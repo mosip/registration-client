@@ -19,7 +19,7 @@ public enum ErrorMessages {
 	 */
 	QRCODE_FAILED_TO_GENERATE("Failed to generate QR code");
 	
-	
+
 	
 	private ErrorMessages(String code) {
 		this.code = code;
