@@ -4,6 +4,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Timestamp;
@@ -17,20 +18,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import io.mosip.registration.dto.mastersync.GenericDto;
-import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RemapException;
-import io.mosip.registration.service.BaseService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
-import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
+
 import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.kernel.core.templatemanager.spi.TemplateManagerBuilder;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.registration.audit.AuditManagerService;
@@ -44,7 +42,6 @@ import io.mosip.registration.controller.device.BiometricsController;
 import io.mosip.registration.controller.device.ScanPopUpViewController;
 import io.mosip.registration.controller.eodapproval.RegistrationApprovalController;
 import io.mosip.registration.controller.reg.AlertController;
-import io.mosip.registration.controller.reg.DemographicDetailController;
 import io.mosip.registration.controller.reg.HeaderController;
 import io.mosip.registration.controller.reg.HomeController;
 import io.mosip.registration.controller.reg.PacketHandlerController;
@@ -60,18 +57,19 @@ import io.mosip.registration.dto.biometric.BiometricInfoDTO;
 import io.mosip.registration.dto.biometric.FaceDetailsDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.scheduler.SchedulerUtil;
+import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.IdentitySchemaService;
-import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.security.AuthenticationService;
 import io.mosip.registration.service.sync.SyncStatusValidatorService;
-import io.mosip.registration.service.template.TemplateService;
-import io.mosip.registration.util.acktemplate.TemplateGenerator;
 import io.mosip.registration.util.common.PageFlow;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import io.mosip.registration.validator.RequiredFieldValidator;
 import javafx.animation.PauseTransition;
@@ -90,7 +88,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -103,7 +100,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
@@ -141,24 +137,13 @@ public class BaseController {
 	protected FXComponents fXComponents;
 
 	@Autowired
-	private DemographicDetailController demographicDetailController;
-	@Autowired
 	public RegistrationPreviewController registrationPreviewController;
 
 	@Autowired
 	private BiometricsController guardianBiometricsController;
 
 	@Autowired
-	private TemplateService templateService;
-
-	@Autowired
 	private AuthenticationService authenticationService;
-
-	@Autowired
-	private TemplateManagerBuilder templateManagerBuilder;
-
-	@Autowired
-	private TemplateGenerator templateGenerator;
 
 	@Autowired
 	private UserOnboardService userOnboardService;
@@ -189,15 +174,12 @@ public class BaseController {
 
 	@Autowired
 	protected PageFlow pageFlow;
-	
+
 	@Autowired
 	private UserOnboardParentController userOnboardParentController;
 
 	@Value("${mosip.registration.css_file_path:}")
 	private String cssName;
-
-	@Autowired
-	private BioService bioService;
 
 	@Autowired
 	private RestartController restartController;
@@ -216,6 +198,12 @@ public class BaseController {
 
 	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
+	
+	@Value("${mosip.registration.images.path:images}")
+	private String imagesPath;
+	
+	@Value("${mosip.registration.theme:}")
+	private String imagesTheme;
 
 	protected ApplicationContext applicationContext = ApplicationContext.getInstance();
 
@@ -266,7 +254,7 @@ public class BaseController {
 
 	/**
 	 * Set Validations map
-	 * 
+	 *
 	 * @param validations is a map id's and regex validations
 	 */
 	public void setValidations(Map<String, UiSchemaDTO> validations) {
@@ -471,7 +459,7 @@ public class BaseController {
 
 	/**
 	 * Alert specific for page navigation confirmation
-	 * 
+	 *
 	 * @return
 	 */
 	protected boolean pageNavigantionAlert() {
@@ -912,7 +900,7 @@ public class BaseController {
 	 * generate the notification template writeNotificationTemplate =
 	 * templateGenerator.generateNotificationTemplate(notificationTemplate,
 	 * registrationDTO, templateManagerBuilder); }
-	 * 
+	 *
 	 * } catch (RegBaseUncheckedException regBaseUncheckedException) {
 	 * LOGGER.error("REGISTRATION - UI - GENERATE_NOTIFICATION", APPLICATION_NAME,
 	 * APPLICATION_ID, regBaseUncheckedException.getMessage() +
@@ -937,7 +925,6 @@ public class BaseController {
 		return registrationDTO;
 
 	}
-
 
 	/**
 	 * to return to the next page based on the current page and action for User
@@ -979,7 +966,6 @@ public class BaseController {
 	 * @param action      - action to be performed previous/next
 	 * @return id of next Anchorpane
 	 */
-	@SuppressWarnings("unchecked")
 	protected String getPageByAction(String currentPage, String action) {
 
 		LOGGER.info(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
@@ -1075,7 +1061,7 @@ public class BaseController {
 				return new Task<ResponseDTO>() {
 					/*
 					 * (non-Javadoc)
-					 * 
+					 *
 					 * @see javafx.concurrent.Task#call()
 					 */
 					@Override
@@ -1091,7 +1077,7 @@ public class BaseController {
 				};
 			}
 		};
-		
+
 		userOnboardParentController.getProgressIndicator().progressProperty().bind(taskService.progressProperty());
 		taskService.start();
 		taskService.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
@@ -1138,7 +1124,7 @@ public class BaseController {
 	 * @param pageId     - Parent Anchorpane where other panes are included
 	 * @param notTosShow - Id of Anchorpane which has to be hidden
 	 * @param show       - Id of Anchorpane which has to be shown
-	 * 
+	 *
 	 */
 	protected void getCurrentPage(Pane pageId, String notTosShow, String show) {
 		LOGGER.info("Pane : {}, Navigating from current page {} to show : {}",
@@ -1152,8 +1138,6 @@ public class BaseController {
 		}
 		LOGGER.info("Navigated to next page >> {}", show);
 	}
-
-
 
 	public void remapMachine() {
 
@@ -1220,7 +1204,6 @@ public class BaseController {
 			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.REMAP_PROCESS_STILL_PENDING);
 		}
 	}
-
 
 	private void disableHomePage(boolean isDisabled) {
 
@@ -1325,7 +1308,7 @@ public class BaseController {
 		 * guardianBiometricsLabel.setText("Biometrics"); // //
 		 * guardianBiometricsController.setGuardianBiometricsLabel(
 		 * guardianBiometricsLabel);
-		 * 
+		 *
 		 * } else if (updateUINNextPage(RegistrationConstants.FINGERPRINT_DISABLE_FLAG)
 		 * && !isChild()) {
 		 * SessionContext.map().put(RegistrationConstants.UIN_UPDATE_FINGERPRINTCAPTURE,
@@ -1412,7 +1395,6 @@ public class BaseController {
 	 * @param pageId id of the page
 	 * @param val    value to be set
 	 */
-	@SuppressWarnings("unchecked")
 	protected void updatePageFlow(String pageId, boolean val) {
 
 		LOGGER.info(LoggerConstants.LOG_REG_BASE, RegistrationConstants.APPLICATION_NAME,
@@ -1464,7 +1446,7 @@ public class BaseController {
 
 	/**
 	 * To get the current timestamp
-	 * 
+	 *
 	 * @return Timestamp returns the current timestamp
 	 */
 	protected Timestamp getCurrentTimestamp() {
@@ -1474,7 +1456,7 @@ public class BaseController {
 	/**
 	 * Restricts the re-ordering of the columns in {@link TableView}. This is
 	 * generic method.
-	 * 
+	 *
 	 * @param table the instance of {@link TableView} for which re-ordering of
 	 *              columns had to be restricted
 	 */
@@ -1607,41 +1589,41 @@ public class BaseController {
 		}
 
 		return mapToProcess;
-	}
+	}*/
 
 	/*
 	 * protected void disablePaneOnBioAttributes(Node pane, List<String>
 	 * constantBioAttributes) { return;
 	 *//** Put pane disable by default */
 	/*
-	 * 
+	 *
 	 * pane.setDisable(true);
-	 * 
+	 *
 	 *//** Get UI schema individual Biometrics Bio Attributes */
 	/*
-	 * 
+	 *
 	 * List<String> uiSchemaBioAttributes =
 	 * getBioAttributesBySubType(RegistrationConstants.indBiometrics);
-	 * 
+	 *
 	 *//** If bio Attribute not mentioned for bio attribute then disable */
 	/*
-	 * 
+	 *
 	 * if (uiSchemaBioAttributes == null || uiSchemaBioAttributes.isEmpty()) {
 	 * pane.setDisable(true); } else {
-	 * 
+	 *
 	 * for (String attribute : constantBioAttributes) {
-	 * 
+	 *
 	 *//** If bio attribute configured in UI Schema, then enable the pane */
 
 	/*
-	 * 
+	 *
 	 * if (uiSchemaBioAttributes.contains(attribute)) { pane.setDisable(false);
-	 * 
+	 *
 	 *//** Stop the iteration as we got the attribute *//*
-														 * break; } } }
-														 * 
-														 * }
-														 */
+	 * break; } } }
+	 *
+	 * }
+	 */
 
 	// protected void addExceptionDTOs() {
 	// List<String> bioAttributesFromSchema =
@@ -1692,16 +1674,16 @@ public class BaseController {
 	 * Attribute not mentioned for bio attribute then disable if
 	 * (uiSchemaBioAttributes == null || uiSchemaBioAttributes.isEmpty()) {
 	 * isAvailable = false; } else {
-	 * 
+	 *
 	 * for (String attribute : constantAttributes) {
-	 * 
+	 *
 	 * // If bio attribute configured in UI Schema, then enable the pane if
 	 * (uiSchemaBioAttributes.contains(attribute)) {
-	 * 
+	 *
 	 * isAvailable = true; } }
-	 * 
+	 *
 	 * }
-	 * 
+	 *
 	 * return isAvailable; }
 	 */
 
@@ -1731,7 +1713,7 @@ public class BaseController {
 
 	/*
 	 * protected List<String> getConstantConfigBioAttributes(String bioType) {
-	 * 
+	 *
 	 * return bioType.equalsIgnoreCase(RegistrationUIConstants.RIGHT_SLAP) ?
 	 * RegistrationConstants.rightHandUiAttributes :
 	 * bioType.equalsIgnoreCase(RegistrationUIConstants.LEFT_SLAP) ?
@@ -1747,15 +1729,15 @@ public class BaseController {
 	/*
 	 * protected List<String> getConfigBioAttributes(List<String>
 	 * constantAttributes) {
-	 * 
+	 *
 	 * // Get Bio Attributes List<String> uiAttributes =
 	 * getSchemaFieldBioAttributes(RegistrationConstants.indBiometrics);
-	 * 
+	 *
 	 * return
 	 * constantAttributes.stream().filter(uiAttributes::contains).collect(Collectors
 	 * .toList());
-	 * 
-	 * 
+	 *
+	 *
 	 * }
 	 */
 
@@ -1975,5 +1957,55 @@ public class BaseController {
 			generateAlert(RegistrationConstants.ERROR, "Both Mandatory and Optional languages not configured");
 		}
 		return Collections.EMPTY_LIST;
+	}
+	
+	
+	public void setImage(ImageView imageView, String imageName) {
+
+		if (imageView != null) {
+			Image image;
+			try {
+				image = getImage(imageName);
+				if (image != null) {
+
+					imageView.setImage(image);
+				}
+			} catch (RegBaseCheckedException e) {
+				LOGGER.error("Exception while Getting Image");
+			}
+
+		}
+	}
+
+	public Image getImage(String imageName) throws RegBaseCheckedException {
+
+		if (imageName == null || imageName.isEmpty()) {
+			throw new RegBaseCheckedException();
+		}
+
+		Image image = null;
+		try {
+			
+			
+			image = new Image(getImageFilePath(imageName));
+		} catch (Exception exception) {
+
+			LOGGER.error("Exception while Getting Image", exception);
+			throw new RegBaseCheckedException();
+		}
+
+		return image;
+	}
+
+	private String getImagesConfiguredFilePath() {
+		return imagesPath;
+	}
+
+	private String getConfiguredImagesTheme() {
+		return imagesTheme;
+	}
+	
+	public String getImageFilePath(String imageName) {
+		return getImagesConfiguredFilePath().concat(File.separator).concat(getConfiguredImagesTheme()!=null ? getConfiguredImagesTheme().concat(File.separator) : "").concat(imageName);
 	}
 }
