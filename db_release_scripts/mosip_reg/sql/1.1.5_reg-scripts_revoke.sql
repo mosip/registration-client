@@ -1,16 +1,13 @@
 -- -------------------------------------------------------------------------------------------------
--- Database Name: mosip_regprc
--- Release Version 	: 1.2
--- Purpose    		: Database Alter scripts for the release for Registration Processor DB.       
+-- Database Name: mosip_reg
+-- Release Version 	: 1.1.5
+-- Purpose    		: Revoking Database Alter deployement done for release in Registration ProcessorDB.       
 -- Create By   		: Ram Bhatt
--- Created Date		: Mar-2021
+-- Created Date		: Jan-2021
 -- 
 -- Modified Date        Modified By         Comments / Remarks
 -- -------------------------------------------------------------------------------------------------
 
-\c mosip_regprc sysadmin
-
-ALTER TABLE reg_prc.registration ADD COLUMN resume_timestamp timestamp;
-ALTER TABLE reg_prc.registration ADD COLUMN default_resume_action character varying(50);
+\c mosip_reg sysadmin
 
 ----------------------------------------------------------------------------------------------------
