@@ -9,7 +9,7 @@
 	
 	<name>MOSIP Registration Parent POM</name>
 	<description>Mosip Registration Project</description>
-        <url>https://github.com/mosip/registration</url>	
+        <url>https://github.com/mosip/registration-client</url>
 	<licenses>
           <license>
                 <name>MPL 2.0</name>
@@ -17,9 +17,9 @@
           </license>
         </licenses>	
 		<scm>
-                <connection>scm:git:git://github.com/mosip/registration.git</connection>
-                <developerConnection>scm:git:ssh://github.com:mosip/registration.git</developerConnection>
-                <url>https://github.com/mosip/registration</url>
+                <connection>scm:git:git://github.com/mosip/registration-client.git</connection>
+                <developerConnection>scm:git:ssh://github.com:mosip/registration-client.git</developerConnection>
+                <url>https://github.com/mosip/registration-client</url>
                 <tag>HEAD</tag>
         </scm>	
 	<developers>
@@ -27,7 +27,7 @@
                   <name>Mosip</name>
                   <email>mosip.emailnotifier@gmail.com</email>
                   <organization>io.mosip</organization>
-                  <organizationUrl>https://github.com/mosip/registration</organizationUrl>
+                  <organizationUrl>https://github.com/mosip/registration-client</organizationUrl>
                 </developer>
      </developers>
 

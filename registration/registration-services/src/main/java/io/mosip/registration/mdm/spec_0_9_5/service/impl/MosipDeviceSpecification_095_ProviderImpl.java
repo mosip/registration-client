@@ -14,7 +14,10 @@ import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.mosip.registration.context.ApplicationContext;
 import org.apache.http.Consts;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
@@ -25,6 +28,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.assertj.core.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -36,7 +40,6 @@ import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.exception.DeviceException;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -75,6 +78,12 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 	// TODO - remove, and use helper. as this leads to circular dependency
 	@Autowired
 	private MosipDeviceSpecificationFactory deviceSpecificationFactory;
+
+	@Value("${mosip.registration.mdm.trust.domain.rcapture:DEVICE}")
+	private String rCaptureTrustDomain;
+
+	@Value("${mosip.registration.mdm.trust.domain.digitalId:FTM}")
+	private String digitalIdTrustDomain;
 
 	@Override
 	public String getSpecVersion() {
@@ -119,12 +128,17 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 	public InputStream stream(MdmBioDevice bioDevice, String modality) throws RegBaseCheckedException {
 		try {
 
+			if (!isDeviceAvailable(bioDevice)) {
+				throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
+						RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
+			}
+
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Started Strema for modality : " + modality);
 
 			String url = bioDevice.getCallbackId() + MosipBioDeviceConstants.STREAM_ENDPOINT;
 
 			String timeout = (String) ApplicationContext.getInstance().getApplicationMap()
-					.get(RegistrationConstants.CAPTURE_TIME_OUT);
+					.getOrDefault(RegistrationConstants.CAPTURE_TIME_OUT, "60000");
 			StreamRequestDTO streamRequestDTO = new StreamRequestDTO(bioDevice.getDeviceId(), getDeviceSubId(modality),
 					timeout);
 
@@ -149,32 +163,30 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 			}
 
 			try {
-				byte[] byteArray = mosipDeviceSpecificationHelper.getJPEGByteArray(urlStream, System.currentTimeMillis()
-						+ (timeout != null && !timeout.isEmpty() ? Long.parseLong(timeout) : 60000));
+				byte[] byteArray = mosipDeviceSpecificationHelper.getJPEGByteArray(urlStream,
+						System.currentTimeMillis() + Long.parseLong(timeout));
 
 				if (byteArray != null) {
 					LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 							"Stream Request Completed" + System.currentTimeMillis());
 					return urlStream;
-				} else {
-
-					urlStream.close();
-					throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_STREAM_TIMEOUT.getErrorCode(),
-							RegistrationExceptionConstants.MDS_STREAM_TIMEOUT.getErrorMessage());
 				}
+
 			} catch (RegBaseCheckedException regBaseCheckedException) {
-
-				urlStream.close();
-				throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorCode(),
-						RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorMessage(), regBaseCheckedException);
-
+				LOGGER.error("Stream Request failed", regBaseCheckedException);
 			}
 
-		} catch (Exception exception) {
-			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorCode(),
-					RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorMessage(), exception);
+			if(urlStream != null)
+				urlStream.close();
 
+			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_STREAM_TIMEOUT.getErrorCode(),
+					RegistrationExceptionConstants.MDS_STREAM_TIMEOUT.getErrorMessage());
+
+		} catch (Exception exception) {
+			LOGGER.error("Stream Request failed", exception);
 		}
+		throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorCode(),
+				RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorMessage());
 	}
 
 	@Override
@@ -245,7 +257,7 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 				}
 				if (rCaptureResponseBiometricsDTO.getData() != null
 						&& !rCaptureResponseBiometricsDTO.getData().isEmpty()) {
-					mosipDeviceSpecificationHelper.validateJWTResponse(rCaptureResponseBiometricsDTO.getData());
+					mosipDeviceSpecificationHelper.validateJWTResponse(rCaptureResponseBiometricsDTO.getData(), rCaptureTrustDomain);
 					String payLoad = mosipDeviceSpecificationHelper.getPayLoad(rCaptureResponseBiometricsDTO.getData());
 
 					RCaptureResponseDataDTO dataDTO = mapper.readValue(
@@ -389,7 +401,7 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 	}
 
 	private DigitalId getDigitalId(String digitalId) throws IOException, RegBaseCheckedException, DeviceException {
-		mosipDeviceSpecificationHelper.validateJWTResponse(digitalId);
+		mosipDeviceSpecificationHelper.validateJWTResponse(digitalId, digitalIdTrustDomain);
 		return mosipDeviceSpecificationHelper.getMapper().readValue(
 				new String(Base64.getUrlDecoder().decode(mosipDeviceSpecificationHelper.getPayLoad(digitalId))),
 				DigitalId.class);
@@ -436,9 +448,8 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 					"Entering into Device availbale check....." + System.currentTimeMillis());
 
-			String requestBody = null;
 			ObjectMapper mapper = new ObjectMapper();
-			requestBody = mapper.writeValueAsString(deviceDiscoveryRequest);
+			String requestBody = mapper.writeValueAsString(deviceDiscoveryRequest);
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for RCapture...." + requestBody);
 
@@ -453,40 +464,19 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 					.setEntity(requestEntity).build();
 
 			CloseableHttpResponse response = client.execute(request);
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Request completed.... " + System.currentTimeMillis());
 
-			String val = EntityUtils.toString(response.getEntity());
+			LOGGER.info("Request completed {}. parsing device discovery response to 095 dto", System.currentTimeMillis());
+			List<DeviceDiscoveryMDSResponse> deviceList = (mosipDeviceSpecificationHelper.getMapper().readValue(EntityUtils.toString(response.getEntity()),
+					new TypeReference<List<DeviceDiscoveryMDSResponse>>() {}));
 
-			if (val != null && !val.isEmpty()) {
+			isDeviceAvailable = deviceList.stream().anyMatch(device ->
+					Arrays.asList(device.getSpecVersion()).contains(SPEC_VERSION)
+							&& RegistrationConstants.DEVICE_STATUS_READY.equalsIgnoreCase(device.getDeviceStatus())
+							&& device.getCertification().equals(mdmBioDevice.getCertification())
+							&& device.getDeviceCode().equals(mdmBioDevice.getDeviceCode())
+							&& device.getDeviceId().equals(mdmBioDevice.getDeviceId()));
 
-				List<DeviceDiscoveryMDSResponse> deviceList;
-
-				LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-						"parsing device discovery response to 095 dto");
-				deviceList = (mosipDeviceSpecificationHelper.getMapper().readValue(val,
-						new TypeReference<List<DeviceDiscoveryMDSResponse>>() {
-						}));
-
-				if (deviceList != null && !deviceList.isEmpty()) {
-
-					for (DeviceDiscoveryMDSResponse device : deviceList) {
-
-						if (Arrays.asList(device.getSpecVersion()).contains(SPEC_VERSION)
-								&& RegistrationConstants.DEVICE_STATUS_READY.equalsIgnoreCase(device.getDeviceStatus())
-								&& device.getCertification().equals(mdmBioDevice.getCertification())
-								&& device.getDeviceCode().equals(mdmBioDevice.getDeviceCode())
-								&& device.getDeviceId().equals(mdmBioDevice.getDeviceId())) {
-
-							isDeviceAvailable = true;
-							break;
-
-						}
-					}
-				}
-			}
-
-		} catch (IOException exception) {
+		} catch (Throwable exception) {
 			LOGGER.error(MOSIP_BIO_DEVICE_INTEGERATOR, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(exception));
 		}

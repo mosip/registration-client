@@ -6,6 +6,7 @@ on:
     types: [published]
   
 jobs:
+  
   build_client:
     runs-on: ubuntu-latest
     steps:
@@ -56,4 +57,3 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.access_token }}
         GPG_TTY: $(tty) 
-      

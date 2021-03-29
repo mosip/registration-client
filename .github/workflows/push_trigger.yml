@@ -11,6 +11,7 @@ on:
       - develop
   
 jobs:
+  
   build_client:
     runs-on: ubuntu-latest
     env:
@@ -89,5 +90,4 @@ jobs:
         echo IMAGE_ID=$IMAGE_ID
         echo VERSION=$VERSION
         docker tag $SERVICE_NAME $IMAGE_ID:$VERSION
-        docker push $IMAGE_ID:$VERSION  
-
+        docker push $IMAGE_ID:$VERSION
