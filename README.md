@@ -1,8 +1,9 @@
 # Registration
 
-This repository contains the two components of registration:
+This repository contains the components related to registration:
 1. Registration Client
-1. Registration Processor 
+2. Registration services
+3. Registration libs - installer and run wrapper
 
 Refer to README in respective folders for details.
 
