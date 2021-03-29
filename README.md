@@ -5,8 +5,8 @@
 
 
 This repository contains the two components of registration:
-1. Registration Client
-1. Registration Processor 
+1. Registration Client (UI Component)
+1. Registration Services 
 
 Refer to README in respective folders for details.
 
