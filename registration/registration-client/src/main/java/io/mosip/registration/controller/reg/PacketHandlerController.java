@@ -288,9 +288,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 	private String packetsLocation;
 
 	@Autowired
-	private GenericController genericController;
-
-	@Autowired
 	private Validations validation;
 
 	/**
