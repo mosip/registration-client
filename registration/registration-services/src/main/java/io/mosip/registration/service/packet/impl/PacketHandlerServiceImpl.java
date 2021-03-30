@@ -312,6 +312,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_CENTER_ID));
 		metaData.put(PacketManagerConstants.META_DONGLE_ID,
 				(String) ApplicationContext.map().get(RegistrationConstants.DONGLE_SERIAL_NUMBER));
+		metaData.put("langCodes", String.join(RegistrationConstants.COMMA, registrationDTO.getSelectedLanguagesByApplicant()));
 
 		String keyIndex = null;
 		try {

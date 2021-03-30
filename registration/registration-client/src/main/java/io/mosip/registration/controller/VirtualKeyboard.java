@@ -12,7 +12,6 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.VirtualKeyboardKeys;
-import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.controller.reg.RegistrationController;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -44,6 +43,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Polygon;
+import javafx.stage.Stage;
 
 public class VirtualKeyboard {
 
@@ -52,7 +52,7 @@ public class VirtualKeyboard {
 	 */
 	private static final Logger LOGGER = AppConfig.getLogger(RegistrationController.class);
 
-	private static final Set<Integer> KEY_LENGTHS = new HashSet<>();
+	private static Set<Integer> KEY_LENGTHS = new HashSet<>();
 
 	private VBox root;
 
@@ -60,13 +60,26 @@ public class VirtualKeyboard {
 
 	private StringBuilder vkType = new StringBuilder();
 
-	private final ResourceBundle keyboard = ApplicationContext.secondaryLanguageLocal() != null
-			? ResourceBundle.getBundle("keyboards.keyboard", new Locale(ApplicationContext.secondaryLanguageLocal()))
-			: null;
+	private ResourceBundle keyboard = null;
+	
+	private KeyEvent keyEvent;
+
+	private Stage parentStage;
+	
+	public VirtualKeyboard(String langCode) {
+		this(null, langCode);
+	}
 
 	private String getKey(String keyCode) {
-
 		return keyboard != null ? keyboard.getString(keyCode) : null;
+	}
+	
+	public Stage getParentStage() {
+		return parentStage;
+	}
+	
+	public void setParentStage(Stage parentStage) {
+		this.parentStage = parentStage;
 	}
 
 	/**
@@ -75,22 +88,15 @@ public class VirtualKeyboard {
 	 * @param target The node that will receive KeyEvents from this keyboard. If
 	 *               target is null, KeyEvents will be dynamically forwarded to the
 	 *               focus owner in the Scene containing this keyboard.
+	 * @param langCode 
 	 */
 
-	private static VirtualKeyboard instance = null;
-
-	public static VirtualKeyboard getInstance() {
-		if (instance == null) {
-			instance = new VirtualKeyboard();
-		}
-
-		return instance;
-	}
-
-	private VirtualKeyboard(ReadOnlyObjectProperty<Node> target) {
+	private VirtualKeyboard(ReadOnlyObjectProperty<Node> target, String langCode) {
 		LOGGER.info(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Opening virtual keyboard");
 
+		this.keyboard = ResourceBundle.getBundle("keyboards.keyboard", new Locale(langCode.substring(0, 2)));
+		
 		this.root = new VBox(5);
 		root.setPadding(new Insets(10));
 		root.setId("virtualKeyboard");
@@ -229,14 +235,6 @@ public class VirtualKeyboard {
 	}
 
 	/**
-	 * Creates a VirtualKeyboard which uses the focusProperty of the scene to which
-	 * it is attached as its target
-	 */
-	private VirtualKeyboard() {
-		this(null);
-	}
-
-	/**
 	 * Visual component displaying this keyboard. The returned node has a style
 	 * class of "virtual-keyboard". Buttons in the view have a style class of
 	 * "virtual-keyboard-button".
@@ -278,9 +276,7 @@ public class VirtualKeyboard {
 				if (target != null) {
 					targetNode = target.get();
 				} else {
-					targetNode = view().getScene().getFocusOwner();
-					if (target != null && !targetNode.getId().contains("Local"))
-						targetNode = null;
+					targetNode = getParentStage().getScene().getFocusOwner();
 				}
 
 				if (targetNode != null) {
@@ -308,7 +304,7 @@ public class VirtualKeyboard {
 		});
 		return button;
 	}
-
+	
 	private KeyEvent createKeyEvent(Object source, EventTarget target, EventType<KeyEvent> eventType, String character,
 			KeyCode code, Modifiers modifiers) {
 		return new KeyEvent(source, target, eventType, character, code.toString(), code, modifiers.shiftDown().get(),
@@ -415,8 +411,24 @@ public class VirtualKeyboard {
 							capsLock = true;
 						}
 					}
+					if (e.getCode().getName().equals("Shift")) {
+						keyEvent = e;
+					}					
+					
+					textField.setOnKeyReleased(new EventHandler<KeyEvent>() {
+			            @Override
+			            public void handle(KeyEvent event) {
+			                switch (event.getCode()) {			                   
+			                    case SHIFT:
+			                    	keyEvent = null;
+							default:
+								break;
+			                }
+			            }
+			        });
+					
 					String key;
-					if (capsLock) {
+					if (capsLock || keyEvent != null ? keyEvent.getCode().getName().equals("Shift") : false) {
 						try {
 							key = keyboard.getString("shift_" + e.getCode().getName().replaceAll("\\s", ""));
 						} catch (MissingResourceException exception) {

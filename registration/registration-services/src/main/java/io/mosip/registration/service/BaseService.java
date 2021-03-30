@@ -1,6 +1,6 @@
 package io.mosip.registration.service;
 
-import static io.mosip.registration.constants.LoggerConstants.*;
+import static io.mosip.registration.constants.LoggerConstants.BIO_SERVICE;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
@@ -15,21 +15,21 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
-import io.mosip.kernel.core.util.HMACUtils2;
-import io.mosip.registration.constants.PreConditionChecks;
-import io.mosip.registration.dao.RegistrationCenterDAO;
-import io.mosip.registration.entity.CenterMachine;
-import io.mosip.registration.entity.MachineMaster;
-import io.mosip.registration.exception.PreConditionCheckException;
-import io.mosip.registration.repositories.CenterMachineRepository;
-import io.mosip.registration.repositories.MachineMasterRepository;
-import io.mosip.registration.service.operator.UserDetailService;
-import io.mosip.registration.service.remap.CenterMachineReMapService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
-import lombok.NonNull;
+import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import io.mosip.commons.packet.constants.Biometric;
@@ -48,16 +48,18 @@ import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.FileUtils;
+import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.kernel.core.util.JsonUtils;
 import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.kernel.core.util.exception.JsonMappingException;
 import io.mosip.kernel.core.util.exception.JsonParseException;
 import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.constants.DeviceTypes;
+import io.mosip.registration.constants.PreConditionChecks;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.MachineMappingDAO;
+import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dao.UserOnboardDAO;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.PacketStatusDTO;
@@ -66,13 +68,22 @@ import io.mosip.registration.dto.RegistrationDataDto;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.entity.CenterMachine;
+import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.Registration;
+import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
+import io.mosip.registration.repositories.CenterMachineRepository;
+import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.service.config.GlobalParamService;
+import io.mosip.registration.service.operator.UserDetailService;
+import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.template.impl.NotificationServiceImpl;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
+import lombok.NonNull;
 
 /**
  * This is a base class for service package. The common functionality across the
@@ -121,16 +132,75 @@ public class BaseService {
 
 	@Autowired
 	private CenterMachineRepository centerMachineRepository;
+	
+	@Value("#{'${mosip.mandatory-languages:}'.split('[,]')}")
+	private List<String> mandatoryLanguages;
+
+	@Value("#{'${mosip.optional-languages:}'.split('[,]')}")
+	private List<String> optionalLanguages;
+	
+	@Value("${mosip.min-languages.count:0}")
+	private int minLanguagesCount;
+
+	@Value("${mosip.max-languages.count:0}")
+	private int maxLanguagesCount;
+
+	public List<String> getMandatoryLanguages() {
+		return mandatoryLanguages.stream()
+				.filter(item-> !item.isBlank())
+				.map(String::strip)
+				.map(String::toLowerCase)
+				.distinct()
+				.collect(Collectors.toList());
+	}
+
+	public List<String> getOptionalLanguages() throws PreConditionCheckException {
+		List<String> mandatoryLang = getMandatoryLanguages();
+		List<String> optionalLang = optionalLanguages.stream()
+				.filter(item-> !item.isBlank())
+				.map(String::strip)
+				.map(String::toLowerCase)
+				.distinct()
+				.collect(Collectors.toList());
+
+		if(mandatoryLang.isEmpty() && optionalLang.isEmpty()) {
+			LOGGER.error("BOTH MANDATORY AND OPTIONAL LANGUAGES ARE EMPTY");
+			throw new PreConditionCheckException(PreConditionChecks.INVALID_LANG_CONFIG.name(),
+					"BOTH MANDATORY AND OPTIONAL LANGUAGES ARE EMPTY");
+		}
+
+		return ListUtils.subtract(optionalLang, mandatoryLang);
+	}
+
+	public int getMinLanguagesCount() {
+		List<String> mandatoryLang = getMandatoryLanguages();
+
+		return  ( minLanguagesCount <=0 ) ?
+						//min-count is 0 / less than 0, then set to mandatory list size
+							( mandatoryLang.size() > 0 ?  mandatoryLang.size()  : 1 )
+						//if min-count is greater than 0,
+							// check if its greater than mandatory list size then set it back to mandatory list size
+							: (minLanguagesCount < mandatoryLang.size() ? mandatoryLang.size() : minLanguagesCount);
+	}
+
+	public int getMaxLanguagesCount() throws PreConditionCheckException {
+		List<String> mandatoryLang = getMandatoryLanguages();
+		List<String> optionalLang = getOptionalLanguages();
+		int minCount = getMinLanguagesCount();
+		int idealMaxCount = mandatoryLang.size() + optionalLang.size();
+
+		//max-count is (0 / less than 0) OR ( greater than mandatory + optional size), set to mandatory + optional size
+		return maxLanguagesCount <= 0 || maxLanguagesCount > idealMaxCount ? idealMaxCount :
+				maxLanguagesCount < minCount ? minCount : maxLanguagesCount;
+	}
+
 
 	/**
 	 * create success response.
 	 *
-	 * @param responseDTO
-	 *            the response DTO
-	 * @param message
-	 *            the message
-	 * @param attributes
-	 *            the attributes
+	 * @param responseDTO the response DTO
+	 * @param message     the message
+	 * @param attributes  the attributes
 	 * @return ResponseDTO returns the responseDTO after creating appropriate
 	 *         success response and mapping to it
 	 */
@@ -152,12 +222,9 @@ public class BaseService {
 	/**
 	 * create error response.
 	 *
-	 * @param response
-	 *            the response
-	 * @param message
-	 *            the message
-	 * @param attributes
-	 *            the attributes
+	 * @param response   the response
+	 * @param message    the message
+	 * @param attributes the attributes
 	 * @return ResponseDTO returns the responseDTO after creating appropriate error
 	 *         response and mapping to it
 	 */
@@ -207,8 +274,7 @@ public class BaseService {
 	/**
 	 * Checks if is null.
 	 *
-	 * @param list
-	 *            the list
+	 * @param list the list
 	 * @return true, if is null
 	 */
 	public boolean isNull(List<?> list) {
@@ -220,8 +286,7 @@ public class BaseService {
 	/**
 	 * Checks if is empty.
 	 *
-	 * @param list
-	 *            the list
+	 * @param list the list
 	 * @return true, if is empty
 	 */
 	public boolean isEmpty(List<?> list) {
@@ -262,8 +327,7 @@ public class BaseService {
 	/**
 	 * Gets the center id.
 	 *
-	 * @param stationId
-	 *            the station id
+	 * @param stationId the station id
 	 * @return the center id
 	 */
 	public String getCenterId(@NonNull String stationId) {
@@ -272,12 +336,10 @@ public class BaseService {
 				centerMachine.getCenterMachineId().getRegCenterId() : null;
 	}
 
-	
 	/**
 	 * Get Global Param configuration value.
 	 *
-	 * @param key
-	 *            the name
+	 * @param key the name
 	 * @return value
 	 */
 	public String getGlobalConfigValueOf(String key) {
@@ -301,8 +363,7 @@ public class BaseService {
 	/**
 	 * Conversion of Registration to Packet Status DTO.
 	 *
-	 * @param registration
-	 *            the registration
+	 * @param registration the registration
 	 * @return the packet status DTO
 	 */
 	public PacketStatusDTO packetStatusDtoPreperation(Registration registration) {
@@ -314,12 +375,13 @@ public class BaseService {
 		statusDTO.setUploadStatus(registration.getFileUploadStatus());
 		statusDTO.setPacketStatus(registration.getStatusCode());
 		statusDTO.setSupervisorStatus(registration.getClientStatusCode());
-		statusDTO.setSupervisorComments(registration.getClientStatusComments());		
-		
+		statusDTO.setSupervisorComments(registration.getClientStatusComments());
+
 		try {
 			if (registration.getAdditionalInfo() != null) {
 				String additionalInfo = new String(registration.getAdditionalInfo());
-				RegistrationDataDto registrationDataDto = (RegistrationDataDto) JsonUtils.jsonStringToJavaObject(RegistrationDataDto.class, additionalInfo);
+				RegistrationDataDto registrationDataDto = (RegistrationDataDto) JsonUtils
+						.jsonStringToJavaObject(RegistrationDataDto.class, additionalInfo);
 				statusDTO.setName(registrationDataDto.getName());
 				statusDTO.setPhone(registrationDataDto.getPhone());
 				statusDTO.setEmail(registrationDataDto.getEmail());
@@ -355,8 +417,7 @@ public class BaseService {
 	/**
 	 * Registration date conversion.
 	 *
-	 * @param timestamp
-	 *            the timestamp
+	 * @param timestamp the timestamp
 	 * @return the string
 	 */
 	protected String regDateConversion(Timestamp timestamp) {
@@ -365,10 +426,11 @@ public class BaseService {
 		Date date = new Date(timestamp.getTime());
 		return dateFormat.format(date);
 	}
-	
+
 	protected String regDateTimeConversion(String time) {
 		try {
-			String formattedTime = Timestamp.valueOf(time).toLocalDateTime().format(DateTimeFormatter.ofPattern(RegistrationConstants.UTC_PATTERN));
+			String formattedTime = Timestamp.valueOf(time).toLocalDateTime()
+					.format(DateTimeFormatter.ofPattern(RegistrationConstants.UTC_PATTERN));
 			LocalDateTime dateTime = DateUtils.parseUTCToLocalDateTime(formattedTime);
 			return dateTime.format(DateTimeFormatter.ofPattern(RegistrationConstants.TEMPLATE_DATE_FORMAT));
 		} catch (RuntimeException exception) {
@@ -387,11 +449,9 @@ public class BaseService {
 	 * {@link RegistrationExceptionConstants} enum passed as parameter. Extracts the
 	 * error code and error message from the enum parameter.
 	 * 
-	 * @param exceptionEnum
-	 *            the enum of {@link RegistrationExceptionConstants} containing the
-	 *            error code and error message to be thrown
-	 * @throws RegBaseCheckedException
-	 *             the checked exception
+	 * @param exceptionEnum the enum of {@link RegistrationExceptionConstants}
+	 *                      containing the error code and error message to be thrown
+	 * @throws RegBaseCheckedException the checked exception
 	 */
 	protected void throwRegBaseCheckedException(RegistrationExceptionConstants exceptionEnum)
 			throws RegBaseCheckedException {
@@ -401,20 +461,18 @@ public class BaseService {
 	/**
 	 * Validates the input {@link List} is either <code>null</code> or empty
 	 * 
-	 * @param listToBeValidated
-	 *            the {@link List} object to be validated
+	 * @param listToBeValidated the {@link List} object to be validated
 	 * @return <code>true</code> if {@link List} is either <code>null</code> or
 	 *         empty, else <code>false</code>
 	 */
 	protected boolean isListEmpty(List<?> listToBeValidated) {
 		return listToBeValidated == null || listToBeValidated.isEmpty();
 	}
-	
+
 	/**
 	 * Validates the input {@link Set} is either <code>null</code> or empty
 	 * 
-	 * @param setToBeValidated
-	 *            the {@link Set} object to be validated
+	 * @param setToBeValidated the {@link Set} object to be validated
 	 * @return <code>true</code> if {@link Set} is either <code>null</code> or
 	 *         empty, else <code>false</code>
 	 */
@@ -425,8 +483,7 @@ public class BaseService {
 	/**
 	 * Validates the input {@link String} is either <code>null</code> or empty
 	 * 
-	 * @param stringToBeValidated
-	 *            the {@link String} object to be validated
+	 * @param stringToBeValidated the {@link String} object to be validated
 	 * @return <code>true</code> if input {@link String} is either <code>null</code>
 	 *         or empty, else <code>false</code>
 	 */
@@ -437,8 +494,7 @@ public class BaseService {
 	/**
 	 * Validates the input {@link Map} is either <code>null</code> or empty
 	 * 
-	 * @param mapToBeValidated
-	 *            the {@link Map} object to be validated
+	 * @param mapToBeValidated the {@link Map} object to be validated
 	 * @return <code>true</code> if {@link Map} is either <code>null</code> or
 	 *         empty, else <code>false</code>
 	 */
@@ -449,8 +505,7 @@ public class BaseService {
 	/**
 	 * Validates the input byte array is either <code>null</code> or empty
 	 * 
-	 * @param byteArrayToBeValidated
-	 *            the byte array to be validated
+	 * @param byteArrayToBeValidated the byte array to be validated
 	 * @return <code>true</code> if byte array is either <code>null</code> or empty,
 	 *         else <code>false</code>
 	 */
@@ -462,8 +517,7 @@ public class BaseService {
 	 * Validates if the error code of the input {@link Exception} is same of the
 	 * error code of Auth Token Empty
 	 * 
-	 * @param exception
-	 *            the {@link Exception} to be validated
+	 * @param exception the {@link Exception} to be validated
 	 * @return <code>true</code> if error code is same as Auth Token empty
 	 */
 	protected boolean isAuthTokenEmptyException(Exception exception) {
@@ -476,8 +530,7 @@ public class BaseService {
 	 * Validates if the error code of the input {@link ResponseDTO} is same of the
 	 * error code of Auth Token Empty
 	 * 
-	 * @param responseDTO
-	 *            the {@link ResponseDTO} to be validated
+	 * @param responseDTO the {@link ResponseDTO} to be validated
 	 * @return <code>true</code> if error code is same as Auth Token empty
 	 */
 	protected boolean isAuthTokenEmptyError(ResponseDTO responseDTO) {
@@ -490,8 +543,11 @@ public class BaseService {
 
 		return isAuthTokenEmptyError;
 	}
-	
-	
+
+	/*public static boolean isChild() {
+
+		return (boolean) SessionContext.map().get(RegistrationConstants.IS_Child);
+	}*/
 
 	/**
 	 * Gets the registration DTO from session.
@@ -501,7 +557,7 @@ public class BaseService {
 	protected RegistrationDTO getRegistrationDTOFromSession() {
 		return (RegistrationDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
 	}
-	
+
 	/**
 	 * Check of update UIN whether only demo update or bio includes.
 	 *
@@ -573,7 +629,7 @@ public class BaseService {
 						.build())
 				.build();
 	}
-	
+
 	private List<String> getSubTypes(SingleType singleType, String bioAttribute) {
 		List<String> subtypes = new LinkedList<>();
 		switch (singleType) {
@@ -711,10 +767,14 @@ public class BaseService {
 	}
 
 	public void proceedWithRegistration() throws PreConditionCheckException {
-		if(SessionContext.isSessionContextAvailable() &&
-				!userDetailService.isValidUser(SessionContext.userId()) && !isInitialSync())
+		if(!SessionContext.isSessionContextAvailable() ||
+				!userDetailService.isValidUser(SessionContext.userId()))
 			throw new PreConditionCheckException(PreConditionChecks.USER_INACTIVE.name(),
 					"Registration forbidden as User is inactive");
+
+		if(isInitialSync())
+			throw new PreConditionCheckException(PreConditionChecks.MARKED_FOR_INITIAL_SETUP.name(),
+					"Registration forbidden as machine is marked for initial setup");
 
 		if(centerMachineReMapService.isMachineRemapped())
 			throw new PreConditionCheckException(PreConditionChecks.MARKED_FOR_REMAP.name(),

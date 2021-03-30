@@ -4,13 +4,11 @@ import static io.mosip.registration.constants.LoggerConstants.LOG_REG_UIN_UPDATE
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
@@ -28,6 +26,7 @@ import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.FXUtils;
 import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.response.SchemaDto;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -36,14 +35,13 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.RowConstraints;
 
 /**
@@ -97,13 +95,15 @@ public class UpdateUINController extends BaseController implements Initializable
 		fxUtils = FXUtils.getInstance();
 		checkBoxKeeper = new HashMap<>();
 		Map<String, UiSchemaDTO> schemaMap = getValidationMap();
+		SchemaDto schema = getLatestSchema();
 
 		groupedMap = schemaMap.values().stream().filter(field -> field.getGroup() != null && field.isInputRequired())
 				.collect(Collectors.groupingBy(UiSchemaDTO::getGroup));
 
 		parentFlow = parentFlowPane.getChildren();
 		groupedMap.forEach((groupName, list) -> {
-			GridPane checkBox = addCheckBox(groupName);
+			UiSchemaDTO groupField = schema.getSchema().stream().filter(field -> field.getGroup() != null && field.getGroup().equalsIgnoreCase(groupName)).findFirst().get();
+			GridPane checkBox = addCheckBox(groupName, groupField);
 			if (checkBox != null) {
 				parentFlow.add(checkBox);
 			}
@@ -126,15 +126,16 @@ public class UpdateUINController extends BaseController implements Initializable
 		}
 	}
 
-	private GridPane addCheckBox(String groupName) {
-
-		CheckBox checkBox = new CheckBox(groupName);
+	private GridPane addCheckBox(String groupName, UiSchemaDTO field) {
+		String groupLabel = getLabelsForGroup(groupName, field);
+		CheckBox checkBox = new CheckBox(groupLabel);
+		checkBox.setTooltip(new Tooltip(groupLabel));
 		checkBox.getStyleClass().add(RegistrationConstants.updateUinCheckBox);
 		fxUtils.listenOnSelectedCheckBox(checkBox);
 		checkBoxKeeper.put(groupName, checkBox);
 
 		GridPane gridPane = new GridPane();
-		gridPane.setPrefWidth(200);
+		gridPane.setPrefWidth(400);
 		gridPane.setPrefHeight(40);
 
 		ObservableList<ColumnConstraints> columnConstraints = gridPane.getColumnConstraints();
@@ -158,6 +159,18 @@ public class UpdateUINController extends BaseController implements Initializable
 		gridPane.add(checkBox, 1, 1);
 
 		return gridPane;
+	}
+
+	private String getLabelsForGroup(String groupName, UiSchemaDTO field) {
+		String groupLabel = RegistrationConstants.EMPTY;
+		if (field.getGroupLabel() != null && !field.getGroupLabel().isEmpty()) {
+			for (String langCode : registrationController.getSelectedLangList()) {
+				if (field.getGroupLabel().containsKey(langCode)) {
+					groupLabel = groupLabel.isBlank() ? field.getGroupLabel().get(langCode) : groupLabel.concat(RegistrationConstants.SLASH).concat(field.getGroupLabel().get(langCode));
+				}
+			}
+		}
+		return groupLabel.isBlank() ? groupName : groupLabel;
 	}
 
 	/**
@@ -193,7 +206,7 @@ public class UpdateUINController extends BaseController implements Initializable
 					registrationController.init(uinId.getText(), checkBoxKeeper, selectedFields, selectedFieldGroups);
 					Parent createRoot = BaseController.load(
 							getClass().getResource(RegistrationConstants.CREATE_PACKET_PAGE),
-							applicationContext.getApplicationLanguageBundle());
+							applicationContext.getBundle(getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0), RegistrationConstants.LABELS));
 
 					getScene(createRoot).setRoot(createRoot);
 				} else {
@@ -205,9 +218,9 @@ public class UpdateUINController extends BaseController implements Initializable
 					invalidIdException.getMessage() + ExceptionUtils.getStackTrace(invalidIdException));
 
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UPDATE_UIN_VALIDATION_ALERT);
-		} catch (IOException ioException) {
+		} catch (Exception exception) {
 			LOGGER.error(LOG_REG_UIN_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
+					exception.getMessage() + ExceptionUtils.getStackTrace(exception));
 
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_REG_PAGE);
 		}

@@ -14,10 +14,7 @@ import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import io.mosip.registration.context.ApplicationContext;
 import org.apache.http.Consts;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
@@ -40,6 +37,7 @@ import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.exception.DeviceException;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -154,8 +152,6 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 					"Requesting Stream url...." + System.currentTimeMillis());
 			CloseableHttpResponse response = client.execute(httpUriRequest);
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Request completed.... " + System.currentTimeMillis());
 
 			InputStream urlStream = null;
 			if (response.getEntity() != null) {
@@ -464,7 +460,6 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 					.setEntity(requestEntity).build();
 
 			CloseableHttpResponse response = client.execute(request);
-
 			LOGGER.info("Request completed {}. parsing device discovery response to 095 dto", System.currentTimeMillis());
 			List<DeviceDiscoveryMDSResponse> deviceList = (mosipDeviceSpecificationHelper.getMapper().readValue(EntityUtils.toString(response.getEntity()),
 					new TypeReference<List<DeviceDiscoveryMDSResponse>>() {}));

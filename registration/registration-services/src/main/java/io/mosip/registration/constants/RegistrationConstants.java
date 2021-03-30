@@ -51,7 +51,10 @@ public class RegistrationConstants {
 	public static final String SEND_NOTIFICATION_PAGE = "/fxml/SendNotification.fxml";
 	public static final String PACKET_UPLOAD_STATUS_UI = "/fxml/PacketUploadStatus.fxml";
 	public static final String ALERT_GENERATION = "/fxml/Alert.fxml";
-  public static final String DASHBOARD_PAGE = "/fxml/Dashboard.fxml";
+	public static final String DASHBOARD_PAGE = "/fxml/Dashboard.fxml";
+	public static final String SELECT_LANGUAGE_PAGE = "/fxml/SelectLanguage.fxml";
+	public static final String REG_PREVIEW_PAGE = "/fxml/RegistrationPreview.fxml";
+	public static final String REG_AUTH_PAGE = "/fxml/OperatorAuthentication.fxml";
 
 	// FXML Id
 	public static final String DEMOGRAPHIC_DETAIL = "demographicDetail";
@@ -85,6 +88,8 @@ public class RegistrationConstants {
 	// public static final String BIOMETRIC_EXCEPTION_FLOW =
 	// "biometricExceptionFlow";
 	public static final String GUARDIAN_BIOMETRIC = "biometric";
+
+	public static final String DOC_PREVIEW_ICON = "/images/hover.png";
 
 	// css for quality indicator
 	public static final String RETRY_ATTEMPT = "#retryAttempt_";
@@ -507,114 +512,35 @@ public class RegistrationConstants {
 	public static final String TEMPLATE_UIN_UPDATE = "UINUpdate";
 	public static final String TEMPLATE_HEADER_TABLE = "headerTable";
 	public static final String TEMPLATE_UIN_HEADER_TABLE = "uinHeaderTable";
-	public static final String TEMPLATE_UIN_USER_LANG_LABEL = "UINPrimLabel";
-	public static final String TEMPLATE_UIN_LOCAL_LANG_LABEL = "UINSecLabel";
+	public static final String TEMPLATE_UIN_LABEL = "UINLabel";
 	public static final String TEMPLATE_UIN = "UIN";
-	public static final String TEMPLATE_RID_USER_LANG_LABEL = "RIDPrimLabel";
-	public static final String TEMPLATE_RID_LOCAL_LANG_LABEL = "RIDSecLabel";
+	public static final String TEMPLATE_RID_LABEL = "RIDLabel";
 	public static final String TEMPLATE_RID = "RID";
-	public static final String TEMPLATE_DATE_USER_LANG_LABEL = "DatePrimLabel";
-	public static final String TEMPLATE_DATE_LOCAL_LANG_LABEL = "DateSecLabel";
+	public static final String TEMPLATE_DATE_LABEL = "DateLabel";
 	public static final String TEMPLATE_DATE = "Date";
-	public static final String TEMPLATE_PRE_REG_ID_USER_LANG_LABEL = "PreRegIDPrimLabel";
-	public static final String TEMPLATE_PRE_REG_ID_LOCAL_LANG_LABEL = "PreRegIDSecLabel";
+	public static final String TEMPLATE_PRE_REG_ID_LABEL = "PreRegIDLabel";
 	public static final String TEMPLATE_PRE_REG_ID = "PreRegID";
 	public static final String TEMPLATE_PRE_REG = "IsPreRegIDPresent";
 	public static final String TEMPLATE_DEMO_INFO = "DemographicInfo";
 	public static final String DEMOGRAPHIC_TEXTFIELD_FOCUSED = "demoGraphicTextFieldFocused";
 	public static final String DEMOGRAPHIC_TEXTFIELD = "demoGraphicTextField";
-	public static final String TEMPLATE_FULL_NAME_USER_LANG_LABEL = "FullNamePrimLabel";
-	public static final String TEMPLATE_FULL_NAME_LOCAL_LANG_LABEL = "FullNameSecLabel";
-	public static final String TEMPLATE_FULL_NAME = "FullName";
-	public static final String TEMPLATE_FULL_NAME_LOCAL_LANG = "FullNameSec";
-	public static final String TEMPLATE_GENDER_USER_LANG_LABEL = "GenderPrimLabel";
-	public static final String TEMPLATE_GENDER_LOCAL_LANG_LABEL = "GenderSecLabel";
-	public static final String TEMPLATE_GENDER = "Gender";
-	public static final String TEMPLATE_GENDER_LOCAL_LANG = "GenderSec";
-	public static final String TEMPLATE_DOB_USER_LANG_LABEL = "DOBPrimLabel";
-	public static final String TEMPLATE_DOB_LOCAL_LANG_LABEL = "DOBSecLabel";
-	public static final String TEMPLATE_DOB = "DOB";
-	public static final String TEMPLATE_AGE_USER_LANG_LABEL = "AgePrimLabel";
-	public static final String TEMPLATE_AGE_LOCAL_LANG_LABEL = "AgeSecLabel";
-	public static final String TEMPLATE_AGE = "Age";
-	public static final String TEMPLATE_YEARS_USER_LANG = "YearsPrim";
-	public static final String TEMPLATE_YEARS_LOCAL_LANG = "YearsSec";
-	public static final String TEMPLATE_FOREIGNER_USER_LANG_LABEL = "ForiegnerPrimLabel";
-	public static final String TEMPLATE_FOREIGNER_LOCAL_LANG_LABEL = "ForiegnerSecLabel";
-	public static final String TEMPLATE_RESIDENCE_STATUS = "ResidenceStatus";
-	public static final String TEMPLATE_RESIDENCE_STATUS_LOCAL_LANG = "ResidenceStatusSec";
-	public static final String TEMPLATE_ADDRESS_LINE1_USER_LANG_LABEL = "AddressLine1PrimLabel";
-	public static final String TEMPLATE_ADDRESS_LINE1_LOCAL_LANG_LABEL = "AddressLine1SecLabel";
-	public static final String TEMPLATE_ADDRESS_LINE1 = "AddressLine1";
-	public static final String TEMPLATE_ADDRESS_LINE1_LOCAL_LANG = "AddressLine1Sec";
-	public static final String TEMPLATE_ADDRESS_LINE2_USER_LANG_LABEL = "AddressLine2PrimLabel";
-	public static final String TEMPLATE_ADDRESS_LINE2_LOCAL_LANG_LABEL = "AddressLine2SecLabel";
-	public static final String TEMPLATE_ADDRESS_LINE2 = "AddressLine2";
-	public static final String TEMPLATE_ADDRESS_LINE3 = "AddressLine3";
-	public static final String TEMPLATE_ADDRESS_LINE2_LOCAL_LANG = "AddressLine2Sec";
-	public static final String TEMPLATE_REGION_USER_LANG_LABEL = "RegionPrimLabel";
-	public static final String TEMPLATE_REGION_LOCAL_LANG_LABEL = "RegionSecLabel";
-	public static final String TEMPLATE_REGION = "Region";
-	public static final String TEMPLATE_CITY = "City";
-	public static final String TEMPLATE_REGION_LOCAL_LANG = "RegionSec";
-	public static final String TEMPLATE_PROVINCE_USER_LANG_LABEL = "ProvincePrimLabel";
-	public static final String TEMPLATE_PROVINCE_LOCAL_LANG_LABEL = "ProvinceSecLabel";
-	public static final String TEMPLATE_PROVINCE = "Province";
-	public static final String TEMPLATE_PROVINCE_LOCAL_LANG = "ProvinceSec";
-	public static final String TEMPLATE_LOCAL_AUTHORITY_USER_LANG_LABEL = "LocalAuthorityPrimLabel";
-	public static final String TEMPLATE_LOCAL_AUTHORITY_LOCAL_LANG_LABEL = "LocalAuthoritySecLabel";
-	public static final String TEMPLATE_LOCAL_AUTHORITY = "LocalAuthority";
-	public static final String TEMPLATE_LOCAL_AUTHORITY_LOCAL_LANG = "LocalAuthoritySec";
-	public static final String TEMPLATE_MOBILE_USER_LANG_LABEL = "MobilePrimLabel";
-	public static final String TEMPLATE_MOBILE_LOCAL_LANG_LABEL = "MobileSecLabel";
-	public static final String TEMPLATE_MOBILE = "Mobile";
-	public static final String TEMPLATE_POSTAL_CODE_USER_LANG_LABEL = "PostalCodePrimLabel";
-	public static final String TEMPLATE_POSTAL_CODE_LOCAL_LANG_LABEL = "PostalCodeSecLabel";
-	public static final String TEMPLATE_POSTAL_CODE = "PostalCode";
-	public static final String TEMPLATE_EMAIL_USER_LANG_LABEL = "EmailPrimLabel";
-	public static final String TEMPLATE_EMAIL_LOCAL_LANG_LABEL = "EmailSecLabel";
-	public static final String TEMPLATE_EMAIL = "Email";
-	public static final String TEMPLATE_CNIE_NUMBER_USER_LANG_LABEL = "CNIEPrimLabel";
-	public static final String TEMPLATE_CNIE_LOCAL_LANG_LABEL = "CNIESecLabel";
-	public static final String TEMPLATE_CNIE_NUMBER = "CNIE";
-	public static final String TEMPLATE_WITH_PARENT = "WithParent";
-	public static final String TEMPLATE_PARENT_NAME_USER_LANG_LABEL = "ParentNamePrimLabel";
-	public static final String TEMPLATE_PARENT_NAME_LOCAL_LANG_LABEL = "ParentNameSecLabel";
-	public static final String TEMPLATE_PARENT_NAME = "ParentName";
-	public static final String TEMPLATE_PARENT_UIN_USER_LANG_LABEL = "ParentUINPrimLabel";
-	public static final String TEMPLATE_PARENT_UIN_LOCAL_LANG_LABEL = "ParentUINSecLabel";
-	public static final String TEMPLATE_PARENT_UIN = "ParentUIN";
-	public static final String TEMPLATE_PARENT_NAME_LOCAL_LANG = "ParentNameSec";
-	public static final String TEMPLATE_DOCUMENTS_USER_LANG_LABEL = "DocumentsPrimLabel";
-	public static final String TEMPLATE_DOCUMENTS_LOCAL_LANG_LABEL = "DocumentsSecLabel";
+	public static final String TEMPLATE_DOCUMENTS_LABEL = "DocumentsLabel";
 	public static final String TEMPLATE_DOCUMENTS = "Documents";
-	public static final String TEMPLATE_DOCUMENTS_LOCAL_LANG = "DocumentsSec";
-	public static final String TEMPLATE_BIOMETRICS_USER_LANG_LABEL = "BiometricsPrimLabel";
-	public static final String TEMPLATE_BIOMETRICS_LOCAL_LANG_LABEL = "BiometricsSecLabel";
-	public static final String TEMPLATE_BIOMETRICS_CAPTURED_USER_LANG_LABEL = "BiometricsCapturedPrimLabel";
-	public static final String TEMPLATE_BIOMETRICS_CAPTURED_LOCAL_LANG_LABEL = "BiometricsCapturedSecLabel";
+	public static final String TEMPLATE_BIOMETRICS_LABEL = "BiometricsLabel";
+	public static final String TEMPLATE_BIOMETRICS_CAPTURED_LABEL = "BiometricsCapturedLabel";
 	public static final String TEMPLATE_BIOMETRICS_CAPTURED = "Biometrics";
-	public static final String TEMPLATE_BIOMETRICS_CAPTURED_LOCAL_LANG = "BiometricsSec";
-	public static final String TEMPLATE_WITHOUT_EXCEPTION = "WithoutException";
-	public static final String TEMPLATE_WITH_EXCEPTION = "WithException";
-	public static final String TEMPLATE_EXCEPTION_PHOTO_USER_LANG_LABEL = "ExceptionPhotoPrimLabel";
-	public static final String TEMPLATE_EXCEPTION_PHOTO_LOCAL_LANG_LABEL = "ExceptionPhotoSecLabel";
-	public static final String TEMPLATE_LEFT_EYE_USER_LANG_LABEL = "LeftEyePrimLabel";
-	public static final String TEMPLATE_LEFT_EYE_LOCAL_LANG_LABEL = "LeftEyeSecLabel";
-	public static final String TEMPLATE_RIGHT_EYE_USER_LANG_LABEL = "RightEyePrimLabel";
-	public static final String TEMPLATE_RIGHT_EYE_LOCAL_LANG_LABEL = "RightEyeSecLabel";
+	public static final String TEMPLATE_EXCEPTION_PHOTO_LABEL = "ExceptionPhotoLabel";
+	public static final String TEMPLATE_LEFT_EYE_LABEL = "LeftEyeLabel";
+	public static final String TEMPLATE_RIGHT_EYE_LABEL = "RightEyeLabel";
 	public static final String TEMPLATE_EXCEPTION_IMAGE_SOURCE = "ExceptionImageSource";
 	public static final String TEMPLATE_LEFT_EYE = "LeftEye";
 	public static final String TEMPLATE_EYE_IMAGE_SOURCE = "EyeImageSource";
 	public static final String TEMPLATE_RIGHT_EYE = "RightEye";
 	public static final String TEMPLATE_CAPTURED_LEFT_EYE = "CapturedLeftEye";
 	public static final String TEMPLATE_CAPTURED_RIGHT_EYE = "CapturedRightEye";
-	public static final String TEMPLATE_LEFT_PALM_USER_LANG_LABEL = "LeftPalmPrimLabel";
-	public static final String TEMPLATE_LEFT_PALM_LOCAL_LANG_LABEL = "LeftPalmSecLabel";
-	public static final String TEMPLATE_RIGHT_PALM_USER_LANG_LABEL = "RightPalmPrimLabel";
-	public static final String TEMPLATE_RIGHT_PALM_LOCAL_LANG_LABEL = "RightPalmSecLabel";
-	public static final String TEMPLATE_THUMBS_USER_LANG_LABEL = "ThumbsPrimLabel";
-	public static final String TEMPLATE_THUMBS_LOCAL_LANG_LABEL = "ThumbsSecLabel";
+	public static final String TEMPLATE_LEFT_PALM_LABEL = "LeftPalmLabel";
+	public static final String TEMPLATE_RIGHT_PALM_LABEL = "RightPalmLabel";
+	public static final String TEMPLATE_THUMBS_LABEL = "ThumbsLabel";
 	public static final String TEMPLATE_LEFT_PALM_IMAGE_SOURCE = "LeftPalmImageSource";
 	public static final String TEMPLATE_RIGHT_PALM_IMAGE_SOURCE = "RightPalmImageSource";
 	public static final String TEMPLATE_THUMBS_IMAGE_SOURCE = "ThumbsImageSource";
@@ -632,25 +558,17 @@ public class RegistrationConstants {
 	public static final String TEMPLATE_CAPTURED_RIGHT_SLAP = "CapturedRightSlap";
 	public static final String TEMPLATE_CAPTURED_THUMBS = "CapturedThumbs";
 	public static final String TEMPLATE_MISSING_LEFT_FINGERS = "MissingLeftFingers";
-	public static final String TEMPLATE_LEFT_SLAP_EXCEPTION_USER_LANG = "LeftSlapExceptionPrim";
-	public static final String TEMPLATE_LEFT_SLAP_EXCEPTION_LOCAL_LANG = "LeftSlapExceptionSec";
+	public static final String TEMPLATE_LEFT_SLAP_EXCEPTION = "LeftSlapException";
 	public static final String TEMPLATE_MISSING_RIGHT_FINGERS = "MissingRightFingers";
-	public static final String TEMPLATE_RIGHT_SLAP_EXCEPTION_USER_LANG = "RightSlapExceptionPrim";
-	public static final String TEMPLATE_RIGHT_SLAP_EXCEPTION_LOCAL_LANG = "RightSlapExceptionSec";
+	public static final String TEMPLATE_RIGHT_SLAP_EXCEPTION = "RightSlapException";
 	public static final String TEMPLATE_MISSING_THUMBS = "MissingThumbs";
-	public static final String TEMPLATE_THUMBS_EXCEPTION_USER_LANG = "ThumbsExceptionPrim";
-	public static final String TEMPLATE_THUMBS_EXCEPTION_LOCAL_LANG = "ThumbsExceptionSec";
+	public static final String TEMPLATE_THUMBS_EXCEPTION = "ThumbsException";
 	public static final String TEMPLATE_RO_IMAGE_SOURCE = "ROImageSource";
-	public static final String TEMPLATE_RO_NAME_USER_LANG_LABEL = "RONamePrimLabel";
-	public static final String TEMPLATE_RO_NAME_LOCAL_LANG_LABEL = "RONameSecLabel";
+	public static final String TEMPLATE_RO_NAME_LABEL = "RONameLabel";
 	public static final String TEMPLATE_RO_NAME = "ROName";
-	public static final String TEMPLATE_RO_NAME_LOCAL_LANG = "RONameSec";
-	public static final String TEMPLATE_REG_CENTER_USER_LANG_LABEL = "RegCenterPrimLabel";
-	public static final String TEMPLATE_REG_CENTER_LOCAL_LANG_LABEL = "RegCenterSecLabel";
+	public static final String TEMPLATE_REG_CENTER_LABEL = "RegCenterLabel";
 	public static final String TEMPLATE_REG_CENTER = "RegCenter";
-	public static final String TEMPLATE_REG_CENTER_LOCAL_LANG = "RegCenterSec";
-	public static final String TEMPLATE_PHOTO_USER_LANG = "PhotoPrim";
-	public static final String TEMPLATE_PHOTO_LOCAL_LANG = "PhotoSec";
+	public static final String TEMPLATE_PHOTO = "Photo";
 	public static final String TEMPLATE_APPLICANT_IMAGE_SOURCE = "ApplicantImageSource";
 	public static final String TEMPLATE_DATE_FORMAT = "dd/MM/yyyy hh:mm a";
 	public static final String TEMPLATE_JPG_IMAGE_ENCODING = "data:image/jpg;base64,";
@@ -690,18 +608,15 @@ public class RegistrationConstants {
 	public static final String TEMPLATE_CONSENT_CHECKED = "checked='checked'";
 	public static final String PARENT_PHOTO_CAPTURED = "parentPhotoCaptured";
 	public static final String PARENT_PHOTO_NOT_CAPTURED = "parentPhotoNotCaptured";
-	public static final String PARENT_PHOTO_PRIMARY_LANG = "ParentPhotoPrim";
-	public static final String PARENT_PHOTO_LOCAL_LANG = "ParentPhotoSec";
+	public static final String PARENT_PHOTO = "ParentPhoto";
 	public static final String PARENT_IMAGE_SOURCE = "ParentImageSource";
 	public static final String LIST_ITEM_OPENING_TAG = "<li><span>";
 	public static final String LIST_ITEM_CLOSING_TAG = "</span></li><br/>";
 	public static final String SPLIT_DELIMITOR = "\\.";
 	public static final String TEMPLATE_GUIDELINES = "Guidelines";
 	public static final String TEMPLATE_IS_UIN_UPDATE = "IsUINUpdate";
-	public static final String TEMPLATE_APPLICANT_NAME_PRIMARY_LABEL = "NamePrimLabel";
-	public static final String TEMPLATE_APPLICANT_NAME_SECONDARY_LABEL = "NameSecLabel";
-	public static final String TEMPLATE_APPLICANT_NAME_PRIMARY_VALUE = "NamePrimValue";
-	public static final String TEMPLATE_APPLICANT_NAME_SECONDARY_VALUE = "NameSecValue";
+	public static final String TEMPLATE_APPLICANT_NAME_LABEL = "NameLabel";
+	public static final String TEMPLATE_APPLICANT_NAME_VALUE = "NameValue";
 
 	public static final String MODIFY_DEMO_INFO = "modifyDemographicInfo";
 	public static final String MODIFY_DOCUMENTS = "modifyDocuments";
@@ -873,7 +788,7 @@ public class RegistrationConstants {
 	public static final String ACKNOWLEDGEMENT_TEMPLATE = "Ack Template";
 	public static final String ACKNOWLEDGEMENT_TEMPLATE_CODE = "reg-ack-template-part";
 	public static final String PREVIEW_TEMPLATE_CODE = "reg-preview-template-part";
-  public static final String DASHBOARD_TEMPLATE_CODE = "reg-dashboard-template";
+	public static final String DASHBOARD_TEMPLATE_CODE = "reg-dashboard-template";
 	public static final String DASHBOARD_TEMPLATE = "Dashboard Template";
 
 	// Notification Service
@@ -937,7 +852,7 @@ public class RegistrationConstants {
 	public static final String IS_SOFTWARE_UPDATE_AVAILABLE = "mosip.registration.is_software_update_available";
 	public static final String PROVIDER_NAME = "mosip.registration.provider_name";
 	public static final String DISK_SPACE = "mosip.registration.disk_space_size";
-  public static final String LAST_SOFTWARE_UPDATE = "mosip.registration.last_software_update";
+	public static final String LAST_SOFTWARE_UPDATE = "mosip.registration.last_software_update";
 	public static final String REGCLIENT_INSTALLED_TIME = "mosip.registration.regclient_installed_time";
 
 	// Spring Batch-Jobs
@@ -1069,6 +984,7 @@ public class RegistrationConstants {
 	public static final String FINGERPRINT_RETRIES_COUNT = "mosip.registration.num_of_fingerprint_retries";
 	public static final String IRIS_RETRY_COUNT = "mosip.registration.num_of_iris_retries";
 	public static final String FACE_RETRY_COUNT = "mosip.registration.num_of_face_retries";
+	public static final String PHOTO_RETRY_COUNT = "mosip.registration.num_of_photo_retries";
 
 	public static final String[] LEFTHAND_SEGMNTD_FILE_PATHS = new String[] { "/fingerprints/lefthand/leftIndex/",
 			"/fingerprints/lefthand/leftLittle/", "/fingerprints/lefthand/leftMiddle/",
@@ -1209,14 +1125,15 @@ public class RegistrationConstants {
 	public static final String MASTER_SYNC = "MASTER_SYNC";
 	public static final String NO_INTERNET = "NO_INTERNET";
 	public static final String MASTER_VALIDATOR_SERVICE_NAME = "master_sync";
-	//public static final String MASTER_CENTER_REMAP_SERVICE_NAME = "center_remap_sync";
+	// public static final String MASTER_CENTER_REMAP_SERVICE_NAME =
+	// "center_remap_sync";
 	public static final String MASTER_CENTER_PARAM = "regcenterId";
 	public static final String MASTER_DATA_LASTUPDTAE = "lastUpdated";
 	public static final String MASTER_SYNC_LOGGER_INFO = "Entering into Master Sync Dao Impl...";
 	// POLICY SYNC
 	public static final String REG_APP_ID = "REGISTRATION";
 	public static final String KERNEL_APP_ID = "KERNEL";
-	//public static final String KERNEL_REF_ID = "SIGNATUREKEY";
+	// public static final String KERNEL_REF_ID = "SIGNATUREKEY";
 	public static final String POLICY_SYNC_SUCCESS_CODE = "REG-MDS‌-001 ";
 	public static final String POLICY_SYNC_SUCCESS_MESSAGE = "SYNC_SUCCESS";
 	public static final String POLICY_SYNC_ERROR_CODE = "REG-MDS‌-003 ";
@@ -1343,7 +1260,7 @@ public class RegistrationConstants {
 
 	// flag for quality check with SDK
 	public static final String QUALITY_CHECK_WITH_SDK = "mosip.registration.quality_check_with_sdk";
-  public static final String UPDATE_SDK_QUALITY_SCORE = "mosip.registration.replace_sdk_quality_score";
+	public static final String UPDATE_SDK_QUALITY_SCORE = "mosip.registration.replace_sdk_quality_score";
 
 	// Packet Sync
 	public static final String PACKET_SYNC = "packet_sync";
@@ -1829,8 +1746,8 @@ public class RegistrationConstants {
 
 	public static final String OPT_TO_REG_CCS_J00017 = "CCS_J00017";
 	public static final String API_CALL_FAILED = "API call failed with unknown error";
-  
-  public static final String FORGOT_USERNAME_URL = "mosip.registration.forgot_username_url";
+
+	public static final String FORGOT_USERNAME_URL = "mosip.registration.forgot_username_url";
 	public static final String FORGOT_PWORD_URL = "mosip.registration.forgot_password_url";
 	public static final String RESET_PWORD_URL = "mosip.registration.reset_password_url";
 	public static final String EMAIL_PLACEHOLDER = "{EMAIL}";
@@ -1859,5 +1776,37 @@ public class RegistrationConstants {
 	public static final String DASHBOARD_VERSION = "Version";
 	public static final String DASHBOARD_UPDATES = "Updates";
 
+	public static String LOCATION = "Location";
+	public static String IMAGE_VIEW = "imageView";
+	public static final String DEMOGRAPHIC_COMBOBOX = "demographicCombobox";
+	public static String TEXT_FIELD = "TextField";
+	public static String VBOX = "VBOX";
+	public static String HBOX = "HBOX";
+	public static String VALUE = "VALUE";
+	public static final String GENERIC_DETAIL = "genericScreen";
+	public static final String GENERIC_LAYOUT = "/fxml/GenericRegistrationLayout.fxml";
+	public static final String BIOMETRIC_FXML = "/fxml/GenericBiometricFXML.fxml";
 	public static final String DEVICE_STATUS_READY = "Ready";
+
+//	Code CleanUp 
+	public static final String LABELS = "labels";
+	public static final String MESSAGES = "messages";
+	public static final String Resident_Information = "Resident Information";
+	public static final String previewHeader = "previewHeader";
+	public static final String authentication = "authentication";
+	public static final String SLASH = "/";
+	
+	public static final String NEW_REGISTRATION_FLOW = "New Registration";
+	public static final String UIN_UPDATE_FLOW = "UIN Update";
+	public static final String LOST_UIN_FLOW = "Lost UIN";
+	public static final String SCAN_BUTTON = "scan";
+	public static final String REF_NUMBER = "REF_NUMBER";
+	public static final String INVALID_AGE = "INVALID_AGE";
+	public static final String INVALID_DATE="INVALID_DATE";
+	
+	public static final String ICONS_HBOX = "iconsHBox";
+	public static final String KEYBOARD_PANE = "keyboardPane";
+	public static final String QUALITY_BOX_LABEL = "qualityBoxLabel";
+	public static final String MODALITY_BUTTONS = "modalityButtons";
+	public static final int LANGCODE_LENGTH = 3;
 }

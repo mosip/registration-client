@@ -83,22 +83,17 @@ public class RegistrationDTO {
 	private String acknowledgeReceiptName;
 
 	public Map<String, byte[]> streamImages = new HashMap<>();
+	
+	private List<String> selectedLanguagesByApplicant = new ArrayList<>();
 
 	public void addDemographicField(String fieldId, String value) {
 		this.demographics.put(fieldId, (value != null && !value.isEmpty()) ? value : null);
 	}
 
-	public void addDemographicField(String fieldId, String applicationLanguage, String value, String localLanguage,
-			String localValue) {
-		List<SimpleDto> values = new ArrayList<SimpleDto>();
-		if (value != null && !value.isEmpty())
-			values.add(new SimpleDto(applicationLanguage, value));
-
-		if (localValue != null && !localValue.isEmpty())
-			values.add(new SimpleDto(localLanguage, localValue));
-
-		if (!values.isEmpty())
+	public void addDemographicField(String fieldId, List<SimpleDto> values) {
+		if (fieldId != null && !values.isEmpty()) {
 			this.demographics.put(fieldId, values);
+		}
 	}
 
 	public void addDefaultDemographicField(String fieldId, String applicationLanguage, String value,
@@ -122,26 +117,22 @@ public class RegistrationDTO {
 		if (isValidValue(day) && isValidValue(month) && isValidValue(year)) {
 			LocalDate date = LocalDate.of(Integer.valueOf(year), Integer.valueOf(month), Integer.valueOf(day));
 			if (fieldId != null) {
-				this.demographics.put(fieldId, date.format(DateTimeFormatter.ofPattern(
-						ApplicationContext.getDateFormat()
-				)));
+				this.demographics.put(fieldId,
+						date.format(DateTimeFormatter.ofPattern(ApplicationContext.getDateFormat())));
 			}
-			
+
 			this.age = Period.between(date, LocalDate.now(ZoneId.of("UTC"))).getYears();
 
 			int minAge = Integer
 					.parseInt((String) applicationContext.getApplicationMap().get(RegistrationConstants.MIN_AGE));
-			int maxAge = Integer
-					.parseInt((String) applicationContext.getApplicationMap().get(RegistrationConstants.MAX_AGE));
 			this.isChild = this.age < minAge;
 		}
 	}
 
 	public void setDateField(String fieldId, String dateString) {
 		if (isValidValue(dateString)) {
-			LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern(
-					ApplicationContext.getDateFormat()
-			));
+			LocalDate date = LocalDate.parse(dateString,
+					DateTimeFormatter.ofPattern(ApplicationContext.getDateFormat()));
 			setDateField(fieldId, String.valueOf(date.getDayOfMonth()), String.valueOf(date.getMonthValue()),
 					String.valueOf(date.getYear()));
 		}
@@ -150,9 +141,7 @@ public class RegistrationDTO {
 	public String[] getDateField(String fieldId) {
 		if (this.demographics.containsKey(fieldId)) {
 			String value = (String) this.demographics.get(fieldId);
-			LocalDate date = LocalDate.parse(value, DateTimeFormatter.ofPattern(
-					ApplicationContext.getDateFormat()
-			));
+			LocalDate date = LocalDate.parse(value, DateTimeFormatter.ofPattern(ApplicationContext.getDateFormat()));
 			return new String[] { String.valueOf(date.getDayOfMonth()), String.valueOf(date.getMonthValue()),
 					String.valueOf(date.getYear()) };
 		}
@@ -282,7 +271,7 @@ public class RegistrationDTO {
 			savedBiometrics = new LinkedList<>();
 
 			boolean isForceCaptured = false;
-			
+
 			if (!biometricsDTOMap.isEmpty()) {
 				thresholdScore = thresholdScore * biometricsDTOMap.size();
 			}
@@ -343,4 +332,13 @@ public class RegistrationDTO {
 
 		return qualityScore;
 	}
+	
+	public List<String> getSelectedLanguagesByApplicant() {
+		return selectedLanguagesByApplicant;
+	}
+
+	public void setSelectedLanguagesByApplicant(List<String> selectedLanguagesByApplicant) {
+		this.selectedLanguagesByApplicant = selectedLanguagesByApplicant;
+	}
+	
 }

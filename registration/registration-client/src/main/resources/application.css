@@ -1,9 +1,12 @@
 #virtualKeyboard {
-	-fx-background-color: white;
-	-fx-border-width: 1.0 1.0 1.0 1.0;
-	-fx-border-color: black;
 	-fx-background-radius: 6.0, 5.0;
-	-fx-font-size: 15.0px;
+	-fx-font-size: 14.0px;
+}
+
+.keyboardPane {
+	-fx-background-color: white;
+	-fx-border-color: black;
+	-fx-border-width: 1;
 }
 
 #doc_label {
@@ -332,7 +335,7 @@
 .scanVBox {
 	-fx-background-color: white;
 	-fx-border-width: 0.0 0.0 0.0 0.0;
-	-fx-pref-width: 100.0px;
+	/* -fx-pref-width: 100.0px; */
 }
 
 .paneRoot {
@@ -375,6 +378,44 @@
 	-fx-background-color: #175768;
 }
 
+.selectLanguageHeader {
+	-fx-background-color: #005baa;
+}
+
+.selectLanguageMainText {
+	-fx-background-color: #ffffff;
+	-fx-border-width: 0.0;
+	-fx-text-fill: #666666;
+	-fx-font-size: 14px;
+}
+
+.selectLanguageFooterText {
+	-fx-background-color: #ffffff;
+	-fx-border-width: 0.0;
+	-fx-text-fill: #666666;
+	-fx-font-size: 12px;
+}
+
+.selectLangErrorLabel {
+	-fx-background-color: #ffffff;
+	-fx-text-fill: red;
+	-fx-font-size: 11px;
+}
+
+.languageCheckBox {
+	-fx-font-size: 14px;
+}
+
+.languageCheckBox .box {
+	-fx-background-color: #ffffff;
+	-fx-border-color: #005baa;
+	-fx-border-radius: 5px;
+}
+
+.languageCheckBox:selected .mark {
+	-fx-background-color: #005baa;
+}
+
 .scanPopupHeaderTitle {
 	-fx-text-fill: white;
 	-fx-font-size: 16.0px;
@@ -400,6 +441,14 @@
 .loginAnchorPaneStyle {
 	-fx-pref-height: 172.0px;
 	-fx-pref-width: 228.0px;
+}
+
+.userNameAnchorPaneStyle {
+	-fx-pref-height: 320.0px;
+	-fx-pref-width: 400.0px;
+	-fx-background-color: #FFFFFF;
+	-fx-border-width: 1.0 1.0 1.0 1.0;
+	-fx-border-color: #808080;
 }
 
 .loginTextStyle {
@@ -777,9 +826,15 @@ Working on new Css by taleev
 	-fx-border-color: #C9C9C9;
 	-fx-border-width: 0.0 0.0 1.0 0.0;
 	-fx-background-color: #FFFFFF;
-	-fx-prompt-text-fill: #000000;
+	-fx-prompt-text-fill: #a0a0a0;
 	-fx-font-size: 1.2em;
 	-fx-text-fill: #000000;
+}
+
+.iconsHBox {
+	-fx-border-style: solid inside;
+	-fx-border-width: 0.0 0.0 1.0 0.0;
+	-fx-border-color: #C9C9C9;
 }
 
 .documentTextField {
@@ -843,20 +898,10 @@ Working on new Css by taleev
 	-fx-font-size: 1.2em;
 }
 
-.demoGraphicTextField {
-	-fx-border-color: #C9C9C9;
-	-fx-border-width: 0.0 0.0 1.0 0.0;
-	-fx-background-color: #FFFFFF;
-	-fx-prompt-text-fill: #000000;
-	-fx-font-size: 1.2em;
-	-fx-text-fill: #000000;
-}
-
 .demoGraphicTextFieldOnType {
 	-fx-border-color: #C9C9C9;
 	-fx-border-width: 0.0 0.0 1.0 0.0;
 	-fx-background-color: #FFFFFF;
-	-fx-prompt-text-fill: black;
 	-fx-text-fill: #000000;
 	-fx-font-size: 1.2em;
 }
@@ -891,6 +936,15 @@ Working on new Css by taleev
 	-fx-font-size: 14.0px;
 	-fx-pref-height: 10.0px;
 	-fx-pref-width: 190.0px;
+}
+
+.loginCombobox {
+	-fx-background-color: #ffffff;
+	-fx-font-size: 14.0px;	
+	-fx-pref-height: 35.0px;
+	-fx-pref-width: 312.0px;
+	-fx-border-width: 0.0 0.0 2.0 0.0;
+	-fx-border-color: #005baa;
 }
 
 .demographicComboboxFocused {
@@ -2336,4 +2390,63 @@ Working on new Css by taleev
 
 #alertImage {
 	-fx-background-size: 90.0px 90.0px;
+}
+
+.modalityButtons {
+	-fx-border-width:3;
+	-fx-border-color:#0286f7;
+	-fx-background-color:white;
+}
+
+/* tab pane related CSS */
+/* .tab-pane .tab-header-area .tab-header-background {
+    -fx-opacity: 0;
+}
+
+.tab {
+    -fx-pref-width: 250
+}
+
+.tab-header-background {
+    -fx-background-color:transparent
+}
+
+.tab-pane{
+    -fx-padding: 0 -1 -1 -1
+} */
+
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-opacity: 0;
+}
+
+.tab {
+	-fx-pref-width: 250.0;
+    -fx-background-insets: 0 1 0 1,0,0;
+}
+.tab-pane .tab {
+    -fx-background-color: #e6e6e6;
+}
+
+.tab-pane .tab:selected {
+    -fx-background-color: white;
+}
+
+.tab .tab-label {
+    -fx-text-fill: #3b3b3b;
+    -fx-font-size: 13px;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab > .tab-container > .tab-label {
+    -fx-alignment: CENTER;
+    -fx-pref-width: 220.0;
+}
+
+.tab:selected .tab-label {
+    -fx-text-fill: #0B6A82;
+    -fx-font-weight: bold;
+}
+
+.tab-pane:top *.tab-header-area {
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0.416667em 0.166667em 0.0em 0.0em;
 }
