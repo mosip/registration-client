@@ -113,7 +113,7 @@ public class TemplateGenerator extends BaseService {
 
 	@Autowired
 	private JobConfigurationService jobConfigurationService;
-	
+
 	@Autowired
 	private SoftwareUpdateHandler softwareUpdateHandler;
 
@@ -459,7 +459,7 @@ public class TemplateGenerator extends BaseService {
 	}
 
 	private void generateQRCode(RegistrationDTO registration, Map<String, Object> templateValues,
-			ResourceBundle applicationLanguageProperties) throws RegBaseCheckedException {
+								ResourceBundle applicationLanguageProperties) throws RegBaseCheckedException {
 		try {
 			StringBuilder qrCodeString = new StringBuilder();
 			qrCodeString.append(applicationLanguageProperties.getString("registrationid")).append(" : ").append("\n")
@@ -501,7 +501,7 @@ public class TemplateGenerator extends BaseService {
 			if (!field.getType().equalsIgnoreCase(RegistrationConstants.SIMPLE_TYPE)) {
 				return value;
 			}
-		}	
+		}
 		return value;
 	}
 
@@ -547,14 +547,14 @@ public class TemplateGenerator extends BaseService {
 		}
 		return RegistrationConstants.EMPTY;
 	}
-	
+
 	private byte[] getSegmentedImageBytes(BiometricsDto biometricsDto, RegistrationDTO registration) {
 		return registration.streamImages.get(String.format("%s_%s_%s", biometricsDto.getSubType(),
 				biometricsDto.getBioAttribute(), biometricsDto.getNumOfRetries()));
 	}
-	
+
 	public ResponseDTO generateDashboardTemplate(String templateText, TemplateManagerBuilder templateManagerBuilder,
-			String templateType, String applicationStartTime) throws RegBaseCheckedException {
+												 String templateType, String applicationStartTime) throws RegBaseCheckedException {
 		ResponseDTO response = new ResponseDTO();
 
 		try {
@@ -690,9 +690,6 @@ public class TemplateGenerator extends BaseService {
 	}
 
 	private Map<String, List<Map<String, Object>>> addToJobList(Map<String, List<Map<String, Object>>> activities, String activityName, Map<String, Object> job) {
-		if (activityName == null) {
-			activityName = ApplicationContext.applicationLanguageBundle().getString("syncactivities");
-		}
 		if (activities.containsKey(activityName)) {
 			activities.get(activityName).add(job);
 		} else {
@@ -715,6 +712,6 @@ public class TemplateGenerator extends BaseService {
 			LOGGER.error("REGISTRATION - ALERT - BASE_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(exception));
 		}
-		return time;
+		return time + RegistrationConstants.UTC_APPENDER;
 	}
 }

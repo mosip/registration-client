@@ -126,11 +126,11 @@ public class SendNotificationController extends BaseController implements Initia
 		LOGGER.debug("REGISTRATION - UI- SEND_NOTIFICATION", APPLICATION_NAME, APPLICATION_ID, "Popup is closed");
 	}
 
-	private boolean validateMail(String emailId) {
+	/*private boolean validateMail(String emailId) {
 		return validations.validateSingleString(emailId, email.getId());
 	}
 
 	private boolean validateMobile(String mobileNo) {
 		return validations.validateSingleString(mobileNo, mobile.getId());
-	}
+	}*/
 }

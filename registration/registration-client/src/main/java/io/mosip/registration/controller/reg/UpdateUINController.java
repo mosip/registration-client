@@ -71,9 +71,6 @@ public class UpdateUINController extends BaseController implements Initializable
 
 	@Autowired
 	Validations validation;
-	
-	@Autowired
-	private GenericController genericController;
 
 	@FXML
 	FlowPane parentFlowPane;

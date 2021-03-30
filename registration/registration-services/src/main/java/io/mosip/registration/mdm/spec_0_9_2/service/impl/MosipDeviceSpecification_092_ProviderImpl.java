@@ -24,6 +24,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.assertj.core.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -191,7 +192,7 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 					"Entering into Capture method....." + System.currentTimeMillis());
 
 			ObjectMapper mapper = new ObjectMapper();
-			requestBody = mapper.writeValueAsString(rCaptureRequestDTO);
+			String requestBody = mapper.writeValueAsString(rCaptureRequestDTO);
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for RCapture...." + requestBody);
 
