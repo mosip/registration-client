@@ -156,6 +156,8 @@ public interface RegPacketStatusService {
 	 */
 	ResponseDTO syncPacket(String triggerpoint);
 	
+	ResponseDTO syncPacket(String triggerpoint, int count);
+	
 	/**
 	 * Deletes the list of {@link Registration} entries from the local system based
 	 * on the status of the packets

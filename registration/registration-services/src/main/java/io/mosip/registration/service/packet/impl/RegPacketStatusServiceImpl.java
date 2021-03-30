@@ -428,78 +428,17 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 	 * lang.String)
 	 */
 	public ResponseDTO syncPacket(String triggerPoint) {
-
 		LOGGER.debug("REGISTRATION - SYNC_PACKETS_TO_SERVER - REG_PACKET_STATUS_SERVICE", APPLICATION_NAME,
 				APPLICATION_ID, "Sync the packets to the server");
 		ResponseDTO responseDTO = new ResponseDTO();
-		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
 		List<ErrorResponseDTO> errorList = new ArrayList<>();
 		try {
-
 			//Precondition check, proceed only if met, otherwise throws exception
 			proceedWithPacketSync();
 
 			List<Registration> packetsToBeSynched = registrationDAO
 					.getPacketsToBeSynched(RegistrationConstants.PACKET_STATUS);
-			List<SyncRegistrationDTO> syncDtoList = new ArrayList<>();
-			List<PacketStatusDTO> packetDto = new ArrayList<>();
-			List<PacketStatusDTO> synchedPackets = new ArrayList<>();
-			for (Registration reg : packetsToBeSynched) {
-				packetDto.add(packetStatusDtoPreperation(reg));
-			}
-			ResponseDTO response = new ResponseDTO();
-			if (!packetDto.isEmpty()) {
-
-				for (PacketStatusDTO packetToBeSynch : packetDto) {
-					SyncRegistrationDTO syncDto = new SyncRegistrationDTO();
-					syncDto.setLangCode(getGlobalConfigValueOf(RegistrationConstants.PRIMARY_LANGUAGE));
-					syncDto.setRegistrationId(packetToBeSynch.getFileName());
-					syncDto.setName(packetToBeSynch.getName());
-					syncDto.setEmail(packetToBeSynch.getEmail());
-					syncDto.setPhone(packetToBeSynch.getPhone());
-					syncDto.setRegistrationType(packetToBeSynch.getPacketStatus().toUpperCase());
-					syncDto.setPacketHashValue(packetToBeSynch.getPacketHash());
-					syncDto.setPacketSize(packetToBeSynch.getPacketSize());
-					if (RegistrationClientStatusCode.RE_REGISTER.getCode()
-							.equalsIgnoreCase(packetToBeSynch.getPacketClientStatus())) {
-						syncDto.setSupervisorStatus(RegistrationConstants.CLIENT_STATUS_APPROVED);
-					} else {
-						syncDto.setSupervisorStatus(packetToBeSynch.getSupervisorStatus());
-					}
-					syncDto.setSupervisorComment(packetToBeSynch.getSupervisorComments());
-					syncDtoList.add(syncDto);
-				}
-				RegistrationPacketSyncDTO registrationPacketSyncDTO = new RegistrationPacketSyncDTO();
-				registrationPacketSyncDTO
-						.setRequesttime(DateUtils.formatToISOString(DateUtils.getUTCCurrentDateTime()));
-				registrationPacketSyncDTO.setSyncRegistrationDTOs(syncDtoList);
-				registrationPacketSyncDTO.setId(RegistrationConstants.PACKET_SYNC_STATUS_ID);
-				registrationPacketSyncDTO.setVersion(RegistrationConstants.PACKET_SYNC_VERSION);
-				String regId = registrationPacketSyncDTO.getSyncRegistrationDTOs().get(0).getRegistrationId();
-				response = packetSynchService.syncPacketsToServer(CryptoUtil.encodeBase64(offlinePacketCryptoServiceImpl
-						.encrypt(regId, javaObjectToJsonString(registrationPacketSyncDTO).getBytes())),
-						triggerPoint);
-			} else {
-				response.setSuccessResponseDTO(new SuccessResponseDTO());
-			}
-			if (response != null && response.getSuccessResponseDTO() != null) {
-				for (PacketStatusDTO registration : packetDto) {
-					String status = (String) response.getSuccessResponseDTO().getOtherAttributes()
-							.get(registration.getFileName());
-					if (status != null && status.equalsIgnoreCase(RegistrationConstants.SUCCESS)) {
-
-						registration.setPacketClientStatus(RegistrationClientStatusCode.META_INFO_SYN_SERVER.getCode());
-
-						synchedPackets.add(registration);
-					}
-				}
-				packetSynchService.updateSyncStatus(synchedPackets);
-				successResponseDTO.setMessage(RegistrationConstants.SUCCESS);
-				responseDTO.setSuccessResponseDTO(successResponseDTO);
-			}
-			LOGGER.debug("REGISTRATION - SYNC_PACKETS_TO_SERVER_END - REG_PACKET_STATUS_SERVICE", APPLICATION_NAME,
-					APPLICATION_ID, "Sync the packets to the server ending");
-
+			responseDTO = syncPacketsToServer(packetsToBeSynched, triggerPoint, responseDTO);
 		} catch (RegBaseUncheckedException | RegBaseCheckedException | JsonProcessingException
 				| URISyntaxException exception) {
 			LOGGER.error("REGISTRATION - SYNC_PACKETS_TO_SERVER - REG_PACKET_STATUS_SYNC", APPLICATION_NAME,
@@ -509,6 +448,92 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 			errorList.add(errorResponseDTO);
 			responseDTO.setErrorResponseDTOs(errorList);
 		}
+		return responseDTO;
+	}
+	
+	public ResponseDTO syncPacket(String triggerPoint, int count) {
+		LOGGER.info("Syncing specific number of packets to the server with count {}", count);
+		
+		ResponseDTO responseDTO = new ResponseDTO();
+		List<ErrorResponseDTO> errorList = new ArrayList<>();
+		try {
+			//Precondition check, proceed only if met, otherwise throws exception
+			proceedWithPacketSync();
+
+			List<Registration> packetsToBeSynched = registrationDAO
+					.getPacketsToBeSynched(RegistrationConstants.PACKET_STATUS, count);
+			responseDTO = syncPacketsToServer(packetsToBeSynched, triggerPoint, responseDTO);
+		} catch (RegBaseUncheckedException | RegBaseCheckedException | JsonProcessingException
+				| URISyntaxException exception) {
+			LOGGER.error("Exception in RID sync", exception);
+			
+			ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO();
+			errorResponseDTO.setMessage(exception.getMessage());
+			errorList.add(errorResponseDTO);
+			responseDTO.setErrorResponseDTOs(errorList);
+		}
+		return responseDTO;
+	}
+
+	private ResponseDTO syncPacketsToServer(List<Registration> packetsToBeSynched, String triggerPoint, ResponseDTO responseDTO) throws RegBaseCheckedException, JsonProcessingException, URISyntaxException {
+		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
+		List<SyncRegistrationDTO> syncDtoList = new ArrayList<>();
+		List<PacketStatusDTO> packetDto = new ArrayList<>();
+		List<PacketStatusDTO> synchedPackets = new ArrayList<>();
+		for (Registration reg : packetsToBeSynched) {
+			packetDto.add(packetStatusDtoPreperation(reg));
+		}
+		ResponseDTO response = new ResponseDTO();
+		if (!packetDto.isEmpty()) {
+			for (PacketStatusDTO packetToBeSynch : packetDto) {
+				SyncRegistrationDTO syncDto = new SyncRegistrationDTO();
+				syncDto.setLangCode(getGlobalConfigValueOf(RegistrationConstants.PRIMARY_LANGUAGE));
+				syncDto.setRegistrationId(packetToBeSynch.getFileName());
+				syncDto.setName(packetToBeSynch.getName());
+				syncDto.setEmail(packetToBeSynch.getEmail());
+				syncDto.setPhone(packetToBeSynch.getPhone());
+				syncDto.setRegistrationType(packetToBeSynch.getPacketStatus().toUpperCase());
+				syncDto.setPacketHashValue(packetToBeSynch.getPacketHash());
+				syncDto.setPacketSize(packetToBeSynch.getPacketSize());
+				if (RegistrationClientStatusCode.RE_REGISTER.getCode()
+						.equalsIgnoreCase(packetToBeSynch.getPacketClientStatus())) {
+					syncDto.setSupervisorStatus(RegistrationConstants.CLIENT_STATUS_APPROVED);
+				} else {
+					syncDto.setSupervisorStatus(packetToBeSynch.getSupervisorStatus());
+				}
+				syncDto.setSupervisorComment(packetToBeSynch.getSupervisorComments());
+				syncDtoList.add(syncDto);
+			}
+			RegistrationPacketSyncDTO registrationPacketSyncDTO = new RegistrationPacketSyncDTO();
+			registrationPacketSyncDTO
+					.setRequesttime(DateUtils.formatToISOString(DateUtils.getUTCCurrentDateTime()));
+			registrationPacketSyncDTO.setSyncRegistrationDTOs(syncDtoList);
+			registrationPacketSyncDTO.setId(RegistrationConstants.PACKET_SYNC_STATUS_ID);
+			registrationPacketSyncDTO.setVersion(RegistrationConstants.PACKET_SYNC_VERSION);
+			String regId = registrationPacketSyncDTO.getSyncRegistrationDTOs().get(0).getRegistrationId();
+			response = packetSynchService.syncPacketsToServer(CryptoUtil.encodeBase64(offlinePacketCryptoServiceImpl
+					.encrypt(regId, javaObjectToJsonString(registrationPacketSyncDTO).getBytes())),
+					triggerPoint);
+		} else {
+			response.setSuccessResponseDTO(new SuccessResponseDTO());
+		}
+		if (response != null && response.getSuccessResponseDTO() != null) {
+			for (PacketStatusDTO registration : packetDto) {
+				String status = (String) response.getSuccessResponseDTO().getOtherAttributes()
+						.get(registration.getFileName());
+				if (status != null && status.equalsIgnoreCase(RegistrationConstants.SUCCESS)) {
+
+					registration.setPacketClientStatus(RegistrationClientStatusCode.META_INFO_SYN_SERVER.getCode());
+
+					synchedPackets.add(registration);
+				}
+			}
+			packetSynchService.updateSyncStatus(synchedPackets);
+			successResponseDTO.setMessage(RegistrationConstants.SUCCESS);
+			responseDTO.setSuccessResponseDTO(successResponseDTO);
+		}
+		LOGGER.debug("REGISTRATION - SYNC_PACKETS_TO_SERVER_END - REG_PACKET_STATUS_SERVICE", APPLICATION_NAME,
+				APPLICATION_ID, "Sync the packets to the server ending");
 		return responseDTO;
 	}
 

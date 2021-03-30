@@ -386,7 +386,7 @@ public class RegistrationConstants {
 	public static final String PDF = "pdf";
 	public static final String CONSTANTS_FILE_NAME = "/constants.properties";
 	public static final String PENDING = "Pending";
-	public static final String EOD_PROCESS_CONFIG_FLAG = "mosip.registration.eod_process_config_flag";
+	public static final String SUPERVISOR_APPROVAL_CONFIG_FLAG = "mosip.registration.supervisor_approval_config_flag";
 	public static final String EOD_PROCESS_ID = "id";
 	public static final String EOD_PROCESS_STATUSCOMMENT = "statusComment";
 	public static final String EOD_PROCESS_ACKNOWLEDGEMENTFORMPATH = "acknowledgementFormPath";
@@ -702,6 +702,9 @@ public class RegistrationConstants {
 	public static final String PACKET_UPLOAD_SNO = "slno";
 	public static final String PACKET_UPLOAD_DATE = "createdTime";
 	public static final String PACKET_UPLOAD_FILE = "fileName";
+	public static final String PACKET_CLIENT_STATUS = "packetClientStatus";
+	public static final String PACKET_SERVER_STATUS = "packetServerStatus";
+	public static final String PACKET_OPERATOR_ID = "userId";
 	public static final String UPLOAD_FILE_NAME = "PacketUploadList";
 	// opt to register constants
 	public static final String OPT_TO_REG_GEO_CAP_FREQ = "GEO_CAP_FREQ";

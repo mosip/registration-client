@@ -13,8 +13,8 @@ import java.util.UUID;
 
 import javax.transaction.Transactional;
 
-import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 import io.mosip.commons.packet.dto.packet.SimpleDto;
@@ -41,7 +41,6 @@ import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.repositories.RegistrationRepository;
 import io.mosip.registration.service.IdentitySchemaService;
-import org.springframework.util.StringUtils;
 
 /**
  * The implementation class of {@link RegistrationDAO}.
@@ -249,6 +248,10 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	public List<Registration> getPacketsToBeSynched(List<String> statusCodes) {
 		return registrationRepository.findByClientStatusCodeInOrderByUpdDtimesDesc(statusCodes);
 	}
+	
+	public List<Registration> getPacketsToBeSynched(List<String> statusCodes, int count) {
+		return registrationRepository.findByClientStatusCodeInOrderByCrDtimeAsc(statusCodes, PageRequest.of(0, count));
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -264,6 +267,15 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 
 		return registrationRepository.findByStatusCodes(packetStatus.get(0), packetStatus.get(1), packetStatus.get(2),
 				packetStatus.get(3));
+	}
+	
+	@Override
+	public List<Registration> getRegistrationByStatus(List<String> packetStatus, int count) {
+		LOGGER.info("REGISTRATION - GET_PACKET_DETAILS_BY_ID - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
+				"got the packet details by id");
+
+		return registrationRepository.findByStatusCodes(packetStatus.get(0), packetStatus.get(1), packetStatus.get(2),
+				packetStatus.get(3), PageRequest.of(0, count));
 	}
 
 	/*

@@ -2,6 +2,7 @@ package io.mosip.registration.jobs.impl;
 
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -41,6 +42,9 @@ public class RegistrationPacketSyncJob extends BaseJob {
 
 	@Autowired
 	private RegPacketStatusService regPacketStatusService;
+	
+	@Value("${mosip.registration.rid_sync_batch_size:0}")
+	private int count;
 
 	/**
 	 * LOGGER for logging
@@ -61,7 +65,6 @@ public class RegistrationPacketSyncJob extends BaseJob {
 		this.responseDTO = new ResponseDTO();
 
 		try {
-
 			this.jobId = loadContext(context);
 			regPacketStatusService = applicationContext.getBean(RegPacketStatusService.class);
 
@@ -70,12 +73,10 @@ public class RegistrationPacketSyncJob extends BaseJob {
 
 			// Execute Current Job
 			if (responseDTO.getSuccessResponseDTO() != null) {
-				this.responseDTO = regPacketStatusService.syncPacket(triggerPoint);
+				this.responseDTO = regPacketStatusService.syncPacket(triggerPoint, count);
 
 			}
-
 			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
-
 		} catch (RegBaseUncheckedException baseUncheckedException) {
 			LOGGER.error(LoggerConstants.REG_PACKET_SYNC_STATUS_JOB, RegistrationConstants.APPLICATION_NAME,
 					RegistrationConstants.APPLICATION_ID, baseUncheckedException.getMessage());
@@ -95,7 +96,6 @@ public class RegistrationPacketSyncJob extends BaseJob {
 	 */
 	@Override
 	public ResponseDTO executeJob(String triggerPoint, String jobId) {
-
 		LOGGER.debug(LoggerConstants.REG_PACKET_SYNC_STATUS_JOB, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "execute Job started");
 
@@ -104,7 +104,7 @@ public class RegistrationPacketSyncJob extends BaseJob {
 
 		// Execute Current Job
 		if (responseDTO.getSuccessResponseDTO() != null) {
-			this.responseDTO = regPacketStatusService.syncPacket(triggerPoint);
+			this.responseDTO = regPacketStatusService.syncPacket(triggerPoint, count);
 		}
 		syncTransactionUpdate(responseDTO, triggerPoint, jobId);
 
@@ -112,7 +112,6 @@ public class RegistrationPacketSyncJob extends BaseJob {
 				RegistrationConstants.APPLICATION_ID, "execute job ended");
 
 		return responseDTO;
-
 	}
 
 }

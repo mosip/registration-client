@@ -17,7 +17,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-import io.mosip.registration.exception.PreConditionCheckException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -46,15 +45,14 @@ import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SyncDataProcessDTO;
 import io.mosip.registration.entity.PreRegistrationList;
 import io.mosip.registration.entity.SyncControl;
+import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.config.JobConfigurationService;
 import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.packet.PacketHandlerService;
-import io.mosip.registration.service.packet.PacketUploadService;
 import io.mosip.registration.service.packet.ReRegistrationService;
 import io.mosip.registration.service.packet.RegistrationApprovalService;
-import io.mosip.registration.service.sync.PacketSynchService;
 import io.mosip.registration.service.sync.PolicySyncService;
 import io.mosip.registration.service.sync.PreRegistrationDataSyncService;
 import io.mosip.registration.service.template.TemplateService;
@@ -205,12 +203,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 	@Autowired
 	private UserOnboardParentController userOnboardParentController;
-
-	@Autowired
-	private PacketSynchService packetSynchService;
-
-	@Autowired
-	private PacketUploadService packetUploadService;
+	
 	@Autowired
 	private PolicySyncService policySyncService;
 
@@ -820,12 +813,10 @@ public class PacketHandlerController extends BaseController implements Initializ
 //						(String) registrationDTO.getDemographics().get("phone"), registrationDTO.getRegistrationId());
 
 				// Sync and Uploads Packet when EOD Process Configuration is set to OFF
-				if (!getValueFromApplicationContext(RegistrationConstants.EOD_PROCESS_CONFIG_FLAG)
+				if (!getValueFromApplicationContext(RegistrationConstants.SUPERVISOR_APPROVAL_CONFIG_FLAG)
 						.equalsIgnoreCase(RegistrationConstants.ENABLE)) {
 					updatePacketStatus();
 				}
-				/* sync the packet to server irrespective of eod enable/disable */
-				syncAndUploadPacket();
 
 				LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID,
 						"Registration's Acknowledgement Receipt saved");
@@ -937,32 +928,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID,
 				"Auto Approval of Packet when EOD process disabled ended");
 
-	}
-
-	/**
-	 * Sync and upload packet.
-	 *
-	 * @throws RegBaseCheckedException the reg base checked exception
-	 */
-	private void syncAndUploadPacket() throws RegBaseCheckedException {
-		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Sync and Upload of created Packet started");
-		if (proceedOnAction("PS")) {
-
-			String response = packetSynchService.packetSync(getRegistrationDTOFromSession().getRegistrationId());
-
-			// modified as per the story MOS-29831
-			if (!getValueFromApplicationContext(RegistrationConstants.EOD_PROCESS_CONFIG_FLAG)
-					.equalsIgnoreCase(RegistrationConstants.ENABLE)) {
-				if (response.equals(RegistrationConstants.EMPTY)) {
-
-					packetUploadService.uploadPacket(getRegistrationDTOFromSession().getRegistrationId());
-				} else {
-					generateAlert("ERROR", RegistrationUIConstants.UPLOAD_FAILED);
-				}
-			}
-
-		}
-		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Sync and Upload of created Packet ended");
 	}
 
 	private ResponseDTO isKeyValid() {

@@ -305,8 +305,7 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 	 */
 	@Override
 	public ResponseDTO uploadAllSyncedPackets() {
-		LOGGER.info("REGISTRATION - PUSH_PACKET - PACKET_UPLOAD_SERVICE", APPLICATION_NAME, APPLICATION_ID,
-				"Started Uploading All Packets Invocation");
+		LOGGER.info("Started Uploading All Packets Invocation");
 		ResponseDTO responseDTO = new ResponseDTO();
 
 		//Precondition check, proceed only if met, otherwise throws exception
@@ -318,17 +317,48 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 		}
 
 		List<Registration> synchedPackets = getSynchedPackets();
-		List<PacketStatusDTO> packetsToBeSynced = new ArrayList<>();
-		if(synchedPackets != null) {
-			synchedPackets.forEach(reg -> {
-				packetsToBeSynced.add(packetStatusDtoPreperation(reg));
-			});
+		List<PacketStatusDTO> packetsToBeUploaded = preparePacketStatusDTO(synchedPackets);
+
+		LOGGER.info("Uploading Packets: {}", packetsToBeUploaded.size());
+
+		return uploadSyncedPacket(packetsToBeUploaded);
+	}
+	
+	@Override
+	public ResponseDTO uploadSyncedPackets(int count) {
+		LOGGER.info("Started uploading specific number of packets with count {}", count);
+		ResponseDTO responseDTO = new ResponseDTO();
+
+		//Precondition check, proceed only if met, otherwise throws exception
+		try {
+			proceedWithPacketSync();
+		} catch (PreConditionCheckException e) {
+			setErrorResponse(responseDTO, e.getErrorCode(), null);
+			return responseDTO;
 		}
 
-		LOGGER.info("REGISTRATION - PUSH_PACKET - PACKET_UPLOAD_SERVICE", APPLICATION_NAME, APPLICATION_ID,
-				"Syncing Packets: " + packetsToBeSynced.size());
+		List<Registration> synchedPackets = getSynchedPackets(count);
+		List<PacketStatusDTO> packetsToBeUploaded = preparePacketStatusDTO(synchedPackets);
 
-		return uploadSyncedPacket(packetsToBeSynced);
+		LOGGER.info("Uploading Packets: {}", packetsToBeUploaded.size());
+
+		return uploadSyncedPacket(packetsToBeUploaded);
+	}
+	
+	private List<Registration> getSynchedPackets(int count) {
+		LOGGER.info("REGISTRATION - GET_SYNCED_PACKETS - PACKET_UPLOAD_SERVICE", APPLICATION_NAME, APPLICATION_ID,
+				"Fetching synced packets from the database with count of {}", count);
+		return registrationDAO.getRegistrationByStatus(RegistrationConstants.PACKET_UPLOAD_STATUS);
+	}
+
+	private List<PacketStatusDTO> preparePacketStatusDTO(List<Registration> synchedPackets) {
+		List<PacketStatusDTO> packetsToBeUploaded = new ArrayList<>();
+		if(synchedPackets != null) {
+			synchedPackets.forEach(reg -> {
+				packetsToBeUploaded.add(packetStatusDtoPreperation(reg));
+			});
+		}
+		return packetsToBeUploaded;
 	}
 
 	private Boolean checkPacketDto(PacketStatusDTO packetStatusDTO) throws RegBaseCheckedException {
