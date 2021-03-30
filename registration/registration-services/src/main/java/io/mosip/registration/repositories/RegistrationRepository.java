@@ -3,6 +3,7 @@ package io.mosip.registration.repositories;
 import java.sql.Timestamp;
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -34,7 +35,24 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	@Query("select reg from Registration reg where reg.clientStatusCode= :syncStatus or reg.clientStatusCode= :exportStatus and (reg.serverStatusCode=:resendStatus or reg.serverStatusCode IS NULL) or reg.fileUploadStatus=:fileUploadStatus")
 	List<Registration> findByStatusCodes(@Param("syncStatus") String clientstatusCode, @Param("exportStatus") String exportstatusCode,
 			@Param("resendStatus") String serverStatusCode, @Param("fileUploadStatus") String fileUploadStatus);
-
+	
+	/**
+	 * This method returns the list of {@link Registration} based on provided id's.
+	 *
+	 * @param clientstatusCode 
+	 * 				the clientstatus code
+	 * @param exportstatusCode 
+	 * 				the exportstatus code
+	 * @param serverStatusCode 
+	 * 				the server status code
+	 * @param fileUploadStatus 
+	 * 				the file upload status
+	 * @return the list of {@link Registration}
+	 */
+	@Query("select reg from Registration reg where reg.clientStatusCode= :syncStatus or reg.clientStatusCode= :exportStatus and (reg.serverStatusCode=:resendStatus or reg.serverStatusCode IS NULL) or reg.fileUploadStatus=:fileUploadStatus")
+	List<Registration> findByStatusCodes(@Param("syncStatus") String clientstatusCode, @Param("exportStatus") String exportstatusCode,
+			@Param("resendStatus") String serverStatusCode, @Param("fileUploadStatus") String fileUploadStatus, Pageable pageable);
+	
 	/**
 	 * This method returns the list of {@link Registration} based on status code
 	 * 
@@ -53,6 +71,8 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	 * @return List of registration packets
 	 */
 	List<Registration> findByClientStatusCodeInOrderByUpdDtimesDesc(List<String> statusCodes);
+	
+	List<Registration> findByClientStatusCodeInOrderByCrDtimeAsc(List<String> statusCodes, Pageable pageable);
 	
 	/**
 	 * To fetch the records for Packet Upload.

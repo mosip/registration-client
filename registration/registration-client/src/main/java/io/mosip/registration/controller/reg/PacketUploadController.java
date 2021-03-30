@@ -25,12 +25,13 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
-import io.mosip.kernel.core.util.HMACUtils2;
+import org.apache.commons.collections.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
@@ -38,6 +39,7 @@ import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.vo.PacketStatusVO;
@@ -45,6 +47,7 @@ import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
+import io.mosip.registration.service.packet.PacketHandlerService;
 import io.mosip.registration.service.packet.PacketUploadService;
 import io.mosip.registration.service.sync.PacketSynchService;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
@@ -66,8 +69,11 @@ import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTableCell;
@@ -89,6 +95,9 @@ public class PacketUploadController extends BaseController implements Initializa
 
 	@Autowired
 	private PacketUploadService packetUploadService;
+	
+	@Autowired
+	private PacketHandlerService packetHandlerService;
 
 	@FXML
 	private TableColumn<PacketStatusDTO, String> fileNameColumn;
@@ -119,7 +128,25 @@ public class PacketUploadController extends BaseController implements Initializa
 
 	@FXML
 	private TableColumn<PacketStatusDTO, String> statusColumn;
+	
+	@FXML
+	private TableColumn<PacketStatusDTO, String> clientStatus;
+	
+	@FXML
+	private TableColumn<PacketStatusDTO, String> serverStatus;
+	
+	@FXML
+	private TableColumn<PacketStatusDTO, String> operatorId;
+	
+	@FXML
+	private ComboBox<String> clientStatusComboBox;
+	
+	@FXML
+	private ComboBox<String> serverStatusComboBox;
 
+	@FXML
+	private Button clearFilters;
+	
 	@Autowired
 	private PacketSynchService packetSynchService;
 
@@ -143,6 +170,10 @@ public class PacketUploadController extends BaseController implements Initializa
 	private SortedList<PacketStatusVO> sortedList;
 
 	private Stage stage;
+	
+	private List<PacketStatusVO> packetsToBeUploaded = new ArrayList<>();
+	
+	private List<PacketStatusVO> uploadedPackets = new ArrayList<>();
 
 	@FXML
 	private GridPane uploadPacketRoot;
@@ -404,8 +435,7 @@ public class PacketUploadController extends BaseController implements Initializa
 	 * Export the packets and show the exported packets in the table
 	 */
 	public void packetExport() {
-		LOGGER.info("REGISTRATION - PACKET_EXPORT_START - PACKET_UPLOAD_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
-				"Exporting the selected packets");
+		LOGGER.info("Exporting the selected packets");
 
 		if (!selectedPackets.isEmpty()) {
 			List<PacketStatusDTO> packetsToBeExported = new ArrayList<>();
@@ -475,49 +505,63 @@ public class PacketUploadController extends BaseController implements Initializa
 	 * To display the Uploaded packet details in UI
 	 * 
 	 * @param tableData
+	 * @param uploadedPackets 
 	 */
-	private void displayData(List<PacketStatusVO> tableData) {
-
-		LOGGER.info("REGISTRATION - DISPLAY_DATA - PACKET_UPLOAD_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
-				"To display all the ui data");
+	private void displayData() {
+		LOGGER.info("Displaying all the ui data");
+		
 		checkBoxColumn.setCellValueFactory(cellData -> cellData.getValue().selectedProperty());
 		fileNameColumn.setCellValueFactory(new PropertyValueFactory<>(RegistrationConstants.PACKET_UPLOAD_FILE));
 		regDate.setCellValueFactory(new PropertyValueFactory<>(RegistrationConstants.PACKET_UPLOAD_DATE));
 		slno.setCellValueFactory(new PropertyValueFactory<>(RegistrationConstants.PACKET_UPLOAD_SNO));
+		clientStatus.setCellValueFactory(new PropertyValueFactory<>(RegistrationConstants.PACKET_CLIENT_STATUS));
+		serverStatus.setCellValueFactory(new PropertyValueFactory<>(RegistrationConstants.PACKET_SERVER_STATUS));
+		operatorId.setCellValueFactory(new PropertyValueFactory<>(RegistrationConstants.PACKET_OPERATOR_ID));
 
 		this.list = FXCollections.observableArrayList(new Callback<PacketStatusVO, Observable[]>() {
-
 			@Override
 			public Observable[] call(PacketStatusVO param) {
 				return new Observable[] { param.selectedProperty() };
 			}
 		});
-		list.addAll(tableData);
+		list.addAll(packetsToBeUploaded);
+		list.addAll(uploadedPackets);
+		
 		checkBoxColumn
 				.setCellFactory(CheckBoxTableCell.forTableColumn(new Callback<Integer, ObservableValue<Boolean>>() {
-
 					@Override
 					public ObservableValue<Boolean> call(Integer param) {
 						return list.get(param).selectedProperty();
 					}
 				}));
+		
+		checkBoxColumn.setCellFactory(column -> {
+	        return new CheckBoxTableCell<PacketStatusVO, Boolean>() {
+	            @Override
+	            public void updateItem(Boolean item, boolean empty) {
+	                super.updateItem(item, empty);
+
+	                TableRow<PacketStatusVO> currentRow = getTableRow();
+	                if (currentRow.getItem() != null && !empty) {
+	                    if (uploadedPackets.contains(currentRow.getItem())) {
+	                        this.setDisable(true);
+	                    }
+	                }
+	            }
+	        };
+	    });
 		list.addListener(new ListChangeListener<PacketStatusVO>() {
 			@Override
 			public void onChanged(Change<? extends PacketStatusVO> displayData) {
 				while (displayData.next()) {
-
 					boolean isAdded = false;
-
 					for (PacketStatusVO packet : selectedPackets) {
-
 						if (packet.getFileName().equals(table.getItems().get(displayData.getFrom()).getFileName())) {
 							isAdded = true;
 						}
 					}
-
 					if (displayData.wasUpdated()) {
-
-						if (!isAdded) {
+						if (!isAdded && !uploadedPackets.contains(table.getItems().get(displayData.getFrom()))) {
 							selectedPackets.add(table.getItems().get(displayData.getFrom()));
 						} else {
 							selectedPackets.remove(table.getItems().get(displayData.getFrom()));
@@ -531,9 +575,62 @@ public class PacketUploadController extends BaseController implements Initializa
 		observableList = FXCollections.observableArrayList(list);
 
 		wrapListAndAddFiltering();
+		handleCombobox();
 
 		table.setItems(sortedList);
 		table.setEditable(true);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void handleCombobox() {
+		LOGGER.info("Adding data into comboboxes for filtering");
+		
+		List<String> clientStatus = ((List<PacketStatusVO>) ListUtils.union(packetsToBeUploaded, uploadedPackets)).stream()
+				.filter(item-> item.getPacketClientStatus() != null && !item.getPacketClientStatus().isEmpty())
+				.map(PacketStatusVO::getPacketClientStatus)
+				.distinct()
+				.collect(Collectors.toList());
+		
+		List<String> serverStatus = ((List<PacketStatusVO>) ListUtils.union(packetsToBeUploaded, uploadedPackets)).stream()
+				.filter(item-> item.getPacketServerStatus() != null && !item.getPacketServerStatus().isEmpty())
+				.map(PacketStatusVO::getPacketServerStatus)
+				.distinct()
+				.collect(Collectors.toList());
+		
+		clientStatusComboBox.getItems().clear();
+		serverStatusComboBox.getItems().clear();
+		
+		clientStatusComboBox.getItems().addAll(clientStatus);
+		serverStatusComboBox.getItems().addAll(serverStatus);
+		
+		clientStatusComboBox.setButtonCell(new ListCell<String>() {
+	        @Override
+	        protected void updateItem(String item, boolean empty) {
+	            super.updateItem(item, empty) ;
+	            if (empty || item == null) {
+	                setText(ApplicationContext.getInstance().getApplicationLanguageLabelBundle().getString("clientStatus"));
+	            } else {
+	                setText(item);
+	            }
+	        }
+	    });
+		
+		serverStatusComboBox.setButtonCell(new ListCell<String>() {
+	        @Override
+	        protected void updateItem(String item, boolean empty) {
+	            super.updateItem(item, empty) ;
+	            if (empty || item == null) {
+	                setText(ApplicationContext.getInstance().getApplicationLanguageLabelBundle().getString("serverStatus"));
+	            } else {
+	                setText(item);
+	            }
+	        }
+	    });
+		
+		clearFilters.setOnAction(event -> {
+			clientStatusComboBox.getSelectionModel().clearSelection();
+			serverStatusComboBox.getSelectionModel().clearSelection();
+		});
 	}
 
 	private void wrapListAndAddFiltering() {
@@ -547,6 +644,14 @@ public class PacketUploadController extends BaseController implements Initializa
 		if (!filterField.getText().isEmpty()) {
 			filterData(filterField.getText(), filteredList);
 		}
+		
+		clientStatusComboBox.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> {
+			filterData(newValue, filteredList);
+		});
+		
+		serverStatusComboBox.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> {
+			filterData(newValue, filteredList);
+		});
 
 		// 3. Wrap the FilteredList in a SortedList.
 		sortedList = new SortedList<>(filteredList);
@@ -566,9 +671,17 @@ public class PacketUploadController extends BaseController implements Initializa
 			String lowerCaseFilter = newValue.toLowerCase();
 
 			if (reg.getFileName().contains(lowerCaseFilter)) {
-				// Filter matches first name.
 				table.getSelectionModel().selectFirst();
-				return true;
+				return true; // Filter matches packet name.
+			} else if (reg.getUserId().toLowerCase().contains(lowerCaseFilter)) {
+				table.getSelectionModel().selectFirst();
+				return true; // Filter matches operator ID.
+			} else if (newValue.equalsIgnoreCase(reg.getPacketClientStatus())) {
+				table.getSelectionModel().selectFirst();
+				return true; // Filter matches packet client status.
+			} else if (newValue.equalsIgnoreCase(reg.getPacketServerStatus())) {
+				table.getSelectionModel().selectFirst();
+				return true; // Filter matches packet server status.
 			}
 			return false; // Does not match.
 		});
@@ -582,9 +695,7 @@ public class PacketUploadController extends BaseController implements Initializa
 	 * @return
 	 */
 	private List<PacketStatusDTO> populateTableData(Map<String, String> packetStatus) {
-
-		LOGGER.info("REGISTRATION - POPULATE_UI_TABLE_DATA - PACKET_UPLOAD_CONTROLLER", APPLICATION_NAME,
-				APPLICATION_ID, "Populating the table data with the Updated details");
+		LOGGER.info("Populating the table data with the Updated details");
 
 		List<PacketStatusDTO> listUploadStatus = new ArrayList<>();
 		packetStatus.forEach((id, status) -> {
@@ -597,18 +708,38 @@ public class PacketUploadController extends BaseController implements Initializa
 		return listUploadStatus;
 	}
 
+	@SuppressWarnings("unchecked")
 	private void loadInitialPage() {
-		List<PacketStatusDTO> synchedPackets = packetSynchService.fetchPacketsToBeSynched();
-		exportCSVIcon.setDisable(synchedPackets.isEmpty());
-		filterField.setDisable(synchedPackets.isEmpty());
-		table.setDisable(synchedPackets.isEmpty());
+		LOGGER.info("Loading Packet Display Screen with all the available packets");
+		
+		List<PacketStatusDTO> toBeUploadedPacketStatusDTOs = packetSynchService.fetchPacketsToBeSynched();
+		List<PacketStatusDTO> allApprovedPackets = packetHandlerService.getAllPackets();
+		List<PacketStatusDTO> uploadedPacketStatusDTOs = ListUtils.subtract(allApprovedPackets, toBeUploadedPacketStatusDTOs);
+		
+		exportCSVIcon.setDisable(allApprovedPackets.isEmpty());
+		filterField.setDisable(allApprovedPackets.isEmpty());
+		table.setDisable(allApprovedPackets.isEmpty());
 		table.getColumns().forEach(column -> column.setReorderable(false));
-		saveToDevice.setVisible(!synchedPackets.isEmpty());
-		uploadBtn.setVisible(!synchedPackets.isEmpty());
+		saveToDevice.setVisible(!allApprovedPackets.isEmpty());
+		uploadBtn.setVisible(!toBeUploadedPacketStatusDTOs.isEmpty());
 		selectAllCheckBox.setSelected(false);
-		List<PacketStatusVO> packetsToBeExport = new ArrayList<>();
+		clientStatusComboBox.setDisable(allApprovedPackets.isEmpty());
+		serverStatusComboBox.setDisable(allApprovedPackets.isEmpty());
+		clearFilters.setDisable(allApprovedPackets.isEmpty());
+		
 		int count = 1;
-		for (PacketStatusDTO packet : synchedPackets) {
+		packetsToBeUploaded = convertToPacketStatusVO(toBeUploadedPacketStatusDTOs, count);
+		uploadedPackets = convertToPacketStatusVO(uploadedPacketStatusDTOs, packetsToBeUploaded.size() + 1);
+		
+		if (packetsToBeUploaded.isEmpty()) {
+			selectAllCheckBox.setDisable(true);
+		}
+		displayData();
+	}
+
+	private List<PacketStatusVO> convertToPacketStatusVO(List<PacketStatusDTO> packetStatusDTOs, int count) {
+		List<PacketStatusVO> packets = new ArrayList<>();
+		for (PacketStatusDTO packet : packetStatusDTOs) {
 			PacketStatusVO packetStatusVO = new PacketStatusVO();
 			packetStatusVO.setClientStatusComments(packet.getClientStatusComments());
 			packetStatusVO.setFileName(packet.getFileName());
@@ -625,13 +756,10 @@ public class PacketUploadController extends BaseController implements Initializa
 			packetStatusVO.setName(packet.getName());
 			packetStatusVO.setPhone(packet.getPhone());
 			packetStatusVO.setEmail(packet.getEmail());
-			packetsToBeExport.add(packetStatusVO);
+			packetStatusVO.setUserId(packet.getUserId());
+			packets.add(packetStatusVO);
 		}
-		if (packetsToBeExport.isEmpty()) {
-			selectAllCheckBox.setDisable(true);
-		} else {
-			displayData(packetsToBeExport);
-		}
+		return packets;
 	}
 
 	@Override
@@ -697,7 +825,7 @@ public class PacketUploadController extends BaseController implements Initializa
 	}
 
 	public void exportData() {
-		LOGGER.info(LOG_PACKET_UPLOAD, APPLICATION_NAME, APPLICATION_ID, "Exporting the packet upload status details");
+		LOGGER.info("Exporting the packet upload status details");
 		String str = filterField.getText();
 		Stage stage = new Stage();
 		DirectoryChooser destinationSelector = new DirectoryChooser();
@@ -744,7 +872,9 @@ public class PacketUploadController extends BaseController implements Initializa
 	public void selectAllCheckBox(ActionEvent e) {
 		// saveToDevice.setDisable(((CheckBox) e.getSource()).isSelected());
 		list.forEach(item -> {
-			item.setStatus(((CheckBox) e.getSource()).isSelected());
+			if (!uploadedPackets.contains(item)) {
+				item.setStatus(((CheckBox) e.getSource()).isSelected());
+			}
 		});
 	}
 

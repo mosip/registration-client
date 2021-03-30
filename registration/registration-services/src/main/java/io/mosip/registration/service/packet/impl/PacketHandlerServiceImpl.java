@@ -37,11 +37,15 @@ import io.mosip.kernel.biometrics.entities.BiometricRecord;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.kernel.core.util.JsonUtils;
+import io.mosip.kernel.core.util.exception.JsonMappingException;
+import io.mosip.kernel.core.util.exception.JsonParseException;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
 import io.mosip.registration.constants.Components;
+import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
@@ -673,6 +677,43 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	@Override
 	public List<Registration> getAllRegistrations() {
 		return registrationDAO.getAllRegistrations();
+	}
+	
+	@Override
+	public List<PacketStatusDTO> getAllPackets() {
+		LOGGER.info("Fetching all the packets that are registered");
+		List<PacketStatusDTO> packets = new ArrayList<>();
+		List<Registration> registeredPackets = registrationDAO.getAllRegistrations();
+		for (Registration registeredPacket : registeredPackets) {
+			if (!registeredPacket.getClientStatusCode().equalsIgnoreCase(RegistrationClientStatusCode.CREATED.getCode())) {
+				PacketStatusDTO packetStatusDTO = new PacketStatusDTO();
+				packetStatusDTO.setFileName(registeredPacket.getId());
+				packetStatusDTO.setPacketClientStatus(registeredPacket.getClientStatusCode());
+				packetStatusDTO.setClientStatusComments(registeredPacket.getClientStatusComments());
+				packetStatusDTO.setPacketServerStatus(registeredPacket.getServerStatusCode());
+				packetStatusDTO.setPacketPath(registeredPacket.getAckFilename());
+				packetStatusDTO.setUploadStatus(registeredPacket.getFileUploadStatus());
+				packetStatusDTO.setPacketStatus(registeredPacket.getStatusCode());
+				packetStatusDTO.setSupervisorStatus(registeredPacket.getClientStatusCode());
+				packetStatusDTO.setSupervisorComments(registeredPacket.getClientStatusComments());
+				packetStatusDTO.setCreatedTime(regDateTimeConversion(registeredPacket.getCrDtime().toString()));
+				packetStatusDTO.setUserId(registeredPacket.getRegUsrId());
+				try {
+					if (registeredPacket.getAdditionalInfo() != null) {
+						String additionalInfo = new String(registeredPacket.getAdditionalInfo());
+						RegistrationDataDto registrationDataDto = (RegistrationDataDto) JsonUtils
+								.jsonStringToJavaObject(RegistrationDataDto.class, additionalInfo);
+						packetStatusDTO.setName(registrationDataDto.getName());
+						packetStatusDTO.setPhone(registrationDataDto.getPhone());
+						packetStatusDTO.setEmail(registrationDataDto.getEmail());
+					}
+				} catch (JsonParseException | JsonMappingException | io.mosip.kernel.core.exception.IOException exception) {
+					LOGGER.error("Exception while parsing additional info", exception);
+				}
+				packets.add(packetStatusDTO);
+			}
+		}
+		return packets;
 	}
 
 	@Override

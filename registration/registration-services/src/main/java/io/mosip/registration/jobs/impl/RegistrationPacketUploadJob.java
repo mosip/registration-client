@@ -2,6 +2,7 @@ package io.mosip.registration.jobs.impl;
 
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -41,6 +42,9 @@ public class RegistrationPacketUploadJob extends BaseJob {
 
 	@Autowired
 	private PacketUploadService packetUploadService;
+	
+	@Value("${mosip.registration.packet_upload_batch_size:0}")
+	private int count;
 
 	/**
 	 * LOGGER for logging
@@ -58,10 +62,9 @@ public class RegistrationPacketUploadJob extends BaseJob {
 	public void executeInternal(JobExecutionContext context) {
 		LOGGER.debug(LoggerConstants.REG_PACKET_SYNC_STATUS_JOB, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "job execute internal started");
+		
 		this.responseDTO = new ResponseDTO();
-
 		try {
-
 			this.jobId = loadContext(context);
 			packetUploadService = applicationContext.getBean(PacketUploadService.class);
 
@@ -70,11 +73,9 @@ public class RegistrationPacketUploadJob extends BaseJob {
 			
 			// Execute Current Job
 			if (responseDTO.getSuccessResponseDTO() != null) {
-				this.responseDTO = packetUploadService.uploadAllSyncedPackets();
+				this.responseDTO = packetUploadService.uploadSyncedPackets(count);
 			}
 			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
-
-
 		} catch (RegBaseUncheckedException baseUncheckedException) {
 			LOGGER.error(LoggerConstants.REG_PACKET_SYNC_STATUS_JOB, RegistrationConstants.APPLICATION_NAME,
 					RegistrationConstants.APPLICATION_ID, baseUncheckedException.getMessage());
@@ -83,7 +84,6 @@ public class RegistrationPacketUploadJob extends BaseJob {
 
 		LOGGER.debug(LoggerConstants.REG_PACKET_SYNC_STATUS_JOB, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "job execute internal Ended");
-
 	}
 
 	/*
@@ -94,7 +94,6 @@ public class RegistrationPacketUploadJob extends BaseJob {
 	 */
 	@Override
 	public ResponseDTO executeJob(String triggerPoint, String jobId) {
-
 		LOGGER.debug(LoggerConstants.REG_PACKET_SYNC_STATUS_JOB, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "execute Job started");
 
@@ -103,7 +102,7 @@ public class RegistrationPacketUploadJob extends BaseJob {
 
 		// Execute Current Job
 		if (responseDTO.getSuccessResponseDTO() != null) {
-			this.responseDTO = packetUploadService.uploadAllSyncedPackets();
+			this.responseDTO = packetUploadService.uploadSyncedPackets(count);
 		}
 		syncTransactionUpdate(responseDTO, triggerPoint, jobId);
 
@@ -111,7 +110,6 @@ public class RegistrationPacketUploadJob extends BaseJob {
 				RegistrationConstants.APPLICATION_ID, "execute job ended");
 
 		return responseDTO;
-
 	}
 
 }

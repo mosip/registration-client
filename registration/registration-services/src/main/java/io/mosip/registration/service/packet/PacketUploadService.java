@@ -121,4 +121,6 @@ public interface PacketUploadService {
 	 * @return 
 	 */
 	ResponseDTO uploadAllSyncedPackets();
+
+	ResponseDTO uploadSyncedPackets(int count);
 }

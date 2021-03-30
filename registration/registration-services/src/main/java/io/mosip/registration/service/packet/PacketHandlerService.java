@@ -3,6 +3,7 @@ package io.mosip.registration.service.packet;
 import java.util.List;
 
 import io.mosip.registration.dto.ErrorResponseDTO;
+import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
@@ -55,4 +56,6 @@ public interface PacketHandlerService {
 	 * @throws RegBaseCheckedException
 	 */
 	public RegistrationDTO startRegistration(String id, String category) throws RegBaseCheckedException;
+
+	public List<PacketStatusDTO> getAllPackets();
 }

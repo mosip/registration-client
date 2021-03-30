@@ -21,6 +21,7 @@ public class PacketStatusVO {
 	private SimpleStringProperty name;
 	private SimpleStringProperty phone;
 	private SimpleStringProperty email;
+	private SimpleStringProperty userId;
 	
 	/**
 	 * @return the supervisorStatus
@@ -158,4 +159,11 @@ public class PacketStatusVO {
 		this.email = new SimpleStringProperty(email);
 	}
 	
+	public String getUserId() {
+		return userId == null ? null : userId.get();
+	}
+
+	public void setUserId(String userId) {
+		this.userId = new SimpleStringProperty(userId);
+	}
 }
