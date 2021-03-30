@@ -143,9 +143,9 @@ public class LoginController extends BaseController implements Initializable {
 	@FXML
 	private Label otpValidity;
 
-	@FXML
-	private Hyperlink forgotUsrnme;
-
+//	@FXML
+//	private Hyperlink forgotUsrnme;
+	
 	@FXML
 	private Hyperlink forgotPword;
 
@@ -360,7 +360,7 @@ public class LoginController extends BaseController implements Initializable {
 			userId.setText(userName);
 			userName = null;
 		}
-		forgotUsrnme.setVisible(ApplicationContext.map().containsKey(RegistrationConstants.FORGOT_USERNAME_URL));
+		//forgotUsrnme.setVisible(ApplicationContext.map().containsKey(RegistrationConstants.FORGOT_USERNAME_URL));
 
 		Screen screen = Screen.getPrimary();
 		Rectangle2D bounds = screen.getVisualBounds();
@@ -892,23 +892,22 @@ public class LoginController extends BaseController implements Initializable {
 	 * 
 	 * @param event event for forgot user name
 	 */
-	public void forgotUsrname(ActionEvent event) {
-		forgotUsrnme.setOnAction(e -> {
-			if (Desktop.isDesktopSupported()) {
-				try {
-					Desktop.getDesktop().browse(new URI(ApplicationContext
-							.getStringValueFromApplicationMap(RegistrationConstants.FORGOT_USERNAME_URL)));
-				} catch (IOException ioException) {
-					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
-							ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
-				} catch (URISyntaxException uriSyntaxException) {
-					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
-							uriSyntaxException.getMessage() + ExceptionUtils.getStackTrace(uriSyntaxException));
-				}
-			}
-		});
-	}
-
+//	public void forgotUsrname(ActionEvent event) {
+//		forgotUsrnme.setOnAction(e -> {
+//			if (Desktop.isDesktopSupported()) {
+//				try {
+//					Desktop.getDesktop().browse(new URI(ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.FORGOT_USERNAME_URL)));
+//				} catch (IOException ioException) {
+//					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
+//							ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
+//				} catch (URISyntaxException uriSyntaxException) {
+//					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
+//							uriSyntaxException.getMessage() + ExceptionUtils.getStackTrace(uriSyntaxException));
+//				}
+//			}			
+//		});
+//	}
+	
 	/**
 	 * Redirects to mosip.io in case of user forgot pword
 	 * 
