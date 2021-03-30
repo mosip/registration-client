@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import io.mosip.registration.exception.PreConditionCheckException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -35,6 +36,7 @@ import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
+import io.mosip.registration.controller.GenericController;
 import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.PacketStatusDTO;
@@ -58,8 +60,6 @@ import io.mosip.registration.service.sync.PreRegistrationDataSyncService;
 import io.mosip.registration.service.template.TemplateService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.acktemplate.TemplateGenerator;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
-import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
@@ -69,6 +69,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -269,9 +270,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 	@Autowired
 	HeaderController headerController;
 
-	@Autowired
-	private AuthTokenUtilService authTokenUtilService;
-
 	@FXML
 	private ImageView uploadPacketImageView;
 
@@ -288,7 +286,13 @@ public class PacketHandlerController extends BaseController implements Initializ
 	private String packetsLocation;
 
 	@Autowired
+	private GenericController genericController;
+
+	@Autowired
 	private Validations validation;
+	
+	@Autowired
+	private LanguageSelectionController languageSelectionController;
 
 	/**
 	 * @return the userOnboardMsg
@@ -469,102 +473,65 @@ public class PacketHandlerController extends BaseController implements Initializ
 	 * acknowledgement form
 	 */
 	public void createPacket() {
-		if(!proceedOnRegistrationAction())
-			return;
-
-		ResponseDTO keyResponse = isKeyValid();
-		if (null == keyResponse.getSuccessResponseDTO()) {
-			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.INVALID_KEY);
-			return;
-		}
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Creation of Registration Starting.");
 		try {
-			auditFactory.audit(AuditEvent.NAV_NEW_REG, Components.NAVIGATION,
-					SessionContext.userContext().getUserId(),
+			auditFactory.audit(AuditEvent.NAV_NEW_REG, Components.NAVIGATION, SessionContext.userContext().getUserId(),
 					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-			Parent createRoot = BaseController.load(
-					getClass().getResource(RegistrationConstants.CREATE_PACKET_PAGE),
-					applicationContext.getApplicationLanguageBundle());
-			LOGGER.info("REGISTRATION - CREATE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER",
-					APPLICATION_NAME, APPLICATION_ID, "Validating Create Packet screen for specific role");
+			Parent createRoot = getRoot(RegistrationConstants.CREATE_PACKET_PAGE);
+			LOGGER.info("REGISTRATION - CREATE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
+					APPLICATION_ID, "Validating Create Packet screen for specific role");
 
 			if (!validateScreenAuthorization(createRoot.getId())) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.AUTHORIZATION_ERROR);
-			} else {
-				StringBuilder errorMessage = new StringBuilder();
-				ResponseDTO responseDTO;
-				responseDTO = validateSyncStatus();
-				List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
-				if (errorResponseDTOs != null && !errorResponseDTOs.isEmpty()) {
-					for (ErrorResponseDTO errorResponseDTO : errorResponseDTOs) {
-						errorMessage.append(RegistrationUIConstants
-								.getMessageLanguageSpecific(errorResponseDTO.getMessage()) + "\n\n");
-					}
-					generateAlert(RegistrationConstants.ERROR, errorMessage.toString().trim());
-				} else {
-					getScene(createRoot).setRoot(createRoot);
-				}
+				return;
 			}
-		} catch (IOException ioException) {
-			LOGGER.error("REGISTRATION - UI- Officer Packet Create ", APPLICATION_NAME, APPLICATION_ID,
-					ExceptionUtils.getStackTrace(ioException));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_REG_PAGE);
+
+			getScene(createRoot).setRoot(createRoot);
+			getScene(createRoot).getStylesheets().add(ClassLoader.getSystemClassLoader().getResource(getCssName()).toExternalForm());
+			validation.updateAsLostUIN(false);
+
+			if(registrationController.createRegistrationDTOObject(RegistrationConstants.PACKET_TYPE_NEW)) {
+				genericController.populateScreens();
+				return;
+			}
+		} catch (Exception exception) {
+			LOGGER.error("Failed to start registration", exception);
 		}
+		clearRegistrationData();
+		generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_REG_PAGE);
 	}
 
 	/**
 	 * Validating screen authorization and Creating Packet in case of Lost UIN
 	 */
 	public void lostUIN() {
-		if(!proceedOnRegistrationAction())
-			return;
-
-		ResponseDTO keyResponse = isKeyValid();
-		if (null == keyResponse.getSuccessResponseDTO()) {
-			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.INVALID_KEY);
-			return;
-		}
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID,
 				"Creating of Registration for lost UIN Starting.");
 		try {
-			auditFactory.audit(AuditEvent.NAV_LOST_UIN, Components.NAVIGATION,
-					SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
+			auditFactory.audit(AuditEvent.NAV_LOST_UIN, Components.NAVIGATION, SessionContext.userContext().getUserId(),
+					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-			/* Mark Registration Category as Lost UIN */
-			registrationController.initializeLostUIN();
-
-			Parent createRoot = BaseController.load(
-					getClass().getResource(RegistrationConstants.CREATE_PACKET_PAGE),
-					applicationContext.getApplicationLanguageBundle());
-			LOGGER.info("REGISTRATION - CREATE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER",
-					APPLICATION_NAME, APPLICATION_ID, "Validating Create Packet screen for specific role");
+			Parent createRoot = getRoot(RegistrationConstants.CREATE_PACKET_PAGE);
+			LOGGER.info("REGISTRATION - CREATE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
+					APPLICATION_ID, "Validating Create Packet screen for specific role");
 
 			if (!validateScreenAuthorization(createRoot.getId())) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.AUTHORIZATION_ERROR);
-			} else {
-				StringBuilder errorMessage = new StringBuilder();
-				ResponseDTO responseDTO;
-				responseDTO = validateSyncStatus();
-				List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
-				if (errorResponseDTOs != null && !errorResponseDTOs.isEmpty()) {
-					for (ErrorResponseDTO errorResponseDTO : errorResponseDTOs) {
-						errorMessage.append(RegistrationUIConstants
-								.getMessageLanguageSpecific(errorResponseDTO.getMessage()) + "\n\n");
-					}
-					generateAlert(RegistrationConstants.ERROR, errorMessage.toString().trim());
-				} else {
-					getScene(createRoot).setRoot(createRoot);
-					// demographicDetailController.lostUIN();
-				}
+				return;
 			}
-		} catch (IOException ioException) {
-			LOGGER.error("REGISTRATION - UI- Officer Packet Create for Lost UIN", APPLICATION_NAME,
-					APPLICATION_ID, ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
 
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_REG_PAGE);
+			getScene(createRoot).setRoot(createRoot);
+			validation.updateAsLostUIN(true);
+			if(registrationController.createRegistrationDTOObject(RegistrationConstants.PACKET_TYPE_LOST)) {
+				genericController.populateScreens();
+				return;
+			}
+		} catch (Exception exception) {
+			LOGGER.error("Failed to start Lost UIN", exception);
 		}
-		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID,"Creating of Registration for lost UIN ended.");
+		clearRegistrationData();
+		generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_REG_PAGE);
 	}
 
 	public void showReciept() {
@@ -576,9 +543,10 @@ public class PacketHandlerController extends BaseController implements Initializ
 			String ackTemplateText = templateService.getHtmlTemplate(ACKNOWLEDGEMENT_TEMPLATE_CODE,
 					platformLanguageCode);
 
-			if (ApplicationContext.applicationLanguage().equalsIgnoreCase(ApplicationContext.localLanguage())) {
-				ackTemplateText = ackTemplateText.replace("} / ${", "}  ${");
-			}
+			// TODO check for template use cases
+//			if (ApplicationContext.applicationLanguage().equalsIgnoreCase(ApplicationContext.localLanguage())) {
+//				ackTemplateText = ackTemplateText.replace("} / ${", "}  ${");
+//			}
 
 			if (ackTemplateText != null && !ackTemplateText.isEmpty()) {
 				String key = "mosip.registration.important_guidelines_" + applicationContext.getApplicationLanguage();
@@ -592,9 +560,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 					ackReceiptController.setStringWriter(stringWriter);
 					ResponseDTO packetCreationResponse = savePacket(stringWriter, registrationDTO);
 					if (packetCreationResponse.getSuccessResponseDTO() != null) {
-						Parent createRoot = BaseController.load(
-								getClass().getResource(RegistrationConstants.ACK_RECEIPT_PATH),
-								applicationContext.getApplicationLanguageBundle());
+						Parent createRoot = getRoot(RegistrationConstants.ACK_RECEIPT_PATH);
 						getScene(createRoot).setRoot(createRoot);
 						setIsAckOpened(true);
 						return;
@@ -696,7 +662,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 	}
 
 	public void updateUIN() {
-		if(!proceedOnRegistrationAction())
+		if (!proceedOnRegistrationAction())
 			return;
 
 		ResponseDTO keyResponse = isKeyValid();
@@ -708,21 +674,21 @@ public class PacketHandlerController extends BaseController implements Initializ
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Loading Update UIN screen started.");
 		try {
 			auditFactory.audit(AuditEvent.NAV_UIN_UPDATE, Components.NAVIGATION,
-					SessionContext.userContext().getUserId(),
-					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
+					SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-			if (RegistrationConstants.DISABLE.equalsIgnoreCase(
-					getValueFromApplicationContext(RegistrationConstants.FINGERPRINT_DISABLE_FLAG))
+			if (RegistrationConstants.DISABLE
+					.equalsIgnoreCase(getValueFromApplicationContext(RegistrationConstants.FINGERPRINT_DISABLE_FLAG))
 					&& RegistrationConstants.DISABLE.equalsIgnoreCase(
 							getValueFromApplicationContext(RegistrationConstants.IRIS_DISABLE_FLAG))) {
 
 				generateAlert(RegistrationConstants.ERROR,
 						RegistrationUIConstants.UPDATE_UIN_NO_BIOMETRIC_CONFIG_ALERT);
 			} else {
-				Parent root = BaseController.load(getClass().getResource(RegistrationConstants.UIN_UPDATE));
+				Parent root = BaseController.load(getClass().getResource(RegistrationConstants.UIN_UPDATE), 
+						applicationContext.getBundle(registrationController.getSelectedLangList().get(0), RegistrationConstants.LABELS));
 
-				LOGGER.info("REGISTRATION - update UIN - REGISTRATION_OFFICER_PACKET_CONTROLLER",
-						APPLICATION_NAME, APPLICATION_ID, "updating UIN");
+				LOGGER.info("REGISTRATION - update UIN - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
+						APPLICATION_ID, "updating UIN");
 
 				if (!validateScreenAuthorization(root.getId())) {
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.AUTHORIZATION_ERROR);
@@ -734,8 +700,9 @@ public class PacketHandlerController extends BaseController implements Initializ
 					List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
 					if (errorResponseDTOs != null && !errorResponseDTOs.isEmpty()) {
 						for (ErrorResponseDTO errorResponseDTO : errorResponseDTOs) {
-							errorMessage.append(RegistrationUIConstants
-									.getMessageLanguageSpecific(errorResponseDTO.getMessage()) + "\n\n");
+							errorMessage.append(
+									RegistrationUIConstants.getMessageLanguageSpecific(errorResponseDTO.getMessage())
+											+ "\n\n");
 						}
 						generateAlert(RegistrationConstants.ERROR, errorMessage.toString().trim());
 
@@ -771,7 +738,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 	 * change On-Board user Perspective
 	 */
 	public void onBoardUser() {
-		if(!proceedOnAction("OU"))
+		if (!proceedOnAction("OU"))
 			return;
 
 		auditFactory.audit(AuditEvent.NAV_ON_BOARD_USER, Components.NAVIGATION, APPLICATION_NAME,
@@ -919,11 +886,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 	}
 
 	public void viewDashBoard() {
-		if (isPrimaryOrSecondaryLanguageEmpty()) {
-			generateAlert(RegistrationConstants.ERROR,
-					RegistrationUIConstants.UNABLE_LOAD_LOGIN_SCREEN_LANGUAGE_NOT_SET);
-			return;
-		}
+
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Loading dashboard screen sarted.");
 
 		try {
@@ -1027,7 +990,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 		}
 	}
 
-
 	@FXML
 	public void uploadPacketToServer() {
 		auditFactory.audit(AuditEvent.SYNC_PRE_REGISTRATION_PACKET, Components.SYNC_SERVER_TO_CLIENT,
@@ -1044,5 +1006,53 @@ public class PacketHandlerController extends BaseController implements Initializ
 	@FXML
 	public void hasUpdate() {
 		headerController.hasUpdate(null);
+	}
+	
+	public void selectLanguage(MouseEvent event) {
+		if (!proceedOnRegistrationAction())
+			return;
+
+		ResponseDTO keyResponse = isKeyValid();
+		if (null == keyResponse.getSuccessResponseDTO()) {
+			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.INVALID_KEY);
+			return;
+		}
+		StringBuilder errorMessage = new StringBuilder();
+		ResponseDTO responseDTO;
+		responseDTO = validateSyncStatus();
+		List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
+		if (errorResponseDTOs != null && !errorResponseDTOs.isEmpty()) {
+			for (ErrorResponseDTO errorResponseDTO : errorResponseDTOs) {
+				errorMessage.append(
+						RegistrationUIConstants.getMessageLanguageSpecific(errorResponseDTO.getMessage())
+								+ "\n\n");
+			}
+			generateAlert(RegistrationConstants.ERROR, errorMessage.toString().trim());
+		} else {
+			String action = RegistrationConstants.EMPTY;
+			if (((GridPane) event.getSource()).equals(newRegGridPane)) {
+				action = RegistrationConstants.NEW_REGISTRATION_FLOW;
+			} else if (((GridPane) event.getSource()).equals(uinUpdateGridPane)) {
+				action = RegistrationConstants.UIN_UPDATE_FLOW;
+			} else if (((GridPane) event.getSource()).equals(lostUINPane)) {
+				action = RegistrationConstants.LOST_UIN_FLOW;
+			}
+
+			try {
+				if(isLanguageSelectionRequired()) {
+					getStage().getScene().getRoot().setDisable(true);
+					languageSelectionController.init(action);
+				}
+				else {
+					languageSelectionController.submitLanguagesAndProceed(baseService.getMandatoryLanguages());
+				}
+			} catch (PreConditionCheckException e) {
+				generateAlert(RegistrationConstants.ERROR, e.getErrorCode());
+			}
+		}
+	}
+
+	private boolean isLanguageSelectionRequired() throws PreConditionCheckException {
+		return ( baseService.getMinLanguagesCount() >= 1 && baseService.getMaxLanguagesCount() > 1 );
 	}
 }

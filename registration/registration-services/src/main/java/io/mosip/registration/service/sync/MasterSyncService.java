@@ -11,6 +11,9 @@ import io.mosip.registration.dto.mastersync.GenderDto;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.mastersync.LocationDto;
 import io.mosip.registration.dto.mastersync.ReasonListDto;
+import io.mosip.registration.entity.DocumentCategory;
+import io.mosip.registration.entity.DocumentType;
+import io.mosip.registration.entity.Location;
 import io.mosip.registration.exception.RegBaseCheckedException;
 
 /**
@@ -40,12 +43,11 @@ public interface MasterSyncService {
 	 */
 	ResponseDTO getMasterSync(String masterSyncDetails, String triggerPoint) throws RegBaseCheckedException;
 
-
 	/**
 	 * Find location or region by hierarchy code.
 	 *
 	 * @param hierarchyLevel the hierarchy code
-	 * @param langCode      the lang code
+	 * @param langCode       the lang code
 	 * @return the list holds the Location data to be displayed in the UI.
 	 * @throws RegBaseCheckedException
 	 */
@@ -59,7 +61,7 @@ public interface MasterSyncService {
 	 * @return the list holds the Province data to be displayed in the UI.
 	 * @throws RegBaseCheckedException
 	 */
-	List<GenericDto> findProvianceByHierarchyCode(String code, String langCode) throws RegBaseCheckedException;
+	List<GenericDto> findLocationByParentHierarchyCode(String code, String langCode) throws RegBaseCheckedException;
 
 	/**
 	 * Gets all the reasons for rejection that to be selected during EOD approval
@@ -90,7 +92,18 @@ public interface MasterSyncService {
 	 * @return all the document categories
 	 * @throws RegBaseCheckedException
 	 */
-	List<DocumentCategoryDto> getDocumentCategories(String docCode, String langCode) throws RegBaseCheckedException;
+	List<DocumentCategoryDto> getDocumentCategories(String docCode, String langCode);
+	
+	/**
+	 * Get the document Type from db that to be displayed in the UI
+	 * dropdown.
+	 *
+	 * @param docCode  the doc code
+	 * @param langCode the lang code
+	 * @return all the document categories
+	 * @throws RegBaseCheckedException
+	 */
+	DocumentType getDocumentType(String docCode, String langCode);
 
 	/**
 	 * Gets the gender details.
@@ -101,15 +114,15 @@ public interface MasterSyncService {
 	 */
 	List<GenericDto> getGenderDtls(String langCode) throws RegBaseCheckedException;
 
-
 	/**
 	 * Gets the individual type.
+	 * 
 	 * @param langCode the lang code
 	 * @return the individual type
 	 * @throws RegBaseCheckedException
 	 */
 	List<GenericDto> getIndividualType(String langCode) throws RegBaseCheckedException;
-	
+
 	/**
 	 * Gets the biometric type.
 	 *
@@ -135,5 +148,12 @@ public interface MasterSyncService {
 	 * @return
 	 * @throws RegBaseCheckedException
 	 */
-	List<GenericDto> getFieldValues(String fieldName, String langCode) throws RegBaseCheckedException;
+	List<GenericDto> getFieldValues(String fieldName, String langCode, boolean isHierarchical);
+
+	/**
+	 * @param code     location code
+	 * @param langCode language code
+	 * @return Location
+	 */
+	public Location getLocation(String code, String langCode);
 }

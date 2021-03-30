@@ -12,10 +12,10 @@ import java.net.URL;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -34,6 +34,7 @@ import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
+import io.mosip.registration.controller.FXUtils;
 import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.controller.device.Streamer;
 import io.mosip.registration.controller.reg.HeaderController;
@@ -43,6 +44,8 @@ import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.LoginUserDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.dto.mastersync.GenericDto;
+import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
@@ -55,6 +58,7 @@ import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.common.OTPManager;
 import io.mosip.registration.util.common.PageFlow;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -64,6 +68,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
@@ -140,7 +145,7 @@ public class LoginController extends BaseController implements Initializable {
 
 	@FXML
 	private Hyperlink forgotUsrnme;
-	
+
 	@FXML
 	private Hyperlink forgotPword;
 
@@ -201,11 +206,16 @@ public class LoginController extends BaseController implements Initializable {
 	@FXML
 	private Label versionValueLabel;
 
+	@FXML
+	private ComboBox<GenericDto> appLanguage;
+
 	@Autowired
 	private MosipDeviceSpecificationFactory deviceSpecificationFactory;
 
 	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
+
+	private String userName;
 
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
@@ -228,6 +238,33 @@ public class LoginController extends BaseController implements Initializable {
 		}).start();
 
 		try {
+			List<GenericDto> languages = getConfiguredLanguages();
+			appLanguage.getItems().addAll(languages);
+			appLanguage.setConverter(FXUtils.getInstance().getStringConverterForComboBox());
+			Optional<GenericDto> selectedLang = languages.stream().filter( l ->
+					ApplicationContext.getInstance().getApplicationLanguage() != null &&
+							ApplicationContext.getInstance().getApplicationLanguage().equals(l.getCode())).findFirst();
+
+			if(!selectedLang.isPresent()) {
+				LOGGER.info("No Language is set in applicationContext, Default selection : {}", languages.get(0));
+				appLanguage.getSelectionModel().select(languages.get(0));
+			} else {
+				appLanguage.getSelectionModel().select(selectedLang.get());
+			}
+
+			appLanguage.setVisible(languages.size() == 1 ? false : true);
+			appLanguage.setManaged(languages.size() == 1 ? false : true);
+
+			appLanguage.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> {
+				if (newValue != null &&
+						!ApplicationContext.getInstance().getApplicationLanguage().equals(newValue.getCode())) {
+					userName = userId.getText();
+					ApplicationContext.getInstance().setApplicationLanguage(newValue.getCode());
+					RegistrationUIConstants.setBundle();
+					loadInitialScreen(getStage());
+				}
+			});
+
 			isInitialSetUp = RegistrationConstants.ENABLE
 					.equalsIgnoreCase(getValueFromApplicationContext(RegistrationConstants.INITIAL_SETUP));
 
@@ -269,14 +306,13 @@ public class LoginController extends BaseController implements Initializable {
 
 		/* Save Global Param Values in Application Context's application map */
 		getGlobalParams();
-
-		/*
-		 * if the primary or secondary language is not set , the application should show
-		 * err msg
-		 */
-		ApplicationContext.loadResources();
-
+		
 		try {
+			//TODO - remove these setters and initialize them from applicationMap
+			applicationContext.setMandatoryLanguages(baseService.getMandatoryLanguages());
+			applicationContext.setOptionalLanguages(baseService.getOptionalLanguages());
+
+			ApplicationContext.loadResources();
 
 			LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Retrieve Login mode");
 
@@ -298,27 +334,13 @@ public class LoginController extends BaseController implements Initializable {
 
 			} else if (!isInitialSetUp) {
 				executePreLaunchTask(loginRoot, progressIndicator);
-				boolean isPrimaryOrSecondaryLanguageEmpty = ApplicationContext.loadResources();
-				if (isPrimaryOrSecondaryLanguageEmpty) {
-					generateAlert(RegistrationConstants.ERROR,
-							RegistrationUIConstants.UNABLE_LOAD_LOGIN_SCREEN_LANGUAGE_NOT_SET);
-					return;
-				}
+
 				jobConfigurationService.startScheduler();
 
 			}
 
-		} catch (IOException ioException) {
-
-			LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
-					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
-
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_LOGIN_SCREEN);
-		} catch (RuntimeException runtimeException) {
-
-			LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
-					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
-
+		} catch (IOException | RuntimeException | PreConditionCheckException exception) {
+			LOGGER.error("Failed to load screen", exception);
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_LOGIN_SCREEN);
 		}
 	}
@@ -330,11 +352,15 @@ public class LoginController extends BaseController implements Initializable {
 		loginRoot = BaseController.load(getClass().getResource(RegistrationConstants.INITIAL_PAGE));
 
 		scene = getScene(loginRoot);
-		loadUIElementsFromSchema();
+		//loadUIElementsFromSchema();
 		pageFlow.loadPageFlow();
-		
+
+		if (userName != null) {
+			userId.setText(userName);
+			userName = null;
+		}
 		forgotUsrnme.setVisible(ApplicationContext.map().containsKey(RegistrationConstants.FORGOT_USERNAME_URL));
-		
+
 		Screen screen = Screen.getPrimary();
 		Rectangle2D bounds = screen.getVisualBounds();
 		primaryStage.setX(bounds.getMinX());
@@ -405,6 +431,8 @@ public class LoginController extends BaseController implements Initializable {
 	@SuppressWarnings("unchecked")
 	public void validateUserId(ActionEvent event) {
 
+		
+		//loadUIElementsFromSchema();
 		auditFactory.audit(AuditEvent.LOGIN_AUTHENTICATE_USER_ID, Components.LOGIN,
 				userId.getText().isEmpty() ? "NA" : userId.getText(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
@@ -621,7 +649,7 @@ public class LoginController extends BaseController implements Initializable {
 		auditFactory.audit(AuditEvent.LOGIN_SUBMIT_OTP, Components.LOGIN, userId.getText(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-		if (validations.validateTextField(otpPane, otp, otp.getId(), true)) {
+		if (validations.validateTextField(otpPane, otp, otp.getId(), true, ApplicationContext.applicationLanguage())) {
 
 			UserDTO userDTO = loginService.getUserDetail(userId.getText());
 
@@ -867,7 +895,8 @@ public class LoginController extends BaseController implements Initializable {
 		forgotUsrnme.setOnAction(e -> {
 			if (Desktop.isDesktopSupported()) {
 				try {
-					Desktop.getDesktop().browse(new URI(ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.FORGOT_USERNAME_URL)));
+					Desktop.getDesktop().browse(new URI(ApplicationContext
+							.getStringValueFromApplicationMap(RegistrationConstants.FORGOT_USERNAME_URL)));
 				} catch (IOException ioException) {
 					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 							ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
@@ -875,10 +904,10 @@ public class LoginController extends BaseController implements Initializable {
 					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 							uriSyntaxException.getMessage() + ExceptionUtils.getStackTrace(uriSyntaxException));
 				}
-			}			
+			}
 		});
 	}
-	
+
 	/**
 	 * Redirects to mosip.io in case of user forgot pword
 	 * 
@@ -888,7 +917,8 @@ public class LoginController extends BaseController implements Initializable {
 		forgotPword.setOnAction(e -> {
 			if (Desktop.isDesktopSupported()) {
 				try {
-					String url = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.FORGOT_PWORD_URL);
+					String url = ApplicationContext
+							.getStringValueFromApplicationMap(RegistrationConstants.FORGOT_PWORD_URL);
 					if (url.toUpperCase().contains(RegistrationConstants.EMAIL_PLACEHOLDER)) {
 						UserDTO userDTO = loginService.getUserDetail(userId.getText());
 						url = url.replace(RegistrationConstants.EMAIL_PLACEHOLDER, userDTO.getEmail());
@@ -908,8 +938,8 @@ public class LoginController extends BaseController implements Initializable {
 	/**
 	 * Loading next login screen in case of multifactor authentication
 	 * 
-	 * @param userDTO the userDetail
-	 * @param loginMode  the loginMode
+	 * @param userDTO   the userDetail
+	 * @param loginMode the loginMode
 	 */
 	private void loadNextScreen(UserDTO userDTO, String loginMode) {
 
@@ -996,7 +1026,8 @@ public class LoginController extends BaseController implements Initializable {
 
 						LOGGER.info("REGISTRATION - INITIAL_SYNC - LOGIN_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 								"Handling all the sync activities before login");
-						if(RegistrationAppHealthCheckUtil.isNetworkAvailable() && ( isInitialSetUp || authTokenUtilService.hasAnyValidToken() ))
+						if (RegistrationAppHealthCheckUtil.isNetworkAvailable()
+								&& (isInitialSetUp || authTokenUtilService.hasAnyValidToken()))
 							return loginService.initialSync(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
 						else {
 							List<String> list = new ArrayList<>();
@@ -1048,7 +1079,7 @@ public class LoginController extends BaseController implements Initializable {
 	/**
 	 * Validating invalid number of login attempts
 	 * 
-	 * @param userDTO user details
+	 * @param userDTO      user details
 	 * @param errorMessage
 	 * @return boolean
 	 */
@@ -1090,7 +1121,6 @@ public class LoginController extends BaseController implements Initializable {
 		return validate;
 
 	}
-
 
 	/**
 	 * Redirects to mosip username page

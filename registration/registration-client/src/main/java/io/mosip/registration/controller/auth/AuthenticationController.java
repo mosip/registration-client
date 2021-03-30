@@ -240,7 +240,7 @@ public class AuthenticationController extends BaseController implements Initiali
 		LOGGER.info("REGISTRATION - OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
 				"Validating OTP for OTP based Authentication");
 
-		if (validations.validateTextField(operatorAuthenticationPane, otp, otp.getId(), true)) {
+		if (validations.validateTextField(operatorAuthenticationPane, otp, otp.getId(), true,ApplicationContext.applicationLanguage())) {
 			if (isSupervisor) {
 				if (!otpUserId.getText().isEmpty()) {
 					if (fetchUserRole(otpUserId.getText())) {
@@ -935,13 +935,15 @@ public class AuthenticationController extends BaseController implements Initiali
 		LOGGER.info("REGISTRATION - OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
 				"Enabling OTP based Authentication Screen in UI");
 
-		otpLabel.setText(ApplicationContext.applicationLanguageBundle().getString("otpAuthentication"));
+		otpLabel.setText(
+				ApplicationContext.getInstance().getApplicationLanguageLabelBundle().getString("otpAuthentication"));
 		otpBasedLogin.setVisible(true);
 		otp.clear();
 		otpUserId.clear();
 		otpUserId.setEditable(false);
 		if (isSupervisor) {
-			otpLabel.setText(ApplicationContext.applicationLanguageBundle().getString("supervisorOtpAuth"));
+			otpLabel.setText(
+					ApplicationContext.getInstance().getApplicationLanguageLabelBundle().getString("supervisorOtpAuth"));
 			if (authCount > 1 && !userNameField.isEmpty()) {
 				otpUserId.setText(userNameField);
 			} else {
@@ -959,13 +961,15 @@ public class AuthenticationController extends BaseController implements Initiali
 		LOGGER.info("REGISTRATION - OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
 				"Enabling Password based Authentication Screen in UI");
 
-		pwdLabel.setText(ApplicationContext.applicationLanguageBundle().getString("pwdAuthentication"));
+		pwdLabel.setText(
+				ApplicationContext.getInstance().getApplicationLanguageLabelBundle().getString("pwdAuthentication"));
 		pwdBasedLogin.setVisible(true);
 		username.clear();
 		password.clear();
 		username.setEditable(false);
 		if (isSupervisor) {
-			pwdLabel.setText(ApplicationContext.applicationLanguageBundle().getString("supervisorPwdAuth"));
+			pwdLabel.setText(
+					ApplicationContext.getInstance().getApplicationLanguageLabelBundle().getString("supervisorPwdAuth"));
 			if (authCount > 1 && !userNameField.isEmpty()) {
 				username.setText(userNameField);
 			} else {
@@ -983,12 +987,13 @@ public class AuthenticationController extends BaseController implements Initiali
 		LOGGER.info("REGISTRATION - OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
 				"Enabling Fingerprint based Authentication Screen in UI");
 
-		fpLabel.setText(ApplicationContext.applicationLanguageBundle().getString("fpAuthentication"));
+		fpLabel.setText(ApplicationContext.getInstance().getApplicationLanguageLabelBundle().getString("fpAuthentication"));
 		fingerprintBasedLogin.setVisible(true);
 		fpUserId.clear();
 		fpUserId.setEditable(false);
 		if (isSupervisor) {
-			fpLabel.setText(ApplicationContext.applicationLanguageBundle().getString("supervisorFpAuth"));
+			fpLabel.setText(
+					ApplicationContext.getInstance().getApplicationLanguageLabelBundle().getString("supervisorFpAuth"));
 			if (authCount > 1 && !userNameField.isEmpty()) {
 				fpUserId.setText(userNameField);
 			} else {
@@ -1006,12 +1011,14 @@ public class AuthenticationController extends BaseController implements Initiali
 		LOGGER.info("REGISTRATION - OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
 				"Enabling Iris based Authentication Screen in UI");
 
-		irisLabel.setText(ApplicationContext.applicationLanguageBundle().getString("irisAuthentication"));
+		irisLabel.setText(
+				ApplicationContext.getInstance().getApplicationLanguageLabelBundle().getString("irisAuthentication"));
 		irisBasedLogin.setVisible(true);
 		irisUserId.clear();
 		irisUserId.setEditable(false);
 		if (isSupervisor) {
-			irisLabel.setText(ApplicationContext.applicationLanguageBundle().getString("supervisorIrisAuth"));
+			irisLabel.setText(
+					ApplicationContext.getInstance().getApplicationLanguageLabelBundle().getString("supervisorIrisAuth"));
 			if (authCount > 1 && !userNameField.isEmpty()) {
 				irisUserId.setText(userNameField);
 			} else {
@@ -1029,12 +1036,14 @@ public class AuthenticationController extends BaseController implements Initiali
 		LOGGER.info("REGISTRATION - OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
 				"Enabling Face based Authentication Screen in UI");
 
-		photoLabel.setText(ApplicationContext.applicationLanguageBundle().getString("photoAuthentication"));
+		photoLabel.setText(
+				ApplicationContext.getInstance().getApplicationLanguageLabelBundle().getString("photoAuthentication"));
 		faceBasedLogin.setVisible(true);
 		faceUserId.clear();
 		faceUserId.setEditable(false);
 		if (isSupervisor) {
-			photoLabel.setText(ApplicationContext.applicationLanguageBundle().getString("supervisorPhotoAuth"));
+			photoLabel.setText(
+					ApplicationContext.getInstance().getApplicationLanguageLabelBundle().getString("supervisorPhotoAuth"));
 			if (authCount > 1 && !userNameField.isEmpty()) {
 				faceUserId.setText(userNameField);
 			} else {

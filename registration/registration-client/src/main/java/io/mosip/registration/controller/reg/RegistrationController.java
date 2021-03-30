@@ -1,11 +1,15 @@
 package io.mosip.registration.controller.reg;
 
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 import io.mosip.registration.service.packet.PacketHandlerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +41,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -78,6 +83,27 @@ public class RegistrationController extends BaseController {
 	public ImageView biometricTracker;
 	@FXML
 	private GridPane registrationPreview;
+
+	@FXML
+	private GridPane registrationHeader;
+
+	@FXML
+	private Text regTypeText;
+
+	public Text getRegTypeText() {
+		return regTypeText;
+	}
+
+	@FXML
+	private Text homeText;
+
+	@FXML
+	private GridPane navigationGridPane;
+
+	public GridPane getNavigationGridPane() {
+		return navigationGridPane;
+	}
+
 	@Autowired
 	private AuthenticationController authenticationController;
 
@@ -87,37 +113,7 @@ public class RegistrationController extends BaseController {
 	@Autowired
 	private PacketHandlerService packetHandlerService;
 
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see javafx.fxml.Initializable#initialize()
-	 */
-	@FXML
-	private void initialize() {
-		LOGGER.debug(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Entering the Registration Controller");
-		try {
-			if (isEditPage() && getRegistrationDTOFromSession() != null) {
-				prepareEditPageContent();
-			}
-			uinUpdate();
-
-		} catch (RuntimeException runtimeException) {
-			LOGGER.error("REGISTRATION - CONTROLLER", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_REG_PAGE);
-		}
-	}
-
-	/**
-	 * This method is prepare the screen for uin update
-	 */
-	private void uinUpdate() {
-		if (getRegistrationDTOFromSession().getUpdatableFields() != null) {
-			demographicDetailController.uinUpdate();
-		}
-	}
+	private List<String> selectedLangList = new LinkedList<>();
 
 	public void init(String UIN, HashMap<String, Object> selectionListDTO, Map<String, UiSchemaDTO> selectedFields,
 			List<String> selectedFieldGroups) {
@@ -133,29 +129,11 @@ public class RegistrationController extends BaseController {
 				selectedFieldGroups.contains(RegistrationConstants.BIOMETRICS_GROUP) ? true : false);
 	}
 
-	protected void initializeLostUIN() {
+	/*protected void initializeLostUIN() {
 		validation.updateAsLostUIN(true);
+
 		createRegistrationDTOObject(RegistrationConstants.PACKET_TYPE_LOST);
-	}
-
-	/**
-	 * This method is to prepopulate all the values for edit operation
-	 */
-	private void prepareEditPageContent() {
-		try {
-			LOGGER.debug(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME,
-					RegistrationConstants.APPLICATION_ID, "Preparing the Edit page content");
-			// demographicDetailController.prepareEditPageContent();
-			documentScanController.prepareEditPageContent();
-			SessionContext.map().put(RegistrationConstants.REGISTRATION_ISEDIT, false);
-		} catch (RuntimeException runtimeException) {
-			LOGGER.error(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME,
-					RegistrationConstants.APPLICATION_ID,
-					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
-		}
-
-	}
-
+	}*/
 
 	/**
 	 * This method is to go to the operator authentication page
@@ -182,19 +160,17 @@ public class RegistrationController extends BaseController {
 	/**
 	 * This method will create registration DTO object
 	 */
-	public void createRegistrationDTOObject(String registrationCategory) {
+	public boolean createRegistrationDTOObject(String registrationCategory) {
 		try {
 			// Put the RegistrationDTO object to SessionContext Map
-			SessionContext.map().put(RegistrationConstants.REGISTRATION_DATA, packetHandlerService.startRegistration(null,
-					registrationCategory));
+			SessionContext.map().put(RegistrationConstants.REGISTRATION_DATA,
+					packetHandlerService.startRegistration(null, registrationCategory));
+			getRegistrationDTOFromSession().setSelectedLanguagesByApplicant(selectedLangList);
+			return true;
 		} catch (RegBaseCheckedException ex) {
-			LOGGER.error(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME,
-					RegistrationConstants.APPLICATION_ID, ExceptionUtils.getStackTrace(ex));
-			generateAlert(RegistrationConstants.ERROR,
-					ApplicationContext.applicationMessagesBundle().containsKey(ex.getErrorCode()) ?
-							ApplicationContext.applicationMessagesBundle().getString(ex.getErrorCode()) :
-							ex.getErrorCode());
+			LOGGER.error("Error when creating RegistrationDTO", ex);
 		}
+		return false;
 	}
 
 	/**
@@ -236,40 +212,7 @@ public class RegistrationController extends BaseController {
 				RegistrationConstants.APPLICATION_ID, "Navigated to next page based on the current page");
 	}
 
-	/**
-	 * 
-	 * Validates the fields of demographic pane1
-	 * 
-	 */
-	public boolean validateDemographicPane(Pane paneToValidate) {
-		LOGGER.debug(RegistrationConstants.REGISTRATION_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Validating the fields in demographic pane");
 
-		boolean gotoNext = true;
-		List<String> excludedIds = RegistrationConstants.fieldsToExclude();
-		/*
-		 * if (getRegistrationDTOFromSession().getSelectionListDTO() != null) {
-		 * excludedIds.remove("cniOrPinNumber");
-		 * excludedIds.remove("cniOrPinNumberLocalLanguage"); }
-		 */
-
-		if (getRegistrationDTOFromSession().getUpdatableFields() != null
-				&& !getRegistrationDTOFromSession().getUpdatableFields().isEmpty()) {
-			if (getRegistrationDTOFromSession().isChild()
-					&& !getRegistrationDTOFromSession().getUpdatableFieldGroups().contains("GuardianDetails")) {
-				gotoNext = false;
-				generateAlert(RegistrationConstants.ERROR, "Parent or Guardian should have been selected");
-			}
-		}
-
-		validation.setValidationMessage();
-		gotoNext = validation.validate(paneToValidate, excludedIds, gotoNext, masterSync);
-		displayValidationMessage(validation.getValidationMessage().toString());
-		LOGGER.debug(RegistrationConstants.REGISTRATION_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Validated the fields");
-
-		return gotoNext;
-	}
 
 	/**
 	 * Display the validation failure messages
@@ -294,4 +237,36 @@ public class RegistrationController extends BaseController {
 		}
 	}
 
+	/**
+	 * Go to home ack template.
+	 */
+	public void home() {
+		try {
+			BaseController.load(getClass().getResource(RegistrationConstants.HOME_PAGE));
+			if (!(boolean) SessionContext.map().get(RegistrationConstants.ONBOARD_USER)) {
+				clearOnboardData();
+				clearRegistrationData();
+			} else {
+				SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+						RegistrationConstants.ENABLE);
+			}
+		} catch (IOException ioException) {
+			LOGGER.error("REGISTRATION - UI - ACK_RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
+					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE);
+		} catch (RuntimeException runtimException) {
+			LOGGER.error("REGISTRATION - UI - ACK_RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
+					runtimException.getMessage() + ExceptionUtils.getStackTrace(runtimException));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE);
+		}
+
+	}
+
+	public List<String> getSelectedLangList() {
+		return selectedLangList;
+	}
+
+	public void setSelectedLangList(List<String> selectedLangList) {
+		this.selectedLangList = selectedLangList;
+	}
 }

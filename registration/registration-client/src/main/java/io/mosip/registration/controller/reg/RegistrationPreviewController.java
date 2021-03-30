@@ -5,8 +5,6 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 
 import java.io.Writer;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.ResourceBundle;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +25,6 @@ import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
-import io.mosip.registration.controller.device.BiometricsController;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.template.TemplateService;
@@ -36,9 +33,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.text.Text;
 import javafx.scene.web.WebView;
 
 @Controller
@@ -67,21 +62,16 @@ public class RegistrationPreviewController extends BaseController implements Ini
 	@Autowired
 	private RegistrationController registrationController;
 
-	@Autowired
-	private BiometricsController guardianBiometricsController;
-
-	@FXML
-	private Text registrationNavlabel;
-
 	@FXML
 	private Button nextButton;
 
-	private String consentText;
-
+	public Button getNextButton() {
+		return nextButton;
+	}
 
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
-		Image backInWhite = new Image(getClass().getResourceAsStream(RegistrationConstants.BACK_FOCUSED));
+		/*Image backInWhite = new Image(getClass().getResourceAsStream(RegistrationConstants.BACK_FOCUSED));
 		Image backImage = new Image(getClass().getResourceAsStream(RegistrationConstants.BACK));
 
 		backBtn.hoverProperty().addListener((ov, oldValue, newValue) -> {
@@ -95,21 +85,8 @@ public class RegistrationPreviewController extends BaseController implements Ini
 		nextButton.setDisable(true);
 
 		String key = RegistrationConstants.REG_CONSENT + applicationContext.getApplicationLanguage();
-		consentText = getValueFromApplicationContext(key);
+		consentText = getValueFromApplicationContext(key);*/
 
-		if (getRegistrationDTOFromSession() != null && getRegistrationDTOFromSession().getSelectionListDTO() != null) {
-
-			registrationNavlabel.setText(ApplicationContext.applicationLanguageBundle()
-					.getString(RegistrationConstants.UIN_UPDATE_UINUPDATENAVLBL));
-		}
-		if (getRegistrationDTOFromSession() != null
-				&& getRegistrationDTOFromSession().getRegistrationMetaDataDTO().getRegistrationCategory() != null
-				&& getRegistrationDTOFromSession().getRegistrationMetaDataDTO().getRegistrationCategory()
-						.equals(RegistrationConstants.PACKET_TYPE_LOST)) {
-
-			registrationNavlabel.setText(
-					ApplicationContext.applicationLanguageBundle().getString(RegistrationConstants.LOSTUINLBL));
-		}
 	}
 
 	@FXML
@@ -124,7 +101,7 @@ public class RegistrationPreviewController extends BaseController implements Ini
 		// }
 		registrationController.showCurrentPage(RegistrationConstants.REGISTRATION_PREVIEW,
 				getPageByAction(RegistrationConstants.REGISTRATION_PREVIEW, RegistrationConstants.PREVIOUS));
-		guardianBiometricsController.populateBiometricPage(false, true);
+//		guardianBiometricsController.populateBiometricPage(false, true);
 		/*
 		 * } else { registrationController.showCurrentPage(RegistrationConstants.
 		 * REGISTRATION_PREVIEW,
@@ -189,12 +166,7 @@ public class RegistrationPreviewController extends BaseController implements Ini
 			String ackTemplateText = templateService.getHtmlTemplate(RegistrationConstants.PREVIEW_TEMPLATE_CODE,
 					ApplicationContext.applicationLanguage());
 
-			if (ApplicationContext.applicationLanguage().equalsIgnoreCase(ApplicationContext.localLanguage())) {
-				ackTemplateText = ackTemplateText.replace("} / ${", "}  ${");
-			}
-
 			if (ackTemplateText != null && !ackTemplateText.isEmpty()) {
-				templateGenerator.setConsentText(consentText);
 				ResponseDTO templateResponse = templateGenerator.generateTemplate(ackTemplateText,
 						getRegistrationDTOFromSession(), templateManagerBuilder,
 						RegistrationConstants.TEMPLATE_PREVIEW);
@@ -220,6 +192,28 @@ public class RegistrationPreviewController extends BaseController implements Ini
 		}
 	}
 
+	public String getPreviewContent() {
+		LOGGER.info("Setting up preview content has been started");
+		try {
+			String ackTemplateText = templateService.getHtmlTemplate(RegistrationConstants.PREVIEW_TEMPLATE_CODE,
+					ApplicationContext.applicationLanguage());
+
+			if (ackTemplateText != null && !ackTemplateText.isEmpty()) {
+				ResponseDTO templateResponse = templateGenerator.generateTemplate(ackTemplateText,
+						getRegistrationDTOFromSession(), templateManagerBuilder,
+						RegistrationConstants.TEMPLATE_PREVIEW);
+				if (templateResponse != null && templateResponse.getSuccessResponseDTO() != null) {
+					Writer stringWriter = (Writer) templateResponse.getSuccessResponseDTO().getOtherAttributes()
+							.get(RegistrationConstants.TEMPLATE_NAME);
+					return stringWriter.toString();
+				}
+			}
+		} catch (RegBaseCheckedException regBaseCheckedException) {
+			LOGGER.error(ExceptionUtils.getStackTrace(regBaseCheckedException));
+		}
+		return null;
+	}
+
 	private void listenToButton(Document document) {
 		LOGGER.info("REGISTRATION - UI - REGISTRATION_PREVIEW_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 				"Button click action happened on preview content");
@@ -232,141 +226,6 @@ public class RegistrationPreviewController extends BaseController implements Ini
 		Element no = document.getElementById(RegistrationConstants.REG_CONSENT_NO);
 		((EventTarget) yes).addEventListener(RegistrationConstants.CLICK, event -> enableConsent(), false);
 		((EventTarget) no).addEventListener(RegistrationConstants.CLICK, event -> disableConsent(), false);
-
-		List<String> modifyElements = new ArrayList<>();
-		modifyElements.add(RegistrationConstants.MODIFY_DEMO_INFO);
-		modifyElements.add(RegistrationConstants.MODIFY_DOCUMENTS);
-		modifyElements.add(RegistrationConstants.MODIFY_BIOMETRICS);
-		for (String element : modifyElements) {
-			Element button = document.getElementById(element);
-			((EventTarget) button).addEventListener(RegistrationConstants.CLICK, event -> modifyElement(element),
-					false);
-		}
-	}
-
-	private void modifyElement(String element) {
-		LOGGER.info("REGISTRATION - UI - REGISTRATION_PREVIEW_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
-				"Modifying Registration Information");
-
-		if (element.equals(RegistrationConstants.MODIFY_DEMO_INFO)) {
-			modifyDemographicInfo();
-		} else if (element.equals(RegistrationConstants.MODIFY_DOCUMENTS)) {
-			modifyDocuments();
-		} else if (element.equals(RegistrationConstants.MODIFY_BIOMETRICS)) {
-			modifyBiometrics();
-		}
-	}
-
-	public void modifyDemographicInfo() {
-		LOGGER.info("REGISTRATION - UI - REGISTRATION_PREVIEW_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
-				"Modifying Demographic Information");
-
-		auditFactory.audit(AuditEvent.REG_PREVIEW_DEMO_EDIT, Components.REG_PREVIEW, SessionContext.userId(),
-				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
-
-		SessionContext.map().put(RegistrationConstants.REGISTRATION_ISEDIT, true);
-		if (getRegistrationDTOFromSession().getSelectionListDTO() != null) {
-			SessionContext.map().put(RegistrationConstants.UIN_UPDATE_REGISTRATIONPREVIEW, false);
-			SessionContext.map().put(RegistrationConstants.UIN_UPDATE_DEMOGRAPHICDETAIL, true);
-			// registrationController.showUINUpdateCurrentPage();
-		}
-		registrationController.showCurrentPage(RegistrationConstants.REGISTRATION_PREVIEW,
-				RegistrationConstants.DEMOGRAPHIC_DETAIL);
-
-	}
-
-	public void modifyDocuments() {
-		LOGGER.info("REGISTRATION - UI - REGISTRATION_PREVIEW_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
-				"Modifying Documents");
-
-		auditFactory.audit(AuditEvent.REG_PREVIEW_DOC_EDIT, Components.REG_PREVIEW, SessionContext.userId(),
-				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
-
-		SessionContext.map().put(RegistrationConstants.REGISTRATION_ISEDIT, true);
-		if (getRegistrationDTOFromSession().getSelectionListDTO() != null) {
-
-			SessionContext.map().put(RegistrationConstants.UIN_UPDATE_REGISTRATIONPREVIEW, false);
-			if (!RegistrationConstants.DISABLE
-					.equalsIgnoreCase(getValueFromApplicationContext(RegistrationConstants.DOC_DISABLE_FLAG))) {
-				SessionContext.map().put(RegistrationConstants.UIN_UPDATE_DOCUMENTSCAN, true);
-			} else {
-				SessionContext.map().put(RegistrationConstants.UIN_UPDATE_REGISTRATIONPREVIEW, true);
-			}
-			registrationController.showUINUpdateCurrentPage();
-		} else {
-			registrationController.showCurrentPage(RegistrationConstants.REGISTRATION_PREVIEW,
-					RegistrationConstants.DOCUMENT_SCAN);
-		}
-	}
-
-	public void modifyBiometrics() {
-		LOGGER.info("REGISTRATION - UI - REGISTRATION_PREVIEW_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
-				"Modifying Biometrics Information");
-
-		auditFactory.audit(AuditEvent.REG_PREVIEW_BIO_EDIT, Components.REG_PREVIEW, SessionContext.userId(),
-				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
-
-		SessionContext.map().put(RegistrationConstants.REGISTRATION_ISEDIT, true);
-		// fingerPrintCaptureController.initializeCaptureCount();
-		// irisCaptureController.initializeCaptureCount();
-		guardianBiometricsController.populateBiometricPage(false, false);
-
-		if (getRegistrationDTOFromSession().getSelectionListDTO() != null) {
-			SessionContext.map().put(RegistrationConstants.UIN_UPDATE_REGISTRATIONPREVIEW, false);
-
-			/*
-			 * long fingerPrintCount =
-			 * getRegistrationDTOFromSession().getBiometricDTO().getIntroducerBiometricDTO()
-			 * .getFingerprintDetailsDTO().stream().count(); long irisCount =
-			 * getRegistrationDTOFromSession().getBiometricDTO().getIntroducerBiometricDTO()
-			 * .getIrisDetailsDTO().stream().count(); if ((Boolean)
-			 * SessionContext.userMap().get(RegistrationConstants.
-			 * TOGGLE_BIO_METRIC_EXCEPTION)) {
-			 * SessionContext.map().put(RegistrationConstants.UIN_UPDATE_BIOMETRICEXCEPTION,
-			 * true); } else if (getRegistrationDTOFromSession().isUpdateUINChild() &&
-			 * (fingerPrintCount > 0 || irisCount > 0)) {
-			 * SessionContext.map().put(RegistrationConstants.
-			 * UIN_UPDATE_PARENTGUARDIAN_DETAILS, true); } else if (fingerPrintCount > 0) {
-			 * SessionContext.map().put(RegistrationConstants.UIN_UPDATE_FINGERPRINTCAPTURE,
-			 * true); } else if (irisCount > 0) {
-			 * 
-			 * SessionContext.map().put(RegistrationConstants.UIN_UPDATE_IRISCAPTURE, true);
-			 * } else if (!RegistrationConstants.DISABLE
-			 * .equalsIgnoreCase(getValueFromApplicationContext(RegistrationConstants.
-			 * FACE_DISABLE_FLAG))) {
-			 * SessionContext.map().put(RegistrationConstants.UIN_UPDATE_FACECAPTURE, true);
-			 * } else { SessionContext.map().put(RegistrationConstants.
-			 * UIN_UPDATE_REGISTRATIONPREVIEW, true); }
-			 */
-			registrationController.showCurrentPage(RegistrationConstants.REGISTRATION_PREVIEW,
-					getPageByAction(RegistrationConstants.REGISTRATION_PREVIEW, RegistrationConstants.PREVIOUS));
-		} else {
-			/*
-			 * if ((boolean) SessionContext.map().get(RegistrationConstants.IS_Child)) {
-			 * registrationController.showCurrentPage(RegistrationConstants.
-			 * REGISTRATION_PREVIEW, RegistrationConstants.GUARDIAN_BIOMETRIC); } else { if
-			 * ((Boolean) SessionContext.userMap().get(RegistrationConstants.
-			 * TOGGLE_BIO_METRIC_EXCEPTION)) {
-			 * registrationController.showCurrentPage(RegistrationConstants.
-			 * REGISTRATION_PREVIEW, RegistrationConstants.UIN_UPDATE_BIOMETRICEXCEPTION); }
-			 * else if (RegistrationConstants.ENABLE.equalsIgnoreCase(
-			 * getValueFromApplicationContext(RegistrationConstants.FINGERPRINT_DISABLE_FLAG
-			 * ))) { registrationController.showCurrentPage(RegistrationConstants.
-			 * REGISTRATION_PREVIEW, RegistrationConstants.FINGERPRINT_CAPTURE); } else if
-			 * (RegistrationConstants.ENABLE
-			 * .equalsIgnoreCase(getValueFromApplicationContext(RegistrationConstants.
-			 * IRIS_DISABLE_FLAG))) {
-			 * registrationController.showCurrentPage(RegistrationConstants.
-			 * REGISTRATION_PREVIEW, RegistrationConstants.IRIS_CAPTURE); } else if
-			 * (RegistrationConstants.ENABLE
-			 * .equalsIgnoreCase(getValueFromApplicationContext(RegistrationConstants.
-			 * FACE_DISABLE_FLAG))) {
-			 * registrationController.showCurrentPage(RegistrationConstants.
-			 * REGISTRATION_PREVIEW, RegistrationConstants.FACE_CAPTURE); } }
-			 */
-			registrationController.showCurrentPage(RegistrationConstants.REGISTRATION_PREVIEW,
-					getPageByAction(RegistrationConstants.REGISTRATION_PREVIEW, RegistrationConstants.PREVIOUS));
-		}
 	}
 
 	private void enableConsent() {

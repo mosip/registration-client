@@ -24,7 +24,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.assertj.core.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -191,7 +190,6 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 					"Entering into Capture method....." + System.currentTimeMillis());
 
-			String requestBody = null;
 			ObjectMapper mapper = new ObjectMapper();
 			requestBody = mapper.writeValueAsString(rCaptureRequestDTO);
 
@@ -381,9 +379,8 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 					.setEntity(requestEntity).build();
 
 			CloseableHttpResponse response = client.execute(request);
-
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"parsing device discovery response to 095 dto");
+					"parsing device discovery response to 092 dto");
 			List<DeviceDiscoveryMDSResponse> deviceList = (mosipDeviceSpecificationHelper.getMapper().readValue(
 					EntityUtils.toString(response.getEntity()), new TypeReference<List<DeviceDiscoveryMDSResponse>>() {	}));
 

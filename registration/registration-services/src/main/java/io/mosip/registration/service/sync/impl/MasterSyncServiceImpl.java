@@ -10,16 +10,11 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import io.mosip.registration.entity.*;
 import io.mosip.registration.entity.id.GlobalParamId;
+import org.apache.commons.collections4.ListUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -74,8 +69,6 @@ import io.mosip.registration.util.mastersync.MapperUtils;
  */
 @Service
 public class MasterSyncServiceImpl extends BaseService implements MasterSyncService {
-
-
 
 	/**
 	 * The SncTransactionManagerImpl, which Have the functionalities to get the job
@@ -140,7 +133,6 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 
 	}
 
-
 	/**
 	 * Find location or region by hierarchy code.
 	 *
@@ -175,7 +167,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	 * @throws RegBaseCheckedException
 	 */
 	@Override
-	public List<GenericDto> findProvianceByHierarchyCode(String code, String langCode) throws RegBaseCheckedException {
+	public List<GenericDto> findLocationByParentHierarchyCode(String code, String langCode) throws RegBaseCheckedException {
 
 		List<GenericDto> locationDto = new ArrayList<>();
 		if (codeAndlangCodeNullCheck(code, langCode)) {
@@ -313,44 +305,34 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	 * @throws RegBaseCheckedException
 	 */
 	@Override
-	public List<DocumentCategoryDto> getDocumentCategories(String docCode, String langCode)
-			throws RegBaseCheckedException {
-		List<String> validDocuments = new ArrayList<>();
+	public List<DocumentCategoryDto> getDocumentCategories(String docCode, String langCode) {
 		List<DocumentCategoryDto> documentsDTO = new ArrayList<>();
-		if (codeAndlangCodeNullCheck(docCode, langCode)) {
+		DocumentCategory documentCategory = documentCategoryDAO.getDocumentCategoryByCodeAndByLangCode(docCode,
+				langCode);
+		if (documentCategory != null && documentCategory.getIsActive()) {
+			List<String> validDocuments = new ArrayList<>();
+			List<ValidDocument> masterValidDocuments = masterSyncDao.getValidDocumets(docCode);
+			masterValidDocuments.forEach(docs -> {
+				validDocuments.add(docs.getDocTypeCode());
+			});
 
-			DocumentCategory documentCategory = documentCategoryDAO.getDocumentCategoryByCodeAndByLangCode(docCode,
-					langCode);
-			if (documentCategory != null && documentCategory.getIsActive()) {
+			List<DocumentType> masterDocuments = masterSyncDao.getDocumentTypes(validDocuments, langCode);
 
-				List<ValidDocument> masterValidDocuments = masterSyncDao.getValidDocumets(docCode);
-				masterValidDocuments.forEach(docs -> {
-					validDocuments.add(docs.getDocTypeCode());
-				});
+			masterDocuments.forEach(document -> {
 
-				List<DocumentType> masterDocuments = masterSyncDao.getDocumentTypes(validDocuments, langCode);
+				DocumentCategoryDto documents = new DocumentCategoryDto();
+				documents.setCode(document.getCode());
+				documents.setDescription(document.getDescription());
+				documents.setLangCode(document.getLangCode());
+				documents.setName(document.getName());
+				documentsDTO.add(documents);
 
-				masterDocuments.forEach(document -> {
-
-					DocumentCategoryDto documents = new DocumentCategoryDto();
-					documents.setCode(document.getCode());
-					documents.setDescription(document.getDescription());
-					documents.setLangCode(document.getLangCode());
-					documents.setName(document.getName());
-					documentsDTO.add(documents);
-
-				});
-			}
-		} else {
-			LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID,
-					RegistrationConstants.CODE_AND_LANG_CODE_MANDATORY);
-			throw new RegBaseCheckedException(
-					RegistrationExceptionConstants.REG_MASTER_SYNC_SERVICE_IMPL_CODE_AND_LANGCODE.getErrorCode(),
-					RegistrationExceptionConstants.REG_MASTER_SYNC_SERVICE_IMPL_CODE_AND_LANGCODE.getErrorMessage());
+			});
 		}
 		return documentsDTO;
 	}
 
+	
 	/**
 	 * Gets the individual type.
 	 * 
@@ -394,13 +376,16 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	}
 
 	@Override
-	public List<GenericDto> getFieldValues(String fieldName, String langCode) throws RegBaseCheckedException {
-		/*
-		 * switch (fieldName) { case "gender": return getGenderDtls(langCode); case
-		 * "residenceStatus": return getIndividualType(langCode); default:
-		 */
-		return getDynamicField(fieldName, langCode);
-		
+	public List<GenericDto> getFieldValues(String fieldName, String langCode, boolean isHierarchical) {
+		try {
+			if(isHierarchical) {
+				return findLocationByParentHierarchyCode(fieldName, langCode);
+			}
+			return getDynamicField(fieldName, langCode);
+		} catch (RegBaseCheckedException exception) {
+			LOGGER.error("Failed to fetch values for field : " + fieldName, exception);
+		}
+		return Collections.EMPTY_LIST;
 	}
 
 	/**
@@ -560,15 +545,16 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	 */
 	private Map<String, String> getRequestParamsForClientSettingsSync(String masterSyncDtls) {
 		Map<String, String> requestParamMap = new HashMap<String, String>();
-		requestParamMap.put(RegistrationConstants.KEY_INDEX.toLowerCase(), CryptoUtil
-				.computeFingerPrint(clientCryptoFacade.getClientSecurity().getEncryptionPublicPart(), null));
+		requestParamMap.put(RegistrationConstants.KEY_INDEX.toLowerCase(),
+				CryptoUtil.computeFingerPrint(clientCryptoFacade.getClientSecurity().getEncryptionPublicPart(), null));
 
-		if(!isInitialSync()) {
+		if (!isInitialSync()) {
 			// getting Last Sync date from Data from sync table
 			SyncControl masterSyncDetails = masterSyncDao.syncJobDetails(masterSyncDtls);
 			if (masterSyncDetails != null) {
-				requestParamMap.put(RegistrationConstants.MASTER_DATA_LASTUPDTAE, DateUtils.formatToISOString(
-						LocalDateTime.ofInstant(masterSyncDetails.getLastSyncDtimes().toInstant(), ZoneOffset.ofHours(0))));
+				requestParamMap.put(RegistrationConstants.MASTER_DATA_LASTUPDTAE,
+						DateUtils.formatToISOString(LocalDateTime
+								.ofInstant(masterSyncDetails.getLastSyncDtimes().toInstant(), ZoneOffset.ofHours(0))));
 			}
 
 			String registrationCenterId = getCenterId();
@@ -595,7 +581,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 		LinkedHashMap<String, Object> masterSyncResponse = null;
 
 		try {
-			//Precondition check, proceed only if met, otherwise throws exception
+			// Precondition check, proceed only if met, otherwise throws exception
 			proceedWithMasterAndKeySync(masterSyncDtls);
 
 			LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID, new JSONObject(requestParam).toString());
@@ -604,8 +590,8 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 					.get(RegistrationConstants.MASTER_VALIDATOR_SERVICE_NAME, requestParam, true, triggerPoint);
 
 			String errorCode = getErrorCode(getErrorList(masterSyncResponse));
-			if(RegistrationConstants.MACHINE_REMAP_CODE.equalsIgnoreCase(errorCode)) {
-				//Machine is remapped, exit from sync and mark the remap process to start
+			if (RegistrationConstants.MACHINE_REMAP_CODE.equalsIgnoreCase(errorCode)) {
+				// Machine is remapped, exit from sync and mark the remap process to start
 				globalParamService.update(RegistrationConstants.MACHINE_CENTER_REMAP_FLAG, RegistrationConstants.TRUE);
 				return responseDTO;
 			}
@@ -715,8 +701,17 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 
 		return isMatch;
 	}
-	
+
 	public List<SyncJobDef> getSyncJobs() {
 		return masterSyncDao.getSyncJobs();
+	}
+
+	public Location getLocation(String code, String langCode) {
+		return masterSyncDao.getLocation(code, langCode);
+	}
+
+	@Override
+	public DocumentType getDocumentType(String docCode, String langCode) {
+		return  masterSyncDao.getDocumentType(docCode, langCode);
 	}
 }

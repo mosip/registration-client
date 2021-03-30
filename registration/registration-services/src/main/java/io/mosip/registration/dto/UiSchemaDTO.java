@@ -58,7 +58,12 @@ public class UiSchemaDTO {
 
 	private String contactType;
 	private String group;
+	private HashMap<String, String> groupLabel;
 
 	private String changeAction;
 
+	private boolean transliterate;
+	private String templateName;
+	private String fieldLayout;
+	private List<String> locationHierarchy;
 }

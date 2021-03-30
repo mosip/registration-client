@@ -8,6 +8,8 @@ import java.util.List;
 
 import javax.transaction.Transactional;
 
+import io.mosip.registration.entity.*;
+import io.mosip.registration.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -18,33 +20,7 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.mastersync.MasterDataResponseDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
-import io.mosip.registration.entity.BiometricAttribute;
-import io.mosip.registration.entity.BlacklistedWords;
-import io.mosip.registration.entity.DocumentCategory;
-import io.mosip.registration.entity.DocumentType;
-import io.mosip.registration.entity.Gender;
-import io.mosip.registration.entity.IndividualType;
-import io.mosip.registration.entity.Language;
-import io.mosip.registration.entity.Location;
-import io.mosip.registration.entity.ReasonCategory;
-import io.mosip.registration.entity.ReasonList;
-import io.mosip.registration.entity.SyncControl;
-import io.mosip.registration.entity.SyncJobDef;
-import io.mosip.registration.entity.ValidDocument;
 import io.mosip.registration.exception.RegBaseUncheckedException;
-import io.mosip.registration.repositories.BiometricAttributeRepository;
-import io.mosip.registration.repositories.BlacklistedWordsRepository;
-import io.mosip.registration.repositories.DocumentCategoryRepository;
-import io.mosip.registration.repositories.DocumentTypeRepository;
-import io.mosip.registration.repositories.GenderRepository;
-import io.mosip.registration.repositories.IndividualTypeRepository;
-import io.mosip.registration.repositories.LanguageRepository;
-import io.mosip.registration.repositories.LocationRepository;
-import io.mosip.registration.repositories.ReasonCategoryRepository;
-import io.mosip.registration.repositories.ReasonListRepository;
-import io.mosip.registration.repositories.SyncJobControlRepository;
-import io.mosip.registration.repositories.SyncJobDefRepository;
-import io.mosip.registration.repositories.ValidDocumentRepository;
 import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 
 /**
@@ -66,11 +42,9 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	@Autowired
 	private BiometricAttributeRepository biometricAttributeRepository;
 
-
 	/** Object for Sync Blacklisted Words Repository. */
 	@Autowired
 	private BlacklistedWordsRepository blacklistedWordsRepository;
-
 
 	/** Object for Sync Document Category Repository. */
 	@Autowired
@@ -87,7 +61,7 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	/** Object for Sync Location Repository. */
 	@Autowired
 	private LocationRepository locationRepository;
-	
+
 	/** Object for Sync Reason Category Repository. */
 	@Autowired
 	private ReasonCategoryRepository reasonCategoryRepository;
@@ -111,13 +85,12 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	/** Object for Sync screen auth Repository. */
 	@Autowired
 	private SyncJobDefRepository syncJobDefRepository;
-	
+
 	@Autowired
 	private ClientSettingSyncHelper clientSettingSyncHelper;
 
-
-
-
+	@Autowired
+	private LocationHierarchyRepository locationHierarchyRepository;
 
 	/**
 	 * logger for logging
@@ -154,7 +127,6 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 		return syncControlResonse;
 	}
 
-	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -221,6 +193,17 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	public List<DocumentType> getDocumentTypes(List<String> docCode, String langCode) {
 		return documentTypeRepository.findByIsActiveTrueAndLangCodeAndCodeIn(langCode, docCode);
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see io.mosip.registration.dao.MasterSyncDao#getDocumentCategories(java.lang.
+	 * String)
+	 */
+	@Override
+	public DocumentType getDocumentType(String docCode, String langCode) {
+		return documentTypeRepository.findByIsActiveTrueAndLangCodeAndCode(langCode, docCode);
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -256,7 +239,7 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 		return individualTypeRepository.findByIndividualTypeIdCodeAndIndividualTypeIdLangCodeAndIsActiveTrue(code,
 				langCode);
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -266,11 +249,9 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	 */
 	@Override
 	public List<IndividualType> getIndividulType(String langCode) {
-		return individualTypeRepository.findByIndividualTypeIdLangCodeAndIsActiveTrueOrderByIndividualTypeIdCodeDesc(
-				langCode);
+		return individualTypeRepository
+				.findByIndividualTypeIdLangCodeAndIsActiveTrueOrderByIndividualTypeIdCodeDesc(langCode);
 	}
-	
-	
 
 	public List<SyncJobDef> getSyncJobs() {
 		return syncJobDefRepository.findAllByIsActiveTrue();
@@ -303,33 +284,45 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	public List<Location> getLocationDetails() {
 		return locationRepository.findAllByIsActiveTrue();
 	}
-	
+
 	public List<Location> getLocationDetails(String langCode) {
 		return locationRepository.findByIsActiveTrueAndLangCode(langCode);
 	}
 
 	/**
-	 * All the master data such as Location, gender,Registration center, Document types,category etc., 
-	 * will be saved in the DB(These details will be getting from the MasterSync service)
+	 * All the master data such as Location, gender,Registration center, Document
+	 * types,category etc., will be saved in the DB(These details will be getting
+	 * from the MasterSync service)
 	 *
-	 * @param syncDataResponseDto
-	 *            All the master details will be available in the {@link MasterDataResponseDto}
-	 * @return the string
-	 * 			- Returns the Success or Error response
+	 * @param syncDataResponseDto All the master details will be available in the
+	 *                            {@link MasterDataResponseDto}
+	 * @return the string - Returns the Success or Error response
 	 */
-	
+
 	@Override
 	public String saveSyncData(SyncDataResponseDto syncDataResponseDto) {
 		String syncStatusMessage = null;
 		try {
 			syncStatusMessage = clientSettingSyncHelper.saveClientSettings(syncDataResponseDto);
 			return syncStatusMessage;
-		} catch (Exception runtimeException) {			
+		} catch (Exception runtimeException) {
 			LOGGER.error(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID,
-					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));			
+					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
 			syncStatusMessage = runtimeException.getMessage();
 		}
 		throw new RegBaseUncheckedException(RegistrationConstants.MASTER_SYNC_EXCEPTION, syncStatusMessage);
 	}
 
+	public List<Location> getLocationDetails(String hierarchyName, String langCode) {
+		return locationRepository.findByIsActiveTrueAndHierarchyNameAndLangCode(hierarchyName, langCode);
+	}
+
+	public Location getLocation(String code, String langCode) {
+		return locationRepository.findByCodeAndLangCode(code, langCode);
+	}
+
+	@Override
+	public List<LocationHierarchy> getAllLocationHierarchy(String langCode) {
+		return locationHierarchyRepository.findAllByIsActiveTrueAndLangCode(langCode);
+	}
 }
