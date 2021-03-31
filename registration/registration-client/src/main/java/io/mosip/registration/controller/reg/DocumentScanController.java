@@ -652,16 +652,16 @@ public class DocumentScanController extends BaseController {
 				if (documentDto != null) {
 					
 					
-					if("jpg".equalsIgnoreCase(documentDto.getFormat())) {
-					          InputStream is = new ByteArrayInputStream(documentDto.getDocument());
-			                   BufferedImage newBi = ImageIO.read(is);
-			        
-			                   List<BufferedImage> list = new LinkedList<>();
-			                   list.add(newBi);
-			                   setScannedPages(list);
+					if(RegistrationConstants.PDF.equalsIgnoreCase(documentDto.getFormat())) {
+
+						setScannedPages(documentScanFacade.pdfToImages(documentDto.getDocument()));
 					} else {
-			        
-					setScannedPages(documentScanFacade.pdfToImages(documentDto.getDocument()));
+						 InputStream is = new ByteArrayInputStream(documentDto.getDocument());
+		                   BufferedImage newBi = ImageIO.read(is);
+		        
+		                   List<BufferedImage> list = new LinkedList<>();
+		                   list.add(newBi);
+		                   setScannedPages(list);		        
 					}
 				}
 			} catch (IOException exception) {
