@@ -74,6 +74,7 @@ public class Initialization extends Application {
 		try {
 			System.setProperty("java.net.useSystemProxies", "true");
 			System.setProperty("file.encoding", "UTF-8");
+			
 			io.mosip.registration.context.ApplicationContext.getInstance();
 			if (args.length > 1) {
 				upgradeServer = args[0];
@@ -83,7 +84,7 @@ public class Initialization extends Application {
 			Timestamp time = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
 			applicationStartTime = String.valueOf(time);
 
-			applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+			applicationContext = createApplicationContext();
 			launch(args);
 
 			LOGGER.info("REGISTRATION - APPLICATION INITILIZATION - REGISTRATIONAPPINITILIZATION", APPLICATION_NAME,
@@ -96,6 +97,20 @@ public class Initialization extends Application {
 							+ new SimpleDateFormat(RegistrationConstants.HH_MM_SS).format(System.currentTimeMillis())
 							+ ExceptionUtils.getStackTrace(exception));
 		}
+	}
+
+	/**
+	 * Create Application context with AppConfig Class
+	 * @return Spring Application context 
+	 */
+	public static ApplicationContext createApplicationContext() {
+
+		if(System.getProperty(RegistrationConstants.MOSIP_HOSTNAME)==null && System.getenv(RegistrationConstants.MOSIP_HOSTNAME)!=null) {
+			
+			System.setProperty(RegistrationConstants.MOSIP_HOSTNAME, System.getenv(RegistrationConstants.MOSIP_HOSTNAME));
+		}
+		
+		return new AnnotationConfigApplicationContext(AppConfig.class);
 	}
 
 	@Override

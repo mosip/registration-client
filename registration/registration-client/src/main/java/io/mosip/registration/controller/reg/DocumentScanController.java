@@ -4,10 +4,13 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -533,7 +536,17 @@ public class DocumentScanController extends BaseController {
 			try {
 
 				if (documentDto != null) {
-					setScannedPages(documentScanFacade.pdfToImages(documentDto.getDocument()));
+					if(RegistrationConstants.PDF.equalsIgnoreCase(documentDto.getFormat())) {
+
+						setScannedPages(documentScanFacade.pdfToImages(documentDto.getDocument()));
+					} else {
+						 InputStream is = new ByteArrayInputStream(documentDto.getDocument());
+		                   BufferedImage newBi = ImageIO.read(is);
+
+		                   List<BufferedImage> list = new LinkedList<>();
+		                   list.add(newBi);
+		                   setScannedPages(list);		        
+					}
 				}
 			} catch (IOException exception) {
 				LOGGER.error("REGISTRATION - DOCUMENT_SCAN_CONTROLLER", APPLICATION_NAME,

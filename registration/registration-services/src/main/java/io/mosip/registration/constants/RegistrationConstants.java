@@ -1809,4 +1809,8 @@ public class RegistrationConstants {
 	public static final String QUALITY_BOX_LABEL = "qualityBoxLabel";
 	public static final String MODALITY_BUTTONS = "modalityButtons";
 	public static final int LANGCODE_LENGTH = 3;
+	
+	public static final String MOSIP_HOSTNAME = "mosip.hostname";
+	public static final String MOSIP_HOSTNAME_DEF_VAL = "dev.mosip.net";
+	
 }
