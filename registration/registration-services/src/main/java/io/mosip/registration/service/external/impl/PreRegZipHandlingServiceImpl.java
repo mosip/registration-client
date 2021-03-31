@@ -262,6 +262,12 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 							documentDto.setFormat(fieldValue.getString("format"));
 							documentDto.setType(fieldValue.getString("type"));
 							documentDto.setValue(fieldValue.getString("value"));
+							try {
+							    documentDto.setRefNumber((fieldValue.getString("docRefId")));
+							} catch(JSONException jsonException) {
+								LOGGER.error("Unable to find Document Refernce Number for Pre-Reg-Sync : {} "
+										, ExceptionUtils.getStackTrace(jsonException));
+							}
 							getRegistrationDtoContent().addDocument(field.getId(), documentDto);
 						}
 						break;

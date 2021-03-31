@@ -1898,4 +1898,7 @@ public class RegistrationConstants {
 	public static final String RIGHTEYE_IMG = "exceptionmarks/lightBlueCrossMark.png";
 	public static final String LEFTEYE_IMG = "exceptionmarks/lightBlueCrossMark.png";
 	public static final String DEFAULT_EXCEPTION_IMG = "ExceptionPhoto.png";
+	
+	public static final String MOSIP_HOSTNAME = "mosip.hostname";
+	public static final String MOSIP_HOSTNAME_DEF_VAL = "dev.mosip.net";
 }
