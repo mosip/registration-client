@@ -168,14 +168,14 @@ public class ServiceDelegateUtil {
 	}
 
 	private String prepareUrlByHostName(String url) {
-		String mosipHostNameVal = System.getenv("mosip.hostname");
+		
+		
+		String mosipHostNameVal = System.getProperty(RegistrationConstants.MOSIP_HOSTNAME);
 
-		LOGGER.info(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_PREPARE_POST, APPLICATION_NAME, APPLICATION_ID,
-				"Mosip Host name in environment variables : " + mosipHostNameVal);
+		LOGGER.info("Mosip Host name in environment variables : {} " , mosipHostNameVal);
 		if (mosipHostNameVal == null || mosipHostNameVal.isEmpty()) {
-			mosipHostNameVal = getEnvironmentProperty("mosip", "hostname");
-			LOGGER.info(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_PREPARE_POST, APPLICATION_NAME, APPLICATION_ID,
-					"Mosip Host name in Default spring propertries variables : " + mosipHostNameVal);
+			mosipHostNameVal = RegistrationConstants.MOSIP_HOSTNAME_DEF_VAL;
+			LOGGER.info("Mosip Host name in Default mode : {} " ,mosipHostNameVal);
 
 		}
 
