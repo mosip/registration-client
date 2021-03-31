@@ -1860,4 +1860,8 @@ public class RegistrationConstants {
 	public static final String DASHBOARD_UPDATES = "Updates";
 
 	public static final String DEVICE_STATUS_READY = "Ready";
+	
+	public static final String MOSIP_HOSTNAME = "mosip.hostname";
+	public static final String MOSIP_HOSTNAME_DEF_VAL = "dev.mosip.net";
+	
 }
