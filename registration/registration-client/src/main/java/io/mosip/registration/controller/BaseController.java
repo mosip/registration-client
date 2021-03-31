@@ -199,10 +199,7 @@ public class BaseController {
 	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
 	
-	@Value("${mosip.registration.images.path:images}")
-	private String imagesPath;
-	
-	@Value("${mosip.registration.theme:}")
+	@Value("${mosip.registration.images.theme:}")
 	private String imagesTheme;
 
 	protected ApplicationContext applicationContext = ApplicationContext.getInstance();
@@ -1965,7 +1962,7 @@ public class BaseController {
 		if (imageView != null) {
 			Image image;
 			try {
-				image = getImage(imageName);
+				image = getImage(imageName, false);
 				if (image != null) {
 
 					imageView.setImage(image);
@@ -1977,35 +1974,46 @@ public class BaseController {
 		}
 	}
 
-	public Image getImage(String imageName) throws RegBaseCheckedException {
+	public Image getImage(String imageName, boolean canDefault) throws RegBaseCheckedException {
 
 		if (imageName == null || imageName.isEmpty()) {
 			throw new RegBaseCheckedException();
 		}
 
-		Image image = null;
-		try {
-			
-			
-			image = new Image(getImageFilePath(imageName));
+
+		try {					
+
+			return getImage(getImageFilePath(getConfiguredFolder(),imageName));
+		} catch (RegBaseCheckedException exception) {
+
+			if(canDefault) {
+			return getImage(getImageFilePath(RegistrationConstants.IMAGES,imageName));
+			} else {
+				throw exception;
+			}
+		}
+
+
+	}
+
+	private Image getImage(String uri) throws RegBaseCheckedException {
+
+        try {
+
+
+			return  new Image(uri);
 		} catch (Exception exception) {
 
 			LOGGER.error("Exception while Getting Image", exception);
 			throw new RegBaseCheckedException();
 		}
-
-		return image;
 	}
 
-	private String getImagesConfiguredFilePath() {
-		return imagesPath;
+	private String getConfiguredFolder() {
+		return RegistrationConstants.IMAGES.concat(imagesTheme !=null && !imagesTheme.isEmpty() ? "_"+imagesTheme : "");
 	}
 
-	private String getConfiguredImagesTheme() {
-		return imagesTheme;
-	}
-	
-	public String getImageFilePath(String imageName) {
-		return getImagesConfiguredFilePath().concat(File.separator).concat(getConfiguredImagesTheme()!=null ? getConfiguredImagesTheme().concat(File.separator) : "").concat(imageName);
+	public String getImageFilePath(String configFolder,String imageName) {
+		return configFolder.concat(File.separator).concat(imageName);
 	}
 }
