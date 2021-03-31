@@ -113,7 +113,7 @@ public class TemplateGenerator extends BaseService {
 
 	@Autowired
 	private JobConfigurationService jobConfigurationService;
-	
+
 	@Autowired
 	private SoftwareUpdateHandler softwareUpdateHandler;
 
@@ -459,7 +459,7 @@ public class TemplateGenerator extends BaseService {
 	}
 
 	private void generateQRCode(RegistrationDTO registration, Map<String, Object> templateValues,
-			ResourceBundle applicationLanguageProperties) throws RegBaseCheckedException {
+								ResourceBundle applicationLanguageProperties) throws RegBaseCheckedException {
 		try {
 			StringBuilder qrCodeString = new StringBuilder();
 			qrCodeString.append(applicationLanguageProperties.getString("registrationid")).append(" : ").append("\n")
@@ -501,7 +501,7 @@ public class TemplateGenerator extends BaseService {
 			if (!field.getType().equalsIgnoreCase(RegistrationConstants.SIMPLE_TYPE)) {
 				return value;
 			}
-		}	
+		}
 		return value;
 	}
 
@@ -547,14 +547,14 @@ public class TemplateGenerator extends BaseService {
 		}
 		return RegistrationConstants.EMPTY;
 	}
-	
+
 	private byte[] getSegmentedImageBytes(BiometricsDto biometricsDto, RegistrationDTO registration) {
 		return registration.streamImages.get(String.format("%s_%s_%s", biometricsDto.getSubType(),
 				biometricsDto.getBioAttribute(), biometricsDto.getNumOfRetries()));
 	}
-	
+
 	public ResponseDTO generateDashboardTemplate(String templateText, TemplateManagerBuilder templateManagerBuilder,
-			String templateType, String applicationStartTime) throws RegBaseCheckedException {
+												 String templateType, String applicationStartTime) throws RegBaseCheckedException {
 		ResponseDTO response = new ResponseDTO();
 
 		try {

@@ -25,7 +25,6 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.FXUtils;
-import io.mosip.registration.controller.GenericController;
 import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.response.SchemaDto;
 import javafx.collections.ObservableList;
@@ -66,15 +65,14 @@ public class UpdateUINController extends BaseController implements Initializable
 	private Button backBtn;
 	@FXML
 	private ImageView backImageView;
+	@FXML
+	private ImageView continueImageView;
 
 	@Autowired
 	private UinValidator<String> uinValidatorImpl;
 
 	@Autowired
 	Validations validation;
-	
-	@Autowired
-	private GenericController genericController;
 
 	@FXML
 	FlowPane parentFlowPane;
@@ -96,6 +94,12 @@ public class UpdateUINController extends BaseController implements Initializable
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 
+//		backImageView	images/arrowLeft.png
+//		continueImageView	images/arrowRight.png
+
+		setImage(backImageView, RegistrationConstants.ARROW_LEFT_IMG);
+		setImage(continueImageView, RegistrationConstants.ARROW_RIGHT_IMG);
+		
 		fxUtils = FXUtils.getInstance();
 		checkBoxKeeper = new HashMap<>();
 		Map<String, UiSchemaDTO> schemaMap = getValidationMap();
@@ -114,14 +118,12 @@ public class UpdateUINController extends BaseController implements Initializable
 		});
 
 		try {
-			Image backInWhite = new Image(getClass().getResourceAsStream(RegistrationConstants.BACK_FOCUSED));
-			Image backImage = new Image(getClass().getResourceAsStream(RegistrationConstants.BACK));
-
+			
 			backBtn.hoverProperty().addListener((ov, oldValue, newValue) -> {
 				if (newValue) {
-					backImageView.setImage(backInWhite);
+					setImage(backImageView, RegistrationConstants.BACK_FOCUSED_IMG);
 				} else {
-					backImageView.setImage(backImage);
+					setImage(backImageView, RegistrationConstants.ARROW_LEFT_IMG);
 				}
 			});
 		} catch (RuntimeException runtimeException) {
@@ -200,6 +202,7 @@ public class UpdateUINController extends BaseController implements Initializable
 					}
 				}
 
+
 				LOGGER.debug(LOG_REG_UIN_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 						"selectedFieldGroups size : " + selectedFieldGroups.size());
 				LOGGER.debug(LOG_REG_UIN_UPDATE, APPLICATION_NAME, APPLICATION_ID,
@@ -212,7 +215,6 @@ public class UpdateUINController extends BaseController implements Initializable
 							applicationContext.getBundle(getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0), RegistrationConstants.LABELS));
 
 					getScene(createRoot).setRoot(createRoot);
-					genericController.populateScreens();
 				} else {
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UPDATE_UIN_SELECTION_ALERT);
 				}

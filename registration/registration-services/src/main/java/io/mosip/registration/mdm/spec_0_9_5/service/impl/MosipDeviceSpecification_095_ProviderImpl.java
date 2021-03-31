@@ -25,6 +25,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.assertj.core.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -76,6 +77,12 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 	@Autowired
 	private MosipDeviceSpecificationFactory deviceSpecificationFactory;
 
+	@Value("${mosip.registration.mdm.trust.domain.rcapture:DEVICE}")
+	private String rCaptureTrustDomain;
+
+	@Value("${mosip.registration.mdm.trust.domain.digitalId:FTM}")
+	private String digitalIdTrustDomain;
+
 	@Override
 	public String getSpecVersion() {
 		return SPEC_VERSION;
@@ -117,13 +124,13 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 
 	@Override
 	public InputStream stream(MdmBioDevice bioDevice, String modality) throws RegBaseCheckedException {
-
-		if (!isDeviceAvailable(bioDevice)) {
-			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
-					RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
-		}
-
 		try {
+
+			if (!isDeviceAvailable(bioDevice)) {
+				throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
+						RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
+			}
+
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Started Strema for modality : " + modality);
 
 			String url = bioDevice.getCallbackId() + MosipBioDeviceConstants.STREAM_ENDPOINT;
@@ -152,21 +159,21 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 			}
 
 			try {
-				byte[] byteArray = mosipDeviceSpecificationHelper.getJPEGByteArray(urlStream, System.currentTimeMillis()
-						+ (timeout != null && !timeout.isEmpty() ? Long.parseLong(timeout) : 60000));
+				byte[] byteArray = mosipDeviceSpecificationHelper.getJPEGByteArray(urlStream,
+						System.currentTimeMillis() + Long.parseLong(timeout));
 
 				if (byteArray != null) {
 					LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 							"Stream Request Completed" + System.currentTimeMillis());
 					return urlStream;
 				}
-			} catch (RegBaseCheckedException exception) {
-				LOGGER.error("Stream Request failed", exception);
+
+			} catch (RegBaseCheckedException regBaseCheckedException) {
+				LOGGER.error("Stream Request failed", regBaseCheckedException);
 			}
 
-			if(urlStream != null) {
+			if(urlStream != null)
 				urlStream.close();
-			}
 
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_STREAM_TIMEOUT.getErrorCode(),
 					RegistrationExceptionConstants.MDS_STREAM_TIMEOUT.getErrorMessage());
@@ -246,7 +253,7 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 				}
 				if (rCaptureResponseBiometricsDTO.getData() != null
 						&& !rCaptureResponseBiometricsDTO.getData().isEmpty()) {
-					mosipDeviceSpecificationHelper.validateJWTResponse(rCaptureResponseBiometricsDTO.getData());
+					mosipDeviceSpecificationHelper.validateJWTResponse(rCaptureResponseBiometricsDTO.getData(), rCaptureTrustDomain);
 					String payLoad = mosipDeviceSpecificationHelper.getPayLoad(rCaptureResponseBiometricsDTO.getData());
 
 					RCaptureResponseDataDTO dataDTO = mapper.readValue(
@@ -390,7 +397,7 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 	}
 
 	private DigitalId getDigitalId(String digitalId) throws IOException, RegBaseCheckedException, DeviceException {
-		mosipDeviceSpecificationHelper.validateJWTResponse(digitalId);
+		mosipDeviceSpecificationHelper.validateJWTResponse(digitalId, digitalIdTrustDomain);
 		return mosipDeviceSpecificationHelper.getMapper().readValue(
 				new String(Base64.getUrlDecoder().decode(mosipDeviceSpecificationHelper.getPayLoad(digitalId))),
 				DigitalId.class);

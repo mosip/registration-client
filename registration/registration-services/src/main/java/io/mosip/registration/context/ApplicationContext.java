@@ -17,7 +17,7 @@ import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 /**
  * This class will load all the property files as bundles All application level
  * details will be loaded in a map
- * 
+ *
  * @author Taleev Aalam
  *
  */
@@ -39,7 +39,7 @@ public class ApplicationContext {
 
 	private List<String> mandatoryLanguages;
 	private List<String> optionalLanguages;
-	
+
 	public List<String> getMandatoryLanguages() {
 		return mandatoryLanguages;
 	}
@@ -93,21 +93,21 @@ public class ApplicationContext {
 
 	/**
 	 * here we will load the property files such as labels, messages and validation.
-	 * 
+	 *
 	 * </P>
 	 * <p>
 	 * Based on those languages these property files will be loaded.
 	 * </p>
-	 * 
+	 *
 	 * @return
-	 * 
-	 * 
+	 *
+	 *
 	 */
 	public void loadResourceBundle() {
 		try {
 			if (applicationLanguge == null) {
 				List<String> langList = Stream.concat(mandatoryLanguages.stream(), optionalLanguages.stream())
-                        .collect(Collectors.toList());
+						.collect(Collectors.toList());
 
 				if (null != langList && !langList.isEmpty()) {
 					//choosing first language in the concatenated list as default application language

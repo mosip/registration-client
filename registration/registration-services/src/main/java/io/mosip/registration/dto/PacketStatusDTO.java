@@ -28,5 +28,6 @@ public class PacketStatusDTO {
 	private String name;
 	private String phone;
 	private String email;
+	private String userId;
 	
 }

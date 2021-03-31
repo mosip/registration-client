@@ -21,7 +21,6 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
-import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -56,6 +55,8 @@ public class SendNotificationController extends BaseController implements Initia
 	private ImageView emailIcon;
 	@FXML
 	private ImageView mobileIcon;
+	@FXML
+	private ImageView closeImageView;
 	@FXML
 	private Button send;
 
@@ -102,6 +103,16 @@ public class SendNotificationController extends BaseController implements Initia
 			mobile.setVisible(false);
 			mobileIcon.setVisible(false);
 		}
+		
+//		emailIcon	/images/Email.png
+//		mobileIcon	images/EnterMobile.png
+//		closeImageView	./images/Close.png
+		
+		setImage(emailIcon	, RegistrationConstants.EMAIL_IMG);
+		setImage(mobileIcon	, RegistrationConstants.MOBILE_IMG);
+		setImage(closeImageView	, RegistrationConstants.CLOSE_IMG);
+
+
 	}
 
 	/**
@@ -127,11 +138,11 @@ public class SendNotificationController extends BaseController implements Initia
 		LOGGER.debug("REGISTRATION - UI- SEND_NOTIFICATION", APPLICATION_NAME, APPLICATION_ID, "Popup is closed");
 	}
 
-	private boolean validateMail(String emailId) {
-		return validations.validateSingleString(emailId, email.getId(), ApplicationContext.applicationLanguage());
+	/*private boolean validateMail(String emailId) {
+		return validations.validateSingleString(emailId, email.getId());
 	}
 
 	private boolean validateMobile(String mobileNo) {
-		return validations.validateSingleString(mobileNo, mobile.getId(), ApplicationContext.applicationLanguage());
-	}
+		return validations.validateSingleString(mobileNo, mobile.getId());
+	}*/
 }

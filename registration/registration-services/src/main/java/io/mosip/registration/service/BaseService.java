@@ -681,14 +681,10 @@ public class BaseService {
 		ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO();
 		errorResponseDTO.setCode(RegistrationConstants.ERRORS);
 		String errorMessage = RegistrationConstants.API_CALL_FAILED;
-		if (httpResponse != null && httpResponse.get(RegistrationConstants.ERRORS) != null) {
-			List<HashMap<String, String>> errors = (List<HashMap<String, String>>) httpResponse
-					.get(RegistrationConstants.ERRORS);
-
-			// TODO Commented as getting error
-//			LOGGER.error("Response Errors >>>> {}", errors);
-			errorMessage = errors.isEmpty() ? RegistrationConstants.API_CALL_FAILED
-					: errors.get(0).get(RegistrationConstants.ERROR_MSG);
+		if(httpResponse != null && httpResponse.get(RegistrationConstants.ERRORS) != null) {
+			List<HashMap<String, String>> errors = (List<HashMap<String, String>>) httpResponse.get(RegistrationConstants.ERRORS);
+			LOGGER.error("Response Errors >>>> {}", errors);
+			errorMessage = errors.isEmpty() ? RegistrationConstants.API_CALL_FAILED : errors.get(0).get(RegistrationConstants.ERROR_MSG);
 		}
 		errorResponseDTO.setMessage(errorMessage);
 		erResponseDTOs.add(errorResponseDTO);

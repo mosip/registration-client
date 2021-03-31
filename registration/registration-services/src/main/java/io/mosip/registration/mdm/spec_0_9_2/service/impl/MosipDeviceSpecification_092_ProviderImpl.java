@@ -24,6 +24,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.assertj.core.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -74,6 +75,15 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 	@Autowired
 	private MosipDeviceSpecificationFactory deviceSpecificationFactory;
 
+	@Value("${mosip.registration.mdm.trust.domain.rcapture:DEVICE}")
+	private String rCaptureTrustDomain;
+
+	@Value("${mosip.registration.mdm.trust.domain.digitalId:FTM}")
+	private String digitalIdTrustDomain;
+
+	@Value("${mosip.registration.mdm.trust.domain.deviceinfo:DEVICE}")
+	private String deviceInfoTrustDomain;
+
 	@Override
 	public String getSpecVersion() {
 		return SPEC_VERSION;
@@ -114,6 +124,11 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 	public InputStream stream(MdmBioDevice bioDevice, String modality) throws RegBaseCheckedException {
 
 		try {
+
+			if (!isDeviceAvailable(bioDevice)) {
+				throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
+						RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
+			}
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Started Strema for modality : " + modality);
 			String url = mosipDeviceSpecificationHelper.buildUrl(bioDevice.getPort(),
@@ -210,7 +225,7 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 				LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 						"Getting data payload of biometric" + System.currentTimeMillis());
 
-				mosipDeviceSpecificationHelper.validateJWTResponse(rCaptureResponseBiometricsDTO.getData());
+				mosipDeviceSpecificationHelper.validateJWTResponse(rCaptureResponseBiometricsDTO.getData(), rCaptureTrustDomain);
 				String payLoad = mosipDeviceSpecificationHelper.getPayLoad(rCaptureResponseBiometricsDTO.getData());
 
 				RCaptureResponseDataDTO dataDTO = mapper.readValue(new String(Base64.getUrlDecoder().decode(payLoad)),
@@ -316,7 +331,7 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 	}
 
 	private DigitalId getDigitalId(String digitalId) throws IOException, RegBaseCheckedException, DeviceException {
-		mosipDeviceSpecificationHelper.validateJWTResponse(digitalId);
+		mosipDeviceSpecificationHelper.validateJWTResponse(digitalId, digitalIdTrustDomain);
 		return mosipDeviceSpecificationHelper.getMapper().readValue(
 				new String(Base64.getUrlDecoder().decode(mosipDeviceSpecificationHelper.getPayLoad(digitalId))),
 				DigitalId.class);
@@ -349,9 +364,8 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 					"Entering into Device availbale check....." + System.currentTimeMillis());
 
-			String requestBody = null;
 			ObjectMapper mapper = new ObjectMapper();
-			requestBody = mapper.writeValueAsString(deviceDiscoveryRequest);
+			String requestBody = mapper.writeValueAsString(deviceDiscoveryRequest);
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for RCapture...." + requestBody);
 

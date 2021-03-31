@@ -663,7 +663,7 @@ Working on new Css by taleev
 
 .searchBoxTextStyle {
 	-fx-pref-height: 30.0px;
-	-fx-pref-width: 312.0px;
+	-fx-pref-width: 320.0px;
 	-fx-border-width: 0.0 0.0 0.0 0.0;
 	-fx-border-color: #C9C9C9;
 	-fx-background-color: -fx-text-box-border, -fx-control-inner-background;
@@ -996,6 +996,16 @@ Working on new Css by taleev
 	-fx-border-color: #005baa;
 }
 
+.filterCombobox {
+	-fx-background-color: #ffffff;
+	-fx-font-size: 14.0px;	
+	-fx-pref-height: 35.0px;
+	-fx-pref-width: 240.0px;
+	-fx-border-width: 0.0 0.0 0.0 0.0;
+	-fx-border-color: #C9C9C9;
+	-fx-background-color: -fx-text-box-border, -fx-control-inner-background;
+}
+
 .demographicComboboxFocused {
 	-fx-background-color: #ffffff;
 	-fx-border-width: 0.0 0.0 1.0 0.0;
@@ -1317,6 +1327,10 @@ Working on new Css by taleev
 	-fx-border-width: 0.0 0.0 0.0 0.0;
 }
 
+.table-cell {
+    -fx-alignment: CENTER;
+}
+
 .table-row-cell {
 	-fx-background-color: #FFFFFF;
 	-fx-background-insets: 0.0, 0.0 0.0 1.0 0.0;
@@ -1354,7 +1368,7 @@ Working on new Css by taleev
 }
 
 .table-view .column-header .label {
-	-fx-alignment: null;
+	-fx-alignment: CENTER;
 	-fx-text-fill: #666666;
 	-fx-font: 15.0px Roboto;
 }
