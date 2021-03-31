@@ -4,10 +4,13 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -19,6 +22,7 @@ import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
+import org.assertj.core.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -646,7 +650,19 @@ public class DocumentScanController extends BaseController {
 			try {
 
 				if (documentDto != null) {
+					
+					
+					if("jpg".equalsIgnoreCase(documentDto.getFormat())) {
+					          InputStream is = new ByteArrayInputStream(documentDto.getDocument());
+			                   BufferedImage newBi = ImageIO.read(is);
+			        
+			                   List<BufferedImage> list = new LinkedList<>();
+			                   list.add(newBi);
+			                   setScannedPages(list);
+					} else {
+			        
 					setScannedPages(documentScanFacade.pdfToImages(documentDto.getDocument()));
+					}
 				}
 			} catch (IOException exception) {
 				LOGGER.error("REGISTRATION - DOCUMENT_SCAN_CONTROLLER", APPLICATION_NAME,

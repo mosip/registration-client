@@ -262,6 +262,7 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 							documentDto.setFormat(fieldValue.getString("format"));
 							documentDto.setType(fieldValue.getString("type"));
 							documentDto.setValue(fieldValue.getString("value"));
+							documentDto.setRefNumber((fieldValue.getString("docRefId")));
 							getRegistrationDtoContent().addDocument(field.getId(), documentDto);
 						}
 						break;
