@@ -22,6 +22,7 @@ import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.idvalidator.exception.InvalidIDException;
 import io.mosip.kernel.core.idvalidator.spi.RidValidator;
 import io.mosip.kernel.core.idvalidator.spi.UinValidator;
+import io.mosip.kernel.core.idvalidator.spi.VidValidator;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
@@ -71,6 +72,8 @@ public class Validations extends BaseController {
 	private UinValidator<String> uinValidator;
 	@Autowired
 	private RidValidator<String> ridValidator;
+	@Autowired
+	private VidValidator<String> vidValidator;
 	@Autowired
 	private DateValidation dateValidation;
 	@Autowired
@@ -278,7 +281,7 @@ public class Validations extends BaseController {
 		}
 
 		if (!isLocalLanguageField && uiSchemaDTO != null
-				&& Arrays.asList("UIN", "RID").contains(uiSchemaDTO.getSubType())
+				&& Arrays.asList("UIN", "RID","VID").contains(uiSchemaDTO.getSubType())
 				&& !validateUinOrRidField(value, getRegistrationDTOFromSession(), uiSchemaDTO)) {
 			generateInvalidValueAlert(parentPane, node.getId(),
 					getFromLabelMap(fieldId).concat(RegistrationConstants.SPACE)
@@ -523,6 +526,9 @@ public class Validations extends BaseController {
 
 			if ("RID".equals(schemaField.getSubType())) {
 				isValid = ridValidator.validateId(inputText);
+			}
+			if("VID".equals(schemaField.getSubType())) {
+				isValid = vidValidator.validateId(inputText);
 			}
 
 		} catch (InvalidIDException invalidRidException) {
