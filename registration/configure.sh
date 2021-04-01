@@ -9,11 +9,9 @@ crypto_key_env="$crypto_key_env" #key to encrypt the jar files
 client_certificate="$client_certificate_env" # Not used as of now
 client_upgrade_server="$client_upgrade_server_env" #docker hosted url
 reg_client_sdk_url="$reg_client_sdk_url_env"
+artifactory_url="$artifactory_url_env"
 
 echo "initalized variables"
-
-#download the certificate at runtime from the certificate store
-#wget -O mosip_cer.cer "${client_certificate_url}"
 
 mkdir -p /registration-libs/target/props
 
@@ -44,13 +42,8 @@ then
 	cp /sdkDependency/*.jar /sdkjars/
 else
 	echo "Downloading MOCK SDK..."
-	wget https://repo1.maven.org/maven2/io/mosip/mock/sdk/mock-sdk/0.9/mock-sdk-0.9.jar -P /sdkjars/
+	wget "${artifactory_url}/artifactory/libs-release-local/mock-sdk/1.1.5/mock-sdk.jar" -O /sdkjars/mock-sdk.jar
 fi
-
-## download Open JRE 11 + FX
-#wget https://cdn.azul.com/zulu/bin/zulu11.41.23-ca-fx-jre11.0.8-win_x64.zip -O zulu11.41.23-ca-fx-jre11.0.8-win_x64.zip
-
-#cp /registration-libs/resources/zulu11.41.23-ca-fx-jre11.0.8-win_x64.zip /
 
 #unzip Jre to be bundled
 /usr/bin/unzip /zulu11.41.23-ca-fx-jre11.0.8-win_x64.zip

@@ -26,6 +26,8 @@ ENV client_repo_env=${client_repo_url}
 
 ENV client_certificate_env=${client_certificate}
 
+ENV artifactory_url_env=${artifactory_url}
+
 ADD registration-client/target /registration-client/target
 
 ADD registration-libs/target /registration-libs/target
