@@ -1982,4 +1982,23 @@ public class BaseController {
 		}
 		return true;
 	}
+
+	public boolean proceedOnReRegistrationAction() {
+		if (isPrimaryOrSecondaryLanguageEmpty()) {
+			generateAlert(RegistrationConstants.ERROR,
+					RegistrationUIConstants.UNABLE_LOAD_LOGIN_SCREEN_LANGUAGE_NOT_SET);
+			return false;
+		}
+
+		try {
+			baseService.proceedWithReRegistration();
+		} catch (PreConditionCheckException ex){
+			generateAlert(RegistrationConstants.ERROR,
+					ApplicationContext.applicationMessagesBundle().containsKey(ex.getErrorCode()) ?
+							ApplicationContext.applicationMessagesBundle().getString(ex.getErrorCode()) :
+							ex.getErrorCode());
+			return false;
+		}
+		return true;
+	}
 }

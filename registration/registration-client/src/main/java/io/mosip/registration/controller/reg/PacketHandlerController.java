@@ -890,7 +890,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 	 * Load re registration screen.
 	 */
 	public void loadReRegistrationScreen() {
-		if (!proceedOnRegistrationAction()) {
+		if (!proceedOnReRegistrationAction()) {
 			return;
 		}
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Loading re-registration screen sarted.");

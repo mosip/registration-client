@@ -731,6 +731,22 @@ public class BaseService {
 					"Registration forbidden as center is inactive");
 	}
 
+	public void proceedWithReRegistration() throws PreConditionCheckException {
+		if(SessionContext.isSessionContextAvailable() &&
+				!userDetailService.isValidUser(SessionContext.userId()) && !isInitialSync())
+			throw new PreConditionCheckException(PreConditionChecks.USER_INACTIVE.name(),
+					"Registration forbidden as User is inactive");
+
+		String machineId = getStationId();
+		if(machineId == null)
+			throw new PreConditionCheckException(PreConditionChecks.MACHINE_INACTIVE.name(),
+					"Registration forbidden as machine is inactive");
+
+		if(!registrationCenterDAO.isMachineCenterActive(machineId))
+			throw new PreConditionCheckException(PreConditionChecks.CENTER_INACTIVE.name(),
+					"Registration forbidden as center is inactive");
+	}
+
 	/**
 	 * Checks if this is initial launch
 	 * @return
