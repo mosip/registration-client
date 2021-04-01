@@ -45,7 +45,7 @@ import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 @Service
 public class PublicKeySyncImpl extends BaseService implements PublicKeySync {
 
-	private static final Logger LOGGER = AppConfig.getLogger(PolicySyncServiceImpl.class);
+	private static final Logger LOGGER = AppConfig.getLogger(PublicKeySyncImpl.class);
 
 	@Autowired
 	private KeymanagerService keymanagerService;
