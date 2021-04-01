@@ -1,4 +1,4 @@
-FROM openjdk:11
+FROM mosipdev/javafx-reg-client-openjdk:latest
 
 RUN apt-get update
 
@@ -14,10 +14,6 @@ ARG client_upgrade_server
 
 ARG cert_server_URL
 
-ARG tpm_enabled
-
-ARG db_bootpwd
-
 ENV client_version_env=${client_version}
 
 ENV crypto_key_env=${crypto_key}
@@ -30,9 +26,7 @@ ENV client_repo_env=${client_repo_url}
 
 ENV client_certificate_env=${client_certificate}
 
-ENV tpm_enabled_env=${tpm_enabled}
-
-ENV db_bootpwd_env=${db_bootpwd}
+ENV artifactory_url_env=${artifactory_url}
 
 ADD registration-client/target /registration-client/target
 
