@@ -51,7 +51,8 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
  *
  */
 @ComponentScan(basePackages = {"io.mosip.kernel.core", "io.mosip.kernel.clientcrypto.service.impl",
-		"io.mosip.kernel.partnercertservice.service", "io.mosip.kernel.partnercertservice.helper"})
+		"io.mosip.kernel.partnercertservice.service", "io.mosip.kernel.partnercertservice.helper",
+		"io.mosip.kernel.biosdk.provider"})
 public class DaoConfig extends HibernateDaoConfig {
 
 	private static final Logger LOGGER = AppConfig.getLogger(DaoConfig.class);
@@ -119,8 +120,8 @@ public class DaoConfig extends HibernateDaoConfig {
 	public DataSource dataSource() {
 		if(this.driverManagerDataSource == null) {
 			setupDataSource();
-			jdbcTemplate();
 		}
+		jdbcTemplate();
 		return this.driverManagerDataSource;
 	}
 
