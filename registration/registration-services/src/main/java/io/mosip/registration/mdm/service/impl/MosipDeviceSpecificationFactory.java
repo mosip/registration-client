@@ -350,9 +350,9 @@ public class MosipDeviceSpecificationFactory {
 	}
 
 	public boolean isDeviceAvailable(String modality) throws RegBaseCheckedException {
-		String key = String.format("%s_%s", getDeviceType(modality).toLowerCase(),
-				getDeviceSubType(modality).toLowerCase());
-		MdmBioDevice bioDevice = deviceInfoMap.get(key);
+		/*String key = String.format("%s_%s", getDeviceType(modality).toLowerCase(),
+				getDeviceSubType(modality).toLowerCase());*/
+		MdmBioDevice bioDevice = getDeviceInfoByModality(modality);
 		if(bioDevice != null) {
 			Optional<MosipDeviceSpecificationProvider>  result = deviceSpecificationProviders.stream().filter(provider ->
 					provider.getSpecVersion().equalsIgnoreCase(bioDevice.getSpecVersion()) && provider.isDeviceAvailable(bioDevice)).findFirst();
