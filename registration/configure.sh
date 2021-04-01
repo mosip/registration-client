@@ -6,15 +6,12 @@ echo "Started with args"
 
 client_version_env="$client_version_env" #We should pick this from the jar not as an argument.
 crypto_key_env="$crypto_key_env" #key to encrypt the jar files
-client_tpm_enabled="$tpm_enabled_env" #Not used as of now
 client_certificate="$client_certificate_env" # Not used as of now
 client_upgrade_server="$client_upgrade_server_env" #docker hosted url
 reg_client_sdk_url="$reg_client_sdk_url_env"
+artifactory_url="$artifactory_url_env"
 
 echo "initalized variables"
-
-#download the certificate at runtime from the certificate store
-#wget -O mosip_cer.cer "${client_certificate_url}"
 
 mkdir -p /registration-libs/target/props
 
@@ -26,7 +23,7 @@ echo "mosip.reg.rollback.path=../BackUp" >> /registration-libs/target/props/mosi
 echo "mosip.reg.cerpath=/cer/mosip_cer.cer" >> /registration-libs/target/props/mosip-application.properties
 echo "mosip.reg.dbpath=db/reg" >> /registration-libs/target/props/mosip-application.properties
 echo "mosip.reg.xml.file.url=${client_upgrade_server}/registration-client/maven-metadata.xml" >> /registration-libs/target/props/mosip-application.properties
-echo "mosip.reg.client.tpm.availability=${client_tpm_enabled}" >> /registration-libs/target/props/mosip-application.properties
+echo "mosip.reg.client.tpm.availability=Y" >> /registration-libs/target/props/mosip-application.properties
 echo "mosip.client.upgrade.server.url=${client_upgrade_server}" >> /registration-libs/target/props/mosip-application.properties
 
 echo "created mosip-application.properties"
@@ -45,13 +42,8 @@ then
 	cp /sdkDependency/*.jar /sdkjars/
 else
 	echo "Downloading MOCK SDK..."
-	wget https://repo1.maven.org/maven2/io/mosip/mock/sdk/mock-sdk/0.9/mock-sdk-0.9.jar -P /sdkjars/
+	wget "${artifactory_url}/artifactory/libs-release-local/mock-sdk/1.1.5/mock-sdk.jar" -O /sdkjars/mock-sdk.jar
 fi
-
-## download Open JRE 11 + FX
-#wget https://cdn.azul.com/zulu/bin/zulu11.41.23-ca-fx-jre11.0.8-win_x64.zip -O zulu11.41.23-ca-fx-jre11.0.8-win_x64.zip
-
-cp /registration-libs/resources/zulu11.41.23-ca-fx-jre11.0.8-win_x64.zip /
 
 #unzip Jre to be bundled
 /usr/bin/unzip /zulu11.41.23-ca-fx-jre11.0.8-win_x64.zip
