@@ -144,8 +144,7 @@ public class DateValidation extends BaseController {
 		setTextFieldStyle(parentPane, ageField, isError);
 
 		if(isError) {
-			dobMessage.setText(RegistrationUIConstants.INVALID_DATE.concat(" / ")
-					.concat(RegistrationUIConstants.INVALID_AGE + getValueFromApplicationContext(RegistrationConstants.MAX_AGE)));
+			dobMessage.setText(RegistrationUIConstants.DOB_REQUIRED);
 			dobMessage.setVisible(true);
 			generateAlert(parentPane, RegistrationConstants.DOB, dobMessage.getText());
 		} else {

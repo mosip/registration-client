@@ -187,6 +187,7 @@ public class RegistrationUIConstants {
 	public static final String UIN_INVALID = bundle.getString("UIN_INVALID");
 	public static final String IS_BLOCKED_WORD = bundle.getString("IS_BLOCKED_WORD");
 	public static final String THRESHOLD = bundle.getString("THRESHOLD");
+	public static final String DOB_REQUIRED = bundle.getString("DOB_REQUIRED");
 	public static final String INVALID_DATE = bundle.getString("INVALID_DATE");
 	public static final String INVALID_YEAR = bundle.getString("INVALID_YEAR");
 	public static final String FUTURE_DOB = bundle.getString("FUTURE_DOB");
