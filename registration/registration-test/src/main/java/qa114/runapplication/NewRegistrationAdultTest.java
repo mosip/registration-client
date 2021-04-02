@@ -33,7 +33,6 @@ import org.apache.log4j.PropertyConfigurator;
 public class NewRegistrationAdultTest{
 
 	private static final Logger logger = LogManager.getLogger(NewRegistrationAdultTest.class);  
-
 	static FxRobot robot;
 	static String[] Strinrid;
 
@@ -44,7 +43,7 @@ public class NewRegistrationAdultTest{
 			String supervisorPwd,Double schemaVersion,String targetUrl
 			) 
 	{
-			LoginNewRegLogout lg=new LoginNewRegLogout();  
+		LoginNewRegLogout lg=new LoginNewRegLogout();  
 
 		Thread thread = new Thread() { 
 			@Override
@@ -55,14 +54,14 @@ public class NewRegistrationAdultTest{
 
 					Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait"))); 
 					robot=new FxRobot();
-					
+
 					RID rid=lg.newRegistrationAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonIdentity,
 							documentUpload,schemaVersion);
 
 					logger.info("RID RESULTS-"+ rid.result +"\t"+ rid.ridDateTime +"\t"+ rid.rid);
 					ExtentReportUtil.reports.flush();
-				
+
 				} catch (Exception e) {
 
 					logger.error(e.getMessage());
@@ -75,107 +74,103 @@ public class NewRegistrationAdultTest{
 
 		String args[]= {};
 		Application.launch(StartApplication.class, args); 
-		
-		
-		
+
+
+
 	}
 	public static void invokeRegClient(
 			String operatorId,String operatorPwd,String targetUrl
 			) 
 	{
-			LoginNewRegLogout lg=new LoginNewRegLogout();  
-
+		LoginNewRegLogout lg=new LoginNewRegLogout();  
 		Thread thread = new Thread() { 
 			@Override
 			public void run() {
 				try {
 
-					logger.info("thread inside calling testcase"); 
+						logger.info("thread inside calling testcase"); 
 
-					Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait"))); 
-					robot=new FxRobot();
-					boolean flag=lg.initialRegclientSet(robot, operatorId, operatorPwd, StartApplication.primaryStage);
-					if(flag==true)
-						logger.info("Initial setup Done");
-					else
-						logger.info("Initial setup not required");
-					ExtentReportUtil.reports.flush();
+						Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait"))); 
+						robot=new FxRobot();
+						boolean flag=lg.initialRegclientSet(robot, operatorId, operatorPwd, StartApplication.primaryStage);
+						if(flag==true)
+							logger.info("Initial setup Done");
+						else
+							logger.info("Initial setup not required");
+						ExtentReportUtil.reports.flush();
 
-				} catch (Exception e) {
+					} catch (Exception e) {
+						logger.error(e.getMessage());
+					}
 
-					logger.error(e.getMessage());
-				}	
+			}};
+
+				thread.start();
+
+				String args[]= {};
+				Application.launch(StartApplication.class, args); 
 			}
 
-		};
+			public static void main(String[] args) throws InterruptedException, IOException, JSONException { 
+				System.out.println("IN MAIN NEW REG" + args);
+				String targetUrl=PropertiesUtil.getKeyValue("mosip.upgradeserver");
+				String hostName=targetUrl.substring(targetUrl.indexOf("//")+2);
 
-		thread.start();
+				System.setProperty("java.net.useSystemProxies", "true");
+				System.setProperty("file.encoding", "UTF-8");
+				System.setProperty("derby.ui.codeset", "UTF-8");
 
-		String args[]= {};
-		Application.launch(StartApplication.class, args); 
+				System.setProperty("mosip.upgradeserver",targetUrl+"/");
+
+				System.setProperty("mosip.hostname",hostName);
+
+				System.setProperty("jdbc.drivers","org.apache.derby.jdbc.EmbeddedDriver");
+
+				//	invokeRegClient(PropertiesUtil.getKeyValue("operatorId"), 
+				//		PropertiesUtil.getKeyValue("operatorPwd"),PropertiesUtil.getKeyValue("mosip.upgradeserver"));
+
+				invokeRegClientNewReg(readJsonFileText(),readMapDocumentValues(),
+						PropertiesUtil.getKeyValue("operatorId"), 
+						PropertiesUtil.getKeyValue("operatorPwd"),
+						PropertiesUtil.getKeyValue("supervisorUserid"), 
+						PropertiesUtil.getKeyValue("supervisorUserpwd"),
+						Double.parseDouble(PropertiesUtil.getKeyValue("schemaversion")),
+						PropertiesUtil.getKeyValue("mosip.upgradeserver"));
+
+				System.exit(0);	
+			}
+
+			public static String readJsonFileText() throws IOException, JSONException
+			{
+				File f = new File(System.getProperty("user.dir")+PropertiesUtil.getKeyValue("IDJsonPath"));
+				String jsonTxt=null;
+				if (f.exists()){
+					InputStream is = new FileInputStream(f);
+					jsonTxt = IOUtils.toString(is, "UTF-8");
+					System.out.println(jsonTxt);
+					logger.info("readJsonFileText");
+
+				}
+				return jsonTxt;
+			}
 
 
-	}
-	public static void main(String[] args) throws InterruptedException, IOException, JSONException { 
-		System.out.println("IN MAIN NEW REG" + args);
-		String targetUrl=PropertiesUtil.getKeyValue("mosip.upgradeserver");
-		String hostName=targetUrl.substring(targetUrl.indexOf("//")+2);
+			public static HashMap<String, String> readMapDocumentValues()
+			{
+				HashMap<String, String> map=new HashMap<String, String>();
+				map.put("proofOfConsent","Registration Form");
+				map.put("proofOfAddress","Barangay ID");
+				map.put("proofOfIdentity","Postal ID");
 
-		System.setProperty("java.net.useSystemProxies", "true");
-		System.setProperty("file.encoding", "UTF-8");
-		System.setProperty("derby.ui.codeset", "UTF-8");
+				return map;
 
-		System.setProperty("mosip.upgradeserver",targetUrl+"/");
-
-		System.setProperty("mosip.hostname",hostName);
-
-		System.setProperty("jdbc.drivers","org.apache.derby.jdbc.EmbeddedDriver");
-
-//	invokeRegClient(PropertiesUtil.getKeyValue("operatorId"), 
-//		PropertiesUtil.getKeyValue("operatorPwd"),PropertiesUtil.getKeyValue("mosip.upgradeserver"));
-//		
-		invokeRegClientNewReg(readJsonFileText(),readMapDocumentValues(),
-				PropertiesUtil.getKeyValue("operatorId"), 
-				PropertiesUtil.getKeyValue("operatorPwd"),
-				PropertiesUtil.getKeyValue("supervisorUserid"), 
-				PropertiesUtil.getKeyValue("supervisorUserpwd"),
-				Double.parseDouble(PropertiesUtil.getKeyValue("schemaversion")),
-				PropertiesUtil.getKeyValue("mosip.upgradeserver"));
-
-		System.exit(0);	
-	}
-
-	public static String readJsonFileText() throws IOException, JSONException
-	{
-		File f = new File(System.getProperty("user.dir")+PropertiesUtil.getKeyValue("IDJsonPath"));
-		String jsonTxt=null;
-		if (f.exists()){
-			InputStream is = new FileInputStream(f);
-			jsonTxt = IOUtils.toString(is, "UTF-8");
-			System.out.println(jsonTxt);
-			logger.info("readJsonFileText");
+			}
 
 		}
-		return jsonTxt;
-	}
-
-
-	public static HashMap<String, String> readMapDocumentValues()
-	{
-		HashMap<String, String> map=new HashMap<String, String>();
-		map.put("proofOfConsent","Registration Form");
-		map.put("proofOfAddress","Barangay ID");
-		map.put("proofOfIdentity","Postal ID");
-
-		return map;
-
-	}
-
-}
 
 
 
-/*
+		/*
 String hostName=targetUrl.substring(targetUrl.indexOf("//")+2);
 
 System.setProperty("java.net.useSystemProxies", "true");
@@ -191,6 +186,6 @@ System.setProperty("jdbc.drivers","org.apache.derby.jdbc.EmbeddedDriver");
     System.setProperty("prism.text", "t2k");
     System.setProperty("java.awt.headless", "true");
 //}
- */
+		 */
 
 

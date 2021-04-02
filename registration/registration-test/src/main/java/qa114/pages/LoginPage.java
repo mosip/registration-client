@@ -20,6 +20,7 @@ import qa114.controls.Alerts;
 import qa114.pojo.output.RID;
 import qa114.runapplication.StartApplication;
 import qa114.utility.ExtentReportUtil;
+import qa114.utility.PropertiesUtil;
 import  qa114.utility.WaitsUtil;
 
 public class LoginPage {
@@ -131,7 +132,7 @@ public class LoginPage {
 			waitsUtil.clickNodeAssert(submit);
 			
 
-			Thread.sleep(40000);
+			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
 			waitsUtil.clickNodeAssert(success);
 			waitsUtil.clickNodeAssert(exit);
 

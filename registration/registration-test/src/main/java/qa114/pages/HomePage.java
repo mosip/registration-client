@@ -3,6 +3,8 @@ package qa114.pages;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.io.IOException;
+
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.testfx.api.FxRobot;
@@ -15,6 +17,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import qa114.controls.Alerts;
+import qa114.runapplication.NewRegistrationAdultTest;
 import qa114.utility.PropertiesUtil;
 import qa114.utility.WaitsUtil;
 
@@ -62,7 +65,7 @@ public class HomePage {
 		this.applicationPrimaryStage=applicationPrimaryStage;
 		this.scene=scene;
 		waitsUtil=new WaitsUtil(robot);
-		waitsUtil.clickNodeAssert(homeimg);
+		
 		alerts=new Alerts(robot);
 
 	}
@@ -76,10 +79,12 @@ public class HomePage {
 		waitsUtil.clickNodeAssert( homeimg);
 	}
 
-	public void clickHomeImg() {
-	waitsUtil.clickNodeAssert(homeimg);
-	}
 
+	
+	public void clickHomeImg() {
+		waitsUtil.clickNodeAssert(homeimg);
+	}
+	
 	public void clickSynchronizeData() 
 	{
 		try

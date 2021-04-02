@@ -105,7 +105,7 @@ public class LoginNewRegLogout {
 		try {
 			ExtentReportUtil.ExtentSetting();
 			ExtentReportUtil.test=ExtentReportUtil.reports.createTest("Verify Initial Application start");
-			ExtentReportUtil.step1=ExtentReportUtil.test.createNode("Loading RegClient");
+			ExtentReportUtil.step1=ExtentReportUtil.test.createNode("STEP 1-Loading RegClient");
 			
 			loginPage=new LoginPage(robot);
 			buttons=new Buttons(robot);
@@ -114,9 +114,9 @@ public class LoginNewRegLogout {
 			
 			//Load Login screen
 			loginPage.loadLoginScene(applicationPrimaryStage1);
+			ExtentReportUtil.step1.log(Status.PASS, "RegclientScreen Loaded");
 			
-			
-			ExtentReportUtil.step2=ExtentReportUtil.test.createNode("Operator Enter Details ");
+			ExtentReportUtil.step2=ExtentReportUtil.test.createNode("STEP 2-Operator Enter Details ");
 			
 			//Enter userid and password
 			loginPage.setUserId(loginUserid);
@@ -131,6 +131,7 @@ public class LoginNewRegLogout {
 			{
 				ExtentReportUtil.test.log(Status.FAIL, "FAIL");
 			}
+			ExtentReportUtil.reports.flush();
 		}
 		catch(Exception e)
 		{
@@ -149,7 +150,7 @@ public class LoginNewRegLogout {
 		
 		
 		
-		ExtentReportUtil.step1=ExtentReportUtil.test.createNode("Loading RegClient");
+		ExtentReportUtil.step1=ExtentReportUtil.test.createNode("STEP 1-Loading RegClient");
 		
 		loginPage=new LoginPage(robot);
 		buttons=new Buttons(robot);
@@ -160,7 +161,7 @@ public class LoginNewRegLogout {
 		loginPage.loadLoginScene(applicationPrimaryStage1);
 		
 		
-		ExtentReportUtil.step2=ExtentReportUtil.test.createNode("Operator Enter Details ");
+		ExtentReportUtil.step2=ExtentReportUtil.test.createNode("STEP 2-Operator Enter Details ");
 		
 		//Enter userid and password
 		loginPage.setUserId(loginUserid);
@@ -168,11 +169,12 @@ public class LoginNewRegLogout {
 		ExtentReportUtil.step2.log(Status.PASS, "Operator logs in");
 		
 		//New Registration
+		homePage.clickHomeImg();
 		homePage.clickSynchronizeData();
 		
 		demographicPage=homePage.clickNewRegistration();
 		
-		ExtentReportUtil.step3=ExtentReportUtil.test.createNode("Demographic, Biometric upload ");
+		ExtentReportUtil.step3=ExtentReportUtil.test.createNode("STEP 3-Demographic, Biometric upload ");
 		
 		webViewDocument=demographicPage.scemaDemoDocUpload(schemaVersion,jsonIdentity,documentUpload);
 		
@@ -185,7 +187,7 @@ public class LoginNewRegLogout {
 
 		buttons.clickContinueBtn();
 
-		ExtentReportUtil.step4=ExtentReportUtil.test.createNode("Accept Preview ");
+		ExtentReportUtil.step4=ExtentReportUtil.test.createNode("STEP 4-Accept Preview ");
 		
 		
 		rid=webViewDocument.acceptPreview(); //return thread and wait on thread
@@ -209,9 +211,12 @@ public class LoginNewRegLogout {
 		 * Enter user details
 		 */
 
+		
 		homePage.clickHomeImg();
 		
-		ExtentReportUtil.step5=ExtentReportUtil.test.createNode("Approve Packet ");
+		
+		
+		ExtentReportUtil.step5=ExtentReportUtil.test.createNode("STEP 5-Approve Packet ");
 		
 		
 
@@ -233,7 +238,7 @@ public class LoginNewRegLogout {
 		 * Upload the packet
 		 */
 		
-		ExtentReportUtil.step6=ExtentReportUtil.test.createNode("Upload Packet ");
+		ExtentReportUtil.step6=ExtentReportUtil.test.createNode("STEP 6-Upload Packet ");
 		
 
 		uploadPacketPage=homePage.clickuploadPacketImageView( applicationPrimaryStage, scene);
@@ -257,7 +262,7 @@ public class LoginNewRegLogout {
 		if(result==true)
 		{ExtentReportUtil.step6.log(Status.PASS, "Upload Packet done");
 
-			ExtentReportUtil.test.log(Status.PASS, "TESTCASE PASS");
+			ExtentReportUtil.test.log(Status.PASS, "TESTCASE PASS\n" +"RID "+ rid.rid +"\nDATE TiME "+ rid.ridDateTime +"\nENVIRONMENT" +System.getProperty("mosip.hostname"));
 		}		else
 			ExtentReportUtil.test.log(Status.FAIL, "TESTCASE FAIL");
 
