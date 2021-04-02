@@ -262,7 +262,7 @@ public class LoginNewRegLogout {
 		if(result==true)
 		{ExtentReportUtil.step6.log(Status.PASS, "Upload Packet done");
 
-			ExtentReportUtil.test.log(Status.PASS, "TESTCASE PASS\n" +"RID "+ rid.rid +"\nDATE TiME "+ rid.ridDateTime +"\nENVIRONMENT" +System.getProperty("mosip.hostname"));
+			ExtentReportUtil.test.log(Status.PASS, "TESTCASE PASS\n" +" RID-"+ rid.rid +" DATE TIME-"+ rid.ridDateTime +" ENVIRONMENT-" +System.getProperty("mosip.hostname"));
 		}		else
 			ExtentReportUtil.test.log(Status.FAIL, "TESTCASE FAIL");
 

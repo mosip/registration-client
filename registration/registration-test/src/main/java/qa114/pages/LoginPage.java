@@ -154,6 +154,7 @@ public class LoginPage {
 		System.out.println("In Login test Loaded");
 		
 		//this.robot=robot;
+		waitsUtil.clickNodeAssert("Update Later");
 		waitsUtil.clickNodeAssert(loginScreen);
 		
 		
