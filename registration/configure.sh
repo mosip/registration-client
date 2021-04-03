@@ -32,6 +32,17 @@ cd /registration-libs/target
 jar uf registration-libs-${client_version_env}.jar props/mosip-application.properties
 cd /
 
+if wget "${artifactory_url}/artifactory/libs-release-local/reg-client/resources.zip"
+then
+  echo "Successfully downloaded reg-client resources, Adding it to reg-client jar"
+  /usr/bin/unzip /resources.zip
+  cd /resources
+  jar uvf /registration-client/target/registration-client-${client_version_env}.jar .
+else
+  echo "No separate resources found !!"
+fi
+
+cd /
 mkdir -p /sdkjars
 
 if [ "$reg_client_sdk_url" ]
@@ -45,14 +56,15 @@ else
 	wget "${artifactory_url}/artifactory/libs-release-local/mock-sdk/1.1.5/mock-sdk.jar" -O /sdkjars/mock-sdk.jar
 fi
 
+
+wget "${artifactory_url}/artifactory/libs-release-local/icu4j/icu4j.jar" /registration-client/target/lib/icu4j.jar
+wget "${artifactory_url}/artifactory/libs-release-local/icu4j/kernel-transliteration-icu4j.jar" /registration-client/target/lib/kernel-transliteration-icu4j.jar
+
 #unzip Jre to be bundled
 /usr/bin/unzip /zulu11.41.23-ca-fx-jre11.0.8-win_x64.zip
 mkdir -p /registration-libs/resources/jre
 mv /zulu11.41.23-ca-fx-jre11.0.8-win_x64/* /registration-libs/resources/jre/
 chmod -R a+x /registration-libs/resources/jre
-
-## temp fix - for class loader issue
-rm /registration-libs/resources/rxtx/bcprov-jdk14-138.jar
 
 /usr/local/openjdk-11/bin/java -cp /registration-libs/target/*:/registration-client/target/lib/* io.mosip.registration.cipher.ClientJarEncryption "/registration-client/target/registration-client-${client_version_env}.jar" "${crypto_key_env}" "${client_version_env}" "/registration-libs/target/" "/build_files/${client_certificate}" "/registration-libs/resources/db/reg" "/registration-client/target/registration-client-${client_version_env}.jar" "/registration-libs/resources/rxtx" "/registration-libs/resources/jre" "/registration-libs/resources/batch/run.bat" "/registration-libs/target/props/mosip-application.properties" "/sdkjars"
 
@@ -68,7 +80,6 @@ ls -ltr lib | grep bc
 
 /usr/bin/zip -r reg-client.zip bin
 /usr/bin/zip -r reg-client.zip lib
-#/usr/bin/zip reg-client.zip MANIFEST.MF
 
 echo "setting up nginx static content"
 

@@ -15,8 +15,6 @@ import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.transliteration.spi.Transliteration;
-import io.mosip.kernel.transliteration.icu4j.impl.TransliterationImpl;
-import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
@@ -87,7 +85,7 @@ public class TextFieldFxControl extends FxControl {
 		validation = applicationContext.getBean(Validations.class);
 		fxComponents = applicationContext.getBean(FXComponents.class);
 		demographicChangeActionHandler = applicationContext.getBean(DemographicChangeActionHandler.class);
-		transliteration = (Transliteration<String>) applicationContext.getBean(TransliterationImpl.class);
+		transliteration = (Transliteration<String>) applicationContext.getBean(Transliteration.class);
 		genericController = applicationContext.getBean(GenericController.class);
 	}
 
