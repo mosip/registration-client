@@ -43,5 +43,3 @@ RUN chmod a+x configure.sh \
  && rm  -f /registration-libs/target/registration-libs-*-sources.jar
 
 ENTRYPOINT ["./configure.sh" ]
-
-#CMD [ "${client_version_env}", "${crypto_key_env}", "${db_bootpwd_env}", "${tpm_enabled_env}", "${client_certificate_env}", "${client_upgrade_server_env}" ]
