@@ -1925,6 +1925,21 @@ public class BaseController {
 		return true;
 	}
 
+	public boolean proceedOnReRegistrationAction() {
+		try {
+			baseService.proceedWithReRegistration();
+		} catch (PreConditionCheckException ex){
+			ResourceBundle resourceBundle = applicationContext.getBundle(applicationContext.getApplicationLanguage(),
+					RegistrationConstants.MESSAGES);
+
+			generateAlert(RegistrationConstants.ERROR,
+					resourceBundle.containsKey(ex.getErrorCode()) ? resourceBundle.getString(ex.getErrorCode())
+							: ex.getErrorCode());
+			return false;
+		}
+		return true;
+	}
+
 	protected List<GenericDto> getConfiguredLanguages() {
 		ResourceBundle resourceBundle = ResourceBundle.getBundle(RegistrationConstants.LABELS, Locale.getDefault());
 		List<GenericDto> languages = new ArrayList<>();
