@@ -58,7 +58,7 @@ fi
 
 
 wget "${artifactory_url}/artifactory/libs-release-local/icu4j/icu4j.jar" /registration-client/target/lib/icu4j.jar
-wget "${artifactory_url}/artifactory/libs-release-local/icu4j/kernel-transliteration-icu4j.jar /registration-client/target/lib/kernel-transliteration-icu4j.jar
+wget "${artifactory_url}/artifactory/libs-release-local/icu4j/kernel-transliteration-icu4j.jar" /registration-client/target/lib/kernel-transliteration-icu4j.jar
 
 #unzip Jre to be bundled
 /usr/bin/unzip /zulu11.41.23-ca-fx-jre11.0.8-win_x64.zip
