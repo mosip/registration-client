@@ -178,9 +178,6 @@ public class BaseController {
 	@Autowired
 	private UserOnboardParentController userOnboardParentController;
 
-	@Value("${mosip.registration.css_file_path:}")
-	private String cssName;
-
 	@Autowired
 	private RestartController restartController;
 
@@ -198,9 +195,6 @@ public class BaseController {
 
 	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
-	
-	@Value("${mosip.registration.images.theme:}")
-	private String imagesTheme;
 
 	protected ApplicationContext applicationContext = ApplicationContext.getInstance();
 
@@ -239,6 +233,12 @@ public class BaseController {
 	}
 
 	private static List<String> ALL_BIO_ATTRIBUTES = null;
+
+	@Value("${mosip.registration.images.theme:}")
+	private String imagesTheme;
+
+	@Value("${mosip.registration.css.theme:}")
+	private String cssTheme;
 
 	static {
 		ALL_BIO_ATTRIBUTES = new ArrayList<String>();
@@ -1849,7 +1849,7 @@ public class BaseController {
 	}
 
 	public String getCssName() {
-		return cssName;
+		return cssTheme == null || cssTheme.isBlank() ? "application.css" : String.format("application-%s.css", cssTheme);
 	}
 
 	protected String getLocalZoneTime(String time) {
@@ -2012,10 +2012,7 @@ public class BaseController {
 	}
 
 	private Image getImage(String uri) throws RegBaseCheckedException {
-
         try {
-
-
 			return  new Image(uri);
 		} catch (Exception exception) {
 
@@ -2025,7 +2022,7 @@ public class BaseController {
 	}
 
 	private String getConfiguredFolder() {
-		return RegistrationConstants.IMAGES.concat(imagesTheme !=null && !imagesTheme.isEmpty() ? "_"+imagesTheme : "");
+		return RegistrationConstants.IMAGES.concat(imagesTheme !=null && !imagesTheme.isBlank() ? "_"+imagesTheme : "");
 	}
 
 	public String getImageFilePath(String configFolder,String imageName) {

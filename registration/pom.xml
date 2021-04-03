@@ -300,11 +300,6 @@
 
 			<dependency>
 				<groupId>io.mosip.kernel</groupId>
-				<artifactId>kernel-transliteration-icu4j</artifactId>
-				<version>${mosip.core.kernel.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.mosip.kernel</groupId>
 				<artifactId>kernel-applicanttype-api</artifactId>
 				<version>${mosip.core.kernel.version}</version>
 			</dependency>
