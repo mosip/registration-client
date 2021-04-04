@@ -111,8 +111,17 @@ public class NewRegistrationAdultTest{
 				Application.launch(StartApplication.class, args); 
 			}
 
-			public static void main(String[] args) throws InterruptedException, IOException, JSONException { 
-				System.out.println("IN MAIN NEW REG" + args);
+			public static void main(String[] args)  { 
+				///TBD
+//				System.setProperty("testfx.robot", "glass");
+//			    System.setProperty("testfx.headless", "true");
+//			    System.setProperty("prism.order", "sw");
+//			    System.setProperty("prism.text", "t2k");
+//			    System.setProperty("java.awt.headless", "true");
+//			    
+			    ///////TBD
+				
+				try {
 				String targetUrl=PropertiesUtil.getKeyValue("mosip.upgradeserver");
 				String hostName=targetUrl.substring(targetUrl.indexOf("//")+2);
 
@@ -136,20 +145,29 @@ public class NewRegistrationAdultTest{
 						PropertiesUtil.getKeyValue("supervisorUserpwd"),
 						Double.parseDouble(PropertiesUtil.getKeyValue("schemaversion")),
 						PropertiesUtil.getKeyValue("mosip.upgradeserver"));
-
+				}catch(Exception e)
+				{
+					logger.error(e.getMessage());
+				}
 				System.exit(0);	
 			}
 
-			public static String readJsonFileText() throws IOException, JSONException
+			public static String readJsonFileText()
 			{
-				File f = new File(System.getProperty("user.dir")+PropertiesUtil.getKeyValue("IDJsonPath"));
 				String jsonTxt=null;
+				try {
+				File f = new File(System.getProperty("user.dir")+PropertiesUtil.getKeyValue("IDJsonPath"));
+				
 				if (f.exists()){
 					InputStream is = new FileInputStream(f);
 					jsonTxt = IOUtils.toString(is, "UTF-8");
 					System.out.println(jsonTxt);
 					logger.info("readJsonFileText");
 
+				}}
+				catch(Exception e)
+				{
+					logger.error(e.getMessage());
 				}
 				return jsonTxt;
 			}

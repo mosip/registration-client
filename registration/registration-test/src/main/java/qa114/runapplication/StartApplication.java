@@ -57,7 +57,9 @@ public class StartApplication extends Application{
 			e.printStackTrace();
 		}
 	}
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) {
+		try {
+			
 		
 		System.setProperty("java.net.useSystemProxies", "true");
 		System.setProperty("file.encoding", "UTF-8");
@@ -68,5 +70,10 @@ public class StartApplication extends Application{
 		System.out.println("MAIN INVOKED NNEEHEHA");
 		
 		launch(args);
+		}
+		catch(Exception e)
+		{
+			logger.error(e.getMessage());
+		}
 	}
 }

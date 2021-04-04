@@ -1,5 +1,6 @@
 package qa114.pages;
 
+import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.log4j.LogManager;
@@ -14,11 +15,12 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.input.KeyCode;
 import qa114.pojo.schema.Schema;
 import qa114.pojo.testdata.TestData;
+import qa114.utility.PropertiesUtil;
 import qa114.utility.WaitsUtil;
 
 public class DocumentUploadPage {
 	private static final Logger logger = LogManager.getLogger(DocumentUploadPage.class); 
-	
+
 	FxRobot robot;
 	WaitsUtil waitsUtil;
 	String captureBtn="#captureBtn";
@@ -40,8 +42,11 @@ public class DocumentUploadPage {
 
 
 	}
-	public void selectDocumentScan() throws InterruptedException, TimeoutException
-	{	logger.info("In DocumentUploadPage Constructor");
+	public void selectDocumentScan()
+	{	logger.info("In selectDocumentScan");
+	try {
+
+
 		waitsUtil.clickNodeAssert( captureBtn);
 		waitsUtil.clickNodeAssert (success);
 
@@ -50,45 +55,60 @@ public class DocumentUploadPage {
 		waitsUtil.clickNodeAssert( saveBtn);
 
 		robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
+	}catch(Exception e)
+	{
+		logger.error(e.getMessage());
+	}
 
 	}
 
 
-	public void user_selects_combo_item(FxRobot robot,String comboBoxId, DocumentCategoryDto dto) throws InterruptedException {
+	public void user_selects_combo_item(FxRobot robot,String comboBoxId, DocumentCategoryDto dto)  {
 
-		
+		try {
 
-		Platform.runLater(new Runnable() {
-			@Override
-			public void run() {
-				ComboBox comboBox= waitsUtil.lookupById(comboBoxId);
 
-				comboBox.getSelectionModel().select(dto); 
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					ComboBox comboBox= waitsUtil.lookupById(comboBoxId);
 
-			}});
+					comboBox.getSelectionModel().select(dto); 
 
-		Thread.sleep(800);
+				}});
+
+			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait"))); 
+
+		} catch (InterruptedException | NumberFormatException | IOException e) {
+			// TODO Auto-generated catch block
+			logger.error(e.getMessage());
+		}
 		logger.info( comboBoxId +  dto +"CHOOSEN" );
 	}
 
-	public void documentScan( String testdata, Schema schema, String id) throws InterruptedException, TimeoutException
+	public void documentScan( String testdata, Schema schema, String id) 
 
 	{
+		try {
 
-		documentCategoryDto.setName(testdata);
-		documentCategoryDto.setCode(schema.getSubType());
+			documentCategoryDto.setName(testdata);
+			documentCategoryDto.setCode(schema.getSubType());
 
-		user_selects_combo_item(robot,id,documentCategoryDto);
+			user_selects_combo_item(robot,id,documentCategoryDto);
 
-		String scanBtn="#"+schema.getSubType();
+			String scanBtn="#"+schema.getSubType();
 
-		Button scanButton = waitsUtil.lookupByIdButton(scanBtn,robot);
+			Button scanButton = waitsUtil.lookupByIdButton(scanBtn,robot);
 
-		//waitsUtil.lookupById(docPreviewImgViewPane);
+			//waitsUtil.lookupById(docPreviewImgViewPane);
 
-		robot.clickOn(scanButton);
-		selectDocumentScan();
-
+			robot.clickOn(scanButton);
+			selectDocumentScan();
+		}
+		catch (Exception e) {
+			// TODO Auto-generated catch block
+			logger.error(e.getMessage());
+		}
 	}
 }
 

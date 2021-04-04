@@ -24,33 +24,41 @@ public class UploadPacketPage {
 	String uploaded="UPLOADED";
 	RobotActions robotActions;
 	UploadPacketPage(FxRobot robot)
-	{this.robot=robot;
+	{
+		logger.info("UploadPacketPage Constructor");
+		this.robot=robot;
 	waitsUtil=new WaitsUtil(robot);
 	robotActions=new RobotActions(robot);
 	}
 	
 	public void clickOnfilterField(FxRobot robot)
 	{
+		logger.info("clickOnfilterField");
 		waitsUtil.clickNodeAssert( filterField);
 	}
 
 	public void enterFilterDetails(String rid) {
 		// TODO Auto-generated method stub
+		logger.info("enter rid Details" + rid);
 		robot.write(rid);
 	}
 
 	public void clickOnApprovalBtn(FxRobot robot)
 	{
+		logger.info("clickOnApprovalBtn");
 		waitsUtil.clickNodeAssert( approvalBtn);
 	}
 	
 	public AuthenticationPage clickOnAuthenticateBtn(FxRobot robot)
 	{
+		logger.info("clickOnAuthenticateBtn");
 		waitsUtil.clickNodeAssert( authenticateBtn);
 		return new AuthenticationPage(robot);
 	}
 
 	public void selectPacket(String rid) {
+		
+		logger.info("selectPacket" + rid);
 		waitsUtil.clickNodeAssert( "#filterField");
 		robot.write(rid);
 		
@@ -62,9 +70,9 @@ public class UploadPacketPage {
 		
 	}
 
-	public Boolean verifyPacketUpload(String rid) throws InterruptedException  {
+	public Boolean verifyPacketUpload(String rid) {
 		Boolean result=false;
-
+		logger.info("verifyPacketUpload" + rid);
 		try {
 			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("PacketUploadTimeWait")));
 			waitsUtil.clickNodeAssert( uploaded);
@@ -73,7 +81,8 @@ public class UploadPacketPage {
 			result=true;
 			robotActions.closeWindow();
 		} catch (Exception e) {
-			System.out.println("Failure Unable to upload");
+			logger.error(e.getMessage());
+			logger.info("Failure Unable to upload");
 			result=false;
 			e.printStackTrace();
 		} 

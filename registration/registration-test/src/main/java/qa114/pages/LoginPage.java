@@ -50,6 +50,7 @@ public class LoginPage {
 	
 	public LoginPage(FxRobot robot, Stage applicationPrimaryStage,Scene scene)
 	{
+		logger.info("LoginPage Constructor");
 		this.robot=robot;
 		this.applicationPrimaryStage=applicationPrimaryStage;
 		this.scene=scene;
@@ -59,6 +60,8 @@ public class LoginPage {
 
 	public LoginPage(FxRobot robot)
 	{
+		logger.info("LoginPage Constructor");
+		
 		this.robot=robot;
 		waitsUtil=new WaitsUtil(robot);
 		waitsUtil.clickNodeAssert( loginScreen);
@@ -66,10 +69,14 @@ public class LoginPage {
 	
 	
 	public String getUserId() {
+		logger.info("getUserId");
+		
 		return userIdTextField.getText();
 	}
 
 	public void setUserId(String userIdText) {
+		logger.info("setUserId" +userIdText);
+		
 		
 		userIdTextField=waitsUtil.lookupByIdTextField(userId, robot);
 		
@@ -96,6 +103,8 @@ public class LoginPage {
  */
 
 	public HomePage setPassword(String pwd) {
+		
+		logger.info("setPassword" );
 		
 		passwordTextField=waitsUtil.lookupByIdTextField(password, robot);
 
@@ -149,11 +158,11 @@ public class LoginPage {
 		}
 
 	
-	public void loadLoginScene(Stage applicationPrimaryStage) throws InterruptedException
+	public void loadLoginScene(Stage applicationPrimaryStage) 
 	{
-		System.out.println("In Login test Loaded");
+		logger.info("In Login test Loaded");
 		
-		//this.robot=robot;
+		try {
 		waitsUtil.clickNodeAssert("Update Later");
 		waitsUtil.clickNodeAssert(loginScreen);
 		
@@ -161,14 +170,18 @@ public class LoginPage {
 		scene=applicationPrimaryStage.getScene();
 		node=scene.lookup(loginScreen);
 		while(node.isDisable())
-			{Thread.sleep(500);
+			{Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait"))); 
+			
 				System.out.println("Disable login screen waiting to get it on");
 			}
 		assertNotNull(node,"Login Page is not shown");
 		
 		ExtentReportUtil.step1.log(Status.PASS, "Successfully Screen Loaded");
 		
-		
+		}catch(Exception e)
+		{
+			logger.error(e.getMessage());
+		}
 
 		
 	}

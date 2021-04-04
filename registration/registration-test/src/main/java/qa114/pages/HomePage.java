@@ -37,7 +37,7 @@ public class HomePage {
 	String homeimg="#homeimg";
 	String exit="#exit";
 	String success="Success";
-	
+
 	//operationalTasks
 	String syncDataImageView ="#syncDataImageView",
 			downloadPreRegDataImageView="#downloadPreRegDataImageView",
@@ -65,7 +65,7 @@ public class HomePage {
 		this.applicationPrimaryStage=applicationPrimaryStage;
 		this.scene=scene;
 		waitsUtil=new WaitsUtil(robot);
-		
+
 		alerts=new Alerts(robot);
 
 	}
@@ -80,22 +80,22 @@ public class HomePage {
 	}
 
 
-	
+
 	public void clickHomeImg() {
 		waitsUtil.clickNodeAssert(homeimg);
 	}
-	
+
 	public void clickSynchronizeData() 
 	{
 		try
 		{
-		waitsUtil.clickNodeAssert(syncDataImageView);
-		Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait"))); 
-		
-		
-		waitsUtil.clickNodeAssert( success);
-		waitsUtil.clickNodeAssert( exit);
-		
+			waitsUtil.clickNodeAssert(syncDataImageView);
+			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait"))); 
+
+
+			waitsUtil.clickNodeAssert( success);
+			waitsUtil.clickNodeAssert( exit);
+
 		}
 		catch(Exception e)
 		{logger.error(e.getMessage());
@@ -103,72 +103,129 @@ public class HomePage {
 
 	}
 
-	public void clickdownloadPreRegDataImageView(Stage applicationPrimaryStage,Scene scene) throws InterruptedException
-	{
+	public void clickdownloadPreRegDataImageView(Stage applicationPrimaryStage,Scene scene)
+
+	{try {
 		waitsUtil.clickNodeAssert( downloadPreRegDataImageView);
+	}
+	catch(Exception e)
+	{
+		logger.error(e.getMessage());
+	}
 
 	}
 
-	public void clickupdateOperatorBiometricsImageView(Stage applicationPrimaryStage,Scene scene) throws InterruptedException
+	public void clickupdateOperatorBiometricsImageView(Stage applicationPrimaryStage,Scene scene) 
 	{
-
-		waitsUtil.clickNodeAssert( updateOperatorBiometricsImageView);
+		try {
+			waitsUtil.clickNodeAssert( updateOperatorBiometricsImageView);
+		}
+		catch(Exception e)
+		{
+			logger.error(e.getMessage());
+		}
 	}
 
 
 
-	public UploadPacketPage clickuploadPacketImageView(Stage applicationPrimaryStage,Scene scene) throws InterruptedException
-	{
+	public UploadPacketPage clickuploadPacketImageView(Stage applicationPrimaryStage,Scene scene)
+	{try {
 		waitsUtil.clickNodeAssert( uploadPacketImageView);
+	}
+	catch(Exception e)
+	{
+		logger.error(e.getMessage());
+	}
 	return new UploadPacketPage(robot);
 	}
 
-	public void clickremapImageView(Stage applicationPrimaryStage,Scene scene) throws InterruptedException
-	{
+	public void clickremapImageView(Stage applicationPrimaryStage,Scene scene)
+	{try {
 		waitsUtil.clickNodeAssert( remapImageView);
 	}
-
-	public void clickcheckUpdatesImageView(Stage applicationPrimaryStage,Scene scene) throws InterruptedException
+	catch(Exception e)
 	{
+		logger.error(e.getMessage());
+	}
+	}
+
+	public void clickcheckUpdatesImageView(Stage applicationPrimaryStage,Scene scene)
+	{try {
 		waitsUtil.clickNodeAssert( checkUpdatesImageView);
 	}
-
-
-
-	public DemographicPage clickNewRegistration() throws InterruptedException
+	catch(Exception e)
 	{
+		logger.error(e.getMessage());
+	}
+	}
+
+
+
+	public DemographicPage clickNewRegistration() 
+	{try {
 
 		waitsUtil.clickNodeAssert( newRegImage);
-		return new DemographicPage(robot);
+	}
+	catch(Exception e)
+	{
+		logger.error(e.getMessage());
+	}
+	return new DemographicPage(robot);
 	}
 
-	public void clickuinUpdateImage(Stage applicationPrimaryStage,Scene scene) throws InterruptedException
-	{
+	public void clickuinUpdateImage(Stage applicationPrimaryStage,Scene scene)
+	{try {
 		waitsUtil.clickNodeAssert( uinUpdateImage);
 	}
-
-
-	public DemographicPage clicklostUINImage(Stage applicationPrimaryStage,Scene scene) throws InterruptedException
+	catch(Exception e)
 	{
+		logger.error(e.getMessage());
+	}
+	}
+
+
+	public DemographicPage clicklostUINImage(Stage applicationPrimaryStage,Scene scene) 
+	{try {
 		waitsUtil.clickNodeAssert( lostUINImage);
-		return new DemographicPage(robot);
+	}
+	catch(Exception e)
+	{
+		logger.error(e.getMessage());
+	}
+	return new DemographicPage(robot);
 	}
 
-	public EodApprovalPage clickeodApprovalImageView(Stage applicationPrimaryStage,Scene scene) throws InterruptedException
-	{
+	public EodApprovalPage clickeodApprovalImageView(Stage applicationPrimaryStage,Scene scene) 
+	{try {
 		waitsUtil.clickNodeAssert( eodApprovalImageView);
-		return new EodApprovalPage(robot);
+	}
+	catch(Exception e)
+	{
+		logger.error(e.getMessage());
+	}
+	return new EodApprovalPage(robot);
 	}
 
-	public void clickreRegistrationImageView(Stage applicationPrimaryStage,Scene scene) throws InterruptedException
-	{
+	public void clickreRegistrationImageView(Stage applicationPrimaryStage,Scene scene)
+	{try {
 		waitsUtil.clickNodeAssert( reRegistrationImageView);
 	}
-
-	public void clickviewReportsImageView(Stage applicationPrimaryStage,Scene scene) throws InterruptedException
+	catch(Exception e)
 	{
-		waitsUtil.clickNodeAssert( viewReportsImageView);
+		logger.error(e.getMessage());
+	}
+	}
 
+	public void clickviewReportsImageView(Stage applicationPrimaryStage,Scene scene) 
+	{
+		try
+		{
+			waitsUtil.clickNodeAssert( viewReportsImageView);
+		}
+		catch(Exception e)
+		{
+			logger.error(e.getMessage());
+		}
 	}
 
 

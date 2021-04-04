@@ -63,7 +63,7 @@ public class DemographicPage {
 
 	public DemographicPage(FxRobot robot) {
 		logger.info(" DemographicPage Constructor  ");
-		
+
 		this.robot=robot;
 		waitsUtil=new WaitsUtil(robot);
 		//waitsUtil.clickNodeAssert( DemoDetailsImg); 
@@ -73,40 +73,51 @@ public class DemographicPage {
 	}
 
 	public String getTextFields() {
-		
+
 		return demoTextField.getText();
 	}
 
-	public void setTextFields(String id,String idSchema) throws InterruptedException {
-		this.robot=robot;
-		demoTextField= waitsUtil.lookupById(id);
-		assertNotNull(demoTextField, id+" not present");
+	public void setTextFields(String id,String idSchema) {
+		logger.info(" setTextFields in " + id +" " + idSchema );
 
-		if(demoTextField.isEditable() && demoTextField.isVisible())
-		{	
-			robot.clickOn(id);	//Must Needed
-			demoTextField.setText(idSchema);
-		}		
+		try {
+			demoTextField= waitsUtil.lookupById(id);
+			assertNotNull(demoTextField, id+" not present");
+
+			if(demoTextField.isEditable() && demoTextField.isVisible())
+			{	
+				robot.clickOn(id);	//Must Needed
+				demoTextField.setText(idSchema);
+			}	}
+		catch(Exception e)
+		{
+			logger.error(e.getMessage());
+		}
 	}
 
 
 
-	public WebViewDocument scemaDemoDocUpload(Double schemaVersion,String JsonIdentity,HashMap<String, String> documentUpload) throws IOException, TimeoutException {
+	public WebViewDocument scemaDemoDocUpload(Double schemaVersion,String JsonIdentity,HashMap<String, String> documentUpload)  {
 
 		String schemafile = System.getProperty("user.dir")+"\\SCHEMA_"+schemaVersion+".json";
 
 		/**
 		 *  convertJsonintoJava
 		 */
-		String jsonFromSchema = Files.readString(Paths.get(schemafile));
-		logger.info("Automaiton Script - Printing Json" + jsonFromSchema);
-		
-		rootSchema = JsonUtil.convertJsonintoJava(jsonFromSchema, Root.class);
+		String jsonFromSchema;
+		try {
+			jsonFromSchema = Files.readString(Paths.get(schemafile));
+			logger.info("Automaiton Script - Printing Json" + jsonFromSchema);
 
-		logger.info(rootSchema.getId() + " " + rootSchema.getIdVersion());
-		logger.info("Automaiton Script - Printing Json" + JsonIdentity);
+			rootSchema = JsonUtil.convertJsonintoJava(jsonFromSchema, Root.class);
 
-		logger.info("Automaiton Script - Schema ID Follows :- ");
+			logger.info(rootSchema.getId() + " " + rootSchema.getIdVersion());
+			logger.info("Automaiton Script - Printing Json" + JsonIdentity);
+
+			logger.info("Automaiton Script - Schema ID Follows :- ");
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+		}
 
 
 
@@ -117,13 +128,13 @@ public class DemographicPage {
 
 			String id="#"+schema.getId(); 
 			String key=schema.getId(); 
-
-			scrollVerticalDirection(i,schema);
-
 			try {
+				scrollVerticalDirection(i,schema);
+
+
 				switch (schema.getControlType()) {
 				case "textbox":
-
+					logger.info("Schema Control Type textbox");
 					String value=null;
 					if(schema.getType().contains("simpleType"))
 						value=JsonUtil.JsonObjSimpleParsing(JsonIdentity,key);
@@ -134,12 +145,12 @@ public class DemographicPage {
 					System.out.println("Textbox");
 					break;
 				case "ageDate":
-					
+
 					String dateofbirth[]=JsonUtil.JsonObjParsing(JsonIdentity,key).split("/");
-					
+
 					if(!schema.getLabel().secondary.equals(null)) {
-					robot.press(KeyCode.TAB).release(KeyCode.TAB);
-					robot.press(KeyCode.TAB).release(KeyCode.TAB);}
+						robot.press(KeyCode.TAB).release(KeyCode.TAB);
+						robot.press(KeyCode.TAB).release(KeyCode.TAB);}
 					else { robot.press(KeyCode.TAB).release(KeyCode.TAB);}
 					robot.write(dateofbirth[0]);
 					robot.press(KeyCode.TAB).release(KeyCode.TAB);
@@ -213,22 +224,29 @@ public class DemographicPage {
 
 
 
-	private void scrollVerticalDirection(int i,Schema schema) throws NumberFormatException, IOException {
-		if(schema.getId().equals(schema.getSubType())) 
-			if(i==Integer.parseInt(PropertiesUtil.getKeyValue("scrollVerticalDirection6")))
-				robot.scroll(Integer.parseInt(PropertiesUtil.getKeyValue("scrollVerticalDirection6")), VerticalDirection.DOWN);
+	private void scrollVerticalDirection(int i,Schema schema)  {
+		if(schema.getId().equals(schema.getSubType()))
+			try {
+				if(i==Integer.parseInt(PropertiesUtil.getKeyValue("scrollVerticalDirection6")))
+					robot.scroll(Integer.parseInt(PropertiesUtil.getKeyValue("scrollVerticalDirection6")), VerticalDirection.DOWN);
 				else
 					robot.scroll(Integer.parseInt(PropertiesUtil.getKeyValue("scrollVerticalDirection2")), VerticalDirection.DOWN);
-				else if(i>Integer.parseInt(PropertiesUtil.getKeyValue("scrollVerticalDirection6")))
-					
+			} catch (NumberFormatException | IOException e) {
+				// TODO Auto-generated catch block
+				logger.error(e.getMessage());
+			}
+		else
+			try {
+				if(i>Integer.parseInt(PropertiesUtil.getKeyValue("scrollVerticalDirection6")))
+
 					robot.scroll(Integer.parseInt(PropertiesUtil.getKeyValue("scrollVerticalDirection2")), VerticalDirection.DOWN);
-
-				//if((i==10)||(i==16)||(i==20)||(i==25)||(i==30)||(i==35))
-				//if(i%5==0)	
-
+			} catch (NumberFormatException | IOException e) {
+				// TODO Auto-generated catch block
+				logger.error(e.getMessage());
+			}
 	}
 
-	public void user_selects_combo_item(String comboBoxId, GenericDto dto) throws InterruptedException, NumberFormatException, IOException {
+	public void user_selects_combo_item(String comboBoxId, GenericDto dto)  {
 		Thread taskThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -251,8 +269,13 @@ public class DemographicPage {
 
 
 		taskThread.start();
-		taskThread.join();
-		Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait"))); 
+		try {
+			taskThread.join();
+				Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
+		} catch (NumberFormatException | InterruptedException | IOException e) {
+			// TODO Auto-generated catch block
+			logger.error(e.getMessage());
+		} 
 
 	}
 

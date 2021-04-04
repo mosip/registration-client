@@ -31,36 +31,43 @@ public class BiometricUploadPage {
 
 	BiometricUploadPage(FxRobot robot)
 	{logger.info("BiometricUploadPage Constructor");
-	
-		this.robot=robot;
-		waitsUtil=new WaitsUtil(robot);
-		//waitsUtil.clickNodeAssert( BiometricDetail);
+
+	this.robot=robot;
+	waitsUtil=new WaitsUtil(robot);
+	//waitsUtil.clickNodeAssert( BiometricDetail);
 
 	}
 
 
-	public void bioSpecificScan(String id,String scanBtn) throws InterruptedException
+	public void bioSpecificScan(String id,String scanBtn)
 	{
-		logger.info("bioSpecificScan");
-		waitsUtil.clickNodeAssert( id);
-		waitsUtil.clickNodeAssert( scanBtn);
-		Thread.sleep(5000);
-		waitsUtil.clickNodeAssert( alertImage);
+		try {
+			logger.info("bioSpecificScan");
+			waitsUtil.clickNodeAssert( id);
+			waitsUtil.clickNodeAssert( scanBtn);
+			Thread.sleep(5000);
+			waitsUtil.clickNodeAssert( alertImage);
 
-		waitsUtil.clickNodeAssert( success);
-		waitsUtil.clickNodeAssert( exit);
-		//robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
-
+			waitsUtil.clickNodeAssert( success);
+			waitsUtil.clickNodeAssert( exit);
+			//robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
+		}
+		catch(InterruptedException e)
+		{
+			logger.error(e.getMessage());
+		}
 
 
 	}
-/**
- * Bio attributes without List
- * @return
- * @throws InterruptedException
- */
-	public WebViewDocument biometricDetailsUpload() throws InterruptedException {
-		logger.info("  Bio attributes upload without List");
+	/**
+	 * Bio attributes without List
+	 * @return
+	 * @throws InterruptedException
+	 */
+	public WebViewDocument biometricDetailsUpload() {
+
+		try
+		{logger.info("  Bio attributes upload without List");
 		bioSpecificScan(IRIS_DOUBLE,scanBtn);
 
 		bioSpecificScan(FINGERPRINT_SLAB_RIGHT,scanBtn);
@@ -72,36 +79,48 @@ public class BiometricUploadPage {
 
 
 		bioSpecificScan(FACE,scanBtn);
+		}
+		catch(Exception e)
+		{
+			logger.error(e.getMessage());
+		}
 
 		return new WebViewDocument(robot);
 	}
-	
-/**
- * Bio attributes in list
- * @param list
- * @return
- * @throws InterruptedException
- * @throws IOException
- */
-	public WebViewDocument newRegbioUpload(List<String> list) throws InterruptedException, IOException {
-		logger.info("  Bio attributes upload with List");
-		if(list.contains(PropertiesUtil.getKeyValue("leftEye"))||list.contains(PropertiesUtil.getKeyValue("rightEye")))
-			bioSpecificScan(IRIS_DOUBLE,scanBtn);
 
-		if(list.contains(PropertiesUtil.getKeyValue("rightIndex"))||list.contains(PropertiesUtil.getKeyValue("rightLittle"))||list.contains(PropertiesUtil.getKeyValue("rightRing"))||list.contains(PropertiesUtil.getKeyValue("rightMiddle")))
+	/**
+	 * Bio attributes in list
+	 * @param list
+	 * @return
+	 * @throws InterruptedException
+	 * @throws IOException
+	 */
+	public WebViewDocument newRegbioUpload(List<String> list)  {
+		try
+		{
+			logger.info("  Bio attributes upload with List");
+			if(list.contains(PropertiesUtil.getKeyValue("leftEye"))||list.contains(PropertiesUtil.getKeyValue("rightEye")))
+				bioSpecificScan(IRIS_DOUBLE,scanBtn);
 
-			bioSpecificScan(FINGERPRINT_SLAB_RIGHT,scanBtn);
+			if(list.contains(PropertiesUtil.getKeyValue("rightIndex"))||list.contains(PropertiesUtil.getKeyValue("rightLittle"))||list.contains(PropertiesUtil.getKeyValue("rightRing"))||list.contains(PropertiesUtil.getKeyValue("rightMiddle")))
 
-		if(list.contains(PropertiesUtil.getKeyValue("leftIndex"))||list.contains(PropertiesUtil.getKeyValue("leftLittle"))||list.contains(PropertiesUtil.getKeyValue("leftRing"))||list.contains(PropertiesUtil.getKeyValue("leftMiddle")))
+				bioSpecificScan(FINGERPRINT_SLAB_RIGHT,scanBtn);
 
-			bioSpecificScan(FINGERPRINT_SLAB_LEFT,scanBtn);
+			if(list.contains(PropertiesUtil.getKeyValue("leftIndex"))||list.contains(PropertiesUtil.getKeyValue("leftLittle"))||list.contains(PropertiesUtil.getKeyValue("leftRing"))||list.contains(PropertiesUtil.getKeyValue("leftMiddle")))
 
-		if(list.contains(PropertiesUtil.getKeyValue("leftThumb"))||list.contains(PropertiesUtil.getKeyValue("rightThumb")))
-			bioSpecificScan(FINGERPRINT_SLAB_THUMBS,scanBtn);
+				bioSpecificScan(FINGERPRINT_SLAB_LEFT,scanBtn);
 
-		if(list.contains(PropertiesUtil.getKeyValue("face")))
-			bioSpecificScan(FACE,scanBtn);
-		
+			if(list.contains(PropertiesUtil.getKeyValue("leftThumb"))||list.contains(PropertiesUtil.getKeyValue("rightThumb")))
+				bioSpecificScan(FINGERPRINT_SLAB_THUMBS,scanBtn);
+
+			if(list.contains(PropertiesUtil.getKeyValue("face")))
+				bioSpecificScan(FACE,scanBtn);
+		}
+		catch(Exception e)
+		{
+			logger.error(e.getMessage());
+		}
+
 		return new WebViewDocument(robot);
 
 	}
