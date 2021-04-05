@@ -129,11 +129,6 @@
 			<artifactId>kernel-idvalidator-prid</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-virusscanner-clamav</artifactId>
-			<version>${mosip.kernel.virusscanner.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>ma.glasnost.orika</groupId>
 			<artifactId>orika-core</artifactId>
 		</dependency>
@@ -351,7 +346,6 @@
 			<artifactId>kernel-auth-adapter</artifactId>
 			<version>1.2.0-SNAPSHOT</version>
 		</dependency>
-
 	</dependencies>
 	<!--<repositories> <repository> <id>local-maven-repo</id> <url>file:///${basedir}/lib</url> 
 		</repository> </repositories> -->

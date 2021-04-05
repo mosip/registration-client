@@ -294,12 +294,6 @@
 
 			<dependency>
 				<groupId>io.mosip.kernel</groupId>
-				<artifactId>kernel-virusscanner-clamav</artifactId>
-				<version>${mosip.kernel.virusscanner.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>io.mosip.kernel</groupId>
 				<artifactId>kernel-applicanttype-api</artifactId>
 				<version>${mosip.core.kernel.version}</version>
 			</dependency>
