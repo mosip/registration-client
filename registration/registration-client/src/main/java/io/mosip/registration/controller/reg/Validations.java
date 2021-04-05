@@ -511,24 +511,27 @@ public class Validations extends BaseController {
 	private boolean validateUinOrRidField(String inputText, RegistrationDTO registrationDto, UiSchemaDTO schemaField) {
 		boolean isValid = true;
 		try {
-			if ("UIN".equals(schemaField.getSubType())) {
-				String updateUIN = RegistrationConstants.PACKET_TYPE_UPDATE
+			
+			switch (schemaField.getSubType()) {
+				case "UIN":
+					String updateUIN = RegistrationConstants.PACKET_TYPE_UPDATE
 						.equals(registrationDto.getRegistrationCategory())
 								? (String) registrationDto.getDemographics().get("UIN")
 								: null;
 
-				if (updateUIN != null && inputText.equals(updateUIN))
-					isValid = false;
-
-				if (isValid)
-					isValid = uinValidator.validateId(inputText);
-			}
-
-			if ("RID".equals(schemaField.getSubType())) {
-				isValid = ridValidator.validateId(inputText);
-			}
-			if("VID".equals(schemaField.getSubType())) {
-				isValid = vidValidator.validateId(inputText);
+					if (updateUIN != null && inputText.equals(updateUIN))
+						isValid = false;
+	
+					if (isValid)
+						isValid = uinValidator.validateId(inputText);
+					break;
+			
+				case "RID": 
+					isValid = ridValidator.validateId(inputText);
+					break;
+				case "VID":
+					isValid = vidValidator.validateId(inputText);
+					break;
 			}
 
 		} catch (InvalidIDException invalidRidException) {
