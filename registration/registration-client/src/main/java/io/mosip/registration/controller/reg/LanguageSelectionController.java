@@ -212,7 +212,8 @@ public class LanguageSelectionController extends BaseController implements Initi
 		return (CheckBox) checkBoxesPane.lookup(RegistrationConstants.HASH + id);
 	}
 
-	public void submitLanguagesAndProceed(List<String> langCodes) {
+	public void submitLanguagesAndProceed(String action, List<String> langCodes) {
+		this.action = action;
 		registrationController.setSelectedLangList(langCodes);
 		goToNextPage();
 	}

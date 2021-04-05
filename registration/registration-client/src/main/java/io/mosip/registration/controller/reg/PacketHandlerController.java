@@ -1023,7 +1023,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 					languageSelectionController.init(action);
 				}
 				else {
-					languageSelectionController.submitLanguagesAndProceed(baseService.getMandatoryLanguages());
+					languageSelectionController.submitLanguagesAndProceed(action, baseService.getMandatoryLanguages());
 				}
 			} catch (PreConditionCheckException e) {
 				generateAlert(RegistrationConstants.ERROR, e.getErrorCode());
