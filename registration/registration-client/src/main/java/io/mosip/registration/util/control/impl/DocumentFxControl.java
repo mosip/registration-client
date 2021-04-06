@@ -187,8 +187,8 @@ public class DocumentFxControl extends FxControl {
 					isPreviewOnly);
 
 		} else {
-			documentScanController.generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.PLEASE_SELECT
-					+ RegistrationConstants.SPACE + uiSchemaDTO.getSubType() + " " + RegistrationUIConstants.DOCUMENT);
+			documentScanController.generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("PLEASE_SELECT")
+					+ RegistrationConstants.SPACE + uiSchemaDTO.getSubType() + " " + RegistrationUIConstants.getMessageLanguageSpecific("DOCUMENT"));
 		}
 
 	}
@@ -333,21 +333,21 @@ public class DocumentFxControl extends FxControl {
 					int docSize = Integer.parseInt(documentSize) / (1024 * 1024);
 					if (bufferedImages == null || bufferedImages.isEmpty()) {
 						documentScanController.generateAlert(RegistrationConstants.ERROR,
-								RegistrationUIConstants.SCAN_DOCUMENT_EMPTY);
+								RegistrationUIConstants.getMessageLanguageSpecific("SCAN_DOCUMENT_EMPTY"));
 						return;
 					}
 					byte[] byteArray = documentScanController.getScannedPagesToBytes(bufferedImages);
 
 					if (byteArray == null) {
 						documentScanController.generateAlert(RegistrationConstants.ERROR,
-								RegistrationUIConstants.SCAN_DOCUMENT_CONVERTION_ERR);
+								RegistrationUIConstants.getMessageLanguageSpecific("SCAN_DOCUMENT_CONVERTION_ERR"));
 						return;
 					}
 
 					if (docSize <= (byteArray.length / (1024 * 1024))) {
 						bufferedImages.clear();
 						documentScanController.generateAlert(RegistrationConstants.ERROR,
-								RegistrationUIConstants.SCAN_DOC_SIZE.replace("1", Integer.toString(docSize)));
+								RegistrationUIConstants.getMessageLanguageSpecific("SCAN_DOC_SIZE").replace("1", Integer.toString(docSize)));
 					} else {
 
 						ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(
@@ -403,7 +403,7 @@ public class DocumentFxControl extends FxControl {
 			getField(uiSchemaDTO.getId() + PREVIEW_ICON).setVisible(false);
 			getField(uiSchemaDTO.getId() + CLEAR_ID).setVisible(false);
 			documentScanController.generateAlert(RegistrationConstants.ERROR,
-					RegistrationUIConstants.UNABLE_LOAD_REG_PAGE);
+					RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_REG_PAGE"));
 		}
 
 		refreshFields();

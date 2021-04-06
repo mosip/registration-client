@@ -276,7 +276,7 @@ public class DemographicDetailController extends BaseController {
 //		} catch (RuntimeException runtimeException) {
 //			LOGGER.error("REGISTRATION - CONTROLLER", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 //					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
-//			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_DEMOGRAPHIC_PAGE);
+//			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_DEMOGRAPHIC_PAGE);
 //
 //		}
 //	}
@@ -1192,13 +1192,13 @@ public class DemographicDetailController extends BaseController {
 //		String preRegId = preRegistrationId.getText();
 //
 //		if (StringUtils.isEmpty(preRegId)) {
-//			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.PRE_REG_ID_EMPTY);
+//			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("PRE_REG_ID_EMPTY);
 //			return;
 //		} else {
 //			try {
 //				pridValidatorImpl.validateId(preRegId);
 //			} catch (InvalidIDException invalidIDException) {
-//				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.PRE_REG_ID_NOT_VALID);
+//				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("PRE_REG_ID_NOT_VALID);
 //				LOGGER.error("PRID VALIDATION FAILED", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 //						invalidIDException.getMessage() + ExceptionUtils.getStackTrace(invalidIDException));
 //				return;

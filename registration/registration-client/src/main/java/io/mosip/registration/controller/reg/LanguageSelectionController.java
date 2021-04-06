@@ -136,7 +136,7 @@ public class LanguageSelectionController extends BaseController implements Initi
 				checkBoxesPane.getChildren().add(checkBox);
 			}
 		} catch (PreConditionCheckException e) {
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_SCAN_POPUP);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_SCAN_POPUP"));
 		}
 	}
 
@@ -173,7 +173,7 @@ public class LanguageSelectionController extends BaseController implements Initi
 					RegistrationConstants.USER_REG_SCAN_EXP, ioException.getMessage(),
 					ExceptionUtils.getStackTrace(ioException)));
 
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_SCAN_POPUP);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_SCAN_POPUP"));
 		}
 
 	}
