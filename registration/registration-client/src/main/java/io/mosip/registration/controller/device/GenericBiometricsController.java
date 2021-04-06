@@ -619,12 +619,12 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 				saveProofOfExceptionDocument(byteArray);
 				generateAlert(RegistrationConstants.ALERT_INFORMATION,
-						RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS);
+						RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_CAPTURE_SUCCESS"));
 
 				scanPopUpViewController.getPopupStage().close();
 
 			} catch (RuntimeException | IOException exception) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_SCANNING_ERROR"));
 				LOGGER.error("Error while capturing exception photo : ", exception);
 
 			}
@@ -720,12 +720,12 @@ public class GenericBiometricsController extends BaseController /* implements In
 					SessionContext.setAutoLogout(false);
 
 					if (mdmBioDevice == null) {
-						setPopViewControllerMessage(true, RegistrationUIConstants.NO_DEVICE_FOUND);
+						setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific("NO_DEVICE_FOUND"));
 						return;
 					}
 
 					// Start Stream
-					setPopViewControllerMessage(true, RegistrationUIConstants.STREAMING_PREP_MESSAGE);
+					setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific("STREAMING_PREP_MESSAGE"));
 
 					InputStream urlStream = bioService.getStream(mdmBioDevice,
 							isFace(currentModality) ? RegistrationConstants.FACE_FULLFACE : currentModality.name());
@@ -737,13 +737,13 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 						deviceSpecificationFactory.init();
 
-						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.STREAMING_ERROR);
+						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("STREAMING_ERROR"));
 						scanPopUpViewController.getPopupStage().close();
 
 						return;
 					}
 
-					setPopViewControllerMessage(true, RegistrationUIConstants.STREAMING_INIT_MESSAGE);
+					setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific("STREAMING_INIT_MESSAGE"));
 
 					rCaptureTaskService();
 
@@ -758,7 +758,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 					}
 
 					LOGGER.error("Error while streaming : " + currentModality,  exception);
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.STREAMING_ERROR);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("STREAMING_ERROR"));
 					scanPopUpViewController.getPopupStage().close();
 
 					// Enable Auto-Logout
@@ -780,7 +780,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 					return;
 				}
 
-				setPopViewControllerMessage(true, RegistrationUIConstants.NO_DEVICE_FOUND);
+				setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific("NO_DEVICE_FOUND"));
 			}
 		});
 
@@ -850,7 +850,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 			@Override
 			public void handle(WorkerStateEvent t) {
 				LOGGER.debug("RCapture task failed");
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_SCANNING_ERROR"));
 
 				LOGGER.debug("closing popup stage");
 				scanPopUpViewController.getPopupStage().close();
@@ -878,7 +878,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 					if(!isValidBiometric) {
 						// if any above checks failed show alert capture failure
-						generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.BIOMETRIC_CAPTURE_FAILURE);
+						generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_CAPTURE_FAILURE"));
 						return;
 					}
 
@@ -894,7 +894,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 						LOGGER.info("Doing local de-dup validation -- found ? {} ", isMatchedWithLocalBiometrics);
 						if(isMatchedWithLocalBiometrics) {
 							// if any above checks failed show alert capture failure
-							generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.LOCAL_DEDUP_CHECK_FAILED);
+							generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("LOCAL_DEDUP_CHECK_FAILED"));
 							return;
 						}
 					}
@@ -920,7 +920,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 						LOGGER.info("started Saving Exception photo captured using MDS");
 						saveProofOfExceptionDocument(extractFaceImageData(registrationDTOBiometricsList.get(0).getAttributeISO()));
 						generateAlert(RegistrationConstants.ALERT_INFORMATION,
-								RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS);
+								RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_CAPTURE_SUCCESS"));
 
 						fxControl.refreshModalityButton(currentModality);
 						scanPopUpViewController.getPopupStage().close();
@@ -936,7 +936,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 					if(registrationDTOBiometricsList.isEmpty()) {
 						// request response mismatch
 						generateAlert(RegistrationConstants.ALERT_INFORMATION,
-								RegistrationUIConstants.BIOMETRIC_CAPTURE_FAILURE);
+								RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_CAPTURE_FAILURE"));
 						return;
 					}
 
@@ -975,11 +975,11 @@ public class GenericBiometricsController extends BaseController /* implements In
 					displayBiometric(currentModality);
 
 					// if all the above check success show alert capture success
-					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS);
+					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_CAPTURE_SUCCESS"));
 
 				} catch (RuntimeException | RegBaseCheckedException e) {
 					LOGGER.error("Exception while getting the scanned biometrics for user registration",e);
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_SCANNING_ERROR"));
 				}
 
 				scanPopUpViewController.getPopupStage().close();
@@ -1229,11 +1229,11 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 	//TODO - check if this is in use ?
 	private String constructBioType(String bioType) {
-		if (bioType.equalsIgnoreCase(RegistrationUIConstants.RIGHT_SLAP)) {
+		if (bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific("RIGHT_SLAP"))) {
 			bioType = RegistrationConstants.FINGERPRINT_SLAB_RIGHT;
-		} else if (bioType.equalsIgnoreCase(RegistrationUIConstants.LEFT_SLAP)) {
+		} else if (bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific("LEFT_SLAP"))) {
 			bioType = RegistrationConstants.FINGERPRINT_SLAB_LEFT;
-		} else if (bioType.equalsIgnoreCase(RegistrationUIConstants.THUMBS)) {
+		} else if (bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific("THUMBS"))) {
 			bioType = RegistrationConstants.FINGERPRINT_SLAB_THUMBS;
 		}
 		return bioType;
@@ -1384,7 +1384,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 		thresholdLabel.setAlignment(Pos.CENTER);
 
 		double thresholdValDouble = threshold != null && !threshold.isEmpty() ? Double.parseDouble(threshold) : 0;
-		thresholdLabel.setText(RegistrationUIConstants.THRESHOLD.concat("  ").concat(String.valueOf(thresholdValDouble))
+		thresholdLabel.setText(RegistrationUIConstants.getMessageLanguageSpecific("THRESHOLD").concat("  ").concat(String.valueOf(thresholdValDouble))
 				.concat(RegistrationConstants.PERCENTAGE));
 		thresholdPane1.setPercentWidth(thresholdValDouble);
 		thresholdPane2.setPercentWidth(100.00 - (thresholdValDouble));

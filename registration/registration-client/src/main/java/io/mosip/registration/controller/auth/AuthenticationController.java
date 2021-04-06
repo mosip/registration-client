@@ -240,15 +240,15 @@ public class AuthenticationController extends BaseController implements Initiali
 				// Generate alert to show OTP
 				getOTP.setVisible(false);
 				generateAlert(RegistrationConstants.ALERT_INFORMATION,
-						RegistrationUIConstants.OTP_GENERATION_SUCCESS_MESSAGE);
+						RegistrationUIConstants.getMessageLanguageSpecific("OTP_GENERATION_SUCCESS_MESSAGE"));
 			} else if (responseDTO.getErrorResponseDTOs() != null) {
 				// Generate Alert to show INVALID USERNAME
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.OTP_GENERATION_ERROR_MESSAGE);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("OTP_GENERATION_ERROR_MESSAGE"));
 			}
 
 		} else {
 			// Generate Alert to show username field was empty
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.USERNAME_FIELD_EMPTY);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("USERNAME_FIELD_EMPTY"));
 		}
 	}
 
@@ -281,13 +281,13 @@ public class AuthenticationController extends BaseController implements Initiali
 							loadNextScreen();
 						} else {
 							generateAlert(RegistrationConstants.ERROR,
-									RegistrationUIConstants.OTP_VALIDATION_ERROR_MESSAGE);
+									RegistrationUIConstants.getMessageLanguageSpecific("OTP_VALIDATION_ERROR_MESSAGE"));
 						}
 					} else {
-						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.USER_NOT_AUTHORIZED);
+						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("USER_NOT_AUTHORIZED"));
 					}
 				} else {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.USERNAME_FIELD_EMPTY);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("USERNAME_FIELD_EMPTY"));
 				}
 			} else {
 				if (null != authenticationService.authValidator(RegistrationConstants.OTP, otpUserId.getText(),
@@ -298,7 +298,7 @@ public class AuthenticationController extends BaseController implements Initiali
 					userAuthenticationTypeListValidation.remove(0);
 					loadNextScreen();
 				} else {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.OTP_VALIDATION_ERROR_MESSAGE);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("OTP_VALIDATION_ERROR_MESSAGE"));
 				}
 			}
 		}
@@ -317,7 +317,7 @@ public class AuthenticationController extends BaseController implements Initiali
 			if (!username.getText().isEmpty()) {
 				if (fetchUserRole(username.getText())) {
 					if (password.getText().isEmpty()) {
-						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.PWORD_FIELD_EMPTY);
+						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("PWORD_FIELD_EMPTY"));
 					} else {
 						status = validatePwd(username.getText(), password.getText());
 						if (RegistrationConstants.SUCCESS.equals(status)) {
@@ -329,19 +329,19 @@ public class AuthenticationController extends BaseController implements Initiali
 							}
 							loadNextScreen();
 						} else if (RegistrationConstants.FAILURE.equals(status)) {
-							generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.AUTHENTICATION_FAILURE);
+							generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("AUTHENTICATION_FAILURE"));
 						}
 					}
 				} else {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.USER_NOT_AUTHORIZED);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("USER_NOT_AUTHORIZED"));
 				}
 			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.USERNAME_FIELD_EMPTY);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("USERNAME_FIELD_EMPTY"));
 			}
 		} else {
 			if (!username.getText().isEmpty()) {
 				if (password.getText().isEmpty()) {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.PWORD_FIELD_EMPTY);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("PWORD_FIELD_EMPTY"));
 				} else {
 					status = validatePwd(username.getText(), password.getText());
 					if (RegistrationConstants.SUCCESS.equals(status)) {
@@ -352,11 +352,11 @@ public class AuthenticationController extends BaseController implements Initiali
 						}
 						loadNextScreen();
 					} else if (RegistrationConstants.FAILURE.equals(status)) {
-						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.AUTHENTICATION_FAILURE);
+						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("AUTHENTICATION_FAILURE"));
 					}
 				}
 			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.USERNAME_FIELD_EMPTY);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("USERNAME_FIELD_EMPTY"));
 			}
 		}
 
@@ -395,10 +395,10 @@ public class AuthenticationController extends BaseController implements Initiali
 					}
 
 				} else {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.USER_NOT_AUTHORIZED);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("USER_NOT_AUTHORIZED"));
 				}
 			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.USERNAME_FIELD_EMPTY);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("USERNAME_FIELD_EMPTY"));
 			}
 		} else {
 			MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.FINGERPRINT_SLAB_LEFT, null,
@@ -442,7 +442,7 @@ public class AuthenticationController extends BaseController implements Initiali
 									"Exception while getting the scanned biometrics for user authentication: caused by "
 											+ ExceptionUtils.getStackTrace(exception));
 							generateAlert(RegistrationConstants.ERROR,
-									RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR);
+									RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_SCANNING_ERROR"));
 						}
 						return false;
 					}
@@ -477,14 +477,14 @@ public class AuthenticationController extends BaseController implements Initiali
 //
 					}
 					generateAlert(RegistrationConstants.ALERT_INFORMATION,
-							RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS);
+							RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_CAPTURE_SUCCESS"));
 
 					loadNextScreen();
 				} else {
 					if (operatorAuthContinue != null) {
 						operatorAuthContinue.setDisable(true);
 					}
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.FINGER_PRINT_MATCH);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("FINGER_PRINT_MATCH"));
 				}
 
 			}
@@ -515,10 +515,10 @@ public class AuthenticationController extends BaseController implements Initiali
 						executeIrisValidationTask(irisUserId.getText(), irisBasedLogin);
 					}
 				} else {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.USER_NOT_AUTHORIZED);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("USER_NOT_AUTHORIZED"));
 				}
 			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.USERNAME_FIELD_EMPTY);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("USERNAME_FIELD_EMPTY"));
 			}
 		} else {
 			if (!isEODAuthentication) {
@@ -552,7 +552,7 @@ public class AuthenticationController extends BaseController implements Initiali
 							LOGGER.error("AuthenticationController", APPLICATION_NAME, APPLICATION_ID,
 									"Exception while getting the scanned biometrics for user authentication: caused by "
 											+ ExceptionUtils.getStackTrace(exception));
-							generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.NO_DEVICE_FOUND);
+							generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("NO_DEVICE_FOUND"));
 						}
 						return false;
 					}
@@ -584,14 +584,14 @@ public class AuthenticationController extends BaseController implements Initiali
 						irisScanButton.setDisable(true);
 					}
 					generateAlert(RegistrationConstants.ALERT_INFORMATION,
-							RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS);
+							RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_CAPTURE_SUCCESS"));
 					loadNextScreen();
 				} else {
 
 					if (operatorAuthContinue != null) {
 						operatorAuthContinue.setDisable(true);
 					}
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.IRIS_MATCH);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("IRIS_MATCH"));
 				}
 
 			}
@@ -642,10 +642,10 @@ public class AuthenticationController extends BaseController implements Initiali
 						executeFaceValidationTask(faceUserId.getText(), faceBasedLogin);
 					}
 				} else {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.USER_NOT_AUTHORIZED);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("USER_NOT_AUTHORIZED"));
 				}
 			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.USERNAME_FIELD_EMPTY);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("USERNAME_FIELD_EMPTY"));
 			}
 		} else {
 			if (!isEODAuthentication) {
@@ -681,7 +681,7 @@ public class AuthenticationController extends BaseController implements Initiali
 									"Exception while getting the scanned biometrics for user authentication: caused by "
 											+ ExceptionUtils.getStackTrace(exception));
 							generateAlert(RegistrationConstants.ERROR,
-									RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR);
+									RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_SCANNING_ERROR"));
 						}
 						return false;
 					}
@@ -714,14 +714,14 @@ public class AuthenticationController extends BaseController implements Initiali
 						faceScanButton.setDisable(true);
 					}
 					generateAlert(RegistrationConstants.ALERT_INFORMATION,
-							RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS);
+							RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_CAPTURE_SUCCESS"));
 					loadNextScreen();
 
 				} else {
 					if (operatorAuthContinue != null) {
 						operatorAuthContinue.setDisable(true);
 					}
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.FACE_MATCH);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("FACE_MATCH"));
 				}
 
 			}
@@ -754,7 +754,7 @@ public class AuthenticationController extends BaseController implements Initiali
 
 		if (userAuthenticationTypeList.isEmpty()) {
 			isSupervisor = false;
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.AUTHENTICATION_ERROR_MSG);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("AUTHENTICATION_ERROR_MSG"));
 			if (isEODAuthentication) {
 				throw new RegBaseCheckedException();
 			}
@@ -944,13 +944,13 @@ public class AuthenticationController extends BaseController implements Initiali
 		faceBasedLogin.setVisible(false);
 		errorPane.setVisible(true);
 		errorPane.setDisable(false);
-		errorText1.setText(RegistrationUIConstants.BIOMETRIC_DISABLE_SCREEN_4);
+		errorText1.setText(RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_DISABLE_SCREEN_4"));
 		errorText1.setVisible(true);
-		errorText2.setText(RegistrationUIConstants.BIOMETRIC_DISABLE_SCREEN_3);
+		errorText2.setText(RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_DISABLE_SCREEN_3"));
 		errorText1.setVisible(true);
 
 		if (isSupervisor) {
-			errorLabel.setText(RegistrationUIConstants.SUPERVISOR_VERIFICATION);
+			errorLabel.setText(RegistrationUIConstants.getMessageLanguageSpecific("SUPERVISOR_VERIFICATION"));
 		}
 	}
 
@@ -1231,8 +1231,8 @@ public class AuthenticationController extends BaseController implements Initiali
 		int minutes = otpExpirySeconds / 60;
 		String seconds = String.valueOf(otpExpirySeconds % 60);
 		seconds = seconds.length() < 2 ? "0" + seconds : seconds;
-		otpValidity.setText(RegistrationUIConstants.OTP_VALIDITY + " " + minutes + ":" + seconds + " "
-				+ RegistrationUIConstants.MINUTES);
+		otpValidity.setText(RegistrationUIConstants.getMessageLanguageSpecific("OTP_VALIDITY") + " " + minutes + ":" + seconds + " "
+				+ RegistrationUIConstants.getMessageLanguageSpecific("MINUTES"));
 		stopTimer();
 		isSupervisor = false;
 		isEODAuthentication = false;
@@ -1271,7 +1271,7 @@ public class AuthenticationController extends BaseController implements Initiali
 		int minutes = otpExpirySeconds / 60;
 		String seconds = String.valueOf(otpExpirySeconds % 60);
 		seconds = seconds.length() < 2 ? "0" + seconds : seconds;
-		otpValidity.setText(RegistrationUIConstants.OTP_VALIDITY + " " + minutes + ":" + seconds);
+		otpValidity.setText(RegistrationUIConstants.getMessageLanguageSpecific("OTP_VALIDITY") + " " + minutes + ":" + seconds);
 		stopTimer();
 
 	}

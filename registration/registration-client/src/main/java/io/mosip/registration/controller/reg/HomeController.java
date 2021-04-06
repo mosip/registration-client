@@ -68,7 +68,7 @@ public class HomeController extends BaseController implements Initializable {
 							APPLICATION_NAME, APPLICATION_ID,
 							ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
 					
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_HOME_PAGE"));
 				}
 			} else {
 				auditFactory.audit(AuditEvent.NAV_HOME, Components.NAVIGATION, SessionContext.userContext().getUserId(),
@@ -86,7 +86,7 @@ public class HomeController extends BaseController implements Initializable {
 			LOGGER.error(LoggerConstants.LOG_REG_HOME, APPLICATION_NAME, APPLICATION_ID,
 					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
 
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_HOME_PAGE"));
 		}
 	}
 

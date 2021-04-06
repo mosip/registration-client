@@ -189,7 +189,7 @@ public class UpdateUINController extends BaseController implements Initializable
 		LOGGER.info(LOG_REG_UIN_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Updating UIN details");
 		try {
 			if (StringUtils.isEmpty(uinId.getText())) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UPDATE_UIN_ENTER_UIN_ALERT);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UPDATE_UIN_ENTER_UIN_ALERT"));
 			} else {
 				Map<String, UiSchemaDTO> selectedFields = new HashMap<String, UiSchemaDTO>();
 				List<String> selectedFieldGroups = new ArrayList<String>();
@@ -216,19 +216,19 @@ public class UpdateUINController extends BaseController implements Initializable
 
 					getScene(createRoot).setRoot(createRoot);
 				} else {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UPDATE_UIN_SELECTION_ALERT);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UPDATE_UIN_SELECTION_ALERT"));
 				}
 			}
 		} catch (InvalidIDException invalidIdException) {
 			LOGGER.error(LOG_REG_UIN_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 					invalidIdException.getMessage() + ExceptionUtils.getStackTrace(invalidIdException));
 
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UPDATE_UIN_VALIDATION_ALERT);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UPDATE_UIN_VALIDATION_ALERT"));
 		} catch (Exception exception) {
 			LOGGER.error(LOG_REG_UIN_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 					exception.getMessage() + ExceptionUtils.getStackTrace(exception));
 
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_REG_PAGE);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_REG_PAGE"));
 		}
 	}
 }
