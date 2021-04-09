@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.testfx.api.FxRobotContext;
-import org.testfx.framework.junit5.Start;
 
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.controller.Initialization;
@@ -32,7 +31,7 @@ public class StartApplication extends Application{
 	String tpmRequired = "Y";
 	FxRobotContext context;
 	Scene scene;
-	@Start 
+	
 	public void start(Stage primaryStage) {
 
 		try {
@@ -40,7 +39,7 @@ public class StartApplication extends Application{
 			io.mosip.registration.context.ApplicationContext.setTPMUsageFlag(tpmRequired);
 			//io.mosip.registration.context.ApplicationContext.setUpgradeServerURL(System.getProperty("mosip.upgradeserver"));
 			
-			System.out.println(System.getProperty("mosip.upgradeserver"));
+			//System.out.println(System.getProperty("mosip.upgradeserver"));
 			System.out.println(System.getProperty("mosip.hostname"));
 			
 			//applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);

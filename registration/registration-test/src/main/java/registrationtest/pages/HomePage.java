@@ -93,7 +93,7 @@ public class HomePage {
 			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait"))); 
 
 
-			waitsUtil.clickNodeAssert( success);
+			waitsUtil.clickNodeAssert(success);
 			waitsUtil.clickNodeAssert( exit);
 
 		}

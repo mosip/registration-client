@@ -6,11 +6,16 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testfx.api.FxRobot;
+import org.testfx.osgi.service.TestFx;
+import org.testfx.util.WaitForAsyncUtils;
 
 import com.aventstack.extentreports.ExtentReporter;
 import com.aventstack.extentreports.ExtentReports;
@@ -27,8 +32,12 @@ import javafx.application.Platform;
 import org.apache.log4j.BasicConfigurator;  
 import org.apache.log4j.LogManager;  
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;  
+import org.apache.log4j.PropertyConfigurator;
 
+import static org.testfx.assertions.api.Assertions.assertThat;
+import static org.testfx.api.FxAssert.assertContext;
+import static org.testfx.api.FxAssert.verifyThat;
+import static org.testfx.matcher.base.NodeMatchers.isNull;
 
 public class NewRegistrationAdultTest{
 
@@ -57,6 +66,8 @@ public class NewRegistrationAdultTest{
 					Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait"))); 
 					robot=new FxRobot();
 					ExtentReportUtil.ExtentSetting();
+					
+					
 					
 					RID rid1=loginNewRegLogout.newRegistrationAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,readJsonFileText("path.idjson.adult"),
@@ -127,7 +138,8 @@ public class NewRegistrationAdultTest{
 				System.setProperty("file.encoding", "UTF-8");
 				System.setProperty("derby.ui.codeset", "UTF-8");
 				System.setProperty("jdbc.drivers","org.apache.derby.jdbc.EmbeddedDriver");
-
+				System.setProperty("mosip.hostname",PropertiesUtil.getKeyValue("mosip.hostname"));
+				
 				invokeRegClientNewReg(
 						readMapDocumentValues(),
 						PropertiesUtil.getKeyValue("operatorId"), 
@@ -144,11 +156,11 @@ public class NewRegistrationAdultTest{
 			
 			
 			
-			public static String readJsonFileText(String vmarg)
+			public static String readJsonFileText(String key)
 			{
 				String jsonTxt=null;
 				try {
-				File f = new File(System.getProperty("user.dir")+System.getProperty(vmarg));
+				File f = new File(System.getProperty("user.dir")+PropertiesUtil.getKeyValue(key));
 				
 				if (f.exists()){
 					InputStream is = new FileInputStream(f);

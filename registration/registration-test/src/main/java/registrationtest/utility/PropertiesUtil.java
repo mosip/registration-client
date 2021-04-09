@@ -15,7 +15,6 @@ public class PropertiesUtil {
 	
 public static  String getKeyValue(String key) throws IOException
 {
-			//String configFilePath=System.getProperty("user.dir")+"\\src\\main\\java\\registrationtest\\res\\config.properties";
 			
 			String configFilePath=System.getProperty("user.dir")+System.getProperty("path.config");
 			

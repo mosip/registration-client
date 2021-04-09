@@ -18,9 +18,6 @@ import org.testfx.api.FxRobot;
 import org.testfx.api.FxRobotContext;
 import org.testfx.api.FxRobotException;
 import org.testfx.api.FxToolkit;
-import org.testfx.framework.junit5.ApplicationAdapter;
-import org.testfx.framework.junit5.ApplicationExtension;
-import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
 import io.mosip.registration.config.AppConfig;

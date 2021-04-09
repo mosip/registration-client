@@ -18,8 +18,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.testfx.api.FxRobot;
 import org.testfx.api.FxRobotContext;
-import org.testfx.framework.junit5.ApplicationExtension;
-import org.testfx.framework.junit5.Start;
 
 import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.Status;

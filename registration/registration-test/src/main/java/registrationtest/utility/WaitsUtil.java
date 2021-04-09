@@ -1,6 +1,5 @@
 package registrationtest.utility;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -31,6 +30,7 @@ import org.apache.log4j.PropertyConfigurator;
 import org.assertj.core.internal.bytebuddy.matcher.VisibilityMatcher;
 import org.testfx.util.WaitForAsyncUtils;
 
+import static org.testfx.assertions.api.Assertions.assertThat;
 
 /**
  * 
@@ -48,12 +48,29 @@ public class WaitsUtil {
 	}
 
 	public <T extends Node> T lookupById(final String controlId) {
-
 		
-		Awaitility
-        .await()
-        .pollDelay(10, TimeUnit.MILLISECONDS)
-        .until(() -> robot.lookup(controlId).query() != null);
+		//verifyThat(robot.lookup("nodeQuery").tryQuery().orElse(null), isNull()); 
+		 // assertThat(robot.lookup("#loginScreen").tryQuery()).isPresent();
+
+		 
+		 try {
+			 
+			WaitForAsyncUtils.waitFor(30, TimeUnit.SECONDS, new Callable<Boolean>() {
+				    @Override
+				    public Boolean call() throws Exception {
+				    	Boolean b=robot.lookup(controlId).query().isVisible();
+				        return b ;
+				    }
+				});
+		} catch (TimeoutException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+//		Awaitility
+//        .await()
+//        .pollDelay(10, TimeUnit.MILLISECONDS)
+//        .until(() -> robot.lookup(controlId).query() != null);
 
 		return robot.lookup(controlId).query();
 		
@@ -64,9 +81,10 @@ public class WaitsUtil {
 	public void clickNodeAssert(String id)
 	{	
 		node=lookupById(id);
-		robot.clickOn(node);
-		assertNotNull(node," "+id+" is not present");
-	
+		
+		 assertThat(robot.lookup(id).tryQuery()).isNotNull();
+		 robot.clickOn(node);
+				
 
 	}
 
