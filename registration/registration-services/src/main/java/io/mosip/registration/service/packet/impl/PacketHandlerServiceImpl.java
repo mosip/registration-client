@@ -535,7 +535,8 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 					list.add(bir);
 				} else if (exceptions.containsKey(key)) {
 					
-					list.add(birBuilder.getExceptionBIR(attribute));
+					//TODO need to uncomment once fix in packet manager
+//					list.add(birBuilder.getExceptionBIR(attribute));
 					
 					BiometricsException biometricsDto = exceptions.get(key);
 
