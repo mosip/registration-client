@@ -29,6 +29,7 @@ import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.registration.config.AppConfig;
+import io.mosip.registration.constants.RegistrationConstants;
 
 @Component
 public class BIRBuilder {
@@ -84,27 +85,42 @@ public class BIRBuilder {
 				.build();
 	}
 
-//	private JAXBElement<String> getCBEFFTestTag(SingleType biometricType) {
-//		String testTagElementName = null;
-//		String testTagType = "y".equalsIgnoreCase(uniqueTagsEnabled) ? "Unique"
-//				: (random.nextInt() % 2 == 0 ? "Duplicate" : "Unique");
-//
-//		switch (biometricType) {
-//		case FINGER:
-//			testTagElementName = "TestFinger";
-//			break;
-//		case IRIS:
-//			testTagElementName = "TestIris";
-//			break;
-//		case FACE:
-//			testTagElementName = "TestFace";
-//			break;
-//		default:
-//			break;
-//		}
-//
-//		return new JAXBElement<>(new QName("testschema", testTagElementName), String.class, testTagType);
-//	}
+
+	public BIR getExceptionBIR(String bioAttribute) {
+		
+		SingleType singleType = Biometric.getSingleTypeByAttribute(bioAttribute);
+		
+		// Format
+		RegistryIDType birFormat = new RegistryIDType();
+		birFormat.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_FORMAT_ORG);
+		birFormat.setType(String.valueOf(Biometric.getFormatType(singleType)));
+		
+		// Algorithm
+				RegistryIDType birAlgorithm = new RegistryIDType();
+				birAlgorithm.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_ALG_ORG);
+				birAlgorithm.setType(PacketManagerConstants.CBEFF_DEFAULT_ALG_TYPE);
+
+				LOGGER.debug("BIRBUILDER", APPLICATION_NAME, APPLICATION_ID,
+						"started building Quality type for for bioAttribute : " + bioAttribute);
+
+				
+				VersionType versionType = new VersionType(1, 1);
+
+				BiometricType biometricType = BiometricType.fromValue(singleType.name());
+				
+				return new BIR.BIRBuilder()
+						.withVersion(versionType)
+						.withCbeffversion(versionType)
+						.withBirInfo(new BIRInfo.BIRInfoBuilder().withIntegrity(false).build())
+						.withOther(RegistrationConstants.EXCEPTION, true)
+						.withBdbInfo(new BDBInfo.BDBInfoBuilder().withFormat(birFormat)
+								.withType(Arrays.asList(biometricType)).withSubtype(getSubTypes(biometricType, bioAttribute))
+								.withPurpose(PurposeType.ENROLL).withLevel(ProcessedLevelType.RAW)
+								.withCreationDate(LocalDateTime.now(ZoneId.of("UTC"))).withIndex(UUID.randomUUID().toString())
+								.build())
+						.build();
+		
+	}
 
 	@SuppressWarnings("incomplete-switch")
 	private List<String> getSubTypes(BiometricType biometricType, String bioAttribute) {

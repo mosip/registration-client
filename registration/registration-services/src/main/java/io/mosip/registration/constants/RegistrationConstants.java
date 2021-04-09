@@ -1903,4 +1903,13 @@ public class RegistrationConstants {
 	public static final String MOSIP_HOSTNAME = "mosip.hostname";
 	public static final String MOSIP_HOSTNAME_DEF_VAL = "dev.mosip.net";
 	
+	/** BIR Meta info constants */
+	public static final String RETRIES = "RETRIES";
+	public static final String FORCE_CAPTURED  = "FORCE_CAPTURED";
+	public static final String SDK_SCORE  = "SDK_SCORE";
+	public static final String EXCEPTION   = "EXCEPTION";
+	public static final String CONFIGURED    = "CONFIGURED";
+	
+	
+	
 }

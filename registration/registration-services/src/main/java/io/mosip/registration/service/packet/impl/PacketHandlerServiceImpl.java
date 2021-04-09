@@ -34,6 +34,7 @@ import io.mosip.commons.packet.facade.PacketWriter;
 import io.mosip.kernel.auditmanager.entity.Audit;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biometrics.entities.BiometricRecord;
+import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
@@ -64,6 +65,7 @@ import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.IdentitySchemaService;
+import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.packet.PacketHandlerService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.common.BIRBuilder;
@@ -115,6 +117,9 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 	@Autowired
 	private RidGenerator<String> ridGeneratorImpl;
+	
+	@Autowired
+	private BioService bioService;
 
 	@Value("${objectstore.packet.source:REGISTRATION_CLIENT}")
 	private String source;
@@ -529,6 +534,9 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 					list.add(bir);
 				} else if (exceptions.containsKey(key)) {
+					
+					list.add(birBuilder.getExceptionBIR(attribute));
+					
 					BiometricsException biometricsDto = exceptions.get(key);
 
 					exceptionAttributesMap.put(biometricsDto.getMissingBiometric(), biometricsDto);
@@ -669,8 +677,29 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	}
 
 	private BIR getBIR(BiometricsDto bioDto) {
-		return birBuilder.buildBIR(bioDto.getAttributeISO(), bioDto.getQualityScore(),
+		BIR bir = birBuilder.buildBIR(bioDto.getAttributeISO(), bioDto.getQualityScore(),
 				Biometric.getSingleTypeByAttribute(bioDto.getBioAttribute()), bioDto.getBioAttribute());
+		
+		Map<String,Object> othersMap = new HashMap<String, Object>();
+		othersMap.put(RegistrationConstants.RETRIES, bioDto.getNumOfRetries());
+		
+		double sdkScore;
+		
+	
+			try {
+				sdkScore = bioService.getSDKScore(bioDto);
+			} catch (BiometricException biometricException) {
+				LOGGER.info("Unable to get the sdk score ", biometricException.getCause());
+				sdkScore = bioDto.getQualityScore();
+			}
+		
+		
+		othersMap.put(RegistrationConstants.SDK_SCORE, sdkScore);
+		othersMap.put(RegistrationConstants.FORCE_CAPTURED, bioDto.isForceCaptured());
+		othersMap.put(RegistrationConstants.EXCEPTION, false);
+		
+		bir.setOthers(othersMap);
+		return bir;
 
 	}
 	

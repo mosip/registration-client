@@ -3,6 +3,7 @@ package io.mosip.registration.service.bio;
 import java.io.InputStream;
 import java.util.List;
 
+import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.kernel.core.cbeffutil.entity.BIR;
 import io.mosip.kernel.core.cbeffutil.jaxbclasses.ProcessedLevelType;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
@@ -61,4 +62,11 @@ public interface BioService {
 	 * @return bir builder for biometric
 	 */
 	public BIR buildBir(String bioAttribute, long qualityScore, byte[] iso, ProcessedLevelType processedLevelType);
+	
+	/**
+	 * @param biometricsDto biometrics captured DTO
+	 * @return sdk score
+	 * @throws BiometricException 
+	 */
+	public double getSDKScore(BiometricsDto biometricsDto) throws BiometricException;
 }
