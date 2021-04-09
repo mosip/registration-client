@@ -73,53 +73,19 @@ public class BIRBuilder {
 		
 		VersionType versionType = new VersionType(1, 1);
 
+		boolean isException = bdb==null ? true : false;
+		
 		return new BIR.BIRBuilder().withBdb(bdb)
 				.withVersion(versionType)
 				.withCbeffversion(versionType)
 				.withBirInfo(new BIRInfo.BIRInfoBuilder().withIntegrity(false).build())
+				.withOther(RegistrationConstants.EXCEPTION, isException)
 				.withBdbInfo(new BDBInfo.BDBInfoBuilder().withFormat(birFormat).withQuality(qualityType)
 						.withType(Arrays.asList(biometricType)).withSubtype(getSubTypes(biometricType, bioAttribute))
 						.withPurpose(PurposeType.ENROLL).withLevel(ProcessedLevelType.RAW)
 						.withCreationDate(LocalDateTime.now(ZoneId.of("UTC"))).withIndex(UUID.randomUUID().toString())
 						.build())
 				.build();
-	}
-
-
-	public BIR getExceptionBIR(String bioAttribute) {
-		
-		SingleType singleType = Biometric.getSingleTypeByAttribute(bioAttribute);
-		
-		// Format
-		RegistryIDType birFormat = new RegistryIDType();
-		birFormat.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_FORMAT_ORG);
-		birFormat.setType(String.valueOf(Biometric.getFormatType(singleType)));
-		
-		// Algorithm
-				RegistryIDType birAlgorithm = new RegistryIDType();
-				birAlgorithm.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_ALG_ORG);
-				birAlgorithm.setType(PacketManagerConstants.CBEFF_DEFAULT_ALG_TYPE);
-
-				LOGGER.debug("BIRBUILDER", APPLICATION_NAME, APPLICATION_ID,
-						"started building Quality type for for bioAttribute : " + bioAttribute);
-
-				
-				VersionType versionType = new VersionType(1, 1);
-
-				BiometricType biometricType = BiometricType.fromValue(singleType.name());
-				
-				return new BIR.BIRBuilder()
-						.withVersion(versionType)
-						.withCbeffversion(versionType)
-						.withBirInfo(new BIRInfo.BIRInfoBuilder().withIntegrity(false).build())
-						.withOther(RegistrationConstants.EXCEPTION, true)
-						.withBdbInfo(new BDBInfo.BDBInfoBuilder().withFormat(birFormat)
-								.withType(Arrays.asList(biometricType)).withSubtype(getSubTypes(biometricType, bioAttribute))
-								.withPurpose(PurposeType.ENROLL).withLevel(ProcessedLevelType.RAW)
-								.withCreationDate(LocalDateTime.now(ZoneId.of("UTC"))).withIndex(UUID.randomUUID().toString())
-								.build())
-						.build();
-		
 	}
 
 	@SuppressWarnings("incomplete-switch")

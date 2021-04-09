@@ -536,7 +536,8 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 				} else if (exceptions.containsKey(key)) {
 					
 					//TODO need to uncomment once fix in packet manager
-//					list.add(birBuilder.getExceptionBIR(attribute));
+					list.add(birBuilder.buildBIR(null, 0,
+							Biometric.getSingleTypeByAttribute(attribute), attribute));
 					
 					BiometricsException biometricsDto = exceptions.get(key);
 
@@ -681,23 +682,12 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		BIR bir = birBuilder.buildBIR(bioDto.getAttributeISO(), bioDto.getQualityScore(),
 				Biometric.getSingleTypeByAttribute(bioDto.getBioAttribute()), bioDto.getBioAttribute());
 		
-		Map<String,Object> othersMap = new HashMap<String, Object>();
+		Map<String,Object> othersMap = bir.getOthers();
+		
 		othersMap.put(RegistrationConstants.RETRIES, bioDto.getNumOfRetries());
 		
-		double sdkScore;
-		
-	
-			try {
-				sdkScore = bioService.getSDKScore(bioDto);
-			} catch (BiometricException biometricException) {
-				LOGGER.info("Unable to get the sdk score ", biometricException.getCause());
-				sdkScore = bioDto.getQualityScore();
-			}
-		
-		
-		othersMap.put(RegistrationConstants.SDK_SCORE, sdkScore);
+		othersMap.put(RegistrationConstants.SDK_SCORE, bioDto.getSdkScore());
 		othersMap.put(RegistrationConstants.FORCE_CAPTURED, bioDto.isForceCaptured());
-		othersMap.put(RegistrationConstants.EXCEPTION, false);
 		
 		bir.setOthers(othersMap);
 		return bir;
