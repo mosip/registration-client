@@ -177,12 +177,12 @@ public class RegistrationPreviewController extends BaseController implements Ini
 					webView.getEngine().documentProperty()
 							.addListener((observableValue, oldValue, document) -> listenToButton(document));
 				} else {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_PREVIEW_PAGE);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_PREVIEW_PAGE"));
 					clearRegistrationData();
 					goToHomePageFromRegistration();
 				}
 			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_PREVIEW_PAGE);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_PREVIEW_PAGE"));
 				clearRegistrationData();
 				goToHomePageFromRegistration();
 			}

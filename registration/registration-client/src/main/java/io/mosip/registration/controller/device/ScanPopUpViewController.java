@@ -250,11 +250,11 @@ public class ScanPopUpViewController extends BaseController {
 			scanningMsg.textProperty().addListener((observable, oldValue, newValue) -> {
 
 				Platform.runLater(() -> {
-					if (RegistrationUIConstants.NO_DEVICE_FOUND.contains(newValue)) {
+					if (RegistrationUIConstants.getMessageLanguageSpecific("NO_DEVICE_FOUND").contains(newValue)) {
 
 						// captureBtn.setDisable(false);
 
-						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.NO_DEVICE_FOUND);
+						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("NO_DEVICE_FOUND"));
 						popupStage.close();
 
 					}
@@ -272,7 +272,7 @@ public class ScanPopUpViewController extends BaseController {
 							RegistrationConstants.USER_REG_SCAN_EXP, ioException.getMessage(),
 							ExceptionUtils.getStackTrace(ioException)));
 
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_SCAN_POPUP);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_SCAN_POPUP"));
 		}
 
 	}
@@ -331,7 +331,7 @@ public class ScanPopUpViewController extends BaseController {
 			}
 		}
 
-		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.DOC_CAPTURE_SUCCESS);
+		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("DOC_CAPTURE_SUCCESS"));
 	}
 
 	/**
@@ -390,7 +390,7 @@ public class ScanPopUpViewController extends BaseController {
 			} catch (RuntimeException ioException) {
 				LOGGER.error(LOG_REG_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 						ExceptionUtils.getStackTrace(ioException));
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.SCAN_DOCUMENT_ERROR);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("SCAN_DOCUMENT_ERROR"));
 			}
 		}
 
@@ -565,7 +565,7 @@ public class ScanPopUpViewController extends BaseController {
 
 		scanImage.setImage(SwingFXUtils.toFXImage(documentScanController.getScannedPages().get(pageNumber - 1), null));
 		graphics.dispose();
-		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.CROP_DOC_SUCCESS);
+		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("CROP_DOC_SUCCESS"));
 
 //		if (webcamSarxosServiceImpl.isWebcamConnected()) {
 //			scanImage.setVisible(false);
@@ -590,7 +590,7 @@ public class ScanPopUpViewController extends BaseController {
 		// Remove current page
 		documentScanController.getScannedPages().remove(pageNumberIndex);
 
-		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.DOC_DELETE_SUCCESS);
+		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("DOC_DELETE_SUCCESS"));
 		// If first page
 		if (currentDocPageNumber == 1) {
 

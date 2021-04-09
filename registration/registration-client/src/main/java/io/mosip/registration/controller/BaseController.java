@@ -427,7 +427,7 @@ public class BaseController {
 			alertStage.initModality(Modality.WINDOW_MODAL);
 
 			alertController.getAlertGridPane().setPrefHeight(context.length() / 2 + 110);
-			controller.setScanningMsg(RegistrationUIConstants.VALIDATION_MESSAGE);
+			controller.setScanningMsg(RegistrationUIConstants.getMessageLanguageSpecific("VALIDATION_MESSAGE"));
 			alertTypeCheck(title, context, alertStage);
 			isValid = run.toRun();
 		} catch (IOException ioException) {
@@ -478,8 +478,8 @@ public class BaseController {
 		if (!fXComponents.getScene().getRoot().getId().equals("mainBox") && !SessionContext.map()
 				.get(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ).equals(RegistrationConstants.ENABLE)) {
 
-			Alert alert = createAlert(AlertType.CONFIRMATION, RegistrationUIConstants.INFORMATION,
-					RegistrationUIConstants.ALERT_NOTE_LABEL, RegistrationUIConstants.PAGE_NAVIGATION_MESSAGE,
+			Alert alert = createAlert(AlertType.CONFIRMATION, RegistrationUIConstants.getMessageLanguageSpecific("INFORMATION"),
+					RegistrationUIConstants.getMessageLanguageSpecific("ALERT_NOTE_LABEL"), RegistrationUIConstants.getMessageLanguageSpecific("PAGE_NAVIGATION_MESSAGE"),
 					RegistrationConstants.PAGE_NAVIGATION_CONFIRM, RegistrationConstants.PAGE_NAVIGATION_CANCEL);
 
 			alert.show();
@@ -627,11 +627,11 @@ public class BaseController {
 		} catch (IOException ioException) {
 			LOGGER.error("REGISTRATION - REDIRECTHOME - BASE_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_HOME_PAGE"));
 		} catch (RuntimeException runtimException) {
 			LOGGER.error("REGISTRATION - REDIRECTHOME - BASE_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 					runtimException.getMessage() + ExceptionUtils.getStackTrace(runtimException));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_HOME_PAGE"));
 		}
 	}
 
@@ -1157,12 +1157,12 @@ public class BaseController {
 
 	public void remapMachine() {
 
-		String message = RegistrationUIConstants.REMAP_NO_ACCESS_MESSAGE;
+		String message = RegistrationUIConstants.getMessageLanguageSpecific("REMAP_NO_ACCESS_MESSAGE");
 
 		if (isPacketsPendingForEODOrReRegister()) {
-			message += RegistrationConstants.NEW_LINE + RegistrationUIConstants.REMAP_EOD_PROCESS_MESSAGE;
+			message += RegistrationConstants.NEW_LINE + RegistrationUIConstants.getMessageLanguageSpecific("REMAP_EOD_PROCESS_MESSAGE");
 		}
-		message += RegistrationConstants.NEW_LINE + RegistrationUIConstants.REMAP_CLICK_OK;
+		message += RegistrationConstants.NEW_LINE + RegistrationUIConstants.getMessageLanguageSpecific("REMAP_CLICK_OK");
 		generateAlert(RegistrationConstants.ALERT_INFORMATION, message);
 
 		disableHomePage(true);
@@ -1214,10 +1214,10 @@ public class BaseController {
 		packetHandlerController.getProgressIndicator().setVisible(false);
 
 		if (isSuccess) {
-			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.REMAP_PROCESS_SUCCESS);
+			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("REMAP_PROCESS_SUCCESS"));
 			headerController.logoutCleanUp();
 		} else {
-			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.REMAP_PROCESS_STILL_PENDING);
+			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("REMAP_PROCESS_STILL_PENDING"));
 		}
 	}
 
@@ -1427,7 +1427,7 @@ public class BaseController {
 
 	protected void restartApplication() {
 
-		generateAlert(RegistrationConstants.SUCCESS.toUpperCase(), RegistrationUIConstants.RESTART_APPLICATION);
+		generateAlert(RegistrationConstants.SUCCESS.toUpperCase(), RegistrationUIConstants.getMessageLanguageSpecific("RESTART_APPLICATION"));
 		restartController.restart();
 
 	}
@@ -1732,11 +1732,11 @@ public class BaseController {
 	/*
 	 * protected List<String> getConstantConfigBioAttributes(String bioType) {
 	 * 
-	 * return bioType.equalsIgnoreCase(RegistrationUIConstants.RIGHT_SLAP) ?
+	 * return bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific("RIGHT_SLAP) ?
 	 * RegistrationConstants.rightHandUiAttributes :
-	 * bioType.equalsIgnoreCase(RegistrationUIConstants.LEFT_SLAP) ?
+	 * bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific("LEFT_SLAP) ?
 	 * RegistrationConstants.leftHandUiAttributes :
-	 * bioType.equalsIgnoreCase(RegistrationUIConstants.THUMBS) ?
+	 * bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific("THUMBS) ?
 	 * RegistrationConstants.twoThumbsUiAttributes :
 	 * bioType.equalsIgnoreCase(RegistrationConstants.IRIS) ?
 	 * RegistrationConstants.eyesUiAttributes :
@@ -1834,7 +1834,7 @@ public class BaseController {
 		Map<Entry<String, String>, Map<String, List<List<String>>>> mapToProcess = new HashMap<>();
 
 		Map<String, String> labels = new HashMap<>();
-		labels.put("OPERATOR", RegistrationUIConstants.ONBOARD_USER_TITLE);
+		labels.put("OPERATOR", RegistrationUIConstants.getMessageLanguageSpecific("ONBOARD_USER_TITLE"));
 
 		Object value = ApplicationContext.map().get(RegistrationConstants.OPERATOR_ONBOARDING_BIO_ATTRIBUTES);
 		List<String> attributes = (value != null) ? Arrays.asList(((String) value).split(","))
@@ -1891,12 +1891,12 @@ public class BaseController {
 	public boolean proceedOnAction(String job) {
 
 		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.NO_INTERNET_CONNECTION);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("NO_INTERNET_CONNECTION"));
 			return false;
 		}
 
 		if (!authTokenUtilService.hasAnyValidToken()) {
-			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.USER_RELOGIN_REQUIRED);
+			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("USER_RELOGIN_REQUIRED"));
 			return false;
 		}
 

@@ -315,8 +315,8 @@ public class PacketHandlerController extends BaseController implements Initializ
 				eodLabel.setVisible(false);
 			}
 			setLastUpdateTime();
-			pendingApprovalCountLbl.setText(RegistrationUIConstants.NO_PENDING_APPLICATIONS);
-			reRegistrationCountLbl.setText(RegistrationUIConstants.NO_RE_REGISTER_APPLICATIONS);
+			pendingApprovalCountLbl.setText(RegistrationUIConstants.getMessageLanguageSpecific("NO_PENDING_APPLICATIONS"));
+			reRegistrationCountLbl.setText(RegistrationUIConstants.getMessageLanguageSpecific("NO_RE_REGISTER_APPLICATIONS"));
 
 			List<RegistrationApprovalDTO> pendingApprovalRegistrations = registrationApprovalService
 					.getEnrollmentByStatus(RegistrationClientStatusCode.CREATED.getCode());
@@ -327,11 +327,11 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 			if (!pendingApprovalRegistrations.isEmpty()) {
 				pendingApprovalCountLbl
-						.setText(pendingApprovalRegistrations.size() + " " + RegistrationUIConstants.APPLICATIONS);
+						.setText(pendingApprovalRegistrations.size() + " " + RegistrationUIConstants.getMessageLanguageSpecific("APPLICATIONS"));
 			}
 			if (!reRegisterRegistrations.isEmpty()) {
 				reRegistrationCountLbl
-						.setText(reRegisterRegistrations.size() + " " + RegistrationUIConstants.APPLICATIONS);
+						.setText(reRegisterRegistrations.size() + " " + RegistrationUIConstants.getMessageLanguageSpecific("APPLICATIONS"));
 			}
 			if (!(getValueFromApplicationContext(RegistrationConstants.UIN_UPDATE_CONFIG_FLAG))
 					.equalsIgnoreCase(RegistrationConstants.ENABLE)
@@ -347,7 +347,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 			Timestamp ts = userOnboardService.getLastUpdatedTime(SessionContext.userId());
 			if (ts != null) {
 				lastBiometricTime
-						.setText(RegistrationUIConstants.LAST_DOWNLOADED + " " + getLocalZoneTime(ts.toString()));
+						.setText(RegistrationUIConstants.getMessageLanguageSpecific("LAST_DOWNLOADED") + " " + getLocalZoneTime(ts.toString()));
 			}
 
 			if (!(getValueFromApplicationContext(RegistrationConstants.LOST_UIN_CONFIG_FLAG))
@@ -483,7 +483,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 					APPLICATION_ID, "Validating Create Packet screen for specific role");
 
 			if (!validateScreenAuthorization(createRoot.getId())) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.AUTHORIZATION_ERROR);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("AUTHORIZATION_ERROR"));
 				return;
 			}
 
@@ -499,7 +499,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 			LOGGER.error("Failed to start registration", exception);
 		}
 		clearRegistrationData();
-		generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_REG_PAGE);
+		generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_REG_PAGE"));
 	}
 
 	/**
@@ -517,7 +517,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 					APPLICATION_ID, "Validating Create Packet screen for specific role");
 
 			if (!validateScreenAuthorization(createRoot.getId())) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.AUTHORIZATION_ERROR);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("AUTHORIZATION_ERROR"));
 				return;
 			}
 
@@ -531,7 +531,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 			LOGGER.error("Failed to start Lost UIN", exception);
 		}
 		clearRegistrationData();
-		generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_REG_PAGE);
+		generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_REG_PAGE"));
 	}
 
 	public void showReciept() {
@@ -570,12 +570,12 @@ public class PacketHandlerController extends BaseController implements Initializ
 					}
 				} else if (templateResponse != null && templateResponse.getErrorResponseDTOs() != null) {
 					generateAlert(RegistrationConstants.ERROR,
-							RegistrationUIConstants.UNABLE_LOAD_ACKNOWLEDGEMENT_PAGE);
+							RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_ACKNOWLEDGEMENT_PAGE"));
 					clearRegistrationData();
 					createPacket();
 				}
 			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_ACKNOWLEDGEMENT_PAGE);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_ACKNOWLEDGEMENT_PAGE"));
 				clearRegistrationData();
 				createPacket();
 			}
@@ -610,7 +610,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 			if (SessionContext.userContext().getRoles().contains(RegistrationConstants.ROLE_DEFAULT)) {
 				getScene(root);
 			} else if (!validateScreenAuthorization(root.getId())) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.AUTHORIZATION_ERROR);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("AUTHORIZATION_ERROR"));
 			} else {
 				getScene(root);
 			}
@@ -618,7 +618,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 			LOGGER.error("REGISTRATION - OFFICER_PACKET_MANAGER - APPROVE PACKET", APPLICATION_NAME, APPLICATION_ID,
 					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
 
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_APPROVAL_PAGE);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_APPROVAL_PAGE"));
 		}
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Loading Pending Approval screen ended.");
 	}
@@ -643,7 +643,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 					APPLICATION_ID, "Validating Upload Packet screen for specific role");
 
 			if (!validateScreenAuthorization(uploadRoot.getId())) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.AUTHORIZATION_ERROR);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("AUTHORIZATION_ERROR"));
 			} else {
 				getScene(uploadRoot);
 
@@ -667,7 +667,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 		ResponseDTO keyResponse = isKeyValid();
 		if (null == keyResponse.getSuccessResponseDTO()) {
-			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.INVALID_KEY);
+			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("INVALID_KEY"));
 			return;
 		}
 
@@ -682,7 +682,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 							getValueFromApplicationContext(RegistrationConstants.IRIS_DISABLE_FLAG))) {
 
 				generateAlert(RegistrationConstants.ERROR,
-						RegistrationUIConstants.UPDATE_UIN_NO_BIOMETRIC_CONFIG_ALERT);
+						RegistrationUIConstants.getMessageLanguageSpecific("UPDATE_UIN_NO_BIOMETRIC_CONFIG_ALERT"));
 			} else {
 				Parent root = BaseController.load(getClass().getResource(RegistrationConstants.UIN_UPDATE), 
 						applicationContext.getBundle(registrationController.getSelectedLangList().get(0), RegistrationConstants.LABELS));
@@ -691,7 +691,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 						APPLICATION_ID, "updating UIN");
 
 				if (!validateScreenAuthorization(root.getId())) {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.AUTHORIZATION_ERROR);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("AUTHORIZATION_ERROR"));
 				} else {
 
 					StringBuilder errorMessage = new StringBuilder();
@@ -839,7 +839,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 				if (regBaseCheckedException.getErrorCode()
 						.equals(RegistrationExceptionConstants.AUTH_ADVICE_USR_ERROR.getErrorCode())) {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.AUTH_ADVICE_FAILURE);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("AUTH_ADVICE_FAILURE"));
 				}
 			} catch (RuntimeException runtimeException) {
 				LOGGER.error("REGISTRATION - SAVE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
@@ -848,9 +848,9 @@ public class PacketHandlerController extends BaseController implements Initializ
 		} else {
 			if (response.getErrorResponseDTOs() != null && response.getErrorResponseDTOs().get(0).getCode()
 					.equals(RegistrationExceptionConstants.AUTH_ADVICE_USR_ERROR.getErrorCode())) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.AUTH_ADVICE_FAILURE);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("AUTH_ADVICE_FAILURE"));
 			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.PACKET_CREATION_FAILURE);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("PACKET_CREATION_FAILURE"));
 			}
 		}
 		return response;
@@ -880,7 +880,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 					APPLICATION_NAME, APPLICATION_ID,
 					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
 
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_APPROVAL_PAGE);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_APPROVAL_PAGE"));
 		}
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Loading re-registration screen ended.");
 	}
@@ -911,13 +911,13 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 				getScene(root);
 			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_DASHBOARD_PAGE);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_DASHBOARD_PAGE"));
 			}
 		} catch (IOException | RegBaseCheckedException exception) {
 			LOGGER.error("REGISTRATION - LOAD_DASHBOARD_SCREEN - REGISTRATION_OFFICER_PACKET_CONTROLLER",
 					APPLICATION_NAME, APPLICATION_ID, exception.getMessage() + ExceptionUtils.getStackTrace(exception));
 
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_DASHBOARD_PAGE);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_DASHBOARD_PAGE"));
 		}
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Loading dashboard screen ended.");
 	}
@@ -957,7 +957,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 					packetUploadService.uploadPacket(getRegistrationDTOFromSession().getRegistrationId());
 				} else {
-					generateAlert("ERROR", RegistrationUIConstants.UPLOAD_FAILED);
+					generateAlert("ERROR", RegistrationUIConstants.getMessageLanguageSpecific("UPLOAD_FAILED"));
 				}
 			}
 
@@ -984,7 +984,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 			Timestamp lastPreRegPacketDownloaded = syncControl.getLastSyncDtimes();
 
 			if (lastPreRegPacketDownloaded != null) {
-				lastPreRegPacketDownloadedTime.setText(RegistrationUIConstants.LAST_DOWNLOADED + " "
+				lastPreRegPacketDownloadedTime.setText(RegistrationUIConstants.getMessageLanguageSpecific("LAST_DOWNLOADED") + " "
 						+ getLocalZoneTime(lastPreRegPacketDownloaded.toString()));
 			}
 		}
@@ -1014,7 +1014,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 		ResponseDTO keyResponse = isKeyValid();
 		if (null == keyResponse.getSuccessResponseDTO()) {
-			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.INVALID_KEY);
+			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationConstants.INVALID_KEY));
 			return;
 		}
 		StringBuilder errorMessage = new StringBuilder();

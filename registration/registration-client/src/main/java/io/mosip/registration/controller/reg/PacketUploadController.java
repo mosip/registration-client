@@ -204,7 +204,7 @@ public class PacketUploadController extends BaseController implements Initializa
 						String packetSyncStatus = packetSynchService.packetSync(packetsToBeSynced);
 						if (!RegistrationConstants.EMPTY.equals(packetSyncStatus)) {
 							selectAllCheckBox.setSelected(false);
-							generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.SYNC_FAILURE);
+							generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("SYNC_FAILURE"));
 						}
 					}
 					auditFactory.audit(AuditEvent.UPLOAD_PACKET, Components.UPLOAD_PACKET,
@@ -224,16 +224,16 @@ public class PacketUploadController extends BaseController implements Initializa
 					});
 				} else {
 					loadInitialPage();
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.PACKET_UPLOAD_EMPTY_ERROR);
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("PACKET_UPLOAD_EMPTY_ERROR"));
 				}
 			} else {
 				loadInitialPage();
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.NETWORK_ERROR);
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("NETWORK_ERROR"));
 			}
 		} catch (RegBaseCheckedException checkedException) {
 			LOGGER.info("REGISTRATION - UPLOAD_ERROR - PACKET_UPLOAD_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 					checkedException.getMessage() + ExceptionUtils.getStackTrace(checkedException));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.PACKET_UPLOAD_EMPTY_ERROR);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("PACKET_UPLOAD_EMPTY_ERROR"));
 		}
 
 	}
@@ -292,7 +292,7 @@ public class PacketUploadController extends BaseController implements Initializa
 													response.getSuccessResponseDTO().getMessage());
 											packetUploadList.add(synchedPacket);
 											tableMap.put(synchedPacket.getFileName(),
-													RegistrationUIConstants.PACKET_UPLOAD_SUCCESS);
+													RegistrationUIConstants.getMessageLanguageSpecific("PACKET_UPLOAD_SUCCESS"));
 
 										} else if (response.getErrorResponseDTOs() != null) {
 											String errMessage = response.getErrorResponseDTOs().get(0).getMessage()
@@ -300,7 +300,7 @@ public class PacketUploadController extends BaseController implements Initializa
 											if (errMessage.contains(RegistrationConstants.PACKET_DUPLICATE)) {
 
 												tableMap.put(synchedPacket.getFileName(),
-														RegistrationUIConstants.PACKET_UPLOAD_DUPLICATE);
+														RegistrationUIConstants.getMessageLanguageSpecific("PACKET_UPLOAD_DUPLICATE"));
 												synchedPacket.setPacketClientStatus(
 														RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode());
 												synchedPacket.setUploadStatus(
@@ -317,7 +317,7 @@ public class PacketUploadController extends BaseController implements Initializa
 
 									} else {
 										tableMap.put(synchedPacket.getFileName(),
-												RegistrationUIConstants.PACKET_NOT_AVAILABLE);
+												RegistrationUIConstants.getMessageLanguageSpecific("PACKET_NOT_AVAILABLE"));
 									}
 
 								} catch (URISyntaxException uriSyntaxException) {
@@ -326,7 +326,7 @@ public class PacketUploadController extends BaseController implements Initializa
 											"REGISTRATION - HANDLE_PACKET_UPLOAD_URI_ERROR - PACKET_UPLOAD_CONTROLLER",
 											APPLICATION_NAME, APPLICATION_ID,
 											"Error in uri syntax" + ExceptionUtils.getStackTrace(uriSyntaxException));
-									status = RegistrationUIConstants.PACKET_UPLOAD_ERROR;
+									status = RegistrationUIConstants.getMessageLanguageSpecific("PACKET_UPLOAD_ERROR");
 								} catch (RegBaseCheckedException regBaseCheckedException) {
 									LOGGER.error("REGISTRATION - HANDLE_PACKET_UPLOAD_ERROR - PACKET_UPLOAD_CONTROLLER",
 											APPLICATION_NAME, APPLICATION_ID,
@@ -338,10 +338,10 @@ public class PacketUploadController extends BaseController implements Initializa
 									if (regBaseCheckedException.getErrorCode().equals(
 											RegistrationExceptionConstants.AUTH_ADVICE_USR_ERROR.getErrorCode())) {
 										tableMap.put(synchedPacket.getFileName(),
-												RegistrationUIConstants.AUTH_ADVICE_FAILURE);
+												RegistrationUIConstants.getMessageLanguageSpecific("AUTH_ADVICE_FAILURE"));
 									} else {
 										tableMap.put(synchedPacket.getFileName(),
-												RegistrationUIConstants.PACKET_UPLOAD_SERVICE_ERROR);
+												RegistrationUIConstants.getMessageLanguageSpecific("PACKET_UPLOAD_SERVICE_ERROR"));
 									}
 									packetUploadList.add(synchedPacket);
 
@@ -352,9 +352,9 @@ public class PacketUploadController extends BaseController implements Initializa
 											"Run time error while connecting to the server"
 													+ ExceptionUtils.getStackTrace(runtimeException));
 									if (i == 0) {
-										status = RegistrationUIConstants.PACKET_UPLOAD_ERROR;
+										status = RegistrationUIConstants.getMessageLanguageSpecific("PACKET_UPLOAD_ERROR");
 									} else if (i > 0) {
-										status = RegistrationUIConstants.PACKET_PARTIAL_UPLOAD_ERROR;
+										status = RegistrationUIConstants.getMessageLanguageSpecific("PACKET_PARTIAL_UPLOAD_ERROR");
 									}
 									for (int count = i; count < selectedPackets.size(); count++) {
 										synchedPacket = selectedPackets.get(count);
@@ -391,7 +391,7 @@ public class PacketUploadController extends BaseController implements Initializa
 					} else {
 						loadInitialPage();
 						generateAlert(RegistrationConstants.ALERT_INFORMATION,
-								RegistrationUIConstants.PACKET_UPLOAD_EMPTY);
+								RegistrationUIConstants.getMessageLanguageSpecific("PACKET_UPLOAD_EMPTY"));
 					}
 					selectedPackets.clear();
 					return status;
@@ -467,7 +467,7 @@ public class PacketUploadController extends BaseController implements Initializa
 			selectedPackets.clear();
 		} else {
 			loadInitialPage();
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.PACKET_EXPORT_EMPTY_ERROR);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("PACKET_EXPORT_EMPTY_ERROR"));
 		}
 	}
 
@@ -653,19 +653,19 @@ public class PacketUploadController extends BaseController implements Initializa
 
 			stage = new Stage();
 
-			stage.setTitle(RegistrationUIConstants.PACKET_UPLOAD_HEADER_NAME);
+			stage.setTitle(RegistrationUIConstants.getMessageLanguageSpecific("PACKET_UPLOAD_HEADER_NAME"));
 			stage.setWidth(500);
 			stage.setHeight(500);
 
 			TableView<PacketStatusDTO> statusTable = new TableView<>();
 			statusTable.setId("resultTable");
 			TableColumn<PacketStatusDTO, String> fileNameCol = new TableColumn<>(
-					RegistrationUIConstants.UPLOAD_COLUMN_HEADER_FILE);
+					RegistrationUIConstants.getMessageLanguageSpecific("UPLOAD_COLUMN_HEADER_FILE"));
 			fileNameCol.setMinWidth(250);
 			fileNameCol.setId("PacketID");
 			fileNameCol.getStyleClass().add("tableId");
 			TableColumn<PacketStatusDTO, String> statusCol = new TableColumn<>(
-					RegistrationUIConstants.UPLOAD_COLUMN_HEADER_STATUS);
+					RegistrationUIConstants.getMessageLanguageSpecific("UPLOAD_COLUMN_HEADER_STATUS"));
 			statusCol.setMinWidth(250);
 			statusCol.setId("PacketStatus");
 			
@@ -683,7 +683,7 @@ public class PacketUploadController extends BaseController implements Initializa
 			stage.initOwner(fXComponents.getStage());
 			stage.setResizable(false);
 			stage.setScene(scene);
-			stage.setTitle(RegistrationUIConstants.ALERT_NOTE_LABEL);
+			stage.setTitle(RegistrationUIConstants.getMessageLanguageSpecific("ALERT_NOTE_LABEL"));
 			stage.show();
 			selectAllCheckBox.setSelected(false);
 			stage.setOnCloseRequest((e) -> {
@@ -713,9 +713,9 @@ public class PacketUploadController extends BaseController implements Initializa
 							.concat(packetVo.getFileName()).concat("'").concat(RegistrationConstants.COMMA).concat("'")
 							.concat(packetVo.getCreatedTime()).concat("'"))
 					.collect(Collectors.joining(RegistrationConstants.NEW_LINE));
-			String headers = RegistrationUIConstants.EOD_SLNO_LABEL.concat(RegistrationConstants.COMMA)
-					.concat(RegistrationUIConstants.PACKETUPLOAD_PACKETID_LABEL).concat(RegistrationConstants.COMMA)
-					.concat(RegistrationUIConstants.EOD_REGISTRATIONDATE_LABEL).concat(RegistrationConstants.COMMA)
+			String headers = RegistrationUIConstants.getMessageLanguageSpecific("EOD_SLNO_LABEL").concat(RegistrationConstants.COMMA)
+					.concat(RegistrationUIConstants.getMessageLanguageSpecific("PACKETUPLOAD_PACKETID_LABEL")).concat(RegistrationConstants.COMMA)
+					.concat(RegistrationUIConstants.getMessageLanguageSpecific("EOD_REGISTRATIONDATE_LABEL")).concat(RegistrationConstants.COMMA)
 					.concat(RegistrationConstants.NEW_LINE);
 			fileData = headers + fileData;
 			filterField.setText(str);
@@ -725,13 +725,13 @@ public class PacketUploadController extends BaseController implements Initializa
 				writer.write(fileData);
 
 				generateAlert(RegistrationConstants.ALERT_INFORMATION,
-						RegistrationUIConstants.EOD_DETAILS_EXPORT_SUCCESS);
+						RegistrationUIConstants.getMessageLanguageSpecific("EOD_DETAILS_EXPORT_SUCCESS"));
 
 			} catch (IOException ioException) {
 				LOGGER.error(LOG_PACKET_UPLOAD, APPLICATION_NAME, APPLICATION_ID,
 						ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
 
-				generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.PACKET_STATUS_EXPORT);
+				generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("PACKET_STATUS_EXPORT"));
 
 			}
 		}
@@ -780,11 +780,11 @@ public class PacketUploadController extends BaseController implements Initializa
 		} catch (IOException ioException) {
 			LOGGER.error("REGISTRATION - UI - ACK_RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_HOME_PAGE"));
 		} catch (RuntimeException runtimException) {
 			LOGGER.error("REGISTRATION - UI - ACK_RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 					runtimException.getMessage() + ExceptionUtils.getStackTrace(runtimException));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_HOME_PAGE"));
 		}
 
 	}

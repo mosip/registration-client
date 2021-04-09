@@ -93,8 +93,8 @@ public class UserOnboardController extends BaseController implements Initializab
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		setImagesOnHover();
-		operatorName.setText(RegistrationUIConstants.USER_ONBOARD_HI + " " + SessionContext.userContext().getName()
-				+ ", " + RegistrationUIConstants.USER_ONBOARD_NOTONBOARDED);
+		operatorName.setText(RegistrationUIConstants.getMessageLanguageSpecific("USER_ONBOARD_HI") + " " + SessionContext.userContext().getName()
+				+ ", " + RegistrationUIConstants.getMessageLanguageSpecific("USER_ONBOARD_NOTONBOARDED"));
 	}
 
 	@FXML
