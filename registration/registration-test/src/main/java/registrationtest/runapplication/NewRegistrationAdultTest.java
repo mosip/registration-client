@@ -86,6 +86,7 @@ public class NewRegistrationAdultTest{
 							documentUpload);
 					logger.info("RID RESULTS-"+ rid3.result +"\t"+ rid3.ridDateTime +"\t"+ rid3.rid);
 					ExtentReportUtil.reports.flush();
+				System.exit(0);	
 				} catch (Exception e) {
 
 					logger.error(e.getMessage());
@@ -150,7 +151,7 @@ public class NewRegistrationAdultTest{
 				{
 					logger.error(e.getMessage());
 				}
-				System.exit(0);	
+				
 			}
 
 			
