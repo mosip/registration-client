@@ -4,6 +4,7 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import io.mosip.registration.exception.ConnectionException;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -36,7 +37,7 @@ public class RestClientUtilTest {
 	@Mock
 	RequestHTTPDTO requestHTTPDTO;
 
-	@Ignore
+
 	@Test(expected= ResourceAccessException.class)
 	public void invokeTest() throws URISyntaxException, HttpClientErrorException, HttpServerErrorException,
 			ResourceAccessException, SocketTimeoutException, RegBaseCheckedException {
@@ -54,13 +55,12 @@ public class RestClientUtilTest {
 		requestHTTPDTO.setSimpleClientHttpRequestFactory(new SimpleClientHttpRequestFactory());
 		requestHTTPDTO.setUri(uri);
 
-		Assert.assertNull(restClientUtil.invoke(requestHTTPDTO));
+		Assert.assertNull(restClientUtil.invokeURL(requestHTTPDTO));
 	}
 
-	@Ignore
+
 	@Test(expected= ResourceAccessException.class)
-	public void invokeHeadersTest() throws URISyntaxException, HttpClientErrorException, HttpServerErrorException,
-			ResourceAccessException, SocketTimeoutException, RegBaseCheckedException {
+	public void invokeHeadersTest() throws RegBaseCheckedException, ConnectionException, URISyntaxException {
 		OtpGeneratorResponseDTO generatorResponseDto = new OtpGeneratorResponseDTO();
 		generatorResponseDto.setOtp("099977");
 		OtpGeneratorRequestDTO otpGeneratorRequestDTO = new OtpGeneratorRequestDTO();
@@ -74,10 +74,10 @@ public class RestClientUtilTest {
 		requestHTTPDTO.setHttpMethod(HttpMethod.POST);
 		requestHTTPDTO.setUri(uri);
 
-		Assert.assertNull(restClientUtil.invoke(requestHTTPDTO));
+		Assert.assertNull(restClientUtil.invokeURL(requestHTTPDTO));
 	}
 
-	@Ignore
+
 	@Test(expected= ResourceAccessException.class)
 	public void invokeHeadersException() throws URISyntaxException, HttpClientErrorException, HttpServerErrorException,
 			ResourceAccessException, SocketTimeoutException, RegBaseCheckedException {
@@ -95,11 +95,11 @@ public class RestClientUtilTest {
 		requestHTTPDTO.setHttpMethod(HttpMethod.POST);
 		requestHTTPDTO.setUri(uri);
 
-		Assert.assertNull(restClientUtil.invoke(requestHTTPDTO));
+		Assert.assertNull(restClientUtil.invokeURL(requestHTTPDTO));
 
 	}
 
-	@Ignore
+
 	@Test(expected= ResourceAccessException.class)
 	public void invokeHeaderException() throws URISyntaxException, HttpClientErrorException, HttpServerErrorException,
 			ResourceAccessException, SocketTimeoutException, RegBaseCheckedException {
@@ -117,7 +117,7 @@ public class RestClientUtilTest {
 		requestHTTPDTO.setHttpMethod(HttpMethod.POST);
 		requestHTTPDTO.setUri(uri);
 
-		Assert.assertNull(restClientUtil.invoke(requestHTTPDTO));
+		Assert.assertNull(restClientUtil.invokeURL(requestHTTPDTO));
 
 	}
 

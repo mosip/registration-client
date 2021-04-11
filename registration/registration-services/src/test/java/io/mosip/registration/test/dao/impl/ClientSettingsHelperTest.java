@@ -4,14 +4,30 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
+import io.mosip.registration.dao.IdentitySchemaDao;
+import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.exception.ConnectionException;
+import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.repositories.*;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -26,50 +42,6 @@ import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.impl.MasterSyncDaoImpl;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.exception.RegBaseUncheckedException;
-import io.mosip.registration.repositories.AppAuthenticationRepository;
-import io.mosip.registration.repositories.AppDetailRepository;
-import io.mosip.registration.repositories.AppRolePriorityRepository;
-import io.mosip.registration.repositories.ApplicantValidDocumentRepository;
-import io.mosip.registration.repositories.BiometricAttributeRepository;
-import io.mosip.registration.repositories.BiometricTypeRepository;
-import io.mosip.registration.repositories.BlacklistedWordsRepository;
-import io.mosip.registration.repositories.CenterMachineRepository;
-import io.mosip.registration.repositories.DeviceMasterRepository;
-import io.mosip.registration.repositories.DeviceProviderRepository;
-import io.mosip.registration.repositories.DeviceSpecificationRepository;
-import io.mosip.registration.repositories.DeviceTypeRepository;
-import io.mosip.registration.repositories.DocumentCategoryRepository;
-import io.mosip.registration.repositories.DocumentTypeRepository;
-import io.mosip.registration.repositories.FoundationalTrustProviderRepository;
-import io.mosip.registration.repositories.GenderRepository;
-import io.mosip.registration.repositories.IdTypeRepository;
-import io.mosip.registration.repositories.IndividualTypeRepository;
-import io.mosip.registration.repositories.LanguageRepository;
-import io.mosip.registration.repositories.LocationRepository;
-import io.mosip.registration.repositories.MachineMasterRepository;
-import io.mosip.registration.repositories.MachineSpecificationRepository;
-import io.mosip.registration.repositories.MachineTypeRepository;
-import io.mosip.registration.repositories.MosipDeviceServiceRepository;
-import io.mosip.registration.repositories.ProcessListRepository;
-import io.mosip.registration.repositories.ReasonCategoryRepository;
-import io.mosip.registration.repositories.ReasonListRepository;
-import io.mosip.registration.repositories.RegisteredDeviceTypeRepository;
-import io.mosip.registration.repositories.RegisteredSubDeviceTypeRepository;
-import io.mosip.registration.repositories.RegistrationCenterDeviceRepository;
-import io.mosip.registration.repositories.RegistrationCenterMachineDeviceRepository;
-import io.mosip.registration.repositories.RegistrationCenterRepository;
-import io.mosip.registration.repositories.RegistrationCenterTypeRepository;
-import io.mosip.registration.repositories.RegistrationCenterUserRepository;
-import io.mosip.registration.repositories.ScreenAuthorizationRepository;
-import io.mosip.registration.repositories.ScreenDetailRepository;
-import io.mosip.registration.repositories.SyncJobControlRepository;
-import io.mosip.registration.repositories.SyncJobDefRepository;
-import io.mosip.registration.repositories.TemplateFileFormatRepository;
-import io.mosip.registration.repositories.TemplateRepository;
-import io.mosip.registration.repositories.TemplateTypeRepository;
-import io.mosip.registration.repositories.TitleRepository;
-import io.mosip.registration.repositories.UserMachineMappingRepository;
-import io.mosip.registration.repositories.ValidDocumentRepository;
 import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import io.mosip.registration.util.mastersync.MetaDataUtils;
 
@@ -77,7 +49,7 @@ import io.mosip.registration.util.mastersync.MetaDataUtils;
 @PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*" })
 @SpringBootTest
 @PrepareForTest({ MetaDataUtils.class, RegBaseUncheckedException.class, SessionContext.class, MasterSyncDaoImpl.class,
-		ClientSettingSyncHelper.class, BiometricAttributeRepository.class })
+		ClientSettingSyncHelper.class, BiometricAttributeRepository.class, RegistrationAppHealthCheckUtil.class })
 public class ClientSettingsHelperTest {
 
 	@Rule
@@ -121,6 +93,10 @@ public class ClientSettingsHelperTest {
 
 	@Mock
 	private LocationRepository masterSyncLocationRepository;
+
+	@Mock
+	private LocationHierarchyRepository locationHierarchyRepository;
+
 
 	@Mock
 	private MachineMasterRepository masterSyncMachineRepository;
@@ -224,8 +200,19 @@ public class ClientSettingsHelperTest {
 	@InjectMocks
 	private ClientSettingSyncHelper clientSettingSyncHelper;
 
-	@SuppressWarnings("unchecked")
-	@Test()
+	@Mock
+	private ClientCryptoFacade clientCryptoFacade;
+
+	@Mock
+	private ClientCryptoService clientCryptoService;
+
+	@Mock
+	private ServiceDelegateUtil serviceDelegateUtil;
+
+	@Mock
+	private IdentitySchemaDao identitySchemaDao;
+
+	@Test(expected = RegBaseUncheckedException.class)
 	public void testSingleEntity() {
 		String response = null;
 		SyncDataResponseDto syncDataResponseDto = getSyncDataResponseDto("biometricJson.json");
@@ -241,22 +228,25 @@ public class ClientSettingsHelperTest {
 		clientSettingSyncHelper.saveClientSettings(syncDataResponseDto);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
-	public void testClientSettingsSyncForValidJson() {
+	public void testClientSettingsSyncForValidJson() throws RegBaseCheckedException, ConnectionException, IOException {
+		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
+		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
+		Mockito.when(clientCryptoFacade.decrypt(Mockito.any())).thenReturn("[]".getBytes(StandardCharsets.UTF_8));
+
+		Map<String, Object> map = new LinkedHashMap<>();
+		SchemaDto schemaDto = new SchemaDto();
+		schemaDto.setSchemaJson("");
+		schemaDto.setSchema(new ArrayList<>());
+		map.put("response", schemaDto);
+		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(),Mockito.anyMap(), Mockito.anyBoolean(),
+				Mockito.anyString())).thenReturn(map);
 
 		String response = null;
 		SyncDataResponseDto syncDataResponseDto = getSyncDataResponseDto("responseJson.json");
 		response = clientSettingSyncHelper.saveClientSettings(syncDataResponseDto);
 		assertEquals(RegistrationConstants.SUCCESS, response);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Test(expected = RegBaseUncheckedException.class)
-	public void testInvalidJsonSyntaxJsonSyntaxException() {
-		String response = null;
-		SyncDataResponseDto syncDataResponseDto = getSyncDataResponseDto("invalidJson.json");
-		clientSettingSyncHelper.saveClientSettings(syncDataResponseDto);
 	}
 
 	private SyncDataResponseDto getSyncDataResponseDto(String fileName) {

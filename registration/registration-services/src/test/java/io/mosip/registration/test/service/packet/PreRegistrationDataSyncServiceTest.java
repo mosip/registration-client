@@ -17,6 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.registration.exception.ConnectionException;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -138,7 +139,7 @@ public class PreRegistrationDataSyncServiceTest {
 
 	@Test
 	public void getPreRegistrationsTest()
-			throws HttpClientErrorException, ResourceAccessException, SocketTimeoutException, RegBaseCheckedException {
+			throws RegBaseCheckedException, ConnectionException {
 
 		LinkedHashMap<String, Object> postResponse = new LinkedHashMap<>();
 
@@ -166,7 +167,7 @@ public class PreRegistrationDataSyncServiceTest {
 	}
 
 	protected void mockPreRegServices(LinkedHashMap<String, Object> postResponse)
-			throws RegBaseCheckedException, SocketTimeoutException {
+			throws RegBaseCheckedException, ConnectionException {
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.any(), Mockito.anyString()))
 				.thenReturn(postResponse);
 		// Mockito.when(preRegistrationResponseDTO.getResponse()).thenReturn(list);
@@ -194,7 +195,7 @@ public class PreRegistrationDataSyncServiceTest {
 
 	@Test
 	public void getPreRegistrationsAlternateFlowTest()
-			throws HttpClientErrorException, ResourceAccessException, SocketTimeoutException, RegBaseCheckedException {
+			throws RegBaseCheckedException, ConnectionException {
 
 		LinkedHashMap<String, Object> postResponse = new LinkedHashMap<>();
 
@@ -217,7 +218,7 @@ public class PreRegistrationDataSyncServiceTest {
 
 	@Test
 	public void getPreRegistrationTest()
-			throws HttpClientErrorException, ResourceAccessException, SocketTimeoutException, RegBaseCheckedException {
+			throws RegBaseCheckedException, ConnectionException  {
 
 		mockData();
 
@@ -236,7 +237,7 @@ public class PreRegistrationDataSyncServiceTest {
 
 	}
 
-	protected void mockData() throws RegBaseCheckedException, SocketTimeoutException {
+	protected void mockData() throws RegBaseCheckedException, ConnectionException {
 		Map<String, Object> responseMap = new LinkedHashMap<>();
 		LinkedHashMap<String, Object> valuesMap = new LinkedHashMap<>();
 		valuesMap.put("pre-registration-id", "70694681371453");
@@ -258,7 +259,7 @@ public class PreRegistrationDataSyncServiceTest {
 
 	@Test
 	public void getPreRegistrationAlternateTest()
-			throws HttpClientErrorException, ResourceAccessException, SocketTimeoutException, RegBaseCheckedException {
+			throws RegBaseCheckedException, ConnectionException {
 
 		Mockito.when(
 				serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(), Mockito.anyString()))
@@ -279,7 +280,7 @@ public class PreRegistrationDataSyncServiceTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void getPreRegistrationNegativeTest()
-			throws HttpClientErrorException, ResourceAccessException, SocketTimeoutException, RegBaseCheckedException {
+			throws RegBaseCheckedException, ConnectionException {
 
 		Mockito.when(
 				serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(), Mockito.anyString()))
@@ -293,7 +294,7 @@ public class PreRegistrationDataSyncServiceTest {
 
 	@Test
 	public void getPreRegistrationExceptionTest()
-			throws HttpClientErrorException, ResourceAccessException, SocketTimeoutException, RegBaseCheckedException {
+			throws RegBaseCheckedException, ConnectionException {
 
 		mockData();
 
@@ -315,7 +316,7 @@ public class PreRegistrationDataSyncServiceTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void getPreRegistrationsTestNegative()
-			throws HttpClientErrorException, ResourceAccessException, SocketTimeoutException, RegBaseCheckedException { // Test-2
+			throws RegBaseCheckedException, ConnectionException { // Test-2
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.any(), Mockito.anyString()))
 				.thenThrow(HttpClientErrorException.class);
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);

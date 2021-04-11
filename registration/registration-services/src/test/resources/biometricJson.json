@@ -4,19 +4,11 @@
 		{
 			"entityName": "BiometricType",
 			"entityType": "structured",
-			"data": [
-				"{\"code\":\"FNR\",\"name\":\"Fingerprint\",\"description\":\"Finger prints of the applicant\",\"isDeleted\":null,\"langCode\":\"eng\",\"isActive\":true}",
-
-				"{\"code\":\"IRS\",\"name\":\"Photo\",\"description\":\"Photo of the face of the applicant\",\"isDeleted\":null,\"langCode\":\"fra\",\"isActive\":true}"
-			]
+			"data": "[{\"code\":\"FNR\",\"name\":\"Fingerprint\",\"description\":\"Finger prints of the applicant\",\"isDeleted\":null,\"langCode\":\"eng\",\"isActive\":true}]"
 		},
 		{
 		"entityName": "BiometricAttribute",
 		"entityType": "structured",
-		"data": [
-			"{\"code\":\"LI\",\"name\":\"Iris gauche\",\"description\":\"Gravure de Iris Gauche\",\"biometricTypeCode\":\"IRS\",\"isDeleted\":null,\"langCode\":\"fra\",\"isActive\":true}",
-
-			"{\"code\":\"LH\",\"name\":\"Left Slab\",\"description\":\"Print of Left Slab\",\"biometricTypeCode\":\"FNR\",\"isDeleted\":null,\"langCode\":\"eng\",\"isActive\":true}"
-		]
+		"data": "{\"code\":\"LI\",\"name\":\"Iris gauche\",\"description\":\"Gravure de Iris Gauche\",\"biometricTypeCode\":\"IRS\",\"isDeleted\":null,\"langCode\":\"fra\",\"isActive\":true}]"
 	}]
 }

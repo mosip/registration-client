@@ -6,18 +6,24 @@ import static org.mockito.Mockito.times;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
+import java.util.*;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
 
+import io.mosip.kernel.core.util.HMACUtils2;
+import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.dao.*;
+import io.mosip.registration.entity.*;
+import io.mosip.registration.entity.id.CenterMachineId;
+import io.mosip.registration.entity.id.RegMachineSpecId;
+import io.mosip.registration.repositories.CenterMachineRepository;
+import io.mosip.registration.repositories.MachineMasterRepository;
+import io.mosip.registration.service.BaseService;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -28,7 +34,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -41,14 +49,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.dao.MachineMappingDAO;
-import io.mosip.registration.dao.SyncJobControlDAO;
-import io.mosip.registration.dao.SyncTransactionDAO;
-import io.mosip.registration.dao.UserOnboardDAO;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
-import io.mosip.registration.entity.SyncControl;
-import io.mosip.registration.entity.SyncJobDef;
-import io.mosip.registration.entity.SyncTransaction;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.impl.SyncManagerImpl;
@@ -57,6 +58,7 @@ import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecke
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
+@PrepareForTest({io.mosip.registration.context.ApplicationContext.class})
 public class SyncManagerTest {
 
 	@Mock
@@ -101,6 +103,20 @@ public class SyncManagerTest {
 	@Mock
 	private MachineMappingDAO machineMappingDAO;
 
+	@Mock
+	private BaseService baseService;
+
+	@Mock
+	private RegistrationCenterDAO registrationCenterDAO;
+
+	@Mock
+	private MachineMasterRepository machineMasterRepository;
+
+	@Mock
+	private CenterMachineRepository centerMachineRepository;
+
+	private Map<String, Object> applicationMap = new HashMap<>();
+
 	@Before
 	public void initializeSyncJob() throws RegBaseCheckedException {
 		syncJob.setId("1");
@@ -124,11 +140,32 @@ public class SyncManagerTest {
 		syncJobList.forEach(job -> {
 			jobMap.put(job.getId(), job);
 		});
-		// JobConfigurationServiceImpl.SYNC_JOB_MAP = jobMap;
 
-		//PowerMockito.mockStatic(io.mosip.registration.config.AppConfig.class);
-		//when(io.mosip.registration.config.AppConfig.getApplicationProperty(Mockito.anyString())).thenReturn("Appli_Lang");
+		PowerMockito.mockStatic(io.mosip.registration.context.ApplicationContext.class);
+		applicationMap.put(RegistrationConstants.REG_DELETION_CONFIGURED_DAYS, "5");
+		io.mosip.registration.context.ApplicationContext.setApplicationMap(applicationMap);
 
+		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn("10011");
+		Mockito.when(baseService.getStationId()).thenReturn("11002");
+		Mockito.when(baseService.isInitialSync()).thenReturn(false);
+		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
+
+		MachineMaster machine = new MachineMaster();
+		RegMachineSpecId regMachineSpecId = new RegMachineSpecId();
+		regMachineSpecId.setId("11002");
+		regMachineSpecId.setLangCode("eng");
+		machine.setRegMachineSpecId(regMachineSpecId);
+		machine.setIsActive(true);
+		Mockito.when(machineMasterRepository.findByNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(),
+				Mockito.any())).thenReturn(machine);
+
+		CenterMachine centerMachine = new CenterMachine();
+		CenterMachineId centerMachineId = new CenterMachineId();
+		centerMachineId.setMachineId("11002");
+		centerMachineId.setRegCenterId("10011");
+		centerMachine.setCenterMachineId(centerMachineId);
+		centerMachine.setIsActive(true);
+		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString())).thenReturn(centerMachine);
 	}
 
 	private SyncTransaction prepareSyncTransaction() {
@@ -165,15 +202,13 @@ public class SyncManagerTest {
 
 	@Test
 	public void createSyncTest() throws RegBaseCheckedException {
-		String machineId = RegistrationSystemPropertiesChecker.getMachineId();
+
 		SyncTransaction syncTransaction = prepareSyncTransaction();
 		SyncControl syncControl = null;
 		Mockito.when(syncJobDAO.findBySyncJobId(Mockito.anyString())).thenReturn(syncControl);
 
 		Mockito.when(jobTransactionDAO.save(Mockito.any(SyncTransaction.class))).thenReturn(syncTransaction);
-		Mockito.when(machineMappingDAO.getStationID(machineId)).thenReturn(Mockito.anyString());
-		
-		
+
 		assertSame(syncTransaction.getSyncJobId(),
 				syncTransactionManagerImpl.createSyncTransaction("Completed", "Completed", "USER", "1").getSyncJobId());
 
@@ -190,7 +225,7 @@ public class SyncManagerTest {
 	
 	@Test
 	public void updateClientSettingLastSyncTimeTest() throws ParseException {
-		SyncDataResponseDto syncDataResponseDto=getSyncDataResponseDto("responseJson.json");
+		SyncDataResponseDto syncDataResponseDto=getSyncDataResponseDto("responseJsonDate.json");
 		SyncTransaction syncTransaction = prepareSyncTransaction();
 		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 		Date date = formatter.parse(syncDataResponseDto.getLastSyncTime());
@@ -201,7 +236,6 @@ public class SyncManagerTest {
 		assertNotNull(syncTransactionManagerImpl.updateClientSettingLastSyncTime(syncTransaction, timestamp));
 	}
 
-	@Ignore
 	@Test(expected = RegBaseUncheckedException.class)
 	public void createSyncTransactionExceptionTest() {
 		SyncTransaction syncTransaction = null;
@@ -222,6 +256,7 @@ public class SyncManagerTest {
 		Mockito.when(syncJobDAO.save(Mockito.any(SyncControl.class))).thenReturn(syncControl);
 		assertNotNull(syncTransactionManagerImpl.createSyncControlTransaction(syncTransaction));
 	}
+
 	private SyncDataResponseDto getSyncDataResponseDto(String fileName) {
 		
 		ObjectMapper mapper = new ObjectMapper();

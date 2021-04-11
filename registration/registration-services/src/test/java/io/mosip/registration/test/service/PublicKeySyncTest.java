@@ -11,6 +11,24 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.kernel.cryptomanager.util.CryptomanagerUtils;
+import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import io.mosip.kernel.keymanagerservice.util.KeymanagerUtil;
+import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.dao.RegistrationCenterDAO;
+import io.mosip.registration.dao.UserDetailDAO;
+import io.mosip.registration.dao.impl.RegistrationCenterDAOImpl;
+import io.mosip.registration.entity.MachineMaster;
+import io.mosip.registration.entity.id.RegMachineSpecId;
+import io.mosip.registration.exception.ConnectionException;
+import io.mosip.registration.exception.PreConditionCheckException;
+import io.mosip.registration.repositories.MachineMasterRepository;
+import io.mosip.registration.service.BaseService;
+import io.mosip.registration.service.config.GlobalParamService;
+import io.mosip.registration.service.remap.CenterMachineReMapService;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,6 +41,8 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.HttpClientErrorException;
 
 import io.mosip.registration.constants.RegistrationConstants;
@@ -31,9 +51,12 @@ import io.mosip.registration.service.sync.impl.PublicKeySyncImpl;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
+import static org.mockito.Mockito.doNothing;
+
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@PrepareForTest({ RegistrationAppHealthCheckUtil.class })
+@PrepareForTest({ RegistrationAppHealthCheckUtil.class, ApplicationContext.class, SessionContext.class ,
+		RegistrationSystemPropertiesChecker.class})
 public class PublicKeySyncTest {
 
 	@Rule
@@ -42,14 +65,66 @@ public class PublicKeySyncTest {
 	@Mock
 	private ServiceDelegateUtil serviceDelegateUtil;
 
+	@Mock
+	private KeymanagerService keymanagerService;
+
+	@Mock
+	private KeymanagerUtil keymanagerUtil;
+
+	@Mock
+	private CryptomanagerUtils cryptomanagerUtils;
+
+	private String signRefId = "SIGN";
+
 	@InjectMocks
 	private PublicKeySyncImpl publicKeySyncImpl;
 
+	@Mock
+	private BaseService baseService;
+
+	@Mock
+	private RegistrationCenterDAOImpl registrationCenterDAO;
+
+	@Mock
+	private CenterMachineReMapService centerMachineReMapService;
+
+	@Mock
+	private GlobalParamService globalParamService;
+
+	@Mock
+	private MachineMasterRepository machineMasterRepository;
+
+	@Before
+	public void init() {
+		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class,
+				RegistrationSystemPropertiesChecker.class);
+		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
+		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
+
+		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn("10011");
+		Mockito.when(baseService.getStationId()).thenReturn("11002");
+		Mockito.when(baseService.isInitialSync()).thenReturn(false);
+		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
+
+		//Mockito.when(baseService.getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP)).thenReturn(RegistrationConstants.DISABLE);
+		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);
+		Mockito.when(RegistrationSystemPropertiesChecker.getMachineId()).thenReturn("11002");
+
+		MachineMaster machine = new MachineMaster();
+		RegMachineSpecId regMachineSpecId = new RegMachineSpecId();
+		regMachineSpecId.setId("11002");
+		regMachineSpecId.setLangCode("eng");
+		machine.setRegMachineSpecId(regMachineSpecId);
+		machine.setIsActive(true);
+		Mockito.when(machineMasterRepository.findByNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(),
+				Mockito.anyString())).thenReturn(machine);
+	}
+
 	@Test
 	public void getPublicKey()
-			throws ParseException, HttpClientErrorException, SocketTimeoutException, RegBaseCheckedException {
+			throws ParseException, RegBaseCheckedException, ConnectionException {
 
-		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
 		Date date = dateFormat.parse("2019-4-5");
 		Timestamp timestamp = new Timestamp(date.getTime());
@@ -71,7 +146,7 @@ public class PublicKeySyncTest {
 
 	@Test
 	public void getPublicKeyLogin()
-			throws ParseException, HttpClientErrorException, SocketTimeoutException, RegBaseCheckedException {
+			throws RegBaseCheckedException, ConnectionException  {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		Map<String, Object> responseMap = new LinkedHashMap<>();
 		LinkedHashMap<String, Object> valuesMap = new LinkedHashMap<>();
@@ -90,7 +165,7 @@ public class PublicKeySyncTest {
 
 	@Test
 	public void getPublicKeyLoginFailure()
-			throws RegBaseCheckedException, HttpClientErrorException, SocketTimeoutException {
+			throws RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		Map<String, Object> responseMap = new LinkedHashMap<>();
 		List<LinkedHashMap<String, Object>> valuesMap = new ArrayList<>();
@@ -109,7 +184,7 @@ public class PublicKeySyncTest {
 
 	@Test
 	public void getPublicKeyError()
-			throws ParseException, HttpClientErrorException, SocketTimeoutException, RegBaseCheckedException {
+			throws ParseException, RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
 		Date date = dateFormat.parse("2019-4-5");
@@ -133,7 +208,7 @@ public class PublicKeySyncTest {
 
 	@Test
 	public void getPublicKeyException()
-			throws ParseException, HttpClientErrorException, SocketTimeoutException, RegBaseCheckedException {
+			throws ParseException, RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
 		Date date = dateFormat.parse("2019-4-5");
@@ -149,15 +224,15 @@ public class PublicKeySyncTest {
 		responseMap.put(RegistrationConstants.ERRORS, valuesMap);
 		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
-				Mockito.anyString())).thenThrow(SocketTimeoutException.class);
+				Mockito.anyString())).thenThrow(ConnectionException.class);
 
 		publicKeySyncImpl.getPublicKey("user");
 
 	}
 
-	@Test
+	@Test(expected = PreConditionCheckException.class )
 	public void getPublicKeyNetworkFailure()
-			throws ParseException, HttpClientErrorException, SocketTimeoutException, RegBaseCheckedException {
+			throws ParseException, RegBaseCheckedException, ConnectionException {
 
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
@@ -176,12 +251,6 @@ public class PublicKeySyncTest {
 				Mockito.anyString())).thenReturn(responseMap);
 
 		publicKeySyncImpl.getPublicKey("user");
-
-	}
-
-	@Test(expected = RegBaseCheckedException.class)
-	public void publicSync() throws RegBaseCheckedException {
-		publicKeySyncImpl.getPublicKey(null);
 	}
 
 }

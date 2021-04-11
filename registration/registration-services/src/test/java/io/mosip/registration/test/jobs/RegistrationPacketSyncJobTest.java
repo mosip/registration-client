@@ -6,6 +6,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.registration.exception.ConnectionException;
+import io.mosip.registration.service.sync.PacketSynchService;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,6 +51,9 @@ public class RegistrationPacketSyncJobTest {
 
 	@Mock
 	private RegPacketStatusService regPacketStatusService;
+
+	@Mock
+	private PacketSynchService packetSynchService;
 
 	@Mock
 	private ApplicationContext applicationContext;
@@ -104,7 +109,7 @@ public class RegistrationPacketSyncJobTest {
 	}
 
 	@Test
-	public void executeinternalTest() throws JobExecutionException {
+	public void executeinternalTest() throws JobExecutionException, ConnectionException {
 
 		SyncJobDef syncJob = new SyncJobDef();
 		syncJob.setId("1");
@@ -127,14 +132,14 @@ public class RegistrationPacketSyncJobTest {
 		Mockito.when(jobDataMap.get(Mockito.any())).thenReturn(applicationContext);
 		Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
 		Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
-		Mockito.when(applicationContext.getBean(RegPacketStatusService.class)).thenReturn(regPacketStatusService);
+		Mockito.when(applicationContext.getBean(PacketSynchService.class)).thenReturn(packetSynchService);
 
 //		Mockito.when(jobManager.getChildJobs(Mockito.any())).thenReturn(jobMap);
 		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("1");
 
 		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(registrationPacketSyncJob);
 
-		Mockito.when(regPacketStatusService.syncPacket("System")).thenReturn(responseDTO);
+		Mockito.when(packetSynchService.syncPacket("System")).thenReturn(responseDTO);
 
 		registrationPacketSyncJob.executeInternal(context);
 		registrationPacketSyncJob.executeJob("User", "1");
@@ -164,7 +169,7 @@ public class RegistrationPacketSyncJobTest {
 	}
 
 	@Test(expected = RuntimeException.class)
-	public void executejobRunTimeExceptionTest() {
+	public void executejobRunTimeExceptionTest() throws ConnectionException {
 		ResponseDTO responseDTO = new ResponseDTO();
 		ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO();
 		List<ErrorResponseDTO> errorResponseDTOs = new ArrayList<>();
@@ -187,14 +192,14 @@ public class RegistrationPacketSyncJobTest {
 		Mockito.when(jobDataMap.get(Mockito.any())).thenReturn(applicationContext);
 		Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
 		Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
-		Mockito.when(applicationContext.getBean(RegPacketStatusService.class)).thenReturn(regPacketStatusService);
+		Mockito.when(applicationContext.getBean(PacketSynchService.class)).thenReturn(packetSynchService);
 
 //		Mockito.when(jobManager.getChildJobs(Mockito.any())).thenReturn(jobMap);
 		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("1");
 
 		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(registrationPacketSyncJob);
 
-		Mockito.when(regPacketStatusService.syncPacket("System")).thenThrow(RuntimeException.class);
+		Mockito.when(packetSynchService.syncPacket("System")).thenThrow(RuntimeException.class);
 
 		// assertEquals(responseDTO, deletionJob.executeInternal(context));
 		registrationPacketSyncJob.executeInternal(context);

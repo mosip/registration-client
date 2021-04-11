@@ -11,6 +11,7 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.exception.RemapException;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -96,6 +97,41 @@ public class CenterMachineReMapServiceTest {
 
 	}
 
+	@Test(expected = RemapException.class)
+	public void handleRemapProcessTestWithPendingActivity() throws Exception {
+		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
+		PowerMockito.mockStatic(FileUtils.class);
+		PowerMockito.mockStatic(ScriptUtils.class);
+
+		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+
+		GlobalParam globalParam = new GlobalParam();
+
+		globalParam.setVal("true");
+		Mockito.when(globalParamDAO.get(Mockito.anyObject())).thenReturn(globalParam);
+		List<Registration> registrationList = new ArrayList<>();
+		Registration registration = new Registration();
+		registration.setClientStatusCode(RegistrationConstants.SYNCED_STATUS);
+		registrationList.add(registration);
+		Mockito.when(registrationDAO.findByServerStatusCodeNotIn(Mockito.anyList())).thenReturn(registrationList);
+		SyncJobDef syncJobDef = new SyncJobDef();
+		List<SyncJobDef> syncJobDefList = new ArrayList<>();
+		Mockito.when(syncJobConfigDAO.getActiveJobs()).thenReturn(syncJobDefList);
+		Mockito.when(jdbcTemplate.getDataSource()).thenReturn(dataSource);
+		Mockito.when(dataSource.getConnection()).thenReturn(connection);
+		List<PreRegistrationList> preRegistrationList = new ArrayList<>();
+		Mockito.when(preRegistrationDataSyncDAO.getAllPreRegPackets()).thenReturn(preRegistrationList);
+
+		PowerMockito.mockStatic(SessionContext.class);
+		PowerMockito.when(SessionContext.map()).thenReturn(new HashMap<>());		PowerMockito.doNothing().when(FileUtils.class, "deleteDirectory", Mockito.any(File.class));
+
+		for (int i = 1; i < 5; i++) {
+			centerMachineReMapServiceImpl.handleReMapProcess(i);
+		}
+
+	}
+
+
 	@Test
 	public void handleRemapProcessTest() throws Exception {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
@@ -110,6 +146,7 @@ public class CenterMachineReMapServiceTest {
 		Mockito.when(globalParamDAO.get(Mockito.anyObject())).thenReturn(globalParam);
 		List<Registration> registrationList = new ArrayList<>();
 		Registration registration = new Registration();
+		registration.setClientStatusCode("RE_REGISTER_APPROVED");
 		registrationList.add(registration);
 		Mockito.when(registrationDAO.findByServerStatusCodeNotIn(Mockito.anyList())).thenReturn(registrationList);
 		SyncJobDef syncJobDef = new SyncJobDef();
@@ -121,7 +158,8 @@ public class CenterMachineReMapServiceTest {
 		Mockito.when(preRegistrationDataSyncDAO.getAllPreRegPackets()).thenReturn(preRegistrationList);
 
 		PowerMockito.mockStatic(SessionContext.class);
-		PowerMockito.when(SessionContext.map()).thenReturn(new HashMap<>());		PowerMockito.doNothing().when(FileUtils.class, "deleteDirectory", Mockito.any(File.class));
+		PowerMockito.when(SessionContext.map()).thenReturn(new HashMap<>());
+		PowerMockito.doNothing().when(FileUtils.class, "deleteDirectory", Mockito.any(File.class));
 
 		for (int i = 1; i < 5; i++) {
 			centerMachineReMapServiceImpl.handleReMapProcess(i);

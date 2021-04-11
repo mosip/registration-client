@@ -3,15 +3,29 @@ package io.mosip.registration.test.service;
 import static org.mockito.Mockito.doNothing;
 
 import java.net.SocketTimeoutException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.dao.RegistrationCenterDAO;
+import io.mosip.registration.exception.ConnectionException;
+import io.mosip.registration.exception.PreConditionCheckException;
+import io.mosip.registration.repositories.MachineMasterRepository;
+import io.mosip.registration.service.BaseService;
+import io.mosip.registration.service.config.GlobalParamService;
+import io.mosip.registration.service.remap.CenterMachineReMapService;
+import io.mosip.registration.service.remap.impl.CenterMachineReMapServiceImpl;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -35,7 +49,7 @@ import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@PrepareForTest({ RegistrationAppHealthCheckUtil.class,UserDetailDAO.class })
+@PrepareForTest({ RegistrationAppHealthCheckUtil.class,UserDetailDAO.class, ApplicationContext.class, SessionContext.class })
 public class UserDetailServcieTest {
 
 	@Rule
@@ -53,9 +67,49 @@ public class UserDetailServcieTest {
 	@Mock
 	private UserDetailDAO userDetailDAO;
 
+	@Mock
+	private BaseService baseService;
+
+	@Mock
+	private ClientCryptoFacade clientCryptoFacade;
+
+	@Mock
+	private ApplicationContext context;
+
+	@Mock
+	private RegistrationCenterDAO registrationCenterDAO;
+
+	@Mock
+	private CenterMachineReMapService centerMachineReMapService;
+
+	@Mock
+	private GlobalParamService globalParamService;
+
+	@Mock
+	private MachineMasterRepository machineMasterRepository;
+
+	@Before
+	public void init() {
+		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class);
+		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
+		Mockito.when(clientCryptoFacade.decrypt(Mockito.any())).thenReturn("[]".getBytes(StandardCharsets.UTF_8));
+
+		Map<String, Object> map = new HashMap<>();
+		map.put(RegistrationConstants.MACHINE_CENTER_REMAP_FLAG, false);
+		ApplicationContext.getInstance().setApplicationMap(map);
+
+		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn("10011");
+		Mockito.when(baseService.getStationId()).thenReturn("11002");
+		Mockito.when(baseService.isInitialSync()).thenReturn(false);
+		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
+
+		Mockito.when(baseService.getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP)).thenReturn(RegistrationConstants.DISABLE);
+		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);
+	}
+
 	@Test
-	public void userDtls() throws HttpClientErrorException, SocketTimeoutException, RegBaseCheckedException {
-		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
+	public void userDtls() throws RegBaseCheckedException, ConnectionException {
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
 		List<UserDetailDto> list = new ArrayList<>();
 		UserDetailDto userDetails = new UserDetailDto();
@@ -84,13 +138,14 @@ public class UserDetailServcieTest {
 		doNothing().when(userDetailDAO).save(Mockito.any());
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
 				.thenReturn(responseMap);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		doNothing().when(baseService).proceedWithMasterAndKeySync(Mockito.any());
+
 		userDetailServiceImpl.save("System");
 	}
 
 	@SuppressWarnings("unchecked")
 	@Test
-	public void userDtlsException() throws HttpClientErrorException, SocketTimeoutException, RegBaseCheckedException {
+	public void userDtlsException() throws RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
 		List<UserDetailDto> list = new ArrayList<>();
@@ -110,7 +165,7 @@ public class UserDetailServcieTest {
 
 	@SuppressWarnings("unchecked")
 	@Test
-	public void userDtlsException1() throws HttpClientErrorException, SocketTimeoutException, RegBaseCheckedException {
+	public void userDtlsException1() throws RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
 		List<UserDetailDto> list = new ArrayList<>();
@@ -123,13 +178,13 @@ public class UserDetailServcieTest {
 		map.put(RegistrationConstants.USER_CENTER_ID, "10011");
 		doNothing().when(userDetailDAO).save(Mockito.any());
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
-				.thenThrow(SocketTimeoutException.class);
+				.thenThrow(ConnectionException.class);
 		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
 		userDetailServiceImpl.save("System");
 	}
 	
 	@Test
-	public void userDtlsFail() throws HttpClientErrorException, SocketTimeoutException, RegBaseCheckedException {
+	public void userDtlsFail() throws RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
 		List<UserDetailDto> list = new ArrayList<>();
@@ -164,7 +219,7 @@ public class UserDetailServcieTest {
 	}
 	
 	@Test
-	public void userDtlsTestFail() throws HttpClientErrorException, SocketTimeoutException, RegBaseCheckedException {
+	public void userDtlsTestFail() throws RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
 		List<UserDetailDto> list = new ArrayList<>();
@@ -190,7 +245,7 @@ public class UserDetailServcieTest {
 	}
 	
 	@Test
-	public void userDtlsFailNetwork() throws HttpClientErrorException, SocketTimeoutException, RegBaseCheckedException {
+	public void userDtlsFailNetwork() throws RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
 		List<UserDetailDto> list = new ArrayList<>();

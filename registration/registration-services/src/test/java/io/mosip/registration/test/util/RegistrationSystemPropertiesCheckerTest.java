@@ -18,7 +18,7 @@ public class RegistrationSystemPropertiesCheckerTest {
 
 	private static final String PATTERN = "^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$";
 
-	@Ignore
+
 	@Test
 	public void macAddressValidationTest() {
 		String macAddress = RegistrationSystemPropertiesChecker.getMachineMacAddress();

@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.service.BaseService;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
@@ -84,6 +85,9 @@ public class UserOnBoardDAOImlpTest {
 
 	@InjectMocks
 	private BaseService baseService;
+
+	@Mock
+	private RegistrationCenterDAO registrationCenterDAO;
 
 	@Before
 	public void initialize() throws Exception {
@@ -339,7 +343,7 @@ public class UserOnBoardDAOImlpTest {
 	@Test(expected = RegBaseUncheckedException.class)
 	public void getStationIDRunException() throws RegBaseCheckedException {
 		Mockito.when(machineMasterRepository
-				.findByIsActiveTrueAndNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(), Mockito.anyString()))
+				.findByNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(), Mockito.anyString()))
 				.thenThrow(new RegBaseUncheckedException());
 		baseService.getStationId();
 	}
@@ -348,13 +352,14 @@ public class UserOnBoardDAOImlpTest {
 	public void getStationID() throws RegBaseCheckedException {
 		MachineMaster machineMaster = new MachineMaster();
 		machineMaster.setName("localhost");
+		machineMaster.setIsActive(true);
 		machineMaster.setMacAddress("8C-16-45-88-E7-0C");
 		RegMachineSpecId regMachineSpecId = new RegMachineSpecId();
 		regMachineSpecId.setId("100311");
 		regMachineSpecId.setLangCode("eng");
 		machineMaster.setRegMachineSpecId(regMachineSpecId);
 		Mockito.when(machineMasterRepository
-				.findByIsActiveTrueAndNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(), Mockito.anyString()))
+				.findByNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(), Mockito.anyString()))
 				.thenReturn(machineMaster);
 		String stationId = baseService.getStationId();
 		Assert.assertSame("100311", stationId);
@@ -362,7 +367,7 @@ public class UserOnBoardDAOImlpTest {
 
 	@Test(expected = RegBaseUncheckedException.class)
 	public void getCenterIDRunExceptionTest() throws RegBaseCheckedException {
-		Mockito.when(centerMachineRepository.findByIsActiveTrueAndCenterMachineIdMachineId(Mockito.anyString()))
+		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString()))
 				.thenThrow(new RegBaseUncheckedException());
 		baseService.getCenterId("StationID1947");
 	}
@@ -376,8 +381,9 @@ public class UserOnBoardDAOImlpTest {
 		CenterMachine centerMachine = new CenterMachine();
 		centerMachine.setCenterMachineId(centerMachineId);
 
-		Mockito.when(centerMachineRepository.findByIsActiveTrueAndCenterMachineIdMachineId(Mockito.anyString()))
+		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString()))
 				.thenReturn(centerMachine);
+		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
 		String stationId = baseService.getCenterId("StationID1947");
 		Assert.assertSame("CenterID1947", stationId);
 	}

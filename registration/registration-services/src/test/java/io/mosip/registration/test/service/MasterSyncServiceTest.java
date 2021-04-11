@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,6 +20,20 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
+import io.mosip.kernel.core.util.CryptoUtil;
+import io.mosip.registration.dao.*;
+import io.mosip.registration.dao.impl.RegistrationCenterDAOImpl;
+import io.mosip.registration.entity.*;
+import io.mosip.registration.entity.id.CenterMachineId;
+import io.mosip.registration.entity.id.RegMachineSpecId;
+import io.mosip.registration.exception.ConnectionException;
+import io.mosip.registration.repositories.CenterMachineRepository;
+import io.mosip.registration.repositories.MachineMasterRepository;
+import io.mosip.registration.service.BaseService;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -48,10 +63,6 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
-import io.mosip.registration.dao.IdentitySchemaDao;
-import io.mosip.registration.dao.MachineMappingDAO;
-import io.mosip.registration.dao.MasterSyncDao;
-import io.mosip.registration.dao.UserOnboardDAO;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.ResponseDTO;
@@ -60,17 +71,6 @@ import io.mosip.registration.dto.mastersync.BiometricAttributeDto;
 import io.mosip.registration.dto.mastersync.MasterDataResponseDto;
 import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
-import io.mosip.registration.entity.BiometricAttribute;
-import io.mosip.registration.entity.BlacklistedWords;
-import io.mosip.registration.entity.DocumentType;
-import io.mosip.registration.entity.Gender;
-import io.mosip.registration.entity.IndividualType;
-import io.mosip.registration.entity.Location;
-import io.mosip.registration.entity.MachineMaster;
-import io.mosip.registration.entity.ReasonCategory;
-import io.mosip.registration.entity.ReasonList;
-import io.mosip.registration.entity.SyncControl;
-import io.mosip.registration.entity.SyncTransaction;
 import io.mosip.registration.entity.id.IndividualTypeId;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
@@ -90,7 +90,8 @@ import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@PrepareForTest({ RegistrationAppHealthCheckUtil.class, UriComponentsBuilder.class, URI.class, ApplicationContext.class, SessionContext.class })
+@PrepareForTest({ RegistrationAppHealthCheckUtil.class, ApplicationContext.class, SessionContext.class ,
+		RegistrationSystemPropertiesChecker.class, UriComponentsBuilder.class, URI.class, CryptoUtil.class})
 public class MasterSyncServiceTest {
 //java test
 	@Rule
@@ -136,27 +137,83 @@ public class MasterSyncServiceTest {
 	private MachineMappingDAO machineMappingDAO;
 	
 	@Mock
-	private IdentitySchemaDao identitySchemaDao; 
+	private IdentitySchemaDao identitySchemaDao;
+
+	@Mock
+	private BaseService baseService;
+
+	@Mock
+	private RegistrationCenterDAOImpl registrationCenterDAO;
+
+	@Mock
+	private MachineMasterRepository machineMasterRepository;
+
+	@Mock
+	private CenterMachineRepository centerMachineRepository;
+
+	@Mock
+	private ClientCryptoService clientCryptoService;
+
+	@Mock
+	private ClientCryptoFacade clientCryptoFacade;
+
+	@Mock
+	private DocumentCategoryDAO documentCategoryDAO;
 
 	@Before
 	public void beforeClass() throws Exception {
+		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class,
+				RegistrationSystemPropertiesChecker.class, CryptoUtil.class);
+
 		doNothing().when(auditFactory).audit(Mockito.any(AuditEvent.class), Mockito.any(Components.class),
 				Mockito.anyString(), Mockito.anyString());
 		ReflectionTestUtils.setField(SessionContext.class, "sessionContext", null);
 		RegistrationCenterDetailDTO centerDetailDTO = new RegistrationCenterDetailDTO();
 		centerDetailDTO.setRegistrationCenterId("mosip");
-		PowerMockito.mockStatic(SessionContext.class);
+
 		UserContext userContext = Mockito.mock(SessionContext.UserContext.class);		
 		PowerMockito.doReturn(userContext).when(SessionContext.class, "userContext");
 		PowerMockito.when(SessionContext.userContext().getRegistrationCenterDetailDTO()).thenReturn(centerDetailDTO);
 		
-		PowerMockito.mockStatic(ApplicationContext.class);
-		
+
+		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
+		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
+
+		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn("10011");
+		Mockito.when(baseService.getStationId()).thenReturn("11002");
+		Mockito.when(baseService.isInitialSync()).thenReturn(false);
+		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
+
+		//Mockito.when(baseService.getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP)).thenReturn(RegistrationConstants.DISABLE);
+		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);
+		Mockito.when(RegistrationSystemPropertiesChecker.getMachineId()).thenReturn("11002");
+
+		MachineMaster machine = new MachineMaster();
+		RegMachineSpecId regMachineSpecId = new RegMachineSpecId();
+		regMachineSpecId.setId("11002");
+		regMachineSpecId.setLangCode("eng");
+		machine.setRegMachineSpecId(regMachineSpecId);
+		machine.setIsActive(true);
+		Mockito.when(machineMasterRepository.findByNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(),
+				Mockito.anyString())).thenReturn(machine);
+
+		CenterMachine centerMachine = new CenterMachine();
+		CenterMachineId centerMachineId = new CenterMachineId();
+		centerMachineId.setMachineId("11002");
+		centerMachineId.setRegCenterId("10011");
+		centerMachine.setCenterMachineId(centerMachineId);
+		centerMachine.setIsActive(true);
+		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString())).thenReturn(centerMachine);
+
+		Mockito.when(CryptoUtil.computeFingerPrint(Mockito.anyString(), Mockito.any())).thenReturn("testsetsetes");
+		Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
+		Mockito.when(clientCryptoService.getEncryptionPublicPart()).thenReturn("testsetetsetsetse".getBytes(StandardCharsets.UTF_8));
 	}
 
 	@Test
 	public void testMasterSyncSucessCase()
-			throws RegBaseCheckedException, JsonParseException, JsonMappingException, IOException {
+			throws RegBaseCheckedException, ConnectionException, JsonProcessingException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		MasterDataResponseDto masterSyncDto = new MasterDataResponseDto();
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
@@ -266,10 +323,7 @@ public class MasterSyncServiceTest {
 
 		responseDTO.setErrorResponseDTOs(errorResponses);
 
-		@SuppressWarnings("unused")
 		ResponseDTO responseDto = masterSyncServiceImpl.getMasterSync("MDS_J00001","System");
-		/*assertEquals(RegistrationConstants.MASTER_SYNC_FAILURE_MSG,
-				responseDto.getErrorResponseDTOs().get(0).getMessage());*/
 	}
 
 	@SuppressWarnings({ "unchecked", "unused" })
@@ -508,7 +562,7 @@ public class MasterSyncServiceTest {
 	@SuppressWarnings("unused")
 	@Test
 	public void testMasterSyncSucessCaseJson()
-			throws RegBaseCheckedException, JsonParseException, JsonMappingException, IOException, URISyntaxException {
+			throws RegBaseCheckedException, ConnectionException, IOException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		PowerMockito.mockStatic(UriComponentsBuilder.class);
 		PowerMockito.mockStatic(URI.class);
@@ -595,7 +649,7 @@ public class MasterSyncServiceTest {
 	@SuppressWarnings({ "unchecked", "unused" })
 	@Test
 	public void testMasterSyncHttpCaseJson()
-			throws RegBaseCheckedException, JsonParseException, JsonMappingException, IOException, URISyntaxException {
+			throws RegBaseCheckedException, ConnectionException, IOException {
 
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		PowerMockito.mockStatic(UriComponentsBuilder.class);
@@ -668,7 +722,7 @@ public class MasterSyncServiceTest {
 	@SuppressWarnings({ "unchecked", "unused" })
 	@Test
 	public void testMasterSyncSocketCaseJson()
-			throws RegBaseCheckedException, JsonParseException, JsonMappingException, IOException, URISyntaxException {
+			throws RegBaseCheckedException, ConnectionException, IOException {
 
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		PowerMockito.mockStatic(UriComponentsBuilder.class);
@@ -718,7 +772,7 @@ public class MasterSyncServiceTest {
 		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
 
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
-				.thenThrow(SocketTimeoutException.class);
+				.thenThrow(ConnectionException.class);
 
 		Mockito.when(objectMapper.readValue(masterSyncJson.toString(), MasterDataResponseDto.class))
 				.thenReturn(masterSyncDt);
@@ -879,7 +933,7 @@ public class MasterSyncServiceTest {
 	@SuppressWarnings("unused")
 	@Test
 	public void testMasterSyncSucessFail()
-			throws RegBaseCheckedException, JsonParseException, JsonMappingException, IOException {
+			throws RegBaseCheckedException, ConnectionException, IOException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		MasterDataResponseDto masterSyncDto = new MasterDataResponseDto();
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
@@ -963,7 +1017,7 @@ public class MasterSyncServiceTest {
 	@SuppressWarnings("unused")
 	@Test
 	public void testMasterSyncSucessFailure()
-			throws RegBaseCheckedException, JsonParseException, JsonMappingException, IOException {
+			throws RegBaseCheckedException, ConnectionException, IOException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		MasterDataResponseDto masterSyncDto = new MasterDataResponseDto();
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
@@ -1047,7 +1101,7 @@ public class MasterSyncServiceTest {
 	
 	@SuppressWarnings("unused")
 	@Test
-	public void centerRemap() throws HttpClientErrorException, SocketTimeoutException, RegBaseCheckedException {
+	public void centerRemap() throws RegBaseCheckedException, ConnectionException {
 
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		Map<String, Object> myMap = new HashMap<>();
@@ -1175,80 +1229,6 @@ public class MasterSyncServiceTest {
 		
 	}
 
-	@Test
-	public void getRequestParamsOnlyMacIdTest() {
-		PowerMockito.mockStatic(ApplicationContext.class);
-
-		Mockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString())).thenReturn(null);
-		Mockito.when(masterSyncDao.syncJobDetails(Mockito.anyString())).thenReturn(null);
-
-		Map<String, String> requestParams = ReflectionTestUtils.invokeMethod(masterSyncServiceImpl, "getRequestParamsForClientSettingsSync",
-				"macId", null);
-		
-		Assert.assertNull(requestParams.get(RegistrationConstants.KEY_INDEX.toLowerCase()));
-		Assert.assertEquals(1, requestParams.size());
-	}
-
-	@Test
-	public void getRequestParamsKeyIndexContextTest() throws Exception {
-		PowerMockito.mockStatic(ApplicationContext.class);
-		Map<String, Object> applicationContext = new HashMap<>();
-		applicationContext.put(RegistrationConstants.INITIAL_SETUP, RegistrationConstants.ENABLE);
-
-		PowerMockito.doReturn(applicationContext).when(ApplicationContext.class, "map");
-		PowerMockito.when(masterSyncDao.syncJobDetails(Mockito.anyString())).thenReturn(null);
-
-		Map<String, String> requestParams = ReflectionTestUtils.invokeMethod(masterSyncServiceImpl, "getRequestParamsForClientSettingsSync",
-				"macId", "keyIndex");		
-		
-		Assert.assertTrue(requestParams.containsKey(RegistrationConstants.KEY_INDEX.toLowerCase()));
-		Assert.assertEquals(1, requestParams.size());
-
-	}
-
-	@Test
-	public void getRequestParamsKeyIndexServiceTest() throws Exception {
-		PowerMockito.mockStatic(ApplicationContext.class);
-		Map<String, Object> applicationContext = new HashMap<>();
-		MachineMaster machineMaster = new MachineMaster();
-		machineMaster.setKeyIndex("keyIndex");
-		SyncControl syncControl = new SyncControl();
-		syncControl.setLastSyncDtimes(Timestamp.valueOf(LocalDateTime.now()));
-
-		PowerMockito.doReturn(applicationContext).when(ApplicationContext.class, "map");
-		Mockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString())).thenReturn("keyIndex");
-		PowerMockito.when(masterSyncDao.syncJobDetails(Mockito.anyString())).thenReturn(syncControl);
-
-		Map<String, String> requestParams = ReflectionTestUtils.invokeMethod(masterSyncServiceImpl, "getRequestParamsForClientSettingsSync",
-				"masterSync", "keyIndex");
-
-		Assert.assertTrue(requestParams.containsKey(RegistrationConstants.KEY_INDEX.toLowerCase()));
-		Assert.assertTrue(requestParams.containsKey(RegistrationConstants.MASTER_DATA_LASTUPDTAE));
-		Assert.assertEquals(2, requestParams.size());
-
-	}
-
-	@Test
-	public void getRequestParamsUpdatedDateTest() throws Exception {
-		PowerMockito.mockStatic(ApplicationContext.class);
-		Map<String, Object> applicationContext = new HashMap<>();
-		MachineMaster machineMaster = new MachineMaster();
-		machineMaster.setKeyIndex("keyIndex");
-		SyncControl syncControl = new SyncControl();
-		syncControl.setLastSyncDtimes(Timestamp.valueOf(LocalDateTime.now()));
-
-		PowerMockito.doReturn(applicationContext).when(ApplicationContext.class, "map");
-		Mockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString())).thenReturn("keyIndex");
-		PowerMockito.when(masterSyncDao.syncJobDetails(Mockito.anyString())).thenReturn(syncControl);
-
-		Map<String, String> requestParams = ReflectionTestUtils.invokeMethod(masterSyncServiceImpl, "getRequestParamsForClientSettingsSync",
-				"machine", "keyIndex");
-
-		Assert.assertTrue(requestParams.containsKey(RegistrationConstants.KEY_INDEX.toLowerCase()));
-		Assert.assertTrue(requestParams.containsKey(RegistrationConstants.MASTER_DATA_LASTUPDTAE));
-		Assert.assertEquals(2, requestParams.size());
-
-	}
 
 	@Test
 	public void getMasterSyncWithKeyIndexExceptionTest() throws Exception {
@@ -1390,27 +1370,8 @@ public class MasterSyncServiceTest {
 	}
 	
 	@Test(expected=RegBaseCheckedException.class)
-	public void getGenderDtls() throws RegBaseCheckedException {
-		masterSyncServiceImpl.getGenderDtls(null);
-	}
-	
-	@Test(expected=RegBaseCheckedException.class)
 	public void getBiometricType() throws RegBaseCheckedException {
 		masterSyncServiceImpl.getBiometricType(null);
 	}
-	
-	@Test(expected=RegBaseCheckedException.class)
-	public void getIndividualType() throws RegBaseCheckedException {
-		masterSyncServiceImpl.getIndividualType("eng");
-	}
-	
-	@Test(expected=RegBaseCheckedException.class)
-	public void getIndividualTypeCode() throws RegBaseCheckedException {
-		masterSyncServiceImpl.getIndividualType(null);
-	}
-	
-	
-	
-	
-	
+
 }
