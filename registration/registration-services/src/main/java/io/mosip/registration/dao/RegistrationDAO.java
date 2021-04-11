@@ -211,6 +211,6 @@ public interface RegistrationDAO {
 
 	List<Registration> getAllRegistrations();
 
-	List<Registration> getRegistrationByStatus(List<String> packetStatus, int count);
+	List<Registration> getRegistrationByStatus(List<String> packetStatus, int limit);
 
 }

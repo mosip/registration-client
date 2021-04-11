@@ -3,6 +3,7 @@ package io.mosip.registration.jobs.impl;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import io.mosip.registration.exception.ConnectionException;
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -79,7 +80,7 @@ public class PacketSyncStatusJob extends BaseJob {
 
 			// Execute Current Job
 			if (responseDTO.getSuccessResponseDTO() != null) {
-				this.responseDTO = packetStatusService.packetSyncStatus(triggerPoint);
+				this.responseDTO = packetStatusService.syncServerPacketStatusWithRetryWrapper(triggerPoint);
 			}
 
 			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
@@ -89,7 +90,7 @@ public class PacketSyncStatusJob extends BaseJob {
 					RegistrationConstants.APPLICATION_ID,
 					baseUncheckedException.getMessage() + ExceptionUtils.getStackTrace(baseUncheckedException));
 			throw baseUncheckedException;
-		} catch (RegBaseCheckedException regBaseCheckedException) {
+		} catch (RegBaseCheckedException | ConnectionException regBaseCheckedException) {
 			LOGGER.error(LoggerConstants.PRE_REG_DATA_SYNC_JOB_LOGGER_TITLE, APPLICATION_NAME, APPLICATION_ID,
 					regBaseCheckedException.getMessage() + ExceptionUtils.getStackTrace(regBaseCheckedException));
 		}
@@ -116,13 +117,13 @@ public class PacketSyncStatusJob extends BaseJob {
 
 			// Execute Current Job
 			if (responseDTO.getSuccessResponseDTO() != null) {
-				this.responseDTO = packetStatusService.packetSyncStatus(triggerPoint);
+				this.responseDTO = packetStatusService.syncServerPacketStatusWithRetryWrapper(triggerPoint);
 			}
 			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
 
 			LOGGER.info(LoggerConstants.PACKET_SYNC_STATUS_JOB_TITLE, RegistrationConstants.APPLICATION_NAME,
 					RegistrationConstants.APPLICATION_ID, "execute job ended");
-		} catch (RegBaseCheckedException regBaseCheckedException) {
+		} catch (RegBaseCheckedException | ConnectionException regBaseCheckedException) {
 			LOGGER.error(LoggerConstants.PACKET_SYNC_STATUS_JOB_TITLE, APPLICATION_NAME, APPLICATION_ID,
 					regBaseCheckedException.getMessage() + ExceptionUtils.getStackTrace(regBaseCheckedException));
 		}

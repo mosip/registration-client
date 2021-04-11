@@ -686,31 +686,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		List<Registration> registeredPackets = registrationDAO.getAllRegistrations();
 		for (Registration registeredPacket : registeredPackets) {
 			if (!registeredPacket.getClientStatusCode().equalsIgnoreCase(RegistrationClientStatusCode.CREATED.getCode())) {
-				PacketStatusDTO packetStatusDTO = new PacketStatusDTO();
-				packetStatusDTO.setFileName(registeredPacket.getId());
-				packetStatusDTO.setPacketClientStatus(registeredPacket.getClientStatusCode());
-				packetStatusDTO.setClientStatusComments(registeredPacket.getClientStatusComments());
-				packetStatusDTO.setPacketServerStatus(registeredPacket.getServerStatusCode());
-				packetStatusDTO.setPacketPath(registeredPacket.getAckFilename());
-				packetStatusDTO.setUploadStatus(registeredPacket.getFileUploadStatus());
-				packetStatusDTO.setPacketStatus(registeredPacket.getStatusCode());
-				packetStatusDTO.setSupervisorStatus(registeredPacket.getClientStatusCode());
-				packetStatusDTO.setSupervisorComments(registeredPacket.getClientStatusComments());
-				packetStatusDTO.setCreatedTime(regDateTimeConversion(registeredPacket.getCrDtime().toString()));
-				packetStatusDTO.setUserId(registeredPacket.getRegUsrId());
-				try {
-					if (registeredPacket.getAdditionalInfo() != null) {
-						String additionalInfo = new String(registeredPacket.getAdditionalInfo());
-						RegistrationDataDto registrationDataDto = (RegistrationDataDto) JsonUtils
-								.jsonStringToJavaObject(RegistrationDataDto.class, additionalInfo);
-						packetStatusDTO.setName(registrationDataDto.getName());
-						packetStatusDTO.setPhone(registrationDataDto.getPhone());
-						packetStatusDTO.setEmail(registrationDataDto.getEmail());
-					}
-				} catch (JsonParseException | JsonMappingException | io.mosip.kernel.core.exception.IOException exception) {
-					LOGGER.error("Exception while parsing additional info", exception);
-				}
-				packets.add(packetStatusDTO);
+				packets.add(preparePacketStatusDto(registeredPacket));
 			}
 		}
 		return packets;

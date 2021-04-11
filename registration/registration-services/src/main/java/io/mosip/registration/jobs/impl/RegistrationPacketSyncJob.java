@@ -1,5 +1,6 @@
 package io.mosip.registration.jobs.impl;
 
+import io.mosip.registration.service.sync.PacketSynchService;
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,10 +42,8 @@ public class RegistrationPacketSyncJob extends BaseJob {
 	 */
 
 	@Autowired
-	private RegPacketStatusService regPacketStatusService;
-	
-	@Value("${mosip.registration.rid_sync_batch_size:0}")
-	private int count;
+	private PacketSynchService packetSynchService;
+
 
 	/**
 	 * LOGGER for logging
@@ -66,14 +65,14 @@ public class RegistrationPacketSyncJob extends BaseJob {
 
 		try {
 			this.jobId = loadContext(context);
-			regPacketStatusService = applicationContext.getBean(RegPacketStatusService.class);
+			packetSynchService = applicationContext.getBean(PacketSynchService.class);
 
 			// Execute Parent Job
 			this.responseDTO = executeParentJob(jobId);
 
 			// Execute Current Job
 			if (responseDTO.getSuccessResponseDTO() != null) {
-				this.responseDTO = regPacketStatusService.syncPacket(triggerPoint, count);
+				this.responseDTO = packetSynchService.syncPacket(triggerPoint);
 
 			}
 			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
@@ -104,7 +103,7 @@ public class RegistrationPacketSyncJob extends BaseJob {
 
 		// Execute Current Job
 		if (responseDTO.getSuccessResponseDTO() != null) {
-			this.responseDTO = regPacketStatusService.syncPacket(triggerPoint, count);
+			this.responseDTO = packetSynchService.syncPacket(triggerPoint);
 		}
 		syncTransactionUpdate(responseDTO, triggerPoint, jobId);
 

@@ -25,6 +25,9 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
+import io.mosip.kernel.core.util.exception.JsonProcessingException;
+import io.mosip.registration.exception.ConnectionException;
+import io.mosip.registration.exception.PreConditionCheckException;
 import org.apache.commons.collections.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -193,80 +196,41 @@ public class PacketUploadController extends BaseController implements Initializa
 		observableList.clear();
 		table.refresh();
 		service.reset();
-		try {
-			if (RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
-				if (!selectedPackets.isEmpty()) {
-					List<PacketStatusDTO> packetsToBeSynced = new ArrayList<>();
-					selectedPackets.forEach(packet -> {
-						if ((packet.getPacketServerStatus() == null || !RegistrationConstants.SERVER_STATUS_RESEND
-								.equalsIgnoreCase(packet.getPacketServerStatus()))
-								&& !RegistrationClientStatusCode.META_INFO_SYN_SERVER.getCode()
-										.equalsIgnoreCase(packet.getPacketClientStatus())) {
-							PacketStatusDTO packetStatusVO = new PacketStatusDTO();
-							packetStatusVO.setClientStatusComments(packet.getClientStatusComments());
-							packetStatusVO.setFileName(packet.getFileName());
-							packetStatusVO.setPacketClientStatus(packet.getPacketClientStatus());
-							packetStatusVO.setPacketPath(packet.getPacketPath());
-							packetStatusVO.setPacketServerStatus(packet.getPacketServerStatus());
-							packetStatusVO.setPacketStatus(packet.getPacketStatus());
-							packetStatusVO.setUploadStatus(packet.getUploadStatus());
-							packetStatusVO.setSupervisorStatus(packet.getSupervisorStatus());
-							packetStatusVO.setSupervisorComments(packet.getSupervisorComments());
-							packetStatusVO.setName(packet.getName());
-							packetStatusVO.setPhone(packet.getPhone());
-							packetStatusVO.setEmail(packet.getEmail());
 
-							try (FileInputStream fis = new FileInputStream(new File(
-									packet.getPacketPath().replace(RegistrationConstants.ACKNOWLEDGEMENT_FILE_EXTENSION,
-											RegistrationConstants.ZIP_FILE_EXTENSION)))) {
-								byte[] byteArray = new byte[(int) fis.available()];
-								fis.read(byteArray);
-								packetStatusVO.setPacketHash(HMACUtils2.digestAsPlainText(byteArray));
-								packetStatusVO.setPacketSize(BigInteger.valueOf(byteArray.length));
-
-							} catch (IOException | NoSuchAlgorithmException ioException) {
-								LOGGER.error("REGISTRATION_BASE_SERVICE", APPLICATION_NAME, APPLICATION_ID,
-										ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
-							}
-							packetsToBeSynced.add(packetStatusVO);
-						}
-					});
-					if (!packetsToBeSynced.isEmpty()) {
-						String packetSyncStatus = packetSynchService.packetSync(packetsToBeSynced);
-						if (!RegistrationConstants.EMPTY.equals(packetSyncStatus)) {
-							selectAllCheckBox.setSelected(false);
-							generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.SYNC_FAILURE);
-						}
-					}
-					auditFactory.audit(AuditEvent.UPLOAD_PACKET, Components.UPLOAD_PACKET,
-							SessionContext.userContext().getUserId(),
-							AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
-
-					progressIndicator.progressProperty().bind(service.progressProperty());
-					service.start();
-					service.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
-						@Override
-						public void handle(WorkerStateEvent t) {
-							String status = service.getValue();
-							if (!status.equals(RegistrationConstants.EMPTY)) {
-								generateAlert(RegistrationConstants.ERROR, status);
-							}
-						}
-					});
-				} else {
-					loadInitialPage();
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.PACKET_UPLOAD_EMPTY_ERROR);
-				}
-			} else {
-				loadInitialPage();
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.NETWORK_ERROR);
-			}
-		} catch (RegBaseCheckedException checkedException) {
-			LOGGER.info("REGISTRATION - UPLOAD_ERROR - PACKET_UPLOAD_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
-					checkedException.getMessage() + ExceptionUtils.getStackTrace(checkedException));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.PACKET_UPLOAD_EMPTY_ERROR);
+		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+			loadInitialPage();
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.NETWORK_ERROR);
+			return;
 		}
 
+		if (selectedPackets.isEmpty()) {
+			loadInitialPage();
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.PACKET_UPLOAD_EMPTY_ERROR);
+			return;
+		}
+
+		List<String> selectedRIDs = selectedPackets.stream().map(PacketStatusVO::getFileName).collect(Collectors.toList());
+		ResponseDTO responseDTO = packetSynchService.syncPacket(RegistrationConstants.JOB_TRIGGER_POINT_USER, selectedRIDs);
+		if(responseDTO.getErrorResponseDTOs() != null && !responseDTO.getErrorResponseDTOs().isEmpty()) {
+			selectAllCheckBox.setSelected(false);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.SYNC_FAILURE);
+		}
+
+		auditFactory.audit(AuditEvent.UPLOAD_PACKET, Components.UPLOAD_PACKET,
+				SessionContext.userContext().getUserId(),
+				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
+
+		progressIndicator.progressProperty().bind(service.progressProperty());
+		service.start();
+		service.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
+			@Override
+			public void handle(WorkerStateEvent t) {
+				String status = service.getValue();
+				if (!status.equals(RegistrationConstants.EMPTY)) {
+					generateAlert(RegistrationConstants.ERROR, status);
+				}
+			}
+		});
 	}
 
 	/**
@@ -301,118 +265,17 @@ public class PacketUploadController extends BaseController implements Initializa
 								SessionContext.userContext().getUserId(), RegistrationConstants.PACKET_UPLOAD_REF_ID);
 
 						progressIndicator.setVisible(true);
+
 						for (int i = 0; i < selectedPackets.size(); i++) {
-							PacketStatusVO synchedPacket = selectedPackets.get(i);
-							if ((packetSynchService.fetchSynchedPacket(synchedPacket.getFileName())
-									|| RegistrationConstants.SERVER_STATUS_RESEND
-											.equalsIgnoreCase(synchedPacket.getPacketServerStatus()))
-									&& !RegistrationConstants.PACKET_STATUS_CODE_REREGISTER
-											.equalsIgnoreCase(synchedPacket.getPacketServerStatus())) {
-								String ackFileName = synchedPacket.getPacketPath();
-								int lastIndex = ackFileName.indexOf(RegistrationConstants.ACKNOWLEDGEMENT_FILE);
-								String packetPath = ackFileName.substring(0, lastIndex);
-								File packet = new File(packetPath + RegistrationConstants.ZIP_FILE_EXTENSION);
-								try {
-									if (packet.exists()) {
-										ResponseDTO response = packetUploadService.pushPacket(packet);
-										if (response.getSuccessResponseDTO() != null) {
-
-											synchedPacket.setPacketClientStatus(
-													RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode());
-											synchedPacket.setPacketServerStatus(
-													response.getSuccessResponseDTO().getMessage());
-											packetUploadList.add(synchedPacket);
-											tableMap.put(synchedPacket.getFileName(),
-													RegistrationUIConstants.PACKET_UPLOAD_SUCCESS);
-
-										} else if (response.getErrorResponseDTOs() != null) {
-											String errMessage = response.getErrorResponseDTOs().get(0).getMessage()
-													.toLowerCase();
-											if (errMessage.contains(RegistrationConstants.PACKET_DUPLICATE)) {
-
-												tableMap.put(synchedPacket.getFileName(),
-														RegistrationUIConstants.PACKET_UPLOAD_DUPLICATE);
-												synchedPacket.setPacketClientStatus(
-														RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode());
-												synchedPacket.setUploadStatus(
-														RegistrationClientStatusCode.UPLOAD_SUCCESS_STATUS.getCode());
-												packetUploadList.add(synchedPacket);
-
-											} else {
-												synchedPacket.setUploadStatus(
-														RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode());
-												packetUploadList.add(synchedPacket);
-												tableMap.put(synchedPacket.getFileName(), RegistrationConstants.ERROR);
-											}
-										}
-
-									} else {
-										tableMap.put(synchedPacket.getFileName(),
-												RegistrationUIConstants.PACKET_NOT_AVAILABLE);
-									}
-
-								} catch (URISyntaxException uriSyntaxException) {
-
-									LOGGER.error(
-											"REGISTRATION - HANDLE_PACKET_UPLOAD_URI_ERROR - PACKET_UPLOAD_CONTROLLER",
-											APPLICATION_NAME, APPLICATION_ID,
-											"Error in uri syntax" + ExceptionUtils.getStackTrace(uriSyntaxException));
-									status = RegistrationUIConstants.PACKET_UPLOAD_ERROR;
-								} catch (RegBaseCheckedException regBaseCheckedException) {
-									LOGGER.error("REGISTRATION - HANDLE_PACKET_UPLOAD_ERROR - PACKET_UPLOAD_CONTROLLER",
-											APPLICATION_NAME, APPLICATION_ID,
-											"Error while pushing packets to the server"
-													+ ExceptionUtils.getStackTrace(regBaseCheckedException));
-
-									synchedPacket.setUploadStatus(
-											RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode());
-									if (regBaseCheckedException.getErrorCode().equals(
-											RegistrationExceptionConstants.AUTH_ADVICE_USR_ERROR.getErrorCode())) {
-										tableMap.put(synchedPacket.getFileName(),
-												RegistrationUIConstants.AUTH_ADVICE_FAILURE);
-									} else {
-										tableMap.put(synchedPacket.getFileName(),
-												RegistrationUIConstants.PACKET_UPLOAD_SERVICE_ERROR);
-									}
-									packetUploadList.add(synchedPacket);
-
-								} catch (RuntimeException runtimeException) {
-									LOGGER.error(
-											"REGISTRATION - HANDLE_PACKET_UPLOAD_RUNTIME_ERROR - PACKET_UPLOAD_CONTROLLER",
-											APPLICATION_NAME, APPLICATION_ID,
-											"Run time error while connecting to the server"
-													+ ExceptionUtils.getStackTrace(runtimeException));
-									if (i == 0) {
-										status = RegistrationUIConstants.PACKET_UPLOAD_ERROR;
-									} else if (i > 0) {
-										status = RegistrationUIConstants.PACKET_PARTIAL_UPLOAD_ERROR;
-									}
-									for (int count = i; count < selectedPackets.size(); count++) {
-										synchedPacket = selectedPackets.get(count);
-										synchedPacket.setUploadStatus(
-												RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode());
-										packetUploadList.add(synchedPacket);
-										tableMap.put(synchedPacket.getFileName(), RegistrationConstants.ERROR);
-									}
-									break;
-								}
-
-								this.updateProgress(i, selectedPackets.size());
+							try {
+								PacketStatusDTO dto = packetUploadService.uploadPacket(selectedPackets.get(i).getFileName());
+								tableMap.put(dto.getFileName(), dto.getPacketClientStatus());
+							} catch (RegBaseCheckedException e) {
+								tableMap.put(selectedPackets.get(i).getFileName(), RegistrationConstants.ERROR);
 							}
+							this.updateProgress(i+1, selectedPackets.size());
 						}
-						List<PacketStatusDTO> packetsToBeExport = new ArrayList<>();
-						packetUploadList.forEach(packet -> {
-							PacketStatusDTO packetStatusDTO = new PacketStatusDTO();
-							packetStatusDTO.setClientStatusComments(packet.getClientStatusComments());
-							packetStatusDTO.setFileName(packet.getFileName());
-							packetStatusDTO.setPacketClientStatus(packet.getPacketClientStatus());
-							packetStatusDTO.setPacketPath(packet.getPacketPath());
-							packetStatusDTO.setPacketServerStatus(packet.getPacketServerStatus());
-							packetStatusDTO.setPacketStatus(packet.getPacketStatus());
-							packetStatusDTO.setUploadStatus(packet.getUploadStatus());
-							packetsToBeExport.add(packetStatusDTO);
-						});
-						packetUploadService.updateStatus(packetsToBeExport);
+
 						progressIndicator.setVisible(false);
 						if (!tableMap.isEmpty()) {
 							displayStatus(populateTableData(tableMap));
@@ -503,9 +366,6 @@ public class PacketUploadController extends BaseController implements Initializa
 
 	/**
 	 * To display the Uploaded packet details in UI
-	 * 
-	 * @param tableData
-	 * @param uploadedPackets 
 	 */
 	private void displayData() {
 		LOGGER.info("Displaying all the ui data");
@@ -690,8 +550,7 @@ public class PacketUploadController extends BaseController implements Initializa
 
 	/**
 	 * To populate the data for the UI table
-	 * 
-	 * @param verifiedPackets
+	 * @param packetStatus
 	 * @return
 	 */
 	private List<PacketStatusDTO> populateTableData(Map<String, String> packetStatus) {

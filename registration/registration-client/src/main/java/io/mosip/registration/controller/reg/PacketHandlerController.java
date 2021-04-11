@@ -827,9 +827,10 @@ public class PacketHandlerController extends BaseController implements Initializ
 //						(String) registrationDTO.getDemographics().get("phone"), registrationDTO.getRegistrationId());
 
 				// Sync and Uploads Packet when EOD Process Configuration is set to OFF
-				if (!getValueFromApplicationContext(RegistrationConstants.SUPERVISOR_APPROVAL_CONFIG_FLAG)
+				String supervisorApproval = getValueFromApplicationContext(RegistrationConstants.SUPERVISOR_APPROVAL_CONFIG_FLAG);
+				if (supervisorApproval != null && !getValueFromApplicationContext(RegistrationConstants.SUPERVISOR_APPROVAL_CONFIG_FLAG)
 						.equalsIgnoreCase(RegistrationConstants.ENABLE)) {
-					updatePacketStatus();
+					updatePacketStatus();//auto-approve
 				}
 
 				LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID,

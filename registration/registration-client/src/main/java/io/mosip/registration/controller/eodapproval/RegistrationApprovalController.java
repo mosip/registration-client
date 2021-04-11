@@ -652,25 +652,6 @@ public class RegistrationApprovalController extends BaseController implements In
 				"Updation of registration according to status ended");
 	}
 
-	private void uploadPacketsInBackground(List<String> regIds) {
-		Runnable upload = new Runnable() {
-			public void run() {
-				String response;
-				try {
-					response = packetSynchService.syncEODPackets(regIds);
-					if (response.equals(RegistrationConstants.EMPTY)) {
-						packetUploadService.uploadEODPackets(regIds);
-					}
-				} catch (RegBaseCheckedException checkedException) {
-					LOGGER.error(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
-							"Error in sync and upload of packets" + checkedException.getMessage()
-									+ ExceptionUtils.getStackTrace(checkedException));
-				}
-			}
-		};
-
-		new Thread(upload).start();
-	}
 
 	/**
 	 * Export data.

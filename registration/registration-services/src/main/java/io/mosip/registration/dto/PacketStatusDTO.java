@@ -1,6 +1,7 @@
 package io.mosip.registration.dto;
 
 import java.math.BigInteger;
+import java.util.List;
 
 import lombok.Data;
 
@@ -29,5 +30,5 @@ public class PacketStatusDTO {
 	private String phone;
 	private String email;
 	private String userId;
-	
+	private String selectedLanguages;
 }
