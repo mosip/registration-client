@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RemapException;
 import io.mosip.registration.service.remap.RemapStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -162,14 +163,14 @@ public class CenterMachineReMapServiceImpl implements CenterMachineReMapService 
 				try {
 
 					/* sync packet status from server to Reg client */
-					packetStatusService.packetSyncStatus(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
+					packetStatusService.syncServerPacketStatus(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
 					LOGGER.info("REGISTRATION CENTER MACHINE REMAP : ", APPLICATION_NAME, APPLICATION_ID,
 							"packetSyncStatus completed");
 					auditFactory.audit(AuditEvent.MACHINE_REMAPPED, Components.PACKET_STATUS_SYNCHED, "REGISTRATION",
 							AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
 
 					/* sync and upload the reg packets to server */
-					packetSynchService.syncAllPackets();
+					packetSynchService.syncAllPackets(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
 					LOGGER.info("REGISTRATION CENTER MACHINE REMAP : ", APPLICATION_NAME, APPLICATION_ID,
 							"syncAllPackets completed");
 					auditFactory.audit(AuditEvent.MACHINE_REMAPPED, Components.PACKET_SYNCHED, "REGISTRATION",
@@ -180,14 +181,14 @@ public class CenterMachineReMapServiceImpl implements CenterMachineReMapService 
 							"uploadAllSyncedPackets completed");
 
 					/* sync packet status after packet upload */
-					packetStatusService.packetSyncStatus(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
+					packetStatusService.syncServerPacketStatus(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
 					LOGGER.info("REGISTRATION CENTER MACHINE REMAP : ", APPLICATION_NAME, APPLICATION_ID,
 							"packetSyncStatus completed");
 
 					auditFactory.audit(AuditEvent.MACHINE_REMAPPED, Components.PACKETS_UPLOADED, "REGISTRATION",
 							AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
 
-				} catch (RegBaseCheckedException exception) {
+				} catch (ConnectionException | RegBaseCheckedException exception) {
 					LOGGER.error("REGISTRATION CENTER MACHINE REMAP : ", APPLICATION_NAME, APPLICATION_ID,
 							exception.getMessage() + ExceptionUtils.getStackTrace(exception));
 				}

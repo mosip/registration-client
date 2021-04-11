@@ -139,7 +139,14 @@ public class CertificateSyncServiceImpl extends BaseService implements Certifica
 
     private ResponseDTO saveLastSuccessfulSyncTime(ResponseDTO responseDTO, String triggerPoint, String lastSyncTime)
             throws RegBaseCheckedException {
+        LOGGER.info("saveLastSuccessfulSyncTime invoked with lastSyncTime : {}", lastSyncTime);
         responseDTO = setSuccessResponse(responseDTO, RegistrationConstants.MASTER_SYNC_SUCCESS, null);
+
+        if(lastSyncTime == null) {
+            LOGGER.warn("saveLastSuccessfulSyncTime invoked with lastSyncTime is null");
+            return responseDTO;
+        }
+
         SyncTransaction syncTransaction = syncManager.createSyncTransaction(
                 RegistrationConstants.JOB_EXECUTION_SUCCESS, RegistrationConstants.JOB_EXECUTION_SUCCESS,
                 triggerPoint, RegistrationConstants.OPT_TO_REG_CCS_J00017);

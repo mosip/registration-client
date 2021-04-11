@@ -212,8 +212,7 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 						setErrorResponse(responseDTO, RegistrationConstants.POLICY_SYNC_ERROR_MESSAGE, null);
 					}
 				}
-			} catch (HttpServerErrorException | HttpClientErrorException | SocketTimeoutException
-					| RegBaseCheckedException | ClassCastException | ResourceAccessException exception) {
+			} catch (Exception exception) {
 				if (isAuthTokenEmptyException(exception)) {
 					setErrorResponse(responseDTO,
 							RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(), null);

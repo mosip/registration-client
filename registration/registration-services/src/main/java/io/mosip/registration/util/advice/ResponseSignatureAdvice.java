@@ -109,7 +109,7 @@ public class ResponseSignatureAdvice {
 	 *                                 checked exceptions
 	 */
 	@SuppressWarnings("unchecked")
-	@AfterReturning(pointcut = "execution(* io.mosip.registration.util.restclient.RestClientUtil.invoke(..))", returning = "result")
+	@AfterReturning(pointcut = "execution(* io.mosip.registration.util.restclient.RestClientUtil.invokeURL(..))", returning = "result")
 	public synchronized Map<String, Object> responseSignatureValidation(JoinPoint joinPoint, Object result)
 			throws RegBaseCheckedException {
 
