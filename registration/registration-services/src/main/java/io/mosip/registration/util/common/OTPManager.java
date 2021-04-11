@@ -1,11 +1,5 @@
 package io.mosip.registration.util.common;
 
-import java.net.SocketTimeoutException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -19,13 +13,9 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.LoginMode;
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.dto.AuthNRequestDTO;
-import io.mosip.registration.dto.AuthNSendOTPDTO;
 import io.mosip.registration.dto.AuthTokenDTO;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.LoginUserDTO;
-import io.mosip.registration.dto.OtpGeneratorRequestDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -80,88 +70,26 @@ public class OTPManager extends BaseService {
 	 */
 	@SuppressWarnings("unchecked")
 	public ResponseDTO getOTP(final String userId) {
-
 		LOGGER.info(LoggerConstants.OTP_MANAGER_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Get OTP Started");
+				RegistrationConstants.APPLICATION_ID, "Send OTP Started");
 
 		// Create Response to return to UI layer
 		ResponseDTO response = new ResponseDTO();
-
 		try {
-			/* Check Network Connectivity */
-			if (RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
-				AuthNRequestDTO authNRequestDTO = new AuthNRequestDTO();
-				AuthNSendOTPDTO authNSendOTPDTO = new AuthNSendOTPDTO();
-				authNSendOTPDTO.setAppId(
-						String.valueOf(ApplicationContext.map().get(RegistrationConstants.REGISTRATION_CLIENT)));
-				authNSendOTPDTO.setContext(RegistrationConstants.REGISTRATION_CONTEXT);
-				authNSendOTPDTO.setLangCode(RegistrationConstants.ENGLISH_LANG_CODE);
-				authNSendOTPDTO.setOtpChannel(Arrays.asList(
-						ApplicationContext.map().get(RegistrationConstants.OTP_CHANNELS).toString().toLowerCase().split(",")));
-				authNSendOTPDTO.setTemplateVariables(null);
-				authNSendOTPDTO.setUserId(userId);
-				authNSendOTPDTO.setUseridtype(RegistrationConstants.USER_ID_CODE);
-				authNRequestDTO.setRequest(authNSendOTPDTO);
-				OtpGeneratorRequestDTO otpGeneratorRequestDto = new OtpGeneratorRequestDTO();
-
-				// prepare otpGeneratorRequestDto with specified key(EO Username) obtained
-				otpGeneratorRequestDto.setKey(userId);
-
-				// obtain otpGeneratorResponseDto from serviceDelegateUtil
-				HashMap<String, Object> responseMap = (HashMap<String, Object>) serviceDelegateUtil.post("send_otp",
-						authNRequestDTO, RegistrationConstants.JOB_TRIGGER_POINT_USER);
-				if (responseMap.get("response") != null) {
-
-					LinkedHashMap<String, String> otpMessage = (LinkedHashMap<String, String>) responseMap
-							.get("response");
-
-					// create Success Response
-					setSuccessResponse(response,
-							RegistrationConstants.OTP_GENERATION_SUCCESS_MESSAGE + otpMessage.get("message"), null);
-				} else {
-					// create Error Response
-
-					String errMsg = ((List<LinkedHashMap<String, String>>) responseMap
-							.get(RegistrationConstants.ERRORS)).get(0).get(RegistrationConstants.ERROR_MSG);
-
-					LOGGER.info(LoggerConstants.OTP_MANAGER_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
-							RegistrationConstants.APPLICATION_ID, errMsg);
-
-					setErrorResponse(response, RegistrationConstants.OTP_GENERATION_ERROR_MESSAGE, null);
-				}
-
-			} else {
+			if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) { /* Check Network Connectivity */
 				setErrorResponse(response, RegistrationConstants.CONNECTION_ERROR, null);
+				return response;
 			}
-		} catch (RegBaseCheckedException | HttpClientErrorException | HttpServerErrorException | SocketTimeoutException
-				| ResourceAccessException exception) {
 
-			LOGGER.error(LoggerConstants.OTP_MANAGER_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
-					RegistrationConstants.APPLICATION_ID,
-					exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+			String message = authTokenUtilService.sendOtpWithRetryWrapper(userId);
+			return setSuccessResponse(response, message, null);
 
-			// create Error Response
-			setErrorResponse(response, RegistrationConstants.OTP_GENERATION_ERROR_MESSAGE, null);
-		} catch (IllegalStateException illegalStateException) {
-			LOGGER.error(LoggerConstants.OTP_MANAGER_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
-					RegistrationConstants.APPLICATION_ID,
-					illegalStateException.getMessage() + ExceptionUtils.getStackTrace(illegalStateException));
-
-			setErrorResponse(response, RegistrationConstants.CONNECTION_ERROR, null);
-		} catch (RegBaseUncheckedException uncheckedException) {
-			LOGGER.error(LoggerConstants.OTP_MANAGER_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
-					RegistrationConstants.APPLICATION_ID, String.format("%s --> %s ", uncheckedException.getMessage(),
-							ExceptionUtils.getStackTrace(uncheckedException)));
-
-			// create Error Response
-			setErrorResponse(response, RegistrationConstants.OTP_GENERATION_ERROR_MESSAGE, null);
+		} catch (Throwable e) {
+			LOGGER.error("Failed to send OTP", e);
 		}
-
 		LOGGER.info(LoggerConstants.OTP_MANAGER_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Get OTP ended");
-
-		return response;
-
+				RegistrationConstants.APPLICATION_ID, "Send OTP ended");
+		return setErrorResponse(response, RegistrationConstants.OTP_GENERATION_ERROR_MESSAGE, null);
 	}
 
 	/**
