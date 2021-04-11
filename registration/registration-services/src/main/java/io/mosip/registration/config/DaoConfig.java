@@ -9,6 +9,7 @@ import java.util.*;
 
 import javax.sql.DataSource;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.mosip.kernel.clientcrypto.constant.ClientCryptoManagerConstant;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.registration.context.ApplicationContext;
@@ -120,8 +121,8 @@ public class DaoConfig extends HibernateDaoConfig {
 	public DataSource dataSource() {
 		if (this.driverManagerDataSource == null) {
 			setupDataSource();
-			jdbcTemplate();
 		}
+		jdbcTemplate();
 		return this.driverManagerDataSource;
 	}
 
@@ -208,6 +209,7 @@ public class DaoConfig extends HibernateDaoConfig {
 		return jpaProperties;
 	}
 
+	@VisibleForTesting
 	private void setupDataSource() throws Exception {
 		LOGGER.info(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID, "****** SETTING UP DATASOURCE *******");
 		createDatabase();
@@ -453,6 +455,7 @@ public class DaoConfig extends HibernateDaoConfig {
 		return true;
 	}
 
+	@VisibleForTesting
 	private Map<String, String> getDBConf() throws IOException {
 		Path path = Paths.get(ClientCryptoManagerConstant.KEY_PATH, ClientCryptoManagerConstant.KEYS_DIR,
 				ClientCryptoManagerConstant.DB_PWD_FILE);
@@ -462,7 +465,7 @@ public class DaoConfig extends HibernateDaoConfig {
 			StringBuilder dbConf = new StringBuilder();
 			dbConf.append(RandomStringUtils.randomAlphanumeric(20));
 			dbConf.append(SEPARATOR);
-			dbConf.append(RandomStringUtils.randomAlphanumeric(10));
+			dbConf.append(RandomStringUtils.randomAlphabetic(10));
 			dbConf.append(SEPARATOR);
 			dbConf.append(RandomStringUtils.randomAlphanumeric(20));
 			dbConf.append(SEPARATOR);
@@ -480,7 +483,7 @@ public class DaoConfig extends HibernateDaoConfig {
 		// older versions of reg-cli, re-encrypt db and set the new flags
 		if (parts.length == 1) {
 			conf.put(BOOTPWD_KEY, parts[0]);
-			conf.put(USERNAME_KEY, RandomStringUtils.randomAlphanumeric(20));
+			conf.put(USERNAME_KEY, RandomStringUtils.randomAlphabetic(10));
 			conf.put(PWD_KEY, RandomStringUtils.randomAlphanumeric(20));
 			conf.put(STATE_KEY, ERROR_STATE);
 		} else {
