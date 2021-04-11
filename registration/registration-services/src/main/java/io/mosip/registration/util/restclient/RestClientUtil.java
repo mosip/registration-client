@@ -18,10 +18,7 @@ import javax.net.ssl.X509TrustManager;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.*;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -44,50 +41,30 @@ public class RestClientUtil {
 	 */
 	private static final Logger LOGGER = AppConfig.getLogger(RestClientUtil.class);
 
+
+
 	/**
-	 * Actual exchange using rest template.
-	 *
-	 * @param requestHTTPDTO 
-	 * 				the request HTTPDTO
-	 * @return ResponseEntity 
-	 * 				response entity obtained from api
-	 * @throws RegBaseCheckedException 
-	 * 				the reg base checked exception
-	 * @throws HttpClientErrorException 
-	 * 				when client error exception from server
-	 * @throws HttpServerErrorException 
-	 * 				when server exception from server
-	 * @throws SocketTimeoutException 
-	 * 				the socket timeout exception
-	 * @throws ResourceAccessException 
-	 * 				the resource access exception
+	 * Access resource using restTemplate {@link RestTemplate}
+	 * Note: restTemplate is synchronous client
+	 * @param requestHTTPDTO
+	 * @return
+	 * @throws RestClientException
 	 */
-	public Map<String, Object> invoke(RequestHTTPDTO requestHTTPDTO)
-			throws RegBaseCheckedException, SocketTimeoutException, ResourceAccessException {
-		LOGGER.debug("REGISTRATION - REST_CLIENT_UTIL - INVOKE", APPLICATION_NAME, APPLICATION_ID,
-				"invoke method called");
+	public Map<String, Object> invokeURL(RequestHTTPDTO requestHTTPDTO) throws RestClientException {
+		LOGGER.debug("invoke method called {} ", requestHTTPDTO.getUri());
 
-		return invokeURL(requestHTTPDTO);
-	}
-
-	private Map<String, Object> invokeURL(RequestHTTPDTO requestHTTPDTO) {
-		RestTemplate restTemplate = new RestTemplate();
-		ResponseEntity<?> responseEntity = null;
+		RestTemplate restTemplate = new RestTemplate(requestHTTPDTO.getSimpleClientHttpRequestFactory());
 		Map<String, Object> responseMap = null;
-		restTemplate.setRequestFactory(requestHTTPDTO.getSimpleClientHttpRequestFactory());
-		//To-do need to be removed after checking this properly
+
+		// TODO need to be removed after checking this properly
 		try {
 			if (requestHTTPDTO.getUri().toString().contains("https"))
 				turnOffSslChecking();
-		} catch (KeyManagementException keyManagementException) {
-			LOGGER.error("REGISTRATION - REST_CLIENT_UTIL - INVOKE", APPLICATION_NAME, APPLICATION_ID,
-					keyManagementException.getMessage() + ExceptionUtils.getStackTrace(keyManagementException));
-		} catch (NoSuchAlgorithmException noSuchAlgorithmException) {
-			LOGGER.error("REGISTRATION - REST_CLIENT_UTIL - INVOKE", APPLICATION_NAME, APPLICATION_ID,
-					noSuchAlgorithmException.getMessage() + ExceptionUtils.getStackTrace(noSuchAlgorithmException));
+		} catch (KeyManagementException | NoSuchAlgorithmException e) {
+			LOGGER.error(e.getMessage(), e);
 		}
-		
-		responseEntity = restTemplate.exchange(requestHTTPDTO.getUri(), requestHTTPDTO.getHttpMethod(),
+
+		ResponseEntity<?> responseEntity = restTemplate.exchange(requestHTTPDTO.getUri(), requestHTTPDTO.getHttpMethod(),
 				requestHTTPDTO.getHttpEntity(), requestHTTPDTO.getClazz());
 		
 		if (responseEntity != null && responseEntity.hasBody()) {
@@ -96,36 +73,38 @@ public class RestClientUtil {
 			responseMap.put(RegistrationConstants.REST_RESPONSE_HEADERS, responseEntity.getHeaders());
 		}
 
-		LOGGER.debug("REGISTRATION - REST_CLIENT_UTIL - INVOKE", APPLICATION_NAME, APPLICATION_ID,
-				"invoke method ended");
+		LOGGER.debug("invoke method ended {} ", requestHTTPDTO.getUri());
 		return responseMap;
 	}
 	
-	/**
-	 * Actual exchange using rest template.
-	 *
-	 * @param requestHTTPDTO 
-	 * 				the request HTTPDTO
-	 * @return ResponseEntity 
-	 * 				response entity obtained from api
-	 * @throws RegBaseCheckedException 
-	 * 				the reg base checked exception
-	 * @throws HttpClientErrorException 
-	 * 				when client error exception from server
-	 * @throws HttpServerErrorException 
-	 * 				when server exception from server
-	 * @throws SocketTimeoutException 
-	 * 				the socket timeout exception
-	 * @throws ResourceAccessException 
-	 * 				the resource access exception
-	 */
+
 	public Map<String, Object> invokeForToken(RequestHTTPDTO requestHTTPDTO)
-			throws RegBaseCheckedException, SocketTimeoutException, ResourceAccessException {
-		LOGGER.debug("REGISTRATION - REST_CLIENT_UTIL - INVOKE Token", APPLICATION_NAME, APPLICATION_ID,
-				"invoke token method called"); 
-		requestHTTPDTO
-		.setHttpEntity(new HttpEntity<>(requestHTTPDTO.getRequestBody(), requestHTTPDTO.getHttpHeaders()));
-		return invokeURL(requestHTTPDTO);
+			throws RestClientException {
+		requestHTTPDTO.setHttpEntity(new HttpEntity<>(requestHTTPDTO.getRequestBody(), requestHTTPDTO.getHttpHeaders()));
+		LOGGER.debug("invokeForToken method called {} ", requestHTTPDTO.getUri());
+
+		RestTemplate restTemplate = new RestTemplate(requestHTTPDTO.getSimpleClientHttpRequestFactory());
+		Map<String, Object> responseMap = null;
+
+		// TODO need to be removed after checking this properly
+		try {
+			if (requestHTTPDTO.getUri().toString().contains("https"))
+				turnOffSslChecking();
+		} catch (KeyManagementException | NoSuchAlgorithmException e) {
+			LOGGER.error(e.getMessage(), e);
+		}
+
+		ResponseEntity<?> responseEntity = restTemplate.exchange(requestHTTPDTO.getUri(), requestHTTPDTO.getHttpMethod(),
+				requestHTTPDTO.getHttpEntity(), requestHTTPDTO.getClazz());
+
+		if (responseEntity != null && responseEntity.hasBody()) {
+			responseMap = new LinkedHashMap<>();
+			responseMap.put(RegistrationConstants.REST_RESPONSE_BODY, responseEntity.getBody());
+			responseMap.put(RegistrationConstants.REST_RESPONSE_HEADERS, responseEntity.getHeaders());
+		}
+
+		LOGGER.debug("invokeForToken method ended {} ", requestHTTPDTO.getUri());
+		return responseMap;
 	}
 
 	/**

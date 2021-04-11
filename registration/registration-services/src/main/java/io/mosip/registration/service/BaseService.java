@@ -15,16 +15,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.ListUtils;
@@ -366,16 +357,19 @@ public class BaseService {
 	 * @param registration the registration
 	 * @return the packet status DTO
 	 */
-	public PacketStatusDTO packetStatusDtoPreperation(Registration registration) {
+	public PacketStatusDTO preparePacketStatusDto(Registration registration) {
 		PacketStatusDTO statusDTO = new PacketStatusDTO();
 		statusDTO.setFileName(registration.getId());
 		statusDTO.setPacketClientStatus(registration.getClientStatusCode());
-		statusDTO.setPacketPath(registration.getAckFilename());
+		statusDTO.setClientStatusComments(registration.getClientStatusComments());
 		statusDTO.setPacketServerStatus(registration.getServerStatusCode());
+		statusDTO.setPacketPath(registration.getAckFilename());
 		statusDTO.setUploadStatus(registration.getFileUploadStatus());
 		statusDTO.setPacketStatus(registration.getStatusCode());
 		statusDTO.setSupervisorStatus(registration.getClientStatusCode());
 		statusDTO.setSupervisorComments(registration.getClientStatusComments());
+		statusDTO.setCreatedTime(regDateTimeConversion(registration.getCrDtime().toString()));
+		statusDTO.setUserId(registration.getRegUsrId());
 
 		try {
 			if (registration.getAdditionalInfo() != null) {
@@ -385,6 +379,7 @@ public class BaseService {
 				statusDTO.setName(registrationDataDto.getName());
 				statusDTO.setPhone(registrationDataDto.getPhone());
 				statusDTO.setEmail(registrationDataDto.getEmail());
+				statusDTO.setSelectedLanguages(registrationDataDto.getLangCode());
 			}
 		} catch (JsonParseException | JsonMappingException | io.mosip.kernel.core.exception.IOException exception) {
 			LOGGER.error("REGISTRATION_BASE_SERVICE", APPLICATION_NAME, APPLICATION_ID,
@@ -526,28 +521,6 @@ public class BaseService {
 						.equals(((RegBaseCheckedException) exception).getErrorCode());
 	}
 
-	/**
-	 * Validates if the error code of the input {@link ResponseDTO} is same of the
-	 * error code of Auth Token Empty
-	 * 
-	 * @param responseDTO the {@link ResponseDTO} to be validated
-	 * @return <code>true</code> if error code is same as Auth Token empty
-	 */
-	protected boolean isAuthTokenEmptyError(ResponseDTO responseDTO) {
-		boolean isAuthTokenEmptyError = false;
-		if (responseDTO != null && responseDTO.getErrorResponseDTOs() != null
-				&& !responseDTO.getErrorResponseDTOs().isEmpty()) {
-			isAuthTokenEmptyError = RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode()
-					.equals(responseDTO.getErrorResponseDTOs().get(0).getMessage());
-		}
-
-		return isAuthTokenEmptyError;
-	}
-
-	/*public static boolean isChild() {
-
-		return (boolean) SessionContext.map().get(RegistrationConstants.IS_Child);
-	}*/
 
 	/**
 	 * Gets the registration DTO from session.
@@ -558,14 +531,7 @@ public class BaseService {
 		return (RegistrationDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
 	}
 
-	/**
-	 * Check of update UIN whether only demo update or bio includes.
-	 *
-	 * @return true or false of biometric update
-	 */
-	/*protected boolean isUpdateUinNonBioMetric() {
-		return getRegistrationDTOFromSession().isUpdateUINNonBiometric();
-	}*/
+
 
 	public BIR buildBir(String bioAttribute, long qualityScore, byte[] iso, ProcessedLevelType processedLevelType) {
 
@@ -720,13 +686,13 @@ public class BaseService {
 		String machineId = getStationId();
 		if(RegistrationConstants.OPT_TO_REG_PDS_J00003.equals(jobId) && machineId == null)
 			throw new PreConditionCheckException(PreConditionChecks.MACHINE_INACTIVE.name(),
-					"Pre-reg data sync action forbidden as machine is inactive");
+					"Sync action forbidden as machine is inactive");
 
 		//check regcenter table for center status
 		//if center is inactive, sync is not allowed
 		if(!registrationCenterDAO.isMachineCenterActive(machineId))
 			throw new PreConditionCheckException(PreConditionChecks.CENTER_INACTIVE.name(),
-					"Pre-reg data sync action forbidden as center is inactive");
+					"Sync action forbidden as center is inactive");
 	}
 
 	public void proceedWithPacketSync() throws PreConditionCheckException {

@@ -1,10 +1,22 @@
 package io.mosip.registration.service.sync.impl;
 
+import java.io.File;
 import java.util.*;
 
 import io.mosip.kernel.cryptomanager.util.CryptomanagerUtils;
 import io.mosip.kernel.keymanagerservice.util.KeymanagerUtil;
+import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.exception.ConnectionException;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.retry.RetryCallback;
+import org.springframework.retry.RetryContext;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.retry.backoff.FixedBackOffPolicy;
+import org.springframework.retry.policy.SimpleRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
+import org.springframework.retry.support.RetryTemplateBuilder;
 import org.springframework.stereotype.Service;
 
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -19,6 +31,8 @@ import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.sync.PolicySyncService;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+
+import javax.annotation.PostConstruct;
 
 /**
  * 
@@ -46,6 +60,22 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 	@Autowired
 	private CryptomanagerUtils cryptomanagerUtils;
 
+	private RetryTemplate retryTemplate;
+
+	@PostConstruct
+	private void init() {
+		FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
+		backOffPolicy.setBackOffPeriod((Long) ApplicationContext.map().getOrDefault("mosip.registration.retry.delay.policy.sync", 1000l));
+
+		SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
+		retryPolicy.setMaxAttempts((Integer) ApplicationContext.map().getOrDefault("mosip.registration.retry.maxattempts.policy.sync", 2));
+
+		retryTemplate = new RetryTemplateBuilder()
+				.retryOn(ConnectionException.class)
+				.customPolicy(retryPolicy)
+				.customBackoff(backOffPolicy)
+				.build();
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -70,7 +100,7 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 		String centerMachineId = centerId.concat(RegistrationConstants.UNDER_SCORE).concat(stationId);
 
 		try {
-			String certificateData = getCertificateFromServer(centerMachineId); //fetch policy key from server
+			String certificateData = getCertificateFromServerWithRetryWrapper(centerMachineId); //fetch policy key from server
 			KeyPairGenerateResponseDto certificateDto = getKeyFromLocalDB(centerMachineId); //get policy key from DB
 
 			//compare downloaded and saved one, if different then save it
@@ -88,10 +118,23 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 			LOGGER.debug("Policy Sync saved in local DB successfully");
 			return setSuccessResponse(responseDTO, RegistrationConstants.POLICY_SYNC_SUCCESS_MESSAGE, null);
 
-		} catch (Throwable t) {
+		} catch (ConnectionException | RuntimeException t) {
 			LOGGER.error("", t);
 		}
 		return setErrorResponse(responseDTO, RegistrationExceptionConstants.REG_POLICY_SYNC_FAILED.getErrorMessage(), null);
+	}
+
+
+	private String getCertificateFromServerWithRetryWrapper(String centerMachineId) throws RegBaseCheckedException, ConnectionException {
+		RetryCallback<String, ConnectionException> retryCallback = new RetryCallback<String, ConnectionException>() {
+			@SneakyThrows
+			@Override
+			public String doWithRetry(RetryContext retryContext) throws ConnectionException {
+				LOGGER.info("Currently in Retry wrapper. Current counter : {}", retryContext.getRetryCount());
+				return getCertificateFromServer(centerMachineId);
+			}
+		};
+		return retryTemplate.execute(retryCallback);
 	}
 
 
@@ -104,7 +147,7 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 	 * @return
 	 * @throws RegBaseCheckedException
 	 */
-	private String getCertificateFromServer(String centerMachineId) throws Exception {
+	private String getCertificateFromServer(String centerMachineId) throws RegBaseCheckedException, ConnectionException {
 		LOGGER.debug("Policy Sync from server invoked");
 
 		Map<String, String> requestParams = new HashMap<>();
