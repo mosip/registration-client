@@ -86,11 +86,11 @@ public class AlertController extends BaseController implements Initializable {
 			contextSecondMsg = gettingSecondErrorMessage(split, RegistrationConstants.SUCCESS.toUpperCase());
 		} else if (split.length > 1 && split[1].contains(RegistrationConstants.ERROR.toUpperCase())) {
 			image = new Image(RegistrationConstants.FAILURE_IMG_PTH);
-			header.setText(RegistrationUIConstants.getMessageLanguageSpecific("ALERT_FAILED_LABEL"));
+			header.setText(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.ALERT_FAILED_LABEL));
 			alertImage.setImage(image);
 			contextSecondMsg = gettingSecondErrorMessage(split, RegistrationConstants.ERROR.toUpperCase());
 		} else {
-			header.setText(RegistrationUIConstants.getMessageLanguageSpecific("ALERT_NOTE_LABEL"));
+			header.setText(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.ALERT_NOTE_LABEL));
 			alertImage.setDisable(false);
 			alertImage.setVisible(false);
 			imageVbox.setVisible(false);

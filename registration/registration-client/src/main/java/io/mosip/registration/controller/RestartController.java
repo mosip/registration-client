@@ -84,8 +84,8 @@ public class RestartController extends BaseController {
 					(String) successResponseDTO.getOtherAttributes().get(RegistrationConstants.JOB_ID));
 
 			/* Generate alert */
-			Alert restartAlert = createAlert(AlertType.CONFIRMATION, RegistrationUIConstants.getMessageLanguageSpecific("SYNC_SUCCESS"),RegistrationUIConstants.getMessageLanguageSpecific("ALERT_NOTE_LABEL"),
-					successResponseDTO.getMessage()+RegistrationConstants.SPACE+ RegistrationUIConstants.getMessageLanguageSpecific("RESTART_APPLICATION"),
+			Alert restartAlert = createAlert(AlertType.CONFIRMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_SUCCESS),RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.ALERT_NOTE_LABEL),
+					successResponseDTO.getMessage()+RegistrationConstants.SPACE+ RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.RESTART_APPLICATION),
 					RegistrationConstants.OK_MSG, RegistrationConstants.CANCEL_MSG);
 
 			generatedAlerts.add(restartAlert);

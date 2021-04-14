@@ -603,7 +603,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		thresholdPane2.setPercentWidth(100.00 - (Double.parseDouble("0")));
 
 		thresholdLabel.setText(
-				RegistrationUIConstants.getMessageLanguageSpecific("THRESHOLD").concat("  ").concat("0").concat(RegistrationConstants.PERCENTAGE));
+				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.THRESHOLD).concat("  ").concat("0").concat(RegistrationConstants.PERCENTAGE));
 
 		if (hasApplicantBiometricException()
 				&& getRegistrationDTOFromSession().getDocuments().containsKey("proofOfException")) {
@@ -980,12 +980,12 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 				saveProofOfExceptionDocument(byteArray);
 				generateAlert(RegistrationConstants.ALERT_INFORMATION,
-						RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_CAPTURE_SUCCESS"));
+						RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
 
 				scanPopUpViewController.getPopupStage().close();
 
 			} catch (RuntimeException | IOException exception) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_SCANNING_ERROR"));
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
 
 				LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 						"Error while capturing exception photo : " + ExceptionUtils.getStackTrace(exception));
@@ -1092,13 +1092,13 @@ public class BiometricsController extends BaseController /* implements Initializ
 						SessionContext.setAutoLogout(false);
 
 						if (mdmBioDevice == null) {
-							setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific("NO_DEVICE_FOUND"));
+							setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
 
 							return;
 						}
 
 						// Start Stream
-						setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific("STREAMING_PREP_MESSAGE"));
+						setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_PREP_MESSAGE));
 
 						InputStream urlStream = bioService.getStream(mdmBioDevice,
 								isFace(currentModality) ? RegistrationConstants.FACE_FULLFACE : currentModality);
@@ -1111,13 +1111,13 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 							deviceSpecificationFactory.init();
 
-							generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("STREAMING_ERROR"));
+							generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
 							scanPopUpViewController.getPopupStage().close();
 
 							return;
 						}
 
-						setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific("STREAMING_INIT_MESSAGE"));
+						setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_INIT_MESSAGE));
 
 						rCaptureTaskService();
 
@@ -1141,7 +1141,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 						return;
 
 					}
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("STREAMING_ERROR"));
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
 					scanPopUpViewController.getPopupStage().close();
 
 					// Enable Auto-Logout
@@ -1166,7 +1166,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 					return;
 
 				}
-				setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific("NO_DEVICE_FOUND"));
+				setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
 
 			}
 		});
@@ -1246,7 +1246,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 			public void handle(WorkerStateEvent t) {
 
 				LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "RCapture task failed");
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_SCANNING_ERROR"));
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
 
 				LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "closing popup stage");
 				scanPopUpViewController.getPopupStage().close();
@@ -1336,7 +1336,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 								saveProofOfExceptionDocument(
 										extractFaceImageData(registrationDTOBiometricsList.get(0).getAttributeISO()));
 								generateAlert(RegistrationConstants.ALERT_INFORMATION,
-										RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_CAPTURE_SUCCESS"));
+										RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
 
 								scanPopUpViewController.getPopupStage().close();
 								return;
@@ -1352,7 +1352,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 							if (!registrationDTOBiometricsList.isEmpty()) {
 								// if all the above check success show alert capture success
 								generateAlert(RegistrationConstants.ALERT_INFORMATION,
-										RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_CAPTURE_SUCCESS"));
+										RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
 
 								/*
 								 * Image streamImage = null; if (bioService.isMdmEnabled()) { streamImage =
@@ -1410,7 +1410,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 							} else {
 								// request response mismatch
 								generateAlert(RegistrationConstants.ALERT_INFORMATION,
-										RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_CAPTURE_FAILURE"));
+										RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_FAILURE));
 							}
 
 						} else {
@@ -1419,13 +1419,13 @@ public class BiometricsController extends BaseController /* implements Initializ
 									"Local De-Dup check failed");
 							// if any above checks failed show alert capture failure
 							generateAlert(RegistrationConstants.ALERT_INFORMATION,
-									RegistrationUIConstants.getMessageLanguageSpecific("LOCAL_DEDUP_CHECK_FAILED"));
+									RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.LOCAL_DEDUP_CHECK_FAILED));
 						}
 					} else {
 
 						// if any above checks failed show alert capture failure
 						generateAlert(RegistrationConstants.ALERT_INFORMATION,
-								RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_CAPTURE_FAILURE"));
+								RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_FAILURE));
 					}
 
 				} catch (RuntimeException | RegBaseCheckedException runtimeException) {
@@ -1434,7 +1434,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 							runtimeException.getMessage(),
 							runtimeException.getCause() + ExceptionUtils.getStackTrace(runtimeException)));
 
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_SCANNING_ERROR"));
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
 				}
 
 				scanPopUpViewController.getPopupStage().close();
@@ -1748,11 +1748,11 @@ public class BiometricsController extends BaseController /* implements Initializ
 	}
 
 	private String constructBioType(String bioType) {
-		if (bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific("RIGHT_SLAP"))) {
+		if (bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.RIGHT_SLAP))) {
 			bioType = RegistrationConstants.FINGERPRINT_SLAB_RIGHT;
-		} else if (bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific("LEFT_SLAP"))) {
+		} else if (bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.LEFT_SLAP))) {
 			bioType = RegistrationConstants.FINGERPRINT_SLAB_LEFT;
-		} else if (bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific("THUMBS"))) {
+		} else if (bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.THUMBS))) {
 			bioType = RegistrationConstants.FINGERPRINT_SLAB_THUMBS;
 		}
 
@@ -1903,7 +1903,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		thresholdLabel.setAlignment(Pos.CENTER);
 
 		double thresholdValDouble = threshold != null && !threshold.isEmpty() ? Double.parseDouble(threshold) : 0;
-		thresholdLabel.setText(RegistrationUIConstants.getMessageLanguageSpecific("THRESHOLD").concat("  ").concat(String.valueOf(thresholdValDouble))
+		thresholdLabel.setText(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.THRESHOLD).concat("  ").concat(String.valueOf(thresholdValDouble))
 				.concat(RegistrationConstants.PERCENTAGE));
 		thresholdPane1.setPercentWidth(thresholdValDouble);
 		thresholdPane2.setPercentWidth(100.00 - (thresholdValDouble));
@@ -1999,7 +1999,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		clearCaptureData();
 		biometricBox.setVisible(false);
 		retryBox.setVisible(false);
-		bioValue = RegistrationUIConstants.getMessageLanguageSpecific("SELECT");
+		bioValue = RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SELECT);
 
 		LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"Cleared the captured biometric data");

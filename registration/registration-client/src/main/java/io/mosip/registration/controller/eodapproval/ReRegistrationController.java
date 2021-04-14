@@ -170,10 +170,10 @@ public class ReRegistrationController extends BaseController implements Initiali
 				public void updateItem(String item, boolean empty) {
 					super.updateItem(item, empty);
 					setText(item);
-					if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific("INFORMED"))) {
+					if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.INFORMED))) {
 						actionCounter++;
 						setTextFill(Color.GREEN);
-					} else if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific("CANTINFORMED"))) {
+					} else if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.CANTINFORMED))) {
 						actionCounter++;
 						setTextFill(Color.RED);
 					} else {
@@ -275,7 +275,7 @@ public class ReRegistrationController extends BaseController implements Initiali
 		packetStatusVO.setFileName(table.getSelectionModel().getSelectedItem().getFileName());
 		packetStatusVO.setCreatedTime(table.getSelectionModel().getSelectedItem().getCreatedTime());
 		packetStatusVO.setPacketPath(table.getSelectionModel().getSelectedItem().getPacketPath());
-		packetStatusVO.setPacketStatus(RegistrationUIConstants.getMessageLanguageSpecific("INFORMED"));
+		packetStatusVO.setPacketStatus(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.INFORMED));
 		observableList.set(row, packetStatusVO);
 		
 		wrapListAndAddFiltering(observableList);
@@ -299,7 +299,7 @@ public class ReRegistrationController extends BaseController implements Initiali
 		packetStatusVO.setFileName(table.getSelectionModel().getSelectedItem().getFileName());
 		packetStatusVO.setCreatedTime(table.getSelectionModel().getSelectedItem().getCreatedTime());
 		packetStatusVO.setPacketPath(table.getSelectionModel().getSelectedItem().getPacketPath());
-		packetStatusVO.setPacketStatus(RegistrationUIConstants.getMessageLanguageSpecific("CANTINFORMED"));
+		packetStatusVO.setPacketStatus(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.CANTINFORMED));
 		observableList.set(row, packetStatusVO);
 
 		wrapListAndAddFiltering(observableList);
@@ -354,7 +354,7 @@ public class ReRegistrationController extends BaseController implements Initiali
 		LOGGER.info("REGISTRATION - PAGINATION - REGISTRATION", APPLICATION_NAME, APPLICATION_ID,
 				"Pagination has been started");
 		reRegistrationServiceImpl.updateReRegistrationStatus(reRegisterStatusMap);
-		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("REREGISTRATION_APPROVE_SUCCESS"));
+		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REREGISTRATION_APPROVE_SUCCESS));
 		actionCounter = 0;
 		primaryStage.close();
 		reloadTableView();
@@ -379,7 +379,7 @@ public class ReRegistrationController extends BaseController implements Initiali
 				packetStatusVO.setFileName(reRegisterPacket.getFileName());
 				packetStatusVO.setPacketPath(reRegisterPacket.getPacketPath());
 				packetStatusVO.setCreatedTime(reRegisterPacket.getCreatedTime());
-				packetStatusVO.setPacketStatus(RegistrationUIConstants.getMessageLanguageSpecific("PENDING"));
+				packetStatusVO.setPacketStatus(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PENDING));
 				packetStatusVOs.add(packetStatusVO);
 			}
 			int rowNum = 0;
@@ -479,11 +479,11 @@ public class ReRegistrationController extends BaseController implements Initiali
 		} catch (IOException ioException) {
 			LOGGER.error(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
 					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_HOME_PAGE"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE));
 		} catch (RuntimeException runtimException) {
 			LOGGER.error(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
 					runtimException.getMessage() + ExceptionUtils.getStackTrace(runtimException));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_HOME_PAGE"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE));
 		}
 	}
 }

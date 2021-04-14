@@ -663,7 +663,7 @@ public class GenericController extends BaseController {
 					tab.setContent(getPreviewContent(tabPane));
 				} catch (Exception exception) {
 					LOGGER.error("Failed to load preview page!!, clearing registration data.");
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_PREVIEW_PAGE"));
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_PREVIEW_PAGE));
 				}
 				break;
 
@@ -673,7 +673,7 @@ public class GenericController extends BaseController {
 					authenticationController.initData(ProcessNames.PACKET.getType());
 				} catch (Exception exception) {
 					LOGGER.error("Failed to load auth page!!, clearing registration data.");
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_APPROVAL_PAGE"));
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_APPROVAL_PAGE));
 				}
 				break;
 		}

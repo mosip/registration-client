@@ -246,9 +246,9 @@ public class RegistrationApprovalController extends BaseController implements In
 				public void updateItem(String item, boolean empty) {
 					super.updateItem(item, empty);
 					setText(item);
-					if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific("APPROVED"))) {
+					if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.APPROVED))) {
 						setTextFill(Color.GREEN);
-					} else if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific("REJECTED"))) {
+					} else if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REJECTED))) {
 						setTextFill(Color.RED);
 					} else {
 						setTextFill(Color.BLACK);
@@ -362,7 +362,7 @@ public class RegistrationApprovalController extends BaseController implements In
 				for (RegistrationApprovalDTO approvalDTO : listData) {
 					registrationApprovalVO.add(
 							new RegistrationApprovalVO("    " + count++, approvalDTO.getId(), approvalDTO.getDate(),
-									approvalDTO.getAcknowledgementFormPath(), approvalDTO.getOperatorId(), RegistrationUIConstants.getMessageLanguageSpecific("PENDING")));
+									approvalDTO.getAcknowledgementFormPath(), approvalDTO.getOperatorId(), RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PENDING)));
 				}
 				int rowNum = 0;
 				for (RegistrationApprovalDTO approvalDTO : listData) {
@@ -374,7 +374,7 @@ public class RegistrationApprovalController extends BaseController implements In
 				wrapListAndAddFiltering(observableList);
 			} else {
 				approveRegistrationRootSubPane.disableProperty().set(true);
-				table.setPlaceholder(new Label(RegistrationUIConstants.getMessageLanguageSpecific("PLACEHOLDER_LABEL")));
+				table.setPlaceholder(new Label(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PLACEHOLDER_LABEL)));
 				if (observableList != null) {
 					observableList.clear();
 					wrapListAndAddFiltering(observableList);
@@ -467,11 +467,11 @@ public class RegistrationApprovalController extends BaseController implements In
 		} catch (IOException ioException) {
 			LOGGER.error(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
 					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_HOME_PAGE"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE));
 		} catch (RuntimeException runtimException) {
 			LOGGER.error(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
 					runtimException.getMessage() + ExceptionUtils.getStackTrace(runtimException));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_HOME_PAGE"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE));
 		}
 	}
 	
@@ -520,7 +520,7 @@ public class RegistrationApprovalController extends BaseController implements In
 					table.getSelectionModel().getSelectedItem().getDate(),
 					table.getSelectionModel().getSelectedItem().getAcknowledgementFormPath(),
 					table.getSelectionModel().getSelectedItem().getOperatorId(),
-					RegistrationUIConstants.getMessageLanguageSpecific("APPROVED"));
+					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.APPROVED));
 			observableList.set(row, approvalDTO);
 			wrapListAndAddFiltering(observableList);
 			table.requestFocus();
@@ -622,7 +622,7 @@ public class RegistrationApprovalController extends BaseController implements In
 						map.get(RegistrationConstants.STATUSCOMMENT), map.get(RegistrationConstants.STATUSCODE));
 				regIds.add(map.get(RegistrationConstants.REGISTRATIONID));
 			}
-			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("AUTH_APPROVAL_SUCCESS_MSG"));
+			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTH_APPROVAL_SUCCESS_MSG));
 			actionCounter = 0;
 			primaryStage.close();
 			reloadTableView();
@@ -639,14 +639,14 @@ public class RegistrationApprovalController extends BaseController implements In
 							+ ExceptionUtils.getStackTrace(regBaseCheckedException));
 
 			if(regBaseCheckedException.getErrorCode().equals(RegistrationExceptionConstants.AUTH_ADVICE_USR_ERROR.getErrorCode())) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("AUTH_ADVICE_FAILURE"));
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTH_ADVICE_FAILURE));
 			}
 		}  catch (RuntimeException runtimeException) {
 			LOGGER.error(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
 					"unable to sync and upload of packets" + runtimeException.getMessage()
 							+ ExceptionUtils.getStackTrace(runtimeException));
 
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("AUTH_FAILURE"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTH_FAILURE));
 		}
 		LOGGER.info(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
 				"Updation of registration according to status ended");
@@ -678,11 +678,11 @@ public class RegistrationApprovalController extends BaseController implements In
 							.concat(approvaldto.getOperatorId()).concat("'").concat(RegistrationConstants.COMMA)
 							.concat(approvaldto.getStatusComment()))
 					.collect(Collectors.joining(RegistrationConstants.NEW_LINE));
-			String headers = RegistrationUIConstants.getMessageLanguageSpecific("EOD_SLNO_LABEL").concat(RegistrationConstants.COMMA)
-					.concat(RegistrationUIConstants.getMessageLanguageSpecific("EOD_REGISTRATIONID_LABEL")).concat(RegistrationConstants.COMMA)
-					.concat(RegistrationUIConstants.getMessageLanguageSpecific("EOD_REGISTRATIONDATE_LABEL")).concat(RegistrationConstants.COMMA)
-					.concat(RegistrationUIConstants.getMessageLanguageSpecific("EOD_OPERATORID_LABEL")).concat(RegistrationConstants.COMMA)
-					.concat(RegistrationUIConstants.getMessageLanguageSpecific("EOD_STATUS_LABEL")).concat(RegistrationConstants.NEW_LINE);
+			String headers = RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.EOD_SLNO_LABEL).concat(RegistrationConstants.COMMA)
+					.concat(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.EOD_REGISTRATIONID_LABEL)).concat(RegistrationConstants.COMMA)
+					.concat(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.EOD_REGISTRATIONDATE_LABEL)).concat(RegistrationConstants.COMMA)
+					.concat(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.EOD_OPERATORID_LABEL)).concat(RegistrationConstants.COMMA)
+					.concat(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.EOD_STATUS_LABEL)).concat(RegistrationConstants.NEW_LINE);
 			fileData = headers + fileData;
 			filterField.setText(str);
 			try (Writer writer = new BufferedWriter(new FileWriter(destinationPath + "/"
@@ -691,14 +691,14 @@ public class RegistrationApprovalController extends BaseController implements In
 				writer.write(fileData);
 
 				generateAlert(RegistrationConstants.ALERT_INFORMATION,
-						RegistrationUIConstants.getMessageLanguageSpecific("EOD_DETAILS_EXPORT_SUCCESS"));
+						RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.EOD_DETAILS_EXPORT_SUCCESS));
 
 			} catch (IOException ioException) {
 				LOGGER.error(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
 						ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
 
 				generateAlert(RegistrationConstants.ALERT_INFORMATION,
-						RegistrationUIConstants.getMessageLanguageSpecific("EOD_DETAILS_EXPORT_FAILURE"));
+						RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.EOD_DETAILS_EXPORT_FAILURE));
 
 			}
 		}

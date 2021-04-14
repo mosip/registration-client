@@ -87,7 +87,7 @@ public class SendNotificationController extends BaseController implements Initia
 		} catch (IOException ioException) {
 			LOGGER.error("REGISTRATION - UI- SEND_NOTIFICATION", APPLICATION_NAME, APPLICATION_ID,
 					ioException.getMessage());
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_NOTIFICATION_PAGE"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_NOTIFICATION_PAGE));
 		}
 	}
 

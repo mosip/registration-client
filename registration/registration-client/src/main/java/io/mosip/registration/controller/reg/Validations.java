@@ -268,7 +268,7 @@ public class Validations extends BaseController {
 		if (!isNonBlacklisted)
 			return false;
 
-		String regex = getRegex(fieldId, RegistrationUIConstants.REGEX_TYPE, langCode);
+		String regex = getRegex(fieldId, RegistrationConstants.REGEX_TYPE, langCode);
 		if (regex != null && !value.matches(regex)) {
 			generateInvalidValueAlert(parentPane, node.getId(),
 					getFromLabelMap(fieldId + langCode).concat(RegistrationConstants.SPACE)
@@ -550,7 +550,7 @@ public class Validations extends BaseController {
 	 * @return <code>true</code>, if successful, else <code>false</code>
 	 */
 	public boolean validateSingleString(String value, String id, String langCode) {
-		String regex = getRegex(id, RegistrationUIConstants.REGEX_TYPE, langCode);
+		String regex = getRegex(id, RegistrationConstants.REGEX_TYPE, langCode);
 		return regex != null ? value.matches(regex) : true;
 	}
 

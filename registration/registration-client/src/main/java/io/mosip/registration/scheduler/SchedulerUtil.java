@@ -185,10 +185,10 @@ public class SchedulerUtil extends BaseController {
 			Label initialContent = new Label();
 			Label middleContent = new Label();
 			Label endContent = new Label();
-			titleLbl.setText(RegistrationUIConstants.getMessageLanguageSpecific("TIMEOUT_TITLE"));
-			initialContent.setText(RegistrationUIConstants.getMessageLanguageSpecific("TIMEOUT_INITIAL"));
-			middleContent.setText(RegistrationUIConstants.getMessageLanguageSpecific("TIMEOUT_MIDDLE"));
-			endContent.setText(RegistrationUIConstants.getMessageLanguageSpecific("TIMEOUT_END"));
+			titleLbl.setText(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.TIMEOUT_TITLE));
+			initialContent.setText(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.TIMEOUT_INITIAL));
+			middleContent.setText(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.TIMEOUT_MIDDLE));
+			endContent.setText(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.TIMEOUT_END));
 			titleLbl.getStyleClass().addAll(RegistrationConstants.SCHEDULER_TITLE_STYLE);
 			initialContent.getStyleClass().addAll(RegistrationConstants.SCHEDULER_CONTENT_STYLE);
 			middleContent.getStyleClass().addAll(RegistrationConstants.SCHEDULER_CONTENT_STYLE);

@@ -279,7 +279,7 @@ public class LoginController extends BaseController implements Initializable {
 				String passwordLength = getValueFromApplicationContext(RegistrationConstants.PWORD_LENGTH);
 				if (passwordLength != null && passwordLength.matches("\\d+")
 						&& (newValue.length() > Integer.parseInt(passwordLength))) {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("PWORD_LENGTH"));
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PWORD_LENGTH));
 				}
 			});
 
@@ -348,7 +348,7 @@ public class LoginController extends BaseController implements Initializable {
 
 		} catch (IOException | RuntimeException | PreConditionCheckException exception) {
 			LOGGER.error("Failed to load screen", exception);
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_LOGIN_SCREEN"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_LOGIN_SCREEN));
 		}
 	}
 
@@ -402,11 +402,11 @@ public class LoginController extends BaseController implements Initializable {
 
 					if (RegistrationConstants.BACKUP_PREVIOUS_SUCCESS.equalsIgnoreCase(errorResponseDTO.getMessage())) {
 						generateAlert(RegistrationConstants.ERROR,
-								RegistrationUIConstants.getMessageLanguageSpecific("SQL_EXECUTION_FAILED_AND_REPLACED")
-										+ RegistrationUIConstants.getMessageLanguageSpecific("RESTART_APPLICATION"));
+								RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SQL_EXECUTION_FAILED_AND_REPLACED)
+										+ RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.RESTART_APPLICATION));
 						SessionContext.destroySession();
 					} else {
-						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_DISABLE_SCREEN_2"));
+						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_DISABLE_SCREEN_2));
 
 						new Initialization().stop();
 
@@ -419,7 +419,7 @@ public class LoginController extends BaseController implements Initializable {
 			LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
 
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_DISABLE_SCREEN_2"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_DISABLE_SCREEN_2));
 
 			new Initialization().stop();
 
@@ -448,7 +448,7 @@ public class LoginController extends BaseController implements Initializable {
 				"Validating Credentials entered through UI");
 
 		if (userId.getText().isEmpty()) {
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("USERNAME_FIELD_EMPTY"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
 		} else if (isInitialSetUp) {
 			// For Initial SetUp
 			initialSetUpOrNewUserLaunch();
@@ -508,7 +508,7 @@ public class LoginController extends BaseController implements Initializable {
 						regBaseUncheckedException.getMessage()
 								+ ExceptionUtils.getStackTrace(regBaseUncheckedException));
 
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_LOGIN_SCREEN"));
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_LOGIN_SCREEN));
 			}
 		}
 	}
@@ -540,7 +540,7 @@ public class LoginController extends BaseController implements Initializable {
 
 		if (isInitialSetUp) {
 			if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("NO_INTERNET_CONNECTION"));
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_INTERNET_CONNECTION));
 
 			} else {
 				try {
@@ -553,14 +553,14 @@ public class LoginController extends BaseController implements Initializable {
 							validateUserCredentialsInLocal(userDTO);
 						}
 					} else {
-						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_TO_GET_AUTH_TOKEN"));
+						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_TO_GET_AUTH_TOKEN));
 					}
 
 				} catch (Exception exception) {
 					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, String.format(
 							"Exception while getting AuthZ Token --> %s", ExceptionUtils.getStackTrace(exception)));
 
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_TO_GET_AUTH_TOKEN"));
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_TO_GET_AUTH_TOKEN));
 
 					SessionContext.destroySession();
 					loadInitialScreen(Initialization.getPrimaryStage());
@@ -575,7 +575,7 @@ public class LoginController extends BaseController implements Initializable {
 	private void validateUserCredentialsInLocal(UserDTO userDTO) {
 		boolean pwdValidationStatus = false;
 		if (password.getText().isEmpty()) {
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("PWORD_FIELD_EMPTY"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PWORD_FIELD_EMPTY));
 		} else {
 			if (userDTO != null) {
 
@@ -588,7 +588,7 @@ public class LoginController extends BaseController implements Initializable {
 							authenticationValidatorDTO)) {
 						pwdValidationStatus = validateInvalidLogin(userDTO, "");
 					} else {
-						pwdValidationStatus = validateInvalidLogin(userDTO, RegistrationUIConstants.getMessageLanguageSpecific("INCORRECT_PWORD"));
+						pwdValidationStatus = validateInvalidLogin(userDTO, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.INCORRECT_PWORD));
 					}
 				} catch (RegBaseCheckedException | IOException exception) {
 					generateAlert(RegistrationConstants.ALERT_INFORMATION,
@@ -620,7 +620,7 @@ public class LoginController extends BaseController implements Initializable {
 	public void generateOtp(ActionEvent event) {
 
 		if (userId.getText().isEmpty()) {
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("USERNAME_FIELD_EMPTY"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
 		} else {
 
 			auditFactory.audit(AuditEvent.LOGIN_GET_OTP, Components.LOGIN, userId.getText(),
@@ -635,11 +635,11 @@ public class LoginController extends BaseController implements Initializable {
 
 				// Generate alert to show OTP
 				generateAlert(RegistrationConstants.ALERT_INFORMATION,
-						RegistrationUIConstants.getMessageLanguageSpecific("OTP_GENERATION_SUCCESS_MESSAGE"));
+						RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.OTP_GENERATION_SUCCESS_MESSAGE));
 
 			} else if (responseDTO.getErrorResponseDTOs() != null) {
 				// Generate Alert to show INVALID USERNAME
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("OTP_GENERATION_ERROR_MESSAGE"));
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.OTP_GENERATION_ERROR_MESSAGE));
 
 			}
 		}
@@ -672,7 +672,7 @@ public class LoginController extends BaseController implements Initializable {
 					otpLoginStatus = validateInvalidLogin(userDTO, "");
 				} else {
 					otpLoginStatus = validateInvalidLogin(userDTO,
-							RegistrationUIConstants.getMessageLanguageSpecific("OTP_VALIDATION_ERROR_MESSAGE"));
+							RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.OTP_VALIDATION_ERROR_MESSAGE));
 				}
 			} catch (RegBaseCheckedException | IOException exception) {
 				generateAlert(RegistrationConstants.ALERT_INFORMATION,
@@ -743,7 +743,7 @@ public class LoginController extends BaseController implements Initializable {
 
 		executeValidationTask(userDTO, RegistrationConstants.FINGERPRINT_UPPERCASE, false, false,
 				authenticationValidatorDTO, fingerprintPane, fpProgressIndicator,
-				RegistrationUIConstants.getMessageLanguageSpecific("FINGER_PRINT_MATCH"), RegistrationConstants.FINGERPRINT);
+				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.FINGER_PRINT_MATCH), RegistrationConstants.FINGERPRINT);
 	}
 
 	/**
@@ -766,7 +766,7 @@ public class LoginController extends BaseController implements Initializable {
 		authenticationValidatorDTO.setAuthValidationType("single");
 
 		executeValidationTask(userDTO, RegistrationConstants.IRIS, false, false, authenticationValidatorDTO, irisPane,
-				irisProgressIndicator, RegistrationUIConstants.getMessageLanguageSpecific("IRIS_MATCH"), RegistrationConstants.IRIS);
+				irisProgressIndicator, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.IRIS_MATCH), RegistrationConstants.IRIS);
 	}
 
 	/**
@@ -787,7 +787,7 @@ public class LoginController extends BaseController implements Initializable {
 		authenticationValidatorDTO.setUserId(userId.getText());
 
 		executeValidationTask(userDTO, RegistrationConstants.FACE, false, false, authenticationValidatorDTO, facePane,
-				faceProgressIndicator, RegistrationUIConstants.getMessageLanguageSpecific("FACE_MATCH"), RegistrationConstants.FACE);
+				faceProgressIndicator, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.FACE_MATCH), RegistrationConstants.FACE);
 	}
 
 	private void executeValidationTask(UserDTO userDTO, String loginMethod, boolean isInitialSetUp,
@@ -815,7 +815,7 @@ public class LoginController extends BaseController implements Initializable {
 									"Exception while getting the scanned biometrics for user login: caused by "
 											+ ExceptionUtils.getStackTrace(exception));
 							generateAlert(RegistrationConstants.ERROR,
-									RegistrationUIConstants.getMessageLanguageSpecific("BIOMETRIC_SCANNING_ERROR"));
+									RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
 						}
 						return false;
 					}
@@ -993,21 +993,21 @@ public class LoginController extends BaseController implements Initializable {
 					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 							ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
 
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_LOGIN_SCREEN"));
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_LOGIN_SCREEN));
 				} catch (RegBaseCheckedException regBaseCheckedException) {
 
 					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 							regBaseCheckedException.getMessage()
 									+ ExceptionUtils.getStackTrace(regBaseCheckedException));
 
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_LOGIN_SCREEN"));
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_LOGIN_SCREEN));
 
 				} catch (RuntimeException runtimeException) {
 
 					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 							runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
 
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_LOGIN_SCREEN"));
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_LOGIN_SCREEN));
 
 				}
 			}
@@ -1061,13 +1061,13 @@ public class LoginController extends BaseController implements Initializable {
 			@Override
 			public void handle(WorkerStateEvent t) {
 				if (taskService.getValue().contains(RegistrationConstants.FAILURE)) {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("SYNC_CONFIG_DATA_FAILURE"));
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_CONFIG_DATA_FAILURE));
 					if (isInitialSetUp) {
 						loadInitialScreen(Initialization.getPrimaryStage());
 						return;
 					}
 				} else if (taskService.getValue().contains(RegistrationConstants.AUTH_TOKEN_NOT_RECEIVED_ERROR)) {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("ALERT_AUTH_TOKEN_NOT_FOUND"));
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.ALERT_AUTH_TOKEN_NOT_FOUND));
 					if (isInitialSetUp) {
 						loadInitialScreen(Initialization.getPrimaryStage());
 						return;
@@ -1111,9 +1111,9 @@ public class LoginController extends BaseController implements Initializable {
 		int invalidLoginTime = Integer
 				.parseInt(getValueFromApplicationContext(RegistrationConstants.INVALID_LOGIN_TIME));
 
-		String unlockMessage = String.format("%s %s %s %s %s", RegistrationUIConstants.getMessageLanguageSpecific("USER_ACCOUNT_LOCK_MESSAGE_NUMBER"),
-				String.valueOf(invalidLoginCount), RegistrationUIConstants.getMessageLanguageSpecific("USER_ACCOUNT_LOCK_MESSAGE"),
-				String.valueOf(invalidLoginTime), RegistrationUIConstants.getMessageLanguageSpecific("USER_ACCOUNT_LOCK_MESSAGE_MINUTES"));
+		String unlockMessage = String.format("%s %s %s %s %s", RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USER_ACCOUNT_LOCK_MESSAGE_NUMBER),
+				String.valueOf(invalidLoginCount), RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USER_ACCOUNT_LOCK_MESSAGE),
+				String.valueOf(invalidLoginTime), RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USER_ACCOUNT_LOCK_MESSAGE_MINUTES));
 
 		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 				"Invoking validation of login attempts");
@@ -1162,7 +1162,7 @@ public class LoginController extends BaseController implements Initializable {
 			LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
 
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_LOGIN_SCREEN"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_LOGIN_SCREEN));
 		}
 
 	}

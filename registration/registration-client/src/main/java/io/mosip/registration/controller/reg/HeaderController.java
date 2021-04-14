@@ -262,7 +262,7 @@ public class HeaderController extends BaseController {
 			LOGGER.error(LoggerConstants.LOG_REG_HEADER, APPLICATION_NAME, APPLICATION_ID,
 					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
 
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_LOGOUT_PAGE"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_LOGOUT_PAGE));
 		}
 	}
 
@@ -320,7 +320,7 @@ public class HeaderController extends BaseController {
 		} catch (RuntimeException exception) {
 			LOGGER.error("REGISTRATION - REDIRECTHOME - HEADER_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 					exception.getMessage() + ExceptionUtils.getStackTrace(exception));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_HOME_PAGE"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE));
 		}
 
 	}
@@ -342,7 +342,7 @@ public class HeaderController extends BaseController {
 					.load(getClass().getResource(RegistrationConstants.SYNC_STATUS));
 
 			if (!validateScreenAuthorization(syncServerClientRoot.getId())) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("AUTHORIZATION_ERROR"));
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHORIZATION_ERROR));
 			} else {
 				VBox pane = (VBox) (menu.getParent().getParent().getParent());
 				for (int index = pane.getChildren().size() - 1; index > 0; index--) {
@@ -388,7 +388,7 @@ public class HeaderController extends BaseController {
 		} catch (RuntimeException exception) {
 			LOGGER.error("REGISTRATION - REDIRECTHOME - HEADER_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 					exception.getMessage() + ExceptionUtils.getStackTrace(exception));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_LOAD_HOME_PAGE"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE));
 		}
 
 	}
@@ -439,7 +439,7 @@ public class HeaderController extends BaseController {
 				public void handle(WorkerStateEvent t) {
 					LOGGER.debug("REGISTRATION - REDIRECTHOME - HEADER_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 							"check for Center remap process failed");
-					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("SYNC_FAILURE"));
+					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_FAILURE));
 					machineRemapCheck(true);
 					progressIndicator.setVisible(false);
 				}
@@ -482,9 +482,9 @@ public class HeaderController extends BaseController {
 			boolean hasUpdate = hasUpdate();
 			if (hasUpdate) {
 				softwareUpdate(homeController.getMainBox(), packetHandlerController.getProgressIndicator(),
-						RegistrationUIConstants.getMessageLanguageSpecific("UPDATE_LATER"), true);
+						RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_LATER), true);
 			} else {
-				generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("NO_UPDATES_FOUND"));
+				generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_UPDATES_FOUND));
 			}
 		}
 	}
@@ -562,7 +562,7 @@ public class HeaderController extends BaseController {
 							responseDTO.getErrorResponseDTOs().get(0).getMessage());
 				} else {
 					gridPane.setDisable(false);
-					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("SYNC_SUCCESS"));
+					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_SUCCESS));
 
 				}
 
@@ -651,10 +651,10 @@ public class HeaderController extends BaseController {
 				if (RegistrationConstants.ERROR.equalsIgnoreCase(taskService.getValue())) {
 					// generateAlert(RegistrationConstants.ERROR,
 					// RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_TO_UPDATE);
-					softwareUpdate(pane, progressIndicator, RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_TO_UPDATE"), true);
+					softwareUpdate(pane, progressIndicator, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_TO_UPDATE), true);
 				} else if (RegistrationConstants.ALERT_INFORMATION.equalsIgnoreCase(taskService.getValue())) {
 					// Update completed Re-Launch application
-					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("UPDATE_COMPLETED"));
+					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_COMPLETED));
 
 					restartApplication();
 				}
@@ -667,8 +667,8 @@ public class HeaderController extends BaseController {
 
 	public void softwareUpdate(Pane pane, ProgressIndicator progressIndicator, String context,
 			boolean isPreLaunchTaskToBeStopped) {
-		Alert updateAlert = createAlert(AlertType.CONFIRMATION, RegistrationUIConstants.getMessageLanguageSpecific("UPDATE_AVAILABLE"),
-				RegistrationUIConstants.getMessageLanguageSpecific("ALERT_NOTE_LABEL"), context, RegistrationConstants.UPDATE_NOW_LABEL,
+		Alert updateAlert = createAlert(AlertType.CONFIRMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_AVAILABLE),
+				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.ALERT_NOTE_LABEL), context, RegistrationConstants.UPDATE_NOW_LABEL,
 				RegistrationConstants.UPDATE_LATER_LABEL);
 
 		pane.setDisable(true);
@@ -689,8 +689,8 @@ public class HeaderController extends BaseController {
 			softwareUpdateInitiate(pane, progressIndicator, context, isPreLaunchTaskToBeStopped);
 
 		} else if (result == ButtonType.CANCEL && (statusValidatorService.isToBeForceUpdate())) {
-			Alert alert = createAlert(AlertType.INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("UPDATE_AVAILABLE"),
-					RegistrationUIConstants.getMessageLanguageSpecific("ALERT_NOTE_LABEL"), RegistrationUIConstants.getMessageLanguageSpecific("UPDATE_FREEZE_TIME_EXCEED"),
+			Alert alert = createAlert(AlertType.INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_AVAILABLE),
+					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.ALERT_NOTE_LABEL), RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_FREEZE_TIME_EXCEED),
 					RegistrationConstants.UPDATE_NOW_LABEL, null);
 
 			alert.show();
@@ -724,7 +724,7 @@ public class HeaderController extends BaseController {
 		if (RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
 			executeSoftwareUpdateTask(pane, progressIndicator);
 		} else {
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific("NO_INTERNET_CONNECTION"));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_INTERNET_CONNECTION));
 			softwareUpdate(pane, progressIndicator, context, isPreLaunchTaskToBeStopped);
 		}
 	}
@@ -857,13 +857,13 @@ public class HeaderController extends BaseController {
 		if (centerMachineReMapService.isMachineRemapped()) {
 			remapMachine();
 		} else if (showAlert) {
-			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("REMAP_NOT_APPLICABLE"));
+			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REMAP_NOT_APPLICABLE));
 		}
 	}
 
 	private boolean validUser(boolean showAlert) {
 		if (!userDetailService.isValidUser(SessionContext.getInstance().getUserContext().getUserId())) {
-			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific("USER_IN_ACTIVE"));
+			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USER_IN_ACTIVE));
 			logout(null);
 			return false;
 		}
