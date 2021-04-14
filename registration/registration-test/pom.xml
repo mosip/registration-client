@@ -8,180 +8,112 @@
   <artifactId>registration-test</artifactId>
   <name>registration-test</name>
   <description>Maven project of MOSIP Registration Test</description>
-  
-	<properties>
-		<maven.compiler.source>11</maven.compiler.source>
-		<maven.compiler.target>11</maven.compiler.target>
-	</properties>
-	<dependencies>
-		<dependency>
-			<groupId>org.openjfx</groupId>
-			<artifactId>javafx-fxml</artifactId>
-			<version>15.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.openjfx</groupId>
-			<artifactId>javafx-graphics</artifactId>
-			<version>15.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.openjfx</groupId>
-			<artifactId>javafx-swing</artifactId>
-			<version>15.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.openjfx</groupId>
-			<artifactId>javafx-media</artifactId>
-			<version>15.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.openjfx</groupId>
-			<artifactId>javafx-controls</artifactId>
-			<version>15.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.openjfx</groupId>
-			<artifactId>javafx-web</artifactId>
-			<version>15.0.1</version>
-		</dependency>
-		<!-- QA dependency starts -->
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
-			<version>5.5.1</version>
-		</dependency>
-		<dependency>
-    <groupId>org.testfx</groupId>
-    <artifactId>testfx-core</artifactId>
-    <version>4.0.16-alpha</version>
-    
-</dependency>
-
-
-	<!--	<dependency>
-			<groupId>org.testfx</groupId>
-			<artifactId>testfx-junit5</artifactId>
-			<version>4.0.16-alpha</version>
-		</dependency>
-		 -->
-		<dependency>
-    <groupId>org.hamcrest</groupId>
-    <artifactId>hamcrest</artifactId>
-    <version>2.1</version>
-    <scope>test</scope>
-</dependency>
-
-<dependency>
-    <groupId>org.assertj</groupId>
-    <artifactId>assertj-core</artifactId>
-    <version>3.13.2</version>
-   
-</dependency>
-		<dependency>
-			<groupId>com.opencsv</groupId>
-			<artifactId>opencsv</artifactId>
-			<version>3.5</version>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-params</artifactId>
-			<version>5.5.1</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.json/json -->
-		<dependency>
-			<groupId>org.json</groupId>
-			<artifactId>json</artifactId>
-			<version>20200518</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.junit.platform/junit-platform-runner 
-			<dependency> <groupId>org.junit.platform</groupId> <artifactId>junit-platform-runner</artifactId> 
-			<version>1.7.0</version> <scope>test</scope> </dependency> -->
-		<dependency>
-			<groupId>org.awaitility</groupId>
-			<artifactId>awaitility</artifactId>
-			<version>4.0.3</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/log4j/log4j -->
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.17</version>
-		</dependency>
-		<dependency> 
-    <groupId>com.aventstack</groupId> 
-    <artifactId>extentreports</artifactId> 
-    <version>3.1.5</version> 
-</dependency>  
-		 
-			<dependency> <groupId>morena7</groupId> 
-			<artifactId>morena7</artifactId> <version>1.0</version> </dependency> <dependency> 
-			<groupId>morena7-license</groupId> <artifactId>morena7-license</artifactId> 
-			<version>1.0</version> </dependency> <dependency> <groupId>morena7-win</groupId> 
-			<artifactId>morena7-win</artifactId> <version>1.0</version> </dependency> 
-		
-		<dependency>
-			<groupId>io.mosip.registration</groupId>
-			<artifactId>registration-client</artifactId>
-			<version>1.1.5-rc1</version>
-		</dependency>
-		
-
-		
-			<dependency>
-			<groupId>mocksdk</groupId>
-			<artifactId>mocksdk</artifactId>
-			<version>0.9</version>
-		</dependency>
-<dependency>
-    <groupId>org.testfx</groupId>
-    <artifactId>openjfx-monocle</artifactId>
-    <version>jdk-11+26</version> <!-- jdk-11+26 for Java 11, jdk-9+181 for Java 9, 8u76-b04 for Java 8 -->
-    <scope>test</scope>
-</dependency>
-	</dependencies>
-	<!-- <build> <plugins> <plugin> <groupId>org.apache.maven.plugins</groupId> 
-		<artifactId>maven-jar-plugin</artifactId> <version>2.4</version> <configuration> 
-		<archive> <manifest> <addClasspath>true</addClasspath> <mainClass>qa114.runapplication.NewRegistrationAdultTest</mainClass> 
-		</manifest> </archive> </configuration> </plugin> <plugin> <groupId>org.apache.maven.plugins</groupId> 
-		<artifactId>maven-dependency-plugin</artifactId> <version>2.4</version> <executions> 
-		<execution> <id>copy</id> <phase>prepare-package</phase> <goals> <goal>copy-dependencies</goal> 
-		</goals> <configuration> <outputDirectory>${project.build.directory}/autolib</outputDirectory> 
-		</configuration> </execution> </executions> </plugin> <plugin> <groupId>org.openjfx</groupId> 
-		<artifactId>javafx-maven-plugin</artifactId> <version>0.0.3</version> <configuration> 
-		<mainClass>qa114.runapplication.NewRegistrationAdultTest</mainClass> </configuration> 
-		</plugin> </plugins> </build> -->
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.1.1</version>
-				<configuration>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-					<archive>
-						<manifest>
-							<addClasspath>true</addClasspath>
-							<mainClass>registrationtest.runapplication.NewRegistrationAdultTest</mainClass>
-						</manifest>
-					</archive>
-				</configuration>
-				<executions>
-					<execution>
-						<id>make-assembly</id>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-
-		</plugins>
-	</build>
-
-
+   <properties>
+      <maven.compiler.source>11</maven.compiler.source>
+      <maven.compiler.target>11</maven.compiler.target>
+   </properties>
+   <dependencies>
+      <!-- QA dependency starts -->
+      <dependency>
+         <groupId>org.junit.jupiter</groupId>
+         <artifactId>junit-jupiter-api</artifactId>
+         <version>5.5.1</version>
+      </dependency>
+      <dependency>
+         <groupId>org.testfx</groupId>
+         <artifactId>testfx-junit5</artifactId>
+         <version>4.0.16-alpha</version>
+      </dependency>
+      <dependency>
+         <groupId>com.opencsv</groupId>
+         <artifactId>opencsv</artifactId>
+         <version>3.5</version>
+      </dependency>
+      <dependency>
+         <groupId>org.junit.jupiter</groupId>
+         <artifactId>junit-jupiter-params</artifactId>
+         <version>5.5.1</version>
+      </dependency>
+      <!-- https://mvnrepository.com/artifact/org.json/json -->
+      <dependency>
+         <groupId>org.json</groupId>
+         <artifactId>json</artifactId>
+         <version>20200518</version>
+      </dependency>
+      <!-- https://mvnrepository.com/artifact/org.junit.platform/junit-platform-runner 
+         <dependency> <groupId>org.junit.platform</groupId> <artifactId>junit-platform-runner</artifactId> 
+         <version>1.7.0</version> <scope>test</scope> </dependency> -->
+      <dependency>
+         <groupId>org.awaitility</groupId>
+         <artifactId>awaitility</artifactId>
+         <version>4.0.3</version>
+      </dependency>
+      <!-- https://mvnrepository.com/artifact/log4j/log4j -->
+      <dependency>
+         <groupId>log4j</groupId>
+         <artifactId>log4j</artifactId>
+         <version>1.2.17</version>
+      </dependency>
+      <dependency>
+         <groupId>com.aventstack</groupId>
+         <artifactId>extentreports</artifactId>
+         <version>3.1.5</version>
+      </dependency>
+      <dependency>
+         <groupId>io.mosip.registration</groupId>
+         <artifactId>registration-client</artifactId>
+         <version>1.1.5-rc1</version>
+      </dependency>
+      <dependency>
+         <groupId>io.mosip.mock.sdk</groupId>
+         <artifactId>mock-sdk</artifactId>
+         <version>1.1.5-rc1</version>
+      </dependency>
+      <dependency>
+         <groupId>org.testfx</groupId>
+         <artifactId>openjfx-monocle</artifactId>
+         <version>jdk-11+26</version> <!-- jdk-11+26 for Java 11, jdk-9+181 for Java 9, 8u76-b04 for Java 8 -->
+         <scope>test</scope>
+      </dependency>
+   </dependencies>
+   <!-- <build> <plugins> <plugin> <groupId>org.apache.maven.plugins</groupId> 
+      <artifactId>maven-jar-plugin</artifactId> <version>2.4</version> <configuration> 
+      <archive> <manifest> <addClasspath>true</addClasspath> <mainClass>qa114.runapplication.NewRegistrationAdultTest</mainClass> 
+      </manifest> </archive> </configuration> </plugin> <plugin> <groupId>org.apache.maven.plugins</groupId> 
+      <artifactId>maven-dependency-plugin</artifactId> <version>2.4</version> <executions> 
+      <execution> <id>copy</id> <phase>prepare-package</phase> <goals> <goal>copy-dependencies</goal> 
+      </goals> <configuration> <outputDirectory>${project.build.directory}/autolib</outputDirectory> 
+      </configuration> </execution> </executions> </plugin> <plugin> <groupId>org.openjfx</groupId> 
+      <artifactId>javafx-maven-plugin</artifactId> <version>0.0.3</version> <configuration> 
+      <mainClass>qa114.runapplication.NewRegistrationAdultTest</mainClass> </configuration> 
+      </plugin> </plugins> </build> -->
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>3.1.1</version>
+            <configuration>
+               <descriptorRefs>
+                  <descriptorRef>jar-with-dependencies</descriptorRef>
+               </descriptorRefs>
+               <archive>
+                  <manifest>
+                     <addClasspath>true</addClasspath>
+                     <mainClass>qa114.runapplication.NewRegistrationAdultTest</mainClass>
+                  </manifest>
+               </archive>
+            </configuration>
+            <executions>
+               <execution>
+                  <id>make-assembly</id>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>single</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+      </plugins>
+   </build>
 </project>
