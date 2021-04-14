@@ -35,3 +35,4 @@ reg/README_DO_NOT_TOUCH_FILES.txt
 /MANIFEST.MF
 /SCHEMA_*.json
 /derby.txt
+/extentReport.html
