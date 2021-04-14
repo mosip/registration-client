@@ -91,3 +91,17 @@ jobs:
         echo VERSION=$VERSION
         docker tag $SERVICE_NAME $IMAGE_ID:$VERSION
         docker push $IMAGE_ID:$VERSION
+
+    - name: Publish the maven package
+      run: |
+        mvn deploy -DskipTests -DaltDeploymentRepository=ossrh::default::${{ secrets.RELEASE_URL }} -s $GITHUB_WORKSPACE/settings.xml -f pom.xml
+      env:
+        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        GPG_TTY: $(tty)
+    - name: Analyze with SonarCloud
+      run: |
+        cd registration-processor
+        mvn clean -B verify sonar:sonar -Dsonar.projectKey=${{ secrets.PROJECT_KEY }} -Dsonar.organization=${{ secrets.ORG_KEY }} -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
