@@ -130,7 +130,7 @@
 			<dependency>
 			<groupId>mocksdk</groupId>
 			<artifactId>mocksdk</artifactId>
-			<version>1.0</version>
+			<version>0.9</version>
 		</dependency>
 <dependency>
     <groupId>org.testfx</groupId>
