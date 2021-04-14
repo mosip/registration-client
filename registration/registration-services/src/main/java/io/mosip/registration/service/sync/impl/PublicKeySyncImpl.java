@@ -72,15 +72,7 @@ public class PublicKeySyncImpl extends BaseService implements PublicKeySync {
 
 		//Precondition check, proceed only if met, otherwise throws exception
 		proceedWithMasterAndKeySync(null);
-
 		ResponseDTO responseDTO = new ResponseDTO();
-		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
-			return setErrorResponse(responseDTO, RegistrationConstants.NO_INTERNET, null);
-		}
-
-		//Precondition check, proceed only if met, otherwise throws exception
-		proceedWithMasterAndKeySync(null);
-
 		try {
 			String certificateData = getCertificateFromServer(); //fetch sign public key from server
 			saveSignPublicKey(certificateData);

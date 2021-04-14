@@ -15,9 +15,12 @@ import io.mosip.registration.dao.UserDetailDAO;
 import io.mosip.registration.dto.AuthTokenDTO;
 import io.mosip.registration.dto.LoginUserDTO;
 import io.mosip.registration.entity.UserToken;
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.repositories.UserTokenRepository;
+import lombok.SneakyThrows;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -25,9 +28,20 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.retry.RetryCallback;
+import org.springframework.retry.RetryContext;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.retry.backoff.FixedBackOffPolicy;
+import org.springframework.retry.policy.SimpleRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
+import org.springframework.retry.support.RetryTemplateBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.annotation.PostConstruct;
+import java.io.File;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -44,7 +58,6 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 @Service
 public class AuthTokenUtilService {
 
-    private static final String AUTH_REFRESH_TOKEN_UTIL = "AUTH_REFRESH_TOKEN_UTIL";
     private static final Logger LOGGER = AppConfig.getLogger(AuthTokenUtilService.class);
 
     @Autowired
@@ -62,6 +75,23 @@ public class AuthTokenUtilService {
     @Autowired
     private UserTokenRepository userTokenRepository;
 
+    private RetryTemplate retryTemplate;
+
+    @PostConstruct
+    private void init() {
+        FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
+        backOffPolicy.setBackOffPeriod((Long) ApplicationContext.map().getOrDefault("mosip.registration.retry.delay.auth", 1000l));
+
+        SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
+        retryPolicy.setMaxAttempts((Integer) ApplicationContext.map().getOrDefault("mosip.registration.retry.maxattempts.auth", 2));
+
+        retryTemplate = new RetryTemplateBuilder()
+                .retryOn(ConnectionException.class)
+                .customPolicy(retryPolicy)
+                .customBackoff(backOffPolicy)
+                .build();
+    }
+
     public boolean hasAnyValidToken() {
         UserToken userToken = userTokenRepository.findTopByTokenExpiryGreaterThanAndUserDetailIsActiveTrueOrderByTokenExpiryDesc(System.currentTimeMillis()/1000);
         if(userToken != null) {
@@ -72,13 +102,12 @@ public class AuthTokenUtilService {
             return true;
         }
 
-        LOGGER.error(AUTH_REFRESH_TOKEN_UTIL, APPLICATION_NAME, APPLICATION_ID, "No valid auth token found! Needs new token to be fetched");
+        LOGGER.error("No valid auth token found! Needs new token to be fetched");
         return false;
     }
 
     public AuthTokenDTO fetchAuthToken(String triggerPoint) throws RegBaseCheckedException {
-        LOGGER.info(AUTH_REFRESH_TOKEN_UTIL, APPLICATION_NAME, APPLICATION_ID,
-                "fetchAuthToken invoked for triggerPoint >>>>> " + triggerPoint);
+        LOGGER.info("fetchAuthToken invoked for triggerPoint >>>>> {}", triggerPoint);
 
         if(SessionContext.isSessionContextAvailable()) {
             UserToken userToken = userTokenRepository.findByUsrIdAndUserDetailIsActiveTrue(SessionContext.userId());
@@ -125,8 +154,7 @@ public class AuthTokenUtilService {
 
 
     private String refreshAuthToken(String userId, String refreshToken) throws RegBaseCheckedException {
-        LOGGER.info(AUTH_REFRESH_TOKEN_UTIL, APPLICATION_NAME, APPLICATION_ID,
-                "refreshAuthToken invoked for userId >>>>> " + userId);
+        LOGGER.debug("refreshAuthToken invoked for userId >>>>> {}", userId);
         try {
             String timestamp = DateUtils.formatToISOString(LocalDateTime.now(ZoneOffset.UTC));
             String header = String.format("{\"kid\" : \"%s\"}", CryptoUtil.computeFingerPrint(clientCryptoFacade.getClientSecurity().getSigningPublicPart(), null));
@@ -149,12 +177,10 @@ public class AuthTokenUtilService {
                     currentTimeInSeconds + jsonObject.getLong("refreshExpiryTime"));
             return jsonObject.getString("token");
         } catch (Exception exception) {
-            LOGGER.error(AUTH_REFRESH_TOKEN_UTIL, APPLICATION_NAME, APPLICATION_ID,
-                    ExceptionUtils.getStackTrace(exception));
+            LOGGER.error(exception.getMessage(), exception);
+            throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(),
+                    exception.getMessage(), exception);
         }
-        throw new RegBaseCheckedException(
-                RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(),
-                RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorMessage());
     }
 
     public AuthTokenDTO getAuthTokenAndRefreshToken(LoginMode loginMode) throws RegBaseCheckedException {
@@ -164,8 +190,7 @@ public class AuthTokenUtilService {
 
 
     public AuthTokenDTO getAuthTokenAndRefreshToken(LoginMode loginMode, LoginUserDTO loginUserDTO) throws RegBaseCheckedException {
-        LOGGER.info(AUTH_REFRESH_TOKEN_UTIL, APPLICATION_NAME, APPLICATION_ID,
-                "Fetching Auth Token and refresh token based on Login Mode >>> " + loginMode);
+        LOGGER.info("Fetching Auth Token and refresh token based on Login Mode >>> {}",loginMode);
         try {
             String timestamp = DateUtils.formatToISOString(LocalDateTime.now(ZoneOffset.UTC));
             String header = String.format("{\"kid\" : \"%s\"}", CryptoUtil.computeFingerPrint(clientCryptoFacade.getClientSecurity().getSigningPublicPart(), null));
@@ -212,12 +237,63 @@ public class AuthTokenUtilService {
             return authTokenDTO;
 
         } catch (Exception exception) {
-            LOGGER.error(AUTH_REFRESH_TOKEN_UTIL, APPLICATION_NAME, APPLICATION_ID,
-                    ExceptionUtils.getStackTrace(exception));
+            LOGGER.error(exception.getMessage(), exception);
+            throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(),
+                    exception.getMessage(), exception);
         }
-        throw new RegBaseCheckedException(
-                RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(),
-                RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorMessage());
+    }
+
+    public String sendOtpWithRetryWrapper(String userId) throws ConnectionException {
+        RetryCallback<String, ConnectionException> retryCallback = new RetryCallback<String, ConnectionException>() {
+            @SneakyThrows
+            @Override
+            public String doWithRetry(RetryContext retryContext) throws ConnectionException {
+                LOGGER.info("Currently in Retry wrapper. Current counter : {}", retryContext.getRetryCount());
+                return sendOTP(userId);
+            }
+        };
+        return retryTemplate.execute(retryCallback);
+    }
+
+    public String sendOTP(String userId) throws ConnectionException {
+        LOGGER.info("Request to send OTP");
+        try {
+            String timestamp = DateUtils.formatToISOString(LocalDateTime.now(ZoneOffset.UTC));
+            String header = String.format("{\"kid\" : \"%s\"}", CryptoUtil.computeFingerPrint(clientCryptoFacade.getClientSecurity().getSigningPublicPart(), null));
+
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("userId", userId);
+            jsonObject.put("appId", ApplicationContext.map().get(RegistrationConstants.REGISTRATION_CLIENT));
+            jsonObject.put("useridtype", RegistrationConstants.USER_ID_CODE);
+            jsonObject.put("context", RegistrationConstants.REGISTRATION_CONTEXT);
+            jsonObject.put("otpChannel", new JSONArray(ApplicationContext.map().get(RegistrationConstants.OTP_CHANNELS).toString().toLowerCase().split(",")));
+            jsonObject.put("timestamp", timestamp);
+            String payload = jsonObject.toString();
+
+            byte[] signature = clientCryptoFacade.getClientSecurity().signData(payload.getBytes());
+            String data = String.format("%s.%s.%s", Base64.getUrlEncoder().encodeToString(header.getBytes()),
+                    Base64.getUrlEncoder().encodeToString(payload.getBytes()), Base64.getUrlEncoder().encodeToString(signature));
+
+            RequestHTTPDTO requestHTTPDTO = getRequestHTTPDTO(data, timestamp);
+            setTimeout(requestHTTPDTO);
+            setURI(requestHTTPDTO, new HashMap<>(), getEnvironmentProperty("auth_by_otp", RegistrationConstants.SERVICE_URL));
+            Map<String, Object> responseMap = restClientUtil.invokeForToken(requestHTTPDTO);
+
+            if (responseMap.get(RegistrationConstants.RESPONSE) != null) {
+                LinkedHashMap<String, String> otpMessage = (LinkedHashMap<String, String>) responseMap
+                        .get("response");
+                return RegistrationConstants.OTP_GENERATION_SUCCESS_MESSAGE + otpMessage.get("message");
+            }
+
+            if (responseMap.get(RegistrationConstants.ERRORS) != null) {
+                String errMsg = ((List<LinkedHashMap<String, String>>) responseMap
+                        .get(RegistrationConstants.ERRORS)).get(0).get(RegistrationConstants.ERROR_MSG);
+                LOGGER.error(errMsg);
+            }
+        } catch (RestClientException ex) {
+            throw new ConnectionException("REG_SEND_OTP", ex.getMessage(), ex);
+        }
+        return RegistrationConstants.OTP_GENERATION_ERROR_MESSAGE;
     }
 
     private JSONObject getAuthTokenResponse(Map<String, Object> responseMap) throws RegBaseCheckedException {
@@ -266,8 +342,7 @@ public class AuthTokenUtilService {
     }
 
     private void setURI(RequestHTTPDTO requestHTTPDTO, Map<String, String> requestParams, String url) {
-        LOGGER.info(AUTH_REFRESH_TOKEN_UTIL, APPLICATION_NAME, APPLICATION_ID,
-                "Preparing URI for web-service");
+        LOGGER.info("Preparing URI for web-service >>>>>  {} ", url);
         UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(url);
         if (requestParams != null) {
             Set<String> set = requestParams.keySet();
@@ -277,8 +352,7 @@ public class AuthTokenUtilService {
         }
         URI uri = uriComponentsBuilder.build().toUri();
         requestHTTPDTO.setUri(uri);
-        LOGGER.info(AUTH_REFRESH_TOKEN_UTIL, APPLICATION_NAME, APPLICATION_ID,
-                "Completed preparing URI for web-service >>>>>>> " + uri);
+        LOGGER.info("Completed preparing URI for web-service >>>>>>> {} ", uri);
     }
 
     private void setTimeout(RequestHTTPDTO requestHTTPDTO) {

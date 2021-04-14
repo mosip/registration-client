@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Rule;
@@ -74,11 +75,10 @@ public class DocumentCategoryDAOImplTest {
 		documentCategory.setCode("code");
 
 		Mockito.when(
-				registrationDocumentCategoryRepository.findByIsActiveTrueAndCodeAndLangCode("code", "languageCode"))
-				.thenReturn(documentCategory);
+				registrationDocumentCategoryRepository.findByIsActiveTrueAndLangCode("languageCode"))
+				.thenReturn(Arrays.asList(documentCategory));
 
-		assertEquals(registrationDocumentCategoryDAOImpl.getDocumentCategoriesByLangCode("languageCode"),
-				documentCategory);
+		assertEquals(Arrays.asList(documentCategory), registrationDocumentCategoryDAOImpl.getDocumentCategoriesByLangCode("languageCode"));
 
 	}
 

@@ -514,8 +514,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 
 			return onBoardResponse;
 
-		} catch (RegBaseCheckedException | IOException | RuntimeException
-				| NoSuchAlgorithmException regBasedCheckedException) {
+		} catch (Exception regBasedCheckedException) {
 			LOGGER.error(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(regBasedCheckedException));
 			setErrorResponse(responseDTO, RegistrationConstants.USER_ON_BOARDING_EXCEPTION, null);

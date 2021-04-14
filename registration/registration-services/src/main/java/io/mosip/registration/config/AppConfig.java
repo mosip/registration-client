@@ -18,6 +18,7 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,6 +58,7 @@ import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderIm
 @PropertySource(value = { "classpath:spring.properties" })
 @ImportAutoConfiguration(RefreshAutoConfiguration.class)
 @EnableConfigurationProperties
+@EnableRetry
 public class AppConfig {
 
 	private static final RollingFileAppender MOSIP_ROLLING_APPENDER = new RollingFileAppender();

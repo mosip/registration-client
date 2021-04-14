@@ -553,8 +553,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 			SyncControl masterSyncDetails = masterSyncDao.syncJobDetails(masterSyncDtls);
 			if (masterSyncDetails != null) {
 				requestParamMap.put(RegistrationConstants.MASTER_DATA_LASTUPDTAE,
-						DateUtils.formatToISOString(LocalDateTime
-								.ofInstant(masterSyncDetails.getLastSyncDtimes().toInstant(), ZoneOffset.ofHours(0))));
+						DateUtils.formatToISOString(masterSyncDetails.getLastSyncDtimes().toLocalDateTime()));
 			}
 
 			String registrationCenterId = getCenterId();
@@ -637,7 +636,6 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 			setErrorResponse(responseDTO, RegistrationConstants.MASTER_SYNC_FAILURE_MSG, null);
 	}
 
-	@SuppressWarnings("unchecked")
 	public ResponseDTO syncSchema(String triggerPoint) throws RegBaseCheckedException {
 		LOGGER.info(LOG_REG_SCHEMA_SYNC, APPLICATION_NAME, APPLICATION_ID, "ID Schema sync started .....");
 
@@ -665,8 +663,8 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 				} else
 					setErrorResponse(responseDTO, errorMsg(syncResponse), null);
 
-			} catch (HttpClientErrorException | IOException e) {
-				LOGGER.error(LOG_REG_SCHEMA_SYNC, APPLICATION_NAME, APPLICATION_ID, ExceptionUtils.getStackTrace(e));
+			} catch (Exception e) {
+				LOGGER.error(e.getMessage(), e);
 				setErrorResponse(responseDTO, ExceptionUtils.getStackTrace(e), null);
 			}
 		} else

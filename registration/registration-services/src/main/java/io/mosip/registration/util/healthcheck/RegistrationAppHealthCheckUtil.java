@@ -127,17 +127,10 @@ public class RegistrationAppHealthCheckUtil {
 			connection.setConnectTimeout(10000);
 			connection.connect();
 
-			if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-				isNWAvailable = true;
-				LOGGER.info("REGISTRATION - REGISTRATION APP HEALTHCHECKUTIL - ISNETWORKAVAILABLE", APPLICATION_NAME,
-						APPLICATION_ID, "Internet Access Available." + "====>" + connection.getResponseCode());
-			} else {
-				isNWAvailable = false;
-				LOGGER.info("REGISTRATION - REGISTRATIONAPPHEALTHCHECKUTIL - ISNETWORKAVAILABLE", APPLICATION_NAME,
-						APPLICATION_ID, "Internet Access Not Available." + "====>" + connection.getResponseCode());
-			}
+			isNWAvailable = (connection.getResponseCode() == HttpURLConnection.HTTP_OK);
+			LOGGER.info( "Connected : {} :: Server status : {}", isNWAvailable, connection.getResponseCode());
 		} catch (Exception exception) {
-			LOGGER.error("No Internet Access : {}" , ExceptionUtils.getStackTrace(exception));
+			LOGGER.error("No Internet Access" , exception);
 		}
 		return isNWAvailable;
 	}

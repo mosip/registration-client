@@ -1,12 +1,7 @@
 package io.mosip.registration.exception;
 
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import io.mosip.kernel.core.exception.BaseUncheckedException;
-import io.mosip.kernel.core.exception.ExceptionUtils;
-import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.registration.config.AppConfig;
 
 /**
  * Class for handling the REG unchecked exception
@@ -21,11 +16,7 @@ public class RegBaseUncheckedException extends BaseUncheckedException {
 	 * Serializable Version Id
 	 */
 	private static final long serialVersionUID = 276197701640260133L;
-	/**
-	 * Instance of {@link Logger}
-	 */
-	private static final Logger LOGGER = AppConfig.getLogger(RegBaseUncheckedException.class);
-	
+
 	/**
 	 * Constructs a new unchecked exception
 	 */
@@ -43,8 +34,6 @@ public class RegBaseUncheckedException extends BaseUncheckedException {
 	 */
 	public RegBaseUncheckedException(String errorCode, String errorMessage) {
 		super(errorCode, errorMessage);
-		LOGGER.error("REGISTRATION - UNCHECKED_EXCEPTION", APPLICATION_NAME,
-				APPLICATION_ID, errorCode + "-->" + errorMessage);
 	}
 
 	/**
@@ -59,7 +48,5 @@ public class RegBaseUncheckedException extends BaseUncheckedException {
 	 */
 	public RegBaseUncheckedException(String errorCode, String errorMessage, Throwable throwable) {
 		super(errorCode, errorMessage, throwable);
-		LOGGER.error("REGISTRATION - UNCHECKED_EXCEPTION", APPLICATION_NAME, APPLICATION_ID,
-				errorCode + "-->" + errorMessage + "-->" + ExceptionUtils.getStackTrace(throwable));
 	}
 }

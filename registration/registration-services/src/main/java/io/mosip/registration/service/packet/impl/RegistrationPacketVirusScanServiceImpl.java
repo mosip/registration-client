@@ -37,6 +37,8 @@ import io.mosip.registration.service.packet.RegistrationPacketVirusScanService;
 public class RegistrationPacketVirusScanServiceImpl extends BaseService implements RegistrationPacketVirusScanService {
 
 	@Autowired
+	private org.springframework.context.ApplicationContext applicationContext;
+
 	private VirusScanner<Boolean, InputStream> virusScanner;
 
 	private static final Logger LOGGER = AppConfig.getLogger(RegistrationPacketVirusScanServiceImpl.class);
@@ -50,9 +52,11 @@ public class RegistrationPacketVirusScanServiceImpl extends BaseService implemen
 	 */
 	@Override
 	public synchronized ResponseDTO scanPacket() {
+		virusScanner = (VirusScanner<Boolean, InputStream>) applicationContext.getBean(VirusScanner.class);
 
 		LOGGER.info("REGISTRATION - PACKET_SCAN - REGISTRATION_PACKET_VIRUS_SCAN", APPLICATION_NAME, APPLICATION_ID,
 				"Scanning of Virus Packet start");
+
 		ResponseDTO responseDTO = new ResponseDTO();
 		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
 		List<String> pathList = Arrays.asList(
@@ -87,16 +91,11 @@ public class RegistrationPacketVirusScanServiceImpl extends BaseService implemen
 			}
 			responseDTO.setSuccessResponseDTO(successResponseDTO);
 		} catch (VirusScannerException virusScannerException) {
-			LOGGER.error("REGISTRATION - PACKET_SCAN_EXCEPTION", APPLICATION_NAME, APPLICATION_ID,
-					virusScannerException.getMessage());
-			LOGGER.debug("REGISTRATION - PACKET_SCAN_EXCEPTION_DEBUG", APPLICATION_NAME, APPLICATION_ID,
-					virusScannerException.getMessage() + ExceptionUtils.getStackTrace(virusScannerException));
-			
+			LOGGER.error(virusScannerException.getMessage(), virusScannerException);
 			setSuccessResponse(responseDTO, RegistrationConstants.ANTIVIRUS_SERVICE_NOT_ACCESSIBLE, null);
 			
 		} catch (IOException ioException) {
-			LOGGER.error("REGISTRATION - PACKET_SCAN_IOEXCEPTION", APPLICATION_NAME, APPLICATION_ID,
-					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
+			LOGGER.error(ioException.getMessage(), ioException);
 			ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO();
 			errorResponseDTO.setCode("IOException");
 			errorResponseDTO.setMessage("Error in reading the file");

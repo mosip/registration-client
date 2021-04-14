@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import io.mosip.registration.entity.UserPassword;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -143,8 +144,8 @@ public class UserDetailDAOTest {
 		userDetails.add(user);
 		userDetails.add(user1);
 		userDetailsResponse.setUserDetails(userDetails);
-		Mockito.when(userDetailRepository.save(Mockito.any())).thenReturn(new ArrayList<>());
-		Mockito.when(userPwdRepository.save(Mockito.any())).thenReturn(new ArrayList<>());
+		Mockito.when(userDetailRepository.save(Mockito.any())).thenReturn(new UserDetail());
+		Mockito.when(userPwdRepository.save(Mockito.any())).thenReturn(new UserPassword());
 		Mockito.when(userRoleRepository.saveAll(Mockito.anyCollection())).thenReturn(new ArrayList<>());
 		doNothing().when(userRoleRepository).delete(Mockito.anyString());
 		userDetailDAOImpl.save(user);

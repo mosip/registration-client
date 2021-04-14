@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.registration.exception.ConnectionException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,7 +56,7 @@ public class UserMachineMappingServiceTest {
 	private ServiceDelegateUtil serviceDelegateUtil;
 
 	@Test
-	public void syncUserDetailsTest() throws HttpClientErrorException, ResourceAccessException, SocketTimeoutException, RegBaseCheckedException {
+	public void syncUserDetailsTest() throws RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
 		List<UserMachineMapping> list = new ArrayList<>();
@@ -126,7 +127,7 @@ public class UserMachineMappingServiceTest {
 		assertNotNull(userMachineMappingServiceImpl.isUserNewToMachine(RegistrationConstants.JOB_TRIGGER_POINT_USER).getErrorResponseDTOs());
 	}
 	@Test
-	public void syncfailureTest() throws HttpClientErrorException, ResourceAccessException, SocketTimeoutException, RegBaseCheckedException
+	public void syncfailureTest() throws RegBaseCheckedException, ConnectionException
 	
 	{
 		LinkedHashMap<String, Object> responseMap=new LinkedHashMap<>();

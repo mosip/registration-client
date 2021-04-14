@@ -38,19 +38,7 @@ public class PacketHandlerServiceTest {
 		mockedSuccessResponse.setSuccessResponseDTO(new SuccessResponseDTO());
 	}
 
-	/*
-	 * @Test public void testHandle() throws RegBaseCheckedException {
-	 * RegistrationDTO registrationDTO = new RegistrationDTO();
-	 * registrationDTO.setRegistrationId("10010100100002420190805063005");
-	 * 
-	 * Mockito.when(packetCreationService.create(Mockito.any(RegistrationDTO.class))
-	 * ).thenReturn("Packet Creation".getBytes()); Mockito.when(
-	 * packetEncryptionService.encrypt(Mockito.any(RegistrationDTO.class),
-	 * Mockito.anyString().getBytes())) .thenReturn(mockedSuccessResponse);
-	 * 
-	 * Assert.assertNotNull(packetHandlerServiceImpl.handle(registrationDTO).
-	 * getSuccessResponseDTO()); }
-	 */
+
 
 	@Test
 	public void testCreationException() throws RegBaseCheckedException {
@@ -60,22 +48,6 @@ public class PacketHandlerServiceTest {
 		Assert.assertEquals(RegistrationExceptionConstants.REG_PACKET_CREATION_ERROR_CODE.getErrorCode(),
 				actualResponse.getErrorResponseDTOs().get(0).getCode());
 	}
-
-	/*
-	 * @Test public void testHandlerException() throws RegBaseCheckedException {
-	 * RegBaseUncheckedException exception = new
-	 * RegBaseUncheckedException("errorCode", "errorMsg"); RegistrationDTO
-	 * registrationDTO = new RegistrationDTO();
-	 * registrationDTO.setRegistrationId("");
-	 * 
-	 * Mockito.when(packetCreationService.create(Mockito.any(RegistrationDTO.class))
-	 * ) .thenThrow(exception); Mockito.when(
-	 * packetEncryptionService.encrypt(Mockito.any(RegistrationDTO.class),
-	 * Mockito.anyString().getBytes())) .thenReturn(mockedSuccessResponse);
-	 * 
-	 * Assert.assertNotNull(packetHandlerServiceImpl.handle(registrationDTO).
-	 * getErrorResponseDTOs()); }
-	 */
 
 	@Test
 	public void testHandlerChkException() throws RegBaseCheckedException {
@@ -90,24 +62,6 @@ public class PacketHandlerServiceTest {
 				RegistrationExceptionConstants.AUTH_ADVICE_USR_ERROR.getErrorMessage());
 
 		Assert.assertNotNull(packetHandlerServiceImpl.handle(null).getErrorResponseDTOs());
-	}
-
-	private RegistrationDTO getRegistrationDTO() {
-		RegistrationDTO registrationDTO = new RegistrationDTO();
-
-		BiometricsDto biometricsDto = new BiometricsDto("leftIndex", new byte[126], 20);
-
-		List<BiometricsDto> biometricsList = Collections.singletonList(biometricsDto);
-
-		
-		Map<String, BiometricsDto> biometricsMap = new LinkedHashMap<>();
-		biometricsMap.put("applicant", biometricsDto);
-		registrationDTO.setBiometrics(biometricsMap);
-		
-		registrationDTO.setOfficerBiometrics(biometricsList);
-		
-		
-		return registrationDTO;
 	}
 
 }

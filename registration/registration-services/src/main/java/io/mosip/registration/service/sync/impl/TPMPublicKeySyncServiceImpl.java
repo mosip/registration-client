@@ -9,7 +9,9 @@ import java.util.Map;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.dto.ResponseDTO;
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.service.BaseService;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -68,7 +70,7 @@ public class TPMPublicKeySyncServiceImpl  extends BaseService implements TPMPubl
 			tpmKeyUploadRequest.setVersion(RegistrationConstants.VER);
 			tpmKeyUploadRequest.setRequesttime(DateUtils.getUTCCurrentDateTime());
 			PublicKeyUploadRequestDTO publicKeyUploadRequestDTO = new PublicKeyUploadRequestDTO();
-			publicKeyUploadRequestDTO.setMachineName(InetAddress.getLocalHost().getHostName());
+			publicKeyUploadRequestDTO.setMachineName(RegistrationSystemPropertiesChecker.getMachineId());
 			publicKeyUploadRequestDTO.setPublicKey(CryptoUtil.encodeBase64(clientCryptoFacade.getClientSecurity()
 					.getEncryptionPublicPart()));
 			publicKeyUploadRequestDTO.setSignPublicKey(CryptoUtil.encodeBase64(clientCryptoFacade.getClientSecurity()
@@ -98,7 +100,7 @@ public class TPMPublicKeySyncServiceImpl  extends BaseService implements TPMPubl
 				throw new RegBaseCheckedException(RegistrationExceptionConstants.TPM_PUBLIC_KEY_UPLOAD.getErrorCode(),
 						RegistrationExceptionConstants.TPM_PUBLIC_KEY_UPLOAD.getErrorMessage());
 			}
-		} catch (UnknownHostException | SocketTimeoutException | RegBaseCheckedException checkedException) {
+		} catch (ConnectionException | RegBaseCheckedException checkedException) {
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.TPM_PUBLIC_KEY_UPLOAD.getErrorCode(),
 					RegistrationExceptionConstants.TPM_PUBLIC_KEY_UPLOAD.getErrorMessage(), checkedException);
 		} catch (RuntimeException tpmPublicKeySyncRuntimeExp) {

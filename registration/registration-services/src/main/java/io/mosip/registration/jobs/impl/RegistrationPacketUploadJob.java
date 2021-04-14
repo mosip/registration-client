@@ -42,9 +42,6 @@ public class RegistrationPacketUploadJob extends BaseJob {
 
 	@Autowired
 	private PacketUploadService packetUploadService;
-	
-	@Value("${mosip.registration.packet_upload_batch_size:0}")
-	private int count;
 
 	/**
 	 * LOGGER for logging
@@ -73,7 +70,7 @@ public class RegistrationPacketUploadJob extends BaseJob {
 			
 			// Execute Current Job
 			if (responseDTO.getSuccessResponseDTO() != null) {
-				this.responseDTO = packetUploadService.uploadSyncedPackets(count);
+				this.responseDTO = packetUploadService.uploadSyncedPackets();
 			}
 			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
 		} catch (RegBaseUncheckedException baseUncheckedException) {
@@ -102,7 +99,7 @@ public class RegistrationPacketUploadJob extends BaseJob {
 
 		// Execute Current Job
 		if (responseDTO.getSuccessResponseDTO() != null) {
-			this.responseDTO = packetUploadService.uploadSyncedPackets(count);
+			this.responseDTO = packetUploadService.uploadSyncedPackets();
 		}
 		syncTransactionUpdate(responseDTO, triggerPoint, jobId);
 

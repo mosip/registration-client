@@ -109,43 +109,29 @@ public class TemplateServiceTest {
 	
 	@Test
 	public void createReceiptTest() throws RegBaseCheckedException {
+		List<Template> list = new ArrayList<>();
 		Template template = new Template();
 		template.setId("T01");
 		template.setFileText("sample text");
 		template.setLangCode("en");
 		template.setIsActive(true);
 		template.setName("AckTemplate");
-		
-		TemplateServiceImpl temp = new TemplateServiceImpl();
-		TemplateServiceImpl spyTemp = Mockito.spy(temp);
+		list.add(template);
 
-	    //Mockito.doReturn(template).when(spyTemp).getTemplate("ackTemplate", "eng");
-	    String ack = spyTemp.getHtmlTemplate("ackTemplate", "eng");
+	    Mockito.when(templateDao.getAllTemplates("ackTemplate", "eng")).thenReturn(list);
+	    String ack = templateService.getHtmlTemplate("ackTemplate", "eng");
 	    
 		assertNotNull(ack);
 	}
 
 	@SuppressWarnings("unchecked")
-	@Test(expected = RegBaseUncheckedException.class)
-	public void getHtmlTemplateExceptionTest() throws RegBaseCheckedException {
-		TemplateServiceImpl temp = new TemplateServiceImpl();
-		TemplateServiceImpl spyTemp = Mockito.spy(temp);
-
-		//when(spyTemp.getTemplate("ackTemplate", "eng")).thenThrow(RegBaseUncheckedException.class);
-		
-		String ack = spyTemp.getHtmlTemplate("ackTemplate", "eng");
-
-		assertNull(ack);
-	}
-	
 	@Test(expected = RegBaseCheckedException.class)
-	public void getHtmlTemplateNullTest() throws RegBaseCheckedException {
-		TemplateServiceImpl temp = new TemplateServiceImpl();
-		TemplateServiceImpl spyTemp = Mockito.spy(temp);
-
-		spyTemp.getHtmlTemplate("", "eng");
+	public void getHtmlTemplateExceptionTest() throws RegBaseCheckedException {
+		Mockito.when(templateDao.getAllTemplates(Mockito.any(), Mockito.any())).thenReturn(null);
+		templateService.getHtmlTemplate("ackTemplate", "eng");
 	}
 	
+
 	@Test(expected = RegBaseCheckedException.class)
 	public void getHtmlTemplateLangCodeNullTest() throws RegBaseCheckedException {
 		TemplateServiceImpl temp = new TemplateServiceImpl();

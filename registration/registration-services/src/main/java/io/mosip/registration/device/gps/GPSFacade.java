@@ -78,6 +78,8 @@ public class GPSFacade extends GPSBU343Connector {
 			LOGGER.info(RegistrationConstants.GPS_LOGGER, APPLICATION_NAME, APPLICATION_ID,
 					"GPS SIGNAL ============>" + gpsRawData);
 
+			gpsRawData = gpsRawData != null ? gpsRawData : RegistrationConstants.GPS_CAPTURE_FAILURE;
+
 			if (RegistrationConstants.GPS_CAPTURE_FAILURE.equals(gpsRawData)
 					|| RegistrationConstants.GPS_DEVICE_CONNECTION_FAILURE.equals(gpsRawData)
 					|| RegistrationConstants.GPS_CAPTURE_PORT_FAILURE_MSG.equals(gpsRawData)) {
@@ -161,8 +163,8 @@ public class GPSFacade extends GPSBU343Connector {
 	 *
 	 * @param fromlat from latitude
 	 * @param fromlng from longitude
-	 * @param tolat   to latitude
-	 * @param tolng   to longitude
+	 * @param centerLat   to latitude
+	 * @param centerLngt   to longitude
 	 * @return the distance between given latitudes and longitudes
 	 */
 	private double actualDistance(double fromlat, double fromlng, double centerLat, double centerLngt) {

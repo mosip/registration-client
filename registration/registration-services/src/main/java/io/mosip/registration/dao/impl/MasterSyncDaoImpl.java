@@ -10,6 +10,7 @@ import javax.transaction.Transactional;
 
 import io.mosip.registration.entity.*;
 import io.mosip.registration.repositories.*;
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -305,9 +306,8 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 		try {
 			syncStatusMessage = clientSettingSyncHelper.saveClientSettings(syncDataResponseDto);
 			return syncStatusMessage;
-		} catch (Exception runtimeException) {
-			LOGGER.error(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID,
-					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
+		} catch (Throwable runtimeException) {
+			LOGGER.error(runtimeException.getMessage(), runtimeException);
 			syncStatusMessage = runtimeException.getMessage();
 		}
 		throw new RegBaseUncheckedException(RegistrationConstants.MASTER_SYNC_EXCEPTION, syncStatusMessage);

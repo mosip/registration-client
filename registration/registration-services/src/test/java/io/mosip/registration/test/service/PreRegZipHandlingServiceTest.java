@@ -6,6 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.security.*;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -18,6 +19,9 @@ import java.util.zip.ZipOutputStream;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import io.mosip.kernel.core.crypto.spi.CryptoCoreSpec;
+import io.mosip.kernel.keygenerator.bouncycastle.util.KeyGeneratorUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -55,20 +59,20 @@ import io.mosip.registration.service.external.impl.PreRegZipHandlingServiceImpl;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@PrepareForTest({ FileUtils.class, SessionContext.class })
+@PrepareForTest({ FileUtils.class, SessionContext.class, KeyGeneratorUtils.class, javax.crypto.KeyGenerator.class })
 public class PreRegZipHandlingServiceTest {
 
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
 
 	@Mock
-	private KeyGenerator keyGenerator;
-
-	@Mock
 	private DocumentTypeDAO documentTypeDAO;
 
 	@InjectMocks
 	private PreRegZipHandlingServiceImpl preRegZipHandlingServiceImpl;
+
+	@Mock
+	private KeyGenerator keyGenerator;
 
 	static byte[] preRegPacket;
 
@@ -78,6 +82,9 @@ public class PreRegZipHandlingServiceTest {
 	
 	@Mock
 	private IdentitySchemaService identitySchemaService;
+
+	@Mock
+	private CryptoCoreSpec<byte[], byte[], SecretKey, PublicKey, PrivateKey, String> cryptoCore;
 	
 	List<UiSchemaDTO> schemaFields = new ArrayList<UiSchemaDTO>();
 
@@ -152,7 +159,6 @@ public class PreRegZipHandlingServiceTest {
 
 	@Test
 	public void encryptAndSavePreRegPacketTest() throws RegBaseCheckedException, IOException {
-
 		PreRegistrationDTO preRegistrationDTO = encryptPacket();
 		assertNotNull(preRegistrationDTO);
 	}
@@ -220,8 +226,10 @@ public class PreRegZipHandlingServiceTest {
 
 	private void mockSecretKey() {
 		byte[] decodedKey = Base64.getDecoder().decode("0E8BAAEB3CED73CBC9BF4964F321824A");
-		SecretKey originalKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
-		Mockito.when(keyGenerator.getSymmetricKey()).thenReturn(originalKey);
+		SecretKey secretKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+		Mockito.when(keyGenerator.getSymmetricKey()).thenReturn(secretKey);
+		Mockito.when(cryptoCore.symmetricEncrypt(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(new byte[0]);
+		Mockito.when(cryptoCore.symmetricDecrypt(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(new byte[0]);
 	}
 
 	private static void createRegistrationDTOObject() {

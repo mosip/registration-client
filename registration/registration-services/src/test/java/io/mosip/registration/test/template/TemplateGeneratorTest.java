@@ -6,17 +6,16 @@ import static org.mockito.Mockito.when;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 
 import javax.imageio.ImageIO;
 
+import com.amazonaws.services.opsworks.model.App;
+import io.mosip.registration.dao.IdentitySchemaDao;
+import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.service.BaseService;
+import io.mosip.registration.service.IdentitySchemaService;
+import io.mosip.registration.service.impl.IdentitySchemaServiceImpl;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -60,10 +59,13 @@ public class TemplateGeneratorTest {
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
 
 	@Mock
-	ApplicationContext applicationContext;
-	
-	@Mock
 	QrCodeGenerator<QrVersion> qrCodeGenerator;
+
+	@Mock
+	private IdentitySchemaServiceImpl identitySchemaServiceImpl;
+
+	@Mock
+	private ApplicationContext applicationContext;
 	
 	Map<String,Object> appMap = new HashMap<>();
 	
@@ -85,9 +87,9 @@ public class TemplateGeneratorTest {
 		appMap.put(RegistrationConstants.FACE_DISABLE_FLAG, "Y");
 		appMap.put(RegistrationConstants.PRIMARY_LANGUAGE, "ara");
 		appMap.put(RegistrationConstants.SECONDARY_LANGUAGE, "fra");
-		ApplicationContext.getInstance().setApplicationMap(appMap);
+		//applicationContext.setApplicationMap(appMap);
 		templateGenerator.setGuidelines("My GuideLines");
-		ApplicationContext.getInstance().loadResourceBundle();
+	//	applicationContext.loadResourceBundle();
 		when(qrCodeGenerator.generateQrCode(Mockito.anyString(), Mockito.any())).thenReturn(new byte[1024]);
 		BufferedImage image = null;
 		PowerMockito.mockStatic(ImageIO.class);
@@ -100,20 +102,30 @@ public class TemplateGeneratorTest {
 		when(ImageIO.read(
 				templateGenerator.getClass().getResourceAsStream(RegistrationConstants.TEMPLATE_RIGHT_SLAP_IMAGE_PATH)))
 						.thenReturn(image);
-		when(ImageIO.read(
+		/*when(ImageIO.read(
 				templateGenerator.getClass().getResourceAsStream(RegistrationConstants.TEMPLATE_THUMBS_IMAGE_PATH)))
 						.thenReturn(image);
-		
+		*/
 		UserContext userContext = Mockito.mock(SessionContext.UserContext.class);
 		PowerMockito.mockStatic(SessionContext.class);
 		PowerMockito.doReturn(userContext).when(SessionContext.class, "userContext");
 		RegistrationCenterDetailDTO centerDetailDTO = new RegistrationCenterDetailDTO();
 		centerDetailDTO.setRegistrationCenterId("mosip");
-		PowerMockito.when(SessionContext.userContext().getRegistrationCenterDetailDTO()).thenReturn(centerDetailDTO);
-		
+		PowerMockito.when(userContext.getRegistrationCenterDetailDTO()).thenReturn(centerDetailDTO);
+
 		Map<String,Object> map = new LinkedHashMap<>();
 		map.put(RegistrationConstants.IS_Child, false);
+		map.put(RegistrationConstants.REGISTRATION_DATA, registrationDTO);
 		PowerMockito.when(SessionContext.map()).thenReturn(map);
+
+		PowerMockito.mockStatic(ApplicationContext.class);
+		ApplicationContext.setApplicationMap(appMap);
+		PowerMockito.doReturn(appMap).when(ApplicationContext.class, "map");
+		PowerMockito.doReturn(applicationContext).when(ApplicationContext.class, "getInstance");
+		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
+		Mockito.when(applicationContext.getBundle(Mockito.anyString(), Mockito.anyString())).thenReturn(dummyResourceBundle);
+
+		Mockito.when(identitySchemaServiceImpl.getUISchema(Mockito.anyDouble())).thenReturn(Collections.EMPTY_LIST);
 	}
 	
 	ResourceBundle dummyResourceBundle = new ResourceBundle() {
@@ -129,59 +141,16 @@ public class TemplateGeneratorTest {
 	};
 
 	@Test
-	@Ignore
-	public void generateAckTemplateTest() throws IOException, URISyntaxException , RegBaseCheckedException{
-		PowerMockito.mockStatic(ApplicationContext.class);
-		SessionContext.map().put(RegistrationConstants.IS_Child, false);
-
-		when(ApplicationContext.applicationLanguage()).thenReturn("eng");
-		when(applicationContext.getBundle(Mockito.anyString(), Mockito.anyString())).thenReturn(dummyResourceBundle);
-		when(ApplicationContext.map()).thenReturn(appMap);
-	
-		ResponseDTO response = templateGenerator.generateTemplate("sample text", registrationDTO, template, RegistrationConstants.ACKNOWLEDGEMENT_TEMPLATE);
+	public void generateTemplateWithEmptyFieldsTest() throws RegBaseCheckedException {
+		ResponseDTO response = templateGenerator.generateTemplate("sample text", registrationDTO, template,
+				RegistrationConstants.ACKNOWLEDGEMENT_TEMPLATE);
 		assertNotNull(response.getSuccessResponseDTO());
 	}
 	
 	@Test
-	@Ignore
-	public void generatePreviewTemplateTest() throws IOException, URISyntaxException, RegBaseCheckedException {
-		PowerMockito.mockStatic(ApplicationContext.class);
-		SessionContext.map().put(RegistrationConstants.IS_Child, false);
-		
-		when(ApplicationContext.applicationLanguage()).thenReturn("eng");
-		when(applicationContext.getBundle(Mockito.anyString(), Mockito.anyString())).thenReturn(dummyResourceBundle);
-		when(ApplicationContext.map()).thenReturn(appMap);
-		
+	public void generateTemplateWithDemographicFieldsTest() throws  RegBaseCheckedException {
+		Mockito.when(identitySchemaServiceImpl.getUISchema(Mockito.anyDouble())).thenReturn(DataProvider.getFields());
 		ResponseDTO response = templateGenerator.generateTemplate("sample text", registrationDTO, template, RegistrationConstants.TEMPLATE_PREVIEW);
 		assertNotNull(response.getSuccessResponseDTO());
 	}
-	
-	@Test
-	@Ignore
-	public void generateAckTemplateChildTest() throws IOException, URISyntaxException, RegBaseCheckedException {
-		PowerMockito.mockStatic(ApplicationContext.class);
-		SessionContext.map().put(RegistrationConstants.IS_Child, true);
-
-		when(ApplicationContext.applicationLanguage()).thenReturn("eng");
-		when(applicationContext.getBundle(Mockito.anyString(), Mockito.anyString())).thenReturn(dummyResourceBundle);
-		when(ApplicationContext.map()).thenReturn(appMap);
-		
-		ResponseDTO response = templateGenerator.generateTemplate("sample text", registrationDTO, template, RegistrationConstants.ACKNOWLEDGEMENT_TEMPLATE);
-		assertNotNull(response.getSuccessResponseDTO());
-	}
-	
-	@Test
-	@Ignore
-	public void generatePreviewTemplateChildTest() throws IOException, URISyntaxException, RegBaseCheckedException {
-		PowerMockito.mockStatic(ApplicationContext.class);
-		SessionContext.map().put(RegistrationConstants.IS_Child, true);
-		
-		when(ApplicationContext.applicationLanguage()).thenReturn("eng");
-		when(applicationContext.getBundle(Mockito.anyString(), Mockito.anyString())).thenReturn(dummyResourceBundle);
-		when(ApplicationContext.map()).thenReturn(appMap);
-		
-		ResponseDTO response = templateGenerator.generateTemplate("sample text", registrationDTO, template, RegistrationConstants.TEMPLATE_PREVIEW);
-		assertNotNull(response.getSuccessResponseDTO());
-	}
-
 }

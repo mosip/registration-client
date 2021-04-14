@@ -20,6 +20,7 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.repositories.*;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
+import lombok.NonNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -255,7 +256,7 @@ public class ClientSettingSyncHelper {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public String saveClientSettings(SyncDataResponseDto syncDataResponseDto) throws RegBaseUncheckedException {
+	public String saveClientSettings(@NonNull SyncDataResponseDto syncDataResponseDto) throws RegBaseUncheckedException {
 		long start = System.currentTimeMillis();
 		try {
 			List<CompletableFuture> futures = new ArrayList<CompletableFuture>();
@@ -285,9 +286,8 @@ public class ClientSettingSyncHelper {
 			return RegistrationConstants.SUCCESS;
 		} catch (Throwable e) {
 			LOGGER.error("saveClientSettings failed", e);
-			throw new RegBaseUncheckedException(RegistrationConstants.MASTER_SYNC_EXCEPTION + RegistrationConstants.FAILURE,
-					e.getMessage());
 		}
+		throw new RegBaseUncheckedException(RegistrationConstants.MASTER_SYNC_EXCEPTION, RegistrationConstants.FAILURE);
 	}
 	
 	/**

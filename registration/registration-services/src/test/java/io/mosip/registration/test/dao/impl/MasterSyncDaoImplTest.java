@@ -5,12 +5,17 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
+import io.mosip.registration.dao.IdentitySchemaDao;
+import io.mosip.registration.repositories.*;
+import io.mosip.registration.test.util.RegistrationHealthCheckerTest;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -25,6 +30,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,50 +56,6 @@ import io.mosip.registration.entity.id.IndividualTypeId;
 import io.mosip.registration.entity.id.ValidDocumentID;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
-import io.mosip.registration.repositories.AppAuthenticationRepository;
-import io.mosip.registration.repositories.AppDetailRepository;
-import io.mosip.registration.repositories.AppRolePriorityRepository;
-import io.mosip.registration.repositories.ApplicantValidDocumentRepository;
-import io.mosip.registration.repositories.BiometricAttributeRepository;
-import io.mosip.registration.repositories.BiometricTypeRepository;
-import io.mosip.registration.repositories.BlacklistedWordsRepository;
-import io.mosip.registration.repositories.CenterMachineRepository;
-import io.mosip.registration.repositories.DeviceMasterRepository;
-import io.mosip.registration.repositories.DeviceProviderRepository;
-import io.mosip.registration.repositories.DeviceSpecificationRepository;
-import io.mosip.registration.repositories.DeviceTypeRepository;
-import io.mosip.registration.repositories.DocumentCategoryRepository;
-import io.mosip.registration.repositories.DocumentTypeRepository;
-import io.mosip.registration.repositories.FoundationalTrustProviderRepository;
-import io.mosip.registration.repositories.GenderRepository;
-import io.mosip.registration.repositories.IdTypeRepository;
-import io.mosip.registration.repositories.IndividualTypeRepository;
-import io.mosip.registration.repositories.LanguageRepository;
-import io.mosip.registration.repositories.LocationRepository;
-import io.mosip.registration.repositories.MachineMasterRepository;
-import io.mosip.registration.repositories.MachineSpecificationRepository;
-import io.mosip.registration.repositories.MachineTypeRepository;
-import io.mosip.registration.repositories.MosipDeviceServiceRepository;
-import io.mosip.registration.repositories.ProcessListRepository;
-import io.mosip.registration.repositories.ReasonCategoryRepository;
-import io.mosip.registration.repositories.ReasonListRepository;
-import io.mosip.registration.repositories.RegisteredDeviceTypeRepository;
-import io.mosip.registration.repositories.RegisteredSubDeviceTypeRepository;
-import io.mosip.registration.repositories.RegistrationCenterDeviceRepository;
-import io.mosip.registration.repositories.RegistrationCenterMachineDeviceRepository;
-import io.mosip.registration.repositories.RegistrationCenterRepository;
-import io.mosip.registration.repositories.RegistrationCenterTypeRepository;
-import io.mosip.registration.repositories.RegistrationCenterUserRepository;
-import io.mosip.registration.repositories.ScreenAuthorizationRepository;
-import io.mosip.registration.repositories.ScreenDetailRepository;
-import io.mosip.registration.repositories.SyncJobControlRepository;
-import io.mosip.registration.repositories.SyncJobDefRepository;
-import io.mosip.registration.repositories.TemplateFileFormatRepository;
-import io.mosip.registration.repositories.TemplateRepository;
-import io.mosip.registration.repositories.TemplateTypeRepository;
-import io.mosip.registration.repositories.TitleRepository;
-import io.mosip.registration.repositories.UserMachineMappingRepository;
-import io.mosip.registration.repositories.ValidDocumentRepository;
 import io.mosip.registration.service.sync.impl.MasterSyncServiceImpl;
 import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import io.mosip.registration.util.mastersync.MapperUtils;
@@ -107,7 +69,8 @@ import io.mosip.registration.util.mastersync.MetaDataUtils;
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
 @SpringBootTest
-@PrepareForTest({ MetaDataUtils.class, RegBaseUncheckedException.class, SessionContext.class, BiometricAttributeRepository.class })
+@PrepareForTest({ MetaDataUtils.class, RegBaseUncheckedException.class, SessionContext.class,
+		BiometricAttributeRepository.class, RegistrationAppHealthCheckUtil.class })
 public class MasterSyncDaoImplTest {
 
 	// private MapperFacade mapperFacade = CustomObjectMapper.MAPPER_FACADE;
@@ -115,145 +78,79 @@ public class MasterSyncDaoImplTest {
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
 
+	/** Object for Sync Status Repository. */
 	@Mock
 	private SyncJobControlRepository syncStatusRepository;
+
+	/** Object for Sync Biometric Attribute Repository. */
 	@Mock
 	private BiometricAttributeRepository biometricAttributeRepository;
+
+	/** Object for Sync Blacklisted Words Repository. */
 	@Mock
-	private BiometricTypeRepository masterSyncBiometricTypeRepository;
+	private BlacklistedWordsRepository blacklistedWordsRepository;
+
+	/** Object for Sync Document Category Repository. */
 	@Mock
-	private BlacklistedWordsRepository masterSyncBlacklistedWordsRepository;
+	private DocumentCategoryRepository documentCategoryRepository;
+
+	/** Object for Sync Document Type Repository. */
 	@Mock
-	private DeviceMasterRepository masterSyncDeviceRepository;
+	private DocumentTypeRepository documentTypeRepository;
+
+	/** Object for Sync Gender Type Repository. */
 	@Mock
-	private DeviceSpecificationRepository masterSyncDeviceSpecificationRepository;
+	private GenderRepository genderRepository;
+
+	/** Object for Sync Location Repository. */
 	@Mock
-	private DeviceTypeRepository masterSyncDeviceTypeRepository;
-	@Mock
-	private DocumentCategoryRepository masterSyncDocumentCategoryRepository;
-	@Mock
-	private DocumentTypeRepository masterSyncDocumentTypeRepository;
-	@Mock
-	private GenderRepository masterSyncGenderTypeRepository;
-	@Mock
-	private IdTypeRepository masterSyncIdTypeRepository;
-	@Mock
-	private LanguageRepository masterSyncLanguageRepository;
-	@Mock
-	private LocationRepository masterSyncLocationRepository;
-	@Mock
-	private MachineMasterRepository masterSyncMachineRepository;
-	@Mock
-	private MachineSpecificationRepository masterSyncMachineSpecificationRepository;
-	@Mock
-	private MachineTypeRepository masterSyncMachineTypeRepository;
+	private LocationRepository locationRepository;
+
+	/** Object for Sync Reason Category Repository. */
 	@Mock
 	private ReasonCategoryRepository reasonCategoryRepository;
+
+	/** Object for Sync Reason List Repository. */
 	@Mock
-	private ReasonListRepository masterSyncReasonListRepository;
-	@Mock
-	private RegistrationCenterRepository masterSyncRegistrationCenterRepository;
-	@Mock
-	private RegistrationCenterTypeRepository masterSyncRegistrationCenterTypeRepository;
-	@Mock
-	private TemplateFileFormatRepository masterSyncTemplateFileFormatRepository;
-	@Mock
-	private TemplateRepository masterSyncTemplateRepository;
-	@Mock
-	private TemplateTypeRepository masterSyncTemplateTypeRepository;
-	@Mock
-	private TitleRepository masterSyncTitleRepository;
-	@Mock
-	private ApplicantValidDocumentRepository masterSyncValidDocumentRepository;
+	private ReasonListRepository reasonListRepository;
+
+	/** Object for Sync Valid Document Repository. */
 	@Mock
 	private ValidDocumentRepository validDocumentRepository;
+
+	/** Object for Sync language Repository. */
+	@Mock
+	private LanguageRepository languageRepository;
+
+	/** Object for Sync Individual type Repository. */
 	@Mock
 	private IndividualTypeRepository individualTypeRepository;
-	@Mock
-	private AppAuthenticationRepository appAuthenticationRepository;
 
-	@Mock
-	private AppRolePriorityRepository appRolePriorityRepository;
-
-	@Mock
-	private AppDetailRepository appDetailRepository;
-
-	@Mock
-	private ScreenAuthorizationRepository screenAuthorizationRepository;
-
-	@Mock
-	private ProcessListRepository processListRepository;
-
-	/** Object for Sync language Repository. */
-	@Mock
-	private RegistrationCenterDeviceRepository registrationCenterDeviceRepository;
-
-	/** Object for Sync language Repository. */
-	@Mock
-	private RegistrationCenterMachineDeviceRepository registrationCenterMachineDeviceRepository;
-
-	/** Object for Sync language Repository. */
-	@Mock
-	private UserMachineMappingRepository userMachineMappingRepository;
-
-	/** Object for Sync language Repository. */
-	@Mock
-	private RegistrationCenterUserRepository registrationCenterUserRepository;
-
-	/** Object for Sync language Repository. */
-	@Mock
-	private CenterMachineRepository centerMachineRepository;
-
-	/** Object for Sync language Repository. */
-	@Mock
-	private RegistrationCenterRepository registrationCenterRepository;
-
-	/** Object for Sync language Repository. */
-	@Mock
-	private RegistrationCenterTypeRepository registrationCenterTypeRepository;
-	
-	/** Object for screen detail Repository. */
-	@Mock
-	private ScreenDetailRepository screenDetailRepository;
-	
 	/** Object for Sync screen auth Repository. */
 	@Mock
 	private SyncJobDefRepository syncJobDefRepository;
 
-	
 	@Mock
-	private RegisteredDeviceTypeRepository registeredDeviceTypeRepository;
-	
-	@Mock
-	private RegisteredSubDeviceTypeRepository registeredSubDeviceTypeRepository;
-	
-	@Mock
-	private MosipDeviceServiceRepository mosipDeviceServiceRepository;
-	
-	@Mock
-	private FoundationalTrustProviderRepository foundationalTrustProviderRepository;
-	
-	@Mock
-	private DeviceProviderRepository deviceProviderRepository;
-
+	private ClientSettingSyncHelper clientSettingSyncHelper;
 
 	@Mock
-	private MasterSyncDao masterSyncDao;
+	private LocationHierarchyRepository locationHierarchyRepository;
+
+	/*@Mock
+	private MasterSyncDao masterSyncDao;*/
 	
-	@Mock
+	/*@Mock
 	private MetaDataUtils metaDataUtils;
 	
 	@Mock
 	private MapperUtils mapperUtils;
 	
 	@InjectMocks
-	private MasterSyncServiceImpl masterSyncServiceImpl;
-	
-	@Mock
-	private ClientSettingSyncHelper clientSettingSyncHelper;
+	private MasterSyncServiceImpl masterSyncServiceImpl;*/
 	
 	@InjectMocks
 	private MasterSyncDaoImpl masterSyncDaoImpl;
+
 	
 	@Before
 	public void initialize() throws Exception {
@@ -261,6 +158,15 @@ public class MasterSyncDaoImplTest {
 		PowerMockito.mockStatic(SessionContext.class);
 		PowerMockito.doReturn(userContext).when(SessionContext.class, "userContext");
 		PowerMockito.when(SessionContext.userContext().getUserId()).thenReturn("mosip");
+		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
+		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		//Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
+		//Mockito.when(clientCryptoService.asymmetricDecrypt(Mockito.any())).thenReturn("[]".getBytes(StandardCharsets.UTF_8));
+
+		/*Map<String, Object> response = new HashMap<>();
+		response.put("response", null);
+		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.any(),
+				Mockito.anyString())).thenReturn(response);*/
 	}
 
 	@BeforeClass
@@ -318,7 +224,7 @@ public class MasterSyncDaoImplTest {
 		locattion.setParentLocCode("english");
 		locations.add(locattion);
 
-		Mockito.when(masterSyncLocationRepository.findByIsActiveTrueAndHierarchyNameAndLangCode(Mockito.anyString(),
+		Mockito.when(locationRepository.findByIsActiveTrueAndHierarchyNameAndLangCode(Mockito.anyString(),
 				Mockito.anyString())).thenReturn(locations);
 
 		masterSyncDaoImpl.findLocationByLangCode(1, "ENG");
@@ -339,7 +245,7 @@ public class MasterSyncDaoImplTest {
 		locattion.setParentLocCode("english");
 		locations.add(locattion);
 
-		Mockito.when(masterSyncLocationRepository.findByIsActiveTrueAndHierarchyNameAndLangCode(Mockito.anyString(),
+		Mockito.when(locationRepository.findByIsActiveTrueAndHierarchyNameAndLangCode(Mockito.anyString(),
 				Mockito.anyString())).thenReturn(locations);
 
 		masterSyncDaoImpl.findLocationByParentLocCode("TPT", "eng");
@@ -375,7 +281,7 @@ public class MasterSyncDaoImplTest {
 		reasons.setLangCode("FRE");
 		allReason.add(reasons);
 
-		Mockito.when(masterSyncReasonListRepository
+		Mockito.when(reasonListRepository
 				.findByIsActiveTrueAndLangCodeAndReasonCategoryCodeIn(Mockito.anyString(), Mockito.anyList()))
 				.thenReturn(allReason);
 
@@ -396,7 +302,7 @@ public class MasterSyncDaoImplTest {
 		allBlackWords.add(blackWord);
 
 		Mockito.when(
-				masterSyncBlacklistedWordsRepository.findBlackListedWordsByIsActiveTrueAndLangCode(Mockito.anyString()))
+				blacklistedWordsRepository.findBlackListedWordsByIsActiveTrueAndLangCode(Mockito.anyString()))
 				.thenReturn(allBlackWords);
 
 		masterSyncDaoImpl.getBlackListedWords("ENG");
@@ -417,7 +323,7 @@ public class MasterSyncDaoImplTest {
 		List<String> validDocuments = new ArrayList<>();
 		validDocuments.add("MNA");
 		validDocuments.add("CLR");
-		Mockito.when(masterSyncDao.getDocumentTypes(Mockito.anyList(), Mockito.anyString())).thenReturn(documents);
+		Mockito.when(masterSyncDaoImpl.getDocumentTypes(Mockito.anyList(), Mockito.anyString())).thenReturn(documents);
 
 		masterSyncDaoImpl.getDocumentTypes(validDocuments, "test");
 
@@ -436,7 +342,7 @@ public class MasterSyncDaoImplTest {
 		gender.setIsActive(true);
 		genderList.add(gender);
 
-		Mockito.when(masterSyncDao.getGenderDtls(Mockito.anyString())).thenReturn(genderList);
+		Mockito.when(masterSyncDaoImpl.getGenderDtls(Mockito.anyString())).thenReturn(genderList);
 
 		masterSyncDaoImpl.getGenderDtls("ENG");
 
@@ -455,7 +361,7 @@ public class MasterSyncDaoImplTest {
 		docs.setLangCode("eng");
 		docList.add(docs);
 
-		Mockito.when(masterSyncDao.getValidDocumets(Mockito.anyString())).thenReturn(docList);
+		Mockito.when(masterSyncDaoImpl.getValidDocumets(Mockito.anyString())).thenReturn(docList);
 
 		masterSyncDaoImpl.getValidDocumets("POA");
 
@@ -476,7 +382,7 @@ public class MasterSyncDaoImplTest {
 		individualTypeEntity.setIsActive(true);
 		masterIndividualType.add(individualTypeEntity);
 
-		Mockito.when(masterSyncDao.getIndividulType(Mockito.anyString(), Mockito.anyString()))
+		Mockito.when(masterSyncDaoImpl.getIndividulType(Mockito.anyString(), Mockito.anyString()))
 				.thenReturn(masterIndividualType);
 
 		masterSyncDaoImpl.getIndividulType("NFR", "eng");
@@ -501,8 +407,7 @@ public class MasterSyncDaoImplTest {
 		assertNotNull(masterSyncDaoImpl.getBiometricType("eng", biometricType));
 		
 	}
-	
-	@SuppressWarnings("unchecked")
+
 	@Test()
 	public void testSingleEntity() {
 		String response=null;
@@ -516,7 +421,6 @@ public class MasterSyncDaoImplTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testClientSettingsSyncForJson() {
-		
 		String response=null;
 		SyncDataResponseDto syncDataResponseDto = getSyncDataResponseDto("responseJson.json");
 		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class)))
@@ -525,13 +429,10 @@ public class MasterSyncDaoImplTest {
 		assertEquals(RegistrationConstants.SUCCESS, response);
 	}
 		
-	@SuppressWarnings("unchecked")
+
 	@Test
-	public void testInvalidJsonSyntaxJsonSyntaxException() {		
-		SyncDataResponseDto syncDataResponseDto = getSyncDataResponseDto("invalidJson.json");
-		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class)))
-		.thenThrow(Exception.class);
-		masterSyncDaoImpl.saveSyncData(syncDataResponseDto);		
+	public void testInvalidJsonSyntaxJsonSyntaxException() {
+		masterSyncDaoImpl.saveSyncData(null);
 	}
 
 	@SuppressWarnings("unchecked")

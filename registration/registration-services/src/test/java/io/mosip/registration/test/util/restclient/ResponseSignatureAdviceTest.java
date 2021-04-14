@@ -12,6 +12,13 @@ import java.util.Map;
 
 import javax.crypto.SecretKey;
 
+import io.mosip.commons.packet.constants.CryptomanagerConstant;
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
+import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import io.mosip.kernel.signature.dto.ValidatorResponseDto;
+import io.mosip.kernel.signature.service.SignatureService;
+import io.mosip.registration.service.sync.impl.PublicKeySyncImpl;
 import org.aspectj.lang.JoinPoint;
 import org.junit.Before;
 import org.junit.Rule;
@@ -26,7 +33,10 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
 import io.mosip.kernel.core.crypto.spi.CryptoCoreSpec;
@@ -53,31 +63,29 @@ public class ResponseSignatureAdviceTest {
 	@Mock
 	RestTemplate restTemplate;
 
-	@Mock       
-	private CryptoCoreSpec<byte[], byte[], SecretKey, PublicKey, PrivateKey, String> cryptoCore;
-
 	@Mock
-	KeyGenerator keyGenerator;
-
-	@Mock
-	SignatureUtil signatureUtil;
+	SignatureService signatureService;
 
 	@Mock
 	private JoinPoint joinPointMock;
 
 	@Mock
-	private Object result;
+	private ClientCryptoService clientCryptoService;
 
 	@Mock
-	private Logger LOGGER;
+	private ClientCryptoFacade clientCryptoFacade;
+
+	@Mock
+	private KeymanagerService keymanagerService;
+
+	@Mock
+	private PublicKeySyncImpl publicKeySync;
 
 	@Before
 	public void init() throws Exception {
-		Map<String, Object> appMap = new HashMap<>();
-		appMap.put(RegistrationConstants.ASYMMETRIC_ALG_NAME, "RSA");
-
-		PowerMockito.mockStatic(ApplicationContext.class);
-		PowerMockito.doReturn(appMap).when(ApplicationContext.class, "map");
+		PowerMockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
+		ReflectionTestUtils.setField(responseSignatureAdvice, "DATETIME_PATTERN", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+		ReflectionTestUtils.setField(responseSignatureAdvice, "signRefId", "SIGN");
 	}
 
 	@Test
@@ -109,14 +117,11 @@ public class ResponseSignatureAdviceTest {
 		Map<String, Object> linkedMap = new LinkedHashMap<>();
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_BODY, linkedMapResponse);
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_HEADERS, header);
-		
-		Mockito.when(signatureUtil.validateWithPublicKey(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
-				.thenReturn(true);
-		Mockito.when(cryptoCore.asymmetricDecrypt(Mockito.any(), Mockito.any()))
-				.thenReturn("rqN-Es-XfO9Ksl7mBJ0jjlWzkhMV1BPk4ShfOOq7QDQ".getBytes());
 
+		ValidatorResponseDto validatorResponseDto = new ValidatorResponseDto();
+		validatorResponseDto.setStatus(CryptomanagerConstant.SIGNATURES_SUCCESS);
+		Mockito.when(signatureService.validate(Mockito.any())).thenReturn(validatorResponseDto);
 		responseSignatureAdvice.responseSignatureValidation(joinPointMock, linkedMap);
-
 	}
 
 	@Test
@@ -149,11 +154,10 @@ public class ResponseSignatureAdviceTest {
 		Map<String, Object> linkedMap = new LinkedHashMap<>();
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_BODY, linkedMapResponse);
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_HEADERS, header);
-		
-		Mockito.when(signatureUtil.validateWithPublicKey(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
-				.thenReturn(false);
-		Mockito.when(cryptoCore.asymmetricDecrypt(Mockito.any(), Mockito.any()))
-				.thenReturn("rqN-Es-XfO9Ksl7mBJ0jjlWzkhMV1BPk4ShfOOq7QDQ".getBytes());
+
+		ValidatorResponseDto validatorResponseDto = new ValidatorResponseDto();
+		validatorResponseDto.setStatus("FAILED");
+		Mockito.when(signatureService.validate(Mockito.any())).thenReturn(validatorResponseDto);
 
 		responseSignatureAdvice.responseSignatureValidation(joinPointMock, linkedMap);
 
@@ -189,10 +193,9 @@ public class ResponseSignatureAdviceTest {
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_BODY, linkedMapResponse);
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_HEADERS, header);
 
-		Mockito.when(signatureUtil.validateWithPublicKey(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
-				.thenReturn(true);
-		Mockito.when(cryptoCore.asymmetricDecrypt(Mockito.any(), Mockito.any()))
-				.thenReturn("qN-Es-XfO9Ksl7mBJ0jjlWzkhMV1BPk4ShfOOq7QDQ".getBytes());
+		ValidatorResponseDto validatorResponseDto = new ValidatorResponseDto();
+		validatorResponseDto.setStatus("FAILED");
+		Mockito.when(signatureService.validate(Mockito.any())).thenReturn(validatorResponseDto);
 
 		responseSignatureAdvice.responseSignatureValidation(joinPointMock, linkedMap);
 
@@ -229,10 +232,9 @@ public class ResponseSignatureAdviceTest {
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_BODY, linkedMapResponse);
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_HEADERS, header);
 
-		Mockito.when(signatureUtil.validateWithPublicKey(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
-				.thenReturn(true);
-		Mockito.when(cryptoCore.asymmetricDecrypt(Mockito.any(), Mockito.any()))
-				.thenReturn("qN-Es-XfO9Ksl7mBJ0jjlWzkhMV1BPk4ShfOOq7QDQ".getBytes());
+		ValidatorResponseDto validatorResponseDto = new ValidatorResponseDto();
+		validatorResponseDto.setStatus(CryptomanagerConstant.SIGNATURES_SUCCESS);
+		Mockito.when(signatureService.validate(Mockito.any())).thenReturn(validatorResponseDto);
 
 		responseSignatureAdvice.responseSignatureValidation(joinPointMock, linkedMap);
 
@@ -267,9 +269,6 @@ public class ResponseSignatureAdviceTest {
 		Map<String, Object> linkedMap = new LinkedHashMap<>();
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_BODY, linkedMapResponse);
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_HEADERS, linkedMapHeader);
-		
-		Mockito.when(cryptoCore.asymmetricDecrypt(Mockito.any(), Mockito.any()))
-				.thenReturn("qN-Es-XfO9Ksl7mBJ0jjlWzkhMV1BPk4ShfOOq7QDQ".getBytes());
 
 		responseSignatureAdvice.responseSignatureValidation(joinPointMock, linkedMap);
 

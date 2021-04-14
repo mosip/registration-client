@@ -134,10 +134,11 @@ public class NotificationServiceImpl implements NotificationService {
 
 	/**
 	 * To send notification
-	 * 
 	 * @param regId
 	 * @param responseDTO
-	 * @param smsdto
+	 * @param object
+	 * @param service
+	 * @param expectedStatus
 	 */
 	@SuppressWarnings("unchecked")
 	private void sendNotification(String regId, ResponseDTO responseDTO, Object object, String service,
@@ -176,8 +177,7 @@ public class NotificationServiceImpl implements NotificationService {
 				auditFactory.audit(AuditEvent.NOTIFICATION_STATUS, Components.NOTIFICATION_SERVICE,
 						SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 			}
-		} catch (HttpClientErrorException | RegBaseCheckedException | HttpServerErrorException | SocketTimeoutException
-				| ResourceAccessException exception) {
+		} catch (Exception exception) {
 			sb = new StringBuilder();
 			sb.append("Exception in sending ").append(service.toUpperCase()).append(" Notification - ")
 					.append(exception.getMessage());

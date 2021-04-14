@@ -138,8 +138,7 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 				return setSuccessResponse(responseDTO, RegistrationConstants.PRE_REG_SUCCESS_MESSAGE, null);
 			}
 
-		} catch (HttpClientErrorException | ResourceAccessException | HttpServerErrorException
-				| RegBaseCheckedException | java.io.IOException exception) {
+		} catch (Exception exception) {
 			LOGGER.error("PRE_REGISTRATION_DATA_SYNC", exception);
 		}
 

@@ -187,8 +187,7 @@ public class TemplateGenerator extends BaseService {
 
 		} catch (RuntimeException | IOException runtimeException) {
 			setErrorResponse(response, RegistrationConstants.TEMPLATE_GENERATOR_ACK_RECEIPT_EXCEPTION, null);
-			LOGGER.error(LOG_TEMPLATE_GENERATOR, APPLICATION_NAME, APPLICATION_ID,
-					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
+			LOGGER.error(runtimeException.getMessage(), runtimeException);
 		}
 		return response;
 	}

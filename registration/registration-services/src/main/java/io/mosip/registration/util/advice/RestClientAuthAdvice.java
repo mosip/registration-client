@@ -4,6 +4,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.repositories.UserTokenRepository;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -77,13 +78,12 @@ public class RestClientAuthAdvice {
 	 * @throws RegBaseCheckedException
 	 *             - generalized exception with errorCode and errorMessage
 	 */
-	@Around("execution(* io.mosip.registration.util.restclient.RestClientUtil.invoke(..))")
-	public Object addAuthZToken(ProceedingJoinPoint joinPoint) throws RegBaseCheckedException {
+	@Around("execution(* io.mosip.registration.util.restclient.RestClientUtil.invokeURL(..))")
+	public Object addAuthZToken(ProceedingJoinPoint joinPoint) throws RegBaseCheckedException, ConnectionException {
+		RequestHTTPDTO requestHTTPDTO = (RequestHTTPDTO) joinPoint.getArgs()[0];
 		try {
 			LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
 					"Adding authZ token to web service request header if required");
-
-			RequestHTTPDTO requestHTTPDTO = (RequestHTTPDTO) joinPoint.getArgs()[0];
 
 			if (requestHTTPDTO.isRequestSignRequired()) {
 				addRequestSignature(requestHTTPDTO.getHttpHeaders(), requestHTTPDTO.getRequestBody());
@@ -112,26 +112,25 @@ public class RestClientAuthAdvice {
 			if (errorResponseBody != null && StringUtils.containsIgnoreCase(errorResponseBody, INVALID_TOKEN_STRING)
 					|| 401 == httpClientErrorException.getRawStatusCode()) {
 				try {
-					RequestHTTPDTO requestHTTPDTO = (RequestHTTPDTO) joinPoint.getArgs()[0];
-					getAuthZToken(requestHTTPDTO);
+					RequestHTTPDTO requestHTTPDto = (RequestHTTPDTO) joinPoint.getArgs()[0];
+					getAuthZToken(requestHTTPDto);
 					return joinPoint.proceed(joinPoint.getArgs());
 				} catch (RegBaseCheckedException regBaseCheckedException) {
 					throw regBaseCheckedException;
 				} catch (Throwable throwableError) {
-					throw new RegBaseCheckedException(
-							RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(),
-							RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorMessage(), throwableError);
+					LOGGER.error("UNKNOWN ERROR", throwableError);
+					throw new RegBaseCheckedException("UNKNOWN_ERROR", throwableError.getMessage());
 				}
 
 			}
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(),
 					RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorMessage(),
 					httpClientErrorException);
-		} catch (RegBaseCheckedException regBaseCheckedException) {
+		} catch (ConnectionException | RegBaseCheckedException regBaseCheckedException) {
 			throw regBaseCheckedException;
 		} catch (Throwable throwable) {
-			throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(),
-					RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorMessage(), throwable);
+			LOGGER.error("UNKNOWN ERROR >> " + requestHTTPDTO.getUri(), throwable);
+			throw new RegBaseCheckedException("UNKNOWN_ERROR", throwable.getMessage());
 		}
 	}
 

@@ -28,7 +28,6 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 /**
  * @author M1048290 GPSUtillTest.java 2018
  */
-@Ignore
 public class GPSUtillTest {
 
 	@Rule

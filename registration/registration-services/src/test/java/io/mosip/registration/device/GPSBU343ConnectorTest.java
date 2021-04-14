@@ -7,7 +7,10 @@ import static org.mockito.Mockito.mock;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
+import io.mosip.registration.context.ApplicationContext;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -33,7 +36,7 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.device.gps.impl.GPSBU343Connector;
 
-@Ignore
+
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ CommPortIdentifier.class })
 public class GPSBU343ConnectorTest {
@@ -67,7 +70,7 @@ public class GPSBU343ConnectorTest {
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 
-		ReflectionTestUtils.setField(SessionContext.class, "sessionContext", null);
+		//ReflectionTestUtils.setField(SessionContext.class, "sessionContext", null);
 
 	}
 
@@ -83,6 +86,12 @@ public class GPSBU343ConnectorTest {
 		mockPortName("COM4");
 		doNothing().when(logger).debug(Mockito.anyString(), Mockito.anyString(),
 				Mockito.anyString(), Mockito.anyString());
+
+		Map<String, Object> maplastTime = new HashMap<>();
+		maplastTime.put(RegistrationConstants.GPS_SERIAL_PORT_WINDOWS, "COM4");
+		maplastTime.put(RegistrationConstants.GPS_PORT_LINUX, "COM4");
+		maplastTime.put(RegistrationConstants.GPS_PORT_TIMEOUT, 1000);
+		ApplicationContext.getInstance().setApplicationMap(maplastTime);
 	}
 
 	/**
@@ -91,6 +100,7 @@ public class GPSBU343ConnectorTest {
 	 * 
 	 * @throws Exception
 	 */
+	@Ignore
 	@Test
 	public void testGPSBU343ConnectorWithGpsDevice() throws Exception {
 
@@ -127,6 +137,7 @@ public class GPSBU343ConnectorTest {
 	 *
 	 * @throws Exception the exception
 	 */
+	@Ignore
 	@Test
 	public void testGPSBU343ConnectorPortNUllCase() throws Exception {
 
@@ -163,6 +174,7 @@ public class GPSBU343ConnectorTest {
 	 *
 	 * @throws Exception the exception
 	 */
+	@Ignore
 	@Test
 	public void testGPSBU343ConnectorPortFailureCase1() throws Exception {
 
@@ -194,6 +206,7 @@ public class GPSBU343ConnectorTest {
 
 	}
 
+	@Ignore
 	@Test
 	public void testGPSBU343ConnectorPortFailureCase2() throws Exception {
 
@@ -225,6 +238,7 @@ public class GPSBU343ConnectorTest {
 
 	}
 
+	@Ignore
 	@Test
 	public void testGPSBU343ConnectorPortFailureCase3() throws Exception {
 
@@ -259,6 +273,7 @@ public class GPSBU343ConnectorTest {
 	/**
 	 * @throws Exception
 	 */
+	@Ignore
 	@Test
 	public void testGPSBU343ConnectorPortFailureCase4() throws Exception {
 
@@ -290,6 +305,7 @@ public class GPSBU343ConnectorTest {
 
 	}
 
+	@Ignore
 	@Test
 	public void testGPSBU343ConnectorPortFailureCase5() throws Exception {
 
@@ -311,6 +327,7 @@ public class GPSBU343ConnectorTest {
 	 *
 	 * @throws Exception the exception
 	 */
+	@Ignore
 	@Test
 	public void testGPSBU343ConnectorPortFailureCase6() throws Exception {
 

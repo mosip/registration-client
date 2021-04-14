@@ -101,11 +101,12 @@ public class DocumentScannerServiceTest {
 	private void intializeValues() {
 		Map<String,Object> appMap = new HashMap<>();
 		appMap.put(RegistrationConstants.DOC_SCAN_DPI, 300);
+		appMap.put(RegistrationConstants.DOCUMENT_SCANNER_TIMEOUT, 300l);
 		ApplicationContext.getInstance().setApplicationMap(appMap);
 		
-		ReflectionTestUtils.setField(documentScannerServiceImpl, "scannerhost", "192.168.43.253");
-		ReflectionTestUtils.setField(documentScannerServiceImpl, "scannerPort", 6566);
-		ReflectionTestUtils.setField(documentScannerServiceImpl, "scannerTimeout", 2000);
+		//ReflectionTestUtils.setField(documentScannerServiceImpl, "scannerhost", "192.168.43.253");
+		//ReflectionTestUtils.setField(documentScannerServiceImpl, "scannerPort", 6566);
+		//ReflectionTestUtils.setField(documentScannerServiceImpl, "scannerTimeout", 2000);
 
 	}
 

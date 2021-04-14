@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import io.mosip.registration.exception.ConnectionException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -68,9 +69,6 @@ public class ServiceDelegateUtilTest {
 	@Before
 	public void initialize() throws IOException, URISyntaxException {
 
-		ReflectionTestUtils.setField(delegateUtil, "urlPath", "https://integ.mosip.io/authmanager/v1.0/authorize/validateToken");
-		ReflectionTestUtils.setField(delegateUtil, "invalidateUrlPath", "https://integ.mosip.io/authmanager/v1.0/authorize/invalidateToken");
-
 		LoginUserDTO loginDto = new LoginUserDTO();
 		loginDto.setUserId("super_admin");
 		loginDto.setPassword("super_admin");
@@ -109,7 +107,7 @@ public class ServiceDelegateUtilTest {
 		when(environment.getProperty("otp_validator.service.authrequired")).thenReturn("false");
 		when(environment.getProperty("otp_validator.service.authheader")).thenReturn("Authorization:BASIC");
         Map<String,Object> responseMap=new HashMap<>();
-		when(restClientUtil.invoke(Mockito.any())).thenReturn(responseMap);
+		when(restClientUtil.invokeURL(Mockito.any())).thenReturn(responseMap);
 		Map<String, String> requestParamMap = new HashMap<String, String>();
 		requestParamMap.put(RegistrationConstants.USERNAME_KEY, "yashReddy");
 		requestParamMap.put(RegistrationConstants.OTP, "099886");
@@ -117,13 +115,12 @@ public class ServiceDelegateUtilTest {
 		header.add("authorization", "Mosip-TokeneyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzdXBlcl9hZG1pbiIsIm1vYmlsZSI6Ijc1ODU2NzUzNjQiLCJtYWlsIjoic3VwZXJfYWRtaW5AbW9zaXAuaW8iLCJyb2xlIjoiU1VQRVJBRE1JTiIsImlhdCI6MTU0ODkxODQ5NywiZXhwIjoxNTQ4OTI0NDk3fQ.illxy8uqsiCVfi7bkZQWMbBOCR1ly3XjuwLMDH12GJNvg2prdWWl4_Fv52Flar32qFXZY6Bir144hCrVrUi-VQ");
 		responseMap.put("responseHeader", header);
 		responseMap.put("responseBody", response);
-		Mockito.when(restClientUtil.invoke((Mockito.anyObject()))).thenReturn(responseMap);
+		Mockito.when(restClientUtil.invokeURL((Mockito.anyObject()))).thenReturn(responseMap);
 		assertNotNull(delegateUtil.get("otp_validator", requestParamMap, false,"System"));
 	}
 
 	@Test
-	public void postRequestTest() throws URISyntaxException, HttpClientErrorException, RegBaseCheckedException,
-			HttpServerErrorException, ResourceAccessException, SocketTimeoutException {
+	public void postRequestTest() throws URISyntaxException, RegBaseCheckedException, ConnectionException {
 
 		ResponseDTO response = new ResponseDTO();
 		when(environment.getProperty("otp_generator.service.httpmethod")).thenReturn("POST");
@@ -138,7 +135,7 @@ public class ServiceDelegateUtilTest {
 		header.add("authorization", "Mosip-TokeneyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzdXBlcl9hZG1pbiIsIm1vYmlsZSI6Ijc1ODU2NzUzNjQiLCJtYWlsIjoic3VwZXJfYWRtaW5AbW9zaXAuaW8iLCJyb2xlIjoiU1VQRVJBRE1JTiIsImlhdCI6MTU0ODkxODQ5NywiZXhwIjoxNTQ4OTI0NDk3fQ.illxy8uqsiCVfi7bkZQWMbBOCR1ly3XjuwLMDH12GJNvg2prdWWl4_Fv52Flar32qFXZY6Bir144hCrVrUi-VQ");
 		responseMap.put("responseHeader", header);
 		responseMap.put("responseBody", response);		
-		when(restClientUtil.invoke(Mockito.any())).thenReturn(responseMap);
+		when(restClientUtil.invokeURL(Mockito.any())).thenReturn(responseMap);
 		OtpGeneratorRequestDTO generatorRequestDto = new OtpGeneratorRequestDTO();
 		generatorRequestDto.setKey("yashReddy");
 		assertNotNull(delegateUtil.post("otp_generator", generatorRequestDto,"System"));
@@ -163,13 +160,12 @@ public class ServiceDelegateUtilTest {
 		header.add("authorization", "Mosip-TokeneyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzdXBlcl9hZG1pbiIsIm1vYmlsZSI6Ijc1ODU2NzUzNjQiLCJtYWlsIjoic3VwZXJfYWRtaW5AbW9zaXAuaW8iLCJyb2xlIjoiU1VQRVJBRE1JTiIsImlhdCI6MTU0ODkxODQ5NywiZXhwIjoxNTQ4OTI0NDk3fQ.illxy8uqsiCVfi7bkZQWMbBOCR1ly3XjuwLMDH12GJNvg2prdWWl4_Fv52Flar32qFXZY6Bir144hCrVrUi-VQ");
 		responseMap.put("responseHeader", header);
 		responseMap.put("responseBody", response);
-		Mockito.when(restClientUtil.invoke((Mockito.anyObject()))).thenReturn(responseMap);
+		Mockito.when(restClientUtil.invokeURL((Mockito.anyObject()))).thenReturn(responseMap);
 		assertNotNull(delegateUtil.get("otp_validator", requestParamMap, false,"System"));
 	}
 	
 	@Test
-	public void postRequest() throws URISyntaxException, HttpClientErrorException, RegBaseCheckedException,
-			HttpServerErrorException, ResourceAccessException, SocketTimeoutException {
+	public void postRequest() throws URISyntaxException, RegBaseCheckedException, ConnectionException {
 
 		ResponseDTO response = new ResponseDTO();
 		when(environment.getProperty("otp_generator.service.httpmethod")).thenReturn("POST");
@@ -184,7 +180,7 @@ public class ServiceDelegateUtilTest {
 		header.add("authorization", "Mosip-TokeneyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzdXBlcl9hZG1pbiIsIm1vYmlsZSI6Ijc1ODU2NzUzNjQiLCJtYWlsIjoic3VwZXJfYWRtaW5AbW9zaXAuaW8iLCJyb2xlIjoiU1VQRVJBRE1JTiIsImlhdCI6MTU0ODkxODQ5NywiZXhwIjoxNTQ4OTI0NDk3fQ.illxy8uqsiCVfi7bkZQWMbBOCR1ly3XjuwLMDH12GJNvg2prdWWl4_Fv52Flar32qFXZY6Bir144hCrVrUi-VQ");
 		responseMap.put("responseHeader", header);
 		responseMap.put("responseBody", response);		
-		when(restClientUtil.invoke(Mockito.any())).thenReturn(responseMap);
+		when(restClientUtil.invokeURL(Mockito.any())).thenReturn(responseMap);
 		OtpGeneratorRequestDTO generatorRequestDto = new OtpGeneratorRequestDTO();
 		generatorRequestDto.setKey("yashReddy");
 		assertNotNull(delegateUtil.post("otp_generator", generatorRequestDto,"System"));

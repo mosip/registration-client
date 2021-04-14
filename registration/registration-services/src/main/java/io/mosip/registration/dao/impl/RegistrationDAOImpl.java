@@ -15,6 +15,7 @@ import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import io.mosip.commons.packet.dto.packet.SimpleDto;
@@ -114,6 +115,8 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			registrationDataDto.setName(applicantName);
 			registrationDataDto.setEmail(getAdditionalInfo(emailObj));
 			registrationDataDto.setPhone(getAdditionalInfo(phoneObj));
+			registrationDataDto.setLangCode(String.join(RegistrationConstants.COMMA,
+					registrationDTO.getSelectedLanguagesByApplicant()));
 			
 			String additionalInfo = JsonUtils.javaObjectToJsonString(registrationDataDto);
 			registration.setAdditionalInfo(additionalInfo.getBytes());
@@ -249,8 +252,8 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 		return registrationRepository.findByClientStatusCodeInOrderByUpdDtimesDesc(statusCodes);
 	}
 	
-	public List<Registration> getPacketsToBeSynched(List<String> statusCodes, int count) {
-		return registrationRepository.findByClientStatusCodeInOrderByCrDtimeAsc(statusCodes, PageRequest.of(0, count));
+	public List<Registration> getPacketsToBeSynched(List<String> statusCodes, int limit) {
+		return registrationRepository.findByClientStatusCodeInOrderByCrDtimeAsc(statusCodes, PageRequest.of(0, limit));
 	}
 
 	/*
@@ -262,20 +265,18 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	 */
 	@Override
 	public List<Registration> getRegistrationByStatus(List<String> packetStatus) {
-		LOGGER.info("REGISTRATION - GET_PACKET_DETAILS_BY_ID - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
-				"got the packet details by id");
+		LOGGER.info("get the packet details by status");
 
 		return registrationRepository.findByStatusCodes(packetStatus.get(0), packetStatus.get(1), packetStatus.get(2),
 				packetStatus.get(3));
 	}
 	
 	@Override
-	public List<Registration> getRegistrationByStatus(List<String> packetStatus, int count) {
-		LOGGER.info("REGISTRATION - GET_PACKET_DETAILS_BY_ID - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
-				"got the packet details by id");
+	public List<Registration> getRegistrationByStatus(List<String> packetStatus, int limit) {
+		LOGGER.info("get the packet details, count : {}", limit);
 
 		return registrationRepository.findByStatusCodes(packetStatus.get(0), packetStatus.get(1), packetStatus.get(2),
-				packetStatus.get(3), PageRequest.of(0, count));
+				packetStatus.get(3), PageRequest.of(0, limit, Sort.by(Sort.Order.asc("crBy"))));
 	}
 
 	/*
@@ -285,8 +286,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	 * org.mosip.registration.dao.RegistrationDAO#updateRegStatus(java.lang.String)
 	 */
 	public Registration updateRegStatus(PacketStatusDTO registrationPacket) {
-		LOGGER.info("REGISTRATION - UPDATE_THE_PACKET_STATUS - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
-				"Updating the packet details in the Registration table");
+		LOGGER.info("Updating the packet details in the Registration table");
 
 		Timestamp timestamp = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
 

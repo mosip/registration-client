@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import io.mosip.registration.exception.ConnectionException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -84,7 +85,7 @@ public class GlobalParamServiceTest {
 	}
 
 	@Test
-	public void syncConfigDataTestError() throws RegBaseCheckedException, HttpClientErrorException, SocketTimeoutException {
+	public void syncConfigDataTestError() throws RegBaseCheckedException, ConnectionException {
 
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
@@ -117,7 +118,7 @@ public class GlobalParamServiceTest {
 	}
 
 	@Test
-	public void syncConfigData() throws RegBaseCheckedException, HttpClientErrorException, SocketTimeoutException {
+	public void syncConfigData() throws RegBaseCheckedException, ConnectionException {
 
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
@@ -156,7 +157,7 @@ public class GlobalParamServiceTest {
 
 	@Test
 	public void syncConfigDataExceptionTest()
-			throws RegBaseCheckedException, HttpClientErrorException, SocketTimeoutException {
+			throws RegBaseCheckedException, ConnectionException {
 
 		Map<String, Object> globalParamMap = new LinkedHashMap<>();
 		globalParamMap.put("ANY", "ANY");
@@ -169,7 +170,7 @@ public class GlobalParamServiceTest {
 	}
 
 	@Test
-	public void syncConfigTest() throws RegBaseCheckedException, HttpClientErrorException, SocketTimeoutException {
+	public void syncConfigTest() throws RegBaseCheckedException, ConnectionException {
 
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
@@ -260,7 +261,7 @@ public class GlobalParamServiceTest {
 
 	@Test
 	public void syncConfigDataUpdate()
-			throws RegBaseCheckedException, HttpClientErrorException, SocketTimeoutException {
+			throws RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
 //		doNothing().when(pageFlow).getInitialPageDetails();

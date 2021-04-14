@@ -1,8 +1,5 @@
 package io.mosip.registration.util.restclient;
 
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
-
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
@@ -10,41 +7,23 @@ import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.kernel.core.util.CryptoUtil;
-import io.mosip.registration.dao.MachineMappingDAO;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
-import org.jose4j.jws.JsonWebSignature;
+import io.mosip.registration.exception.ConnectionException;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.constants.LoggerConstants;
-import io.mosip.registration.constants.LoginMode;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.context.SessionContext;
-import io.mosip.registration.dto.AuthNClientIDDTO;
-import io.mosip.registration.dto.AuthNRequestDTO;
-import io.mosip.registration.dto.AuthNUserOTPDTO;
-import io.mosip.registration.dto.AuthNUserPasswordDTO;
-import io.mosip.registration.dto.AuthTokenDTO;
-import io.mosip.registration.dto.LoginUserDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 
 /**
@@ -57,31 +36,18 @@ import io.mosip.registration.exception.RegistrationExceptionConstants;
 @Component("serviceDelegateUtil")
 public class ServiceDelegateUtil {
 
+	private static final Logger LOGGER = AppConfig.getLogger(ServiceDelegateUtil.class);
+
 	@Autowired
 	private RestClientUtil restClientUtil;
 
 	@Autowired
 	private Environment environment;
 
-	// @Value("${mosip.registration.HTTP_API_READ_TIMEOUT}")
-	// private int readTimeout;
-	//
-	// @Value("${mosip.registration.HTTP_API_WRITE_TIMEOUT}")
-	// private int connectTimeout;
-
-	/*@Value("${validate_auth_token.service.url:}")
-	private String urlPath;
-
-	@Value("${invalidate_auth_token.service.url:}")
-	private String invalidateUrlPath;*/
-
-	private String mosipHostNamePlaceHolder = "${mosip.hostname}";
-	private static final Logger LOGGER = AppConfig.getLogger(ServiceDelegateUtil.class);
-
 
 
 	/**
-	 * Prepare GET request.
+	 * Prepare and trigger GET request.
 	 *
 	 * @param serviceName
 	 *            service to be invoked
@@ -94,20 +60,15 @@ public class ServiceDelegateUtil {
 	 * @return Object requiredType of object response Body
 	 * @throws RegBaseCheckedException
 	 *             generalised exception with errorCode and errorMessage
-	 * @throws HttpClientErrorException
-	 *             when client error exception from server
-	 * @throws SocketTimeoutException
-	 *             the socket timeout exception
-	 * @throws HttpServerErrorException
-	 *             when server exception from server
+	 * @throws ConnectionException
+	 *             when client error exception from server / server exception
 	 */
 	public Object get(String serviceName, Map<String, String> requestParams, boolean hasPathParams, String triggerPoint)
-			throws RegBaseCheckedException, HttpClientErrorException, SocketTimeoutException {
+			throws RegBaseCheckedException, ConnectionException {
 
-		LOGGER.debug(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_GET, APPLICATION_NAME, APPLICATION_ID,
-				"Get method has been called");
+		LOGGER.debug("Get method has been called - {}", serviceName);
 
-		Map<String, Object> responseMap = null;
+		Map<String, Object> responseMap;
 		Object responseBody = null;
 
 		RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
@@ -125,13 +86,12 @@ public class ServiceDelegateUtil {
 
 			// URI creation
 			String url = getEnvironmentProperty(serviceName, RegistrationConstants.SERVICE_URL);
-			url = prepareUrlByHostName(url);
+			url = RegistrationAppHealthCheckUtil.prepareURLByHostName(url);
 			Map<String, String> queryParams = new HashMap<>();
 			for (String key : requestParams.keySet()) {
 				if (!url.contains("{" + key + "}")) {
 					queryParams.put(key, requestParams.get(key));
 				}
-
 			}
 
 			if (hasPathParams) {
@@ -142,49 +102,25 @@ public class ServiceDelegateUtil {
 			/** Set URI */
 			setURI(requestHTTPDTO, queryParams, url);
 
-			LOGGER.debug(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_GET, APPLICATION_NAME, APPLICATION_ID,
-					"set uri method called");
+			responseMap = restClientUtil.invokeURL(requestHTTPDTO);
 
-			responseMap = restClientUtil.invoke(requestHTTPDTO);
-
-		} catch (RegBaseCheckedException baseCheckedException) {
-			if (baseCheckedException.getErrorCode()
-					.equals(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode())) {
-				throw baseCheckedException;
-			}
-			throw new RegBaseCheckedException(
-					RegistrationExceptionConstants.REG_SERVICE_DELEGATE_UTIL_CODE.getErrorCode(),
-					RegistrationExceptionConstants.REG_SERVICE_DELEGATE_UTIL_CODE.getErrorMessage(),
-					baseCheckedException);
+		}  catch (RestClientException e) {
+			LOGGER.error(e.getMessage(), e);
+			throw new ConnectionException(RegistrationExceptionConstants.ACCESS_ERROR.getErrorCode(),
+					RegistrationExceptionConstants.ACCESS_ERROR.getErrorMessage(), e);
 		}
 
 		if (isResponseValid(responseMap, RegistrationConstants.REST_RESPONSE_BODY)) {
 			responseBody = responseMap.get(RegistrationConstants.REST_RESPONSE_BODY);
 		}
-		LOGGER.debug(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_GET, APPLICATION_NAME, APPLICATION_ID,
-				"Get method has been ended");
+		LOGGER.debug("Get method has been ended - {}", serviceName);
 
 		return responseBody;
 	}
 
-	private String prepareUrlByHostName(String url) {
-		
-		
-		String mosipHostNameVal = System.getProperty(RegistrationConstants.MOSIP_HOSTNAME);
-
-		LOGGER.info("Mosip Host name in environment variables : {} " , mosipHostNameVal);
-		if (mosipHostNameVal == null || mosipHostNameVal.isEmpty()) {
-			mosipHostNameVal = RegistrationConstants.MOSIP_HOSTNAME_DEF_VAL;
-			LOGGER.info("Mosip Host name in Default mode : {} " ,mosipHostNameVal);
-
-		}
-
-		return (url != null && mosipHostNameVal != null) ? url.replace(mosipHostNamePlaceHolder, mosipHostNameVal)
-				: url;
-	}
 
 	/**
-	 * prepare POST request.
+	 * prepare and trigger POST request.
 	 *
 	 * @param serviceName
 	 *            service to be invoked
@@ -195,19 +131,11 @@ public class ServiceDelegateUtil {
 	 * @return Object requiredType of object response Body
 	 * @throws RegBaseCheckedException
 	 *             generalised exception with errorCode and errorMessage
-	 * @throws HttpClientErrorException
-	 *             when client error exception from server
-	 * @throws SocketTimeoutException
-	 *             the socket timeout exception
-	 * @throws ResourceAccessException
-	 *             the resource access exception
-	 * @throws HttpServerErrorException
-	 *             when server exception from server
+	 * @throws ConnectionException
+	 *             when client error, server error, access error
 	 */
-	public Object post(String serviceName, Object object, String triggerPoint)
-			throws RegBaseCheckedException, HttpClientErrorException, SocketTimeoutException, ResourceAccessException {
-		LOGGER.debug(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_POST, APPLICATION_NAME, APPLICATION_ID,
-				" post method called");
+	public Object post(String serviceName, Object object, String triggerPoint) throws RegBaseCheckedException, ConnectionException {
+		LOGGER.debug("Post method called - {} ", serviceName);
 
 		RequestHTTPDTO requestDto;
 		Object responseBody = null;
@@ -223,17 +151,17 @@ public class ServiceDelegateUtil {
 			requestDto.setTriggerPoint(triggerPoint);
 			requestDto.setRequestSignRequired(
 					Boolean.valueOf(getEnvironmentProperty(serviceName, RegistrationConstants.REQUEST_SIGN_REQUIRED)));
-			responseMap = restClientUtil.invoke(requestDto);
-		} catch (RegBaseCheckedException baseCheckedException) {
-			throw new RegBaseCheckedException(RegistrationConstants.SERVICE_DELEGATE_UTIL,
-					baseCheckedException.getMessage() + ExceptionUtils.getStackTrace(baseCheckedException));
+			responseMap = restClientUtil.invokeURL(requestDto);
+		} catch (RestClientException e) {
+			LOGGER.error(e.getMessage(), e);
+			throw new ConnectionException(RegistrationExceptionConstants.ACCESS_ERROR.getErrorCode(),
+					RegistrationExceptionConstants.ACCESS_ERROR.getErrorMessage(), e);
 		}
 
 		if (isResponseValid(responseMap, RegistrationConstants.REST_RESPONSE_BODY)) {
 			responseBody = responseMap.get(RegistrationConstants.REST_RESPONSE_BODY);
 		}
-		LOGGER.debug(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_POST, APPLICATION_NAME, APPLICATION_ID,
-				"post method ended");
+		LOGGER.debug("Post method ended - {} ", serviceName);
 
 		return responseBody;
 	}
@@ -253,7 +181,7 @@ public class ServiceDelegateUtil {
 	 * @throws RegBaseCheckedException
 	 *             - generalized exception with errorCode and errorMessage
 	 */
-	public Object invokeRestService(String url, String serviceName, Object request, Class<?> responseType)
+	/*public Object invokeRestService(String url, String serviceName, Object request, Class<?> responseType)
 			throws RegBaseCheckedException {
 
 		LOGGER.debug(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_GET, APPLICATION_NAME, APPLICATION_ID,
@@ -282,7 +210,7 @@ public class ServiceDelegateUtil {
 
 		return responseBody;
 
-	}
+	}*/
 
 	/**
 	 * prepares the request
@@ -298,7 +226,7 @@ public class ServiceDelegateUtil {
 	 * @param url
 	 *            - the URL
 	 */
-	protected void prepareRequest(RequestHTTPDTO requestHTTPDTO, String serviceName, Object request,
+	/*protected void prepareRequest(RequestHTTPDTO requestHTTPDTO, String serviceName, Object request,
 			Class<?> responseType, String url) {
 		LOGGER.info(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_PREPARE_REQUEST, APPLICATION_NAME, APPLICATION_ID,
 				"Preparing request");
@@ -318,7 +246,7 @@ public class ServiceDelegateUtil {
 		// Headers
 		setHeaders(requestHTTPDTO.getHttpHeaders(), getEnvironmentProperty(serviceName, RegistrationConstants.HEADERS));
 		requestHTTPDTO.setAuthRequired(false);
-	}
+	}*/
 
 	/**
 	 * Prepare GET request.
@@ -335,8 +263,7 @@ public class ServiceDelegateUtil {
 	 */
 	private RequestHTTPDTO prepareGETRequest(RequestHTTPDTO requestHTTPDTO, final String serviceName,
 			final Map<String, String> requestParams) throws RegBaseCheckedException {
-		LOGGER.debug(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_PREPARE_GET, APPLICATION_NAME, APPLICATION_ID,
-				"Prepare Get request method called");
+		LOGGER.debug("Prepare Get request method called");
 
 		// prepare httpDTO except rquest type and uri build
 		prepareRequest(requestHTTPDTO, serviceName, null);
@@ -354,8 +281,7 @@ public class ServiceDelegateUtil {
 
 		requestHTTPDTO.setClazz(responseClass);
 
-		LOGGER.debug("REGISTRATION - SERVICE_DELEGATE_UTIL - GET", APPLICATION_NAME, APPLICATION_ID,
-				"Prepare Get request method ended");
+		LOGGER.debug("Prepare Get request method ended");
 
 		return requestHTTPDTO;
 	}
@@ -368,13 +294,9 @@ public class ServiceDelegateUtil {
 	 * @param object
 	 *            request type
 	 * @return RequestHTTPDTO requestHTTPDTO with required data
-	 * @throws RegBaseCheckedException
-	 *             the reg base checked exception
 	 */
-	private RequestHTTPDTO preparePOSTRequest(final String serviceName, final Object object)
-			throws RegBaseCheckedException {
-		LOGGER.info(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_PREPARE_POST, APPLICATION_NAME, APPLICATION_ID,
-				"Preparing post request for web-service");
+	private RequestHTTPDTO preparePOSTRequest(final String serviceName, final Object object) {
+		LOGGER.debug("Preparing post request for web-service");
 
 		// DTO need to to be prepared
 		RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
@@ -388,8 +310,7 @@ public class ServiceDelegateUtil {
 		// RequestType
 		requestHTTPDTO.setClazz(Object.class);
 
-		LOGGER.info(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_PREPARE_POST, APPLICATION_NAME, APPLICATION_ID,
-				"Completed preparing post request for web-service");
+		LOGGER.debug("Completed preparing post request for web-service");
 
 		return requestHTTPDTO;
 
@@ -406,8 +327,7 @@ public class ServiceDelegateUtil {
 	 *            the url
 	 */
 	private void setURI(RequestHTTPDTO requestHTTPDTO, Map<String, String> requestParams, String url) {
-		LOGGER.info(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_PREPARE_POST, APPLICATION_NAME, APPLICATION_ID,
-				"Preparing URI for web-service");
+		LOGGER.debug("Preparing URI for web-service");
 
 		// BuildURIComponent
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(url);
@@ -423,8 +343,7 @@ public class ServiceDelegateUtil {
 
 		requestHTTPDTO.setUri(uri);
 
-		LOGGER.info(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_PREPARE_POST, APPLICATION_NAME, APPLICATION_ID,
-				"Completed preparing URI for web-service");
+		LOGGER.debug("Completed preparing URI for web-service");
 	}
 
 	/**
@@ -436,8 +355,7 @@ public class ServiceDelegateUtil {
 	 *            headers
 	 */
 	private void setHeaders(HttpHeaders httpHeaders, String headers) {
-		LOGGER.info(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_PREPARE_REQUEST, APPLICATION_NAME, APPLICATION_ID,
-				"Preparing Header for web-service request");
+		LOGGER.debug("Preparing Header for web-service request");
 
 		String[] header = headers.split(",");
 		String[] headerValues = null;
@@ -463,8 +381,7 @@ public class ServiceDelegateUtil {
 			httpHeaders.add("Cache-Control", "no-cache,max-age=0");
 		}
 
-		LOGGER.info(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_PREPARE_REQUEST, APPLICATION_NAME, APPLICATION_ID,
-				"Completed preparing Header for web-service request");
+		LOGGER.debug("Completed preparing Header for web-service request");
 	}
 
 	/**
@@ -476,8 +393,7 @@ public class ServiceDelegateUtil {
 	 *            object to be included in HTTP entities
 	 */
 	private void prepareRequest(RequestHTTPDTO requestHTTPDTO, String serviceName, Object requestBody) {
-		LOGGER.info(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_PREPARE_REQUEST, APPLICATION_NAME, APPLICATION_ID,
-				"Preparing RequestHTTPDTO object for web-service");
+		LOGGER.debug("Preparing RequestHTTPDTO object for web-service");
 
 		requestHTTPDTO.setHttpMethod(
 				HttpMethod.valueOf(getEnvironmentProperty(serviceName, RegistrationConstants.HTTPMETHOD)));
@@ -488,14 +404,13 @@ public class ServiceDelegateUtil {
 		// Headers
 		setHeaders(requestHTTPDTO.getHttpHeaders(), getEnvironmentProperty(serviceName, RegistrationConstants.HEADERS));
 
-		LOGGER.info(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_PREPARE_REQUEST, APPLICATION_NAME, APPLICATION_ID,
-				"Completed preparing RequestHTTPDTO object for web-service");
+		LOGGER.debug("Completed preparing RequestHTTPDTO object for web-service");
 	}
 
 	/**
 	 * Method to set the request timeout
 	 * 
-	 * @param requestHTTPDTO
+	 * @param requestHTTPDTO requestedHTTPDTO
 	 */
 	private void setTimeout(RequestHTTPDTO requestHTTPDTO) {
 		// Timeout in milli second
@@ -507,7 +422,7 @@ public class ServiceDelegateUtil {
 		requestHTTPDTO.setSimpleClientHttpRequestFactory(requestFactory);
 	}
 
-	private AuthNRequestDTO prepareAuthNRequestDTO(LoginMode loginMode) {
+	/*private AuthNRequestDTO prepareAuthNRequestDTO(LoginMode loginMode) {
 		LOGGER.info(LoggerConstants.LOG_SERVICE_DELEGATE_AUTH_DTO, APPLICATION_NAME, APPLICATION_ID,
 				"Preparing AuthNRequestDTO Based on Login Mode >>>> " + loginMode);
 
@@ -537,7 +452,7 @@ public class ServiceDelegateUtil {
 				"Completed preparing AuthNRequestDTO Based on Login Mode >>> " + loginMode);
 
 		return authNRequestDTO;
-	}
+	}*/
 
 
 
@@ -563,7 +478,7 @@ public class ServiceDelegateUtil {
 	 * @return
 	 * @throws URISyntaxException
 	 */
-	private RequestHTTPDTO buildRequestHTTPDTO(String cookie, String requestURL, HttpMethod httpMethod)
+	/*private RequestHTTPDTO buildRequestHTTPDTO(String cookie, String requestURL, HttpMethod httpMethod)
 			throws URISyntaxException {
 		RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
 		// setting headers
@@ -583,5 +498,5 @@ public class ServiceDelegateUtil {
 		setTimeout(requestHTTPDTO);
 
 		return requestHTTPDTO;
-	}
+	}*/
 }

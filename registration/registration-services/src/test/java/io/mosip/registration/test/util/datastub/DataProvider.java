@@ -4,20 +4,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import io.mosip.commons.packet.dto.packet.AuditDto;
+import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.registration.builder.Builder;
 import io.mosip.registration.constants.IntroducerType;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.OSIDataDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
+import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.biometric.BiometricDTO;
 import io.mosip.registration.dto.biometric.BiometricExceptionDTO;
 import io.mosip.registration.dto.biometric.BiometricInfoDTO;
@@ -30,6 +27,7 @@ import io.mosip.registration.dto.demographic.DemographicInfoDTO;
 import io.mosip.registration.dto.demographic.Identity;
 import io.mosip.registration.dto.demographic.IndividualIdentity;
 import io.mosip.registration.dto.demographic.ValuesDTO;
+import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.exception.RegBaseCheckedException;
 
@@ -72,6 +70,24 @@ public class DataProvider {
 		registrationDTO.setBiometricDTO(DataProvider.getBiometricDTO());
 		HashMap<String, Object> selectionListDTO=new HashMap<>();
 		registrationDTO.setSelectionListDTO(selectionListDTO);
+		registrationDTO.setSelectedLanguagesByApplicant(Arrays.asList("eng", "ara", "fra"));
+		return registrationDTO;
+
+	}
+
+	public static RegistrationDTO getFilledPacketDTO(List<String> selectedLanguages) throws RegBaseCheckedException {
+		RegistrationDTO registrationDTO = new RegistrationDTO();
+		registrationDTO.setAuditDTOs(DataProvider.getAuditDTOs());
+		registrationDTO.setOsiDataDTO(DataProvider.getOsiDataDTO());
+		registrationDTO.setRegistrationMetaDataDTO(DataProvider.getRegistrationMetaDataDTO());
+		registrationDTO.setPreRegistrationId("PEN1345T");
+		registrationDTO.setRegistrationId("10011100110016320190307151917");
+
+		registrationDTO.setDemographics(getDemographicData(selectedLanguages));
+		registrationDTO.setBiometricDTO(DataProvider.getBiometricDTO());
+		HashMap<String, Object> selectionListDTO=new HashMap<>();
+		registrationDTO.setSelectionListDTO(selectionListDTO);
+		registrationDTO.setSelectedLanguagesByApplicant(selectedLanguages);
 		return registrationDTO;
 
 	}
@@ -235,6 +251,32 @@ public class DataProvider {
 		getDocumentDetailsDTO(demographicDTO.getDemographicInfoDTO().getIdentity(),
 				new RegistrationDTO().getDocuments());
 		return demographicDTO;
+	}
+
+	private static Map<String, Object> getDemographicData(List<String> selectedLanguages) {
+		Map<String, Object> demographicMap = new HashMap<>();
+		demographicMap.put("fullName",new ArrayList<SimpleDto>());
+		demographicMap.put("dateOfBirth", "2018/01/01");
+		demographicMap.put("gender", "MLE");
+		demographicMap.put("addressLine1", new ArrayList<SimpleDto>());
+		demographicMap.put("addressLine2", new ArrayList<SimpleDto>());
+		demographicMap.put("region", new ArrayList<SimpleDto>());
+		demographicMap.put("province", new ArrayList<SimpleDto>());
+		demographicMap.put("city", new ArrayList<SimpleDto>());
+		demographicMap.put("postalCode", "1232323");
+		demographicMap.put("email", "test@test.com");
+		demographicMap.put("phone", "222222222");
+
+		selectedLanguages.forEach( lang -> {
+			((List)demographicMap.get("fullName")).add(new SimpleDto(lang, "John"));
+			((List)demographicMap.get("addressLine1")).add(new SimpleDto(lang, "address1"));
+			((List)demographicMap.get("addressLine2")).add(new SimpleDto(lang, "address2"));
+			((List)demographicMap.get("region")).add(new SimpleDto(lang, "India"));
+			((List)demographicMap.get("province")).add(new SimpleDto(lang, "karnataka"));
+			((List)demographicMap.get("city")).add(new SimpleDto(lang, "Bangalore"));
+		});
+
+		return demographicMap;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -469,5 +511,20 @@ public class DataProvider {
 //		audit.setModuleName("New Registration");
 //		audit.setDescription(description);
 		auditDTOList.add(audit);
+	}
+
+	public static List<UiSchemaDTO> getFields() {
+		List<UiSchemaDTO> fields = new ArrayList<>();
+		UiSchemaDTO fullname = new UiSchemaDTO();
+		fullname.setId("fullName");
+		fullname.setType("simpleType");
+		fields.add(fullname);
+
+		UiSchemaDTO region = new UiSchemaDTO();
+		region.setId("region");
+		region.setType("simpleType");
+		fields.add(region);
+
+		return fields;
 	}
 }

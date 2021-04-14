@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.registration.exception.ConnectionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -119,8 +120,7 @@ public class UserMachineMappingServiceImpl extends BaseService implements UserMa
 
 				LOGGER.info("REGISTRATION-ONBOARDED-USER-DETAILS- SYNC", APPLICATION_NAME, APPLICATION_ID,
 						"sync user details is ended");
-			} catch (HttpClientErrorException | ResourceAccessException | SocketTimeoutException
-					| RegBaseCheckedException | RegBaseUncheckedException exception) {
+			} catch (ConnectionException | RegBaseCheckedException | RegBaseUncheckedException exception) {
 				LOGGER.error("REGISTRATION-CENTER-USER-MACHINE-MAPPING-DETAILS- SYNC", APPLICATION_NAME, APPLICATION_ID,
 						exception.getMessage());
 				responseDTO = buildErrorRespone(responseDTO, RegistrationConstants.POLICY_SYNC_ERROR_CODE,

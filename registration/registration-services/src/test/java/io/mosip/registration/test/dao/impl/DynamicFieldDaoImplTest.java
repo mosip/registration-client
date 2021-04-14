@@ -70,14 +70,14 @@ public class DynamicFieldDaoImplTest {
 	
 	@Test
 	public void testForDynamicField() throws IOException {	
-		Mockito.when(dynamicFieldRepository.findByNameAndLangCode("fieldName", "langCode")).thenReturn(dynamicField);		
+		Mockito.when(dynamicFieldRepository.findByIsActiveTrueAndNameAndLangCode("fieldName", "langCode")).thenReturn(dynamicField);
 		assertEquals(dynamicField, dynamicFieldDaoImpl.getDynamicField("fieldName", "langCode"));		
 	}
 	
 	@Test
 	public void testDynamicFieldValues() throws IOException {	
 		dynamicField.setValueJson(valueJson);
-		Mockito.when(dynamicFieldRepository.findByNameAndLangCode("fieldName", "langCode")).thenReturn(dynamicField);	
+		Mockito.when(dynamicFieldRepository.findByIsActiveTrueAndNameAndLangCode("fieldName", "langCode")).thenReturn(dynamicField);
 		assertEquals(fieldValues, dynamicFieldDaoImpl.getDynamicFieldValues("fieldName", "langCode"));
 	}
 	
@@ -104,7 +104,7 @@ public class DynamicFieldDaoImplTest {
 	@Test
 	public void testDynamicFieldValuesWithInvalidJson() {
 		dynamicField.setValueJson("{}");
-		Mockito.when(dynamicFieldRepository.findByNameAndLangCode("fieldName", "langCode")).thenReturn(dynamicField);
+		Mockito.when(dynamicFieldRepository.findByIsActiveTrueAndNameAndLangCode("fieldName", "langCode")).thenReturn(dynamicField);
 		
 		List<DynamicFieldValueDto> list = dynamicFieldDaoImpl.getDynamicFieldValues("fieldName", "langCode");
 		assertEquals(null, list);

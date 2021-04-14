@@ -6,6 +6,8 @@ import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.entity.Registration;
+import io.mosip.registration.exception.ConnectionException;
+import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 
 /**
@@ -61,7 +63,9 @@ public interface RegPacketStatusService {
 	 *         after sync with server
 	 * @throws RegBaseCheckedException 
 	 */
-	ResponseDTO packetSyncStatus(String triggerpoint) throws RegBaseCheckedException;
+	ResponseDTO syncServerPacketStatus(String triggerpoint) throws RegBaseCheckedException, ConnectionException;
+
+	ResponseDTO syncServerPacketStatusWithRetryWrapper(String triggerpoint) throws RegBaseCheckedException, ConnectionException;
 	
 	/**
 	 * Deletes the Registration Packets from the local system based on the status of
@@ -103,61 +107,7 @@ public interface RegPacketStatusService {
 	 */
 	ResponseDTO deleteRegistrationPackets();
 
-	/**
-	 * Synchronizes the registration packets to the server and updates the server
-	 * status code
-	 * 
-	 * <p>
-	 * The status of the packets has to be any one of the following:
-	 * </p>
-	 * <ul>
-	 * <li>APPROVED</li>
-	 * <li>REJECTED</li>
-	 * <li>RE_REGISTER_APPROVED</li>
-	 * </ul>
-	 * 
-	 * <p>
-	 * On successful sync of packet with the server through Packet Sync Service, the
-	 * Server Status Code of that packet would be updated to PUSHED
-	 * </p>
-	 * 
-	 * 
-	 * <p>
-	 * Returns the {@link ResponseDTO} object.
-	 * </p>
-	 * 
-	 * <p>
-	 * If all the above processes had completed successfully,
-	 * {@link SuccessResponseDTO} will be set in {@link ResponseDTO} object
-	 * </p>
-	 * 
-	 * <p>
-	 * If any exception occurs, {@link ErrorResponseDTO} will be set in
-	 * {@link ResponseDTO} object
-	 * </p>
-	 * 
-	 * @param triggerpoint
-	 *            - the point by which the service was triggered.
-	 *            <p>
-	 *            <b>SYSTEM</b>
-	 *            </p>
-	 *            <p>
-	 *            If service is triggered by System
-	 *            </p>
-	 *            <p>
-	 *            <b>User ID</b>
-	 *            </p>
-	 *            <p>
-	 *            If service is triggered by the User
-	 *            </p>
-	 * 
-	 * @return {@link ResponseDTO} which specifies either success response or error
-	 *         response after sync with server
-	 */
-	ResponseDTO syncPacket(String triggerpoint);
-	
-	ResponseDTO syncPacket(String triggerpoint, int count);
-	
+
 	/**
 	 * Deletes the list of {@link Registration} entries from the local system based
 	 * on the status of the packets

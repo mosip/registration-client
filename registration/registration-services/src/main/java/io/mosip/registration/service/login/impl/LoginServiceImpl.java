@@ -324,6 +324,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	 * 3. global parameters sync
 	 * 4. client-settings / master-data sync
 	 * 5. user details sync
+	 * 6. CA cert sync
 	 * user salt sync is removed @Since 1.1.3
 	 */
 	@Override

@@ -1,5 +1,6 @@
 package io.mosip.registration.test.audit;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.when;
 
@@ -11,6 +12,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.registration.dto.LoginUserDTO;
+import io.mosip.registration.dto.RegistrationDTO;
 import org.hibernate.exception.DataException;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -70,9 +73,31 @@ public class AuditFactoryTest {
 	@Mock
 	private GlobalParamService globalParamService;
 
+	@Mock
+	private SessionContext.SecurityContext securityContext;
+
+	@Before
+	public void init() throws Exception {
+		PowerMockito.mockStatic(InetAddress.class,SessionContext.class);
+		PowerMockito.when(SessionContext.securityContext()).thenReturn(securityContext);
+		Map<String, Object> value = new HashMap<>();
+		value.put(RegistrationConstants.REGISTRATION_DATA, new RegistrationDTO());
+		PowerMockito.when(securityContext.getUserId()).thenReturn("user");
+		PowerMockito.when(SessionContext.map()).thenReturn(value);
+
+		Map<String, Object> map = new HashMap<>();
+		map.put(RegistrationConstants.AUDIT_LOG_DELETION_CONFIGURED_DAYS, "5");
+		map.put(RegistrationConstants.DEFAULT_HOST_IP, "127.0.0.0");
+		map.put(RegistrationConstants.DEFAULT_HOST_NAME, "LOCALHOST");
+		map.put(RegistrationConstants.APP_NAME, "REGISTRATION");
+		map.put(RegistrationConstants.APP_ID, "REG");
+
+		PowerMockito.mockStatic(ApplicationContext.class);
+		when(ApplicationContext.map()).thenReturn(map);
+	}
+
 	@Test
 	public void auditTest() throws Exception {
-		PowerMockito.mockStatic(InetAddress.class, SessionContext.class);
 		PowerMockito.when(InetAddress.getLocalHost()).thenCallRealMethod();
 		PowerMockito.doReturn("userId").when(SessionContext.class, "userId");
 		PowerMockito.doReturn("userName").when(SessionContext.class, "userName");
@@ -88,20 +113,6 @@ public class AuditFactoryTest {
 		when(auditHandler.addAudit(Mockito.any(AuditRequestDto.class))).thenReturn(true);
 
 		auditFactory.audit(AuditEvent.PACKET_APPROVED, Components.PACKET_CREATOR, "id", "ref");
-	}
-
-	@Before
-	public void intiate() {
-		Map<String, Object> map = new HashMap<>();
-		map.put(RegistrationConstants.AUDIT_LOG_DELETION_CONFIGURED_DAYS, "5");
-		map.put(RegistrationConstants.DEFAULT_HOST_IP, "127.0.0.0");
-		map.put(RegistrationConstants.DEFAULT_HOST_NAME, "LOCALHOST");
-		map.put(RegistrationConstants.APP_NAME, "REGISTRATION");
-		map.put(RegistrationConstants.APP_ID, "REG");
-		
-		PowerMockito.mockStatic(ApplicationContext.class);
-		when(ApplicationContext.map()).thenReturn(map);
-
 	}
 
 	//Java11 correction
@@ -134,10 +145,12 @@ public class AuditFactoryTest {
 
 	}
 
-	@Ignore
+
 	@Test
 	public void auditLogsDeletionFailureTest() {
 		Mockito.when(applicationMap.get(Mockito.anyString())).thenReturn(null);
+		Mockito.when(auditLogControlDAO.get(Mockito.any(Timestamp.class))).thenThrow(RuntimeException.class);
+		assertNotNull(auditFactory.deleteAuditLogs().getErrorResponseDTOs());
 		assertSame(RegistrationConstants.AUDIT_LOGS_DELETION_FLR_MSG,
 				auditFactory.deleteAuditLogs().getErrorResponseDTOs().get(0).getMessage());
 

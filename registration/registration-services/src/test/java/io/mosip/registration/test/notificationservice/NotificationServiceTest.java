@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.registration.exception.ConnectionException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -62,7 +63,7 @@ public class NotificationServiceTest {
 
 	@Test
 	public void sendEmailTest()
-			throws HttpClientErrorException, RegBaseCheckedException, ResourceAccessException, SocketTimeoutException {
+			throws RegBaseCheckedException, ConnectionException {
 
 		//NotificationDTO emailDTO = new NotificationDTO();
 		//emailDTO.setStatus("Email Request submitted");
@@ -80,7 +81,7 @@ public class NotificationServiceTest {
 
 	@Test
 	public void sendSMSTest()
-			throws HttpClientErrorException, RegBaseCheckedException, ResourceAccessException, SocketTimeoutException {
+			throws RegBaseCheckedException, ConnectionException {
 		NotificationDTO smsdto = new NotificationDTO();
 		Map<String, String> requestMap = new HashMap<>();
 		requestMap.put("message", "Hi");
@@ -100,7 +101,7 @@ public class NotificationServiceTest {
 	}
 
 	@Test(expected=RegBaseCheckedException.class)
-	public void sendSMSFailuretest() throws ResourceAccessException, SocketTimeoutException, RegBaseCheckedException {
+	public void sendSMSFailuretest() throws RegBaseCheckedException, ConnectionException{
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyObject(),Mockito.anyString()))
 				.thenThrow(RegBaseCheckedException.class);
 		ResponseDTO responseDTO = notificationServiceImpl.sendSMS("Hi", null, "regid");
@@ -108,7 +109,7 @@ public class NotificationServiceTest {
 	}
 
 	@Test(expected=RegBaseCheckedException.class)
-	public void sendEmailFailuretest() throws ResourceAccessException, SocketTimeoutException, RegBaseCheckedException {
+	public void sendEmailFailuretest() throws RegBaseCheckedException, ConnectionException{
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.any(NotificationDTO.class),Mockito.anyString()))
 				.thenThrow(RegBaseCheckedException.class);
 		ResponseDTO responseDTO = notificationServiceImpl.sendEmail("Hi", null, "regid");
@@ -117,7 +118,7 @@ public class NotificationServiceTest {
 	}
 	
 	@Test
-	public void sendEmailFailure() throws ResourceAccessException, SocketTimeoutException, RegBaseCheckedException {
+	public void sendEmailFailure() throws RegBaseCheckedException, ConnectionException {
 		Mockito.when(serviceDelegateUtil.post(Mockito.any(), Mockito.any(),Mockito.any()))
 				.thenThrow(HttpClientErrorException.class);
 		ResponseDTO responseDTO = notificationServiceImpl.sendEmail("Hi", "9994019595", "regid");
@@ -126,7 +127,7 @@ public class NotificationServiceTest {
 	}
 	
 	@Test
-	public void sendEmailFailuretest1() throws HttpClientErrorException, ResourceAccessException, SocketTimeoutException, RegBaseCheckedException{
+	public void sendEmailFailuretest1() throws RegBaseCheckedException, ConnectionException {
 		Map<String, List<Map<String,String>>> emailDTO=new HashMap<>();
 		List<Map<String,String>> list= new ArrayList();
 		Map<String,String> map=new HashMap<>();

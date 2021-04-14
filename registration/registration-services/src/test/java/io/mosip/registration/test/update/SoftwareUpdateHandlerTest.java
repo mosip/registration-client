@@ -75,14 +75,15 @@ public class SoftwareUpdateHandlerTest {
 
 	}
 
+
 	@Ignore
 	@Test
 	public void executeSQLTestRollBack() throws Exception {
 
 		// SoftwareUpdateHandler softwareUpdateHandler =new SoftwareUpdateHandler();
 
-		// Mockito.doNothing().when(globalParamService).update(Mockito.anyString(),
-		// Mockito.anyString());
+		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(),
+		Mockito.anyString());
 
 		System.setProperty("user.dir", "src/test/resources/");
 		Mockito.doThrow(RuntimeException.class).when(jdbcTemplate).execute(Mockito.anyString());
