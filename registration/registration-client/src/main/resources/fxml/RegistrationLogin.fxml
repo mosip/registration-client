@@ -1,18 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.jfoenix.controls.*?>
 <?import javafx.scene.image.*?>
-<?import java.lang.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.text.Font?>
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.control.Hyperlink?>
 
 <BorderPane id="loginScreen" prefHeight="553.0" prefWidth="523.0" styleClass="loginBorderPaneStyle" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.mosip.registration.controller.auth.LoginController">
 	<top>
@@ -40,7 +31,8 @@
                <children>
                <Label layoutX="57.0" layoutY="41.0" styleClass="higlightedLoginLable" text="%registrationlogin" AnchorPane.leftAnchor="57.0" AnchorPane.topAnchor="41.0" />
       			 <TextField fx:id="userId" layoutX="57.0" layoutY="116.0" onAction="#validateUserId" promptText="%withusername" styleClass="loginTextStyle" AnchorPane.leftAnchor="53.0" />
-                  <Button layoutX="52.0" layoutY="171.0" mnemonicParsing="false" onAction="#validateUserId" styleClass="loginSubmitStyle" text="%submit" />
+				   <ComboBox fx:id="appLanguage" layoutX="53.0" layoutY="101.0" styleClass="loginCombobox" AnchorPane.leftAnchor="53.0" promptText="%chooselanguage" />
+				   <Button layoutX="52.0" layoutY="171.0" mnemonicParsing="false" onAction="#validateUserId" styleClass="loginSubmitStyle" text="%submit" />
                   <ProgressIndicator fx:id="progressIndicator" layoutX="130.0" layoutY="50.0" progress="0.0" visible="false" />
 <!--              <Hyperlink fx:id="forgotUsrnme" layoutX="167.0" layoutY="221.0" mnemonicParsing="false" onAction="#forgotUsrname" styleClass="hyperLinkStyle" text="%forgotUsername" /> -->
                </children>
