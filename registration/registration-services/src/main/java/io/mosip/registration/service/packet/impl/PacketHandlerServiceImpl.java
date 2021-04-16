@@ -14,6 +14,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import io.mosip.kernel.core.idgenerator.spi.PridGenerator;
 import io.mosip.kernel.core.idgenerator.spi.RidGenerator;
 import io.mosip.registration.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,6 +121,9 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	
 	@Autowired
 	private BioService bioService;
+
+	@Autowired
+	private PridGenerator<String> pridGenerator;
 
 	@Value("${objectstore.packet.source:REGISTRATION_CLIENT}")
 	private String source;

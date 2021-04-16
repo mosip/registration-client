@@ -1903,7 +1903,6 @@ public class RegistrationConstants {
 	public static final String MOSIP_HOSTNAME = "mosip.hostname";
 	public static final String MOSIP_HOSTNAME_DEF_VAL = "dev.mosip.net";
 	
-
 	/** Moved To Here from UiConstants file */
 	public static final String REGEX_TYPE = "REGEX";
 	public static final String SUPERVISOR_AUTHENTICATION_CONFIGURATION = "mosip.registration.supervisor_authentication_configuration";
@@ -1916,4 +1915,6 @@ public class RegistrationConstants {
 	public static final String CONFIGURED    = "CONFIGURED";
 
 	
+	public static final String PACKET_APPLICATION_ID = "applicationId";
+
 }

@@ -95,6 +95,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			registration.setRegUsrId(SessionContext.userContext().getUserId());
 			registration.setApproverUsrId(SessionContext.userContext().getUserId());
 			registration.setPreRegId(registrationDTO.getPreRegistrationId());
+			registration.setAppId(registrationDTO.getAppId());
 			
 			RegistrationDataDto registrationDataDto = new RegistrationDataDto();
 			
@@ -124,6 +125,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			List<RegistrationTransaction> registrationTransactions = new ArrayList<>();
 			RegistrationTransaction registrationTxn = new RegistrationTransaction();
 			registrationTxn.setRegId(registration.getId());
+			registrationTxn.setAppId(registration.getAppId());
 			registrationTxn.setTrnTypeCode(RegistrationTransactionType.CREATED.getCode());
 			registrationTxn.setLangCode(RegistrationConstants.ENGLISH_LANG_CODE);
 			registrationTxn.setStatusCode(RegistrationClientStatusCode.CREATED.getCode());
