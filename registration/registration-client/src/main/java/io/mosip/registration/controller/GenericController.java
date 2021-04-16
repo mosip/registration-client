@@ -218,11 +218,11 @@ public class GenericController extends BaseController {
 			public void handle(MouseEvent event) {
 				ResponseDTO responseDTO = preRegistrationDataSyncService.getPreRegistration(textField.getText(), false);
 
-				getRegistrationDTOFromSession().setPreRegistrationId(textField.getText());
-
-
 				try {
 					loadPreRegSync(responseDTO);
+					getRegistrationDTOFromSession().setPreRegistrationId(textField.getText());
+					getRegistrationDTOFromSession().setAppId(textField.getText());
+
 				} catch (RegBaseCheckedException exception) {
 					generateAlertLanguageSpecific(RegistrationConstants.ERROR, responseDTO.getErrorResponseDTOs().get(0).getMessage());
 				}

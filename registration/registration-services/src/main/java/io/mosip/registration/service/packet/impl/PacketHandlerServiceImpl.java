@@ -14,6 +14,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import io.mosip.kernel.core.idgenerator.spi.PridGenerator;
 import io.mosip.kernel.core.idgenerator.spi.RidGenerator;
 import io.mosip.registration.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -115,6 +116,9 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 	@Autowired
 	private RidGenerator<String> ridGeneratorImpl;
+	
+	@Autowired
+	private PridGenerator<String> pridGenerator;
 
 	@Value("${objectstore.packet.source:REGISTRATION_CLIENT}")
 	private String source;
@@ -702,6 +706,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		// set id-schema version to be followed for this registration
 		registrationDTO.setIdSchemaVersion(identitySchemaService.getLatestEffectiveSchemaVersion());
 
+		registrationDTO.setAppId(pridGenerator.generateId());
 		// Create object for OSIData DTO
 		registrationDTO.setOsiDataDTO(new OSIDataDTO());
 		registrationDTO.setRegistrationCategory(registrationCategory);

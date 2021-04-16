@@ -80,7 +80,9 @@ public class Registration extends RegistrationCommonFields {
 	private Timestamp latestRegTrnTimestamp;
 	@Column(name = "ADDITIONAL_INFO")
 	private byte[] additionalInfo;
-
+	@Column(name = "APP_ID")
+	private String appId;
+	
 	@ManyToOne
 	@JoinColumn(name = "CR_BY", referencedColumnName = "id", insertable = false, updatable = false)
 	private UserDetail userdetail;
@@ -334,4 +336,13 @@ public class Registration extends RegistrationCommonFields {
 	public void setAdditionalInfo(byte[] additionalInfo) {
 		this.additionalInfo = additionalInfo;
 	}
+
+	public String getAppId() {
+		return appId;
+	}
+
+	public void setAppId(String appId) {
+		this.appId = appId;
+	}
+
 }

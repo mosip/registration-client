@@ -1906,5 +1906,6 @@ public class RegistrationConstants {
 	/** Moved To Here from UiConstants file */
 	public static final String REGEX_TYPE = "REGEX";
 	public static final String SUPERVISOR_AUTHENTICATION_CONFIGURATION = "mosip.registration.supervisor_authentication_configuration";
+	public static final String PACKET_APPLICATION_ID = "applicationId";
 	
 }

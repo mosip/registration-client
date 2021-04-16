@@ -44,6 +44,7 @@ public class RegistrationDTO {
 	private double idSchemaVersion;
 	private String registrationId;
 	private String preRegistrationId;
+	private String appId;
 	private String registrationCategory;
 	private int age;
 	private boolean isChild;
