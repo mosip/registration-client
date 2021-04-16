@@ -357,8 +357,10 @@ public class TemplateGenerator extends BaseService {
 		try {
 			templateValues.put("isPreview", isPrevTemplate);
 			templateValues.put("IDSchemaVersion", registration.getIdSchemaVersion());
-			templateValues.put(RegistrationConstants.TEMPLATE_RID_LABEL, getLabel(RegistrationConstants.PACKET_APPLICATION_ID));
-			templateValues.put(RegistrationConstants.TEMPLATE_RID, registration.getAppId());
+			templateValues.put(RegistrationConstants.TEMPLATE_RID_LABEL, getLabel("registrationid"));
+			templateValues.put(RegistrationConstants.TEMPLATE_RID, registration.getRegistrationId());
+			templateValues.put(RegistrationConstants.TEMPLATE_APPLICATION_ID_LABEL, getLabel(RegistrationConstants.PACKET_APPLICATION_ID));
+			templateValues.put(RegistrationConstants.TEMPLATE_APPLICATION_ID, registration.getAppId());
 			templateValues.put(RegistrationConstants.TEMPLATE_UIN_LABEL, getLabel("uin"));
 			templateValues.put(RegistrationConstants.TEMPLATE_UIN, registration.getDemographics().get("UIN"));
 			templateValues.put(RegistrationConstants.TEMPLATE_PRE_REG_ID_LABEL, getLabel("preRegistrationId"));

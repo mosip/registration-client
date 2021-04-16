@@ -514,8 +514,11 @@ public class RegistrationConstants {
 	public static final String TEMPLATE_UIN_HEADER_TABLE = "uinHeaderTable";
 	public static final String TEMPLATE_UIN_LABEL = "UINLabel";
 	public static final String TEMPLATE_UIN = "UIN";
+	
 	public static final String TEMPLATE_RID_LABEL = "RIDLabel";
 	public static final String TEMPLATE_RID = "RID";
+	public static final String TEMPLATE_APPLICATION_ID_LABEL = "ApplicationIDLabel";
+	public static final String TEMPLATE_APPLICATION_ID = "ApplicationID";
 	public static final String TEMPLATE_DATE_LABEL = "DateLabel";
 	public static final String TEMPLATE_DATE = "Date";
 	public static final String TEMPLATE_PRE_REG_ID_LABEL = "PreRegIDLabel";
