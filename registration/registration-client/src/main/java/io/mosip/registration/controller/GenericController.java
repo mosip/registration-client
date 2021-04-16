@@ -571,6 +571,7 @@ public class GenericController extends BaseController {
 		TabPane tabPane = createTabPane();
 		SchemaDto schema = getLatestSchema();
 		getScreens(schema);
+		loadUIElementsFromSchema();
 
 		for(UiScreenDTO screenDTO : orderedScreens.values()) {
 			Map<String, List<UiSchemaDTO>> screenFieldGroups = getFieldsBasedOnAlignmentGroup(screenDTO.getFields(), schema);
