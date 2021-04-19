@@ -309,6 +309,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			throws RegBaseCheckedException {
 		Map<String, String> metaData = new LinkedHashMap<>();
 		metaData.put(PacketManagerConstants.REGISTRATIONID, registrationDTO.getRegistrationId());
+		metaData.put(RegistrationConstants.PACKET_APPLICATION_ID, registrationDTO.getAppId());
 		metaData.put(PacketManagerConstants.META_CREATION_DATE, DateUtils.formatToISOString(LocalDateTime.now()));
 		metaData.put(PacketManagerConstants.META_CLIENT_VERSION, softwareUpdateHandler.getCurrentVersion());
 		metaData.put(PacketManagerConstants.META_REGISTRATION_TYPE,
