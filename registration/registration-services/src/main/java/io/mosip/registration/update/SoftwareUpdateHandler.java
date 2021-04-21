@@ -548,8 +548,11 @@ public class SoftwareUpdateHandler extends BaseService {
 	 */
 	public ResponseDTO executeSqlFile(String latestVersion, String previousVersion) throws IOException {
 
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"DB-Script files execution started");
+		LOGGER.info("DB-Script files execution started from previous version : {} , To Current Version : {}",previousVersion, currentVersion);
+
+		latestVersion = latestVersion.split("-")[0];
+		previousVersion = previousVersion.split("-")[0];
+		
 
 		ResponseDTO responseDTO = new ResponseDTO();
 
