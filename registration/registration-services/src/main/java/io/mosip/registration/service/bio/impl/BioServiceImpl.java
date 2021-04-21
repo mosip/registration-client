@@ -21,6 +21,7 @@ import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
+import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.kernel.core.cbeffutil.entity.BIR;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -111,48 +112,46 @@ public class BioServiceImpl extends BaseService implements BioService {
 
 		List<BiometricsDto> biometricsDtos = deviceSpecificationProvider.rCapture(bioDevice, mdmRequestDto);
 
-		try {
+		
 			for (BiometricsDto biometricsDto : biometricsDtos) {
 				if (biometricsDto != null
 						&& isQualityScoreMaxInclusive(String.valueOf(biometricsDto.getQualityScore()))) {
-					String checkSDKQualityScore = (String) ApplicationContext.map()
-							.getOrDefault(RegistrationConstants.QUALITY_CHECK_WITH_SDK, RegistrationConstants.DISABLE);
-					if (checkSDKQualityScore.equalsIgnoreCase(RegistrationConstants.ENABLE)) {
-						LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-								"Quality check with Biometric SDK flag is enabled..");
+					
+						try {
+							biometricsDto.setSdkScore(getSDKScore(biometricsDto));
+						} catch (Exception exception) {
+							
+							LOGGER.error("Unable to fetch SDK Score ", exception.getCause());
+							if(RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map()
+							                 .getOrDefault(RegistrationConstants.QUALITY_CHECK_WITH_SDK, RegistrationConstants.DISABLE)) ) {
+							    throw new RegBaseCheckedException(
+									RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorCode(),
+									RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorMessage()
+											+ ExceptionUtils.getStackTrace(exception));
+						     }
+						}
+						
+					  if(RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map().getOrDefault(
+								RegistrationConstants.UPDATE_SDK_QUALITY_SCORE, RegistrationConstants.DISABLE))) {
+						LOGGER.info("Quality check with Biometric SDK flag is enabled..");
 
-						BiometricType biometricType = BiometricType
-								.fromValue(Biometric.getSingleTypeByAttribute(biometricsDto.getBioAttribute()).name());
-						BIR bir = buildBir(biometricsDto);
-						BIR[] birList = new BIR[] { bir };
-						Map<BiometricType, Float> scoreMap = bioAPIFactory
-								.getBioProvider(biometricType, BiometricFunction.QUALITY_CHECK)
-								.getModalityQuality(birList, null);
-
-						String updateQualityScore = (String) ApplicationContext.map().getOrDefault(
-								RegistrationConstants.UPDATE_SDK_QUALITY_SCORE, RegistrationConstants.DISABLE);
-						if (updateQualityScore.equalsIgnoreCase(RegistrationConstants.ENABLE)) {
+						
+						
 							LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID,
 									"Flag to update quality score evaluated from Biometric SDK is enabled");
 
-							biometricsDto.setQualityScore(scoreMap.get(biometricType));
+							biometricsDto.setQualityScore(biometricsDto.getSdkScore());
 
-							LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-									"Quality score is evaluated and assigned to biometricsDto");
-						}
-					}
+							LOGGER.info("Quality score is evaluated and assigned to biometricsDto");
+						
+					  }
+					
 					list.add(biometricsDto);
 				}
 			}
-		} catch (Exception exception) {
-			throw new RegBaseCheckedException(
-					RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorCode(),
-					RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorMessage()
-							+ ExceptionUtils.getStackTrace(exception));
-		}
+		 
 
-		LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-				"Ended captureModality method.." + System.currentTimeMillis());
+		LOGGER.info("Ended captureModality method.. {}" , System.currentTimeMillis());
 		return list;
 	}
 
@@ -281,5 +280,20 @@ public class BioServiceImpl extends BaseService implements BioService {
 			return false;
 		}
 		return Double.parseDouble(qualityScore) <= RegistrationConstants.MAX_BIO_QUALITY_SCORE;
+	}
+
+	@Override
+	public double getSDKScore(BiometricsDto biometricsDto) throws BiometricException {
+		BiometricType biometricType = BiometricType
+				.fromValue(Biometric.getSingleTypeByAttribute(biometricsDto.getBioAttribute()).name());
+		BIR bir = buildBir(biometricsDto);
+		BIR[] birList = new BIR[] { bir };
+		Map<BiometricType, Float> scoreMap = bioAPIFactory
+				.getBioProvider(biometricType, BiometricFunction.QUALITY_CHECK)
+				.getModalityQuality(birList, null);
+		
+		return scoreMap.get(biometricType);
+
+		
 	}
 }

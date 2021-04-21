@@ -142,8 +142,6 @@ public class PacketHandlerServiceTest {
 		when(registrationCenterDAO.isMachineCenterActive("123")).thenReturn(true);
 
 		
-		
-		
 		packetHandlerServiceImpl.startRegistration(null, RegistrationConstants.PACKET_TYPE_NEW);
 	}
 
