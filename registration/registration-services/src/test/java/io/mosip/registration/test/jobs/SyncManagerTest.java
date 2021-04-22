@@ -225,7 +225,8 @@ public class SyncManagerTest {
 	
 	@Test
 	public void updateClientSettingLastSyncTimeTest() throws ParseException {
-		SyncDataResponseDto syncDataResponseDto=getSyncDataResponseDto("responseJsonDate.json");
+		SyncDataResponseDto syncDataResponseDto= new SyncDataResponseDto();
+		syncDataResponseDto.setLastSyncTime("2018-12-10T06:12:52.994Z");
 		SyncTransaction syncTransaction = prepareSyncTransaction();
 		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 		Date date = formatter.parse(syncDataResponseDto.getLastSyncTime());
