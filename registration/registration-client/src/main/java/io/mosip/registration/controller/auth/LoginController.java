@@ -354,7 +354,7 @@ public class LoginController extends BaseController implements Initializable {
 		String version = getValueFromApplicationContext(RegistrationConstants.SERVICES_VERSION_KEY);
 
 		try {
-			if (!softwareUpdateHandler.getCurrentVersion().equalsIgnoreCase(version)) {
+			if (!version.equals("0") && !softwareUpdateHandler.getCurrentVersion().equalsIgnoreCase(version)) {
 
 				LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Software Update found");
 

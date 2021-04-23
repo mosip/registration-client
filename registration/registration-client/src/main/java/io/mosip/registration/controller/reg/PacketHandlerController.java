@@ -625,9 +625,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 	 */
 	public void approvePacket() {
 
-		if (!proceedOnAction("PS")) {
-			return;
-		}
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Loading Pending Approval screen started.");
 		try {
 			auditFactory.audit(AuditEvent.NAV_APPROVE_REG, Components.NAVIGATION,
@@ -797,13 +794,12 @@ public class PacketHandlerController extends BaseController implements Initializ
 	 * create packet
 	 */
 	private ResponseDTO savePacket(Writer stringWriter, RegistrationDTO registrationDTO) {
-		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "packet creation has been started");
+		LOGGER.info("packet creation has been started");
 		byte[] ackInBytes = null;
 		try {
 			ackInBytes = stringWriter.toString().getBytes(RegistrationConstants.TEMPLATE_ENCODING);
 		} catch (java.io.IOException ioException) {
-			LOGGER.error("REGISTRATION - SAVE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
-					APPLICATION_ID, ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
+			LOGGER.error( ioException.getMessage(), ioException);
 		}
 
 		if (RegistrationConstants.ENABLE
@@ -844,11 +840,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 				FileUtils.copyToFile(new ByteArrayInputStream(ackInBytes),
 						new File(filePath.concat("_Ack.").concat(RegistrationConstants.ACKNOWLEDGEMENT_FORMAT)));
 
-				// TODO - Client should not send notification, save contact details
-				// TODO - so that it can be sent out during RID sync.
-//				sendNotification((String) registrationDTO.getDemographics().get("email"),
-//						(String) registrationDTO.getDemographics().get("phone"), registrationDTO.getRegistrationId());
-
 				// Sync and Uploads Packet when EOD Process Configuration is set to OFF
 				if (!getValueFromApplicationContext(RegistrationConstants.EOD_PROCESS_CONFIG_FLAG)
 						.equalsIgnoreCase(RegistrationConstants.ENABLE)) {
@@ -857,31 +848,26 @@ public class PacketHandlerController extends BaseController implements Initializ
 				/* sync the packet to server irrespective of eod enable/disable */
 				syncAndUploadPacket();
 
-				LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID,
-						"Registration's Acknowledgement Receipt saved");
+				LOGGER.info("Registration's Acknowledgement Receipt saved");
 			} catch (io.mosip.kernel.core.exception.IOException ioException) {
-				LOGGER.error("REGISTRATION - SAVE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
-						APPLICATION_ID, ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
+				LOGGER.error(ioException.getMessage(), ioException);
 			} catch (RegBaseCheckedException regBaseCheckedException) {
-				LOGGER.error("REGISTRATION - SAVE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
-						APPLICATION_ID,
-						regBaseCheckedException.getMessage() + ExceptionUtils.getStackTrace(regBaseCheckedException));
+				LOGGER.error(regBaseCheckedException.getMessage(), regBaseCheckedException);
 
 				if (regBaseCheckedException.getErrorCode()
 						.equals(RegistrationExceptionConstants.AUTH_ADVICE_USR_ERROR.getErrorCode())) {
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.AUTH_ADVICE_FAILURE);
 				}
 			} catch (RuntimeException runtimeException) {
-				LOGGER.error("REGISTRATION - SAVE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
-						APPLICATION_ID, runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
+				LOGGER.error(runtimeException.getMessage(), runtimeException);
 			}
-		} else {
-			if (response.getErrorResponseDTOs() != null && response.getErrorResponseDTOs().get(0).getCode()
-					.equals(RegistrationExceptionConstants.AUTH_ADVICE_USR_ERROR.getErrorCode())) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.AUTH_ADVICE_FAILURE);
-			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.PACKET_CREATION_FAILURE);
-			}
+			return response;
+		}
+
+		if (response.getErrorResponseDTOs() != null) {
+			generateAlert(RegistrationConstants.ERROR, response.getErrorResponseDTOs().get(0).getCode()
+					.equals(RegistrationExceptionConstants.AUTH_ADVICE_USR_ERROR.getErrorCode()) ?
+					RegistrationUIConstants.AUTH_ADVICE_FAILURE : RegistrationUIConstants.PACKET_CREATION_FAILURE);
 		}
 		return response;
 	}
@@ -980,7 +966,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 	 */
 	private void syncAndUploadPacket() throws RegBaseCheckedException {
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Sync and Upload of created Packet started");
-		if (proceedOnAction("PS")) {
+		if (RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
 
 			String response = packetSynchService.packetSync(getRegistrationDTOFromSession().getRegistrationId());
 

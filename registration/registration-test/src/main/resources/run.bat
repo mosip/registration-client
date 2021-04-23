@@ -1,2 +1,2 @@
 
-jre\jre\bin\java -Dpath.config=\\config.properties -Dfile.encoding=UTF-8 -Djdbc.drivers=org.apache.derby.jdbc.EmbeddedDriver --add-modules=javafx.controls,javafx.fxml,javafx.base,javafx.web,javafx.swing --add-exports javafx.graphics/com.sun.javafx.sg.prism=ALL-UNNAMED -jar registration-test-1.1.5-SNAPSHOT-jar-with-dependencies.jar
+jre\bin\java -Dpath.config=\\config.properties -Dfile.encoding=UTF-8 -Djdbc.drivers=org.apache.derby.jdbc.EmbeddedDriver --add-modules=javafx.controls,javafx.fxml,javafx.base,javafx.web,javafx.swing --add-exports javafx.graphics/com.sun.javafx.sg.prism=ALL-UNNAMED -jar registration-test.jar
