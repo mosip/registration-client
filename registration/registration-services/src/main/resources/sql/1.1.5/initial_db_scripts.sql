@@ -4,8 +4,6 @@ ALTER TABLE "REG"."CA_CERT_STORE" ADD CONSTRAINT "PK_CACS_ID" PRIMARY KEY ("CERT
 
 ALTER TABLE "REG"."SYNC_JOB_DEF" ADD COLUMN "JOB_TYPE" VARCHAR(128);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.last_software_update','mosip.registration.last_software_update','-','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
-
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.regclient_installed_time','mosip.registration.regclient_installed_time',current timestamp,'CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.rcapture','mosip.registration.mdm.key.domain.rcapture','DEVICE','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
@@ -15,3 +13,5 @@ INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.di
 UPDATE "REG"."GLOBAL_PARAM" SET val='false' WHERE name='mosip.registration.machinecenterchanged';
 
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.deviceinfo','mosip.registration.mdm.key.domain.deviceinfo','DEVICE','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+
+INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES('SERVER-RESPONSE', 1095, true, 'mosipadmin', current timestamp);

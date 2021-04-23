@@ -462,6 +462,8 @@ INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION", "IS_ACTIV
 
 INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES('KERNEL', 1095, true, 'mosipadmin', current timestamp);
 
+INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES('SERVER-RESPONSE', 1095, true, 'mosipadmin', current timestamp);
+
 INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES('IDA', 1095, true, 'mosipadmin', current timestamp);
 
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.rcapture','mosip.registration.mdm.key.domain.rcapture','DEVICE','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);

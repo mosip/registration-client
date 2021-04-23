@@ -1863,5 +1863,7 @@ public class RegistrationConstants {
 	
 	public static final String MOSIP_HOSTNAME = "mosip.hostname";
 	public static final String MOSIP_HOSTNAME_DEF_VAL = "dev.mosip.net";
-	
+
+	public static final String RESPONSE_SIGNATURE_PUBLIC_KEY_APP_ID = "SERVER-RESPONSE";
+	public static final String RESPONSE_SIGNATURE_PUBLIC_KEY_REF_ID = "SIGN-VERIFY";
 }
