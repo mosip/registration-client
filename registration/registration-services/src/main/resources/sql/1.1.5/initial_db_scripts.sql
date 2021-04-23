@@ -14,3 +14,5 @@ INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.di
 UPDATE "REG"."GLOBAL_PARAM" SET val='false' WHERE name='mosip.registration.machinecenterchanged';
 
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.deviceinfo','mosip.registration.mdm.key.domain.deviceinfo','DEVICE','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+
+INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES('SERVER-RESPONSE', 1095, true, 'mosipadmin', current timestamp);
