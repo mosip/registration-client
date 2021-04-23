@@ -546,11 +546,11 @@ public class SoftwareUpdateHandler extends BaseService {
 	 * @return response of sql execution
 	 * @throws IOException
 	 */
-	public ResponseDTO executeSqlFile(String latestVersion, String previousVersion) throws IOException {
+	public ResponseDTO executeSqlFile(String actualLatestVersion, String previousVersion) throws IOException {
 
 		LOGGER.info("DB-Script files execution started from previous version : {} , To Current Version : {}",previousVersion, currentVersion);
 
-		latestVersion = latestVersion.split("-")[0];
+		String newVersion = actualLatestVersion.split("-")[0];
 		previousVersion = previousVersion.split("-")[0];
 		
 
@@ -561,12 +561,12 @@ public class SoftwareUpdateHandler extends BaseService {
 		try {
 
 			LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					"Checking Started : " + latestVersion + SLASH + exectionSqlFile);
+					"Checking Started : " + newVersion + SLASH + exectionSqlFile);
 
-			execute(SQL + SLASH + latestVersion + SLASH + exectionSqlFile);
+			execute(SQL + SLASH + newVersion + SLASH + exectionSqlFile);
 
 			LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					"Checking completed : " + latestVersion + SLASH + exectionSqlFile);
+					"Checking completed : " + newVersion + SLASH + exectionSqlFile);
 
 		}
 
@@ -579,12 +579,12 @@ public class SoftwareUpdateHandler extends BaseService {
 			try {
 
 				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Checking started : " + latestVersion + SLASH + rollBackSqlFile);
+						"Checking started : " + newVersion + SLASH + rollBackSqlFile);
 
-				execute(SQL + SLASH + latestVersion + SLASH + rollBackSqlFile);
+				execute(SQL + SLASH + newVersion + SLASH + rollBackSqlFile);
 
 				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Checking completed : " + latestVersion + SLASH + rollBackSqlFile);
+						"Checking completed : " + newVersion + SLASH + rollBackSqlFile);
 
 			} catch (RuntimeException | IOException exception) {
 
@@ -603,9 +603,9 @@ public class SoftwareUpdateHandler extends BaseService {
 		}
 
 		// Update global param with current version
-		globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, latestVersion);
+		globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, actualLatestVersion);
 
-		addProperties(latestVersion);
+		//addProperties(latestVersion);
 
 		setSuccessResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_SUCCESS, null);
 
