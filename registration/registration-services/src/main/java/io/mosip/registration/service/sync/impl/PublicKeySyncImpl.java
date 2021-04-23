@@ -102,9 +102,9 @@ public class PublicKeySyncImpl extends BaseService implements PublicKeySync {
 		}
 
 		UploadCertificateRequestDto uploadCertRequestDto = new UploadCertificateRequestDto();
-		uploadCertRequestDto.setApplicationId(RegistrationConstants.KERNEL_APP_ID);
+		uploadCertRequestDto.setApplicationId(RegistrationConstants.RESPONSE_SIGNATURE_PUBLIC_KEY_APP_ID);
 		uploadCertRequestDto.setCertificateData(syncedCertificate);
-		uploadCertRequestDto.setReferenceId(signRefId);
+		uploadCertRequestDto.setReferenceId(RegistrationConstants.RESPONSE_SIGNATURE_PUBLIC_KEY_REF_ID);
 		keymanagerService.uploadOtherDomainCertificate(uploadCertRequestDto);
 
 		LOGGER.debug("Sign Public Key Synced & saved in local DB successfully");
@@ -142,7 +142,8 @@ public class PublicKeySyncImpl extends BaseService implements PublicKeySync {
 	private KeyPairGenerateResponseDto getKeyFromLocalDB() {
 		try {
 			KeyPairGenerateResponseDto certificateDto = keymanagerService
-					.getCertificate(RegistrationConstants.KERNEL_APP_ID, Optional.of(signRefId));
+					.getCertificate(RegistrationConstants.RESPONSE_SIGNATURE_PUBLIC_KEY_APP_ID,
+							Optional.of(RegistrationConstants.RESPONSE_SIGNATURE_PUBLIC_KEY_REF_ID));
 
 			if(certificateDto != null && certificateDto.getCertificate() != null)
 				return certificateDto;
