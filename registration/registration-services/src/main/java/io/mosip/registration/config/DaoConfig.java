@@ -441,7 +441,7 @@ public class DaoConfig extends HibernateDaoConfig {
 			StringBuilder dbConf = new StringBuilder();
 			dbConf.append(RandomStringUtils.randomAlphanumeric(20));
 			dbConf.append(SEPARATOR);
-			dbConf.append(RandomStringUtils.randomAlphanumeric(10));
+			dbConf.append(RandomStringUtils.randomAlphabetic(10));
 			dbConf.append(SEPARATOR);
 			dbConf.append(RandomStringUtils.randomAlphanumeric(20));
 			dbConf.append(SEPARATOR);
@@ -458,7 +458,7 @@ public class DaoConfig extends HibernateDaoConfig {
 		//older versions of reg-cli, re-encrypt db and set the new flags
 		if(parts.length == 1) {
 			conf.put(BOOTPWD_KEY, parts[0]);
-			conf.put(USERNAME_KEY, RandomStringUtils.randomAlphanumeric(20));
+			conf.put(USERNAME_KEY, RandomStringUtils.randomAlphabetic(20));
 			conf.put(PWD_KEY, RandomStringUtils.randomAlphanumeric(20));
 			conf.put(STATE_KEY, ERROR_STATE);
 		}
