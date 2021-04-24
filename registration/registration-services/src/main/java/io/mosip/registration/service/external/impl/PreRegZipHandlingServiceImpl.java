@@ -29,7 +29,6 @@ import javax.crypto.spec.SecretKeySpec;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.crypto.spi.CryptoCoreSpec;
 import io.mosip.kernel.keygenerator.bouncycastle.KeyGenerator;
-import io.mosip.kernel.keygenerator.bouncycastle.util.KeyGeneratorUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
@@ -40,9 +39,6 @@ import org.springframework.stereotype.Service;
 import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.kernel.core.security.constants.MosipSecurityMethod;
-import io.mosip.kernel.core.security.decryption.MosipDecryptor;
-import io.mosip.kernel.core.security.encryption.MosipEncryptor;
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.registration.config.AppConfig;
@@ -263,12 +259,15 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 	@Override
 	public PreRegistrationDTO encryptAndSavePreRegPacket(String preRegistrationId, byte[] preRegPacket)
 			throws RegBaseCheckedException {
+		
+		// Decrypt the preRegPacket data
+		byte[] decryptedPacketData = clientCryptoFacade.decrypt(preRegPacket);
 
 		//KeyGenerator keyGenerator = KeyGeneratorUtils.getKeyGenerator("AES", 256);
 		// Generate AES Session Key
 		final SecretKey symmetricKey = keyGenerator.getSymmetricKey();
 
-		final byte[] encryptedData = cryptoCore.symmetricEncrypt(symmetricKey, preRegPacket, null);
+		final byte[] encryptedData = cryptoCore.symmetricEncrypt(symmetricKey, decryptedPacketData, null);
 
 		// Encrypt the Pre reg packet data using AES
 		/*final byte[] encryptedData = MosipEncryptor.symmetricEncrypt(symmetricKey.getEncoded(), preRegPacket,
