@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<GridPane fx:id="deviceSettingsRoot" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.mosip.registration.controller.settings.impl.DeviceSettingsController">
+  <columnConstraints>
+    <ColumnConstraints hgrow="SOMETIMES" percentWidth="100.0" />
+  </columnConstraints>
+  <rowConstraints>
+    <RowConstraints percentHeight="100.0" vgrow="SOMETIMES" />
+  </rowConstraints>
+   <children>
+      <GridPane>
+        <columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" percentWidth="100.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints percentHeight="6.0" vgrow="SOMETIMES" />
+          <RowConstraints percentHeight="8.0" vgrow="SOMETIMES" />
+          <RowConstraints percentHeight="86.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <children>
+            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" GridPane.rowIndex="1">
+               <children>
+                  <Label fx:id="headerLabel" styleClass="mainHeader" />
+               </children>
+            </HBox>
+            <GridPane GridPane.rowIndex="2">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" percentWidth="5.0" />
+                <ColumnConstraints hgrow="SOMETIMES" percentWidth="90.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" percentWidth="5.0" />
+              </columnConstraints>
+              <rowConstraints>
+                  <RowConstraints percentHeight="10.0" vgrow="SOMETIMES" />
+                  <RowConstraints percentHeight="90.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <ScrollPane fx:id="contentPane" fitToHeight="true" fitToWidth="true" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                     <opaqueInsets>
+                        <Insets top="20.0" />
+                     </opaqueInsets>
+                  </ScrollPane>
+                  <GridPane GridPane.columnIndex="1">
+                    <columnConstraints>
+                      <ColumnConstraints hgrow="SOMETIMES" percentWidth="80.0" />
+                      <ColumnConstraints hgrow="SOMETIMES" percentWidth="20.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                      <RowConstraints percentHeight="100.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                     <children>
+                        <HBox fx:id="contentHBox" alignment="CENTER_LEFT" spacing="20.0">
+                           <children>
+                              <Label styleClass="settingsLabelStyle" text="%portRange" />
+                              <TextField fx:id="fromPort" promptText="%fromPort" styleClass="deviceSettingsTextFieldStyle" />
+                              <Label styleClass="settingsLabelStyle" text="-" />
+                              <TextField fx:id="toPort" promptText="%toPort" styleClass="deviceSettingsTextFieldStyle" />
+                              <Button fx:id="submit" mnemonicParsing="false" onAction="#modifyPortRange" styleClass="contiuneButton" text="%submit" visible="false" />
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1">
+                           <children>
+                              <Button mnemonicParsing="false" onAction="#scanForDevices" styleClass="contiuneButton" text="%scanNow" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </GridPane>
+               </children>
+            </GridPane>
+            <GridPane fx:id="header">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="100.0" prefWidth="100.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" percentHeight="100.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+              <children>
+                    <fx:include fx:id="Header" prefHeight="${header.height}" prefWidth="${header.width}" source="Header.fxml" />
+               </children>
+            </GridPane>
+            <StackPane fx:id="progressIndicatorPane" visible="false" GridPane.rowIndex="2">
+               <children>
+                  <ProgressIndicator fx:id="progressIndicator" prefHeight="100.0" prefWidth="100.0" progress="0.0" />
+               </children>
+            </StackPane>
+         </children>
+      </GridPane>
+   </children>
+</GridPane>

@@ -55,6 +55,8 @@ public class RegistrationConstants {
 	public static final String SELECT_LANGUAGE_PAGE = "/fxml/SelectLanguage.fxml";
 	public static final String REG_PREVIEW_PAGE = "/fxml/RegistrationPreview.fxml";
 	public static final String REG_AUTH_PAGE = "/fxml/OperatorAuthentication.fxml";
+	public static final String SETTINGS_PAGE = "/fxml/Settings.fxml";
+	public static final String FXML_PATH = "/fxml/";
 
 	// FXML Id
 	public static final String DEMOGRAPHIC_DETAIL = "demographicDetail";
@@ -1128,6 +1130,8 @@ public class RegistrationConstants {
 	public static final String MASTER_SYNC = "MASTER_SYNC";
 	public static final String NO_INTERNET = "NO_INTERNET";
 	public static final String MASTER_VALIDATOR_SERVICE_NAME = "master_sync";
+	public static final String MASTER_SYNC_SUCCESS_MESSAGE = "MASTER_SYNC_SUCCESS";
+	public static final String MASTER_SYNC_ERROR_MESSAGE = "MASTER_SYNC_ERROR";
 	// public static final String MASTER_CENTER_REMAP_SERVICE_NAME =
 	// "center_remap_sync";
 	public static final String MASTER_CENTER_PARAM = "regcenterId";
@@ -1910,6 +1914,40 @@ public class RegistrationConstants {
 	public static final String EXCEPTION   = "EXCEPTION";
 	public static final String CONFIGURED    = "CONFIGURED";
 	
+	/** Settings Page Labels & CSS styles */
+	public static final String SYNC_JOB_STYLE = "syncJobStyle";
+	public static final String RUN_NOW_LABEL = "runNow";
+	public static final String OPERATIONAL_TITLE = "operationalTitle";
+	public static final String NEXT_RUN_LABEL = "nextRun";
+	public static final String OPERATIONAL_DETAILS = "operationalDetails";
+	public static final String LAST_RUN_LABEL = "lastRun";
+	public static final String CRON_EXPRESSION_LABEL = "cronExpression";
+	public static final String SYNC_JOB_LABEL_STYLE = "syncJobLabel";
+	public static final String SYNC_JOB_TEXTFIELD_STYLE = "syncJobTextField";
+	public static final String SUBMIT_LABEL = "submit";
+	public static final String SYNC_JOB_BUTTON_STYLE = "syncJobButton";
+	public static final String UPDATE_LABEL = "update";
+	public static final String FINGERPRINT_DEVICE_IMG = "FingerprintDevice.png";
+	public static final String IRIS_DEVICE_IMG = "IrisDevice.png";
+	public static final String FACE_DEVICE_IMG = "FaceDevice.png";
+	public static final String DOC_SCANNER_DEVICE = "DocScannerDevice.png";
+	public static final String PORT_RANGE_REGEX = "^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$";
+	public static final String FINGERPRINT_DEVICE_KEY = "fingerprint_slab";
+	public static final String IRIS_DEVICE_KEY = "iris_double";
+	public static final String FACE_DEVICE_KEY = "face_face";
+	public static final String FP_DEVICE_CONNECTED_IMG = "FpDeviceConnected.png";
+	public static final String IRIS_DEVICE_CONNECTED_IMG = "IrisDeviceConnected.png";
+	public static final String FACE_DEVICE_CONNECTED_IMG = "FaceDeviceConnected.png";
+	public static final String FP_DEVICE_DISCONNECTED_IMG = "FpDeviceDisconnected.png";
+	public static final String IRIS_DEVICE_DISCONNECTED_IMG = "IrisDeviceDisconnected.png";
+	public static final String FACE_DEVICE_DISCONNECTED_IMG = "FaceDeviceDisconnected.png";
+	public static final String REFRESH_ICON = "refresh.png";
+	public static final String SHORTCUT_ICON = "shortcut.png";
 	
+	public static final String PERMITTED_JOB_TYPE = "JOB";
+	public static final String PERMITTED_CONFIG_TYPE = "CONFIGURATION";
+	
+	public static final String RESTART_NOW = "RESTART_NOW";
+	public static final String RESTART_LATER = "RESTART_LATER";
 	
 }

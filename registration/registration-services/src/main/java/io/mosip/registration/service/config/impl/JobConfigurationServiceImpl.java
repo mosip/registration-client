@@ -4,7 +4,9 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import org.quartz.CronExpression;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
 import org.quartz.JobBuilder;
@@ -59,6 +62,7 @@ import io.mosip.registration.jobs.JobProcessListener;
 import io.mosip.registration.jobs.JobTriggerListener;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.JobConfigurationService;
+import io.mosip.registration.service.config.LocalConfigService;
 
 /**
  * implementation class of {@link JobConfigurationService}
@@ -116,6 +120,9 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 	@Autowired
 	private ApplicationContext applicationContext;
 
+	@Autowired
+	private LocalConfigService localConfigService;
+	
 	public ApplicationContext getApplicationContext() {
 		return applicationContext;
 	}
@@ -291,7 +298,7 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 
 					CronTrigger trigger = (CronTrigger) TriggerBuilder.newTrigger().forJob(jobDetail)
 							.withIdentity(syncJob.getId())
-							.withSchedule(CronScheduleBuilder.cronSchedule(syncJob.getSyncFreq())).build();
+							.withSchedule(CronScheduleBuilder.cronSchedule(getSyncFrequency(syncJob))).build();
 
 					schedulerFactoryBean.getScheduler().scheduleJob(jobDetail, trigger);
 
@@ -734,9 +741,10 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 				RegistrationConstants.APPLICATION_ID, "Started invoking Missed Trigger Jobs");
 
 		map.forEach((jobId, syncJob) -> {
-			if (!isNull(syncJob.getSyncFreq()) && !isNull(syncJob.getApiName())) {
+			String syncFrequency = getSyncFrequency(syncJob);
+			if (!isNull(syncFrequency) && !isNull(syncJob.getApiName())) {
 				/* An A-sync task to complete missed trigger */
-				new Thread(() -> executeMissedTrigger(jobId, syncJob.getSyncFreq())).start();
+				new Thread(() -> executeMissedTrigger(jobId, syncFrequency)).start();
 			}
 
 		});
@@ -744,6 +752,11 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 		LOGGER.info(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Completed invoking Missed Trigger Jobs");
 
+	}
+
+	private String getSyncFrequency(SyncJobDef syncJob) {
+		String localPreference = localConfigService.getValue(syncJob.getId());
+		return localPreference.isBlank() ? syncJob.getSyncFreq() : localPreference;
 	}
 
 	/*
@@ -854,6 +867,13 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 
 		return responseDTO;
 	}
+	
+	@Override
+	public String getNextRestartTime(String syncFrequency) {
+		ExecutionTime executionTime = getExecutionTime(syncFrequency);
+		Instant next = getNext(executionTime);
+		return next.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+	}
 
 	/**
 	 * scheduler factory bean used to schedule the batch jobs
@@ -912,6 +932,11 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 				RegistrationConstants.APPLICATION_ID, "Getting Job info in sync control Completed");
 
 		return syncControl;
+	}
+	
+	@Override
+	public boolean isValidCronExpression(String cronExpression) {
+		return CronExpression.isValidExpression(cronExpression);
 	}
 
 }

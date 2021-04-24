@@ -3,6 +3,11 @@
 	-fx-font-size: 14.0px;
 }
 
+.table-cell:editable {
+	-fx-font-weight: bold;
+    -fx-tex-fill: green;
+}
+
 .keyboardPane {
 	-fx-background-color: white;
 	-fx-border-color: black;
@@ -675,6 +680,28 @@ Working on new Css by taleev
 	-fx-background-color: -fx-text-box-border, -fx-control-inner-background;
 }
 
+.settingsTextFieldStyle {
+	-fx-pref-height: 30.0px;
+	-fx-pref-width: 250.0px;
+	-fx-border-width: 0.0 0.0 0.0 0.0;
+	-fx-border-color: #C9C9C9;
+	-fx-background-color: -fx-text-box-border, -fx-control-inner-background;
+}
+
+.deviceSettingsTextFieldStyle {
+	-fx-pref-height: 30.0px;
+	-fx-pref-width: 150.0px;
+	-fx-border-width: 0.0 0.0 0.0 0.0;
+	-fx-border-color: #C9C9C9;
+	-fx-background-color: -fx-text-box-border, -fx-control-inner-background;
+}
+
+.settingsTextFieldStyle:focused {
+	-fx-border-width: 0.2 0.2 2.0 0.2;
+	-fx-border-color: #C9C9C9 #C9C9C9 #22A8C9 #C9C9C9;
+	-fx-background-color: -fx-text-box-border, -fx-control-inner-background;
+}
+
 .higlightedLoginLable {
 	-fx-font-size: 30.0px;
 }
@@ -855,6 +882,18 @@ Working on new Css by taleev
 	-fx-text-fill: #000000;
 }
 
+.settingsTextField {
+	-fx-border-width: 0.0 0.0 2.0 0.0;
+	-fx-border-color: #8f898c;
+	-fx-effect: dropshadow(three-pass-box, rgba(0.0, 0.0, 0.0, 0.3), 5.0,
+		0.0, 0.0, 1.0);
+	-fx-prompt-text-fill: #a0a0a0;
+	-fx-font-size: 12px;
+	-fx-text-fill: green;
+	-fx-pref-height: 5.0px;
+	-fx-pref-width: 10.0px;
+}
+
 .iconsHBox {
 	-fx-border-style: solid inside;
 	-fx-border-width: 0.0 0.0 1.0 0.0;
@@ -969,7 +1008,7 @@ Working on new Css by taleev
 	-fx-text-fill: black;
 	-fx-font-size: 1.3em;
 	-fx-border-width: 1.0;
-	-fx-border-color: black;
+	-fx-border-color: #005baa;
 }
 
 .demoGraphicFieldMessageLabel {
@@ -994,6 +1033,12 @@ Working on new Css by taleev
 	-fx-pref-width: 312.0px;
 	-fx-border-width: 0.0 0.0 2.0 0.0;
 	-fx-border-color: #005baa;
+}
+
+.settingsLabel {
+	-fx-border-width: 0.0;
+	-fx-text-fill: #666666;
+	-fx-font-size: 12px;
 }
 
 .filterCombobox {
@@ -1331,6 +1376,15 @@ Working on new Css by taleev
     -fx-alignment: CENTER;
 }
 
+.syncTableColumn {
+	-fx-text-fill: black;
+  	-fx-alignment: CENTER-LEFT;
+}
+
+#globalParamTable .column-header .label {
+	-fx-alignment: CENTER-LEFT;
+}
+
 .table-row-cell {
 	-fx-background-color: #FFFFFF;
 	-fx-background-insets: 0.0, 0.0 0.0 1.0 0.0;
@@ -1508,8 +1562,14 @@ Working on new Css by taleev
 }
 
 .mainHeader {
+	-fx-font-family: Roboto;
 	-fx-text-fill: #005baa;
 	-fx-font-size: 20.0px;
+}
+
+.settingsLabelStyle {
+	-fx-font-family: Roboto;
+	-fx-font-size: 16.0px;
 }
 
 #uploadPacketHeader {
@@ -1767,9 +1827,16 @@ Working on new Css by taleev
 }
 
 .internetModePane {
-	-fx-background-radius: 21.0, 21.0, 21.0, 21.0;
+	-fx-border-radius: 25 25 25 25;
+  	-fx-background-radius: 25 25 25 25;
 	-fx-background-color: #1EBD22;
-	-fx-border-radius: 21.0, 21.0, 21.0, 21.0;
+	-fx-border-color: #61AB01;
+}
+
+.offlineModePane {
+	-fx-border-radius: 50%;
+  	-fx-background-radius: 25 25 25 25;
+	-fx-background-color: #F57E20;
 	-fx-border-color: #61AB01;
 }
 
@@ -1879,6 +1946,13 @@ Working on new Css by taleev
 	-fx-background-color: #FFFFFF;
 }
 
+.syncJobStyle {
+	-fx-background-radius: 4.0, 4.0, 4.0, 4.0;
+	-fx-border-radius: 4.0, 4.0, 4.0, 4.0;
+	-fx-border-color: #005baa;
+	-fx-background-color: #FFFFFF;
+}
+
 .uinUpdateStyle:hover, .uinUpdateStyle:hover .label {
 	-fx-background-color: #004887;
 	-fx-border-color: #004887;
@@ -1919,6 +1993,55 @@ Working on new Css by taleev
 	-fx-background-color: #004887;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
+}
+
+.syncJobTextField {
+	-fx-border-color: #C9C9C9;
+	-fx-border-width: 0.0 0.0 1.0 0.0;
+	-fx-background-color: #FFFFFF;
+	-fx-font-size: 11.0px;
+	-fx-text-fill: #005baa;
+	-fx-pref-width: 90.0px;
+}
+
+.syncJobButton {
+	-fx-background-color: #005baa;
+	-fx-border-width: 1.0 1.0 1.0 1.0;
+	-fx-border-color: #005baa;
+	-fx-text-fill: #FFFFFF;
+	-fx-border-radius: 3.0, 3.0, 3.0, 3.0;
+	-fx-font-size: 10.0px;
+	-fx-pref-width: 70.0px;
+}
+
+.syncJobLabel {
+	-fx-text-fill: #005baa;
+	-fx-font-family: Roboto;
+	-fx-font-size: 10.0px;
+	-fx-pref-width: 100.0px;
+}
+
+.deviceDetailsLabel {
+	-fx-text-fill: #000000;
+	-fx-font-family: Roboto;
+	-fx-font-size: 14.0px;
+	-fx-font-weight: bold;
+}
+
+.deviceDetailsComboBox {
+	-fx-background-radius: 4.0, 4.0, 4.0, 4.0;
+	-fx-border-radius: 4.0, 4.0, 4.0, 4.0;
+	-fx-border-color: #005baa;
+	-fx-background-color: #FFFFFF;
+	-fx-font: 14.0px "Roboto";
+	-fx-font-weight: bold;
+	-fx-pref-width: 450;
+}
+
+.deviceDetailsHBox {
+	-fx-border-color:#808080;
+	-fx-border-width: 1; 
+	-fx-border-style: solid;
 }
 
 .operationalTitle {

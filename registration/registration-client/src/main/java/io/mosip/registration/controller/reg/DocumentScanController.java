@@ -596,5 +596,12 @@ public class DocumentScanController extends BaseController {
 		return isPreviewOnly;
 	}
 
+	public String getSelectedScanDeviceName() {
+		return selectedScanDeviceName;
+	}
+
+	public void setSelectedScanDeviceName(String selectedScanDeviceName) {
+		this.selectedScanDeviceName = selectedScanDeviceName;
+	}
 
 }

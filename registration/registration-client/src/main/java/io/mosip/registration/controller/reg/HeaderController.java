@@ -8,10 +8,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.TimerTask;
+import java.util.stream.Collectors;
 
-import io.mosip.registration.exception.PreConditionCheckException;
-import io.mosip.registration.service.BaseService;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -29,15 +31,20 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.RestartController;
+import io.mosip.registration.controller.SettingsController;
 import io.mosip.registration.controller.auth.LoginController;
 import io.mosip.registration.controller.device.Streamer;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
+import io.mosip.registration.dto.SettingsSchema;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.scheduler.SchedulerUtil;
+import io.mosip.registration.service.BaseService;
+import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.config.JobConfigurationService;
 import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.operator.UserDetailService;
@@ -46,7 +53,6 @@ import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.SyncStatusValidatorService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
-import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -55,9 +61,11 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.NodeOrientation;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -69,6 +77,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
@@ -117,13 +126,15 @@ public class HeaderController extends BaseController {
 	private ImageView homeSelectionMenuImageView;
 	@FXML
 	private ImageView homeImgView;
-	
 
 	@FXML
-	private GridPane online;
+	private HBox online;
 
 	@FXML
-	private GridPane offline;
+	private HBox offline;
+
+	@FXML
+	private HBox settingsHBox;
 
 	@FXML
 	private Menu homeSelectionMenu;
@@ -133,6 +144,9 @@ public class HeaderController extends BaseController {
 
 	@FXML
 	private MenuItem resetPword;
+	
+	@FXML
+	private HBox settingsIconHBox;
 
 	@Autowired
 	private JobConfigurationService jobConfigurationService;
@@ -175,6 +189,13 @@ public class HeaderController extends BaseController {
 	@Autowired
 	private BaseService baseService;
 	
+	@Autowired
+	private IdentitySchemaService identitySchemaService;
+
+	@Autowired
+	private SettingsController settingsController;
+	
+	private List<SettingsSchema> settingsByRole = new ArrayList<>();
 
 	/**
 	 * Mapping Registration Officer details
@@ -184,15 +205,14 @@ public class HeaderController extends BaseController {
 		LOGGER.info(LoggerConstants.LOG_REG_HEADER, APPLICATION_NAME, APPLICATION_ID,
 				"Displaying Registration Officer details");
 
-		
-		setImage(mosipLogo	, RegistrationConstants.MOSIP_LOGO_SMALL_IMG);
-		setImage(userImageView	, RegistrationConstants.USER_IMG);
-		setImage(regCenterLocationImgView	, RegistrationConstants.REG_CENTER_LOCATION_IMG);
-		setImage(registrationOfficeIdImageView	, RegistrationConstants.SYSTEM_IMG);
-		setImage(availableIcon1	, RegistrationConstants.ONLINE_IMG);
-		setImage(availableIcon	, RegistrationConstants.ONLINE_IMG);
-		setImage(homeSelectionMenuImageView	, RegistrationConstants.HAMBURGER_IMG);
-		setImage(homeImgView	, RegistrationConstants.HOME_IMG);
+		setImage(mosipLogo, RegistrationConstants.MOSIP_LOGO_SMALL_IMG);
+		setImage(userImageView, RegistrationConstants.USER_IMG);
+		setImage(regCenterLocationImgView, RegistrationConstants.REG_CENTER_LOCATION_IMG);
+		setImage(registrationOfficeIdImageView, RegistrationConstants.SYSTEM_IMG);
+		setImage(availableIcon1, "Online.png");
+		setImage(availableIcon, "Offline.png");
+		setImage(homeSelectionMenuImageView, RegistrationConstants.HAMBURGER_IMG);
+		setImage(homeImgView, RegistrationConstants.HOME_IMG);
 
 		registrationOfficerName.setText(SessionContext.userContext().getName());
 		registrationOfficeId
@@ -209,6 +229,27 @@ public class HeaderController extends BaseController {
 			homeSelectionMenu.setDisable(false);
 		}
 		resetPword.setVisible(ApplicationContext.map().containsKey(RegistrationConstants.RESET_PWORD_URL));
+		
+		try {
+			settingsByRole.clear();
+			List<SettingsSchema> settingsSchema = identitySchemaService
+					.getSettingsSchema(identitySchemaService.getLatestEffectiveSchemaVersion());
+			if (settingsSchema != null && !settingsSchema.isEmpty()) {
+				List<String> userRoles = userDetailService.getUserRoleByUserId(SessionContext.userId());
+				settingsByRole = settingsSchema.stream()
+						.filter(settings -> CollectionUtils.containsAny(settings.getAccessControl(), userRoles))
+						.collect(Collectors.toList());
+				if (settingsByRole != null && !settingsByRole.isEmpty()) {
+					settingsIconHBox.setVisible(true);
+				}
+			}
+		} catch (RuntimeException | RegBaseCheckedException exception) {
+			LOGGER.error("Exception while reading settings", exception);
+		}	
+		
+		if(!shortCuts.isEmpty()) {
+			shortCuts.forEach(shortCut -> settingsHBox.getChildren().add(shortCut));
+		}
 
 		getTimer().schedule(new TimerTask() {
 
@@ -868,5 +909,34 @@ public class HeaderController extends BaseController {
 			return false;
 		}
 		return true;
+	}
+
+	public void openSettings() {
+		getStage().getScene().getRoot().setDisable(true);
+		settingsController.init(settingsByRole);
+	}
+
+	public void addShortCut(HBox shortCutHBox) {
+		boolean isAdded = false;
+		for (Node node : settingsHBox.getChildren()) {
+			if (node != null && node.getId() != null && node.getId().equalsIgnoreCase(shortCutHBox.getId())) {
+				isAdded = true;
+			}
+		}
+		if (!isAdded) {
+			ContextMenu contextMenu = new ContextMenu();
+			MenuItem removeShortCut = new MenuItem("Remove Shortcut");
+			contextMenu.getItems().add(removeShortCut);
+			removeShortCut.setOnAction(event -> {
+				settingsHBox.getChildren().remove(shortCutHBox);
+				removeShortCutFromList(shortCutHBox);
+				
+			});
+			shortCutHBox.setOnContextMenuRequested(e -> {
+				contextMenu.show(shortCutHBox.getScene().getWindow(), e.getScreenX(), e.getScreenY());
+			});
+			settingsHBox.getChildren().add(shortCutHBox);
+			addShortCutToList(shortCutHBox);
+		}
 	}
 }

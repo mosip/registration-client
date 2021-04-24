@@ -11,20 +11,26 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.ResourceBundle;
+import java.util.Timer;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import io.mosip.registration.dto.mastersync.GenericDto;
-import io.mosip.registration.exception.RemapException;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -55,14 +61,17 @@ import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.biometric.BiometricExceptionDTO;
 import io.mosip.registration.dto.biometric.BiometricInfoDTO;
 import io.mosip.registration.dto.biometric.FaceDetailsDTO;
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RemapException;
 import io.mosip.registration.scheduler.SchedulerUtil;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.config.GlobalParamService;
+import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.security.AuthenticationService;
@@ -98,6 +107,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
@@ -195,6 +205,9 @@ public class BaseController {
 
 	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
+	
+	@Autowired
+	private LocalConfigService localConfigService;
 
 	protected ApplicationContext applicationContext = ApplicationContext.getInstance();
 
@@ -223,6 +236,8 @@ public class BaseController {
 	}
 
 	private static HashMap<String, String> labelMap = new HashMap<>();
+	
+	public List<HBox> shortCuts = new ArrayList<>();
 
 	public static String getFromLabelMap(String key) {
 		return labelMap.get(key);
@@ -579,7 +594,9 @@ public class BaseController {
 	 *
 	 */
 	protected void getGlobalParams() {
-		ApplicationContext.setApplicationMap(globalParamService.getGlobalParams());
+		Map<String, Object> globalProps = globalParamService.getGlobalParams();
+		globalProps.putAll(localConfigService.getLocalConfigurations());
+		ApplicationContext.setApplicationMap(globalProps);
 	}
 
 	/**
@@ -2028,4 +2045,17 @@ public class BaseController {
 	public String getImageFilePath(String configFolder,String imageName) {
 		return configFolder.concat(File.separator).concat(imageName);
 	}
+	
+	public List<HBox> getShortCuts() {
+		return shortCuts;
+	}
+	
+	public void addShortCutToList(HBox shortCut) {
+		shortCuts.add(shortCut);
+	}
+	
+	public void removeShortCutFromList(HBox shortCut) {
+		shortCuts.remove(shortCut);
+	}
+	
 }

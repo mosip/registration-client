@@ -133,6 +133,10 @@ public interface JobConfigurationService {
 	 */
 	public SyncControl getSyncControlOfJob(String syncJobId);
 
+	public String getNextRestartTime(String syncFrequency);
+
+	public boolean isValidCronExpression(String cronExpression);
+
 	
 
 }

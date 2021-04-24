@@ -3,24 +3,20 @@ package io.mosip.registration.util.mastersync;
 
 import static io.mosip.registration.constants.LoggerConstants.LOG_REG_MASTER_SYNC;
 import static io.mosip.registration.constants.LoggerConstants.LOG_REG_SCHEMA_SYNC;
-import static io.mosip.registration.constants.RegistrationConstants.*;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.io.IOException;
 import java.io.SyncFailedException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
-import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.kernel.core.util.CryptoUtil;
-import io.mosip.registration.dao.IdentitySchemaDao;
-import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.response.SchemaDto;
-import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.repositories.*;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
-import io.mosip.registration.util.restclient.ServiceDelegateUtil;
-import lombok.NonNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,16 +25,66 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import io.mosip.kernel.core.exception.ExceptionUtils;
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dto.mastersync.DynamicFieldDto;
+import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.dto.response.SyncDataBaseDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.DynamicField;
 import io.mosip.registration.exception.RegBaseUncheckedException;
-import org.springframework.web.client.HttpClientErrorException;
+import io.mosip.registration.repositories.AppAuthenticationRepository;
+import io.mosip.registration.repositories.AppDetailRepository;
+import io.mosip.registration.repositories.AppRolePriorityRepository;
+import io.mosip.registration.repositories.ApplicantValidDocumentRepository;
+import io.mosip.registration.repositories.BiometricAttributeRepository;
+import io.mosip.registration.repositories.BiometricTypeRepository;
+import io.mosip.registration.repositories.BlacklistedWordsRepository;
+import io.mosip.registration.repositories.CenterMachineRepository;
+import io.mosip.registration.repositories.DeviceMasterRepository;
+import io.mosip.registration.repositories.DeviceProviderRepository;
+import io.mosip.registration.repositories.DeviceSpecificationRepository;
+import io.mosip.registration.repositories.DeviceTypeRepository;
+import io.mosip.registration.repositories.DocumentCategoryRepository;
+import io.mosip.registration.repositories.DocumentTypeRepository;
+import io.mosip.registration.repositories.DynamicFieldRepository;
+import io.mosip.registration.repositories.FoundationalTrustProviderRepository;
+import io.mosip.registration.repositories.GenderRepository;
+import io.mosip.registration.repositories.IdTypeRepository;
+import io.mosip.registration.repositories.IndividualTypeRepository;
+import io.mosip.registration.repositories.LanguageRepository;
+import io.mosip.registration.repositories.LocationHierarchyRepository;
+import io.mosip.registration.repositories.LocationRepository;
+import io.mosip.registration.repositories.MachineMasterRepository;
+import io.mosip.registration.repositories.MachineSpecificationRepository;
+import io.mosip.registration.repositories.MachineTypeRepository;
+import io.mosip.registration.repositories.MosipDeviceServiceRepository;
+import io.mosip.registration.repositories.PermittedLocalConfigRepository;
+import io.mosip.registration.repositories.ProcessListRepository;
+import io.mosip.registration.repositories.ReasonCategoryRepository;
+import io.mosip.registration.repositories.ReasonListRepository;
+import io.mosip.registration.repositories.RegisteredDeviceTypeRepository;
+import io.mosip.registration.repositories.RegisteredSubDeviceTypeRepository;
+import io.mosip.registration.repositories.RegistrationCenterDeviceRepository;
+import io.mosip.registration.repositories.RegistrationCenterMachineDeviceRepository;
+import io.mosip.registration.repositories.RegistrationCenterRepository;
+import io.mosip.registration.repositories.RegistrationCenterTypeRepository;
+import io.mosip.registration.repositories.RegistrationCenterUserRepository;
+import io.mosip.registration.repositories.ScreenAuthorizationRepository;
+import io.mosip.registration.repositories.ScreenDetailRepository;
+import io.mosip.registration.repositories.SyncJobDefRepository;
+import io.mosip.registration.repositories.TemplateFileFormatRepository;
+import io.mosip.registration.repositories.TemplateRepository;
+import io.mosip.registration.repositories.TemplateTypeRepository;
+import io.mosip.registration.repositories.TitleRepository;
+import io.mosip.registration.repositories.ValidDocumentRepository;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
+import lombok.NonNull;
 
 @Component
 public class ClientSettingSyncHelper {
@@ -226,6 +272,9 @@ public class ClientSettingSyncHelper {
 
 	@Autowired
 	private LocationHierarchyRepository locationHierarchyRepository;
+	
+	@Autowired
+	private PermittedLocalConfigRepository permittedLocalConfigRepository;
 		
 	private static final Map<String, String> ENTITY_CLASS_NAMES = new HashMap<String, String>();
 	
@@ -270,6 +319,7 @@ public class ClientSettingSyncHelper {
 			futures.add(handleMisellaneousSync1(syncDataResponseDto));
 			futures.add(handleMisellaneousSync2(syncDataResponseDto));
 			futures.add(handleDynamicFieldSync(syncDataResponseDto));
+			futures.add(handlePermittedConfigSync(syncDataResponseDto));
 			futures.add(syncSchema("System"));
 
 			CompletableFuture array [] = new CompletableFuture[futures.size()];
@@ -289,7 +339,7 @@ public class ClientSettingSyncHelper {
 		}
 		throw new RegBaseUncheckedException(RegistrationConstants.MASTER_SYNC_EXCEPTION, RegistrationConstants.FAILURE);
 	}
-	
+
 	/**
 	 * creating meta data for building the entities from SyncDataBaseDto
 	 * 
@@ -600,5 +650,16 @@ public class ClientSettingSyncHelper {
 			LOGGER.error("Schema sync failed", e);
 		}
 		throw new SyncFailedException("Schema sync failed");
+	}
+	
+	@Async
+	private CompletableFuture handlePermittedConfigSync(@NonNull SyncDataResponseDto syncDataResponseDto) throws SyncFailedException{
+		try {
+			permittedLocalConfigRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "PermittedLocalConfig")));
+		} catch (Exception e) {
+			LOGGER.error("Permitted Config sync failed", e);
+			throw new SyncFailedException("Permitted Config sync failed due to " +  e.getMessage());
+		}
+		return CompletableFuture.completedFuture(true);
 	}
 }
