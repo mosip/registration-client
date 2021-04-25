@@ -29,6 +29,7 @@ import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.registration.config.AppConfig;
+import io.mosip.registration.constants.RegistrationConstants;
 
 @Component
 public class BIRBuilder {
@@ -72,10 +73,13 @@ public class BIRBuilder {
 		
 		VersionType versionType = new VersionType(1, 1);
 
+		boolean isException = bdb==null ? true : false;
+		
 		return new BIR.BIRBuilder().withBdb(bdb)
 				.withVersion(versionType)
 				.withCbeffversion(versionType)
 				.withBirInfo(new BIRInfo.BIRInfoBuilder().withIntegrity(false).build())
+				.withOther(RegistrationConstants.EXCEPTION, isException)
 				.withBdbInfo(new BDBInfo.BDBInfoBuilder().withFormat(birFormat).withQuality(qualityType)
 						.withType(Arrays.asList(biometricType)).withSubtype(getSubTypes(biometricType, bioAttribute))
 						.withPurpose(PurposeType.ENROLL).withLevel(ProcessedLevelType.RAW)
@@ -83,28 +87,6 @@ public class BIRBuilder {
 						.build())
 				.build();
 	}
-
-//	private JAXBElement<String> getCBEFFTestTag(SingleType biometricType) {
-//		String testTagElementName = null;
-//		String testTagType = "y".equalsIgnoreCase(uniqueTagsEnabled) ? "Unique"
-//				: (random.nextInt() % 2 == 0 ? "Duplicate" : "Unique");
-//
-//		switch (biometricType) {
-//		case FINGER:
-//			testTagElementName = "TestFinger";
-//			break;
-//		case IRIS:
-//			testTagElementName = "TestIris";
-//			break;
-//		case FACE:
-//			testTagElementName = "TestFace";
-//			break;
-//		default:
-//			break;
-//		}
-//
-//		return new JAXBElement<>(new QName("testschema", testTagElementName), String.class, testTagType);
-//	}
 
 	@SuppressWarnings("incomplete-switch")
 	private List<String> getSubTypes(BiometricType biometricType, String bioAttribute) {

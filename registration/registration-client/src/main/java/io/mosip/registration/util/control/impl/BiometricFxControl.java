@@ -395,6 +395,7 @@ public class BiometricFxControl extends FxControl {
 			Image image = biometricsController.getBioStreamImage(uiSchemaDTO.getSubType(), modality,
 					capturedData.get(0).getNumOfRetries());
 			button.setGraphic(getImageView(image, 80));
+			button.setPrefSize(105, 80);
 		}
 		addRemoveCaptureStatusMark(modalityView, modality);
 		displayExceptionPhoto(modalityView, biometricsController.hasApplicantBiometricException());
@@ -443,6 +444,7 @@ public class BiometricFxControl extends FxControl {
 			tickImageView.setId(uiSchemaDTO.getId() + currentModality.name() + "PANE");
 			tickImageView.setFitWidth(35);
 			tickImageView.setFitHeight(35);
+			tickImageView.setPreserveRatio(true);
 		} catch (RegBaseCheckedException regBaseCheckedException) {
 			LOGGER.error("Exception while getting image");
 		}

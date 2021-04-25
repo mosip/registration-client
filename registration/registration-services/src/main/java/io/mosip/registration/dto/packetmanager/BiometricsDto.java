@@ -14,6 +14,7 @@ public class BiometricsDto {
 	private int numOfRetries;	
 	private boolean isCaptured;
 	private String subType;
+	private double sdkScore;
 
 		
 	public BiometricsDto(String bioAttribute, byte[] attributeISO, double qualityScore) {
