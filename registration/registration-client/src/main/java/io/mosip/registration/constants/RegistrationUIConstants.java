@@ -430,11 +430,9 @@ public class RegistrationUIConstants {
 	public static final String USER_IN_ACTIVE = "USER_IN_ACTIVE";
 
 	public static final String ONBOARD_USER_TITLE = "officerbiometrics";
-
-	public static final String ONBOARD_USER_TITLE = bundle.getString("officerbiometrics");
 	
-	public static final String INVALID_CRON_EXPRESSION = bundle.getString("INVALID_CRON_EXPRESSION");
+	public static final String INVALID_CRON_EXPRESSION = "INVALID_CRON_EXPRESSION";
 	
-	public static final String CRON_EXPRESSION_MODIFIED = bundle.getString("CRON_EXPRESSION_MODIFIED");
+	public static final String CRON_EXPRESSION_MODIFIED = "CRON_EXPRESSION_MODIFIED";
 
 }

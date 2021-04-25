@@ -122,7 +122,6 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 			setSuccessResponse(responseDTO, RegistrationConstants.REGISTRATION_DELETION_BATCH_JOBS_SUCCESS, null);
 
 		} catch (RuntimeException runtimeException) {
-			runtimeException.printStackTrace();
 			LOGGER.error(runtimeException.getMessage(), runtimeException);
 
 			setErrorResponse(responseDTO, RegistrationConstants.REGISTRATION_DELETION_BATCH_JOBS_FAILURE, null);
@@ -279,6 +278,7 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 					/* Obtain RegistrationStatusDTO from service delegate util */
 					LinkedHashMap<String, Object> packetStatusResponse = (LinkedHashMap<String, Object>) serviceDelegateUtil
 							.post(RegistrationConstants.PACKET_STATUS_SYNC_SERVICE_NAME, packetStatusReaderDTO, triggerPoint);
+
 					registrations = (List<LinkedHashMap<String, String>>) packetStatusResponse
 							.get(RegistrationConstants.RESPONSE);
 

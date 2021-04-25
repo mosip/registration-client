@@ -258,9 +258,7 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 
 				loadScheduler(responseDTO);
 			} catch (RuntimeException runtimeException) {
-				LOGGER.error(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
-						RegistrationConstants.APPLICATION_ID,
-						runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
+				LOGGER.error(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, runtimeException);
 				setErrorResponse(responseDTO, RegistrationConstants.START_SCHEDULER_ERROR_MESSAGE, null);
 			}
 
@@ -307,9 +305,7 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 
 				}
 			} catch (SchedulerException | RuntimeException exception) {
-				LOGGER.error(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
-						RegistrationConstants.APPLICATION_ID,
-						exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+				LOGGER.error(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, exception);
 
 				/* Stop, Clear Scheduler and set Error response */
 				setStartExceptionError(responseDTO);

@@ -8,7 +8,9 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
+import io.mosip.kernel.transliteration.icu4j.impl.TransliterationImpl;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.commons.packet.dto.packet.SimpleDto;
@@ -85,7 +87,13 @@ public class TextFieldFxControl extends FxControl {
 		validation = applicationContext.getBean(Validations.class);
 		fxComponents = applicationContext.getBean(FXComponents.class);
 		demographicChangeActionHandler = applicationContext.getBean(DemographicChangeActionHandler.class);
-		transliteration = (Transliteration<String>) applicationContext.getBean(Transliteration.class);
+		Map<String, Transliteration> beans = applicationContext.getBeansOfType(Transliteration.class);
+		LOGGER.debug("Transliterations implementations found : {}", beans);
+		for(String name : beans.keySet()) {
+			LOGGER.info("Choosing transliteration implementations --> {}", name);
+			this.transliteration = beans.get(name);
+			break;
+		}
 		genericController = applicationContext.getBean(GenericController.class);
 	}
 

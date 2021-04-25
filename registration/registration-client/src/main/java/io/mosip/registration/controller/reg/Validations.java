@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.mosip.registration.controller.GenericController;
 import javafx.scene.control.*;
 import org.bridj.cpp.std.list;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -136,7 +137,7 @@ public class Validations extends BaseController {
 		return null;
 	}
 
-	private boolean validateButtons(Pane parentPane, Button node, String id) {
+	/*private boolean validateButtons(Pane parentPane, Button node, String id) {
 		AtomicReference<Boolean> buttonSelected = new AtomicReference<>(false);
 		try {
 			VBox parent = (VBox) parentPane.getParent();
@@ -169,7 +170,7 @@ public class Validations extends BaseController {
 					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
 		}
 		return buttonSelected.get();
-	}
+	}*/
 
 	/**
 	 * Validate for the TextField.
@@ -209,8 +210,7 @@ public class Validations extends BaseController {
 
 			boolean showAlert = (noAlert.contains(node.getId()) && id.contains(RegistrationConstants.ON_TYPE));
 
-			UiSchemaDTO uiSchemaDTO = getValidationMap().get(id);
-
+			UiSchemaDTO uiSchemaDTO = GenericController.getFxControlMap().get(id).getUiSchemaDTO();
 
 			if (uiSchemaDTO != null) {
 				if (requiredFieldValidator.isRequiredField(uiSchemaDTO, getRegistrationDTOFromSession())
@@ -443,7 +443,7 @@ public class Validations extends BaseController {
 	/**
 	 * Validate for the ComboBox type of node
 	 */
-	private boolean validateComboBox(Pane parentPane, ComboBox<?> node, String id, boolean isPreviousValid) {
+	/*private boolean validateComboBox(Pane parentPane, ComboBox<?> node, String id, boolean isPreviousValid) {
 		{
 			boolean isComboBoxValueValid = false;
 			try {
@@ -506,7 +506,7 @@ public class Validations extends BaseController {
 
 			return isComboBoxValueValid;
 		}
-	}
+	}*/
 
 	private boolean validateUinOrRidField(String inputText, RegistrationDTO registrationDto, UiSchemaDTO schemaField) {
 		boolean isValid = true;
@@ -572,7 +572,7 @@ public class Validations extends BaseController {
 	}
 
 	private String getRegex(String fieldId, String regexType, String langCode) {
-		UiSchemaDTO uiSchemaDTO = getValidationMap().get(fieldId);
+		UiSchemaDTO uiSchemaDTO = GenericController.getFxControlMap().get(fieldId).getUiSchemaDTO();
 		if (uiSchemaDTO != null && uiSchemaDTO.getValidators() != null) {
 
 			if (langCode != null) {

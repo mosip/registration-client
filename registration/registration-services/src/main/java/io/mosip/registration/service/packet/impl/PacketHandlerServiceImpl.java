@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import io.mosip.kernel.core.idgenerator.spi.PridGenerator;
 import io.mosip.kernel.core.idgenerator.spi.RidGenerator;
 import io.mosip.registration.dto.*;
+import io.mosip.registration.service.config.LocalConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -121,6 +122,9 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	
 	@Autowired
 	private BioService bioService;
+
+	@Autowired
+	private LocalConfigService localConfigService;
 
 	@Autowired
 	private PridGenerator<String> pridGenerator;
@@ -741,10 +745,11 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_CENTER_ID),
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_STATION_ID));
 		registrationDTO.setRegistrationId(registrationID);
+		registrationDTO.setAppId(registrationID);
 
 		LOGGER.info(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID,
-				"Registration Started for RID  : [ " + registrationDTO.getRegistrationId() + " ] ");
+				"Registration Started for ApplicationId  : [ " + registrationDTO.getAppId() + " ] ");
 
 		List<String> defaultFieldGroups = new ArrayList<String>() {};
 		defaultFieldGroups.add(RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME);

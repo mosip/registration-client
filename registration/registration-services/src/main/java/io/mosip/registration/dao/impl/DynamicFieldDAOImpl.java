@@ -35,9 +35,7 @@ public class DynamicFieldDAOImpl implements DynamicFieldDAO {
 	
 	@Override
 	public DynamicField getDynamicField(String fieldName, String langCode) {
-
-		LOGGER.debug("DynamicFieldDAOImpl", APPLICATION_NAME, APPLICATION_ID,
-				"fetching the dynamic field >>> " + fieldName + " for langCode >>> " + langCode);
+		LOGGER.debug("fetching the dynamic field >>> {} for langCode >>> {}" ,fieldName , langCode);
 
 		return dynamicFieldRepository.findByIsActiveTrueAndNameAndLangCode(fieldName, langCode);
 	}
@@ -45,8 +43,7 @@ public class DynamicFieldDAOImpl implements DynamicFieldDAO {
 	@Override
 	public List<DynamicFieldValueDto> getDynamicFieldValues(String fieldName, String langCode) {
 		
-		LOGGER.debug("DynamicFieldDAOImpl", APPLICATION_NAME, APPLICATION_ID,
-				"fetching the valueJSON ");		
+		LOGGER.debug("fetching the valueJSON ");
 		
 		DynamicField dynamicField = getDynamicField(fieldName, langCode);
 		
@@ -62,8 +59,7 @@ public class DynamicFieldDAOImpl implements DynamicFieldDAO {
 			return fields;
 			
 		} catch (IOException e) {
-			LOGGER.error("Unable to parse value json for dynamic field: " + fieldName, APPLICATION_NAME,
-					RegistrationConstants.APPLICATION_ID, ExceptionUtils.getStackTrace(e));
+			LOGGER.error("Unable to parse value json for dynamic field: ", e);
 		}
 		return null;
 	}
