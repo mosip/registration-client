@@ -33,6 +33,7 @@ import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.service.BaseService;
+import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.junit.Assert;
 import org.junit.Before;
@@ -159,6 +160,9 @@ public class MasterSyncServiceTest {
 
 	@Mock
 	private DocumentCategoryDAO documentCategoryDAO;
+
+	@Mock
+	private LocalConfigService localConfigService;
 
 	@Before
 	public void beforeClass() throws Exception {

@@ -19,6 +19,7 @@ import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
+import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.remap.impl.CenterMachineReMapServiceImpl;
 import org.junit.Before;
@@ -87,6 +88,9 @@ public class UserDetailServcieTest {
 
 	@Mock
 	private MachineMasterRepository machineMasterRepository;
+
+	@Mock
+	private LocalConfigService localConfigService;
 
 	@Before
 	public void init() {

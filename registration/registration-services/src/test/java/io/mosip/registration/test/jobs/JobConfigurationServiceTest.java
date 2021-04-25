@@ -1,5 +1,6 @@
 package io.mosip.registration.test.jobs;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.doNothing;
 
@@ -11,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.registration.service.config.LocalConfigService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -100,6 +102,9 @@ public class JobConfigurationServiceTest {
 	@Mock
 	GlobalParamService globalParamService;
 
+	@Mock
+	LocalConfigService localConfigService;
+
 	List<SyncJobDef> syncJobList;
 
 	HashMap<String, SyncJobDef> jobMap = new HashMap<>();
@@ -173,9 +178,12 @@ public class JobConfigurationServiceTest {
 		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
 		responseDTO.setSuccessResponseDTO(successResponseDTO);
 		Mockito.when(packetSyncJob.executeJob(Mockito.anyString(), Mockito.anyString())).thenReturn(responseDTO);
+		Mockito.when(localConfigService.getValue(Mockito.anyString())).thenReturn("");
 
-		assertSame(RegistrationConstants.BATCH_JOB_START_SUCCESS_MESSAGE,
-				jobConfigurationService.startScheduler().getSuccessResponseDTO().getMessage());
+		ResponseDTO responseDTO1 = jobConfigurationService.startScheduler();
+		assertNotNull(responseDTO1);
+		assertNotNull(responseDTO1.getSuccessResponseDTO());
+		assertSame(RegistrationConstants.BATCH_JOB_START_SUCCESS_MESSAGE, responseDTO1.getSuccessResponseDTO().getMessage());
 	}
 
 	@Test
