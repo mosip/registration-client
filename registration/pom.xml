@@ -202,7 +202,11 @@
 				<artifactId>kernel-idvalidator-uin</artifactId>
 				<version>${mosip.core.kernel.version}</version>
 			</dependency>
-
+			<dependency>
+				<groupId>io.mosip.kernel</groupId>
+				<artifactId>kernel-idvalidator-vid</artifactId>
+				<version>${mosip.core.kernel.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>io.mosip.kernel</groupId>
 				<artifactId>kernel-idvalidator-prid</artifactId>
@@ -211,6 +215,11 @@
 			<dependency>
 				<groupId>io.mosip.kernel</groupId>
 				<artifactId>kernel-idgenerator-rid</artifactId>
+				<version>${mosip.core.kernel.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.mosip.kernel</groupId>
+				<artifactId>kernel-idgenerator-prid</artifactId>
 				<version>${mosip.core.kernel.version}</version>
 			</dependency>
 			<dependency>

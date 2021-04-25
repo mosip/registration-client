@@ -115,6 +115,10 @@
 			<artifactId>kernel-idgenerator-rid</artifactId>
 		</dependency>
 		<dependency>
+				<groupId>io.mosip.kernel</groupId>
+				<artifactId>kernel-idgenerator-prid</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-idvalidator-rid</artifactId>
 		</dependency>
@@ -123,6 +127,10 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-idvalidator-uin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.mosip.kernel</groupId>
+			<artifactId>kernel-idvalidator-vid</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>

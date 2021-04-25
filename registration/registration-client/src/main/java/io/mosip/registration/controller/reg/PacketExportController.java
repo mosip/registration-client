@@ -82,13 +82,13 @@ public class PacketExportController extends BaseController {
 											+ packetToCopy.getFileName() + ExceptionUtils.getStackTrace(ioException));
 						}
 					} else {
-						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.PACKET_EXPORT_FAILURE);
+						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PACKET_EXPORT_FAILURE));
 						break;
 					}
 				}
 			}
 		} else {
-			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.PACKET_EXPORT_MESSAGE);
+			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PACKET_EXPORT_MESSAGE));
 		}
 		return exportedPackets;
 

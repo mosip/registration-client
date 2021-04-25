@@ -128,7 +128,7 @@ public class AckReceiptController extends BaseController implements Initializabl
 			webView.getEngine().print(job);
 			job.endJob();
 		}
-		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.PRINT_INITIATION_SUCCESS);
+		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PRINT_INITIATION_SUCCESS));
 		goToHomePageFromRegistration();
 	}
 
@@ -165,11 +165,11 @@ public class AckReceiptController extends BaseController implements Initializabl
 		} catch (IOException ioException) {
 			LOGGER.error("REGISTRATION - UI - ACK_RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE));
 		} catch (RuntimeException runtimException) {
 			LOGGER.error("REGISTRATION - UI - ACK_RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 					runtimException.getMessage() + ExceptionUtils.getStackTrace(runtimException));
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE));
 		}
 
 	}

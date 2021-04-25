@@ -102,8 +102,8 @@ public class UserOnboardController extends BaseController implements Initializab
 		setImage(uploadDataImageView, RegistrationConstants.UPDATE_OPERATOR_BIOMETRICS_IMG);		
 		setImage(updateBiometricsImageView, RegistrationConstants.ACTIVE_BIOMETRIC_DETAILS_IMG);
 
-		operatorName.setText(RegistrationUIConstants.USER_ONBOARD_HI + " " + SessionContext.userContext().getName()
-				+ ", " + RegistrationUIConstants.USER_ONBOARD_NOTONBOARDED);
+		operatorName.setText(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USER_ONBOARD_HI) + " " + SessionContext.userContext().getName()
+				+ ", " + RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USER_ONBOARD_NOTONBOARDED));
 	}
 
 	@FXML

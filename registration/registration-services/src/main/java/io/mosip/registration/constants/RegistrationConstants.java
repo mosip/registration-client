@@ -516,8 +516,11 @@ public class RegistrationConstants {
 	public static final String TEMPLATE_UIN_HEADER_TABLE = "uinHeaderTable";
 	public static final String TEMPLATE_UIN_LABEL = "UINLabel";
 	public static final String TEMPLATE_UIN = "UIN";
+	
 	public static final String TEMPLATE_RID_LABEL = "RIDLabel";
 	public static final String TEMPLATE_RID = "RID";
+	public static final String TEMPLATE_APPLICATION_ID_LABEL = "ApplicationIDLabel";
+	public static final String TEMPLATE_APPLICATION_ID = "ApplicationID";
 	public static final String TEMPLATE_DATE_LABEL = "DateLabel";
 	public static final String TEMPLATE_DATE = "Date";
 	public static final String TEMPLATE_PRE_REG_ID_LABEL = "PreRegIDLabel";
@@ -1907,13 +1910,20 @@ public class RegistrationConstants {
 	public static final String MOSIP_HOSTNAME = "mosip.hostname";
 	public static final String MOSIP_HOSTNAME_DEF_VAL = "dev.mosip.net";
 	
+	/** Moved To Here from UiConstants file */
+	public static final String REGEX_TYPE = "REGEX";
+	public static final String SUPERVISOR_AUTHENTICATION_CONFIGURATION = "mosip.registration.supervisor_authentication_configuration";
+
 	/** BIR Meta info constants */
 	public static final String RETRIES = "RETRIES";
 	public static final String FORCE_CAPTURED  = "FORCE_CAPTURED";
 	public static final String SDK_SCORE  = "SDK_SCORE";
 	public static final String EXCEPTION   = "EXCEPTION";
 	public static final String CONFIGURED    = "CONFIGURED";
+
 	
+  public static final String PACKET_APPLICATION_ID = "applicationId";
+  
 	/** Settings Page Labels & CSS styles */
 	public static final String SYNC_JOB_STYLE = "syncJobStyle";
 	public static final String RUN_NOW_LABEL = "runNow";
@@ -1949,5 +1959,6 @@ public class RegistrationConstants {
 	
 	public static final String RESTART_NOW = "RESTART_NOW";
 	public static final String RESTART_LATER = "RESTART_LATER";
-	
+
+
 }
