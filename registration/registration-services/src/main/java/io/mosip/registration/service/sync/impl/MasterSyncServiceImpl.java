@@ -374,13 +374,13 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 
 		if (syncedValues != null) {
 			for (DynamicFieldValueDto valueDto : syncedValues) {
-				if (valueDto.isActive()) {
+				//if (valueDto.isActive()) {
 					GenericDto genericDto = new GenericDto();
 					genericDto.setName(valueDto.getValue());
 					genericDto.setCode(valueDto.getCode());
 					genericDto.setLangCode(langCode);
 					fieldValues.add(genericDto);
-				}
+				//}
 			}
 		}
 		return fieldValues;

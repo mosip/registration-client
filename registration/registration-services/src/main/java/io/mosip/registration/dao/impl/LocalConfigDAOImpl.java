@@ -48,7 +48,7 @@ public class LocalConfigDAOImpl implements LocalConfigDAO {
 	public List<String> getPermittedJobs(String configType) {
 		LOGGER.info("Getting the list of permitted configurations of type {}", configType);
 		
-		List<PermittedLocalConfig> permittedConfigs = permittedLocalConfigRepository.findByIsActiveTrueAndConfigType(configType);
+		List<PermittedLocalConfig> permittedConfigs = permittedLocalConfigRepository.findByIsActiveTrueAndType(configType);
 		List<String> permittedJobs = new ArrayList<>();
 		if (permittedConfigs != null && !permittedConfigs.isEmpty()) {
 			permittedJobs
@@ -72,7 +72,7 @@ public class LocalConfigDAOImpl implements LocalConfigDAO {
 	public List<String> getPermittedConfigurations(String configType) {
 		LOGGER.info("Getting the list of permitted configurations of type {}", configType);
 		
-		List<PermittedLocalConfig> permittedConfigs = permittedLocalConfigRepository.findByIsActiveTrueAndConfigType(configType);
+		List<PermittedLocalConfig> permittedConfigs = permittedLocalConfigRepository.findByIsActiveTrueAndType(configType);
 		List<String> permittedConfigurations = new ArrayList<>();
 		if (permittedConfigs != null && !permittedConfigs.isEmpty()) {
 			permittedConfigurations

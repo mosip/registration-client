@@ -17,6 +17,7 @@ import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.repositories.*;
+import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.junit.Rule;
@@ -211,6 +212,12 @@ public class ClientSettingsHelperTest {
 
 	@Mock
 	private IdentitySchemaDao identitySchemaDao;
+
+	@Mock
+	private LocalConfigService localConfigService;
+
+	@Mock
+	private PermittedLocalConfigRepository permittedLocalConfigRepository;
 
 	@Test(expected = RegBaseUncheckedException.class)
 	public void testSingleEntity() {

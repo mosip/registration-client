@@ -73,11 +73,11 @@ public class PageFlow {
 
 		String docType = "documentType";
 		List<UiSchemaDTO> docList = null;
-		if(validations != null && validations.getValidationMap() != null && !validations.getValidationMap().isEmpty()) {
+		/*if(validations != null && validations.getValidationMap() != null && !validations.getValidationMap().isEmpty()) {
 			docList = validations.getValidationMap().values().stream()
 					.filter(schemaDto -> schemaDto.getType() != null && schemaDto.getType().equalsIgnoreCase(docType))
 					.collect(Collectors.toList());
-		}
+		}*/
 
 		Map<String, Boolean> docMap = new LinkedHashMap<>();
 		docMap.put(RegistrationConstants.VISIBILITY, docList != null && !docList.isEmpty());

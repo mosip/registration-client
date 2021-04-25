@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import io.mosip.registration.dto.BiometricDeviceInfo;
+import io.mosip.registration.dto.ScanDeviceInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -17,8 +19,6 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.reg.DocumentScanController;
 import io.mosip.registration.controller.settings.SettingsInterface;
-import io.mosip.registration.controller.vo.BiometricDeviceInfo;
-import io.mosip.registration.controller.vo.ScanDeviceInfo;
 import io.mosip.registration.device.scanner.dto.ScanDevice;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.mdm.dto.MdmBioDevice;

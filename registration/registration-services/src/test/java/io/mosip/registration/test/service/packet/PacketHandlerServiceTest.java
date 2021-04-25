@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.registration.service.config.LocalConfigService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -87,6 +88,9 @@ public class PacketHandlerServiceTest {
 
 	@Mock
 	private MachineMasterRepository machineMasterRepository;
+
+	@Mock
+	private LocalConfigService localConfigService;
 
 	@Before
 	public void initialize() {

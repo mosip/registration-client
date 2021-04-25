@@ -72,9 +72,9 @@ public class LocalConfigDAOImplTest {
 		List<PermittedLocalConfig> permittedConfigs = new ArrayList<>();
 		PermittedLocalConfig config = new PermittedLocalConfig();
 		config.setName("Test Job");
-		config.setConfigType("JOB");
+		config.setType("JOB");
 		permittedConfigs.add(config);
-		Mockito.when(permittedLocalConfigRepository.findByIsActiveTrueAndConfigType(Mockito.anyString())).thenReturn(permittedConfigs);
+		Mockito.when(permittedLocalConfigRepository.findByIsActiveTrueAndType(Mockito.anyString())).thenReturn(permittedConfigs);
 		assertEquals(permittedJobs, localConfigDAOImpl.getPermittedJobs("JOB"));
 	}
 	
@@ -98,9 +98,9 @@ public class LocalConfigDAOImplTest {
 		List<PermittedLocalConfig> permittedConfigs = new ArrayList<>();
 		PermittedLocalConfig config = new PermittedLocalConfig();
 		config.setName("Test Configuration");
-		config.setConfigType(RegistrationConstants.PERMITTED_CONFIG_TYPE);
+		config.setType(RegistrationConstants.PERMITTED_CONFIG_TYPE);
 		permittedConfigs.add(config);
-		Mockito.when(permittedLocalConfigRepository.findByIsActiveTrueAndConfigType(Mockito.anyString())).thenReturn(permittedConfigs);
+		Mockito.when(permittedLocalConfigRepository.findByIsActiveTrueAndType(Mockito.anyString())).thenReturn(permittedConfigs);
 		List<String> permittedConfigurations = new ArrayList<>();
 		permittedConfigurations.add("Test Configuration");
 		assertEquals(permittedConfigurations, localConfigDAOImpl.getPermittedConfigurations(RegistrationConstants.PERMITTED_CONFIG_TYPE));

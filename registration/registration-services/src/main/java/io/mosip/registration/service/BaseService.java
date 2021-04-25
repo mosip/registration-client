@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import io.mosip.registration.service.sync.PolicySyncService;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -136,6 +137,9 @@ public class BaseService {
 	
 	@Autowired
 	private LocalConfigService localConfigService;
+
+	@Autowired
+	private PolicySyncService policySyncService;
 	
 	@Value("#{'${mosip.mandatory-languages:}'.split('[,]')}")
 	private List<String> mandatoryLanguages;
@@ -769,6 +773,12 @@ public class BaseService {
 		if(!registrationCenterDAO.isMachineCenterActive(machineId))
 			throw new PreConditionCheckException(PreConditionChecks.CENTER_INACTIVE.name(),
 					"Registration forbidden as center is inactive");
+
+		ResponseDTO responseDTO = policySyncService.checkKeyValidation();
+		if(responseDTO == null || responseDTO.getSuccessResponseDTO() == null ||
+				!responseDTO.getSuccessResponseDTO().getMessage().equals(RegistrationConstants.VALID_KEY))
+			throw new PreConditionCheckException(PreConditionChecks.INVALID_POLICY_KEY.name(),
+					"Registration forbidden as client POLICY_KEY is INVALID");
 	}
 
 	public void proceedWithReRegistration() throws PreConditionCheckException {
@@ -785,6 +795,12 @@ public class BaseService {
 		if(!registrationCenterDAO.isMachineCenterActive(machineId))
 			throw new PreConditionCheckException(PreConditionChecks.CENTER_INACTIVE.name(),
 					"Registration forbidden as center is inactive");
+
+		ResponseDTO responseDTO = policySyncService.checkKeyValidation();
+		if(responseDTO == null || responseDTO.getSuccessResponseDTO() == null ||
+				!responseDTO.getSuccessResponseDTO().getMessage().equals(RegistrationConstants.VALID_KEY))
+			throw new PreConditionCheckException(PreConditionChecks.INVALID_POLICY_KEY.name(),
+					"Registration forbidden as client POLICY_KEY is INVALID");
 	}
 
 	/**

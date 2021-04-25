@@ -311,7 +311,7 @@ public class GenericController extends BaseController {
 			List<String> defaultUpdateFields = new ArrayList<>(); //TODO
 			defaultUpdateFields.addAll(getRegistrationDTOFromSession().getUpdatableFields());
 			if (!getRegistrationDTOFromSession().isBiometricMarkedForUpdate()) {
-				List<UiSchemaDTO> schemaDTOs = getValidationMap().values().stream()
+				List<UiSchemaDTO> schemaDTOs = schemaDto.getSchema().stream()
 						.filter(schemaDTO -> schemaDTO.getType()
 								.equalsIgnoreCase(PacketManagerConstants.BIOMETRICS_DATATYPE))
 						.collect(Collectors.toList());

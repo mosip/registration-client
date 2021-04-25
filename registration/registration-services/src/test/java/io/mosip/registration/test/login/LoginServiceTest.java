@@ -28,6 +28,7 @@ import io.mosip.registration.entity.*;
 import io.mosip.registration.entity.id.*;
 import io.mosip.registration.repositories.*;
 import io.mosip.registration.service.BaseService;
+import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.CertificateSyncService;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
@@ -152,6 +153,9 @@ public class LoginServiceTest {
 
 	@Mock
 	private ClientCryptoService clientCryptoService;
+
+	@Mock
+	private LocalConfigService localConfigService;
 
 	@Before
 	public void initialize() throws Exception {

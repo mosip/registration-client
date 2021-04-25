@@ -14,6 +14,6 @@ public interface PermittedLocalConfigRepository extends BaseRepository<Permitted
 	 */
 	List<PermittedLocalConfig> findByIsActiveTrue();
 	
-	List<PermittedLocalConfig> findByIsActiveTrueAndConfigType(String configType);
+	List<PermittedLocalConfig> findByIsActiveTrueAndType(String configType);
 
 }

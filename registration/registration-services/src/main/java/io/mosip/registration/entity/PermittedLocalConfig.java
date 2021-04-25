@@ -23,7 +23,7 @@ public class PermittedLocalConfig extends RegistrationCommonFields {
 	@Column(name = "name")
 	private String name;
 	@Column(name = "config_type")
-	private String configType;
+	private String type;
 	@Column(name = "is_deleted")
 	private Boolean isDeleted;
 	@Column(name = "del_dtimes")

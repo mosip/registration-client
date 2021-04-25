@@ -25,6 +25,7 @@ import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 
+import io.mosip.registration.util.control.FxControl;
 import org.mvel2.MVEL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -644,12 +645,12 @@ public class GenericBiometricsController extends BaseController /* implements In
 		documentDto.setOwner(RegistrationConstants.APPLICANT);
 		documentDto.setValue(documentDto.getCategory().concat(RegistrationConstants.UNDER_SCORE).concat(documentDto.getType()));
 
-		Optional<UiSchemaDTO> result = getValidationMap().values().stream()
-				.filter(field -> field.getSubType().equals(RegistrationConstants.POE_DOCUMENT)).findFirst();
+		Optional<FxControl> result = GenericController.getFxControlMap().values().stream()
+				.filter(control -> control.getUiSchemaDTO().getSubType().equals(RegistrationConstants.POE_DOCUMENT)).findFirst();
 
 		if(result.isPresent()) {
-			getRegistrationDTOFromSession().addDocument(result.get().getId(), documentDto);
-			LOGGER.info("Saving Proof of exception document into field : {}", result.get().getId());
+			getRegistrationDTOFromSession().addDocument(result.get().getUiSchemaDTO().getId(), documentDto);
+			LOGGER.info("Saving Proof of exception document into field : {}", result.get().getUiSchemaDTO().getId());
 		}
 	}
 

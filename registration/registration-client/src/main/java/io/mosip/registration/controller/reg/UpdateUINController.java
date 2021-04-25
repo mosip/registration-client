@@ -102,10 +102,10 @@ public class UpdateUINController extends BaseController implements Initializable
 		
 		fxUtils = FXUtils.getInstance();
 		checkBoxKeeper = new HashMap<>();
-		Map<String, UiSchemaDTO> schemaMap = getValidationMap();
+
 		SchemaDto schema = getLatestSchema();
 
-		groupedMap = schemaMap.values().stream().filter(field -> field.getGroup() != null && field.isInputRequired())
+		groupedMap = schema.getSchema().stream().filter(field -> field.getGroup() != null && field.isInputRequired())
 				.collect(Collectors.groupingBy(UiSchemaDTO::getGroup));
 
 		parentFlow = parentFlowPane.getChildren();
@@ -211,7 +211,7 @@ public class UpdateUINController extends BaseController implements Initializable
 				if (uinValidatorImpl.validateId(uinId.getText()) && !selectedFields.isEmpty()) {
 					registrationController.init(uinId.getText(), checkBoxKeeper, selectedFields, selectedFieldGroups);
 					Parent createRoot = BaseController.load(
-							getClass().getResource(RegistrationConstants.CREATE_PACKET_PAGE),
+							getClass().getResource(/*RegistrationConstants.CREATE_PACKET_PAGE*/"/fxml/GenericRegistrationLayout.fxml"),
 							applicationContext.getBundle(getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0), RegistrationConstants.LABELS));
 
 					getScene(createRoot).setRoot(createRoot);
