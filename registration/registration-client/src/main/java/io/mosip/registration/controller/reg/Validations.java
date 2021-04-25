@@ -22,6 +22,7 @@ import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.idvalidator.exception.InvalidIDException;
 import io.mosip.kernel.core.idvalidator.spi.RidValidator;
 import io.mosip.kernel.core.idvalidator.spi.UinValidator;
+import io.mosip.kernel.core.idvalidator.spi.VidValidator;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
@@ -71,6 +72,8 @@ public class Validations extends BaseController {
 	private UinValidator<String> uinValidator;
 	@Autowired
 	private RidValidator<String> ridValidator;
+	@Autowired
+	private VidValidator<String> vidValidator;
 	@Autowired
 	private DateValidation dateValidation;
 	@Autowired
@@ -265,7 +268,7 @@ public class Validations extends BaseController {
 		if (!isNonBlacklisted)
 			return false;
 
-		String regex = getRegex(fieldId, RegistrationUIConstants.REGEX_TYPE, langCode);
+		String regex = getRegex(fieldId, RegistrationConstants.REGEX_TYPE, langCode);
 		if (regex != null && !value.matches(regex)) {
 			generateInvalidValueAlert(parentPane, node.getId(),
 					getFromLabelMap(fieldId + langCode).concat(RegistrationConstants.SPACE)
@@ -278,7 +281,7 @@ public class Validations extends BaseController {
 		}
 
 		if (!isLocalLanguageField && uiSchemaDTO != null
-				&& Arrays.asList("UIN", "RID").contains(uiSchemaDTO.getSubType())
+				&& Arrays.asList("UIN", "RID","VID").contains(uiSchemaDTO.getSubType())
 				&& !validateUinOrRidField(value, getRegistrationDTOFromSession(), uiSchemaDTO)) {
 			generateInvalidValueAlert(parentPane, node.getId(),
 					getFromLabelMap(fieldId).concat(RegistrationConstants.SPACE)
@@ -508,21 +511,27 @@ public class Validations extends BaseController {
 	private boolean validateUinOrRidField(String inputText, RegistrationDTO registrationDto, UiSchemaDTO schemaField) {
 		boolean isValid = true;
 		try {
-			if ("UIN".equals(schemaField.getSubType())) {
-				String updateUIN = RegistrationConstants.PACKET_TYPE_UPDATE
+			
+			switch (schemaField.getSubType()) {
+				case "UIN":
+					String updateUIN = RegistrationConstants.PACKET_TYPE_UPDATE
 						.equals(registrationDto.getRegistrationCategory())
 								? (String) registrationDto.getDemographics().get("UIN")
 								: null;
 
-				if (updateUIN != null && inputText.equals(updateUIN))
-					isValid = false;
-
-				if (isValid)
-					isValid = uinValidator.validateId(inputText);
-			}
-
-			if ("RID".equals(schemaField.getSubType())) {
-				isValid = ridValidator.validateId(inputText);
+					if (updateUIN != null && inputText.equals(updateUIN))
+						isValid = false;
+	
+					if (isValid)
+						isValid = uinValidator.validateId(inputText);
+					break;
+			
+				case "RID": 
+					isValid = ridValidator.validateId(inputText);
+					break;
+				case "VID":
+					isValid = vidValidator.validateId(inputText);
+					break;
 			}
 
 		} catch (InvalidIDException invalidRidException) {
@@ -541,7 +550,7 @@ public class Validations extends BaseController {
 	 * @return <code>true</code>, if successful, else <code>false</code>
 	 */
 	public boolean validateSingleString(String value, String id, String langCode) {
-		String regex = getRegex(id, RegistrationUIConstants.REGEX_TYPE, langCode);
+		String regex = getRegex(id, RegistrationConstants.REGEX_TYPE, langCode);
 		return regex != null ? value.matches(regex) : true;
 	}
 

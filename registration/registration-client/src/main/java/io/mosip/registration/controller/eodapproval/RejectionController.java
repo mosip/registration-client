@@ -174,7 +174,7 @@ public class RejectionController extends BaseController implements Initializable
 					regRejectionTable.getSelectionModel().getSelectedItem().getDate(),
 					regRejectionTable.getSelectionModel().getSelectedItem().getAcknowledgementFormPath(),
 					regRejectionTable.getSelectionModel().getSelectedItem().getOperatorId(),
-					RegistrationUIConstants.REJECTED);
+					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REJECTED));
 
 			observableList.set(rowNum, approvalDTO);
 			registrationApprovalController.wrapListAndAddFiltering(observableList);
