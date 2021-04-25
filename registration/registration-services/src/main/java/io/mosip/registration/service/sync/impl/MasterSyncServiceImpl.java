@@ -5,20 +5,18 @@ import static io.mosip.registration.constants.LoggerConstants.LOG_REG_SCHEMA_SYN
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
-import io.mosip.registration.entity.*;
-import io.mosip.registration.entity.id.GlobalParamId;
-import org.apache.commons.collections4.ListUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -45,6 +43,19 @@ import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.mastersync.ReasonListDto;
 import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
+import io.mosip.registration.entity.BiometricAttribute;
+import io.mosip.registration.entity.BlacklistedWords;
+import io.mosip.registration.entity.DocumentCategory;
+import io.mosip.registration.entity.DocumentType;
+import io.mosip.registration.entity.Gender;
+import io.mosip.registration.entity.IndividualType;
+import io.mosip.registration.entity.Location;
+import io.mosip.registration.entity.ReasonCategory;
+import io.mosip.registration.entity.ReasonList;
+import io.mosip.registration.entity.SyncControl;
+import io.mosip.registration.entity.SyncJobDef;
+import io.mosip.registration.entity.SyncTransaction;
+import io.mosip.registration.entity.ValidDocument;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.jobs.SyncManager;
@@ -624,7 +635,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 		String response = masterSyncDao.saveSyncData(syncDataResponseDto);
 
 		if (response.equals(RegistrationConstants.SUCCESS)) {
-			setSuccessResponse(responseDTO, RegistrationConstants.MASTER_SYNC_SUCCESS, null);
+			setSuccessResponse(responseDTO, RegistrationConstants.MASTER_SYNC_SUCCESS_MESSAGE, null);
 			SyncTransaction syncTransaction = syncManager.createSyncTransaction(
 					RegistrationConstants.JOB_EXECUTION_SUCCESS, RegistrationConstants.JOB_EXECUTION_SUCCESS,
 					triggerPoint, masterSyncDtls);
@@ -633,7 +644,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 			LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID,
 					"Save Client Settings completed successfully.");
 		} else
-			setErrorResponse(responseDTO, RegistrationConstants.MASTER_SYNC_FAILURE_MSG, null);
+			setErrorResponse(responseDTO, RegistrationConstants.MASTER_SYNC_ERROR_MESSAGE, null);
 	}
 
 	public ResponseDTO syncSchema(String triggerPoint) throws RegBaseCheckedException {

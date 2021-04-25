@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.dao.IdentitySchemaDao;
+import io.mosip.registration.dto.SettingsSchema;
 import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.response.SchemaDto;
-import io.mosip.registration.entity.IdentitySchema;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.IdentitySchemaService;
 
@@ -50,6 +50,11 @@ public class IdentitySchemaServiceImpl implements IdentitySchemaService {
 	@Override
 	public SchemaDto getIdentitySchema(double idVersion) throws RegBaseCheckedException {
 		return identitySchemaDao.getIdentitySchema(idVersion);
+	}
+	
+	@Override
+	public List<SettingsSchema> getSettingsSchema(double idVersion) throws RegBaseCheckedException {
+		return identitySchemaDao.getSettingsSchema(idVersion);
 	}
 
 }

@@ -6,18 +6,16 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import io.mosip.kernel.signature.constant.SignatureConstant;
-import io.mosip.kernel.signature.dto.JWTSignatureVerifyRequestDto;
-import io.mosip.kernel.signature.dto.JWTSignatureVerifyResponseDto;
-import io.mosip.kernel.signature.service.SignatureService;
-import io.mosip.registration.exception.DeviceException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
@@ -27,8 +25,6 @@ import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -76,7 +72,9 @@ public class MosipDeviceSpecificationFactory {
 	private int portTo;
 
 	/** Key is modality value is (specVersion, MdmBioDevice) */
-	private static Map<String, MdmBioDevice> deviceInfoMap = new LinkedHashMap<>();
+	private static Map<String, MdmBioDevice> selectedDeviceInfoMap = new LinkedHashMap<>();
+
+	private static Map<String, List<MdmBioDevice>> availableDeviceInfoMap = new LinkedHashMap<>();
 
 	/**
 	 * This method will prepare the device registry, device registry contains all
@@ -99,11 +97,14 @@ public class MosipDeviceSpecificationFactory {
 		portFrom = getPortFrom();
 		portTo = getPortTo();
 
+		availableDeviceInfoMap.clear();
+		selectedDeviceInfoMap.clear();
+
 		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 				"Checking device info from port : " + portFrom + " to port : " + portTo);
+
 		if (portFrom != 0) {
 			for (int port = portFrom; port <= portTo; port++) {
-
 				final int currentPort = port;
 
 				/* An A-sync task to complete MDS initialization */
@@ -116,9 +117,38 @@ public class MosipDeviceSpecificationFactory {
 										+ ExceptionUtils.getStackTrace(exception));
 					}
 				}).start();
-
 			}
 		}
+
+		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
+				"Exit init method for preparing device registry");
+	}
+
+	public void initializeDeviceMap() {
+		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
+				"Entering init method for preparing device registry");
+
+		portFrom = getPortFrom();
+		portTo = getPortTo();
+
+		availableDeviceInfoMap.clear();
+		selectedDeviceInfoMap.clear();
+
+		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
+				"Checking device info from port : " + portFrom + " to port : " + portTo);
+
+		if (portFrom != 0) {
+			for (int port = portFrom; port <= portTo; port++) {
+				try {
+					initByPort(port);
+				} catch (RuntimeException exception) {
+					LOGGER.error(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
+							"Exception while mapping the response : " + exception.getMessage()
+									+ ExceptionUtils.getStackTrace(exception));
+				}
+			}
+		}
+
 		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 				"Exit init method for preparing device registry");
 	}
@@ -205,9 +235,8 @@ public class MosipDeviceSpecificationFactory {
 					for (MdmBioDevice bioDevice : mdmBioDevices) {
 						if (bioDevice != null) {
 							// Add to Device Info Map
-							addToDeviceInfoMap(getKey(getDeviceType(bioDevice.getDeviceType())
-									, getDeviceSubType(bioDevice.getDeviceSubType()))
-									, bioDevice);
+							addToDeviceInfoMap(getKey(getDeviceType(bioDevice.getDeviceType()),
+									getDeviceSubType(bioDevice.getDeviceSubType())), bioDevice);
 						}
 					}
 				}
@@ -251,11 +280,22 @@ public class MosipDeviceSpecificationFactory {
 	}
 
 	private void addToDeviceInfoMap(String key, MdmBioDevice bioDevice) {
-		deviceInfoMap.put(key, bioDevice);
+		selectedDeviceInfoMap.put(key, bioDevice);
+		
+		if (!key.contains("single")) {
+			if (availableDeviceInfoMap.containsKey(key)) {
+				availableDeviceInfoMap.get(key).add(bioDevice);
+			} else {
+				List<MdmBioDevice> bioDevices = new ArrayList<>();
+				bioDevices.add(bioDevice);
+				availableDeviceInfoMap.put(key, bioDevices);
+			}
+		}
+		
 		LOGGER.debug(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 				"Added for device into cache : " + bioDevice.getDeviceCode());
 	}
-	
+
 	private String getKey(String type, String subType) {
 		return String.format("%s_%s", type.toLowerCase(), subType.toLowerCase());
 	}
@@ -340,14 +380,14 @@ public class MosipDeviceSpecificationFactory {
 
 		String key = getKey(getDeviceType(modality), getDeviceSubType(modality));
 
-		if (deviceInfoMap.containsKey(key))
-			return deviceInfoMap.get(key);
+		if (selectedDeviceInfoMap.containsKey(key))
+			return selectedDeviceInfoMap.get(key);
 
 		initByPort(null);
-		if (deviceInfoMap.containsKey(key))
-			return deviceInfoMap.get(key);
+		if (selectedDeviceInfoMap.containsKey(key))
+			return selectedDeviceInfoMap.get(key);
 
-		LOGGER.info("Bio Device not found for modality : {} at {}",modality ,System.currentTimeMillis());
+		LOGGER.info("Bio Device not found for modality : {} at {}", modality, System.currentTimeMillis());
 		throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
 				RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
 	}
@@ -369,15 +409,17 @@ public class MosipDeviceSpecificationFactory {
 				.filter(provider -> provider.getSpecVersion().equalsIgnoreCase(bioDevice.getSpecVersion())
 						&& provider.isDeviceAvailable(bioDevice))
 				.findFirst();
-		if(!result.isPresent()) {
-			deviceInfoMap.remove(getKey(getDeviceType(bioDevice.getDeviceType()), getDeviceSubType(bioDevice.getDeviceSubType())));
+		if (!result.isPresent()) {
+			selectedDeviceInfoMap.remove(
+					getKey(getDeviceType(bioDevice.getDeviceType()), getDeviceSubType(bioDevice.getDeviceSubType())));
 			init();
 			return false;
 		}
-		
+
 		return true;
 
 	}
+
 	private String getLatestVersion(String version1, String version2) {
 
 		if (version1.equalsIgnoreCase(version2)) {
@@ -465,7 +507,19 @@ public class MosipDeviceSpecificationFactory {
 	}
 
 	public static Map<String, MdmBioDevice> getDeviceRegistryInfo() {
-		return deviceInfoMap;
+		return selectedDeviceInfoMap;
+	}
+
+	public static Map<String, List<MdmBioDevice>> getAvailableDeviceInfo() {
+		return availableDeviceInfoMap;
+	}
+	
+	public void modifySelectedDeviceInfo(String key, String serialNumber) {
+		Optional<MdmBioDevice> bioDevice = availableDeviceInfoMap.get(key).stream()
+				.filter(device -> device.getSerialNumber().equalsIgnoreCase(serialNumber)).findAny();
+		if(bioDevice.isPresent()) {
+			selectedDeviceInfoMap.put(key, bioDevice.get());
+		}
 	}
 
 }

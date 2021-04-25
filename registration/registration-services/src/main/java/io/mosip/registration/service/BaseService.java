@@ -15,7 +15,16 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.ListUtils;
@@ -68,6 +77,7 @@ import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.service.config.GlobalParamService;
+import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.operator.UserDetailService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.template.impl.NotificationServiceImpl;
@@ -123,6 +133,9 @@ public class BaseService {
 
 	@Autowired
 	private CenterMachineRepository centerMachineRepository;
+	
+	@Autowired
+	private LocalConfigService localConfigService;
 	
 	@Value("#{'${mosip.mandatory-languages:}'.split('[,]')}")
 	private List<String> mandatoryLanguages;
@@ -340,9 +353,10 @@ public class BaseService {
 			ApplicationContext.getInstance();
 			// Check application map
 			if (ApplicationContext.map().isEmpty() || ApplicationContext.map().get(key) == null) {
-
 				// Load Global params if application map is empty
-				ApplicationContext.setApplicationMap(globalParamService.getGlobalParams());
+				Map<String, Object> globalProps = globalParamService.getGlobalParams();
+				globalProps.putAll(localConfigService.getLocalConfigurations());
+				ApplicationContext.setApplicationMap(globalProps);
 			}
 
 			// Get Value of global param

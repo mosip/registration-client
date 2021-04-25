@@ -41,7 +41,7 @@ public class RegistrationUIConstants {
 			LOGGER.error("REGISTRATION_UI_CONSTANTS", APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(runtimeException));
 		}
-		return key != null ? String.format(ERROR + " : %s", key) : ERROR;
+		return key != null ? key : ERROR;
 	}
 
 	// ALERT
@@ -431,6 +431,10 @@ public class RegistrationUIConstants {
 
 	public static final String ONBOARD_USER_TITLE = "officerbiometrics";
 
-
+	public static final String ONBOARD_USER_TITLE = bundle.getString("officerbiometrics");
+	
+	public static final String INVALID_CRON_EXPRESSION = bundle.getString("INVALID_CRON_EXPRESSION");
+	
+	public static final String CRON_EXPRESSION_MODIFIED = bundle.getString("CRON_EXPRESSION_MODIFIED");
 
 }

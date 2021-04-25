@@ -8,7 +8,15 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Timestamp;
+
+	
+import java.util.ArrayList;	
+import java.util.List;
 import java.util.TimerTask;
+import java.util.TimerTask;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections.CollectionUtils;
 
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.service.BaseService;
@@ -47,6 +55,11 @@ import io.mosip.registration.service.sync.SyncStatusValidatorService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
+import io.mosip.registration.controller.SettingsController;
+import io.mosip.registration.dto.SettingsSchema;	
+import io.mosip.registration.service.IdentitySchemaService;
+
+
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -72,6 +85,9 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
+import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.layout.HBox;
 
 /**
  * Class for Registration Officer details
@@ -120,10 +136,13 @@ public class HeaderController extends BaseController {
 	
 
 	@FXML
-	private GridPane online;
+	private HBox online;
 
 	@FXML
-	private GridPane offline;
+	private HBox offline;
+
+	@FXML
+    private HBox settingsHBox;
 
 	@FXML
 	private Menu homeSelectionMenu;
@@ -133,6 +152,9 @@ public class HeaderController extends BaseController {
 
 	@FXML
 	private MenuItem resetPword;
+
+	@FXML
+	private HBox settingsIconHBox;
 
 	@Autowired
 	private JobConfigurationService jobConfigurationService;
@@ -174,6 +196,14 @@ public class HeaderController extends BaseController {
 
 	@Autowired
 	private BaseService baseService;
+
+	@Autowired
+    private IdentitySchemaService identitySchemaService;
+
+    @Autowired
+	private SettingsController settingsController;
+
+    private List<SettingsSchema> settingsByRole = new ArrayList<>();
 	
 
 	/**
@@ -189,8 +219,8 @@ public class HeaderController extends BaseController {
 		setImage(userImageView	, RegistrationConstants.USER_IMG);
 		setImage(regCenterLocationImgView	, RegistrationConstants.REG_CENTER_LOCATION_IMG);
 		setImage(registrationOfficeIdImageView	, RegistrationConstants.SYSTEM_IMG);
-		setImage(availableIcon1	, RegistrationConstants.ONLINE_IMG);
-		setImage(availableIcon	, RegistrationConstants.ONLINE_IMG);
+		setImage(availableIcon1	, "Online.png");
+		setImage(availableIcon	, "Offline.png");
 		setImage(homeSelectionMenuImageView	, RegistrationConstants.HAMBURGER_IMG);
 		setImage(homeImgView	, RegistrationConstants.HOME_IMG);
 
@@ -209,6 +239,27 @@ public class HeaderController extends BaseController {
 			homeSelectionMenu.setDisable(false);
 		}
 		resetPword.setVisible(ApplicationContext.map().containsKey(RegistrationConstants.RESET_PWORD_URL));
+
+		try {
+			settingsByRole.clear();
+			List<SettingsSchema> settingsSchema = identitySchemaService
+					.getSettingsSchema(identitySchemaService.getLatestEffectiveSchemaVersion());
+			if (settingsSchema != null && !settingsSchema.isEmpty()) {
+				List<String> userRoles = userDetailService.getUserRoleByUserId(SessionContext.userId());
+				settingsByRole = settingsSchema.stream()
+						.filter(settings -> CollectionUtils.containsAny(settings.getAccessControl(), userRoles))
+						.collect(Collectors.toList());
+				if (settingsByRole != null && !settingsByRole.isEmpty()) {
+					settingsIconHBox.setVisible(true);
+				}
+			}
+		} catch (RuntimeException | RegBaseCheckedException exception) {
+			LOGGER.error("Exception while reading settings", exception);
+		}	
+		
+		if(!shortCuts.isEmpty()) {
+			shortCuts.forEach(shortCut -> settingsHBox.getChildren().add(shortCut));
+		}
 
 		getTimer().schedule(new TimerTask() {
 
@@ -868,5 +919,34 @@ public class HeaderController extends BaseController {
 			return false;
 		}
 		return true;
+	}
+
+	public void openSettings() {
+		getStage().getScene().getRoot().setDisable(true);
+		settingsController.init(settingsByRole);
+	}
+
+	public void addShortCut(HBox shortCutHBox) {
+		boolean isAdded = false;
+		for (Node node : settingsHBox.getChildren()) {
+			if (node != null && node.getId() != null && node.getId().equalsIgnoreCase(shortCutHBox.getId())) {
+				isAdded = true;
+			}
+		}
+		if (!isAdded) {
+			ContextMenu contextMenu = new ContextMenu();
+			MenuItem removeShortCut = new MenuItem("Remove Shortcut");
+			contextMenu.getItems().add(removeShortCut);
+			removeShortCut.setOnAction(event -> {
+				settingsHBox.getChildren().remove(shortCutHBox);
+				removeShortCutFromList(shortCutHBox);
+				
+			});
+			shortCutHBox.setOnContextMenuRequested(e -> {
+				contextMenu.show(shortCutHBox.getScene().getWindow(), e.getScreenX(), e.getScreenY());
+			});
+			settingsHBox.getChildren().add(shortCutHBox);
+			addShortCutToList(shortCutHBox);
+		}
 	}
 }

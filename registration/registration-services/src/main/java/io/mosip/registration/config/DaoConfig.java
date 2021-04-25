@@ -1,22 +1,29 @@
 package io.mosip.registration.config;
 
-import java.io.*;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.Statement;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.WeakHashMap;
 
 import javax.sql.DataSource;
 
-import com.google.common.annotations.VisibleForTesting;
-import io.mosip.kernel.clientcrypto.constant.ClientCryptoManagerConstant;
-import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.exception.RegBaseUncheckedException;
-import io.mosip.registration.exception.RegistrationExceptionConstants;
-import lombok.SneakyThrows;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
@@ -35,14 +42,19 @@ import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 
+import com.google.common.annotations.VisibleForTesting;
+
+import io.mosip.kernel.clientcrypto.constant.ClientCryptoManagerConstant;
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.dataaccess.hibernate.config.HibernateDaoConfig;
 import io.mosip.kernel.dataaccess.hibernate.constant.HibernatePersistenceConstant;
 import io.mosip.registration.constants.RegistrationConstants;
-
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
+import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RegistrationExceptionConstants;
+import lombok.SneakyThrows;
 
 /**
  *
@@ -78,6 +90,8 @@ public class DaoConfig extends HibernateDaoConfig {
 	private static final String GLOBAL_PARAM_PROPERTIES = "SELECT CODE, VAL FROM REG.GLOBAL_PARAM WHERE IS_ACTIVE=TRUE AND VAL IS NOT NULL";
 	private static final String KEY = "CODE";
 	private static final String VALUE = "VAL";
+	private static final String LOCAL_PREFERENCES = "SELECT NAME, VAL FROM REG.LOCAL_PREFERENCES WHERE IS_DELETED=FALSE AND CONFIG_TYPE='CONFIGURATION' AND VAL IS NOT NULL";
+	private static final String NAME = "NAME";
 
 	@Autowired
 	private ClientCryptoFacade clientCryptoFacade;
@@ -410,11 +424,12 @@ public class DaoConfig extends HibernateDaoConfig {
 		throw new RegBaseCheckedException(RegistrationExceptionConstants.APP_INVALID_STATE.getErrorCode(),
 				RegistrationExceptionConstants.APP_INVALID_STATE.getErrorMessage());
 	}
-
+	
 	public void updateGlobalParamsInProperties(JdbcTemplate jdbcTemplate) {
 		if (!isPPCUpdated) {
 			Properties properties = new Properties();
-			properties.putAll(getDBProps(jdbcTemplate));
+			Map<String, Object> globalProps = getDBProps(jdbcTemplate);
+			properties.putAll(getLocalProps(jdbcTemplate, globalProps));
 			PropertiesPropertySource propertiesPropertySource = new PropertiesPropertySource("gobalparams", properties);
 			environment.getPropertySources().addFirst(propertiesPropertySource);
 			isPPCUpdated = true;
@@ -437,6 +452,23 @@ public class DaoConfig extends HibernateDaoConfig {
 				globalParamProps.put("objectstore.adapter.name", "PosixAdapter");
 				globalParamProps.put("mosip.sign.refid", keys.getProperty("mosip.sign.refid", "SIGN"));
 				return globalParamProps;
+			}
+		});
+	}
+	
+	/**
+	 * Fetch all the active global param values from the DB and set it in a map
+	 * 
+	 * @return Collection of Global param values
+	 */
+	private static Map<String, Object> getLocalProps(JdbcTemplate jdbcTemplate, Map<String, Object> globalProps) {
+		return jdbcTemplate.query(LOCAL_PREFERENCES, new ResultSetExtractor<Map<String, Object>>() {
+			@Override
+			public Map<String, Object> extractData(ResultSet localParamResultset) throws SQLException {
+				while (localParamResultset.next()) {
+					globalProps.put(localParamResultset.getString(NAME), localParamResultset.getString(VALUE));
+				}
+				return globalProps;
 			}
 		});
 	}
