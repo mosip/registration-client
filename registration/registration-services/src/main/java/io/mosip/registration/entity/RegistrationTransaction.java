@@ -29,6 +29,8 @@ public class RegistrationTransaction {
 	private String id;
 	@Column(name = "REG_ID")
 	private String regId;
+	@Column(name = "APP_ID")
+	private String appId;
 	@Column(name = "PARENT_REGTRN_ID")
 	private String parentRegTrnId;
 	@Column(name = "TRN_TYPE_CODE")
@@ -53,6 +55,7 @@ public class RegistrationTransaction {
 	private Boolean isDeleted;
 	@Column(name = "DEL_DTIMES")
 	private Timestamp delDtime;
+	
 
 	/**
 	 * @return the id
@@ -234,4 +237,11 @@ public class RegistrationTransaction {
 		this.updDtimes = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
 	}
 
+	public String getAppId() {
+		return appId;
+	}
+
+	public void setAppId(String appId) {
+		this.appId = appId;
+	}
 }

@@ -359,6 +359,8 @@ public class TemplateGenerator extends BaseService {
 			templateValues.put("IDSchemaVersion", registration.getIdSchemaVersion());
 			templateValues.put(RegistrationConstants.TEMPLATE_RID_LABEL, getLabel("registrationid"));
 			templateValues.put(RegistrationConstants.TEMPLATE_RID, registration.getRegistrationId());
+			templateValues.put(RegistrationConstants.TEMPLATE_APPLICATION_ID_LABEL, getLabel(RegistrationConstants.PACKET_APPLICATION_ID));
+			templateValues.put(RegistrationConstants.TEMPLATE_APPLICATION_ID, registration.getAppId());
 			templateValues.put(RegistrationConstants.TEMPLATE_UIN_LABEL, getLabel("uin"));
 			templateValues.put(RegistrationConstants.TEMPLATE_UIN, registration.getDemographics().get("UIN"));
 			templateValues.put(RegistrationConstants.TEMPLATE_PRE_REG_ID_LABEL, getLabel("preRegistrationId"));
@@ -461,8 +463,8 @@ public class TemplateGenerator extends BaseService {
 								ResourceBundle applicationLanguageProperties) throws RegBaseCheckedException {
 		try {
 			StringBuilder qrCodeString = new StringBuilder();
-			qrCodeString.append(applicationLanguageProperties.getString("registrationid")).append(" : ").append("\n")
-					.append(registration.getRegistrationId());
+			qrCodeString.append(applicationLanguageProperties.getString(RegistrationConstants.PACKET_APPLICATION_ID)).append(" : ").append("\n")
+					.append(registration.getAppId());
 			byte[] qrCodeInBytes = qrCodeGenerator.generateQrCode(qrCodeString.toString(), QrVersion.V4);
 			String qrCodeImageEncodedBytes = StringUtils.newStringUtf8(Base64.encodeBase64(qrCodeInBytes, false));
 			templateValues.put(RegistrationConstants.TEMPLATE_QRCODE_SOURCE,
