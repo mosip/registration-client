@@ -19,6 +19,7 @@ import java.util.zip.ZipOutputStream;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.crypto.spi.CryptoCoreSpec;
 import io.mosip.kernel.keygenerator.bouncycastle.util.KeyGeneratorUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -36,6 +37,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import io.mosip.kernel.core.exception.IOException;
 import io.mosip.kernel.core.security.constants.MosipSecurityMethod;
@@ -70,6 +72,9 @@ public class PreRegZipHandlingServiceTest {
 
 	@InjectMocks
 	private PreRegZipHandlingServiceImpl preRegZipHandlingServiceImpl;
+	
+	@Mock
+	private ClientCryptoFacade clientCryptoFacade;
 
 	@Mock
 	private KeyGenerator keyGenerator;
@@ -228,6 +233,7 @@ public class PreRegZipHandlingServiceTest {
 		byte[] decodedKey = Base64.getDecoder().decode("0E8BAAEB3CED73CBC9BF4964F321824A");
 		SecretKey secretKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
 		Mockito.when(keyGenerator.getSymmetricKey()).thenReturn(secretKey);
+		Mockito.when(clientCryptoFacade.decrypt(Mockito.any())).thenReturn(new byte[0]);
 		Mockito.when(cryptoCore.symmetricEncrypt(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(new byte[0]);
 		Mockito.when(cryptoCore.symmetricDecrypt(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(new byte[0]);
 	}

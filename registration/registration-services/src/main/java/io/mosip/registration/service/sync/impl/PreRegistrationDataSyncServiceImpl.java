@@ -227,6 +227,7 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 			 Timestamp lastUpdatedTimeStamp) throws Exception {
 		Map<String, String> requestParamMap = new HashMap<>();
 		requestParamMap.put(RegistrationConstants.PRE_REGISTRATION_ID, preRegistrationId);
+		requestParamMap.put(RegistrationConstants.USER_STATION_ID, getStationId());
 		LOGGER.debug("Downloading pre-reg packet {}", requestParamMap);
 
 		LinkedHashMap<String, Object> response = (LinkedHashMap<String, Object>) serviceDelegateUtil.get(RegistrationConstants.GET_PRE_REGISTRATION,
