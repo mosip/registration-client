@@ -720,7 +720,7 @@ public class BaseService {
 			throw new PreConditionCheckException(PreConditionChecks.MARKED_FOR_REMAP.name(),
 					"Onboarding forbidden as machine is marked for center remap");
 
-		//RegistrationUIConstants.CENTER_MACHINE_INACTIVE
+		//RegistrationUIConstants.getMessageLanguageSpecific("CENTER_MACHINE_INACTIVE
 		String machineId = getStationId();
 		if(machineId == null)
 			throw new PreConditionCheckException(PreConditionChecks.MACHINE_INACTIVE.name(),
@@ -746,7 +746,7 @@ public class BaseService {
 			throw new PreConditionCheckException(PreConditionChecks.MARKED_FOR_REMAP.name(),
 					"Registration forbidden as machine is marked for center remap");
 
-		//RegistrationUIConstants.CENTER_MACHINE_INACTIVE
+		//RegistrationUIConstants.getMessageLanguageSpecific("CENTER_MACHINE_INACTIVE
 		String machineId = getStationId();
 		if(machineId == null)
 			throw new PreConditionCheckException(PreConditionChecks.MACHINE_INACTIVE.name(),
