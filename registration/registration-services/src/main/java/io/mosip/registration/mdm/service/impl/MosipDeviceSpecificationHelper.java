@@ -16,6 +16,8 @@ import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.dto.Biometric;
 import io.mosip.registration.mdm.dto.MDMError;
 import io.mosip.registration.mdm.dto.MdmDeviceInfo;
+import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.MdmSbiDeviceInfo;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -45,7 +47,7 @@ public class MosipDeviceSpecificationHelper {
 	@Autowired
 	private SignatureService signatureService;
 
-	@Value("${mosip.registration.mdm.validate.trust:true}")
+	@Value("${mosip.registration.mdm.validate.trust:false}")
 	private boolean validateTrust;
 
 	@Value("${mosip.registration.mdm.trust.domain.rcapture:DEVICE}")
@@ -76,9 +78,21 @@ public class MosipDeviceSpecificationHelper {
 
 	public MdmDeviceInfo getDeviceInfoDecoded(String deviceInfo) {
 		try {
-			validateJWTResponse(deviceInfo, deviceInfoTrustDomain);
+			//validateJWTResponse(deviceInfo, deviceInfoTrustDomain);
 			String result = new String(Base64.getUrlDecoder().decode(getPayLoad(deviceInfo)));
 			return mapper.readValue(result, MdmDeviceInfo.class);
+		} catch (Exception exception) {
+			LOGGER.error(APPLICATION_ID, APPLICATION_NAME, "Failed to decode device info",
+					ExceptionUtils.getStackTrace(exception));
+		}
+		return null;
+	}
+	
+	public MdmSbiDeviceInfo getSbiDeviceInfoDecoded(String deviceSbiInfo) {
+		try {
+			//validateJWTResponse(deviceSbiInfo, deviceInfoTrustDomain);
+			String result = new String(Base64.getUrlDecoder().decode(getPayLoad(deviceSbiInfo)));
+			return mapper.readValue(result, MdmSbiDeviceInfo.class);
 		} catch (Exception exception) {
 			LOGGER.error(APPLICATION_ID, APPLICATION_NAME, "Failed to decode device info",
 					ExceptionUtils.getStackTrace(exception));
@@ -91,17 +105,15 @@ public class MosipDeviceSpecificationHelper {
 		jwtSignatureVerifyRequestDto.setValidateTrust(validateTrust);
 		jwtSignatureVerifyRequestDto.setDomain(domain);
 		jwtSignatureVerifyRequestDto.setJwtSignatureData(signedData);
-		JWTSignatureVerifyResponseDto jwtSignatureVerifyResponseDto = signatureService
-				.jwtVerify(jwtSignatureVerifyRequestDto);
-		if (!jwtSignatureVerifyResponseDto.isSignatureValid())
-			throw new DeviceException(MDMError.MDM_INVALID_SIGNATURE.getErrorCode(),
-					MDMError.MDM_INVALID_SIGNATURE.getErrorMessage());
-
-		if (jwtSignatureVerifyRequestDto.getValidateTrust()
-				&& !jwtSignatureVerifyResponseDto.getTrustValid().equals(SignatureConstant.TRUST_VALID)) {
-			throw new DeviceException(MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorCode(),
-					MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorMessage());
+		
+		JWTSignatureVerifyResponseDto jwtSignatureVerifyResponseDto = signatureService .jwtVerify(jwtSignatureVerifyRequestDto); 
+		if(!jwtSignatureVerifyResponseDto.isSignatureValid()) 
+			throw new DeviceException(MDMError.MDM_INVALID_SIGNATURE.getErrorCode(), MDMError.MDM_INVALID_SIGNATURE.getErrorMessage());
+		 
+		if (jwtSignatureVerifyRequestDto.getValidateTrust() && !jwtSignatureVerifyResponseDto.getTrustValid().equals(SignatureConstant.TRUST_VALID)) { 
+			throw new DeviceException(MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorCode(), MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorMessage()); 
 		}
+		 
 	}
 
 	public String generateMDMTransactionId() {

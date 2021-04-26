@@ -248,8 +248,8 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 					throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
 							RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage()
 									+ " : Data is empty in RCapture " + " error Code  : "
-									+ rCaptureResponseBiometricsDTO.getError().getErrorCode() + " error message : "
-									+ rCaptureResponseBiometricsDTO.getError().getErrorInfo());
+									+ rCaptureResponseBiometricsDTO.getError().getErrorcode() + " error message : "
+									+ rCaptureResponseBiometricsDTO.getError().getErrorinfo());
 				}
 				if (rCaptureResponseBiometricsDTO.getData() != null
 						&& !rCaptureResponseBiometricsDTO.getData().isEmpty()) {
