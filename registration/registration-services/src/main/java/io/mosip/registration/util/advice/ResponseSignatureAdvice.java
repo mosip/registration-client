@@ -5,6 +5,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -13,10 +14,13 @@ import io.mosip.commons.packet.constants.CryptomanagerConstant;
 import io.mosip.kernel.core.exception.BaseCheckedException;
 import io.mosip.kernel.core.exception.BaseUncheckedException;
 import io.mosip.kernel.core.keymanager.exception.KeystoreProcessingException;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
 import io.mosip.kernel.keymanagerservice.exception.KeymanagerServiceException;
 import io.mosip.kernel.keymanagerservice.exception.NoUniqueAliasException;
+import io.mosip.kernel.signature.dto.JWTSignatureVerifyRequestDto;
+import io.mosip.kernel.signature.dto.JWTSignatureVerifyResponseDto;
 import io.mosip.kernel.signature.dto.TimestampRequestDto;
 import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.registration.service.sync.PublicKeySync;
@@ -136,28 +140,18 @@ public class ResponseSignatureAdvice {
 
 				responseHeader = (HttpHeaders) restClientResponse.get(RegistrationConstants.REST_RESPONSE_HEADERS);
 
-				DateTimeFormatter format = DateTimeFormatter.ofPattern(DATETIME_PATTERN);
-				LocalDateTime localdatetime = LocalDateTime.parse(DateUtils.getUTCCurrentDateTimeString(DATETIME_PATTERN), format);
-				TimestampRequestDto timestampRequestDto = new TimestampRequestDto();
-				timestampRequestDto.setSignature(responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE).get(0));
-				timestampRequestDto.setData(new ObjectMapper().writeValueAsString(responseBodyMap));
-				timestampRequestDto.setTimestamp(localdatetime);
-
-				//TODO - Change it to JWT signature verification
-				if (signatureService.validate(timestampRequestDto).getStatus().equalsIgnoreCase(CryptomanagerConstant.SIGNATURES_SUCCESS)) {
-					LOGGER.info(LoggerConstants.RESPONSE_SIGNATURE_VALIDATION, APPLICATION_ID, APPLICATION_NAME,
-							"response signature is valid...");
+				if (isResponseSignatureValid(responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE).get(0),
+						new ObjectMapper().writeValueAsString(responseBodyMap)) ) {
+					LOGGER.info("Response signature is valid... {}", requestDto.getUri());
 					return restClientResponse;
 				} else {
-					LOGGER.info(LoggerConstants.RESPONSE_SIGNATURE_VALIDATION, APPLICATION_ID, APPLICATION_NAME,
-							"response signature is Invalid...");
+					LOGGER.info("Response signature is Invalid... {}", requestDto.getUri());
 					restClientResponse.put(RegistrationConstants.REST_RESPONSE_BODY, new LinkedHashMap<>());
 					restClientResponse.put(RegistrationConstants.REST_RESPONSE_HEADERS, new LinkedHashMap<>());
 				}
 			}
 		} catch (RuntimeException | JsonProcessingException regBaseCheckedException) {
-			LOGGER.error(LoggerConstants.RESPONSE_SIGNATURE_VALIDATION, APPLICATION_ID, APPLICATION_NAME,
-					ExceptionUtils.getStackTrace(regBaseCheckedException));
+			LOGGER.error(regBaseCheckedException.getMessage(), regBaseCheckedException);
 			throw new RegBaseCheckedException("Exception in response signature", regBaseCheckedException.getMessage());
 		}
 
@@ -166,6 +160,20 @@ public class ResponseSignatureAdvice {
 
 		return restClientResponse;
 
+	}
+
+	private boolean isResponseSignatureValid(String signature, String actualData) {
+		KeyPairGenerateResponseDto certificateDto = keymanagerService
+				.getCertificate(RegistrationConstants.RESPONSE_SIGNATURE_PUBLIC_KEY_APP_ID,
+						Optional.of(RegistrationConstants.RESPONSE_SIGNATURE_PUBLIC_KEY_REF_ID));
+
+		JWTSignatureVerifyRequestDto jwtSignatureVerifyRequestDto = new JWTSignatureVerifyRequestDto();
+		jwtSignatureVerifyRequestDto.setJwtSignatureData(signature);
+		jwtSignatureVerifyRequestDto.setActualData(CryptoUtil.encodeBase64(actualData.getBytes(StandardCharsets.UTF_8)));
+		jwtSignatureVerifyRequestDto.setCertificateData(certificateDto.getCertificate());
+
+		JWTSignatureVerifyResponseDto verifyResponseDto =  signatureService.jwtVerify(jwtSignatureVerifyRequestDto);
+		return verifyResponseDto.isSignatureValid();
 	}
 
 	/**

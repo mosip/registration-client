@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
+import io.mosip.registration.controller.GenericController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -74,6 +75,9 @@ public class UpdateUINController extends BaseController implements Initializable
 	@Autowired
 	Validations validation;
 
+	@Autowired
+	private GenericController genericController;
+
 	@FXML
 	FlowPane parentFlowPane;
 
@@ -126,7 +130,7 @@ public class UpdateUINController extends BaseController implements Initializable
 					setImage(backImageView, RegistrationConstants.ARROW_LEFT_IMG);
 				}
 			});
-		} catch (RuntimeException runtimeException) {
+		} catch (Throwable runtimeException) {
 			LOGGER.error(LOG_REG_UIN_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
 		}
@@ -202,33 +206,31 @@ public class UpdateUINController extends BaseController implements Initializable
 					}
 				}
 
+				LOGGER.debug("selectedFieldGroups : {} , selectedFields : {}",selectedFieldGroups, selectedFields);
 
-				LOGGER.debug(LOG_REG_UIN_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"selectedFieldGroups size : " + selectedFieldGroups.size());
-				LOGGER.debug(LOG_REG_UIN_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"selectedFields size : " + selectedFields.size());
+				if(selectedFields.isEmpty()) {
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_UIN_SELECTION_ALERT));
+					return;
+				}
 
 				if (uinValidatorImpl.validateId(uinId.getText()) && !selectedFields.isEmpty()) {
 					registrationController.init(uinId.getText(), checkBoxKeeper, selectedFields, selectedFieldGroups);
 					Parent createRoot = BaseController.load(
-							getClass().getResource(/*RegistrationConstants.CREATE_PACKET_PAGE*/"/fxml/GenericRegistrationLayout.fxml"),
+							getClass().getResource(RegistrationConstants.CREATE_PACKET_PAGE),
 							applicationContext.getBundle(getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0), RegistrationConstants.LABELS));
 
 					getScene(createRoot).setRoot(createRoot);
-				} else {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_UIN_SELECTION_ALERT));
+					genericController.populateScreens();
+					return;
 				}
 			}
 		} catch (InvalidIDException invalidIdException) {
-			LOGGER.error(LOG_REG_UIN_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					invalidIdException.getMessage() + ExceptionUtils.getStackTrace(invalidIdException));
-
+			LOGGER.error(invalidIdException.getMessage(), invalidIdException);
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_UIN_VALIDATION_ALERT));
-		} catch (Exception exception) {
-			LOGGER.error(LOG_REG_UIN_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					exception.getMessage() + ExceptionUtils.getStackTrace(exception));
-
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_REG_PAGE));
+		} catch (Throwable exception) {
+			LOGGER.error(exception.getMessage(), exception);
 		}
+		clearRegistrationData();
+		generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_REG_PAGE));
 	}
 }

@@ -601,18 +601,14 @@ public class PacketHandlerController extends BaseController implements Initializ
 	 */
 	public void approvePacket() {
 
-		if (!proceedOnAction("PS")) {
-			return;
-		}
-		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Loading Pending Approval screen started.");
+		LOGGER.info("Loading Pending Approval screen started.");
 		try {
 			auditFactory.audit(AuditEvent.NAV_APPROVE_REG, Components.NAVIGATION,
 					SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
 			GridPane root = BaseController.load(getClass().getResource(RegistrationConstants.PENDING_APPROVAL_PAGE));
 
-			LOGGER.info("REGISTRATION - APPROVE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
-					APPLICATION_ID, "Validating Approve Packet screen for specific role");
+			LOGGER.info("Validating Approve Packet screen for specific role");
 
 			if (SessionContext.userContext().getRoles().contains(RegistrationConstants.ROLE_DEFAULT)) {
 				getScene(root);
@@ -622,12 +618,11 @@ public class PacketHandlerController extends BaseController implements Initializ
 				getScene(root);
 			}
 		} catch (IOException ioException) {
-			LOGGER.error("REGISTRATION - OFFICER_PACKET_MANAGER - APPROVE PACKET", APPLICATION_NAME, APPLICATION_ID,
-					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
+			LOGGER.error(ioException.getMessage(), ioException);
 
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_APPROVAL_PAGE));
 		}
-		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Loading Pending Approval screen ended.");
+		LOGGER.info("Loading Pending Approval screen ended.");
 	}
 
 	/**
