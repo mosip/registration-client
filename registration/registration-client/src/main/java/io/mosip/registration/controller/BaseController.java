@@ -2037,8 +2037,7 @@ public class BaseController {
         try {
 			return  new Image(uri);
 		} catch (Exception exception) {
-
-			LOGGER.error("Exception while Getting Image", exception);
+			LOGGER.error("Exception while Getting Image "+ uri, exception);
 			throw new RegBaseCheckedException();
 		}
 	}
