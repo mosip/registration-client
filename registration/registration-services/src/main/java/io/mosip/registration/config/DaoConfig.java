@@ -106,10 +106,6 @@ public class DaoConfig extends HibernateDaoConfig {
 
 	static {
 
-		// TODO - Remove this in next release
-		ClientCryptoFacade
-				.setIsTPMRequired(RegistrationConstants.ENABLE.equalsIgnoreCase(ApplicationContext.getTPMUsageFlag()));
-
 		try (InputStream keyStream = DaoConfig.class.getClassLoader().getResourceAsStream("spring.properties")) {
 
 			keys = new Properties();
@@ -449,8 +445,8 @@ public class DaoConfig extends HibernateDaoConfig {
 				while (globalParamResultset.next()) {
 					globalParamProps.put(globalParamResultset.getString(KEY), globalParamResultset.getString(VALUE));
 				}
-				globalParamProps.put("objectstore.adapter.name", "PosixAdapter");
-				globalParamProps.put("mosip.sign.refid", keys.getProperty("mosip.sign.refid", "SIGN"));
+				//globalParamProps.put("objectstore.adapter.name", "PosixAdapter");
+				//globalParamProps.put("mosip.sign.refid", keys.getProperty("mosip.sign.refid", "SIGN"));
 				return globalParamProps;
 			}
 		});

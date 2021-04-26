@@ -10,7 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import io.mosip.kernel.transliteration.icu4j.impl.TransliterationImpl;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.commons.packet.dto.packet.SimpleDto;
