@@ -14,6 +14,7 @@ import io.mosip.registration.exception.DeviceException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.dto.Biometric;
+import io.mosip.registration.mdm.dto.DeviceInfo;
 import io.mosip.registration.mdm.dto.MDMError;
 import io.mosip.registration.mdm.dto.MdmDeviceInfo;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.MdmSbiDeviceInfo;
@@ -47,7 +48,7 @@ public class MosipDeviceSpecificationHelper {
 	@Autowired
 	private SignatureService signatureService;
 
-	@Value("${mosip.registration.mdm.validate.trust:false}")
+	@Value("${mosip.registration.mdm.validate.trust:true}")
 	private boolean validateTrust;
 
 	@Value("${mosip.registration.mdm.trust.domain.rcapture:DEVICE}")
@@ -76,23 +77,16 @@ public class MosipDeviceSpecificationHelper {
 				RegistrationExceptionConstants.MDS_PAYLOAD_EMPTY.getErrorMessage());
 	}
 
-	public MdmDeviceInfo getDeviceInfoDecoded(String deviceInfo) {
+	public DeviceInfo getDeviceInfoDecoded(String deviceInfo, Class<?> classType) {
 		try {
-			//validateJWTResponse(deviceInfo, deviceInfoTrustDomain);
+			validateJWTResponse(deviceInfo, deviceInfoTrustDomain);
 			String result = new String(Base64.getUrlDecoder().decode(getPayLoad(deviceInfo)));
-			return mapper.readValue(result, MdmDeviceInfo.class);
-		} catch (Exception exception) {
-			LOGGER.error(APPLICATION_ID, APPLICATION_NAME, "Failed to decode device info",
-					ExceptionUtils.getStackTrace(exception));
-		}
-		return null;
-	}
-	
-	public MdmSbiDeviceInfo getSbiDeviceInfoDecoded(String deviceSbiInfo) {
-		try {
-			//validateJWTResponse(deviceSbiInfo, deviceInfoTrustDomain);
-			String result = new String(Base64.getUrlDecoder().decode(getPayLoad(deviceSbiInfo)));
-			return mapper.readValue(result, MdmSbiDeviceInfo.class);
+			if(classType.getName().equals("io.mosip.registration.mdm.sbi.spec_1_0.service.impl.MosipDeviceSpecification_SBI_1_0_ProviderImpl")) {
+				return mapper.readValue(result, MdmSbiDeviceInfo.class);
+			} else {
+				return mapper.readValue(result, MdmDeviceInfo.class);
+			}
+			
 		} catch (Exception exception) {
 			LOGGER.error(APPLICATION_ID, APPLICATION_NAME, "Failed to decode device info",
 					ExceptionUtils.getStackTrace(exception));

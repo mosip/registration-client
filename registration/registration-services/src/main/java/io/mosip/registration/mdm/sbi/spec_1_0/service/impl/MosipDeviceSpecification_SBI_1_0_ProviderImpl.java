@@ -36,12 +36,14 @@ import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.exception.DeviceException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.constants.MosipBioDeviceConstants;
 import io.mosip.registration.mdm.dto.Biometric;
+import io.mosip.registration.mdm.dto.DeviceInfo;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.mdm.dto.MdmBioDevice;
 import io.mosip.registration.mdm.integrator.MosipDeviceSpecificationProvider;
@@ -97,15 +99,16 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 		List<MdmDeviceInfoResponse> deviceInfoResponses;
 		try {
 
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "parsing device info response to 092 dto");
+			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "parsing device info response to SBI 1_0 dto");
 			deviceInfoResponses = (mosipDeviceSpecificationHelper.getMapper().readValue(deviceInfoResponse,
 					new TypeReference<List<MdmDeviceInfoResponse>>() {
 					}));
 			for (MdmDeviceInfoResponse mdmDeviceInfoResponse : deviceInfoResponses) {
 				if (mdmDeviceInfoResponse.getDeviceInfo() != null && !mdmDeviceInfoResponse.getDeviceInfo().isEmpty()) {
-					MdmSbiDeviceInfo mdmDeviceInfo = mosipDeviceSpecificationHelper
-							.getSbiDeviceInfoDecoded(mdmDeviceInfoResponse.getDeviceInfo());
-					MdmBioDevice bioDevice = getBioDevice(mdmDeviceInfo);
+					DeviceInfo mdmDeviceInfo = mosipDeviceSpecificationHelper
+							.getDeviceInfoDecoded(mdmDeviceInfoResponse.getDeviceInfo(), this.getClass());
+					
+					MdmBioDevice bioDevice = getBioDevice((MdmSbiDeviceInfo)mdmDeviceInfo);
 					if (bioDevice != null) {
 						bioDevice.setPort(port);
 						mdmBioDevices.add(bioDevice);
@@ -113,7 +116,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 				}
 			}
 		} catch (Exception exception) {
-			LOGGER.error(APPLICATION_NAME, APPLICATION_ID, "Exception while parsing deviceinfo response(092 spec)",
+			LOGGER.error(APPLICATION_NAME, APPLICATION_ID, "Exception while parsing deviceinfo response(SBI 1_0 spec)",
 					ExceptionUtils.getStackTrace(exception));
 		}
 		return mdmBioDevices;
@@ -135,9 +138,11 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 
 			StreamSbiRequestDTO streamSbiRequestDTO = new StreamSbiRequestDTO();
 
+			String timeout = (String) ApplicationContext.getInstance().getApplicationMap()
+			.getOrDefault(RegistrationConstants.CAPTURE_TIME_OUT, "60000");
 			streamSbiRequestDTO.setDeviceSubId(getDeviceSubId(modality));
 			streamSbiRequestDTO.setSerialNo(bioDevice.getSerialNumber());
-			streamSbiRequestDTO.setTimeout("4");
+			streamSbiRequestDTO.setTimeout(timeout);
 
 			String request = new ObjectMapper().writeValueAsString(streamSbiRequestDTO);
 
@@ -159,6 +164,20 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 			InputStream urlStream = null;
 			if (response.getEntity() != null) {
 				urlStream = response.getEntity().getContent();
+			}
+			
+			try {
+				byte[] byteArray = mosipDeviceSpecificationHelper.getJPEGByteArray(urlStream,
+						System.currentTimeMillis() + Long.parseLong(streamSbiRequestDTO.getTimeout()));
+
+				if (byteArray != null) {
+					LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
+							"Stream Request Completed" + System.currentTimeMillis());
+					return urlStream;
+				}
+
+			} catch (RegBaseCheckedException regBaseCheckedException) {
+				LOGGER.error("Stream Request failed", regBaseCheckedException);
 			}
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 					"Stream Request Completed" + System.currentTimeMillis());

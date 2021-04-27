@@ -42,6 +42,7 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.constants.MosipBioDeviceConstants;
 import io.mosip.registration.mdm.dto.Biometric;
+import io.mosip.registration.mdm.dto.DeviceInfo;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.mdm.dto.MdmBioDevice;
 import io.mosip.registration.mdm.dto.MdmDeviceInfo;
@@ -103,9 +104,9 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 					}));
 			for (MdmDeviceInfoResponse mdmDeviceInfoResponse : deviceInfoResponses) {
 				if (mdmDeviceInfoResponse.getDeviceInfo() != null && !mdmDeviceInfoResponse.getDeviceInfo().isEmpty()) {
-					MdmDeviceInfo mdmDeviceInfo = mosipDeviceSpecificationHelper
-							.getDeviceInfoDecoded(mdmDeviceInfoResponse.getDeviceInfo());
-					MdmBioDevice bioDevice = getBioDevice(mdmDeviceInfo);
+					DeviceInfo mdmDeviceInfo = mosipDeviceSpecificationHelper
+							.getDeviceInfoDecoded(mdmDeviceInfoResponse.getDeviceInfo(), this.getClass());
+					MdmBioDevice bioDevice = getBioDevice((MdmDeviceInfo) mdmDeviceInfo);
 					if (bioDevice != null) {
 						bioDevice.setPort(port);
 						mdmBioDevices.add(bioDevice);
