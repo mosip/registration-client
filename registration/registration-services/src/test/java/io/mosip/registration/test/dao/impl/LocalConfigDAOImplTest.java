@@ -151,5 +151,21 @@ public class LocalConfigDAOImplTest {
 		Mockito.when(localPreferencesRepository.findByIsDeletedFalseAndName(Mockito.anyString())).thenReturn(localPreferences);
 		assertEquals(localPreferences.getVal(), localConfigDAOImpl.getValue("mosip.test.config"));
 	}
+	
+	@Test
+	public void updateShortCutPreferenceTestUpdate() {
+		LocalPreferences localPreferences = new LocalPreferences();
+		localPreferences.setConfigType(RegistrationConstants.PERMITTED_SHORTCUT);
+		localPreferences.setName("test_shortcut");
+		localPreferences.setVal("N");
+		Mockito.when(localPreferencesRepository.findByIsDeletedFalseAndName(Mockito.anyString())).thenReturn(localPreferences);
+		localConfigDAOImpl.updateShortcutPreference("test_shortcut", "N");
+	}
+	
+	@Test
+	public void updateShortCutPreferenceTestSave() {
+		Mockito.when(localPreferencesRepository.findByIsDeletedFalseAndName(Mockito.anyString())).thenReturn(null);
+		localConfigDAOImpl.updateShortcutPreference("test_shortcut", "N");
+	}
 
 }
