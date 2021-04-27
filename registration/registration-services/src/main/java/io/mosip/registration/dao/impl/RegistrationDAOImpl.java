@@ -207,6 +207,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			List<RegistrationTransaction> registrationTransaction = registration.getRegistrationTransaction();
 
 			RegistrationTransaction registrationTxn = new RegistrationTransaction();
+			registrationTxn.setAppId(registration.getAppId());
 			registrationTxn.setRegId(registrationID);
 			registrationTxn.setTrnTypeCode(RegistrationTransactionType.UPDATED.getCode());
 			registrationTxn.setLangCode(RegistrationConstants.ENGLISH_LANG_CODE);
@@ -342,6 +343,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 				"Packet encryption has been ended");
 
 		RegistrationTransaction regTransaction = new RegistrationTransaction();
+		regTransaction.setAppId(registrationPacket.getAppId());
 		regTransaction.setId(String.valueOf(UUID.randomUUID().getMostSignificantBits()));
 		regTransaction.setRegId(registrationPacket.getId());
 		regTransaction.setTrnTypeCode(RegistrationTransactionType.UPDATED.getCode());

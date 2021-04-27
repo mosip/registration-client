@@ -313,10 +313,6 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 	@VisibleForTesting
 	private ResponseDTO syncPacketsToServer(@NonNull String encodedString, @NonNull String triggerPoint)
 			throws RegBaseCheckedException, ConnectionException {
-
-		if(true)
-			throw new ConnectionException("test", "test", new Exception());
-
 		LOGGER.info("Sync the packets to the server");
 		ResponseDTO responseDTO = new ResponseDTO();
 
