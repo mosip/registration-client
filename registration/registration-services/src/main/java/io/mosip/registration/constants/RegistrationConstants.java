@@ -1953,9 +1953,12 @@ public class RegistrationConstants {
 	public static final String FACE_DEVICE_DISCONNECTED_IMG = "FaceDeviceDisconnected.png";
 	public static final String REFRESH_ICON = "refresh.png";
 	public static final String SHORTCUT_ICON = "shortcut.png";
+	public static final String DEVICE_SETTINGS_NAME = "devices";
+	public static final String DEVICES_SHORTCUT_PREFERENCE_NAME = "devices_shortcut";
 	
 	public static final String PERMITTED_JOB_TYPE = "JOB";
 	public static final String PERMITTED_CONFIG_TYPE = "CONFIGURATION";
+	public static final String PERMITTED_SHORTCUT = "SHORTCUT";
 	
 	public static final String RESTART_NOW = "RESTART_NOW";
 	public static final String RESTART_LATER = "RESTART_LATER";

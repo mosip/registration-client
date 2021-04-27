@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -107,7 +106,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
@@ -236,8 +234,6 @@ public class BaseController {
 	}
 
 	private static HashMap<String, String> labelMap = new HashMap<>();
-	
-	public List<HBox> shortCuts = new ArrayList<>();
 
 	public static String getFromLabelMap(String key) {
 		return labelMap.get(key);
@@ -2048,18 +2044,6 @@ public class BaseController {
 
 	public String getImageFilePath(String configFolder,String imageName) {
 		return configFolder.concat(File.separator).concat(imageName);
-	}
-	
-	public List<HBox> getShortCuts() {
-		return shortCuts;
-	}
-	
-	public void addShortCutToList(HBox shortCut) {
-		shortCuts.add(shortCut);
-	}
-	
-	public void removeShortCutFromList(HBox shortCut) {
-		shortCuts.remove(shortCut);
 	}
 	
 }
