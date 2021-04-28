@@ -262,6 +262,10 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 					LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 							"Parsed decoded payload" + System.currentTimeMillis());
 
+					mosipDeviceSpecificationHelper.validateResponseTimestamp(dataDTO.getTimestamp());
+
+					mosipDeviceSpecificationHelper.validateQualityScore(dataDTO.getQualityScore());
+					
 					if (dataDTO.getTransactionId() == null
 							|| !dataDTO.getTransactionId().equalsIgnoreCase(rCaptureRequestDTO.getTransactionId())) {
 						throw new RegBaseCheckedException(
@@ -282,12 +286,6 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 										+ rCaptureResponseBiometricsDTO.getSpecVersion());
 					}
 
-					if (dataDTO.getQualityScore() == null || dataDTO.getQualityScore().isEmpty()) {
-						throw new RegBaseCheckedException(
-								RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
-								RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage()
-										+ " Identified Quality Score for capture biometrics is null or Empty");
-					}
 
 					String uiAttribute = Biometric.getUiSchemaAttributeName(dataDTO.getBioSubType(), SPEC_VERSION);
 

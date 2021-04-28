@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.Map.Entry;
@@ -43,6 +44,7 @@ import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.JsonUtils;
 import io.mosip.kernel.core.util.exception.JsonMappingException;
 import io.mosip.kernel.core.util.exception.JsonParseException;
+import io.mosip.kernel.idgenerator.rid.constant.RidGeneratorPropertyConstant;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
@@ -319,7 +321,8 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		Map<String, String> metaData = new LinkedHashMap<>();
 		metaData.put(PacketManagerConstants.REGISTRATIONID, registrationDTO.getRegistrationId());
 		metaData.put(RegistrationConstants.PACKET_APPLICATION_ID, registrationDTO.getAppId());
-		metaData.put(PacketManagerConstants.META_CREATION_DATE, DateUtils.formatToISOString(LocalDateTime.now()));
+		metaData.put(PacketManagerConstants.META_CREATION_DATE, LocalDateTime.now(ZoneId.of("UTC")).format(DateTimeFormatter
+				.ofPattern(RidGeneratorPropertyConstant.TIMESTAMP_FORMAT.getProperty())));
 		metaData.put(PacketManagerConstants.META_CLIENT_VERSION, softwareUpdateHandler.getCurrentVersion());
 		metaData.put(PacketManagerConstants.META_REGISTRATION_TYPE,
 				registrationDTO.getRegistrationMetaDataDTO().getRegistrationCategory());

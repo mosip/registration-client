@@ -23,7 +23,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,6 +59,8 @@ public class MosipDeviceSpecificationHelper {
 	@Value("${mosip.registration.mdm.trust.domain.deviceinfo:DEVICE}")
 	private String deviceInfoTrustDomain;
 
+	@Value("${mosip.mds.validation.time.flag:Y}")
+	private String timeValidationFlag;
 
 	private final String CONTENT_LENGTH = "Content-Length:";
 
@@ -184,6 +188,38 @@ public class MosipDeviceSpecificationHelper {
 
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_STREAM_TIMEOUT.getErrorCode(),
 					RegistrationExceptionConstants.MDS_STREAM_TIMEOUT.getErrorMessage());
+		}
+	}
+	
+	public void validateResponseTimestamp(String responseTime) throws RegBaseCheckedException {
+		
+		//TODO Flag shouldn't be used, as Syncbyte MDS and Mock MDS giving timestamp as null, added temporary flag
+		if(RegistrationConstants.ENABLE.equalsIgnoreCase(timeValidationFlag)) {
+			if(responseTime == null) {
+				throw new RegBaseCheckedException(
+						RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorCode(),
+						RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorMessage());
+			} else {
+				
+				Timestamp ts = Timestamp.valueOf(responseTime);
+									
+				if(ts.getTime() < System.currentTimeMillis()- TimeUnit.MINUTES.toMillis(5) 
+						|| ts.getTime()  > System.currentTimeMillis()+ TimeUnit.MINUTES.toMillis(5)) {
+					throw new RegBaseCheckedException(
+							RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorCode(),
+							RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorMessage());
+				}
+			}
+		}
+	}
+	
+	
+	public void validateQualityScore(String qualityScore) throws RegBaseCheckedException {
+		if (qualityScore == null || qualityScore.isEmpty()) {
+			throw new RegBaseCheckedException(
+					RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
+					RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage()
+							+ " Identified Quality Score for capture biometrics is null or Empty");
 		}
 	}
 }
