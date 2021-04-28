@@ -147,36 +147,11 @@ public class UserDetailDAOTest {
 		Mockito.when(userDetailRepository.save(Mockito.any())).thenReturn(new UserDetail());
 		Mockito.when(userPwdRepository.save(Mockito.any())).thenReturn(new UserPassword());
 		Mockito.when(userRoleRepository.saveAll(Mockito.anyCollection())).thenReturn(new ArrayList<>());
-		doNothing().when(userRoleRepository).delete(Mockito.anyString());
+		//doNothing().when(userRoleRepository).delete(Mockito.anyString());
 		userDetailDAOImpl.save(user);
 		userDetailDAOImpl.save(user1);
 	}
-	
-	@SuppressWarnings("unchecked")
-	@Test(expected=RegBaseUncheckedException.class)
-	public void userDetlsDaoException() {
-		UserDetailResponseDto userDetailsResponse = new UserDetailResponseDto();
-		List<UserDetailDto> userDetails = new ArrayList<>();
 
-		UserDetailDto user = new UserDetailDto();
-		user.setUserName("110011");
-		user.setUserPassword("test".getBytes());
-		user.setRoles(Arrays.asList("SUPERADMIN"));
-		user.setMobile("9894589435");
-		user.setLangCode("eng");
-		UserDetailDto user1 = new UserDetailDto();
-		user1.setUserName("110011");
-		user1.setUserPassword("test".getBytes());
-		user1.setRoles(Arrays.asList("SUPERADMIN"));
-		user1.setMobile("9894589435");
-		user1.setLangCode("eng");
-		userDetails.add(user);
-		userDetails.add(user1);
-		userDetailsResponse.setUserDetails(userDetails);
-		Mockito.when(userDetailRepository.save(Mockito.any())).thenThrow(RegBaseUncheckedException.class);
-		userDetailDAOImpl.save(user);
-		userDetailDAOImpl.save(user1);
-	}
 	
 	@Test
 	public void getUserSpecificBioDetailTest() {

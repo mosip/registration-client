@@ -9,13 +9,17 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.crypto.SecretKey;
 
 import io.mosip.commons.packet.constants.CryptomanagerConstant;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
+import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
+import io.mosip.kernel.signature.dto.JWTSignatureVerifyResponseDto;
 import io.mosip.kernel.signature.dto.ValidatorResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.registration.service.sync.impl.PublicKeySyncImpl;
@@ -86,6 +90,12 @@ public class ResponseSignatureAdviceTest {
 		PowerMockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
 		ReflectionTestUtils.setField(responseSignatureAdvice, "DATETIME_PATTERN", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 		ReflectionTestUtils.setField(responseSignatureAdvice, "signRefId", "SIGN");
+
+		KeyPairGenerateResponseDto certificateDto = new KeyPairGenerateResponseDto();
+		certificateDto.setCertificate("test");
+		Mockito.when(keymanagerService.getCertificate(RegistrationConstants.RESPONSE_SIGNATURE_PUBLIC_KEY_APP_ID,
+				Optional.of(RegistrationConstants.RESPONSE_SIGNATURE_PUBLIC_KEY_REF_ID)))
+				.thenReturn(certificateDto);
 	}
 
 	@Test
@@ -118,9 +128,9 @@ public class ResponseSignatureAdviceTest {
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_BODY, linkedMapResponse);
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_HEADERS, header);
 
-		ValidatorResponseDto validatorResponseDto = new ValidatorResponseDto();
-		validatorResponseDto.setStatus(CryptomanagerConstant.SIGNATURES_SUCCESS);
-		Mockito.when(signatureService.validate(Mockito.any())).thenReturn(validatorResponseDto);
+		JWTSignatureVerifyResponseDto jwtSignatureResponseDto = new JWTSignatureVerifyResponseDto();
+		jwtSignatureResponseDto.setSignatureValid(true);
+		Mockito.when(signatureService.jwtVerify(Mockito.any())).thenReturn(jwtSignatureResponseDto);
 		responseSignatureAdvice.responseSignatureValidation(joinPointMock, linkedMap);
 	}
 
@@ -155,9 +165,9 @@ public class ResponseSignatureAdviceTest {
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_BODY, linkedMapResponse);
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_HEADERS, header);
 
-		ValidatorResponseDto validatorResponseDto = new ValidatorResponseDto();
-		validatorResponseDto.setStatus("FAILED");
-		Mockito.when(signatureService.validate(Mockito.any())).thenReturn(validatorResponseDto);
+		JWTSignatureVerifyResponseDto jwtSignatureResponseDto = new JWTSignatureVerifyResponseDto();
+		jwtSignatureResponseDto.setSignatureValid(false);
+		Mockito.when(signatureService.jwtVerify(Mockito.any())).thenReturn(jwtSignatureResponseDto);
 
 		responseSignatureAdvice.responseSignatureValidation(joinPointMock, linkedMap);
 
@@ -193,9 +203,9 @@ public class ResponseSignatureAdviceTest {
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_BODY, linkedMapResponse);
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_HEADERS, header);
 
-		ValidatorResponseDto validatorResponseDto = new ValidatorResponseDto();
-		validatorResponseDto.setStatus("FAILED");
-		Mockito.when(signatureService.validate(Mockito.any())).thenReturn(validatorResponseDto);
+		JWTSignatureVerifyResponseDto jwtSignatureResponseDto = new JWTSignatureVerifyResponseDto();
+		jwtSignatureResponseDto.setSignatureValid(false);
+		Mockito.when(signatureService.jwtVerify(Mockito.any())).thenReturn(jwtSignatureResponseDto);
 
 		responseSignatureAdvice.responseSignatureValidation(joinPointMock, linkedMap);
 
@@ -232,9 +242,9 @@ public class ResponseSignatureAdviceTest {
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_BODY, linkedMapResponse);
 		linkedMap.put(RegistrationConstants.REST_RESPONSE_HEADERS, header);
 
-		ValidatorResponseDto validatorResponseDto = new ValidatorResponseDto();
-		validatorResponseDto.setStatus(CryptomanagerConstant.SIGNATURES_SUCCESS);
-		Mockito.when(signatureService.validate(Mockito.any())).thenReturn(validatorResponseDto);
+		JWTSignatureVerifyResponseDto jwtSignatureResponseDto = new JWTSignatureVerifyResponseDto();
+		jwtSignatureResponseDto.setSignatureValid(true);
+		Mockito.when(signatureService.jwtVerify(Mockito.any())).thenReturn(jwtSignatureResponseDto);
 
 		responseSignatureAdvice.responseSignatureValidation(joinPointMock, linkedMap);
 

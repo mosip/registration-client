@@ -748,7 +748,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_CENTER_ID),
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_STATION_ID));
 		registrationDTO.setRegistrationId(registrationID);
-		registrationDTO.setAppId(registrationID);
+		registrationDTO.setAppId(pridGenerator.generateId());
 
 		LOGGER.info(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID,

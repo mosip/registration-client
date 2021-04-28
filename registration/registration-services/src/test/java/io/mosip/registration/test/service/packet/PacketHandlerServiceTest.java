@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.mosip.registration.service.config.LocalConfigService;
+import io.mosip.registration.service.sync.PolicySyncService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -92,6 +93,9 @@ public class PacketHandlerServiceTest {
 	@Mock
 	private LocalConfigService localConfigService;
 
+	@Mock
+	private PolicySyncService policySyncService;
+
 	@Before
 	public void initialize() {
 		mockedSuccessResponse = new ResponseDTO();
@@ -145,8 +149,11 @@ public class PacketHandlerServiceTest {
 		
 		when(registrationCenterDAO.isMachineCenterActive("123")).thenReturn(true);
 
-		
-		
+		ResponseDTO responseDTO = new ResponseDTO();
+		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
+		successResponseDTO.setMessage(RegistrationConstants.VALID_KEY);
+		responseDTO.setSuccessResponseDTO(successResponseDTO);
+		when(policySyncService.checkKeyValidation()).thenReturn(responseDTO);
 		
 		packetHandlerServiceImpl.startRegistration(null, RegistrationConstants.PACKET_TYPE_NEW);
 	}

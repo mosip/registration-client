@@ -21,8 +21,8 @@ public interface UserRoleRepository extends BaseRepository<UserRole, UserRoleId>
 
 	List<UserRole> findByUserRoleIdUsrId(String usrId);
 
-	@Modifying
-	@Query(value = "delete from reg.user_role u where u.usr_id = :userId", nativeQuery = true)
-	void delete(@Param("userId") String userId);
+	//@Modifying
+	//@Query(value = "delete from reg.user_role u where u.usr_id = :userId", nativeQuery = true)
+	//void delete(@Param("userId") String userId);
 	
 }
