@@ -8,12 +8,12 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
 import javax.transaction.Transactional;
 
-import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -41,7 +41,6 @@ import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.repositories.RegistrationRepository;
 import io.mosip.registration.service.IdentitySchemaService;
-import org.springframework.util.StringUtils;
 
 /**
  * The implementation class of {@link RegistrationDAO}.
@@ -98,21 +97,21 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			
 			RegistrationDataDto registrationDataDto = new RegistrationDataDto();
 			
-			String applicantName = null;
+			List<String> fullName = new ArrayList<>();
 			String fullNameKey = getKey(RegistrationConstants.UI_SCHEMA_SUBTYPE_FULL_NAME);
 			if(fullNameKey != null) {
 				List<String> fullNameKeys = Arrays.asList(fullNameKey.split(RegistrationConstants.COMMA));
 				for (String key : fullNameKeys) {
 					Object fullNameObj = registrationDTO.getDemographics().get(key);
-					applicantName = applicantName == null ? getAdditionalInfo(fullNameObj) :
-							applicantName.concat(RegistrationConstants.SPACE).concat(getAdditionalInfo(fullNameObj));
+					fullName.add(getAdditionalInfo(fullNameObj));
 				}
 			}
 
 			Object emailObj = registrationDTO.getDemographics().get(getKey(RegistrationConstants.UI_SCHEMA_SUBTYPE_EMAIL));
 			Object phoneObj = registrationDTO.getDemographics().get(getKey(RegistrationConstants.UI_SCHEMA_SUBTYPE_PHONE));
 			
-			registrationDataDto.setName(applicantName);
+			fullName.removeIf(Objects::isNull);
+			registrationDataDto.setName(String.join(RegistrationConstants.SPACE, fullName));
 			registrationDataDto.setEmail(getAdditionalInfo(emailObj));
 			registrationDataDto.setPhone(getAdditionalInfo(phoneObj));
 			
