@@ -143,12 +143,12 @@ public class SettingsController extends BaseController {
 			imageHBox.getChildren().add(imageView);
 			hBox.getChildren().add(imageHBox);
 
-			if (schema.getName().equalsIgnoreCase("devices")) {
+			if (schema.getName().equalsIgnoreCase(RegistrationConstants.DEVICE_SETTINGS_NAME)) {
 				ImageView shortCutIcon = new ImageView(getImage(RegistrationConstants.SHORTCUT_ICON, true));
 				shortCutIcon.setFitWidth(20);
 				shortCutIcon.setFitHeight(20);
 				shortCutIcon.setOnMouseClicked(event -> {
-					createShortCut(shortCutIcon, schema, label.getText());
+					createShortCut(schema);
 				});
 
 				Tooltip tooltip = new Tooltip(
@@ -165,7 +165,7 @@ public class SettingsController extends BaseController {
 		}
 	}
 
-	private void createShortCut(ImageView shortCutIcon, SettingsSchema schema, String headerLabel) {
+	public void createShortCut(SettingsSchema schema) {
 		String controllerName = schema.getFxml().replace(".fxml", "Controller");
 		HBox shortCutHBox = getShortCut(controllerName, schema.getShortcutIcon());
 		shortCutHBox.setId(schema.getName());

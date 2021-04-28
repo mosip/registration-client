@@ -14,5 +14,6 @@ public interface LocalConfigService {
 	public void modifyConfigurations(Map<String, String> localPreferences);
 	public String getValue(String name);
 	public Map<String, String> getLocalConfigurations();
+	public void updateShortcutPreference(String name, String value);
 
 }

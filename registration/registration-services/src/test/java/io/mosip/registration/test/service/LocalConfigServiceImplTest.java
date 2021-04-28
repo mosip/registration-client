@@ -81,5 +81,11 @@ public class LocalConfigServiceImplTest {
 		Mockito.when(localConfigDAOImpl.getValue(Mockito.anyString())).thenReturn("test");
 		assertEquals("test", localConfigServiceImpl.getValue("mosip.test.config"));
 	}
+	
+	@Test
+	public void updateShortcutPreferenceTest() {
+		Mockito.doNothing().when(localConfigDAOImpl).updateShortcutPreference(Mockito.anyString(), Mockito.anyString());
+		localConfigServiceImpl.updateShortcutPreference("Test_Shortcut", "Y");
+	}
 
 }

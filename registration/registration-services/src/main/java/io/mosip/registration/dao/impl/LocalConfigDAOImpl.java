@@ -133,4 +133,23 @@ public class LocalConfigDAOImpl implements LocalConfigDAO {
 		localPreferencesRepository.save(localPreferences);
 	}
 
+	@Override
+	public void updateShortcutPreference(String name, String value) {
+		LOGGER.info("Adding shortcut {} to the local preferences", name);
+		
+		LocalPreferences localPreferences = localPreferencesRepository.findByIsDeletedFalseAndName(name);
+		if (localPreferences != null) {
+			updateShortCutPreference(localPreferences, value);
+		} else {
+			saveLocalPreference(name, value, RegistrationConstants.PERMITTED_SHORTCUT);
+		}
+	}
+	
+	private void updateShortCutPreference(LocalPreferences localPreferences, String value) {
+		localPreferences.setVal(value);
+		localPreferences.setUpdBy(RegistrationConstants.JOB_TRIGGER_POINT_USER);
+		localPreferences.setUpdDtimes(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
+		localPreferencesRepository.update(localPreferences);
+	}
+
 }

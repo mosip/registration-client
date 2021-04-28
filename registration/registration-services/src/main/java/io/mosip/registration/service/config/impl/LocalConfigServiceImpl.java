@@ -51,4 +51,9 @@ public class LocalConfigServiceImpl extends BaseService implements LocalConfigSe
 	public String getValue(String name) {
 		return localConfigDAO.getValue(name);
 	}
+	
+	@Override
+	public void updateShortcutPreference(String name, String value) {
+		localConfigDAO.updateShortcutPreference(name, value);
+	}
 }

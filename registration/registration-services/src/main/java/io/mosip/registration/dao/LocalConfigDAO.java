@@ -14,5 +14,6 @@ public interface LocalConfigDAO {
 	public void modifyConfigurations(Map<String, String> localPreferences);
 	public Map<String, String> getLocalConfigurations();
 	public String getValue(String name);
+	public void updateShortcutPreference(String name, String value);
 	
 }
