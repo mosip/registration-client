@@ -8,6 +8,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -99,21 +100,21 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			
 			RegistrationDataDto registrationDataDto = new RegistrationDataDto();
 			
-			String applicantName = null;
+			List<String> fullName = new ArrayList<>();
 			String fullNameKey = getKey(RegistrationConstants.UI_SCHEMA_SUBTYPE_FULL_NAME);
 			if(fullNameKey != null) {
 				List<String> fullNameKeys = Arrays.asList(fullNameKey.split(RegistrationConstants.COMMA));
 				for (String key : fullNameKeys) {
 					Object fullNameObj = registrationDTO.getDemographics().get(key);
-					applicantName = applicantName == null ? getAdditionalInfo(fullNameObj) :
-							applicantName.concat(RegistrationConstants.SPACE).concat(getAdditionalInfo(fullNameObj));
+					fullName.add(getAdditionalInfo(fullNameObj));
 				}
 			}
 
 			Object emailObj = registrationDTO.getDemographics().get(getKey(RegistrationConstants.UI_SCHEMA_SUBTYPE_EMAIL));
 			Object phoneObj = registrationDTO.getDemographics().get(getKey(RegistrationConstants.UI_SCHEMA_SUBTYPE_PHONE));
 			
-			registrationDataDto.setName(applicantName);
+			fullName.removeIf(Objects::isNull);
+			registrationDataDto.setName(String.join(RegistrationConstants.SPACE, fullName));
 			registrationDataDto.setEmail(getAdditionalInfo(emailObj));
 			registrationDataDto.setPhone(getAdditionalInfo(phoneObj));
 			registrationDataDto.setLangCode(String.join(RegistrationConstants.COMMA,
