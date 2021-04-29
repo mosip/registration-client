@@ -8,6 +8,7 @@ public class BiometricsDto {
 	
 	private byte[] attributeISO;
 	private String bioAttribute;
+	private String bioSubType;
 	private String modalityName;
 	private double qualityScore;
 	private boolean isForceCaptured;

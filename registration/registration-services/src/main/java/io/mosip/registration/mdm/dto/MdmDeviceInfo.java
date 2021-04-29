@@ -3,10 +3,12 @@ package io.mosip.registration.mdm.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MdmDeviceInfo {
+public class MdmDeviceInfo extends DeviceInfo {
 	private String[] specVersion;
 	private String deviceStatus;
 	private String deviceId;

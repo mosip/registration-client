@@ -116,11 +116,9 @@ public class BioServiceImpl extends BaseService implements BioService {
 			for (BiometricsDto biometricsDto : biometricsDtos) {
 				if (biometricsDto != null
 						&& isQualityScoreMaxInclusive(String.valueOf(biometricsDto.getQualityScore()))) {
-					
 						try {
 							biometricsDto.setSdkScore(getSDKScore(biometricsDto));
 						} catch (Exception exception) {
-							
 							LOGGER.error("Unable to fetch SDK Score ", exception.getCause());
 							if(RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map()
 							                 .getOrDefault(RegistrationConstants.QUALITY_CHECK_WITH_SDK, RegistrationConstants.DISABLE)) ) {

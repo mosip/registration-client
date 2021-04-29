@@ -44,6 +44,7 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.constants.MosipBioDeviceConstants;
 import io.mosip.registration.mdm.dto.Biometric;
+import io.mosip.registration.mdm.dto.DeviceInfo;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.mdm.dto.MdmBioDevice;
 import io.mosip.registration.mdm.dto.MdmDeviceInfo;
@@ -106,9 +107,9 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 			for (MdmDeviceInfoResponse mdmDeviceInfoResponse : deviceInfoResponses) {
 
 				if (mdmDeviceInfoResponse.getDeviceInfo() != null && !mdmDeviceInfoResponse.getDeviceInfo().isEmpty()) {
-					MdmDeviceInfo deviceInfo = mosipDeviceSpecificationHelper
-							.getDeviceInfoDecoded(mdmDeviceInfoResponse.getDeviceInfo());
-					MdmBioDevice bioDevice = getBioDevice(deviceInfo);
+					DeviceInfo deviceInfo = mosipDeviceSpecificationHelper
+							.getDeviceInfoDecoded(mdmDeviceInfoResponse.getDeviceInfo(), mosipDeviceSpecificationHelper.getClass());
+					MdmBioDevice bioDevice = getBioDevice((MdmDeviceInfo)deviceInfo);
 					if (bioDevice != null) {
 						bioDevice.setPort(port);
 						mdmBioDevices.add(bioDevice);
@@ -248,8 +249,8 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 					throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
 							RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage()
 									+ " : Data is empty in RCapture " + " error Code  : "
-									+ rCaptureResponseBiometricsDTO.getError().getErrorCode() + " error message : "
-									+ rCaptureResponseBiometricsDTO.getError().getErrorInfo());
+									+ rCaptureResponseBiometricsDTO.getError().getErrorcode() + " error message : "
+									+ rCaptureResponseBiometricsDTO.getError().getErrorinfo());
 				}
 				if (rCaptureResponseBiometricsDTO.getData() != null
 						&& !rCaptureResponseBiometricsDTO.getData().isEmpty()) {
