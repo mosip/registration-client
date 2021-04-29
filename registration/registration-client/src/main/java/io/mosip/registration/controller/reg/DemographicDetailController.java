@@ -539,7 +539,8 @@ public class DemographicDetailController extends BaseController {
 		VBox finalVbox = new VBox();
 		finalVbox.setId(schema.getId());
 		finalVbox.getChildren().addAll(dateHbox, dobMessage);
-		
+		//NOTE: by default local/secondary language DOB fields are disabled
+		finalVbox.setDisable(languageType.equals(RegistrationConstants.LOCAL_LANGUAGE));
 		return finalVbox;
 	}
 
@@ -995,7 +996,7 @@ public class DemographicDetailController extends BaseController {
 			case RegistrationConstants.STRING:
 				switch (schemaField.getControlType()) {
 					case RegistrationConstants.AGE_DATE:
-						registrationDTO.setDateField(schemaField.getId(),
+						registrationDTO.setAgeDateField(schemaField.getId(),
 								listOfTextField.get(schemaField.getId() + "__" + RegistrationConstants.DD).getText(),
 								listOfTextField.get(schemaField.getId() + "__" + RegistrationConstants.MM).getText(),
 								listOfTextField.get(schemaField.getId() + "__" + RegistrationConstants.YYYY).getText());

@@ -65,7 +65,7 @@ public class DateValidation extends BaseController {
 	}
 
 	public boolean validateDate(Pane parentPane, String fieldId) {
-		resetFieldStyleClass(parentPane, fieldId, false);
+		resetFieldStyleClass(parentPane, fieldId, false, getValueFromApplicationContext(RegistrationConstants.MAX_AGE));
 
 		TextField dd = (TextField) getFxElement(parentPane, fieldId+ "__" + RegistrationConstants.DD);
 		TextField mm = (TextField) getFxElement(parentPane, fieldId+ "__" + RegistrationConstants.MM);
@@ -84,12 +84,12 @@ public class DateValidation extends BaseController {
 			}
 		}
 
-		resetFieldStyleClass(parentPane, fieldId, !isValid);
+		resetFieldStyleClass(parentPane, fieldId, !isValid, getValueFromApplicationContext(RegistrationConstants.MAX_AGE));
 		return isValid;
 	}
 	
 	public boolean validateExpiryOfDate(Pane parentPane, String fieldId, int minDate, int maxDate) {
-		resetFieldStyleClass(parentPane, fieldId, false);
+		resetFieldStyleClass(parentPane, fieldId, false, minDate+"-"+maxDate);
 		
 		TextField dd = (TextField) getFxElement(parentPane, fieldId+ "__" + RegistrationConstants.DD);
 		TextField mm = (TextField) getFxElement(parentPane, fieldId+ "__" + RegistrationConstants.MM);
@@ -106,13 +106,13 @@ public class DateValidation extends BaseController {
 			}
 		}
 
-		resetFieldStyleClass(parentPane, fieldId, !isValid);
+		resetFieldStyleClass(parentPane, fieldId, !isValid, minDate+"-"+maxDate);
 		return isValid;
 	}
 
 	public boolean validateAge(Pane parentPane, TextField ageField) {
 		String fieldId = ageField.getId().split("__")[0];
-		resetFieldStyleClass(parentPane, fieldId, false);
+		resetFieldStyleClass(parentPane, fieldId, false, getValueFromApplicationContext(RegistrationConstants.MAX_AGE));
 		boolean isValid = ageField.getText().matches(RegistrationConstants.NUMBER_REGEX);
 
 		if(isValid) {
@@ -146,11 +146,11 @@ public class DateValidation extends BaseController {
 			}
 		}
 
-		resetFieldStyleClass(parentPane, fieldId, !isValid);
+		resetFieldStyleClass(parentPane, fieldId, !isValid, getValueFromApplicationContext(RegistrationConstants.MAX_AGE));
 		return isValid;
 	}
 
-	private void resetFieldStyleClass(Pane parentPane, String fieldId, boolean isError) {
+	private void resetFieldStyleClass(Pane parentPane, String fieldId, boolean isError, String allowedLimit) {
 		TextField dd = (TextField)getFxElement(parentPane, fieldId + "__" + RegistrationConstants.DD);
 		TextField mm = (TextField)getFxElement(parentPane, fieldId + "__" + RegistrationConstants.MM);
 		TextField yyyy = (TextField)getFxElement(parentPane, fieldId + "__" + RegistrationConstants.YYYY);
@@ -165,10 +165,10 @@ public class DateValidation extends BaseController {
 		setTextFieldStyle(parentPane, ageField, isError);
 		setTextFieldStyle(parentPane, ageField, isError);
 		setTextFieldStyle(parentPane, expiryDateField, isError);
-		if(!fieldId.equalsIgnoreCase(RegistrationConstants.DATE)) {
+		if(ageField != null) {
 			if(isError) {
 				dobMessage.setText(RegistrationUIConstants.INVALID_DATE.concat(" / ")
-						.concat(RegistrationUIConstants.INVALID_AGE + getValueFromApplicationContext(RegistrationConstants.MAX_AGE)));
+						.concat(RegistrationUIConstants.INVALID_AGE).concat(allowedLimit));
 				dobMessage.setVisible(true);
 				generateAlert(parentPane, RegistrationConstants.DOB, dobMessage.getText());
 			} else {
@@ -178,7 +178,7 @@ public class DateValidation extends BaseController {
 		}else {
 			if(isError) {
 				dobMessage.setText(RegistrationUIConstants.INVALID_DATE.concat(" / ")
-						.concat(RegistrationUIConstants.INVALID_DATE_LIMIT));
+						.concat(RegistrationUIConstants.INVALID_DATE_LIMIT).concat(allowedLimit));
 				dobMessage.setVisible(true);
 				generateAlert(parentPane, RegistrationConstants.DATE, dobMessage.getText());
 			} else {
