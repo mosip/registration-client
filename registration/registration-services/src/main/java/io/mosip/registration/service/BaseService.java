@@ -27,6 +27,7 @@ import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.service.operator.UserDetailService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
+import io.mosip.registration.service.sync.PolicySyncService;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,6 +122,9 @@ public class BaseService {
 
 	@Autowired
 	private CenterMachineRepository centerMachineRepository;
+
+	@Autowired
+	private PolicySyncService policySyncService;
 
 	/**
 	 * create success response.
@@ -729,6 +733,12 @@ public class BaseService {
 		if(!registrationCenterDAO.isMachineCenterActive(machineId))
 			throw new PreConditionCheckException(PreConditionChecks.CENTER_INACTIVE.name(),
 					"Registration forbidden as center is inactive");
+
+		ResponseDTO responseDTO = policySyncService.checkKeyValidation();
+		if(responseDTO == null || responseDTO.getSuccessResponseDTO() == null ||
+				!responseDTO.getSuccessResponseDTO().getMessage().equals(RegistrationConstants.VALID_KEY))
+			throw new PreConditionCheckException(PreConditionChecks.NO_OR_INVALID_POLICY_KEY.name(),
+					"Registration forbidden as client POLICY_KEY is INVALID");
 	}
 
 	public void proceedWithReRegistration() throws PreConditionCheckException {

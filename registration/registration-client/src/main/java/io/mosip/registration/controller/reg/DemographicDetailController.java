@@ -539,7 +539,8 @@ public class DemographicDetailController extends BaseController {
 		VBox finalVbox = new VBox();
 		finalVbox.setId(schema.getId());
 		finalVbox.getChildren().addAll(dateHbox, dobMessage);
-		
+		//NOTE: by default local/secondary language DOB fields are disabled
+		finalVbox.setDisable(languageType.equals(RegistrationConstants.LOCAL_LANGUAGE));
 		return finalVbox;
 	}
 
@@ -995,7 +996,7 @@ public class DemographicDetailController extends BaseController {
 			case RegistrationConstants.STRING:
 				switch (schemaField.getControlType()) {
 					case RegistrationConstants.AGE_DATE:
-						registrationDTO.setDateField(schemaField.getId(),
+						registrationDTO.setAgeDateField(schemaField.getId(),
 								listOfTextField.get(schemaField.getId() + "__" + RegistrationConstants.DD).getText(),
 								listOfTextField.get(schemaField.getId() + "__" + RegistrationConstants.MM).getText(),
 								listOfTextField.get(schemaField.getId() + "__" + RegistrationConstants.YYYY).getText());
@@ -1637,13 +1638,13 @@ public class DemographicDetailController extends BaseController {
 			Node labelNode = getFxElement(field.getId()+RegistrationConstants.LABEL);
 			Node localLabelNode = getFxElement(field.getId()+ RegistrationConstants.LOCAL_LANGUAGE+RegistrationConstants.LABEL);
 
-			manageFieldVisibility(node, labelNode, isVisible);
-			manageFieldVisibility(localLangNode, localLabelNode, isVisible);			
+			manageFieldVisibility(node, labelNode, isVisible, true);
+			manageFieldVisibility(localLangNode, localLabelNode, isVisible, false);
 		}
 	}
 	
-	private void manageFieldVisibility(Node node, Node labelNode, boolean isVisible) {
-		if(!isVisible) { clearFieldValue(node); }
+	private void manageFieldVisibility(Node node, Node labelNode, boolean isVisible, boolean isPrimary) {
+		if(!isVisible) { clearFieldValue(node, isPrimary); }
 
 		if(node != null) {
 			if(labelNode != null) {
@@ -1654,10 +1655,13 @@ public class DemographicDetailController extends BaseController {
 		}
 	}
 
-	private void clearFieldValue(Node node) {
+	private void clearFieldValue(Node node, boolean isPrimary) {
 		if(node == null) { return; }
-		node.setDisable(false);
-		getRegistrationDTOFromSession().removeDemographicField(node.getId());
+
+		if(isPrimary) {
+			node.setDisable(false);
+			getRegistrationDTOFromSession().removeDemographicField(node.getId());
+		}
 
 		if(node instanceof TextField)
 			((TextField) node).setText("");

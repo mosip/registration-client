@@ -45,13 +45,10 @@ public class MosipDeviceSpecificationHelper {
 	@Autowired
 	private SignatureService signatureService;
 
-	@Value("${mosip.registration.mdm.validate.trust:true}")
-	private boolean validateTrust;
-
 	@Value("${mosip.registration.mdm.trust.domain.rcapture:DEVICE}")
 	private String rCaptureTrustDomain;
 
-	@Value("${mosip.registration.mdm.trust.domain.digitalId:FTM}")
+	@Value("${mosip.registration.mdm.trust.domain.digitalId:DEVICE}")
 	private String digitalIdTrustDomain;
 
 	@Value("${mosip.registration.mdm.trust.domain.deviceinfo:DEVICE}")
@@ -88,7 +85,7 @@ public class MosipDeviceSpecificationHelper {
 
 	public void validateJWTResponse(final String signedData, final String domain) throws DeviceException {
 		JWTSignatureVerifyRequestDto jwtSignatureVerifyRequestDto = new JWTSignatureVerifyRequestDto();
-		jwtSignatureVerifyRequestDto.setValidateTrust(validateTrust);
+		jwtSignatureVerifyRequestDto.setValidateTrust(true);
 		jwtSignatureVerifyRequestDto.setDomain(domain);
 		jwtSignatureVerifyRequestDto.setJwtSignatureData(signedData);
 		JWTSignatureVerifyResponseDto jwtSignatureVerifyResponseDto = signatureService

@@ -8,7 +8,9 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -142,51 +144,48 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 	}
 
 	public void save(UserDetailDto userDetailDto) {
-		LOGGER.info(LOG_REG_USER_DETAIL, APPLICATION_NAME, APPLICATION_ID, "Entering user detail save method...");
-		UserDetail existingUserDetail = userDetailRepository.findByIdIgnoreCase(userDetailDto.getUserName());
-
-		UserDetail userDetail = new UserDetail();
 		UserPassword usrPwd = new UserPassword();
+		UserDetail userDetail = userDetailRepository.findByIdIgnoreCase(userDetailDto.getUserName());
+		boolean userStatus = userDetailDto.getIsActive() != null ? userDetailDto.getIsActive().booleanValue() : true;
 
-		boolean userNewStatus = userDetailDto.getIsActive() != null ? userDetailDto.getIsActive().booleanValue() : true;
-		if(existingUserDetail != null) {
-			deleteUserRole(existingUserDetail.getName());//cleanup existing roles
-			usrPwd.setPwd(existingUserDetail.getUserPassword().getPwd());
-			userDetail.setSalt(existingUserDetail.getSalt());
-
-			if(!userNewStatus) {//clean all auth token belonging to inactive user
-				LOGGER.debug(LOG_REG_USER_DETAIL, APPLICATION_NAME, APPLICATION_ID, "Removed auth token of user : " +
-						existingUserDetail.getName());
-				userTokenRepository.deleteByUsrId(existingUserDetail.getName());
-			}
+		if(userDetail == null) {
+			userDetail = new UserDetail();
+			userDetail.setId(userDetailDto.getUserName());
 		}
+		else {
+			usrPwd.setPwd(userDetail.getUserPassword().getPwd());
+			List<UserRole> roles = userRoleRepository.findByUserRoleIdUsrId(userDetailDto.getUserName());
+			userDetail.getUserRole().removeAll(roles);
+		}
+
+		if(!userStatus) //delete authtoken of inactive users
+			userTokenRepository.deleteByUsrId(userDetailDto.getUserName());
 
 		usrPwd.setUsrId(userDetailDto.getUserName());
 		usrPwd.setStatusCode("00");
-		usrPwd.setIsActive(userNewStatus);
+		usrPwd.setIsActive(userStatus);
 		usrPwd.setLangCode(ApplicationContext.applicationLanguage());
 		usrPwd.setCrBy(SessionContext.isSessionContextAvailable() ? SessionContext.userContext().getUserId() :
 				RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
 		usrPwd.setCrDtime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
-		userDetail.setId(userDetailDto.getUserName());
 		userDetail.setUserPassword(usrPwd);
 		userDetail.setEmail(userDetailDto.getMail());
 		userDetail.setMobile(userDetailDto.getMobile());
 		userDetail.setName(userDetailDto.getName());
 		userDetail.setLangCode(ApplicationContext.applicationLanguage());
 		userDetail.setCrDtime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
-		userDetail.setIsActive(userNewStatus);
+		userDetail.setIsActive(userStatus);
 		userDetail.setCrBy(SessionContext.isSessionContextAvailable() ? SessionContext.userContext().getUserId() :
 				RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
 		userDetail.setStatusCode("00");
 
-		userDetailRepository.save(userDetail);
+		userDetailRepository.saveAndFlush(userDetail);
 		userPwdRepository.save(usrPwd);
 
 		userDetailDto.getRoles().forEach(role -> {
 			UserRole userRole = new UserRole();
-			userRole.setIsActive(userNewStatus);
+			userRole.setIsActive(userStatus);
 			userRole.setLangCode(ApplicationContext.applicationLanguage());
 			userRole.setCrBy(SessionContext.isSessionContextAvailable() ? SessionContext.userContext().getUserId() :
 					RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
@@ -197,7 +196,9 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 			userRole.setUserRoleId(roleId);
 			userRoleRepository.save(userRole);
 		});
+
 		LOGGER.info(LOG_REG_USER_DETAIL, APPLICATION_NAME, APPLICATION_ID, "leaving user detail save method...");
+
 	}
 
 

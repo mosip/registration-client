@@ -120,7 +120,7 @@ public class RegistrationDTO {
 		this.demographics.remove(fieldId);
 	}
 
-	public void setDateField(String fieldId, String day, String month, String year) {
+	/*public void setDateField(String fieldId, String day, String month, String year) {
 		if (isValidValue(day) && isValidValue(month) && isValidValue(year)) {
 			LocalDate date = LocalDate.of(Integer.valueOf(year), Integer.valueOf(month), Integer.valueOf(day));
 			if (fieldId != null && fieldId.equalsIgnoreCase("dateOfBirth")) {
@@ -144,7 +144,7 @@ public class RegistrationDTO {
 				this.date = date;
 			}
 		}
-	}
+	}*/
 	
 	public void setAgeDateField(String fieldId, String day, String month, String year) {
 		if (isValidValue(day) && isValidValue(month) && isValidValue(year)) {
@@ -165,13 +165,33 @@ public class RegistrationDTO {
 		}
 	}
 
-	public void setDateField(String fieldId, String dateString) {
+	public void setDateField(String fieldId, String day, String month, String year) {
+		if (isValidValue(day) && isValidValue(month) && isValidValue(year)) {
+			LocalDate date = LocalDate.of(Integer.valueOf(year), Integer.valueOf(month), Integer.valueOf(day));
+			if (fieldId != null) {
+				this.demographics.put(fieldId, date.format(DateTimeFormatter.ofPattern(
+						ApplicationContext.getDateFormat()
+				)));
+			}
+		}
+	}
+
+	public void parseAndSetDateField(String fieldId, String dateString, String controlType) {
 		if (isValidValue(dateString)) {
 			LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern(
 					ApplicationContext.getDateFormat()
 			));
-			setDateField(fieldId, String.valueOf(date.getDayOfMonth()), String.valueOf(date.getMonthValue()),
-					String.valueOf(date.getYear()));
+
+			switch (controlType) {
+				case RegistrationConstants.AGE_DATE:
+					setAgeDateField(fieldId, String.valueOf(date.getDayOfMonth()), String.valueOf(date.getMonthValue()),
+							String.valueOf(date.getYear()));
+					break;
+				case RegistrationConstants.DATE:
+					setDateField(fieldId, String.valueOf(date.getDayOfMonth()), String.valueOf(date.getMonthValue()),
+							String.valueOf(date.getYear()));
+					break;
+			}
 		}
 	}
 

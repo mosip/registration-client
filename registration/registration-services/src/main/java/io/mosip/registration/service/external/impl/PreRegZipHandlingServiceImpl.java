@@ -278,25 +278,14 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 					default:
 						Object fieldValue = getValueFromJson(field.getId(), field.getType(), jsonObject);
 						if(fieldValue != null) {
-							if(field.getControlType().equalsIgnoreCase("ageDate"))
-								getRegistrationDtoContent().setDateField(field.getId(), (String)fieldValue);
-							else if(field.getControlType().equalsIgnoreCase(RegistrationConstants.DATE))
-								getRegistrationDtoContent().setDateField(field.getId(), (String)fieldValue);
+							if(field.getControlType().toLowerCase().contains("date"))
+								getRegistrationDtoContent().parseAndSetDateField(field.getId(), (String)fieldValue,
+										field.getControlType());
 							else
 								getRegistrationDtoContent().getDemographics().put(field.getId(), fieldValue);
 						}
 						break;
 					}
-					
-					/*if(field.getType() != "documentType" && field.getType() != "biometricsType") {
-						Object fieldValue = getValueFromJson(field.getId(), field.getType(), jsonObject);
-						if(fieldValue != null) {
-							if(field.getControlType().equalsIgnoreCase("ageDate"))
-								getRegistrationDtoContent().setDateField(field.getId(), (String)fieldValue);
-							else
-								getRegistrationDtoContent().getDemographics().put(field.getId(), fieldValue);
-						}
-					}*/
 				}
 			}
 		} catch (JSONException | IOException e) {
