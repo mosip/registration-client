@@ -1921,6 +1921,8 @@ public class RegistrationConstants {
 	public static final String SDK_SCORE  = "SDK_SCORE";
 	public static final String EXCEPTION   = "EXCEPTION";
 	public static final String CONFIGURED    = "CONFIGURED";
+	public static final String PAYLOAD = "PAYLOAD";
+	public static final String SPEC_VERSION = "SPEC_VERSION";
 
 	
   public static final String PACKET_APPLICATION_ID = "applicationId";
@@ -1966,4 +1968,7 @@ public class RegistrationConstants {
 
 	public static final String RESPONSE_SIGNATURE_PUBLIC_KEY_APP_ID = "SERVER-RESPONSE";
 	public static final String RESPONSE_SIGNATURE_PUBLIC_KEY_REF_ID = "SIGN-VERIFY";
+	
+	public static final String  BIOVALUE_KEY  = "bioValue";
+	public static final String BIOVALUE_PLACEHOLDER = "\"<bioValue>\"";
 }

@@ -223,6 +223,7 @@ public enum RegistrationExceptionConstants {
 	MDS_PAYLOAD_EMPTY("REG-MDS-006","Payload is Empty"),
 	MDS_STREAM_TIMEOUT("REG-MDS-007","Stream Timeout Reached"),
 	MDS_CAPTURE_INVALID_TIME("REG-MDS-008","RCapture Time was Invalid"),
+	MDS_SIGNATURE_EMPTY("REG-MDS-009","Signature is Empty"),
 
 	APP_INVALID_STATE("REG-INIT-001", "Application found in invalid state, tampering detected !"),
 	

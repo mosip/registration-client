@@ -245,8 +245,10 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 
 				mosipDeviceSpecificationHelper.validateJWTResponse(sbiRCaptureResponseBiometricsDTO.getData(), rCaptureTrustDomain);
 				String payLoad = mosipDeviceSpecificationHelper.getPayLoad(sbiRCaptureResponseBiometricsDTO.getData());
-				SbiRCaptureResponseDataDTO dataDTO = mapper.readValue(new String(Base64.getUrlDecoder().decode(payLoad)),
-						SbiRCaptureResponseDataDTO.class);
+				String signature = mosipDeviceSpecificationHelper.getSignature(sbiRCaptureResponseBiometricsDTO.getData());
+
+				String decodedPayLoad = new String(Base64.getUrlDecoder().decode(payLoad));
+				SbiRCaptureResponseDataDTO dataDTO = mapper.readValue(decodedPayLoad, SbiRCaptureResponseDataDTO.class);
 
 				LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 						"Parsed decoded payload" + System.currentTimeMillis());
@@ -254,6 +256,9 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 				String uiAttribute = Biometric.getUiSchemaAttributeName(dataDTO.getBioSubType(), SPEC_VERSION);
 				BiometricsDto biometricDTO = new BiometricsDto(uiAttribute, dataDTO.getDecodedBioValue(),
 						Double.parseDouble(dataDTO.getQualityScore()));
+				biometricDTO.setPayLoad(decodedPayLoad);
+				biometricDTO.setSignature(signature);
+				biometricDTO.setSpecVersion(sbiRCaptureResponseBiometricsDTO.getSpecVersion());
 				biometricDTO.setCaptured(true);
 				biometricDTO.setModalityName(mdmRequestDto.getModality());
 				biometricDTOs.add(biometricDTO);

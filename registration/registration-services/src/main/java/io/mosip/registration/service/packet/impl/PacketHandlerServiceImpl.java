@@ -11,14 +11,15 @@ import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import io.mosip.kernel.core.idgenerator.spi.PridGenerator;
-import io.mosip.kernel.core.idgenerator.spi.RidGenerator;
-import io.mosip.registration.dto.*;
-import io.mosip.registration.service.config.LocalConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -37,13 +38,10 @@ import io.mosip.commons.packet.facade.PacketWriter;
 import io.mosip.kernel.auditmanager.entity.Audit;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biometrics.entities.BiometricRecord;
-import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.kernel.core.exception.ExceptionUtils;
+import io.mosip.kernel.core.idgenerator.spi.PridGenerator;
+import io.mosip.kernel.core.idgenerator.spi.RidGenerator;
 import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.kernel.core.util.DateUtils;
-import io.mosip.kernel.core.util.JsonUtils;
-import io.mosip.kernel.core.util.exception.JsonMappingException;
-import io.mosip.kernel.core.util.exception.JsonParseException;
 import io.mosip.kernel.idgenerator.rid.constant.RidGeneratorPropertyConstant;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
@@ -58,6 +56,15 @@ import io.mosip.registration.dao.AuditDAO;
 import io.mosip.registration.dao.AuditLogControlDAO;
 import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dao.RegistrationDAO;
+import io.mosip.registration.dto.ErrorResponseDTO;
+import io.mosip.registration.dto.OSIDataDTO;
+import io.mosip.registration.dto.PacketStatusDTO;
+import io.mosip.registration.dto.RegistrationCenterDetailDTO;
+import io.mosip.registration.dto.RegistrationDTO;
+import io.mosip.registration.dto.RegistrationMetaDataDTO;
+import io.mosip.registration.dto.ResponseDTO;
+import io.mosip.registration.dto.SuccessResponseDTO;
+import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.dto.packetmanager.metadata.BiometricsMetaInfoDto;
@@ -124,9 +131,6 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	
 	@Autowired
 	private BioService bioService;
-
-	@Autowired
-	private LocalConfigService localConfigService;
 
 	@Autowired
 	private PridGenerator<String> pridGenerator;
@@ -694,12 +698,21 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		BIR bir = birBuilder.buildBIR(bioDto.getAttributeISO(), bioDto.getQualityScore(),
 				Biometric.getSingleTypeByAttribute(bioDto.getBioAttribute()), bioDto.getBioAttribute());
 		
+		bir.setSb(bioDto.getSignature().getBytes());
+		
 		Map<String,Object> othersMap = bir.getOthers();
 		
-		othersMap.put(RegistrationConstants.RETRIES, bioDto.getNumOfRetries());
-		
+		othersMap.put(RegistrationConstants.RETRIES, bioDto.getNumOfRetries());		
 		othersMap.put(RegistrationConstants.SDK_SCORE, bioDto.getSdkScore());
 		othersMap.put(RegistrationConstants.FORCE_CAPTURED, bioDto.isForceCaptured());
+		
+		int bioValueKeyIndex = bioDto.getPayLoad().indexOf(RegistrationConstants.BIOVALUE_KEY) + (RegistrationConstants.BIOVALUE_KEY.length() + 1);
+		int bioValueStartIndex = bioDto.getPayLoad().indexOf('"', bioValueKeyIndex);
+		int bioValueEndIndex = bioDto.getPayLoad().indexOf('"', (bioValueStartIndex + 1));
+		String bioValue = bioDto.getPayLoad().substring(bioValueStartIndex, (bioValueEndIndex + 1));
+		String payLoad = bioDto.getPayLoad().replace(bioValue, RegistrationConstants.BIOVALUE_PLACEHOLDER);
+		othersMap.put(RegistrationConstants.PAYLOAD, payLoad);
+		othersMap.put(RegistrationConstants.SPEC_VERSION, bioDto.getSpecVersion());
 		
 		bir.setOthers(othersMap);
 		return bir;
