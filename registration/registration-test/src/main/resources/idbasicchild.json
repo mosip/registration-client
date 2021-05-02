@@ -9,14 +9,14 @@
     "value" : "Female"
   }, {
     "language" : "ara",
-    "value" : "أنثى"
+    "value" : "Ø£Ù†Ø«Ù‰"
   } ],
   "city" : [ {
     "language" : "eng",
     "value" : "Kenitra"
   }, {
     "language" : "ara",
-    "value" : "القنيطرة"
+    "value" : "Ø§Ù„Ù‚Ù†ÙŠØ·Ø±Ø©"
   } ],
   "postalCode" : "14022",
   "fullName" : [ {
@@ -24,7 +24,7 @@
     "value" : "Upgrade1.1.4child"
   }, {
     "language" : "ara",
-    "value" : "ُپگرَدِ١٬١٬٤"
+    "value" : "Ù�Ù¾Ú¯Ø±ÙŽØ¯Ù�Ù¡Ù¬Ù¡Ù¬Ù¤"
   } ],
   "dateOfBirth" : "2020/01/01",
   "referenceIdentityNumber" : "23444444444444322",
@@ -44,14 +44,14 @@
     "value" : "Kenitra"
   }, {
     "language" : "ara",
-    "value" : "القنيطرة"
+    "value" : "Ø§Ù„Ù‚Ù†ÙŠØ·Ø±Ø©"
   } ],
   "zone" : [ {
     "language" : "eng",
     "value" : "Ben Mansour"
   }, {
     "language" : "ara",
-    "value" : "بن منصور"
+    "value" : "Ø¨Ù† Ù…Ù†ØµÙˆØ±"
   } ],
   "phone" : "8600097143",
   "addressLine1" : [ {
@@ -59,7 +59,7 @@
     "value" : "Upgrade1.1.4"
   }, {
     "language" : "ara",
-    "value" : "ُپگرَدِ١٬١٬٤"
+    "value" : "Ù�Ù¾Ú¯Ø±ÙŽØ¯Ù�Ù¡Ù¬Ù¡Ù¬Ù¤"
   } ],
   "addressLine2" : [ {
     "language" : "eng",
@@ -73,7 +73,7 @@
     "value" : "Non-Foreigner"
   }, {
     "language" : "ara",
-    "value" : "غير أجنبي"
+    "value" : "ØºÙŠØ± Ø£Ø¬Ù†Ø¨ÙŠ"
   } ],
   "addressLine3" : [ {
     "language" : "eng",
@@ -87,15 +87,15 @@
     "value" : "Rabat Sale Kenitra"
   }, {
     "language" : "ara",
-    "value" : "جهة الرباط سلا القنيطرة"
+    "value" : "Ø¬Ù‡Ø© Ø§Ù„Ø±Ø¨Ø§Ø· Ø³Ù„Ø§ Ø§Ù„Ù‚Ù†ÙŠØ·Ø±Ø©"
   } ],
-  "email" : "nikhilesh.kumar@technoforte.co.in",
+  "email" : "abc@abc.co.in",
   "parentOrGuardianRID" : "10002100870000320210420134337",
    "parentOrGuardianName" : [ {
     "language" : "eng",
     "value" : "Upgrade1.1.4"
   }, {
     "language" : "ara",
-    "value" : "ُپگرَدِ١٬١٬٤"
+    "value" : "Ù�Ù¾Ú¯Ø±ÙŽØ¯Ù�Ù¡Ù¬Ù¡Ù¬Ù¤"
   } ]
 } } 
