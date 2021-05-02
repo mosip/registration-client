@@ -45,8 +45,8 @@ public class WebViewDocument  {
 	ImageView newRegImage;
 	WebEngine webengine;
 	WebView mywebview; 
-	String[] RID,	RIDDateTime;
-	
+	String[] RID,	RIDDateTime,firstName;
+	String f2;
 	final RID rid=new RID();
 	RegistrationPreviewController registrationPreviewController;
 	WaitsUtil waitsUtil;
@@ -124,7 +124,7 @@ public class WebViewDocument  {
 				mywebview.getEngine().executeScript("document.getElementById('consent-yes').click();");
 
 				System.out.println(mywebview.getEngine().executeScript("document.body.innerHTML;"));
-			rid.setWebviewPreview(mywebview.getEngine().executeScript("document.body.innerHTML;"));
+				rid.setWebviewPreview(mywebview.getEngine().executeScript("document.body.innerHTML;"));
 
 				//System.out.println(mywebview.getEngine().executeScript("document.body.getElementsByTagName('td')[0].innerHTML;"));
 				String RegistrationID=(String) mywebview.getEngine().executeScript("document.body.getElementsByTagName('td')[0].innerHTML;");
@@ -135,12 +135,16 @@ public class WebViewDocument  {
 				String RegistrationIDDateTime=(String)  mywebview.getEngine().executeScript("document.body.getElementsByTagName('td')[1].innerHTML;");
 				RIDDateTime=RegistrationIDDateTime.split("<br>");
 
+				 f2=(String)  mywebview.getEngine().executeScript("document.body.getElementsByTagName('td')[2].innerHTML;");
+				logger.info("f2" + f2);
+				
+				System.out.println("f2" + f2);
+				
+				
 				System.out.println("*****************************");
-
-
 				System.out.println(RID[0] +"=" + RID[1]);
 				System.out.println(RIDDateTime[0] +"=" + RIDDateTime[1]);
-
+			
 				System.out.println("*****************************");
 
 
@@ -163,7 +167,7 @@ public class WebViewDocument  {
 	{
 		logger.error(e.getMessage());
 	}
-		return new RID(RID[1], RIDDateTime[1],rid.getWebviewPreview(),rid.getWebviewPreview());
+		return new RID(RID[1], RIDDateTime[1],f2,rid.getWebviewPreview(),rid.getWebviewPreview());
 
 	}
 
@@ -197,12 +201,13 @@ public class WebViewDocument  {
 				String RegistrationIDDateTime=(String)  mywebview.getEngine().executeScript("document.body.getElementsByTagName('td')[2].innerHTML;");
 				RIDDateTime=RegistrationIDDateTime.split("<br>");
 
+				f2=(String)  mywebview.getEngine().executeScript("document.body.getElementsByTagName('td')[2].innerHTML;");
+
+				
 				System.out.println("*****************************");
-
-
 				System.out.println(RID[0] +"=" + RID[1]);
 				System.out.println(RIDDateTime[0] +"=" + RIDDateTime[1]);
-
+				
 				System.out.println("*****************************");
 
 
@@ -225,7 +230,7 @@ public class WebViewDocument  {
 	{
 		logger.error(e.getMessage());
 	}
-		return new RID(RID[1], RIDDateTime[1],rid.getWebViewAck(),rid.getWebViewAck());
+		return new RID(RID[1], RIDDateTime[1],f2,rid.getWebViewAck(),rid.getWebViewAck());
 
 	}
 
@@ -234,6 +239,4 @@ public class WebViewDocument  {
 }
 
 
-
-//webView
 

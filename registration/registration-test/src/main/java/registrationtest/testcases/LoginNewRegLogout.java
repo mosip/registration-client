@@ -149,7 +149,8 @@ public class LoginNewRegLogout {
 		
 		
 		
-		ExtentReportUtil.step1=ExtentReportUtil.test1.createNode("STEP 1-Loading RegClient");
+		ExtentReportUtil.step1=ExtentReportUtil.test1.createNode("STEP 1-Loading Reg"
+				+ "Client");
 		
 		loginPage=new LoginPage(robot);
 		buttons=new Buttons(robot);

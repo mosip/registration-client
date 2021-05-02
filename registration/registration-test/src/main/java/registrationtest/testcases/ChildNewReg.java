@@ -100,7 +100,7 @@ public class ChildNewReg {
 	
 	public RID newRegistrationChild(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
 			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,HashMap<String, String> documentUpload
-			)  {
+			,RID rid1)  {
 
 		try {
 		ExtentReportUtil.test3=ExtentReportUtil.reports.createTest("New Child Registration Scenario");
@@ -133,7 +133,7 @@ public class ChildNewReg {
 		
 		ExtentReportUtil.step3=ExtentReportUtil.test3.createNode("STEP 3-Demographic, Biometric upload ");
 		
-		webViewDocument=demographicPage.scemaDemoDocUploadChild(jsonIdentity,documentUpload);
+		webViewDocument=demographicPage.scemaDemoDocUploadChild(jsonIdentity,documentUpload,rid1);
 		
 
 		ExtentReportUtil.step3.log(Status.PASS, "Demographic, Biometric upload done");
