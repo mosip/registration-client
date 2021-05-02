@@ -127,6 +127,10 @@ public class DemographicPage {
 						rid1.setFirstName(temp.trim());
 						demoTextField.setText(rid1.firstName);
 					}
+					else
+					{
+						demoTextField.setText(rid1.firstName.trim());
+					}
 				}
 				else if(id.contains("parentOrGuardianRID"))
 					demoTextField.setText(rid1.rid);
