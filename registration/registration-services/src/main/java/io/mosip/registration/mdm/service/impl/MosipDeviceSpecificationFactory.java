@@ -226,7 +226,6 @@ public class MosipDeviceSpecificationFactory {
 
 			try {
 				String deviceInfoResponse = getDeviceInfoResponse(url);
-
 				for (MosipDeviceSpecificationProvider deviceSpecificationProvider : deviceSpecificationProviders) {
 					LOGGER.debug(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 							"Decoding deice info response with provider : " + deviceSpecificationProvider);

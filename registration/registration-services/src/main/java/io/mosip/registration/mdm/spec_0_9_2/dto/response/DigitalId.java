@@ -11,6 +11,7 @@ public class DigitalId {
 	private String subType;
 	private String deviceProviderId;
 	private String deviceProvider;
+	private String deviceSubType;
 	private String dateTime;
 
 }

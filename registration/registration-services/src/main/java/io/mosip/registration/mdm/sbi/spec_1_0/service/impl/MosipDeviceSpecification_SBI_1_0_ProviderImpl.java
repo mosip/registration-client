@@ -53,6 +53,7 @@ import io.mosip.registration.mdm.sbi.spec_1_0.dto.request.SbiRCaptureRequestDTO;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.request.StreamSbiRequestDTO;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.MdmDeviceInfoResponse;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.MdmSbiDeviceInfo;
+import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.MdmSbiDeviceInfoWrapper;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.SbiDeviceDiscoveryMDSResponse;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.SbiDigitalId;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.SbiRCaptureResponseBiometricsDTO;
@@ -66,7 +67,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 
 	private static final Logger LOGGER = AppConfig.getLogger(MosipDeviceSpecification_SBI_1_0_ProviderImpl.class);
 
-	private static final String SPEC_VERSION = "SBI 1.0";
+	private static final String SPEC_VERSION = "1.0";
 
 	private static final String loggerClassName = "MosipDeviceSpecification_SBI_1_0_ProviderImpl";
 
@@ -108,7 +109,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 					DeviceInfo mdmDeviceInfo = mosipDeviceSpecificationHelper
 							.getDeviceInfoDecoded(mdmDeviceInfoResponse.getDeviceInfo(), this.getClass());
 					
-					MdmBioDevice bioDevice = getBioDevice((MdmSbiDeviceInfo)mdmDeviceInfo);
+					MdmBioDevice bioDevice = getBioDevice((MdmSbiDeviceInfoWrapper)mdmDeviceInfo);
 					if (bioDevice != null) {
 						bioDevice.setPort(port);
 						mdmBioDevices.add(bioDevice);
@@ -234,7 +235,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 					"Response Decode and leaving the method.... " + System.currentTimeMillis());
 
-			List<SbiRCaptureResponseBiometricsDTO> sbiCaptureResponseBiometricsDTOs = captureResponse.getListSbiBiometrics();
+			List<SbiRCaptureResponseBiometricsDTO> sbiCaptureResponseBiometricsDTOs = captureResponse.getBiometrics();
 
 			List<BiometricsDto> biometricDTOs = new LinkedList<>();
 
@@ -316,7 +317,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 								: modality.contains("face") ? "0" : "0";
 	}
 
-	private MdmBioDevice getBioDevice(MdmSbiDeviceInfo deviceSbiInfo)
+	private MdmBioDevice getBioDevice(MdmSbiDeviceInfoWrapper deviceSbiInfo)
 			throws IOException, RegBaseCheckedException, DeviceException {
 
 		MdmBioDevice bioDevice = null;
