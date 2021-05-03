@@ -16,6 +16,9 @@ public class BiometricsDto {
 	private boolean isCaptured;
 	private String subType;
 	private double sdkScore;
+	private String payLoad;
+	private String signature;
+	private String specVersion;
 
 		
 	public BiometricsDto(String bioAttribute, byte[] attributeISO, double qualityScore) {

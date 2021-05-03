@@ -81,6 +81,19 @@ public class MosipDeviceSpecificationHelper {
 		throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_PAYLOAD_EMPTY.getErrorCode(),
 				RegistrationExceptionConstants.MDS_PAYLOAD_EMPTY.getErrorMessage());
 	}
+	
+	public String getSignature(String data) throws RegBaseCheckedException {
+		if (data == null || data.isEmpty()) {
+			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_JWT_INVALID.getErrorCode(),
+					RegistrationExceptionConstants.MDS_JWT_INVALID.getErrorMessage());
+		}
+		String[] chunks = data.split("\\.");
+		if (chunks != null && chunks.length > 2) {
+			return chunks[2];
+		}
+		throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_SIGNATURE_EMPTY.getErrorCode(),
+				RegistrationExceptionConstants.MDS_SIGNATURE_EMPTY.getErrorMessage());
+	}
 
 	public DeviceInfo getDeviceInfoDecoded(String deviceInfo, Class<?> classType) {
 		try {
