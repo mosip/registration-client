@@ -116,7 +116,6 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 				}
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			LOGGER.error(APPLICATION_NAME, APPLICATION_ID, "Exception while parsing deviceinfo response(095 spec)",
 					ExceptionUtils.getStackTrace(exception));
 		}
