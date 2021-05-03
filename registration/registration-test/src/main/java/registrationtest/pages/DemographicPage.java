@@ -31,6 +31,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import registrationtest.controls.Buttons;
+import registrationtest.pojo.output.RID;
 import registrationtest.pojo.schema.Root;
 import registrationtest.pojo.schema.Schema;
 import registrationtest.pojo.testdata.RootTestData;
@@ -91,10 +92,50 @@ public class DemographicPage {
 			if(demoTextField.isEditable() && demoTextField.isVisible())
 			{	
 				robot.clickOn(id);	//Must Needed
-				if(id.contains("Address"))demoTextField.setText(idSchema+DateUtil.getDateTime());
+				if(id.contains("Address") || id.contains("address"))demoTextField.setText(idSchema+DateUtil.getDateTime());
+				else if(id.contains("fullName"))
+				{	demoTextField.setText(idSchema+DateUtil.getDateTime());
+
+				}
 				else
 					demoTextField.setText(idSchema);
-					
+
+			}	}
+		catch(Exception e)
+		{
+			logger.error(e.getMessage());
+		}
+	}
+
+	public void setTextFieldsChild(String id,String idSchema,RID rid1) {
+		logger.info(" setTextFields in " + id +" " + idSchema );
+
+		try {
+			demoTextField= waitsUtil.lookupById(id);
+			assertNotNull(demoTextField, id+" not present");
+
+			if(demoTextField.isEditable() && demoTextField.isVisible())
+			{	
+				robot.clickOn(id);	//Must Needed
+				if(id.contains("Address") || id.contains("address"))demoTextField.setText(idSchema+DateUtil.getDateTime());
+				else if(id.contains("parentOrGuardianName"))
+				{
+					if(rid1.firstName.contains("/"))
+					{
+						String firstname[]=rid1.firstName.split("/");
+						String temp=firstname[0];
+						rid1.setFirstName(temp.trim());
+						demoTextField.setText(rid1.firstName);
+					}
+					else
+					{
+						demoTextField.setText(rid1.firstName.trim());
+					}
+				}
+				else if(id.contains("parentOrGuardianRID"))
+					demoTextField.setText(rid1.rid);
+				else 
+					demoTextField.setText(idSchema);
 			}	}
 		catch(Exception e)
 		{
@@ -114,7 +155,7 @@ public class DemographicPage {
 
 		try {
 			schemaversion=JsonUtil.JsonObjIntParsing(JsonIdentity,"IDSchemaVersion");
-			
+
 			schemafile = System.getProperty("user.dir")+"\\SCHEMA_"+schemaversion+".json";
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
@@ -250,17 +291,17 @@ public class DemographicPage {
 	 * @return
 	 */
 	public WebViewDocument scemaDemoDocUploadAdult(String JsonIdentity,HashMap<String, String> documentUpload)  {
-		
+
 		try {
 			schemaversion=JsonUtil.JsonObjIntParsing(JsonIdentity,"IDSchemaVersion");
-			
+
 			schemafile = System.getProperty("user.dir")+"\\SCHEMA_"+schemaversion+".json";
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
-		
+
 		/**
 		 *  convertJsonintoJava
 		 */
@@ -393,11 +434,11 @@ public class DemographicPage {
 	 * @param documentUpload
 	 * @return
 	 */
-	public WebViewDocument scemaDemoDocUploadChild(String JsonIdentity,HashMap<String, String> documentUpload)  {
+	public WebViewDocument scemaDemoDocUploadChild(String JsonIdentity,HashMap<String, String> documentUpload,RID rid1)  {
 
 		try {
 			schemaversion=JsonUtil.JsonObjIntParsing(JsonIdentity,"IDSchemaVersion");
-			
+
 			schemafile = System.getProperty("user.dir")+"\\SCHEMA_"+schemaversion+".json";
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
@@ -444,7 +485,7 @@ public class DemographicPage {
 					else
 						value=JsonUtil.JsonObjParsing(JsonIdentity,key);
 
-					setTextFields(id,value);
+					setTextFieldsChild(id,value,rid1);
 					System.out.println("Textbox");
 					break;
 				case "ageDate":
@@ -475,7 +516,7 @@ public class DemographicPage {
 						waitsUtil.clickNodeAssert(id);
 
 					break;
-					case "fileupload":
+				case "fileupload":
 					try {
 						if(flagContinueBtnDemograph==true) {
 							buttons.clickContinueBtn();
@@ -483,11 +524,11 @@ public class DemographicPage {
 						}
 						if (schema.isInputRequired() &&(schema.getRequiredOn()).get(0).getExpr().contains("identity.isChild && identity.isNew"))
 						{documentUploadPage.documentScan(documentUpload.get(key),schema,id);
-						
+
 						}
 						else if(schema.isInputRequired() && (schema.getRequiredOn()).get(0).getExpr().contains("identity.isNew"))
 							documentUploadPage.documentScan(documentUpload.get(key),schema,id);
-							
+
 					}catch(Exception e)
 					{
 						logger.error(e.getMessage());

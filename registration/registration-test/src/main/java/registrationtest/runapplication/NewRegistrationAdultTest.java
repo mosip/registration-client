@@ -44,7 +44,8 @@ public class NewRegistrationAdultTest{
 	private static final Logger logger = LogManager.getLogger(NewRegistrationAdultTest.class);  
 	static FxRobot robot;
 	static String[] Strinrid;
-
+	static RID rid1,rid2,rid3;
+	
 	public static void invokeRegClientNewReg(
 			HashMap<String, String> documentUpload,
 			String operatorId,String operatorPwd,
@@ -66,24 +67,23 @@ public class NewRegistrationAdultTest{
 					Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait"))); 
 					robot=new FxRobot();
 					ExtentReportUtil.ExtentSetting();
+				
 					
-					
-					
-					RID rid1=loginNewRegLogout.newRegistrationAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
+					 rid1=loginNewRegLogout.newRegistrationAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,readJsonFileText("path.idjson.adult"),
 							documentUpload);
-					logger.info("RID RESULTS-"+ rid1.result +"\t"+ rid1.ridDateTime +"\t"+ rid1.rid);
+					logger.info("RID RESULTS-"+ rid1.result +"\t"+ rid1.ridDateTime +"\t"+ rid1.rid + "\t "+ rid1.firstName );
 					ExtentReportUtil.reports.flush();
 					
-					RID rid2=lostUINLogout.LostUINAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
+					 rid2=lostUINLogout.LostUINAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,readJsonFileText("path.idjson.adult"),
 							documentUpload);
 					logger.info("RID RESULTS-"+ rid2.result +"\t"+ rid2.ridDateTime +"\t"+ rid2.rid);
 					ExtentReportUtil.reports.flush();
 					
-					RID rid3=childNewReg.newRegistrationChild(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
+					 rid3=childNewReg.newRegistrationChild(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,readJsonFileText("path.idjson.child"),
-							documentUpload);
+							documentUpload,rid1);
 					logger.info("RID RESULTS-"+ rid3.result +"\t"+ rid3.ridDateTime +"\t"+ rid3.rid);
 					ExtentReportUtil.reports.flush();
 				System.exit(0);	

@@ -71,6 +71,8 @@
          <version>jdk-11+26</version> <!-- jdk-11+26 for Java 11, jdk-9+181 for Java 9, 8u76-b04 for Java 8 -->
          <scope>test</scope>
       </dependency>
+      
+
    </dependencies>
    <!-- <build> <plugins> <plugin> <groupId>org.apache.maven.plugins</groupId> 
       <artifactId>maven-jar-plugin</artifactId> <version>2.4</version> <configuration> 
@@ -96,7 +98,7 @@
                <archive>
                   <manifest>
                      <addClasspath>true</addClasspath>
-                     <mainClass>qa114.runapplication.NewRegistrationAdultTest</mainClass>
+                     <mainClass>registrationtest.runapplication.NewRegistrationAdultTest</mainClass>
                   </manifest>
                </archive>
             </configuration>

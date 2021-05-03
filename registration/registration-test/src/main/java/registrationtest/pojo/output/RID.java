@@ -9,7 +9,15 @@ public class RID {
 	private static final Logger logger = LogManager.getLogger(RID.class); 
 	
 	   public String rid;
-	    public String ridDateTime;
+	   public String firstName;
+	    public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+		public String ridDateTime;
 	    public Boolean result;
 	    public Object webviewPreview;
 	    public Object webViewAck;
@@ -50,12 +58,13 @@ public class RID {
 			this.ridDateTime = ridDateTime;
 		}
 		
-public RID(String rid, String ridDateTime,Object webviewPreview,Object webViewAck) {
+public RID(String rid, String ridDateTime,String firstName,Object webviewPreview,Object webViewAck) {
 			
 			this.rid = rid;
 			this.ridDateTime = ridDateTime;
 			this.webviewPreview=webviewPreview;
 			this.webViewAck=webViewAck;
+			this.firstName=firstName;
 		}
 
 		public String getRid() {
