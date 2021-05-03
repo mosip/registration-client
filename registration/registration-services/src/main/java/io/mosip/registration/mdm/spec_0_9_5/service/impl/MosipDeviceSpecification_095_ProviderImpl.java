@@ -264,7 +264,7 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 					LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 							"Parsed decoded payload" + System.currentTimeMillis());
 					
-					//mosipDeviceSpecificationHelper.validateResponseTimestamp(dataDTO.getTimestamp());
+					mosipDeviceSpecificationHelper.validateResponseTimestamp(dataDTO.getTimestamp());
 
 					mosipDeviceSpecificationHelper.validateQualityScore(dataDTO.getQualityScore());
 					
