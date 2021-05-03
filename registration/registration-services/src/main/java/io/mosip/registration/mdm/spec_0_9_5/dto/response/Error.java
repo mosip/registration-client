@@ -6,7 +6,7 @@ import lombok.Data;
 public class Error {
 
 	// According to spec errorcode,errorinfo
-	private String errorcode;
-	private String errorinfo;
+	private String errorCode;
+	private String errorInfo;
 
 }

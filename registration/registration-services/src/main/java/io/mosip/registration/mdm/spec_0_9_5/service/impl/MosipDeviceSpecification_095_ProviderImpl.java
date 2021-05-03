@@ -105,10 +105,9 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 					}));
 
 			for (MdmDeviceInfoResponse mdmDeviceInfoResponse : deviceInfoResponses) {
-
 				if (mdmDeviceInfoResponse.getDeviceInfo() != null && !mdmDeviceInfoResponse.getDeviceInfo().isEmpty()) {
 					DeviceInfo deviceInfo = mosipDeviceSpecificationHelper
-							.getDeviceInfoDecoded(mdmDeviceInfoResponse.getDeviceInfo(), mosipDeviceSpecificationHelper.getClass());
+							.getDeviceInfoDecoded(mdmDeviceInfoResponse.getDeviceInfo(), this.getClass());
 					MdmBioDevice bioDevice = getBioDevice((MdmDeviceInfo)deviceInfo);
 					if (bioDevice != null) {
 						bioDevice.setPort(port);
@@ -249,8 +248,8 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 					throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
 							RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage()
 									+ " : Data is empty in RCapture " + " error Code  : "
-									+ rCaptureResponseBiometricsDTO.getError().getErrorcode() + " error message : "
-									+ rCaptureResponseBiometricsDTO.getError().getErrorinfo());
+									+ rCaptureResponseBiometricsDTO.getError().getErrorCode() + " error message : "
+									+ rCaptureResponseBiometricsDTO.getError().getErrorInfo());
 				}
 				if (rCaptureResponseBiometricsDTO.getData() != null
 						&& !rCaptureResponseBiometricsDTO.getData().isEmpty()) {
@@ -262,7 +261,7 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 
 					LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 							"Parsed decoded payload" + System.currentTimeMillis());
-
+					
 					mosipDeviceSpecificationHelper.validateResponseTimestamp(dataDTO.getTimestamp());
 
 					mosipDeviceSpecificationHelper.validateQualityScore(dataDTO.getQualityScore());

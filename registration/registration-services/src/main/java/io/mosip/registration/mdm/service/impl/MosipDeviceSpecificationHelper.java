@@ -18,6 +18,7 @@ import io.mosip.registration.mdm.dto.DeviceInfo;
 import io.mosip.registration.mdm.dto.MDMError;
 import io.mosip.registration.mdm.dto.MdmDeviceInfo;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.MdmSbiDeviceInfo;
+import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.MdmSbiDeviceInfoWrapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,7 +51,7 @@ public class MosipDeviceSpecificationHelper {
 	@Autowired
 	private SignatureService signatureService;
 
-	@Value("${mosip.registration.mdm.validate.trust:true}")
+	@Value("${mosip.registration.mdm.validate.trust:false}")
 	private boolean validateTrust;
 
 	@Value("${mosip.registration.mdm.trust.domain.rcapture:DEVICE}")
@@ -86,7 +87,7 @@ public class MosipDeviceSpecificationHelper {
 			validateJWTResponse(deviceInfo, deviceInfoTrustDomain);
 			String result = new String(Base64.getUrlDecoder().decode(getPayLoad(deviceInfo)));
 			if(classType.getName().equals("io.mosip.registration.mdm.sbi.spec_1_0.service.impl.MosipDeviceSpecification_SBI_1_0_ProviderImpl")) {
-				return mapper.readValue(result, MdmSbiDeviceInfo.class);
+				return mapper.readValue(result, MdmSbiDeviceInfoWrapper.class);
 			} else {
 				return mapper.readValue(result, MdmDeviceInfo.class);
 			}
@@ -104,13 +105,14 @@ public class MosipDeviceSpecificationHelper {
 		jwtSignatureVerifyRequestDto.setDomain(domain);
 		jwtSignatureVerifyRequestDto.setJwtSignatureData(signedData);
 		
-		JWTSignatureVerifyResponseDto jwtSignatureVerifyResponseDto = signatureService .jwtVerify(jwtSignatureVerifyRequestDto); 
-		if(!jwtSignatureVerifyResponseDto.isSignatureValid()) 
-			throw new DeviceException(MDMError.MDM_INVALID_SIGNATURE.getErrorCode(), MDMError.MDM_INVALID_SIGNATURE.getErrorMessage());
-		 
-		if (jwtSignatureVerifyRequestDto.getValidateTrust() && !jwtSignatureVerifyResponseDto.getTrustValid().equals(SignatureConstant.TRUST_VALID)) { 
-			throw new DeviceException(MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorCode(), MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorMessage()); 
-		}
+		JWTSignatureVerifyResponseDto jwtSignatureVerifyResponseDto = signatureService .jwtVerify(jwtSignatureVerifyRequestDto);
+		if(!jwtSignatureVerifyResponseDto.isSignatureValid())
+				throw new DeviceException(MDMError.MDM_INVALID_SIGNATURE.getErrorCode(), MDMError.MDM_INVALID_SIGNATURE.getErrorMessage());
+		
+		if (jwtSignatureVerifyRequestDto.getValidateTrust() && !jwtSignatureVerifyResponseDto.getTrustValid().equals(SignatureConstant.TRUST_VALID)) {
+		        throw new DeviceException(MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorCode(), MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorMessage());
+		 }
+
 		 
 	}
 

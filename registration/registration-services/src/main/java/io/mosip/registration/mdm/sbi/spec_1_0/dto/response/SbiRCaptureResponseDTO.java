@@ -7,5 +7,5 @@ import lombok.Data;
 @Data
 public class SbiRCaptureResponseDTO {
 
-	List<SbiRCaptureResponseBiometricsDTO> listSbiBiometrics;
+	List<SbiRCaptureResponseBiometricsDTO> biometrics;
 }
