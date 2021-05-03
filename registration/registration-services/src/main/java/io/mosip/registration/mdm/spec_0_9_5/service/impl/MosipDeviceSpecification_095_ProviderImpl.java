@@ -105,7 +105,6 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 					}));
 
 			for (MdmDeviceInfoResponse mdmDeviceInfoResponse : deviceInfoResponses) {
-				System.out.println("kdsjhfskjah");
 				if (mdmDeviceInfoResponse.getDeviceInfo() != null && !mdmDeviceInfoResponse.getDeviceInfo().isEmpty()) {
 					DeviceInfo deviceInfo = mosipDeviceSpecificationHelper
 							.getDeviceInfoDecoded(mdmDeviceInfoResponse.getDeviceInfo(), this.getClass());
