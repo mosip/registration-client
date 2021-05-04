@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-
-<GridPane fx:id="genericScreen" styleClass="parentPane" hgap="5.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1530.0" prefWidth="800.0" vgap="5.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.mosip.registration.controller.GenericController">
+<GridPane fx:id="genericScreen" hgap="5.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1530.0" prefWidth="800.0" styleClass="parentPane" vgap="5.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.mosip.registration.controller.GenericController">
    <rowConstraints>
-      <RowConstraints percentHeight="95.0" />
-      <RowConstraints percentHeight="5.0" />
+      <RowConstraints percentHeight="93.0" />
+      <RowConstraints percentHeight="7.0" />
    </rowConstraints>
    <columnConstraints>
       <ColumnConstraints percentWidth="10.0" />
@@ -33,8 +33,8 @@
             <RowConstraints minHeight="10.0" percentHeight="25.0" prefHeight="30.0" vgrow="SOMETIMES" />
          </rowConstraints>
          <children>
-            <Button fx:id="next" alignment="BASELINE_CENTER" mnemonicParsing="false" styleClass="contiuneButton" text="CONTINUE" GridPane.rowIndex="1" />
-            <Button fx:id="authenticate" alignment="BASELINE_CENTER" mnemonicParsing="false" styleClass="contiuneButton" text="Authenticate" GridPane.rowIndex="1" />
+            <Button fx:id="next" alignment="BASELINE_CENTER" mnemonicParsing="false" styleClass="contiuneButton" text="%continue" GridPane.rowIndex="1" />
+            <Button fx:id="authenticate" alignment="BASELINE_CENTER" mnemonicParsing="false" styleClass="contiuneButton" text="%authenticate" GridPane.rowIndex="1" />
          </children>
       </GridPane>
 
@@ -129,5 +129,3 @@
       </GridPane>-->
    </children>
 </GridPane>
-
-

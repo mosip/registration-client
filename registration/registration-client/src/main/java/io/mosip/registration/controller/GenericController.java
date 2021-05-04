@@ -195,7 +195,8 @@ public class GenericController extends BaseController {
 
 	private HBox getPreRegistrationFetchComponent() {
 		HBox hBox = new HBox();
-		hBox.setSpacing(10);
+		hBox.setAlignment(Pos.CENTER_LEFT);
+		hBox.setSpacing(20);
 		hBox.setPrefHeight(100);
 		hBox.setPrefWidth(200);
 
@@ -206,10 +207,11 @@ public class GenericController extends BaseController {
 		hBox.getChildren().add(label);
 		TextField textField = new TextField();
 		textField.setId("preRegistrationId");
+		textField.getStyleClass().add("preregFetchBtnStyle");
 		hBox.getChildren().add(textField);
 		Button button = new Button();
 		button.setId("fetchBtn");
-		button.setStyle("demoGraphicPaneContentButton");
+		button.getStyleClass().add("demoGraphicPaneContentButton");
 		button.setText(applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS)
 				.getString("fetch"));
 
