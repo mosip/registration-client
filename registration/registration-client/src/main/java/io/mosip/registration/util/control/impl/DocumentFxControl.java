@@ -110,6 +110,13 @@ public class DocumentFxControl extends FxControl {
 					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 			
 			getRegistrationDTo().getDocuments().remove(this.uiSchemaDTO.getId());
+			ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(
+					uiSchemaDTO.getId());
+			comboBox.getSelectionModel().clearSelection();
+			TextField textField = (TextField) getField(
+					uiSchemaDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
+			textField.setText(RegistrationConstants.EMPTY);
+			
 			getField(uiSchemaDTO.getId() + PREVIEW_ICON).setVisible(false);
 			getField(uiSchemaDTO.getId() + CLEAR_ID).setVisible(false);
 			getField(uiSchemaDTO.getId() + PREVIEW_ICON).setManaged(true);
@@ -267,23 +274,21 @@ public class DocumentFxControl extends FxControl {
 		simpleTypeVBox.getChildren().add(comboBox);
 
 		comboBox.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> {
-
 			if (comboBox.getSelectionModel().getSelectedItem() != null) {
 				List<String> toolTipTextList = new ArrayList<>();
 				String selectedCode = comboBox.getSelectionModel().getSelectedItem().getCode();
 				for (String langCode : getRegistrationDTo().getSelectedLanguagesByApplicant()) {
-
 					DocumentType documentType = masterSyncService.getDocumentType(selectedCode, langCode);
-
 					if (documentType != null) {
-
 						toolTipTextList.add(documentType.getName());
 					}
 				}
-
 				Label messageLabel = (Label) getField(uiSchemaDTO.getId() + RegistrationConstants.MESSAGE);
 				messageLabel.setText(String.join(RegistrationConstants.SLASH, toolTipTextList));
-
+				fieldTitle.setVisible(true);
+			} else {
+				Label messageLabel = (Label) getField(uiSchemaDTO.getId() + RegistrationConstants.MESSAGE);
+				messageLabel.setText(RegistrationConstants.EMPTY);
 			}
 		});
 
