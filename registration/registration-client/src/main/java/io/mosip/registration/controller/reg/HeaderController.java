@@ -55,6 +55,7 @@ import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.SyncStatusValidatorService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -223,10 +224,11 @@ public class HeaderController extends BaseController {
 		setImage(homeImgView	, RegistrationConstants.HOME_IMG);
 
 		registrationOfficerName.setText(SessionContext.userContext().getName());
-		registrationOfficeId
-				.setText(SessionContext.userContext().getRegistrationCenterDetailDTO().getRegistrationCenterId());
+		registrationOfficeId.setText(RegistrationSystemPropertiesChecker.getMachineId());
 		registrationOfficeLocation
-				.setText(SessionContext.userContext().getRegistrationCenterDetailDTO().getRegistrationCenterName());
+				.setText(SessionContext.userContext().getRegistrationCenterDetailDTO().getRegistrationCenterName() + " ("
+						+ SessionContext.userContext().getRegistrationCenterDetailDTO().getRegistrationCenterId()
+						+ ")");
 		menu.setBackground(Background.EMPTY);
 
 		menu.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
