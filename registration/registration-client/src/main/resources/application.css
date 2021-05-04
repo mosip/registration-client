@@ -666,6 +666,13 @@ Working on new Css by taleev
 		0.0, 0.0, 1.0);
 }
 
+.preregFetchBtnStyle {
+	-fx-pref-height: 35.0px;
+	-fx-pref-width: 280.0px;
+	-fx-border-width: 0.0 0.0 1.0 0.0;
+	-fx-border-color: #005baa;
+}
+
 .searchBoxTextStyle {
 	-fx-pref-height: 30.0px;
 	-fx-pref-width: 320.0px;

@@ -207,7 +207,7 @@ public class BiometricFxControl extends FxControl {
 				modalityAttributeMap.get(modality).add(modalityAttributes);
 				modalityAttributeMap.get(modality).add(ListUtils.subtract(modality.getAttributes(), requiredBioAttributes));
 
-				if(!modalityAttributes.isEmpty() || APPLICANT_SUBTYPE.equalsIgnoreCase(this.uiSchemaDTO.getSubType())) {
+				if(!modalityAttributes.isEmpty()) {
 					HBox modalityView = new HBox();
 					modalityView.setSpacing(10);
 					modalityView.setId(uiSchemaDTO.getId() + modality);
