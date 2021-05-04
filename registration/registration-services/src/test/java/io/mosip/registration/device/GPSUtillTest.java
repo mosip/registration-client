@@ -8,7 +8,6 @@ import java.net.URISyntaxException;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -21,8 +20,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.device.gps.dto.GPSPosition;
 import io.mosip.registration.device.gps.impl.GPSBU343Connector;
-import io.mosip.registration.device.gps.impl.GPSBU343Connector.GPSPosition;
 import io.mosip.registration.exception.RegBaseCheckedException;
 
 /**

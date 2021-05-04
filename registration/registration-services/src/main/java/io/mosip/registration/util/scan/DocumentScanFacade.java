@@ -5,6 +5,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
@@ -24,8 +25,8 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.device.scanner.IMosipDocumentScannerService;
 import io.mosip.registration.device.scanner.dto.ScanDevice;
+import io.mosip.registration.device.scanner.util.DocumentScannerUtil;
 import io.mosip.registration.device.webcam.impl.WebcamSarxosServiceImpl;
-import io.mosip.registration.dto.packetmanager.BiometricsDto;
 
 /**
  * This class is used to select the document scanner provider and scan the
@@ -47,6 +48,9 @@ public class DocumentScanFacade {
 
 	@Autowired
 	private WebcamSarxosServiceImpl webcamSarxosServiceImpl;
+	
+	@Autowired
+	private DocumentScannerUtil documentScannerUtil;
 
 	/**
 	 * <p>
@@ -224,7 +228,9 @@ public class DocumentScanFacade {
 		LOGGER.info(RegistrationConstants.REGISTRATION_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Reading byte array from Scanner");
 
-		return documentScannerService.getImageBytesFromBufferedImage(bufferedImage);
+		return documentScannerUtil.getImageBytesFromBufferedImage(bufferedImage);
+		
+		
 
 	}
 
@@ -240,7 +246,8 @@ public class DocumentScanFacade {
 		LOGGER.info(RegistrationConstants.REGISTRATION_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Reading byte array from Scanner");
 
-		return documentScannerService.asImage(bufferedImages);
+		return documentScannerUtil.asImage(bufferedImages);
+		
 
 	}
 
@@ -255,9 +262,8 @@ public class DocumentScanFacade {
 
 		LOGGER.info(RegistrationConstants.REGISTRATION_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Reading byte array from Scanner");
-
-		return documentScannerService.asPDF(bufferedImages);
-
+		
+		return documentScannerUtil.asPDF(bufferedImages);
 	}
 
 	/**
@@ -269,8 +275,7 @@ public class DocumentScanFacade {
 	 * @throws IOException - holds the ioexception
 	 */
 	public List<BufferedImage> pdfToImages(byte[] pdfBytes) throws IOException {
-
-		return documentScannerService.pdfToImages(pdfBytes);
+		return documentScannerUtil.pdfToImages(pdfBytes);
 	}
 
 	/**
@@ -297,5 +302,23 @@ public class DocumentScanFacade {
 		return null;
 
 	}
+	
+	/**
+	 * converts bytes to BufferedImage
+	 * 
+	 * @param imageBytes
+	 *            - scanned image file in bytes
+	 * @return BufferedImage - image file in bufferedimage format
+	 * @throws IOException
+	 *             - holds the ioexception
+	 */
+	protected BufferedImage getBufferedImageFromBytes(byte[] imageBytes) throws IOException {
 
+		return ImageIO.read(new ByteArrayInputStream(imageBytes));
+	}
+	
+	protected boolean isListNotEmpty(List<?> values) {
+		return values != null && !values.isEmpty();
+	}
+	
 }

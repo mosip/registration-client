@@ -13,7 +13,11 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
+import io.mosip.registration.device.scanner.IMosipDocumentScannerService;
 import io.mosip.registration.device.scanner.dto.ScanDevice;
+import io.mosip.registration.device.scanner.util.DocumentScannerUtil;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import au.com.southsky.jfreesane.SaneDevice;
@@ -33,9 +37,12 @@ import io.mosip.registration.context.ApplicationContext;
  *
  */
 @Service
-public class DocumentScannerSaneServiceImpl extends DocumentScannerService {
+public class DocumentScannerSaneServiceImpl implements IMosipDocumentScannerService {
 
 	private static final Logger LOGGER = AppConfig.getLogger(DocumentScannerSaneServiceImpl.class);
+	
+	@Autowired
+	private DocumentScannerUtil documentScannerUtil;
 
 	/*
 	 * (non-Javadoc)
@@ -46,7 +53,7 @@ public class DocumentScannerSaneServiceImpl extends DocumentScannerService {
 	@Override
 	public boolean isConnected() {
 
-		return isListNotEmpty(getScannerDevices());
+		return documentScannerUtil.isListNotEmpty(getScannerDevices());
 	}
 
 	/*
@@ -67,7 +74,7 @@ public class DocumentScannerSaneServiceImpl extends DocumentScannerService {
 					(Long) ApplicationContext.map().get(RegistrationConstants.DOCUMENT_SCANNER_TIMEOUT),
 					TimeUnit.MILLISECONDS);
 			List<SaneDevice> saneDevices = session.listDevices();
-			if (isListNotEmpty(saneDevices)) {
+			if (documentScannerUtil.isListNotEmpty(saneDevices)) {
 				SaneDevice saneDevice = saneDevices.get(0);
 
 				saneDevice.open();
@@ -108,7 +115,7 @@ public class DocumentScannerSaneServiceImpl extends DocumentScannerService {
 					(Long) ApplicationContext.map().get(RegistrationConstants.DOCUMENT_SCANNER_TIMEOUT),
 					TimeUnit.MILLISECONDS);
 			List<SaneDevice> saneDevices = session.listDevices();
-			if (isListNotEmpty(saneDevices)) {
+			if (documentScannerUtil.isListNotEmpty(saneDevices)) {
 				Optional<SaneDevice> result = saneDevices.stream()
 						.filter(device -> device.getName().equalsIgnoreCase(deviceName)).findFirst();
 				if (result.isPresent()) {

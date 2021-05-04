@@ -26,6 +26,7 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.device.scanner.IMosipDocumentScannerService;
 import io.mosip.registration.device.scanner.dto.ScanDevice;
 
 /**
@@ -34,7 +35,7 @@ import io.mosip.registration.device.scanner.dto.ScanDevice;
  * @since 1.2.0
  */
 @Service
-public class DocumentScannerServiceImpl extends DocumentScannerService {
+public class DocumentScannerServiceImpl implements IMosipDocumentScannerService {
 
 	private static final Logger LOGGER = AppConfig.getLogger(DocumentScannerServiceImpl.class);
 	private static final String DEFAULT_EXCEPTIONAL_DEVICE_TYPES = ".*fficejet.*;.*Jet.*";

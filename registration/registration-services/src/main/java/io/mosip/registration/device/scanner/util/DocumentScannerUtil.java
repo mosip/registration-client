@@ -1,34 +1,39 @@
-package io.mosip.registration.device.scanner.impl;
+package io.mosip.registration.device.scanner.util;
 
-import org.springframework.stereotype.Service;
+import static io.mosip.registration.constants.LoggerConstants.LOG_REG_DOC_SCAN_CONTROLLER;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.imageio.ImageIO;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.springframework.stereotype.Component;
+
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfWriter;
 
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.device.scanner.IMosipDocumentScannerService;
+import io.mosip.registration.constants.RegistrationConstants;
 
-/**
- * This class is used to handle all the requests related to scanner devices
- * through Sane Daemon service
- * 
- * @author balamurugan.ramamoorthy
- * @since 1.0.0
- */
-@Service
-public abstract class DocumentScannerService implements IMosipDocumentScannerService {
-
-//	@Value("${DOCUMENT_SCANNER_DEPTH}")
-//	protected int scannerDepth;
-//
-//	@Value("${DOCUMENT_SCANNER_HOST}")
-//	protected String scannerhost;
-//
-//	@Value("${DOCUMENT_SCANNER_PORT}")
-//	protected int scannerPort;
-//
-//	@Value("${DOCUMENT_SCANNER_TIMEOUT}")
-//	protected long scannerTimeout;
-
-	private static final Logger LOGGER = AppConfig.getLogger(DocumentScannerService.class);
+@Component
+public class DocumentScannerUtil {
+	
+	private static final Logger LOGGER = AppConfig.getLogger(DocumentScannerUtil.class);
 
 	/**
 	 * This method converts the BufferedImage to byte[]
@@ -38,7 +43,7 @@ public abstract class DocumentScannerService implements IMosipDocumentScannerSer
 	 * @return byte[] - scanned document Content
 	 * @throws IOException - holds the IOExcepion
 	 */
-	/**
+	
 	public byte[] getImageBytesFromBufferedImage(BufferedImage bufferedImage) throws IOException {
 		byte[] imageInByte;
 
@@ -50,7 +55,7 @@ public abstract class DocumentScannerService implements IMosipDocumentScannerSer
 
 		return imageInByte;
 	}
-	*/
+	
 
 	/*
 	 * (non-Javadoc)
@@ -58,9 +63,6 @@ public abstract class DocumentScannerService implements IMosipDocumentScannerSer
 	 * @see io.mosip.registration.device.scanner.impl.DocumentScannerService#
 	 * getSinglePDFInBytes(java.util.List)
 	 */
-	
-	/**
-	@Override
 	public byte[] asPDF(List<BufferedImage> bufferedImages) {
 
 		byte[] scannedPdfFile = null;
@@ -91,16 +93,12 @@ public abstract class DocumentScannerService implements IMosipDocumentScannerSer
 		return scannedPdfFile;
 
 	}
-	*/
-
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see io.mosip.registration.device.scanner.impl.DocumentScannerService#
 	 * getSingleImageFromList(java.util.List)
 	 */
-	/**
-	@Override
 	public byte[] asImage(List<BufferedImage> bufferedImages) throws IOException {
 		byte[] newSingleImage = null;
 		if (isListNotEmpty(bufferedImages)) {
@@ -133,10 +131,7 @@ public abstract class DocumentScannerService implements IMosipDocumentScannerSer
 		return newSingleImage;
 
 	}
-	*/
-
-	/**
-	@Override
+	
 	public List<BufferedImage> pdfToImages(byte[] pdfBytes) throws IOException {
 
 		List<BufferedImage> bufferedImages = new ArrayList<>();
@@ -151,7 +146,7 @@ public abstract class DocumentScannerService implements IMosipDocumentScannerSer
 		document.close();
 		return bufferedImages;
 	}
-	*/
+	
 
 	/**
 	 * converts bytes to BufferedImage
@@ -162,15 +157,15 @@ public abstract class DocumentScannerService implements IMosipDocumentScannerSer
 	 * @throws IOException
 	 *             - holds the ioexception
 	 */
-	/**
-	 protected BufferedImage getBufferedImageFromBytes(byte[] imageBytes) throws IOException {
+	 public BufferedImage getBufferedImageFromBytes(byte[] imageBytes) throws IOException {
 
 		return ImageIO.read(new ByteArrayInputStream(imageBytes));
 	}
-	*/
-	/**
-	protected boolean isListNotEmpty(List<?> values) {
+	
+	
+	public boolean isListNotEmpty(List<?> values) {
 		return values != null && !values.isEmpty();
 	}
-	*/
+	
+
 }

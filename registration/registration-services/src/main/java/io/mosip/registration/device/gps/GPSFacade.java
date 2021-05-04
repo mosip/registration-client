@@ -16,6 +16,7 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.device.gps.dto.GPSPosition;
 import io.mosip.registration.device.gps.impl.GPSBU343Connector;
 import io.mosip.registration.exception.RegBaseCheckedException;
 
@@ -108,7 +109,8 @@ public class GPSFacade extends GPSBU343Connector {
 					double distance = actualDistance(deviceLat, deviceLongi, centerLat, centerLngt);
 
 					LOGGER.info(RegistrationConstants.GPS_LOGGER, APPLICATION_NAME, APPLICATION_ID,
-							"Distance between GPS Device and Registartion Stationin meters ====>" + Math.round(distance / 1000));
+							"Distance between GPS Device and Registartion Stationin meters ====>"
+									+ Math.round(distance / 1000));
 
 					if (deviceLat != 0 && deviceLongi != 0 && distance != 0) {
 
@@ -125,7 +127,7 @@ public class GPSFacade extends GPSBU343Connector {
 					gpsResponseMap.put(RegistrationConstants.GPS_DISTANCE, null);
 					gpsResponseMap.put(RegistrationConstants.GPS_CAPTURE_ERROR_MSG,
 							RegistrationConstants.GPS_CAPTURE_FAILURE_MSG);
-					gpsResponseMap.put(RegistrationConstants.GPS_ERROR_CODE, RegistrationConstants.GPS_REG_LGE‌_002);
+					//gpsResponseMap.put(RegistrationConstants.GPS_ERROR_CODE, RegistrationConstants.GPS_REG_LGE‌_002);
 
 					LOGGER.info(RegistrationConstants.GPS_LOGGER, APPLICATION_NAME, APPLICATION_ID,
 							"Unable to Calculate Distance");
@@ -161,10 +163,10 @@ public class GPSFacade extends GPSBU343Connector {
 	 * This method is used to calculate the distance between the given latitudes and
 	 * longitudes.
 	 *
-	 * @param fromlat from latitude
-	 * @param fromlng from longitude
-	 * @param centerLat   to latitude
-	 * @param centerLngt   to longitude
+	 * @param fromlat    from latitude
+	 * @param fromlng    from longitude
+	 * @param centerLat  to latitude
+	 * @param centerLngt to longitude
 	 * @return the distance between given latitudes and longitudes
 	 */
 	private double actualDistance(double fromlat, double fromlng, double centerLat, double centerLngt) {

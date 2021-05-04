@@ -2,17 +2,13 @@ package io.mosip.registration.device;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.mosip.registration.context.ApplicationContext;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -23,11 +19,12 @@ import org.mockito.junit.MockitoRule;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.device.gps.GPSFacade;
 import io.mosip.registration.device.gps.MosipGPSProvider;
+import io.mosip.registration.device.gps.dto.GPSPosition;
 import io.mosip.registration.device.gps.impl.GPSBU343Connector;
-import io.mosip.registration.device.gps.impl.GPSBU343Connector.GPSPosition;
 import io.mosip.registration.exception.RegBaseCheckedException;
 
 public class GPSIntegrationImplTest {

@@ -11,6 +11,7 @@ import java.util.Enumeration;
 import java.util.TooManyListenersException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import gnu.io.CommPortIdentifier;
@@ -19,12 +20,13 @@ import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
 import gnu.io.UnsupportedCommOperationException;
-
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.device.gps.MosipGPSProvider;
+import io.mosip.registration.device.gps.dto.GPSPosition;
+import io.mosip.registration.device.gps.util.MosipGPSUtil;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 
@@ -48,6 +50,9 @@ public class GPSBU343Connector implements MosipGPSProvider, SerialPortEventListe
 
 	/** Object for deviceData. */
 	private StringBuilder deviceData = new StringBuilder();
+
+	@Autowired
+	private MosipGPSUtil mosipGPSUtil;
 
 	/** Object for Logger. */
 
@@ -225,8 +230,8 @@ public class GPSBU343Connector implements MosipGPSProvider, SerialPortEventListe
 				}
 			} catch (IOException exception) {
 
-				throw new RegBaseUncheckedException(RegistrationConstants.GPS_CAPTURING_EXCEPTION,
-						exception.toString(), exception);
+				throw new RegBaseUncheckedException(RegistrationConstants.GPS_CAPTURING_EXCEPTION, exception.toString(),
+						exception);
 			}
 			break;
 
@@ -265,7 +270,7 @@ public class GPSBU343Connector implements MosipGPSProvider, SerialPortEventListe
 			try {
 
 				if ("GPRMC".equals(type)) {
-					parseGPRMC(tokens, position);
+					mosipGPSUtil.parseGPRMC(tokens, position);
 				} else {
 					position.setResponse("failure");
 				}
@@ -287,155 +292,158 @@ public class GPSBU343Connector implements MosipGPSProvider, SerialPortEventListe
 	 * @param tokens   the tokens
 	 * @param position the position
 	 */
-	private static void parseGPRMC(String[] tokens, GPSPosition position) {
-
-		LOGGER.info(RegistrationConstants.GPS_LOGGER, APPLICATION_NAME, APPLICATION_ID, "parsing GPRMC Singal");
-
-		if (tokens[2].equals("A")) {
-
-			position.setLat(latitude2Decimal(tokens[3], tokens[4]));
-			position.setLon(longitude2Decimal(tokens[5], tokens[6]));
-			position.setResponse("success");
-
-		} else {
-			position.setResponse("failure");
-		}
-
-	}
+	/**
+	 * private static void parseGPRMC(String[] tokens, GPSPosition position) {
+	 * 
+	 * LOGGER.info(RegistrationConstants.GPS_LOGGER, APPLICATION_NAME,
+	 * APPLICATION_ID, "parsing GPRMC Singal");
+	 * 
+	 * if (tokens[2].equals("A")) {
+	 * 
+	 * position.setLat(latitude2Decimal(tokens[3], tokens[4]));
+	 * position.setLon(longitude2Decimal(tokens[5], tokens[6]));
+	 * position.setResponse("success");
+	 * 
+	 * } else { position.setResponse("failure"); }
+	 * 
+	 * }
+	 */
 
 	/**
 	 * Decimal to longitude.
 	 *
-	 * @param lon the lon
-	 * @param direction        the direction
+	 * @param lon       the lon
+	 * @param direction the direction
 	 * @return the float
 	 */
-	private static double longitude2Decimal(String lon, String direction) {
-
-		LOGGER.info(RegistrationConstants.GPS_LOGGER, APPLICATION_NAME, APPLICATION_ID, "Longitude conversion begins");
-
-		double longitudeDegrees = 0.0;
-
-		if (lon.indexOf('.') != -1) {
-
-			int minutesPosition = lon.indexOf('.') - 2;
-			double minutes = Double.parseDouble(lon.substring(minutesPosition));
-			double decimalDegrees = Double.parseDouble(lon.substring(minutesPosition)) / 60.0f;
-
-			double degree = Double.parseDouble(lon) - minutes;
-			double wholeDegrees = 100.0 * degree / 100;
-
-			longitudeDegrees = wholeDegrees + decimalDegrees;
-
-			if (direction.startsWith("W")) {
-				longitudeDegrees = -longitudeDegrees;
-			}
-
-			LOGGER.info(RegistrationConstants.GPS_LOGGER, APPLICATION_NAME, APPLICATION_ID,
-					"Longitude conversion begins");
-		}
-		return longitudeDegrees;
-	}
-
+	/**
+	 * private static double longitude2Decimal(String lon, String direction) {
+	 * 
+	 * LOGGER.info(RegistrationConstants.GPS_LOGGER, APPLICATION_NAME,
+	 * APPLICATION_ID, "Longitude conversion begins");
+	 * 
+	 * double longitudeDegrees = 0.0;
+	 * 
+	 * if (lon.indexOf('.') != -1) {
+	 * 
+	 * int minutesPosition = lon.indexOf('.') - 2; double minutes =
+	 * Double.parseDouble(lon.substring(minutesPosition)); double decimalDegrees =
+	 * Double.parseDouble(lon.substring(minutesPosition)) / 60.0f;
+	 * 
+	 * double degree = Double.parseDouble(lon) - minutes; double wholeDegrees =
+	 * 100.0 * degree / 100;
+	 * 
+	 * longitudeDegrees = wholeDegrees + decimalDegrees;
+	 * 
+	 * if (direction.startsWith("W")) { longitudeDegrees = -longitudeDegrees; }
+	 * 
+	 * LOGGER.info(RegistrationConstants.GPS_LOGGER, APPLICATION_NAME,
+	 * APPLICATION_ID, "Longitude conversion begins"); } return longitudeDegrees; }
+	 */
 	/**
 	 * Decimal to latitude conversion.
 	 *
-	 * @param lat the lat
-	 * @param direction       the direction
+	 * @param lat       the lat
+	 * @param direction the direction
 	 * @return the float
 	 */
-	private static double latitude2Decimal(String lat, String direction) {
-
-		LOGGER.info(RegistrationConstants.GPS_LOGGER, APPLICATION_NAME, APPLICATION_ID, "Latitude conversion begins");
-
-		double latitudeDegrees = 0.0;
-
-		if (lat.indexOf('.') != -1) {
-
-			int minutesPosition = lat.indexOf('.') - 2;
-			double minutes = Double.parseDouble(lat.substring(minutesPosition));
-			double decimalDegrees = Double.parseDouble(lat.substring(minutesPosition)) / 60.0f;
-
-			double degree = Double.parseDouble(lat) - minutes;
-			double wholeDegrees = 100.0 * degree / 100;
-
-			latitudeDegrees = wholeDegrees + decimalDegrees;
-
-			if (direction.startsWith("S")) {
-				latitudeDegrees = -latitudeDegrees;
-			}
-			LOGGER.info(RegistrationConstants.GPS_LOGGER, APPLICATION_NAME, APPLICATION_ID, "Latitude conversion ends");
-		}
-		return latitudeDegrees;
-	}
+	/**
+	 * private static double latitude2Decimal(String lat, String direction) {
+	 * 
+	 * LOGGER.info(RegistrationConstants.GPS_LOGGER, APPLICATION_NAME,
+	 * APPLICATION_ID, "Latitude conversion begins");
+	 * 
+	 * double latitudeDegrees = 0.0;
+	 * 
+	 * if (lat.indexOf('.') != -1) {
+	 * 
+	 * int minutesPosition = lat.indexOf('.') - 2; double minutes =
+	 * Double.parseDouble(lat.substring(minutesPosition)); double decimalDegrees =
+	 * Double.parseDouble(lat.substring(minutesPosition)) / 60.0f;
+	 * 
+	 * double degree = Double.parseDouble(lat) - minutes; double wholeDegrees =
+	 * 100.0 * degree / 100;
+	 * 
+	 * latitudeDegrees = wholeDegrees + decimalDegrees;
+	 * 
+	 * if (direction.startsWith("S")) { latitudeDegrees = -latitudeDegrees; }
+	 * LOGGER.info(RegistrationConstants.GPS_LOGGER, APPLICATION_NAME,
+	 * APPLICATION_ID, "Latitude conversion ends"); } return latitudeDegrees; }
+	 */
 
 	/**
 	 * The Class GPSPosition.
 	 */
-	public class GPSPosition {
 
-		/** The latitudeFromGps. */
-		private double latitudeFromGps = 0.0;
-
-		/** The longitudeFromGps. */
-		private double longitudeFromGps = 0.0;
-
-		/** The response. */
-		private String response = "";
-
-		/**
+	/*
+	 * public class GPSPosition {
+	 * 
+	 *//** The latitudeFromGps. */
+	/*
+	 * 
+	 * private double latitudeFromGps = 0.0;
+	 * 
+	 *//** The longitudeFromGps. */
+	/*
+	 * 
+	 * private double longitudeFromGps = 0.0;
+	 * 
+	 *//** The response. */
+	/*
+	 * 
+	 * private String response = "";
+	 * 
+	 *//**
 		 * This method gets the latitude from GPS.
 		 *
 		 * @return the latitudeFromGps
 		 */
-		public double getLat() {
-			return latitudeFromGps;
-		}
-
-		/**
+	/*
+	 * 
+	 * public double getLat() { return latitudeFromGps; }
+	 * 
+	 *//**
 		 * This method sets the latitude.
 		 *
 		 * @param lat the new lat
 		 */
-		public void setLat(double lat) {
-			this.latitudeFromGps = lat;
-		}
-
-		/**
+	/*
+	 * 
+	 * public void setLat(double lat) { this.latitudeFromGps = lat; }
+	 * 
+	 *//**
 		 * This method gets the longitude from GPS.
 		 *
 		 * @return the longitudeFromGps
 		 */
-		public double getLon() {
-			return longitudeFromGps;
-		}
-
-		/**
+	/*
+	 * 
+	 * public double getLon() { return longitudeFromGps; }
+	 * 
+	 *//**
 		 * This method sets the longitude.
 		 *
 		 * @param lon the new lon
 		 */
-		public void setLon(double lon) {
-			this.longitudeFromGps = lon;
-		}
-
-		/**
+	/*
+	 * 
+	 * public void setLon(double lon) { this.longitudeFromGps = lon; }
+	 * 
+	 *//**
 		 * This method gets the response.
 		 *
 		 * @return the response
 		 */
-		public String getResponse() {
-			return response;
-		}
-
-		/**
+	/*
+	 * 
+	 * public String getResponse() { return response; }
+	 * 
+	 *//**
 		 * This method sets the response.
 		 * 
 		 * @param response the response to set
-		 */
-		public void setResponse(String response) {
-			this.response = response;
-		}
-	}
+		 *//*
+			 * public void setResponse(String response) { this.response = response; } }
+			 */
 
 }

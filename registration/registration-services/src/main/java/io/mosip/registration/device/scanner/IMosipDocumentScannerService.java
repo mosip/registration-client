@@ -36,7 +36,7 @@ public interface IMosipDocumentScannerService {
 	 *            - the scanned files
 	 * @return byte[] - The single document which contains all the scanned files
 	 */
-	byte[] asPDF(List<BufferedImage> bufferedImages);
+//	byte[] asPDF(List<BufferedImage> bufferedImages);
 
 	/**
 	 * This method is used to merge all the scanned images into single image side by
@@ -48,7 +48,7 @@ public interface IMosipDocumentScannerService {
 	 * @throws IOException
 	 *             - holds the ioexception
 	 */
-	byte[] asImage(List<BufferedImage> bufferedImages) throws IOException;
+//	byte[] asImage(List<BufferedImage> bufferedImages) throws IOException;
 
 	/**
 	 * This method converts the BufferedImage to byte[]
@@ -59,7 +59,7 @@ public interface IMosipDocumentScannerService {
 	 * @throws IOException
 	 *             - holds the ioexcepion
 	 */
-	byte[] getImageBytesFromBufferedImage(BufferedImage bufferedImage) throws IOException;
+//	byte[] getImageBytesFromBufferedImage(BufferedImage bufferedImage) throws IOException;
 
 	/**
 	 * This method is used to convert the pdf file into images
@@ -70,7 +70,7 @@ public interface IMosipDocumentScannerService {
 	 * @throws IOException
 	 *             - holds the ioexception
 	 */
-	List<BufferedImage> pdfToImages(byte[] pdfBytes) throws IOException;
+//	List<BufferedImage> pdfToImages(byte[] pdfBytes) throws IOException;
 
 	/**
 	 *

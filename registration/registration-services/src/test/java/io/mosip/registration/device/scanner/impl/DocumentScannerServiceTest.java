@@ -19,11 +19,11 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import io.mosip.kernel.core.exception.IOException;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.device.scanner.util.DocumentScannerUtil;
 
 @Ignore
 public class DocumentScannerServiceTest {
@@ -33,6 +33,9 @@ public class DocumentScannerServiceTest {
 
 	@InjectMocks
 	private DocumentScannerSaneServiceImpl documentScannerServiceImpl;
+	
+	@InjectMocks
+	private DocumentScannerUtil documentScannerUtil;
 
 	static BufferedImage bufferedImage;
 
@@ -67,7 +70,7 @@ public class DocumentScannerServiceTest {
 	@Test
 	public void getSinglePDFInBytesTest() {
 		intializeValues();
-		byte[] data = documentScannerServiceImpl.asPDF(bufferedImages);
+		byte[] data = documentScannerUtil.asPDF(bufferedImages);
 		assertNotNull(data);
 
 	}
@@ -75,7 +78,7 @@ public class DocumentScannerServiceTest {
 	@Test
 	public void getSingleImageFromListTest() throws java.io.IOException {
 		intializeValues();
-		byte[] data = documentScannerServiceImpl.asImage(bufferedImages);
+		byte[] data = documentScannerUtil.asImage(bufferedImages);
 		assertNotNull(data);
 
 	}
@@ -84,7 +87,7 @@ public class DocumentScannerServiceTest {
 	public void getSingleImageAlternateFlowTest() throws java.io.IOException {
 		intializeValues();
 		bufferedImages.add(bufferedImage);
-		byte[] data = documentScannerServiceImpl.asImage(bufferedImages);
+		byte[] data = documentScannerUtil.asImage(bufferedImages);
 		assertNotNull(data);
 
 	}
@@ -92,8 +95,8 @@ public class DocumentScannerServiceTest {
 	@Test
 	public void pdfToImagesTest() throws java.io.IOException {
 		intializeValues();
-		byte[] data = documentScannerServiceImpl.asPDF(bufferedImages);
-		documentScannerServiceImpl.pdfToImages(data);
+		byte[] data = documentScannerUtil.asPDF(bufferedImages);
+		documentScannerUtil.pdfToImages(data);
 		assertNotNull(data);
 
 	}
