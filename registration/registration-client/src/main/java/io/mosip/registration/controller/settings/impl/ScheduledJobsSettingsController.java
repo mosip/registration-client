@@ -26,6 +26,7 @@ import io.mosip.registration.service.sync.impl.MasterSyncServiceImpl;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Alert;
@@ -226,6 +227,10 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 			subGridPane.add(jobVbox, 1, 0);
 
 			mainGridPane.add(subGridPane, 0, 0);
+			
+			if (applicationContext.isPrimaryLanguageRightToLeft()) {
+				mainGridPane.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+			}
 
 			gridPane.add(mainGridPane, columnIndex, rowIndex);
 			rowIndex = (columnIndex == 2) ? (rowIndex + 1) : rowIndex;
@@ -327,19 +332,21 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 	private GridPane createGridPane(int size) {
 		GridPane gridPane = new GridPane();
+		gridPane.setPrefHeight(700);
+		gridPane.setPrefWidth(1200);
 		gridPane.setAlignment(Pos.TOP_CENTER);
 		gridPane.setHgap(25);
 		gridPane.setVgap(25);
 
 		if (size <= 3) {
 			RowConstraints rowConstraint = new RowConstraints();
-			rowConstraint.setPercentHeight(25);
+			rowConstraint.setPercentHeight(30);
 			gridPane.getRowConstraints().add(rowConstraint);
 		} else {
 			int ceilOfSize = (size % 3 == 0) ? size : (size + (3 - size % 3));
 			for (int index = 1; index <= ceilOfSize / 3; index++) {
 				RowConstraints rowConstraint = new RowConstraints();
-				rowConstraint.setPercentHeight(25);
+				rowConstraint.setPercentHeight(30);
 				gridPane.getRowConstraints().add(rowConstraint);
 			}
 		}
