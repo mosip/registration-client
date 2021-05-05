@@ -142,7 +142,7 @@ public class PacketHandlerServiceTest {
 
 		machineMaster.setRegMachineSpecId(machineSpecId);
 
-		Mockito.when(machineMasterRepository.findByNameIgnoreCaseAndRegMachineSpecIdLangCode(machineName.toLowerCase(),"eng")).thenReturn(machineMaster);
+		Mockito.when(machineMasterRepository.findByNameIgnoreCase(machineName.toLowerCase())).thenReturn(machineMaster);
 
 		when(baseService.getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP)).thenReturn(RegistrationConstants.DISABLE);
 

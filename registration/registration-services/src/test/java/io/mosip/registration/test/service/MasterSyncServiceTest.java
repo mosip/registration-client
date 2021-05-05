@@ -199,8 +199,7 @@ public class MasterSyncServiceTest {
 		regMachineSpecId.setLangCode("eng");
 		machine.setRegMachineSpecId(regMachineSpecId);
 		machine.setIsActive(true);
-		Mockito.when(machineMasterRepository.findByNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(),
-				Mockito.anyString())).thenReturn(machine);
+		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
 
 		CenterMachine centerMachine = new CenterMachine();
 		CenterMachineId centerMachineId = new CenterMachineId();

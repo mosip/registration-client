@@ -343,7 +343,7 @@ public class UserOnBoardDAOImlpTest {
 	@Test(expected = RegBaseUncheckedException.class)
 	public void getStationIDRunException() throws RegBaseCheckedException {
 		Mockito.when(machineMasterRepository
-				.findByNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(), Mockito.anyString()))
+				.findByNameIgnoreCase(Mockito.anyString()))
 				.thenThrow(new RegBaseUncheckedException());
 		baseService.getStationId();
 	}
@@ -359,7 +359,7 @@ public class UserOnBoardDAOImlpTest {
 		regMachineSpecId.setLangCode("eng");
 		machineMaster.setRegMachineSpecId(regMachineSpecId);
 		Mockito.when(machineMasterRepository
-				.findByNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(), Mockito.anyString()))
+				.findByNameIgnoreCase(Mockito.anyString()))
 				.thenReturn(machineMaster);
 		String stationId = baseService.getStationId();
 		Assert.assertSame("100311", stationId);
