@@ -315,6 +315,7 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 
 			return biometricDTOs;
 		} catch (Exception exception) {
+			LOGGER.error("Failed to capture biometrics", exception);
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
 					RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage(), exception);
 		}

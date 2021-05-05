@@ -45,7 +45,7 @@ import javafx.scene.web.WebView;
 public class HtmlFxControl extends FxControl {
 
     private static final Logger LOGGER = AppConfig.getLogger(HtmlFxControl.class);
-    private static final String DEFAULT_TEMPLATE = "<!DOCTYPE html><html><body><h1>INVALID SCHEMA - Template Name not set !!</h1></body></html>";
+    private static final String DEFAULT_TEMPLATE = "<!DOCTYPE html><html><body><h1>Template Name not set !!</h1></body></html>";
     private TemplateManagerBuilder templateManagerBuilder;
     private TemplateService templateService;
     private Map<String, String> contentHash = null;
@@ -71,6 +71,7 @@ public class HtmlFxControl extends FxControl {
         getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(langCode -> {
             labels.add(this.uiSchemaDTO.getLabel().get(langCode));
         });
+        labels.removeAll(Collections.singletonList(null));
 
         Label label = new Label();
         label.setText(String.join(RegistrationConstants.SLASH, labels));
@@ -84,6 +85,7 @@ public class HtmlFxControl extends FxControl {
             accordion.getPanes().add(titledPane);
         });
 
+        accordion.setExpandedPane(accordion.getPanes().get(0));
         vBox.getChildren().add(accordion);
 
         this.node = vBox;
