@@ -44,7 +44,7 @@
                         <Insets top="20.0" />
                      </opaqueInsets>
                   </ScrollPane>
-                  <GridPane GridPane.columnIndex="1">
+                  <GridPane fx:id="subContentGridPane" GridPane.columnIndex="1">
                     <columnConstraints>
                       <ColumnConstraints hgrow="SOMETIMES" percentWidth="80.0" />
                       <ColumnConstraints hgrow="SOMETIMES" percentWidth="20.0" />
@@ -53,7 +53,7 @@
                       <RowConstraints percentHeight="100.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                      <children>
-                        <HBox fx:id="contentHBox" alignment="CENTER_LEFT" spacing="20.0">
+                        <HBox alignment="CENTER_LEFT" spacing="20.0">
                            <children>
                               <Label styleClass="settingsLabelStyle" text="%portRange" />
                               <TextField fx:id="fromPort" promptText="%fromPort" styleClass="deviceSettingsTextFieldStyle" />
