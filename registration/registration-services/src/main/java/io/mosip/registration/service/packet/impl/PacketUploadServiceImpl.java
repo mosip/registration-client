@@ -1,29 +1,26 @@
 package io.mosip.registration.service.packet.impl;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
 
-import com.google.common.annotations.VisibleForTesting;
-import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.exception.*;
-import lombok.NonNull;
-import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.retry.support.RetryTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.FileUtils;
@@ -34,13 +31,20 @@ import io.mosip.registration.constants.AuditReferenceIdTypes;
 import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dao.RegistrationDAO;
 import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.ResponseDTO;
+import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.entity.Registration;
+import io.mosip.registration.exception.ConnectionException;
+import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.packet.PacketUploadService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
+import lombok.NonNull;
+import lombok.SneakyThrows;
 
 /**
  * This class will update the packet status in the table and also push the
@@ -138,13 +142,19 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 		ResponseDTO responseDTO = new ResponseDTO();
 		List<Registration> syncedPackets = registrationDAO.getRegistrationByStatus(RegistrationConstants.PACKET_UPLOAD_STATUS,
 				batchCount);
-		for(Registration registration : syncedPackets) {
-			if(registration.getServerStatusCode().equals(RegistrationConstants.PACKET_STATUS_CODE_REREGISTER))
-				continue;
+		if (syncedPackets != null && !syncedPackets.isEmpty()) {
+			for(Registration registration : syncedPackets) {
+				if(registration.getServerStatusCode().equals(RegistrationConstants.PACKET_STATUS_CODE_REREGISTER))
+					continue;
 
-			Registration updatedRegDetail = uploadSyncedPacket(preparePacketStatusDto(registration));
-			if(updatedRegDetail.getFileUploadStatus().equals(RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode()))
-				setErrorResponse(responseDTO, RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.name(), null);
+				Registration updatedRegDetail = uploadSyncedPacket(preparePacketStatusDto(registration));
+				if(updatedRegDetail.getFileUploadStatus().equals(RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode()))
+					setErrorResponse(responseDTO, RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.name(), null);
+			}
+		} else {
+			SuccessResponseDTO successResponseDTO =new SuccessResponseDTO();
+			successResponseDTO.setMessage(RegistrationConstants.SUCCESS);
+			responseDTO.setSuccessResponseDTO(successResponseDTO);
 		}
 		return responseDTO;
 	}
