@@ -8,16 +8,13 @@ import io.mosip.kernel.signature.dto.JWTSignatureVerifyRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureVerifyResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.exception.DeviceException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
-import io.mosip.registration.mdm.dto.Biometric;
 import io.mosip.registration.mdm.dto.DeviceInfo;
 import io.mosip.registration.mdm.dto.MDMError;
 import io.mosip.registration.mdm.dto.MdmDeviceInfo;
-import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.MdmSbiDeviceInfo;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.MdmSbiDeviceInfoWrapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,13 +48,10 @@ public class MosipDeviceSpecificationHelper {
 	@Autowired
 	private SignatureService signatureService;
 
-	@Value("${mosip.registration.mdm.validate.trust:false}")
-	private boolean validateTrust;
-
 	@Value("${mosip.registration.mdm.trust.domain.rcapture:DEVICE}")
 	private String rCaptureTrustDomain;
 
-	@Value("${mosip.registration.mdm.trust.domain.digitalId:FTM}")
+	@Value("${mosip.registration.mdm.trust.domain.digitalId:DEVICE}")
 	private String digitalIdTrustDomain;
 
 	@Value("${mosip.registration.mdm.trust.domain.deviceinfo:DEVICE}")
@@ -87,10 +81,13 @@ public class MosipDeviceSpecificationHelper {
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_JWT_INVALID.getErrorCode(),
 					RegistrationExceptionConstants.MDS_JWT_INVALID.getErrorMessage());
 		}
-		String[] chunks = data.split("\\.");
-		if (chunks != null && chunks.length > 2) {
-			return chunks[2];
+		Pattern pattern = Pattern.compile(RegistrationConstants.BIOMETRIC_SEPERATOR);
+		Matcher matcher = pattern.matcher(data);
+		if(matcher.find()) {
+			//returns header..signature
+			return data.replace(matcher.group(1),"");
 		}
+
 		throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_SIGNATURE_EMPTY.getErrorCode(),
 				RegistrationExceptionConstants.MDS_SIGNATURE_EMPTY.getErrorMessage());
 	}
@@ -114,7 +111,7 @@ public class MosipDeviceSpecificationHelper {
 
 	public void validateJWTResponse(final String signedData, final String domain) throws DeviceException {
 		JWTSignatureVerifyRequestDto jwtSignatureVerifyRequestDto = new JWTSignatureVerifyRequestDto();
-		jwtSignatureVerifyRequestDto.setValidateTrust(validateTrust);
+		jwtSignatureVerifyRequestDto.setValidateTrust(true);
 		jwtSignatureVerifyRequestDto.setDomain(domain);
 		jwtSignatureVerifyRequestDto.setJwtSignatureData(signedData);
 		
@@ -124,9 +121,7 @@ public class MosipDeviceSpecificationHelper {
 		
 		if (jwtSignatureVerifyRequestDto.getValidateTrust() && !jwtSignatureVerifyResponseDto.getTrustValid().equals(SignatureConstant.TRUST_VALID)) {
 		        throw new DeviceException(MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorCode(), MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorMessage());
-		 }
-
-		 
+		}
 	}
 
 	public String generateMDMTransactionId() {
@@ -213,23 +208,19 @@ public class MosipDeviceSpecificationHelper {
 	}
 	
 	public void validateResponseTimestamp(String responseTime) throws RegBaseCheckedException {
-		
-		//TODO Flag shouldn't be used, as Syncbyte MDS and Mock MDS giving timestamp as null, added temporary flag
-		if(RegistrationConstants.ENABLE.equalsIgnoreCase(timeValidationFlag)) {
-			if(responseTime == null) {
+		if(responseTime == null) {
+			throw new RegBaseCheckedException(
+					RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorCode(),
+					RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorMessage());
+		} else {
+
+			Timestamp ts = Timestamp.valueOf(responseTime);
+
+			if(ts.getTime() < System.currentTimeMillis()- TimeUnit.MINUTES.toMillis(5)
+					|| ts.getTime()  > System.currentTimeMillis()+ TimeUnit.MINUTES.toMillis(5)) {
 				throw new RegBaseCheckedException(
 						RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorCode(),
 						RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorMessage());
-			} else {
-				
-				Timestamp ts = Timestamp.valueOf(responseTime);
-									
-				if(ts.getTime() < System.currentTimeMillis()- TimeUnit.MINUTES.toMillis(5) 
-						|| ts.getTime()  > System.currentTimeMillis()+ TimeUnit.MINUTES.toMillis(5)) {
-					throw new RegBaseCheckedException(
-							RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorCode(),
-							RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorMessage());
-				}
 			}
 		}
 	}

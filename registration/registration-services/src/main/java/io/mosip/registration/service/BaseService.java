@@ -777,7 +777,7 @@ public class BaseService {
 		ResponseDTO responseDTO = policySyncService.checkKeyValidation();
 		if(responseDTO == null || responseDTO.getSuccessResponseDTO() == null ||
 				!responseDTO.getSuccessResponseDTO().getMessage().equals(RegistrationConstants.VALID_KEY))
-			throw new PreConditionCheckException(PreConditionChecks.INVALID_POLICY_KEY.name(),
+			throw new PreConditionCheckException(PreConditionChecks.NO_OR_INVALID_POLICY_KEY.name(),
 					"Registration forbidden as client POLICY_KEY is INVALID");
 	}
 
@@ -799,7 +799,7 @@ public class BaseService {
 		ResponseDTO responseDTO = policySyncService.checkKeyValidation();
 		if(responseDTO == null || responseDTO.getSuccessResponseDTO() == null ||
 				!responseDTO.getSuccessResponseDTO().getMessage().equals(RegistrationConstants.VALID_KEY))
-			throw new PreConditionCheckException(PreConditionChecks.INVALID_POLICY_KEY.name(),
+			throw new PreConditionCheckException(PreConditionChecks.NO_OR_INVALID_POLICY_KEY.name(),
 					"Registration forbidden as client POLICY_KEY is INVALID");
 	}
 
