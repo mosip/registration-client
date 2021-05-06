@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -27,8 +26,6 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import io.mosip.registration.constants.RegistrationClientStatusCode;
-import io.mosip.registration.constants.RegistrationTransactionType;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.dao.impl.RegistrationDAOImpl;
@@ -36,12 +33,8 @@ import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
-import io.mosip.registration.dto.demographic.DemographicDTO;
-import io.mosip.registration.dto.demographic.DemographicInfoDTO;
-import io.mosip.registration.dto.demographic.IndividualIdentity;
 import io.mosip.registration.dto.demographic.ValuesDTO;
 import io.mosip.registration.entity.Registration;
-import io.mosip.registration.entity.RegistrationTransaction;
 import io.mosip.registration.entity.UserDetail;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
@@ -61,20 +54,10 @@ public class RegistrationDAOTest {
 	private RegistrationRepository registrationRepository;
 	@Mock
 	private RegTransactionRepository regTransactionRepository;
-	private RegistrationTransaction regTransaction;
 	Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
 	@Before
 	public void initialize() throws Exception {
-		Timestamp time = new Timestamp(System.currentTimeMillis());
-		regTransaction = new RegistrationTransaction();
-		regTransaction.setId(String.valueOf(UUID.randomUUID().getMostSignificantBits()));
-		regTransaction.setRegId("11111");
-		regTransaction.setTrnTypeCode(RegistrationClientStatusCode.CREATED.getCode());
-		regTransaction.setStatusCode(RegistrationClientStatusCode.CREATED.getCode());
-		regTransaction.setCrBy("Officer");
-		regTransaction.setCrDtime(time);
-
 		UserContext userContext = Mockito.mock(SessionContext.UserContext.class);
 		List<String> roles = Arrays.asList("SUPERADMIN", "SUPERVISOR");
 		RegistrationCenterDetailDTO center = new RegistrationCenterDetailDTO();
@@ -132,9 +115,6 @@ public class RegistrationDAOTest {
 	public void updateRegStatusTest() {
 		Registration updatedPacket = new Registration();
 		updatedPacket.setUploadCount((short)0);
-		List<RegistrationTransaction> registrationTransactions = new ArrayList<>();
-		registrationTransactions.add(new RegistrationTransaction());
-		updatedPacket.setRegistrationTransaction(registrationTransactions);
 		Mockito.when(registrationRepository.getOne(Mockito.any())).thenReturn(updatedPacket);
 		Mockito.when(registrationRepository.update(updatedPacket)).thenReturn(updatedPacket);
 		
@@ -152,7 +132,6 @@ public class RegistrationDAOTest {
 		regobjectrequest.setUpdBy("mosip");
 		regobjectrequest.setApproverRoleCode("SUPERADMIN");
 		regobjectrequest.setAckFilename("file1");
-		regobjectrequest.setRegistrationTransaction(new ArrayList<>());
 
 		when(registrationRepository.getOne(Mockito.anyString())).thenReturn(regobjectrequest);
 		Registration regobj1 = registrationRepository.getOne("123456");
@@ -167,17 +146,6 @@ public class RegistrationDAOTest {
 		registration.setApproverUsrId("Mosip1214");
 		registration.setStatusComment("");
 		registration.setUpdBy("Mosip1214");
-
-		List<RegistrationTransaction> registrationTransaction = new ArrayList<>();
-		RegistrationTransaction registrationTxn = new RegistrationTransaction();
-		registrationTxn.setTrnTypeCode(RegistrationTransactionType.UPDATED.getCode());
-		registrationTxn.setLangCode("ENG");
-		registrationTxn.setStatusCode(RegistrationClientStatusCode.APPROVED.getCode());
-		registrationTxn.setStatusComment("");
-		registrationTxn.setCrBy("Mosip1214");
-		registrationTxn.setCrDtime(timestamp);
-		registrationTransaction.add(registrationTxn);
-		registration.getRegistrationTransaction();
 
 		when(registrationRepository.update(regobj1)).thenReturn(registration);
 		Registration regobj = registrationDAOImpl.updateRegistration("123456", "", "A");

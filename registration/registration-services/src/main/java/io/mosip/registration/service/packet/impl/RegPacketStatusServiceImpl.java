@@ -7,15 +7,12 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.exception.*;
-import lombok.NonNull;
-import lombok.SneakyThrows;
+import javax.annotation.PostConstruct;
+
 import org.assertj.core.util.Files;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -34,7 +31,7 @@ import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.constants.RegistrationTransactionType;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.RegPacketStatusDAO;
 import io.mosip.registration.dao.RegistrationDAO;
@@ -43,12 +40,14 @@ import io.mosip.registration.dto.RegistrationIdDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.entity.Registration;
-import io.mosip.registration.entity.RegistrationTransaction;
+import io.mosip.registration.exception.ConnectionException;
+import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.packet.RegPacketStatusService;
 import io.mosip.registration.service.sync.PacketSynchService;
-
-import javax.annotation.PostConstruct;
+import lombok.NonNull;
+import lombok.SneakyThrows;
 
 /**
  * The implementation class of {@link RegPacketStatusService}to update status of
@@ -215,8 +214,7 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 						registrationStatus.get(RegistrationConstants.PACKET_STATUS_READER_STATUS_CODE));
 				registration.setServerStatusTimestamp(new Timestamp(System.currentTimeMillis()));
 
-				updateRegistration(registration,
-						registrationStatus.get(RegistrationConstants.PACKET_STATUS_READER_STATUS_CODE));
+				updateRegistration(registration);
 			}
 
 			LOGGER.info("packets status sync from server has been ended");
@@ -318,34 +316,13 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 	}
 
 
-	private Registration updateRegistration(final Registration registration, final String serverStatus) {
-
+	private Registration updateRegistration(final Registration registration) {
 		LOGGER.info("Delete Registration Packet started");
-
-		/* Get Registration Transaction List for each transaction */
-		List<RegistrationTransaction> transactionList = registration.getRegistrationTransaction();
-		if (isNull(transactionList)) {
-			transactionList = new LinkedList<>();
-		}
-		/* Prepare Registration Transaction */
-		RegistrationTransaction registrationTxn = new RegistrationTransaction();
-
-		registrationTxn.setRegId(registration.getId());
-		registrationTxn.setTrnTypeCode(RegistrationTransactionType.CREATED.getCode());
-		registrationTxn.setLangCode("ENG");
-		registrationTxn.setCrBy(createdByUser());
-		registrationTxn.setCrDtime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
-
-		registrationTxn.setStatusCode(serverStatus);
-
-		transactionList.add(registrationTxn);
-		registration.setRegistrationTransaction(transactionList);
 
 		Registration updatedRegistration = regPacketStatusDAO.update(registration);
 		LOGGER.info("Delete Registration Packet ended");
 
 		return updatedRegistration;
-
 	}
 
 	/*
