@@ -428,7 +428,7 @@ public class VirtualKeyboard {
 			        });
 					
 					String key;
-					if (capsLock || keyEvent != null ? keyEvent.getCode().getName().equals("Shift") : false) {
+					if (capsLock || (keyEvent != null ? keyEvent.getCode() != null && keyEvent.getCode().getName() != null && keyEvent.getCode().getName().equals("Shift") : false)) {
 						try {
 							key = keyboard.getString("shift_" + e.getCode().getName().replaceAll("\\s", ""));
 						} catch (MissingResourceException exception) {
