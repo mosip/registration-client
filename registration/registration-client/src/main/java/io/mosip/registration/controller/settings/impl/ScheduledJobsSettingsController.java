@@ -26,10 +26,10 @@ import io.mosip.registration.service.sync.impl.MasterSyncServiceImpl;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
@@ -37,7 +37,6 @@ import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -228,9 +227,7 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 			mainGridPane.add(subGridPane, 0, 0);
 			
-			if (applicationContext.isPrimaryLanguageRightToLeft()) {
-				mainGridPane.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
-			}
+			changeNodeOrientation(mainGridPane);
 
 			gridPane.add(mainGridPane, columnIndex, rowIndex);
 			rowIndex = (columnIndex == 2) ? (rowIndex + 1) : rowIndex;

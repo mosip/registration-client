@@ -34,7 +34,7 @@
 		</HBox>
 	</top>
 	<right>
-		<AnchorPane layoutX="10" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="550.0" prefWidth="489.0">
+		<AnchorPane fx:id="contentPane" layoutX="10" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="550.0" prefWidth="489.0">
 			<children>
             <AnchorPane fx:id="userIdPane" layoutX="37.0" layoutY="188.0" styleClass="userNameAnchorPaneStyle" visible="true">
                <children>
