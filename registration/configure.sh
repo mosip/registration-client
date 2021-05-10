@@ -72,9 +72,12 @@ ls -ltr lib | grep bc
 
 #Creating Regclient testing framework
 mkdir -p /registration-test-utility
+mkdir -p /registration-test-utility/lib
 cp /registration-test/target/registration-test-*-dependencies.jar /registration-test-utility/registration-test.jar
 cp /registration-test/resources/*  /registration-test-utility/
 cp -r /registration-libs/resources/jre /registration-test-utility/
+cp -r /registration-client/target/lib/morena* /registration-test-utility/lib
+cp -r /sdkjars/*.jar /registration-test-utility/lib
 cp /registration-client/target/MANIFEST.MF /registration-test-utility/
 /usr/bin/zip -r /registration-test-utility.zip /registration-test-utility
 
