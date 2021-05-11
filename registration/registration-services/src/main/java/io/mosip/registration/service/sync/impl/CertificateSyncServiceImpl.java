@@ -121,11 +121,15 @@ public class CertificateSyncServiceImpl extends BaseService implements Certifica
 
             for(CaCertificateDto cert : certs) {
                 if(trustedDomains.contains(cert.getPartnerDomain().toUpperCase())) {
-                    CACertificateRequestDto caCertificateRequestDto = new CACertificateRequestDto();
-                    caCertificateRequestDto.setCertificateData(cert.getCertData());
-                    caCertificateRequestDto.setPartnerDomain(cert.getPartnerDomain());
-                    CACertificateResponseDto caCertificateResponseDto = partnerCertificateManagerService.uploadCACertificate(caCertificateRequestDto);
-                    LOGGER.debug(caCertificateResponseDto.getStatus());
+                    try {
+                        CACertificateRequestDto caCertificateRequestDto = new CACertificateRequestDto();
+                        caCertificateRequestDto.setCertificateData(cert.getCertData());
+                        caCertificateRequestDto.setPartnerDomain(cert.getPartnerDomain());
+                        CACertificateResponseDto caCertificateResponseDto = partnerCertificateManagerService.uploadCACertificate(caCertificateRequestDto);
+                        LOGGER.debug(caCertificateResponseDto.getStatus());
+                    } catch (Exception exception) {
+                        LOGGER.error("Failed to save CA cert : " + cert.getCertId(), exception);
+                    }
                 }
             }
             return saveLastSuccessfulSyncTime(responseDTO, triggerPoint,
