@@ -27,6 +27,7 @@ import io.mosip.registration.util.scan.DocumentScanFacade;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -56,7 +57,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 	private Label headerLabel;
 
 	@FXML
-	private HBox contentHBox;
+	private GridPane subContentGridPane;
 
 	@FXML
 	private ScrollPane contentPane;
@@ -264,6 +265,9 @@ public class DeviceSettingsController extends BaseController implements Settings
 			if (!scannerDevices.isEmpty()) {
 				++columnsCount;
 			}
+			if (applicationContext.isPrimaryLanguageRightToLeft()) {
+				subContentGridPane.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+			}
 			GridPane gridPane = createGridPane(columnsCount);
 			addContentToGridPane(gridPane, biometricDevices, scannerDevices);
 			contentPane.setContent(gridPane);
@@ -312,12 +316,18 @@ public class DeviceSettingsController extends BaseController implements Settings
 		int columnIndex = 0;
 		for (Entry<String, List<MdmBioDevice>> entry : biometricDevices.entrySet()) {
 			GridPane mainGridPane = createDevicePane("biometricDevice", entry.getKey(), entry.getValue(), null);
+			if (applicationContext.isPrimaryLanguageRightToLeft()) {
+				mainGridPane.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+			}
 			gridPane.add(mainGridPane, columnIndex, rowIndex);
 			rowIndex = (columnIndex == 1) ? (rowIndex + 1) : rowIndex;
 			columnIndex = (columnIndex == 1) ? 0 : (columnIndex + 1);
 		}
 		if (!scannerDevices.isEmpty()) {
 			GridPane mainGridPane = createDevicePane("scannerDevice", "scanner", null, scannerDevices);
+			if (applicationContext.isPrimaryLanguageRightToLeft()) {
+				mainGridPane.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+			}
 			gridPane.add(mainGridPane, columnIndex, rowIndex);
 			rowIndex = (columnIndex == 1) ? (rowIndex + 1) : rowIndex;
 			columnIndex = (columnIndex == 1) ? 0 : (columnIndex + 1);

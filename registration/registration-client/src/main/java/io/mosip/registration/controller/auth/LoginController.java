@@ -66,6 +66,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.NodeOrientation;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -148,6 +149,9 @@ public class LoginController extends BaseController implements Initializable {
 
 	@FXML
 	private Hyperlink forgotPword;
+	
+	@FXML
+	private AnchorPane contentPane;
 
 	@Autowired
 	private LoginService loginService;
@@ -345,6 +349,8 @@ public class LoginController extends BaseController implements Initializable {
 				jobConfigurationService.startScheduler();
 
 			}
+			
+			changeNodeOrientation(contentPane);
 
 		} catch (IOException | RuntimeException | PreConditionCheckException exception) {
 			LOGGER.error("Failed to load screen", exception);

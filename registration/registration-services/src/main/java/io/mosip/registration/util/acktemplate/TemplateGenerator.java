@@ -577,7 +577,7 @@ public class TemplateGenerator extends BaseService {
 			templateValues.put(RegistrationConstants.PENDING_UPLOAD_COUNT, packetSynchService.fetchPacketsToBeSynched().size());
 
 			Map<String, Map<String, Object>> userDetails = setUserDetails();
-			Map<String, List<Map<String, Object>>> activities = setActivities(applicationStartTime);
+			Map<String, List<Map<String, Object>>> activities = setActivities(applicationStartTime, applicationLanguageProperties);
 
 			templateValues.put(RegistrationConstants.USER_DETAILS_MAP, userDetails);
 			templateValues.put(RegistrationConstants.ACTIVITIES_MAP, activities);
@@ -645,7 +645,7 @@ public class TemplateGenerator extends BaseService {
 		return userDetails;
 	}
 
-	private Map<String, List<Map<String, Object>>> setActivities(String applicationStartTime) throws RegBaseCheckedException {
+	private Map<String, List<Map<String, Object>>> setActivities(String applicationStartTime, ResourceBundle applicationLanguageProperties) throws RegBaseCheckedException {
 		Map<String, List<Map<String, Object>>> activities = new LinkedHashMap<>();
 		List<SyncJobDef> syncJobs = masterSyncServiceImpl.getSyncJobs();
 		for (SyncJobDef syncJob : syncJobs) {
@@ -654,21 +654,21 @@ public class TemplateGenerator extends BaseService {
 				Map<String, Object> job = new LinkedHashMap<>();
 				job.put(RegistrationConstants.DASHBOARD_ACTIVITY_NAME, syncJob.getName());
 				job.put(RegistrationConstants.DASHBOARD_ACTIVITY_VALUE, getLocalZoneTime(syncControl.getLastSyncDtimes().toString()));
-				activities = addToJobList(activities, syncJob.getJobType(), job);
+				activities = addToJobList(activities, syncJob.getJobType(), job, applicationLanguageProperties);
 			}
 		}
 		Map<String, Object> clientVersion = new LinkedHashMap<>();
-		clientVersion.put(RegistrationConstants.DASHBOARD_ACTIVITY_NAME, RegistrationConstants.DASHBOARD_REG_CLIENT);
+		clientVersion.put(RegistrationConstants.DASHBOARD_ACTIVITY_NAME, applicationLanguageProperties.getString("regclient"));
 		clientVersion.put(RegistrationConstants.DASHBOARD_ACTIVITY_VALUE, softwareUpdateHandler.getCurrentVersion());
 		Map<String, Object> schemaVersion = new LinkedHashMap<>();
-		schemaVersion.put(RegistrationConstants.DASHBOARD_ACTIVITY_NAME, RegistrationConstants.DASHBOARD_ID_SCHEMA);
+		schemaVersion.put(RegistrationConstants.DASHBOARD_ACTIVITY_NAME, applicationLanguageProperties.getString("idschema"));
 		schemaVersion.put(RegistrationConstants.DASHBOARD_ACTIVITY_VALUE, String.valueOf(identitySchemaServiceImpl.getLatestEffectiveSchemaVersion()));
 		List<Map<String, Object>> versionsList = new ArrayList<>();
 		versionsList.add(clientVersion);
 		versionsList.add(schemaVersion);
-		activities.put(RegistrationConstants.DASHBOARD_VERSION, versionsList);
+		activities.put(applicationLanguageProperties.getString("version"), versionsList);
 		Map<String, Object> lastSWUpdate = new LinkedHashMap<>();
-		lastSWUpdate.put(RegistrationConstants.DASHBOARD_ACTIVITY_NAME, RegistrationConstants.DASHBOARD_LAST_SW_UPDATE);
+		lastSWUpdate.put(RegistrationConstants.DASHBOARD_ACTIVITY_NAME, RegistrationConstants.BOLD_TAG + applicationLanguageProperties.getString("lastSWUpdate") + RegistrationConstants.BOLD_END_TAG);
 		if (ApplicationContext.map().containsKey(RegistrationConstants.LAST_SOFTWARE_UPDATE)) {
 			lastSWUpdate.put(RegistrationConstants.DASHBOARD_ACTIVITY_VALUE, getLocalZoneTime(ApplicationContext
 					.getStringValueFromApplicationMap(RegistrationConstants.LAST_SOFTWARE_UPDATE)));
@@ -676,7 +676,7 @@ public class TemplateGenerator extends BaseService {
 			lastSWUpdate.put(RegistrationConstants.DASHBOARD_ACTIVITY_VALUE, getLocalZoneTime(applicationStartTime));
 		}
 		Map<String, Object> appInstalledTime = new LinkedHashMap<>();
-		appInstalledTime.put(RegistrationConstants.DASHBOARD_ACTIVITY_NAME, RegistrationConstants.APP_INSTALLED_TIME);
+		appInstalledTime.put(RegistrationConstants.DASHBOARD_ACTIVITY_NAME, applicationLanguageProperties.getString("installedTime"));
 		if (ApplicationContext.map().containsKey(RegistrationConstants.REGCLIENT_INSTALLED_TIME)) {
 			appInstalledTime.put(RegistrationConstants.DASHBOARD_ACTIVITY_VALUE, getLocalZoneTime(ApplicationContext
 					.getStringValueFromApplicationMap(RegistrationConstants.REGCLIENT_INSTALLED_TIME)));
@@ -690,7 +690,10 @@ public class TemplateGenerator extends BaseService {
 		return activities;
 	}
 
-	private Map<String, List<Map<String, Object>>> addToJobList(Map<String, List<Map<String, Object>>> activities, String activityName, Map<String, Object> job) {
+	private Map<String, List<Map<String, Object>>> addToJobList(Map<String, List<Map<String, Object>>> activities, String activityName, Map<String, Object> job, ResourceBundle applicationLanguageProperties) {
+		if (activityName == null) {
+			activityName = applicationLanguageProperties.getString("syncactivities");
+		}
 		if (activities.containsKey(activityName)) {
 			activities.get(activityName).add(job);
 		} else {

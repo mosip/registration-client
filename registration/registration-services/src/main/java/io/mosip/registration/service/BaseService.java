@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import io.mosip.registration.service.sync.PolicySyncService;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -81,6 +80,7 @@ import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.operator.UserDetailService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
+import io.mosip.registration.service.sync.PolicySyncService;
 import io.mosip.registration.service.template.impl.NotificationServiceImpl;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
@@ -309,8 +309,7 @@ public class BaseService {
 	 */
 	public String getStationId() {
 		String machineName = RegistrationSystemPropertiesChecker.getMachineId();
-		MachineMaster machineMaster = machineMasterRepository.findByNameIgnoreCaseAndRegMachineSpecIdLangCode(machineName.toLowerCase(),
-				ApplicationContext.applicationLanguage());
+		MachineMaster machineMaster = machineMasterRepository.findByNameIgnoreCase(machineName.toLowerCase());
 
 		if(machineMaster != null && machineMaster.getRegMachineSpecId().getId() != null && machineMaster.getIsActive())
 			return machineMaster.getRegMachineSpecId().getId();

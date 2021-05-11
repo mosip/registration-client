@@ -89,7 +89,9 @@ import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.NodeOrientation;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -1959,11 +1961,10 @@ public class BaseController {
 	}
 
 	protected List<GenericDto> getConfiguredLanguages() {
-		ResourceBundle resourceBundle = ResourceBundle.getBundle(RegistrationConstants.LABELS, Locale.getDefault());
 		List<GenericDto> languages = new ArrayList<>();
 		for(String langCode : getConfiguredLangCodes()) {
 			languages.add(new GenericDto(langCode,
-					resourceBundle.containsKey(langCode) ? resourceBundle.getString(langCode) : langCode,
+					applicationContext.getBundle(langCode, RegistrationConstants.LABELS).getString("language"),
 					langCode));
 		}
 		return languages;
@@ -2046,4 +2047,9 @@ public class BaseController {
 		return configFolder.concat(File.separator).concat(imageName);
 	}
 	
+	public void changeNodeOrientation(Node node) {
+		if (node != null && applicationContext.isPrimaryLanguageRightToLeft()) {
+			node.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+		}
+	}
 }

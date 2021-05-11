@@ -1780,11 +1780,8 @@ public class RegistrationConstants {
 	public static final String DASHBOARD_USER_STATUS = "userStatus";
 	public static final String DASHBOARD_ACTIVITY_NAME = "activityName";
 	public static final String DASHBOARD_ACTIVITY_VALUE = "activityValue";
-	public static final String DASHBOARD_REG_CLIENT = "Registration Client";
-	public static final String DASHBOARD_ID_SCHEMA = "ID Schema";
-	public static final String APP_INSTALLED_TIME = "Application Installed Time";
-	public static final String DASHBOARD_LAST_SW_UPDATE = "<b>Last S/W Update</b>";
-	public static final String DASHBOARD_VERSION = "Version";
+	public static final String BOLD_TAG = "<b>";
+	public static final String BOLD_END_TAG = "</b>";
 	public static final String DASHBOARD_UPDATES = "Updates";
 
 	public static String LOCATION = "Location";

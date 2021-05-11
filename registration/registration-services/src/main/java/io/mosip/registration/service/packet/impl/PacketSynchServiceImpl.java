@@ -12,30 +12,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import com.google.common.annotations.VisibleForTesting;
-import io.mosip.kernel.core.util.*;
-import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.exception.*;
-import lombok.NonNull;
-import lombok.SneakyThrows;
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
-import org.springframework.retry.backoff.BackOffContext;
-import org.springframework.retry.backoff.BackOffInterruptedException;
-import org.springframework.retry.backoff.BackOffPolicy;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.retry.support.RetryTemplateBuilder;
 import org.springframework.stereotype.Service;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import io.mosip.commons.packet.spi.IPacketCryptoService;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.CryptoUtil;
+import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.kernel.core.util.FileUtils;
+import io.mosip.kernel.core.util.HMACUtils2;
+import io.mosip.kernel.core.util.JsonUtils;
 import io.mosip.kernel.core.util.exception.JsonMappingException;
 import io.mosip.kernel.core.util.exception.JsonParseException;
 import io.mosip.kernel.core.util.exception.JsonProcessingException;
@@ -43,6 +41,7 @@ import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dao.RegistrationDAO;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.PacketStatusDTO;
@@ -52,10 +51,13 @@ import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.SyncRegistrationDTO;
 import io.mosip.registration.entity.Registration;
+import io.mosip.registration.exception.ConnectionException;
+import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.sync.PacketSynchService;
-
-import javax.annotation.PostConstruct;
+import lombok.NonNull;
+import lombok.SneakyThrows;
 
 /**
  * This class invokes the external MOSIP service 'Packet Sync' to sync the
@@ -183,7 +185,6 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 			LOGGER.error("Exception in RID sync", exception);
 			setErrorResponse(responseDTO, exception.getMessage(), null);
 		}
-		setErrorResponse(responseDTO, RegistrationConstants.ERROR, null);
 		return responseDTO;
 	}
 

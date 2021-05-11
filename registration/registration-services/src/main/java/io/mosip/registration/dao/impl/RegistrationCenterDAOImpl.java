@@ -3,24 +3,23 @@ package io.mosip.registration.dao.impl;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import java.util.Objects;
 import java.util.Optional;
 
-import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.entity.CenterMachine;
-import io.mosip.registration.entity.MachineMaster;
-import io.mosip.registration.repositories.CenterMachineRepository;
-import io.mosip.registration.repositories.MachineMasterRepository;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
+import io.mosip.registration.entity.CenterMachine;
+import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.RegistrationCenter;
+import io.mosip.registration.repositories.CenterMachineRepository;
+import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.repositories.RegistrationCenterRepository;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 
 /**
  * The implementation class of {@link RegistrationCenterDAO}.
@@ -92,8 +91,7 @@ public class RegistrationCenterDAOImpl implements RegistrationCenterDAO {
 
 		if(machineId == null) {
 			String machineName = RegistrationSystemPropertiesChecker.getMachineId();
-			MachineMaster machineMaster = machineMasterRepository.findByNameIgnoreCaseAndRegMachineSpecIdLangCode(machineName.toLowerCase(),
-					ApplicationContext.applicationLanguage());
+			MachineMaster machineMaster = machineMasterRepository.findByNameIgnoreCase(machineName.toLowerCase());
 
 			if (machineMaster != null && machineMaster.getRegMachineSpecId().getId() != null) {
 				machineId = machineMaster.getRegMachineSpecId().getId();

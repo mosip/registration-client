@@ -4,15 +4,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.dao.RegistrationCenterDAO;
-import io.mosip.registration.entity.CenterMachine;
-import io.mosip.registration.entity.MachineMaster;
-import io.mosip.registration.entity.id.CenterMachineId;
-import io.mosip.registration.entity.id.RegMachineSpecId;
-import io.mosip.registration.repositories.CenterMachineRepository;
-import io.mosip.registration.repositories.MachineMasterRepository;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -28,15 +19,19 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import io.mosip.registration.constants.DeviceTypes;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.MachineMappingDAO;
+import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dao.UserOnboardDAO;
-import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.entity.CenterMachine;
+import io.mosip.registration.entity.MachineMaster;
+import io.mosip.registration.entity.id.CenterMachineId;
+import io.mosip.registration.entity.id.RegMachineSpecId;
+import io.mosip.registration.repositories.CenterMachineRepository;
+import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.service.BaseService;
-
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
@@ -98,8 +93,7 @@ public class BaseServiceTest {
 		regMachineSpecId.setLangCode("eng");
 		machine.setRegMachineSpecId(regMachineSpecId);
 		machine.setIsActive(true);
-		Mockito.when(machineMasterRepository.findByNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(),
-				Mockito.anyString())).thenReturn(machine);
+		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
 
 		Assert.assertSame("11002", baseService.getStationId());
 	}
@@ -112,8 +106,7 @@ public class BaseServiceTest {
 		regMachineSpecId.setLangCode("eng");
 		machine.setRegMachineSpecId(regMachineSpecId);
 		machine.setIsActive(false);
-		Mockito.when(machineMasterRepository.findByNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(),
-				Mockito.anyString())).thenReturn(machine);
+		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
 
 		Assert.assertSame(null, baseService.getStationId());
 	}
