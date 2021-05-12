@@ -466,6 +466,8 @@
                   <configuration>	
                      <doclint>none</doclint>	
                   </configuration>	
+                        </plugin>
+
 
                        <plugin>	
                   <groupId>org.sonatype.plugins</groupId>	
@@ -479,7 +481,6 @@
                   </configuration>	
                 	</plugin>
 
-			</plugin>			
 			<!-- <plugin>
 					<groupId>org.sonarsource.scanner.maven</groupId>
 					<artifactId>sonar-maven-plugin</artifactId>
