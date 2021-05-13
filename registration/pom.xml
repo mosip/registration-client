@@ -71,14 +71,15 @@
 
 	<properties>
 		<main.basedir>${project.basedir}</main.basedir>
-		<maven.jacoco.version>0.8.2</maven.jacoco.version>
+		<maven.jacoco.version>0.8.5</maven.jacoco.version>
 		<javafx.version>2.2</javafx.version>
-		<maven.sonar.version>3.2</maven.sonar.version>
+		<maven.sonar.plugin.version>3.7.0.1746</maven.sonar.plugin.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>11</maven.compiler.source>
 		<maven.compiler.target>11</maven.compiler.target>
 		<maven.compiler.version>3.8.0</maven.compiler.version>
 		<maven.javadoc.version>3.2.0</maven.javadoc.version>
+		<maven.surefire.plugin.version>2.22.0</maven.surefire.plugin.version>
 		<doclint>none</doclint>
 		<!-- Test & Logging -->
 		<junit.version>4.12</junit.version>
@@ -141,7 +142,7 @@
         <jaxb.api.version>2.3.0</jaxb.api.version>
 		<openjfx.version>11.0.2</openjfx.version>
 		
-		<sonar.exclusions>
+		<sonar.coverage.exclusions>
 			src/main/java/io/mosip/registration/util/**/*,
 			src/main/java/io/mosip/registration/repositories/**/*,
 			src/main/java/io/mosip/registration/context/**/*,
@@ -160,7 +161,7 @@
 			src/main/java/io/mosip/registration/mdm/dto/**/*,
 			src/main/java/io/mosip/registration/mdm/constants/**/*,
 			src/main/java/io/mosip/registration/mdm/util/**/*,
-		</sonar.exclusions>
+		</sonar.coverage.exclusions>
 	</properties>
 
 	<modules>
@@ -441,6 +442,37 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${maven.surefire.plugin.version}</version>
+				<configuration>
+					<skipTests>${skipTests}</skipTests>
+					<skip>false</skip>
+					<argLine>
+						${argLine} --add-opens java.xml/jdk.xml.internal=ALL-UNNAMED --illegal-access=permit
+					</argLine>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${maven.jacoco.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>${maven.compiler.version}</version>
 				<configuration>
@@ -479,48 +511,8 @@
                         <nexusUrl>https://oss.sonatype.org/</nexusUrl>	
                         <autoReleaseAfterClose>false</autoReleaseAfterClose>	
                   </configuration>	
-                	</plugin>
-
-			<!-- <plugin>
-					<groupId>org.sonarsource.scanner.maven</groupId>
-					<artifactId>sonar-maven-plugin</artifactId>
-					<version>${maven.sonar.version}</version>
-					   <executions>
-							<execution>
-								<phase>verify</phase>
-								<goals>
-									<goal>sonar</goal>
-								</goals>
-							</execution>
-					   </executions>
-				</plugin> -->
-
+             	</plugin>
 			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>${maven.jacoco.version}</version>
-<!-- 				<configuration>
-					<excludes>
-						<exclude>**/identy_face_sdk.jar</exclude>
-						<exclude>identy_face_sdk.jar</exclude>
-					</excludes>
-				</configuration>
- -->				<executions>
-					<execution>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>report</id>
-						<phase>prepare-package</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		 <plugin>	
                   	<groupId>org.apache.maven.plugins</groupId>	
                   	<artifactId>maven-gpg-plugin</artifactId>	
                  	 <version>1.5</version>	
@@ -582,32 +574,33 @@
 	</build>
 	<profiles>
 		<profile>
-			<id>DEV</id>
+			<id>sonar</id>
 			<properties>
-				<sonar.host.url>http://13.76.43.109:9000</sonar.host.url>
-				<sonar.login>d9be047d5a47b63c4e9d5a5d0dc2511fa46ea624</sonar.login>
-				<sonar.projectName>Registration-DEV</sonar.projectName>
-				<sonar.projectVersion>master</sonar.projectVersion>
-				<sonar.test.exclusions>**/test/**/*.*</sonar.test.exclusions>
-			       <!-- <sonar.exclusions>**/ai/**/*.*,**/jdbc/**/*.*,**/mpt/**/*.*,**/jcr/**/*.*,**/JDBC*</sonar.exclusions> -->
-				<sonar.jacoco.reportPaths>
-					target/jacoco.exec
-				</sonar.jacoco.reportPaths>
+				<sonar.sources>.</sonar.sources>
+				<sonar.inclusions>src/main/java/**,src/main/resources/**</sonar.inclusions>
+				<sonar.exclusions>${sonar.coverage.exclusions}</sonar.exclusions>
+				<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 			</properties>
-		</profile>
-		<profile>
-			<id>LOCAL</id>
-			<properties>
-				<sonar.host.url>http://104.215.158.154:9000</sonar.host.url>
-				<sonar.login>810793386f5e1c82252f900fe5c4cb99653eefd6</sonar.login>
-				<sonar.projectName>Registration</sonar.projectName>
-				<sonar.projectVersion>master</sonar.projectVersion>
-				<sonar.test.exclusions>**/test/**/*.*</sonar.test.exclusions>
-				<!-- <sonar.exclusions>**/ai/**/*.*,**/jdbc/**/*.*,**/mpt/**/*.*,**/jcr/**/*.*,**/JDBC*</sonar.exclusions> -->
-				<sonar.jacoco.reportPaths>
-					target/jacoco.exec
-				</sonar.jacoco.reportPaths>
-			</properties>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.sonarsource.scanner.maven</groupId>
+						<artifactId>sonar-maven-plugin</artifactId>
+						<version>${maven.sonar.plugin.version}</version>
+						<executions>
+							<execution>
+								<phase>verify</phase>
+								<goals>
+									<goal>sonar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 	</profiles>
 </project>
