@@ -1937,10 +1937,10 @@ public class RegistrationConstants {
 	public static final String SUBMIT_LABEL = "submit";
 	public static final String SYNC_JOB_BUTTON_STYLE = "syncJobButton";
 	public static final String UPDATE_LABEL = "update";
-	public static final String FINGERPRINT_DEVICE_IMG = "FingerprintDevice.png";
-	public static final String IRIS_DEVICE_IMG = "IrisDevice.png";
-	public static final String FACE_DEVICE_IMG = "FaceDevice.png";
-	public static final String DOC_SCANNER_DEVICE = "DocScannerDevice.png";
+	public static final String FINGERPRINT_DEVICE_IMG = "FingerprintDevice.PNG";
+	public static final String IRIS_DEVICE_IMG = "IrisDevice.PNG";
+	public static final String FACE_DEVICE_IMG = "FaceDevice.PNG";
+	public static final String DOC_SCANNER_DEVICE = "DocScannerDevice.PNG";
 	public static final String PORT_RANGE_REGEX = "^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$";
 	public static final String FINGERPRINT_DEVICE_KEY = "fingerprint_slab";
 	public static final String IRIS_DEVICE_KEY = "iris_double";

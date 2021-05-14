@@ -366,6 +366,12 @@
 			<version>${spring.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>io.tus.java.client</groupId>
+			<artifactId>tus-java-client</artifactId>
+			<version>0.4.3</version>
+		</dependency>
+
 	</dependencies>
 	<!--<repositories> <repository> <id>local-maven-repo</id> <url>file:///${basedir}/lib</url> 
 		</repository> </repositories> -->

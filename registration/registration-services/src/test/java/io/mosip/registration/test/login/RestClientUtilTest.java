@@ -25,6 +25,7 @@ import io.mosip.registration.dto.OtpGeneratorResponseDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.util.restclient.RequestHTTPDTO;
 import io.mosip.registration.util.restclient.RestClientUtil;
+import org.springframework.web.client.RestClientException;
 
 public class RestClientUtilTest {
 
@@ -38,7 +39,7 @@ public class RestClientUtilTest {
 	RequestHTTPDTO requestHTTPDTO;
 
 
-	@Test(expected= ResourceAccessException.class)
+	@Test(expected= RestClientException.class)
 	public void invokeTest() throws URISyntaxException, HttpClientErrorException, HttpServerErrorException,
 			ResourceAccessException, SocketTimeoutException, RegBaseCheckedException {
 		OtpGeneratorResponseDTO generatorResponseDto = new OtpGeneratorResponseDTO();
@@ -59,7 +60,7 @@ public class RestClientUtilTest {
 	}
 
 
-	@Test(expected= ResourceAccessException.class)
+	@Test(expected= RestClientException.class)
 	public void invokeHeadersTest() throws RegBaseCheckedException, ConnectionException, URISyntaxException {
 		OtpGeneratorResponseDTO generatorResponseDto = new OtpGeneratorResponseDTO();
 		generatorResponseDto.setOtp("099977");

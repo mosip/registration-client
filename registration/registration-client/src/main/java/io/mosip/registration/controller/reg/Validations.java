@@ -575,18 +575,16 @@ public class Validations extends BaseController {
 		UiSchemaDTO uiSchemaDTO = GenericController.getFxControlMap().get(fieldId).getUiSchemaDTO();
 		if (uiSchemaDTO != null && uiSchemaDTO.getValidators() != null) {
 
-			if (langCode != null) {
-				Optional<Validator> validator = uiSchemaDTO.getValidators().stream()
-						.filter(v -> v.getType().equalsIgnoreCase(regexType)
-								&& (v.getLangCode() != null ? langCode.equalsIgnoreCase(v.getLangCode()) : true))
-						.findFirst();
-				if (validator.isPresent()) {
-					return validator.get().getValidator();
-				}
+			Optional<Validator> validator = (langCode != null) ?uiSchemaDTO.getValidators().stream()
+					.filter(v -> v.getType().equalsIgnoreCase(regexType)
+							&& (v.getLangCode() != null ? langCode.equalsIgnoreCase(v.getLangCode()) : true))
+					.findFirst() :
+					uiSchemaDTO.getValidators().stream()
+							.filter(v -> v.getType().equalsIgnoreCase(regexType)
+									&& v.getLangCode() == null).findFirst() ;
+			if (validator.isPresent()) {
+				return validator.get().getValidator();
 			}
-
-			return uiSchemaDTO.getValidators().get(0).getValidator();
-
 		}
 		return null;
 	}

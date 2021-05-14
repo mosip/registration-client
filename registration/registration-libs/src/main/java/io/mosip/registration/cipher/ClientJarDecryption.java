@@ -98,6 +98,7 @@ public class ClientJarDecryption extends Application {
 
 	private Label downloadLabel;
 	private String MOSIP_SCREEN_LOADED = "Creating filter chain";
+	private String MOSIP_SCREEN_LOADED1 = "Login screen loaded";
 
 	private String EXCEPTION_ENCOUNTERED = "Exception encountered during context initialization";
 
@@ -362,7 +363,7 @@ public class ClientJarDecryption extends Application {
 				LOGGER.info(LoggerConstants.CLIENT_JAR_DECRYPTION, LoggerConstants.APPLICATION_NAME,
 						LoggerConstants.APPLICATION_ID, info);
 
-				if (info.contains(MOSIP_SCREEN_LOADED)) {
+				if (info.contains(MOSIP_SCREEN_LOADED) || info.contains(MOSIP_SCREEN_LOADED1)) {
 					closeStage();
 					break;
 				}

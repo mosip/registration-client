@@ -213,4 +213,6 @@ public interface RegistrationDAO {
 
 	List<Registration> getRegistrationByStatus(List<String> packetStatus, int limit);
 
+	List<Object[]> getStatusBasedCount();
+
 }
