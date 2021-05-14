@@ -61,33 +61,12 @@ import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderIm
 @EnableRetry
 public class AppConfig {
 
-	private static final RollingFileAppender MOSIP_ROLLING_APPENDER = new RollingFileAppender();
-
 	@Autowired
 	@Qualifier("dataSource")
 	private DataSource datasource;
 
-	/*
-	 * @Value("${mosip.registration.face.provider}") private String faceSdk;
-	 * 
-	 * @Value("${mosip.registration.iris.provider}") private String irisSdk;
-	 * 
-	 * @Value("${mosip.registration.finger.provider}") private String fingerSdk;
-	 */
-	static {
-
-		MOSIP_ROLLING_APPENDER.setAppend(true);
-		MOSIP_ROLLING_APPENDER.setAppenderName("org.apache.log4j.RollingFileAppender");
-		MOSIP_ROLLING_APPENDER.setFileName("logs/registration.log");
-		MOSIP_ROLLING_APPENDER.setFileNamePattern("logs/registration-%d{yyyy-MM-dd-HH}-%i.log");
-		MOSIP_ROLLING_APPENDER.setMaxFileSize("5MB");
-		MOSIP_ROLLING_APPENDER.setTotalCap("50MB");
-		MOSIP_ROLLING_APPENDER.setMaxHistory(10);
-		MOSIP_ROLLING_APPENDER.setImmediateFlush(true);
-	}
-
 	public static Logger getLogger(Class<?> className) {
-		return Logfactory.getDefaultRollingFileLogger(MOSIP_ROLLING_APPENDER, className);
+		return Logfactory.getSlf4jLogger(className);
 	}
 
 	@Bean
@@ -99,13 +78,6 @@ public class AppConfig {
 	public ObjectMapper getObjectMapper() {
 		return new ObjectMapper();
 	}
-
-//	@Bean
-//	public TemplateManagerBuilder getTemplateManagerBuilder() {
-//		return new TemplateManagerBuilderImpl();
-//	}
-
-
 
 	@Bean
 	public CacheManager cacheManager() {

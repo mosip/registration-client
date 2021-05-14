@@ -175,7 +175,7 @@ public class DocumentScannerSaneServiceImpl extends DocumentScannerService {
 			SaneSession session = SaneSession.withRemoteSane(
 					InetAddress.getByName(
 							(String) ApplicationContext.map().get(RegistrationConstants.DOCUMENT_SCANNER_HOST)),
-					(Long) ApplicationContext.map().get(RegistrationConstants.DOCUMENT_SCANNER_TIMEOUT),
+					(Long) ApplicationContext.map().getOrDefault(RegistrationConstants.DOCUMENT_SCANNER_TIMEOUT, 30000),
 					TimeUnit.MILLISECONDS);
 			saneDevices = session.listDevices();
 			session.close();

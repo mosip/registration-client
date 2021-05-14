@@ -3,6 +3,7 @@ package io.mosip.registration.mdm.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.signature.constant.SignatureConstant;
 import io.mosip.kernel.signature.dto.JWTSignatureVerifyRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureVerifyResponseDto;
@@ -25,6 +26,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -208,21 +211,16 @@ public class MosipDeviceSpecificationHelper {
 	}
 	
 	public void validateResponseTimestamp(String responseTime) throws RegBaseCheckedException {
-		if(responseTime == null) {
-			throw new RegBaseCheckedException(
-					RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorCode(),
-					RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorMessage());
-		} else {
-
-			Timestamp ts = Timestamp.valueOf(responseTime);
-
-			if(ts.getTime() < System.currentTimeMillis()- TimeUnit.MINUTES.toMillis(5)
-					|| ts.getTime()  > System.currentTimeMillis()+ TimeUnit.MINUTES.toMillis(5)) {
-				throw new RegBaseCheckedException(
-						RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorCode(),
-						RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorMessage());
-			}
+		if(responseTime != null) {
+			LocalDateTime ts = DateUtils.convertUTCToLocalDateTime(responseTime);
+			if(ts.isAfter(LocalDateTime.now(ZoneOffset.UTC).minusMinutes(5))
+					&& ts.isBefore(LocalDateTime.now(ZoneOffset.UTC).plusMinutes(5)))
+				return;
 		}
+
+		throw new RegBaseCheckedException(
+				RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorCode(),
+				RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorMessage());
 	}
 	
 	

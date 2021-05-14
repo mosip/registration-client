@@ -4,7 +4,6 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import io.mosip.registration.dao.MasterSyncDao;
-import org.junit.Assert;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.commons.packet.dto.packet.SimpleDto;
@@ -29,6 +28,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
+import org.springframework.util.Assert;
 
 public class DropDownFxControl extends FxControl {
 
@@ -139,7 +139,7 @@ public class DropDownFxControl extends FxControl {
 					.lowerEntry(this.hierarchyLevel);
 			if(parentEntry == null) { //first parent
 				parentEntry = GenericController.hierarchyLevels.get(langCode).lowerEntry(this.hierarchyLevel);
-				Assert.assertNotNull(parentEntry);
+				Assert.notNull(parentEntry);
 				List<Location> locations = masterSyncDao.getLocationDetails(parentEntry.getValue(), langCode);
 				fieldSubType = locations != null && !locations.isEmpty() ? locations.get(0).getCode() : null;
 			}

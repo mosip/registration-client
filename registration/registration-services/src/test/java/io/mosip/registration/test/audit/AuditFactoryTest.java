@@ -44,7 +44,6 @@ import io.mosip.registration.entity.AuditLogControl;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.packet.RegPacketStatusService;
-import net.bytebuddy.build.Plugin.Engine.Source.Empty;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})

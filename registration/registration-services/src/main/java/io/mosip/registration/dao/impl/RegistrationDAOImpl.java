@@ -400,4 +400,9 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 		
 		return registrationRepository.findAll();
 	}
+
+	@Override
+	public List<Object[]> getStatusBasedCount() {
+		return registrationRepository.getStatusBasedCount();
+	}
 }

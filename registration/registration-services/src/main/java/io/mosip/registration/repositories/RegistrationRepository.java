@@ -164,4 +164,7 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	 */
 	List<Registration> findByClientStatusCodeNotInAndServerStatusCodeIn(List<String> clientStatusCodes,
 			List<String> serverStatusCodes);
+
+	@Query("select clientStatusCode, serverStatusCode, count(*) from Registration group by clientStatusCode, serverStatusCode")
+	List<Object[]> getStatusBasedCount();
 }

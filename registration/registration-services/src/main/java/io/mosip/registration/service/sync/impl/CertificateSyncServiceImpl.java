@@ -25,7 +25,6 @@ import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.sync.CertificateSyncService;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
-import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -34,9 +33,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 
-import static io.mosip.registration.constants.LoggerConstants.LOG_REG_MASTER_SYNC;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 @Service
 public class CertificateSyncServiceImpl extends BaseService implements CertificateSyncService {
@@ -121,11 +117,15 @@ public class CertificateSyncServiceImpl extends BaseService implements Certifica
 
             for(CaCertificateDto cert : certs) {
                 if(trustedDomains.contains(cert.getPartnerDomain().toUpperCase())) {
-                    CACertificateRequestDto caCertificateRequestDto = new CACertificateRequestDto();
-                    caCertificateRequestDto.setCertificateData(cert.getCertData());
-                    caCertificateRequestDto.setPartnerDomain(cert.getPartnerDomain());
-                    CACertificateResponseDto caCertificateResponseDto = partnerCertificateManagerService.uploadCACertificate(caCertificateRequestDto);
-                    LOGGER.debug(caCertificateResponseDto.getStatus());
+                    try {
+                        CACertificateRequestDto caCertificateRequestDto = new CACertificateRequestDto();
+                        caCertificateRequestDto.setCertificateData(cert.getCertData());
+                        caCertificateRequestDto.setPartnerDomain(cert.getPartnerDomain());
+                        CACertificateResponseDto caCertificateResponseDto = partnerCertificateManagerService.uploadCACertificate(caCertificateRequestDto);
+                        LOGGER.debug(caCertificateResponseDto.getStatus());
+                    } catch (Exception exception) {
+                        LOGGER.error("Failed to save CA cert : " + cert.getCertId(), exception);
+                    }
                 }
             }
             return saveLastSuccessfulSyncTime(responseDTO, triggerPoint,
