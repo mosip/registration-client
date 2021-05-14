@@ -1,7 +1,6 @@
 package io.mosip.registration.test.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -713,6 +712,7 @@ public class SyncStatusValidatorServiceTest {
 
 		ResponseDTO responseDTO = syncStatusValidatorServiceImpl.validateSyncStatus();
 		List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
+		assertFalse(errorResponseDTOs.isEmpty());
 		assertEquals("REG-ICS‌-009", errorResponseDTOs.get(0).getCode());
 		assertEquals("REG_PKT_APPRVL_TIME_EXCEED", errorResponseDTOs.get(0).getMessage());
 
