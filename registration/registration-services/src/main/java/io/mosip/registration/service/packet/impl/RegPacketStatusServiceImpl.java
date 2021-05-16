@@ -50,7 +50,6 @@ import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.SyncRegistrationDTO;
 import io.mosip.registration.entity.Registration;
-import io.mosip.registration.entity.RegistrationTransaction;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
@@ -195,7 +194,7 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 	/**
 	 * update status for all packets that are synced with server
 	 *
-	 * @param registrations list of registration entities which are represented as
+	 * @param registrationStatuses list of registration entities which are represented as
 	 *                      LinkedHashMap which maps the attributes of registration
 	 *                      entity to their respective values that are obtained
 	 *                      after sync with server
@@ -212,8 +211,7 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 						registrationStatus.get(RegistrationConstants.PACKET_STATUS_READER_STATUS_CODE));
 				registration.setServerStatusTimestamp(new Timestamp(System.currentTimeMillis()));
 
-				updateRegistration(registration,
-						registrationStatus.get(RegistrationConstants.PACKET_STATUS_READER_STATUS_CODE));
+				registration = regPacketStatusDAO.update(registration);
 			}
 
 			LOGGER.info(LoggerConstants.LOG_PKT_DELETE, APPLICATION_NAME, APPLICATION_ID,
@@ -350,37 +348,6 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 		return true;
 	}
 
-	private Registration updateRegistration(final Registration registration, final String serverStatus) {
-
-		LOGGER.info(LoggerConstants.LOG_PKT_DELETE, APPLICATION_NAME, APPLICATION_ID,
-				"Delete Registration Packet started");
-
-		/* Get Registration Transaction List for each transaction */
-		List<RegistrationTransaction> transactionList = registration.getRegistrationTransaction();
-		if (isNull(transactionList)) {
-			transactionList = new LinkedList<>();
-		}
-		/* Prepare Registration Transaction */
-		RegistrationTransaction registrationTxn = new RegistrationTransaction();
-
-		registrationTxn.setRegId(registration.getId());
-		registrationTxn.setTrnTypeCode(RegistrationTransactionType.CREATED.getCode());
-		registrationTxn.setLangCode("ENG");
-		registrationTxn.setCrBy(createdByUser());
-		registrationTxn.setCrDtime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
-
-		registrationTxn.setStatusCode(serverStatus);
-
-		transactionList.add(registrationTxn);
-		registration.setRegistrationTransaction(transactionList);
-
-		Registration updatedRegistration = regPacketStatusDAO.update(registration);
-		LOGGER.info(LoggerConstants.LOG_PKT_DELETE, APPLICATION_NAME, APPLICATION_ID,
-				"Delete Registration Packet ended");
-
-		return updatedRegistration;
-
-	}
 
 	/*
 	 * (non-Javadoc)
