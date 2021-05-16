@@ -1,5 +1,6 @@
 package io.mosip.registration.jobs.impl;
 
+import io.mosip.registration.entity.Registration;
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -12,7 +13,6 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.entity.RegistrationTransaction;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
 
@@ -23,8 +23,7 @@ import io.mosip.registration.jobs.BaseJob;
  * <p>
  * The Audit logs deletion was dependent on audit_deletion_configured_days.
  * configuration parameter, and Audit logs deletion was internally deletes the
- * registration packets in local and {@link Registration} and
- * {@link RegistrationTransaction} in database.
+ * registration packets in local and {@link Registration} in database.
  * </p>
  * 
  * <p>

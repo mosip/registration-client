@@ -575,61 +575,22 @@ public class DocumentScanController extends BaseController {
 	private void scanDocument(ComboBox<DocumentCategoryDto> documents, VBox vboxElement, String document,
 			String errorMessage) {
 
-		String poeDocValue = getValueFromApplicationContext(RegistrationConstants.POE_DOCUMENT_VALUE);
-		if (null != documents.getValue() && poeDocValue != null
-				&& documents.getValue().getCode().matches(poeDocValue)) {
-			if (documents.getValue() == null) {
-				LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-						RegistrationConstants.APPLICATION_ID, "Select atleast one document for scan");
+		if (documents.getValue() == null) {
+			LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+					RegistrationConstants.APPLICATION_ID, "Select atleast one document for scan");
 
-				generateAlert(RegistrationConstants.ERROR, errorMessage);
-				documents.requestFocus();
-//			} else if (!vboxElement.getChildren().isEmpty()) {
-//				LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-//						RegistrationConstants.APPLICATION_ID, "only One Document can be added to the Category");
-//
-//				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.SCAN_DOC_CATEGORY_MULTIPLE);
-//			} else if (!vboxElement.getChildren().isEmpty() && vboxElement.getChildren().stream()
-//					.noneMatch(index -> index.getId().contains(documents.getValue().getName()))) {
-//				LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-//						RegistrationConstants.APPLICATION_ID, "Select only one document category for scan");
-//
-//				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.SCAN_DOC_CATEGORY_MULTIPLE);
-			} else {
-				selectedDocument = document;
-				selectedComboBox = documents;
-				selectedDocVBox = vboxElement;
-				scanWindow();
-			}
-		} else {
-			if (documents.getValue() == null) {
-				LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-						RegistrationConstants.APPLICATION_ID, "Select atleast one document for scan");
-
-				generateAlert(RegistrationConstants.ERROR, errorMessage);
-				documents.requestFocus();
-//			} else if (!vboxElement.getChildren().isEmpty()) {
-//				LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-//						RegistrationConstants.APPLICATION_ID, "only One Document can be added to the Category");
-//
-//				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.SCAN_DOC_CATEGORY_MULTIPLE);
-//			} else if (!vboxElement.getChildren().isEmpty() && vboxElement.getChildren().stream()
-//					.noneMatch(index -> index.getId().contains(documents.getValue().getName()))) {
-//				LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-//						RegistrationConstants.APPLICATION_ID, "Select only one document category for scan");
-//
-//				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.SCAN_DOC_CATEGORY_MULTIPLE);
-			} else {
-				LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-						RegistrationConstants.APPLICATION_ID, "Displaying Scan window to scan Documents");
-				// documents.getValue().setCode(document);
-				selectedDocument = document;
-				selectedComboBox = documents;
-				selectedDocVBox = vboxElement;
-				scanWindow();
-			}
+			generateAlert(RegistrationConstants.ERROR, errorMessage);
+			documents.requestFocus();
 		}
-
+		else {
+			LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+					RegistrationConstants.APPLICATION_ID, "Displaying Scan window to scan Documents");
+			// documents.getValue().setCode(document);
+			selectedDocument = document;
+			selectedComboBox = documents;
+			selectedDocVBox = vboxElement;
+			scanWindow();
+		}
 	}
 
 	/**
