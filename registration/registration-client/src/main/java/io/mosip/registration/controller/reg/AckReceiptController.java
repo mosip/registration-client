@@ -142,7 +142,7 @@ public class AckReceiptController extends BaseController implements Initializabl
 			job.endJob();
 		}
 		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.PRINT_INITIATION_SUCCESS);
-		goToHomePageFromRegistration();
+		//goToHomePageFromRegistration();
 	}
 
 	@FXML
