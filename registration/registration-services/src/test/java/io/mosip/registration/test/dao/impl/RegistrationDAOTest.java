@@ -38,7 +38,6 @@ import io.mosip.registration.entity.Registration;
 import io.mosip.registration.entity.UserDetail;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
-import io.mosip.registration.repositories.RegTransactionRepository;
 import io.mosip.registration.repositories.RegistrationRepository;
 
 @RunWith(PowerMockRunner.class)
@@ -52,12 +51,12 @@ public class RegistrationDAOTest {
 	private RegistrationDAOImpl registrationDAOImpl;
 	@Mock
 	private RegistrationRepository registrationRepository;
-	@Mock
-	private RegTransactionRepository regTransactionRepository;
+
 	Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
 	@Before
 	public void initialize() throws Exception {
+
 		UserContext userContext = Mockito.mock(SessionContext.UserContext.class);
 		List<String> roles = Arrays.asList("SUPERADMIN", "SUPERVISOR");
 		RegistrationCenterDetailDTO center = new RegistrationCenterDetailDTO();
@@ -281,14 +280,12 @@ public class RegistrationDAOTest {
 		Registration registration1 = new Registration();
 		registration1.setId("12345");
 		registration1.setClientStatusCode("Approved");
-		registration1.setRegistrationTransaction(new ArrayList<>());
 		registrations.add(registration1);
 		Registration registration2 = new Registration();
 		registration2.setId("23456");
 		registration2.setClientStatusCode("Approved");
 		registrations.add(registration2);
-		
-		registration2.setRegistrationTransaction(new ArrayList<>());
+
 		Mockito.when(registrationRepository.findByCrDtimeBeforeAndServerStatusCode(timestamp,"Approved")).thenReturn(registrations);
 		assertSame("Approved",registrationDAOImpl.get(timestamp, "Approved").get(0).getClientStatusCode());
 	}
@@ -300,7 +297,6 @@ public class RegistrationDAOTest {
 		registration1.setId("12345");
 		registration1.setClientStatusCode("Approved");
 		registration1.setServerStatusCode("S");
-		registration1.setRegistrationTransaction(new ArrayList<>());
 		registrations.add(registration1);
 		Registration registration2 = new Registration();
 		registration2.setId("23456");
@@ -311,8 +307,7 @@ public class RegistrationDAOTest {
 		List<String> codes = new ArrayList<>();
 		codes.add("S");
 		codes.add("F");
-		
-		registration2.setRegistrationTransaction(new ArrayList<>());
+
 		Mockito.when(registrationRepository.findByServerStatusCodeIn(codes)).thenReturn(registrations);
 		assertSame("Approved",registrationDAOImpl.findByServerStatusCodeIn(codes).get(0).getClientStatusCode());
 		assertSame( "Approved",registrationDAOImpl.findByServerStatusCodeIn(codes).get(1).getClientStatusCode());
@@ -325,7 +320,6 @@ public class RegistrationDAOTest {
 		Registration registration1 = new Registration();
 		registration1.setId("12345");
 		registration1.setClientStatusCode("Approved");
-		registration1.setRegistrationTransaction(new ArrayList<>());
 		registrations.add(registration1);
 		Registration registration2 = new Registration();
 		registration2.setId("23456");
@@ -335,8 +329,7 @@ public class RegistrationDAOTest {
 		List<String> codes = new ArrayList<>();
 		codes.add("S");
 		codes.add("F");
-		
-		registration2.setRegistrationTransaction(new ArrayList<>());
+
 		Mockito.when(registrationRepository.findByServerStatusCodeNotInOrServerStatusCodeIsNull(codes)).thenReturn(registrations);
 		assertSame("Approved",registrationDAOImpl.findByServerStatusCodeNotIn(codes).get(0).getClientStatusCode());
 	}
@@ -348,7 +341,6 @@ public class RegistrationDAOTest {
 		registration1.setId("12345");
 		registration1.setClientStatusCode("Approved");
 		registration1.setServerStatusCode("S");
-		registration1.setRegistrationTransaction(new ArrayList<>());
 		registrations.add(registration1);
 		Registration registration2 = new Registration();
 		registration2.setId("23456");
@@ -359,8 +351,7 @@ public class RegistrationDAOTest {
 		List<String> codes = new ArrayList<>();
 		codes.add("Approved");
 		codes.add("Rejected");
-		
-		registration2.setRegistrationTransaction(new ArrayList<>());
+
 		Mockito.when(registrationRepository.findByClientStatusCodeInOrServerStatusCodeOrderByUpdDtimesDesc(codes,"S")).thenReturn(registrations);
 		assertSame("Approved",registrationDAOImpl.fetchPacketsToUpload(codes, "S").get(0).getClientStatusCode());
 		assertSame("Rejected",registrationDAOImpl.fetchPacketsToUpload(codes, "S").get(1).getClientStatusCode());

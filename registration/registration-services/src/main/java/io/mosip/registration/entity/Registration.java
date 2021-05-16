@@ -1,16 +1,12 @@
 package io.mosip.registration.entity;
 
 import java.sql.Timestamp;
-import java.util.List;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import io.mosip.kernel.core.util.DateUtils;
@@ -86,10 +82,6 @@ public class Registration extends RegistrationCommonFields {
 	@ManyToOne
 	@JoinColumn(name = "CR_BY", referencedColumnName = "id", insertable = false, updatable = false)
 	private UserDetail userdetail;
-
-	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-	@JoinColumn(name = "REG_ID")
-	private List<RegistrationTransaction> registrationTransaction;
 
 	public String getId() {
 		return id;
@@ -305,14 +297,6 @@ public class Registration extends RegistrationCommonFields {
 
 	public void setUserdetail(UserDetail userdetail) {
 		this.userdetail = userdetail;
-	}
-
-	public List<RegistrationTransaction> getRegistrationTransaction() {
-		return registrationTransaction;
-	}
-
-	public void setRegistrationTransaction(List<RegistrationTransaction> registrationTransaction) {
-		this.registrationTransaction = registrationTransaction;
 	}
 
 	/**
