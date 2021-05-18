@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -129,6 +130,7 @@ public class BaseController {
 
 	private static final Logger LOGGER = AppConfig.getLogger(BaseController.class);
 	private static final String ALERT_STAGE = "alertStage";
+	private static final String TEMPLATE = "/%s/%s";
 
 	@FXML
 	public Text scanningMsg;
@@ -1833,7 +1835,7 @@ public class BaseController {
 		Map<Entry<String, String>, Map<String, List<List<String>>>> mapToProcess = new HashMap<>();
 
 		Map<String, String> labels = new HashMap<>();
-		labels.put("OPERATOR", RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.ONBOARD_USER_TITLE));
+		labels.put("OPERATOR", "OPERATOR");
 
 		Object value = ApplicationContext.map().get(RegistrationConstants.OPERATOR_ONBOARDING_BIO_ATTRIBUTES);
 		List<String> attributes = (value != null) ? Arrays.asList(((String) value).split(","))
@@ -2032,8 +2034,9 @@ public class BaseController {
 
 	private Image getImage(String uri) throws RegBaseCheckedException {
         try {
-			return  new Image(uri);
+			return  new Image(getClass().getResourceAsStream(uri));
 		} catch (Exception exception) {
+			exception.printStackTrace();
 			LOGGER.error("Exception while Getting Image "+ uri, exception);
 			throw new RegBaseCheckedException();
 		}
@@ -2044,7 +2047,8 @@ public class BaseController {
 	}
 
 	public String getImageFilePath(String configFolder,String imageName) {
-		return configFolder.concat(File.separator).concat(imageName);
+		String[] names = imageName.split("\\/|\\\\");
+		return String.format(TEMPLATE, configFolder, String.join("/", names));
 	}
 	
 	public void changeNodeOrientation(Node node) {

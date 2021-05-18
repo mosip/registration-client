@@ -1828,7 +1828,7 @@ public class RegistrationConstants {
 	public static final String RIGHT_HAND_IMG = "rightHand.png";
 	public static final String SCAN_IMG = "scan.png";
 	public static final String EYE_IMG = "Eye.png";
-	public static final String ARROW_LEFT_IMG = " arrowLeft.png";
+	public static final String ARROW_LEFT_IMG = "arrowLeft.png";
 	public static final String ARROW_RIGHT_IMG = "arrowRight.png";
 	public static final String MOSIP_LOGO_SMALL_IMG = "logo-final-small.png";
 	public static final String USER_IMG = "User.png";
