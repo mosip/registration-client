@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-	<property name="LOG_PATTERN" value="%d [%t] %p [%C{1}].%M.%L : %m%n" />
+	<property name="LOG_PATTERN" value="%d %p [%t] %c{5} : %m%n" />
 	<property name="APP_LOG_ROOT" value="logs"/>
 
 	<appender name="applicationLog" class="ch.qos.logback.core.rolling.RollingFileAppender">

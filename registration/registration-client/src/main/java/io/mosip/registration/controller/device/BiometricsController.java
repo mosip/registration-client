@@ -664,7 +664,8 @@ public class BiometricsController extends BaseController /* implements Initializ
 				subTypeLabel.setText(getMapOfbiometricSubtypes().get(currentSubType));
 			} else {
 
-				subTypeLabel.setText("Operator/Supervisor Biometrics");
+				subTypeLabel.setText(applicationContext.getApplicationLanguageLabelBundle()
+						.getString(RegistrationUIConstants.ONBOARD_USER_TITLE));
 			}
 
 		}

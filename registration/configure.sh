@@ -83,6 +83,9 @@ ls -ltr lib | grep bc
 /usr/bin/zip -r reg-client.zip bin
 /usr/bin/zip -r reg-client.zip lib
 
+## adding logback.xml
+/usr/bin/zip -j reg-client.zip /build_files/logback.xml
+
 echo "setting up nginx static content"
 
 mkdir -p /var/www/html/registration-client

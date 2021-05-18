@@ -1677,7 +1677,7 @@ Working on new Css by taleev
 /* Home page design starts here */
 
 .homeContent{
-  -fx-background-image: url(images/pexels-photo.png);
+/*  -fx-background-image: url(images/pexels-photo.png);*/
   -fx-background-repeat: no-repeat;
   -fx-background-size: auto;
   -fx-border-color: #F4F4F4;
