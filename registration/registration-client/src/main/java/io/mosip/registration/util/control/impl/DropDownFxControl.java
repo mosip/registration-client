@@ -173,18 +173,29 @@ public class DropDownFxControl extends FxControl {
 	@Override
 	public void setData(Object data) {
 		ComboBox<GenericDto> appComboBox = (ComboBox<GenericDto>) getField(uiSchemaDTO.getId());
-		List<SimpleDto> values = new ArrayList<SimpleDto>();
 		String selectedCode = appComboBox.getSelectionModel().getSelectedItem().getCode();
-		for (String langCode : getRegistrationDTo().getSelectedLanguagesByApplicant()) {
-			Optional<GenericDto> result = getPossibleValues(langCode).stream()
-					.filter(b -> b.getCode().equals(selectedCode)).findFirst();
-			if (result.isPresent()) {
-				SimpleDto simpleDto = new SimpleDto(langCode, result.get().getName());
-				values.add(simpleDto);
-			}
-		}
 
-		getRegistrationDTo().addDemographicField(uiSchemaDTO.getId(), values);
+		switch (this.uiSchemaDTO.getType()) {
+			case RegistrationConstants.SIMPLE_TYPE:
+				List<SimpleDto> values = new ArrayList<SimpleDto>();
+				for (String langCode : getRegistrationDTo().getSelectedLanguagesByApplicant()) {
+					Optional<GenericDto> result = getPossibleValues(langCode).stream()
+							.filter(b -> b.getCode().equals(selectedCode)).findFirst();
+					if (result.isPresent()) {
+						SimpleDto simpleDto = new SimpleDto(langCode, result.get().getName());
+						values.add(simpleDto);
+					}
+				}
+				getRegistrationDTo().addDemographicField(uiSchemaDTO.getId(), values);
+				break;
+			default:
+				Optional<GenericDto> result = getPossibleValues(getRegistrationDTo().getSelectedLanguagesByApplicant().get(0)).stream()
+						.filter(b -> b.getCode().equals(selectedCode)).findFirst();
+				if (result.isPresent()) {
+					getRegistrationDTo().addDemographicField(uiSchemaDTO.getId(), result.get().getName());
+				}
+				break;
+		}
 	}
 
 	@Override

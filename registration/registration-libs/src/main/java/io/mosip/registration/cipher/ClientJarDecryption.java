@@ -75,8 +75,8 @@ public class ClientJarDecryption extends Application {
 	private static final String IS_KEY_ENCRYPTED = "Y";
 	private static final String MOSIP_CLIENT_TPM_AVAILABILITY = "mosip.reg.client.tpm.availability";
 
-	private static String WIN_CMD_TEMPLATE = "\"%s\" %s %s -Dfile.encoding=UTF-8 -Dlogback.configurationFile=%s -cp %s/*;/* io.mosip.registration.controller.Initialization %s %s";
-	private static String LIN_CMD_TEMPLATE = "\"%s\" %s %s -Dfile.encoding=UTF-8 -Dlogback.configurationFile=%s -cp %s/*:/* io.mosip.registration.controller.Initialization %s %s";
+	private static String WIN_CMD_TEMPLATE = "\"%s\" %s %s -Dfile.encoding=UTF-8 -Dlogback.configurationFile=\"%s\" -cp %s/*;/* io.mosip.registration.controller.Initialization %s %s";
+	private static String LIN_CMD_TEMPLATE = "%s %s %s -Dfile.encoding=UTF-8 -Dlogback.configurationFile=\"%s\" -cp %s/*:/* io.mosip.registration.controller.Initialization %s %s";
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ClientJarDecryption.class);
 
@@ -345,7 +345,7 @@ public class ClientJarDecryption extends Application {
 		LOGGER.info(LoggerConstants.CLIENT_JAR_DECRYPTION, LoggerConstants.APPLICATION_NAME,
 				LoggerConstants.APPLICATION_ID, "Preparing command to launch the reg-client");
 		String jrePath = new File(System.getProperty("user.dir")) + SLASH + "jre/jre/bin/java";
-		String logPath = "logback.xml";
+		String logPath = new File(System.getProperty("user.dir")) + SLASH + "logback.xml";
 
 		Process process = Runtime.getRuntime()
 				.exec(String.format(getCommandTemplate(),
