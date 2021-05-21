@@ -1216,7 +1216,7 @@ public class AuthenticationController extends BaseController implements Initiali
 	 */
 	public void init(BaseController parentControllerObj, String authType) throws RegBaseCheckedException {
 		authCount = 0;
-		isSupervisor = true;
+		isSupervisor = Role.hasSupervisorRole(SessionContext.userContext().getRoles());
 		isEODAuthentication = true;
 		baseController = parentControllerObj;
 		getAuthenticationModes(authType);
@@ -1233,13 +1233,13 @@ public class AuthenticationController extends BaseController implements Initiali
 		otpValidity.setText(RegistrationUIConstants.getMessageLanguageSpecific("OTP_VALIDITY") + " " + minutes + ":" + seconds + " "
 				+ RegistrationUIConstants.getMessageLanguageSpecific("MINUTES"));
 		stopTimer();
-		isSupervisor = false;
+		isSupervisor = Role.hasSupervisorRole(SessionContext.userContext().getRoles());
 		isEODAuthentication = false;
 		getAuthenticationModes(authType);
 	}
 
 	private OSIDataDTO getOSIData() {
-		return ((RegistrationDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA)).getOsiDataDTO();
+		return getRegistrationDTOFromSession().getOsiDataDTO();
 	}
 
 	@Override
