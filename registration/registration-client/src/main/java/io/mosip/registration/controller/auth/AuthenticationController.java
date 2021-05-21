@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+import io.mosip.registration.enums.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -746,7 +747,7 @@ public class AuthenticationController extends BaseController implements Initiali
 
 			roleSet.clear();
 
-			roleSet.add(RegistrationConstants.SUPERVISOR);
+			roleSet.add(Role.REGISTRATION_SUPERVISOR.name());
 		}
 		userAuthenticationTypeList = loginService.getModesOfLogin(authType, roleSet);
 		userAuthenticationTypeListValidation = loginService.getModesOfLogin(authType, roleSet);
@@ -851,7 +852,7 @@ public class AuthenticationController extends BaseController implements Initiali
 					if (!getRegistrationDTOFromSession().getBiometricExceptions().isEmpty()
 							&& RegistrationConstants.ENABLE.equalsIgnoreCase(
 							getValueFromApplicationContext(RegistrationConstants.SUPERVISOR_AUTH_CONFIG))
-							&& !roleSet.contains(RegistrationConstants.SUPERVISOR)) {
+							&& !roleSet.contains(Role.REGISTRATION_SUPERVISOR.name())) {
 						authCount = 0;
 						isSupervisor = true;
 						getAuthenticationModes(ProcessNames.EXCEPTION.getType());
@@ -1095,9 +1096,7 @@ public class AuthenticationController extends BaseController implements Initiali
 		UserDTO userDTO = loginService.getUserDetail(userId);
 		if (userDTO != null) {
 			return userDTO.getUserRole().stream()
-					.anyMatch(userRole -> userRole.getRoleCode().equalsIgnoreCase(RegistrationConstants.SUPERVISOR)
-							|| userRole.getRoleCode().equalsIgnoreCase(RegistrationConstants.ADMIN_ROLE)
-							|| userRole.getRoleCode().equalsIgnoreCase(RegistrationConstants.ROLE_DEFAULT));
+					.anyMatch(userRole -> Role.getSupervisorAuthRoles().contains(userRole.getRoleCode()));
 		}
 		return false;
 	}

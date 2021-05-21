@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import io.mosip.registration.enums.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -318,12 +319,8 @@ public class PacketHandlerController extends BaseController implements Initializ
 			setImage(viewReportsImageView, RegistrationConstants.VIEW_REPORTS_IMG);
 			setImage(tickMarkImageView, RegistrationConstants.TICK_IMG);
 			setImage(updateOperatorBiometricsImageView, RegistrationConstants.UPDATE_OPERATOR_BIOMETRICS_IMG);
-			
-			
-			
-			if (!SessionContext.userContext().getRoles().contains(RegistrationConstants.SUPERVISOR)
-					&& !SessionContext.userContext().getRoles().contains(RegistrationConstants.ADMIN_ROLE)
-					&& !SessionContext.userContext().getRoles().contains(RegistrationConstants.ROLE_DEFAULT)) {
+
+			if (!Role.hasSupervisorRole(SessionContext.userContext().getRoles())) {
 				eodProcessGridPane.setVisible(false);
 				eodLabel.setVisible(false);
 			}
@@ -605,7 +602,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 			LOGGER.info("Validating Approve Packet screen for specific role");
 
-			if (SessionContext.userContext().getRoles().contains(RegistrationConstants.ROLE_DEFAULT)) {
+			if (Role.isDefaultUser(SessionContext.userContext().getRoles())) {
 				getScene(root);
 			} else if (!validateScreenAuthorization(root.getId())) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHORIZATION_ERROR));

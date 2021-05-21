@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.registration.constants.*;
 import io.mosip.registration.dto.*;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.service.sync.CertificateSyncService;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
@@ -145,7 +146,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 
 			auditFactory.audit(AuditEvent.LOGIN_MODES_FETCH, Components.LOGIN_MODES,
 					RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
-			if ((roleList != null && roleList.contains(RegistrationConstants.ROLE_DEFAULT))) {
+			if (Role.isDefaultUser(roleList)) {
 				loginModes.clear();
 				loginModes.add(RegistrationConstants.PWORD);
 			}
@@ -557,10 +558,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 
 					LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Validating roles");
 					// Checking roles
-					if (roleList.isEmpty() || !(roleList.contains(RegistrationConstants.OFFICER)
-							|| roleList.contains(RegistrationConstants.SUPERVISOR)
-							|| roleList.contains(RegistrationConstants.ADMIN_ROLE)
-							|| roleList.contains(RegistrationConstants.ROLE_DEFAULT))) {
+					if (!Role.hasAnyRegistrationRoles(roleList)) {
 						setErrorResponse(responseDTO, RegistrationConstants.ROLES_EMPTY_ERROR, null);
 					} else {
 						ApplicationContext.map().put(RegistrationConstants.USER_STATION_ID, stationId);

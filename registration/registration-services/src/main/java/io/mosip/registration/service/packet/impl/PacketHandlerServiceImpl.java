@@ -20,6 +20,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.mosip.registration.enums.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -749,12 +750,16 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 		// Create object for OSIData DTO
 		registrationDTO.setOsiDataDTO(new OSIDataDTO());
-		registrationDTO.setRegistrationCategory(registrationCategory);
+		if(Role.hasSupervisorRole(SessionContext.userContext().getRoles()))
+			registrationDTO.getOsiDataDTO().setSupervisorID(SessionContext.userId());
+		else
+			registrationDTO.getOsiDataDTO().setOperatorID(SessionContext.userId());
 
 		// Create RegistrationMetaData DTO & set default values in it
 		RegistrationMetaDataDTO registrationMetaDataDTO = new RegistrationMetaDataDTO();
 		registrationMetaDataDTO.setRegistrationCategory(registrationCategory); // TODO - remove its usage
 		registrationDTO.setRegistrationMetaDataDTO(registrationMetaDataDTO);
+		registrationDTO.setRegistrationCategory(registrationCategory);
 
 		// Set RID
 		String registrationID = ridGeneratorImpl.generateId(

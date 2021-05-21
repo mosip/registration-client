@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
+import io.mosip.registration.enums.Role;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.io.IOUtils;
@@ -613,18 +614,9 @@ public class TemplateGenerator extends BaseService {
 			userDetail.put(RegistrationConstants.DASHBOARD_USER_ID, user.getId());
 			userDetail.put(RegistrationConstants.DASHBOARD_USER_NAME, user.getName());
 			List<String> userRoles = userDetailService.getUserRoleByUserId(user.getId());
-			if (userRoles != null && !userRoles.isEmpty()) {
-				if (userRoles.contains(RegistrationConstants.SUPERVISOR)) {
-					userDetail.put(RegistrationConstants.DASHBOARD_USER_ROLE, getEncodedImage("/images/user-green.png",
-							RegistrationConstants.TEMPLATE_PNG_IMAGE_ENCODING));
-				} else if (userRoles.contains(RegistrationConstants.OFFICER)) {
-					userDetail.put(RegistrationConstants.DASHBOARD_USER_ROLE, getEncodedImage("/images/user-yellow.png",
-							RegistrationConstants.TEMPLATE_PNG_IMAGE_ENCODING));
-				} else {
-					userDetail.put(RegistrationConstants.DASHBOARD_USER_ROLE, getEncodedImage("/images/user-grey.png",
-							RegistrationConstants.TEMPLATE_PNG_IMAGE_ENCODING));
-				}
-			}
+			userDetail.put(RegistrationConstants.DASHBOARD_USER_ROLE, getEncodedImage(Role.hasSupervisorRole(userRoles) ? "/images/user-green.png" :
+							Role.hasOperatorRole(userRoles) ? "/images/user-yellow.png" : "/images/user-grey.png",
+					RegistrationConstants.TEMPLATE_PNG_IMAGE_ENCODING));
 			boolean isUserNewToMachine = userMachineMappingService.isUserNewToMachine(user.getId())
 					.getErrorResponseDTOs() != null;
 			if (isUserNewToMachine) {

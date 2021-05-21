@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+import io.mosip.registration.enums.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -485,7 +486,7 @@ public class LoginController extends BaseController implements Initializable {
 							 * if the role is default,the login should always thru password and user onboard
 							 * has to be skipped
 							 */
-							if (roles != null && roles.contains(RegistrationConstants.ROLE_DEFAULT)) {
+							if (Role.isDefaultUser(roles)) {
 								initialSetUpOrNewUserLaunch();
 								return;
 							}
