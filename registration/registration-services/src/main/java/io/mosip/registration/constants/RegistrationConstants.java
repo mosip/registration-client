@@ -182,9 +182,7 @@ public class RegistrationConstants {
 	public static final String INFO = "INFO";
 	public static final String SPLITTER = "#TYPE#";
 	public static final String RESTART = "Restart";
-	public static final String SUPERVISOR = "REGISTRATION_SUPERVISOR";
-	public static final String OFFICER = "REGISTRATION_OFFICER";
-	public static final String ROLE_DEFAULT = "Default";
+
 	public static final String IRIS_STUB = "leftIris";
 	public static final String FACE_STUB = "face";
 	public static final String SUPERVISOR_AUTH = "supervisor";
@@ -222,7 +220,6 @@ public class RegistrationConstants {
 	public static final String FP_TIMEOUT = "TIMEOUT";
 
 	// Authorization Info
-	public static final String ADMIN_ROLE = "REGISTRATION_ADMIN";
 	public static final String ROLES_EMPTY = "RolesEmpty";
 	public static final String MACHINE_MAPPING = "MachineMapping";
 

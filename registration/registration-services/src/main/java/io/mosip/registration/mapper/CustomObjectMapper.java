@@ -71,7 +71,7 @@ public class CustomObjectMapper extends ConfigurableMapper {
 		ConverterFactory converterFactory = mapperFactory.getConverterFactory();
 		converterFactory.registerConverter(new PassThroughConverter(LocalDateTime.class));
 		converterFactory.registerConverter(new PassThroughConverter(OffsetDateTime.class));
-		converterFactory.registerConverter("packetMetaInfo", new PacketMetaInfoConverter());
+		//converterFactory.registerConverter("packetMetaInfo", new PacketMetaInfoConverter());
 
 		mapperFactory.classMap(DemographicInfoDTO.class, DemographicInfo.class).byDefault().register();
 

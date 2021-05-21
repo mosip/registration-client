@@ -218,6 +218,12 @@ public class GenericController extends BaseController {
 		button.setOnMouseClicked(new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent event) {
+
+				if(!pridValidatorImpl.validateId(textField.getText())) {
+					generateAlertLanguageSpecific(RegistrationConstants.ERROR, RegistrationUIConstants.PRE_REG_ID_NOT_VALID);
+					return;
+				}
+
 				ResponseDTO responseDTO = preRegistrationDataSyncService.getPreRegistration(textField.getText(), false);
 
 				try {

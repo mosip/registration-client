@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import org.springframework.context.ApplicationContext;
 
@@ -530,7 +531,7 @@ public class SessionContext {
 		/* user onboard skipped for the user with role Default */
 		if ((machineList.contains(RegistrationSystemPropertiesChecker.getMachineId().toLowerCase())
 				&& centerList.contains(userDTO.getRegCenterUser().getRegcntrId()))
-				|| SessionContext.userContext().getRoles().contains(RegistrationConstants.ROLE_DEFAULT)) {
+				|| Role.isDefaultUser(SessionContext.userContext().getRoles())) {
 			sessionContext.mapObject.put(RegistrationConstants.ONBOARD_USER, false);
 			sessionContext.mapObject.put(RegistrationConstants.ONBOARD_USER_UPDATE, false);
 			sessionContext.mapObject.put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
