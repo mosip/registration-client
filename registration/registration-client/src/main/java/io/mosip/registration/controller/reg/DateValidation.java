@@ -128,7 +128,7 @@ public class DateValidation extends BaseController {
 					defaultDate.set(Calendar.MONTH, 0);
 					defaultDate.add(Calendar.YEAR, -age);
 
-					LocalDate date = LocalDate.of(defaultDate.get(Calendar.YEAR), defaultDate.get(Calendar.MONTH + 1),
+					LocalDate date = LocalDate.of(defaultDate.get(Calendar.YEAR), defaultDate.get(Calendar.MONTH) + 1,
 							defaultDate.get(Calendar.DATE));
 					isValid = validation.validateSingleString(date.format(DateTimeFormatter.ofPattern(ApplicationContext.getDateFormat())),
 							fieldId);
@@ -221,7 +221,7 @@ public class DateValidation extends BaseController {
 		defaultDate.add(Calendar.YEAR, -age);
 
 		dd.setText(String.valueOf(defaultDate.get(Calendar.DATE)));
-		mm.setText(String.valueOf(defaultDate.get(Calendar.MONTH + 1)));
+		mm.setText(String.valueOf(defaultDate.get(Calendar.MONTH) + 1));
 		yyyy.setText(String.valueOf(defaultDate.get(Calendar.YEAR)));
 
 		setLocalDateFields(parentPane, dd, mm, yyyy);
