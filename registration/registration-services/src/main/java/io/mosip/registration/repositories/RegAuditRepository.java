@@ -38,6 +38,8 @@ public interface RegAuditRepository extends BaseRepository<Audit, Long> {
 	int updateSyncAudits(@Param("audits") List<String> auditUUIDs);
 	
 	void deleteAllInBatchBycreatedAtBetween(LocalDateTime auditLogFromDtimes,LocalDateTime auditLogToDtimes);
+	
+	void deleteAllInBatchByCreatedAtLessThan(LocalDateTime auditLogToDtimes);
 
 	/**
 	 * Retrieves the {@link Audit} which are logged after the input parameter

@@ -11,9 +11,7 @@ import org.springframework.stereotype.Repository;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
-import io.mosip.registration.dao.AuditLogControlDAO;
 import io.mosip.registration.dao.RegPacketStatusDAO;
-import io.mosip.registration.entity.AuditLogControl;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.entity.RegistrationTransaction;
 import io.mosip.registration.repositories.RegTransactionRepository;
@@ -33,10 +31,7 @@ public class RegPacketStatusDAOImpl implements RegPacketStatusDAO {
 
 	@Autowired
 	private RegTransactionRepository regTransactionRepository;
-
-	@Autowired
-	private AuditLogControlDAO auditLogControlDAO;
-
+	
 	/**
 	 * Object for Logger
 	 */
@@ -90,13 +85,6 @@ public class RegPacketStatusDAOImpl implements RegPacketStatusDAO {
 	public void delete(Registration registration) {
 		LOGGER.info("Delete registration has been started");
 
-		AuditLogControl auditLogControl = auditLogControlDAO.get(registration.getId());
-		LOGGER.debug("Queried auditLogControl for registration {}, auditslogs: {}", registration.getId(), auditLogControl);
-		if(auditLogControl != null) {
-			/* Delete Audit Logs */
-			auditLogControlDAO.delete(auditLogControl);
-		}
-
 		/* Delete Registartion Transaction */
 		Iterable<RegistrationTransaction> iterableTransaction = registration.getRegistrationTransaction();
 		if(iterableTransaction != null) {
@@ -105,7 +93,6 @@ public class RegPacketStatusDAOImpl implements RegPacketStatusDAO {
 
 		/* Delete Registartion */
 		registrationRepository.deleteById(registration.getId());
-
 	}
 
 }
