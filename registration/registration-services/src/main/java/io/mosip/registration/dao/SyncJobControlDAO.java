@@ -33,8 +33,8 @@ public interface SyncJobControlDAO {
 		/** The sync count. */
 		private double yetToExportCount;
 		
-		/** The last export registration list. */
-		private List<Registration> lastExportRegistrationList;
+		/** The last export registration. */
+		private Registration lastExportRegistration;
 
 		/**
 		 * Instantiates a new sync job info.
@@ -46,11 +46,11 @@ public interface SyncJobControlDAO {
 		 * @param lastExportRegistrationList 
 		 * 				the last export registration list
 		 */
-		public SyncJobInfo(List<SyncControl> syncControlList, double yetToExportCount, List<Registration> lastExportRegistrationList) {
+		public SyncJobInfo(List<SyncControl> syncControlList, double yetToExportCount, Registration lastExportRegistration) {
 			super();
 			this.syncControlList = syncControlList;
 			this.yetToExportCount = yetToExportCount;
-			this.lastExportRegistrationList = lastExportRegistrationList;
+			this.lastExportRegistration = lastExportRegistration;
 		}
 
 		/**
@@ -76,8 +76,8 @@ public interface SyncJobControlDAO {
 		 *
 		 * @return the lastExportRegistrationList
 		 */
-		public List<Registration> getLastExportRegistrationList() {
-			return lastExportRegistrationList;
+		public Registration getLastExportRegistration() {
+			return lastExportRegistration;
 		}
 	}
 
@@ -121,4 +121,8 @@ public interface SyncJobControlDAO {
 	 * @return list of Registration
 	 */
 	List<Registration> getRegistrationDetails();
+
+	public Long getRegistrationCount();
+
+	public Registration getFirstRegistration();
 }
