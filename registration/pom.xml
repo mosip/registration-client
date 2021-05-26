@@ -165,6 +165,7 @@
 	</properties>
 
 	<modules>
+		<module>registration-api</module>
 		<module>registration-services</module>
 		<module>registration-client</module>
 		<module>registration-libs</module>

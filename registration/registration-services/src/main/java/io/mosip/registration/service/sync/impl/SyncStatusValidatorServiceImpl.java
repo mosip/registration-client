@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import io.mosip.registration.api.geoposition.GeoPositionFacade;
+import io.mosip.registration.api.geoposition.dto.GeoPosition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +34,6 @@ import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dao.SyncJobConfigDAO;
 import io.mosip.registration.dao.SyncJobControlDAO;
 import io.mosip.registration.dao.SyncJobControlDAO.SyncJobInfo;
-import io.mosip.registration.device.gps.GPSFacade;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.entity.GlobalParam;
@@ -65,9 +66,6 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 	private SyncJobControlDAO syncJObDao;
 
 	@Autowired
-	private GPSFacade gpsFacade;
-
-	@Autowired
 	private SyncJobConfigDAO jobConfigDAO;
 	/** Object for Logger. */
 
@@ -84,6 +82,9 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 	 */
 	@Autowired
 	private AuditManagerService auditFactory;
+
+	@Autowired
+	private GeoPositionFacade geoPositionFacade;
 
 	/*
 	 * (non-Javadoc)
@@ -316,15 +317,12 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 	 *            the error response DTO list
 	 */
 	private void captureGeoLocation(List<ErrorResponseDTO> errorResponseDTOList) {
-
-		LOGGER.info(LoggerConstants.OPT_TO_REG_LOGGER_SESSION_ID, APPLICATION_NAME, APPLICATION_ID,
-				"Getting the center latitude and longitudes from session context");
+		LOGGER.info("Getting the center latitude and longitudes from session context");
 
 		if (RegistrationConstants.ENABLE.equalsIgnoreCase(
 				String.valueOf(ApplicationContext.map().get(RegistrationConstants.GPS_DEVICE_DISABLE_FLAG)))) {
 
-			LOGGER.info(LoggerConstants.OPT_TO_REG_LOGGER_SESSION_ID, APPLICATION_NAME, APPLICATION_ID,
-					"Validating the geo location of machine w.r.t registration center started");
+			LOGGER.debug("Validating the geo location of machine w.r.t registration center started");
 
 			double centerLatitude = Double
 					.parseDouble(registration
@@ -338,46 +336,38 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 									.getRegistrationCenterId(), ApplicationContext.applicationLanguage())
 							.getRegistrationCenterLongitude());
 
-			Map<String, Object> gpsMapDetails = gpsFacade.getLatLongDtls(centerLatitude, centerLongitude,
-					String.valueOf(ApplicationContext.map().get(RegistrationConstants.GPS_DEVICE_MODEL)));
+			GeoPosition geoPosition = new GeoPosition();
+			geoPosition.setModelName(String.valueOf(ApplicationContext.map().get(RegistrationConstants.GPS_DEVICE_MODEL)));
+			geoPosition.setPort(String.valueOf(ApplicationContext.map().getOrDefault(RegistrationConstants.GPS_SERIAL_PORT_WINDOWS,
+					RegistrationConstants.GPS_SERIAL_PORT)));
+			geoPosition.setTimeout(Integer.parseInt((String) ApplicationContext.map().getOrDefault(RegistrationConstants.GPS_PORT_TIMEOUT,
+					"3000")));
+			geoPosition = geoPositionFacade.getMachineGeoPosition(geoPosition);
 
-			if (RegistrationConstants.GPS_CAPTURE_SUCCESS_MSG
-					.equals(gpsMapDetails.get(RegistrationConstants.GPS_CAPTURE_ERROR_MSG))) {
+			if(geoPosition.getError() != null) {
+				getErrorResponse(RegistrationConstants.ICS_CODE_FOUR,
+						geoPosition.getError(), RegistrationConstants.ERROR,
+						errorResponseDTOList);
+				return;
+			}
 
-				if (Double.parseDouble(String.valueOf(
-						ApplicationContext.map().get(RegistrationConstants.DIST_FRM_MACHN_TO_CENTER))) <= Double
-								.parseDouble(gpsMapDetails.get(RegistrationConstants.GPS_DISTANCE).toString())) {
+			if (geoPosition != null && geoPosition.getError() != null) {
+				double distance = geoPositionFacade.getDistance(geoPosition.getLongitude(), geoPosition.getLatitude(),
+						centerLongitude, centerLatitude);
 
+				if (distance > Double.parseDouble(String.valueOf(
+						ApplicationContext.map().get(RegistrationConstants.DIST_FRM_MACHN_TO_CENTER)))) {
 					getErrorResponse(RegistrationConstants.ICS_CODE_FOUR,
 							RegistrationConstants.OPT_TO_REG_OUTSIDE_LOCATION, RegistrationConstants.ERROR,
 							errorResponseDTOList);
-				} else {
-
-					ApplicationContext.map().put(RegistrationConstants.OPT_TO_REG_LAST_CAPTURED_TIME, Instant.now());
+					return;
 				}
-			} else if (RegistrationConstants.GPS_CAPTURE_FAILURE_MSG
-					.equals(gpsMapDetails.get(RegistrationConstants.GPS_CAPTURE_ERROR_MSG))) {
-				getErrorResponse(RegistrationConstants.ICS_CODE_SIX, RegistrationConstants.OPT_TO_REG_WEAK_GPS,
-						RegistrationConstants.ERROR, errorResponseDTOList);
-			} else if (RegistrationConstants.GPS_DEVICE_CONNECTION_FAILURE_ERRO_MSG
-					.equals(gpsMapDetails.get(RegistrationConstants.GPS_CAPTURE_ERROR_MSG))
-					|| RegistrationConstants.GPS_DEVICE_CONNECTION_FAILURE
-							.equals(gpsMapDetails.get(RegistrationConstants.GPS_CAPTURE_ERROR_MSG))) {
-				getErrorResponse(RegistrationConstants.ICS_CODE_FIVE, RegistrationConstants.OPT_TO_REG_INSERT_GPS,
-						RegistrationConstants.ERROR, errorResponseDTOList);
-			} else {
-				getErrorResponse(RegistrationConstants.ICS_CODE_SEVEN,
-						RegistrationConstants.OPT_TO_REG_GPS_PORT_MISMATCH, RegistrationConstants.ERROR,
-						errorResponseDTOList);
+				ApplicationContext.map().put(RegistrationConstants.OPT_TO_REG_LAST_CAPTURED_TIME, Instant.now());
 			}
+			auditFactory.audit(AuditEvent.SYNC_GEO_VALIDATE, Components.SYNC_VALIDATE,
+					RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
 		}
-
-		LOGGER.info(LoggerConstants.OPT_TO_REG_LOGGER_SESSION_ID, APPLICATION_NAME, APPLICATION_ID,
-				"Validating the geo location of machine w.r.t registration center ended");
-
-		auditFactory.audit(AuditEvent.SYNC_GEO_VALIDATE, Components.SYNC_VALIDATE,
-				RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
-
+		LOGGER.info("Validating the geo location of machine w.r.t registration center ended");
 	}
 
 	/**

@@ -3,6 +3,9 @@ package io.mosip.registration.util.control.impl;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +13,7 @@ import java.util.ResourceBundle;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.registration.api.docscanner.DocScannerUtil;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
@@ -188,10 +192,8 @@ public class DocumentFxControl extends FxControl {
 	private void scanDocument(ComboBox<DocumentCategoryDto> comboBox, String subType, boolean isPreviewOnly) {
 
 		if (isValid()) {
-
-			documentScanController.setFxControl(control);
-			documentScanController.scanDocument(this, uiSchemaDTO.getId(), comboBox.getValue().getCode(),
-					isPreviewOnly);
+			documentScanController.setFxControl(this);
+			documentScanController.scanDocument(uiSchemaDTO.getId(), comboBox.getValue().getCode(),	isPreviewOnly);
 
 		} else {
 			documentScanController.generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PLEASE_SELECT)
@@ -326,97 +328,76 @@ public class DocumentFxControl extends FxControl {
 		try {
 
 			if (data == null) {
-
 				getField(uiSchemaDTO.getId() + PREVIEW_ICON).setVisible(false);
 				getField(uiSchemaDTO.getId() + CLEAR_ID).setVisible(false);
 			} else {
 				List<BufferedImage> bufferedImages = (List<BufferedImage>) data;
-
-				if (bufferedImages != null && !bufferedImages.isEmpty()) {
-					String documentSize = documentScanController
-							.getValueFromApplicationContext(RegistrationConstants.DOC_SIZE);
-					int docSize = Integer.parseInt(documentSize) / (1024 * 1024);
-					if (bufferedImages == null || bufferedImages.isEmpty()) {
-						documentScanController.generateAlert(RegistrationConstants.ERROR,
-								RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOCUMENT_EMPTY));
-						return;
-					}
-					byte[] byteArray = documentScanController.getScannedPagesToBytes(bufferedImages);
-
-					if (byteArray == null) {
-						documentScanController.generateAlert(RegistrationConstants.ERROR,
-								RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOCUMENT_CONVERTION_ERR));
-						return;
-					}
-
-					if (docSize <= (byteArray.length / (1024 * 1024))) {
-						bufferedImages.clear();
-						documentScanController.generateAlert(RegistrationConstants.ERROR,
-								RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOC_SIZE).replace("1", Integer.toString(docSize)));
-					} else {
-
-						ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(
-								uiSchemaDTO.getId());
-
-						DocumentDto documentDto = documentScanController.getRegistrationDTOFromSession().getDocuments()
-								.get(uiSchemaDTO.getId());
-
-						if (documentDto == null) {
-							documentDto = new DocumentDto();
-							documentDto.setDocument(byteArray);
-							documentDto.setType(comboBox.getValue().getCode());
-
-							String docType = documentScanController
-									.getValueFromApplicationContext(RegistrationConstants.DOC_TYPE);
-
-							documentDto.setFormat(docType);
-							documentDto.setCategory(uiSchemaDTO.getSubType());
-							documentDto.setOwner(RegistrationConstants.APPLICANT);
-							documentDto.setValue(uiSchemaDTO.getSubType().concat(RegistrationConstants.UNDER_SCORE)
-									.concat(comboBox.getValue().getCode()));
-						} else {
-
-							documentDto.setDocument(byteArray);
-						}
-
-						TextField textField = (TextField) getField(
-								uiSchemaDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
-
-						documentDto.setRefNumber(textField.getText());
-
-						documentScanController.getRegistrationDTOFromSession().addDocument(uiSchemaDTO.getId(),
-								documentDto);
-
-						getField(uiSchemaDTO.getId() + PREVIEW_ICON).setVisible(true);
-						getField(uiSchemaDTO.getId() + CLEAR_ID).setVisible(true);
-
-						getField(uiSchemaDTO.getId() + PREVIEW_ICON).setManaged(true);
-						getField(uiSchemaDTO.getId() + CLEAR_ID).setManaged(true);
-						
-						Label label = (Label) getField(uiSchemaDTO.getId()+RegistrationConstants.LABEL);
-						label.getStyleClass().clear();
-						label.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL);
-					}
+				if (bufferedImages == null || bufferedImages.isEmpty()) {
+					documentScanController.generateAlert(RegistrationConstants.ERROR,
+							RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOCUMENT_EMPTY));
+					return;
 				}
-			}
-		} catch (IOException regBaseCheckedException) {
 
-			LOGGER.error("REGISTRATION - DOCUMENT_SCAN_CONTROLLER", APPLICATION_NAME,
-					RegistrationConstants.APPLICATION_ID,
-					"Unable to parse the buffered images to byte array " + regBaseCheckedException.getMessage()
-							+ ExceptionUtils.getStackTrace(regBaseCheckedException));
+				String configuredDocType = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.DOC_TYPE);
+				byte[] byteArray =  ("pdf".equalsIgnoreCase(configuredDocType)) ?
+						DocScannerUtil.asPDF(bufferedImages) : DocScannerUtil.asImage(bufferedImages);
+
+				if (byteArray == null) {
+					documentScanController.generateAlert(RegistrationConstants.ERROR,
+							RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOCUMENT_CONVERTION_ERR));
+					return;
+				}
+
+				int docSize = Integer.parseInt(documentScanController
+						.getValueFromApplicationContext(RegistrationConstants.DOC_SIZE)) / (1024 * 1024);
+				if (docSize <= (byteArray.length / (1024 * 1024))) {
+					bufferedImages.clear();
+					documentScanController.generateAlert(RegistrationConstants.ERROR,
+							RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOC_SIZE).replace("1", Integer.toString(docSize)));
+					return;
+				}
+
+				ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiSchemaDTO.getId());
+				DocumentDto documentDto = getRegistrationDTo().getDocuments().get(uiSchemaDTO.getId());
+				if (documentDto == null) {
+					documentDto = new DocumentDto();
+					documentDto.setFormat(configuredDocType);
+					documentDto.setCategory(uiSchemaDTO.getSubType());
+					documentDto.setOwner(RegistrationConstants.APPLICANT);
+				}
+
+				documentDto.setType(comboBox.getValue().getCode());
+				documentDto.setValue(uiSchemaDTO.getSubType().concat(RegistrationConstants.UNDER_SCORE)
+						.concat(comboBox.getValue().getCode()));
+
+				documentDto.setDocument(byteArray);
+				TextField textField = (TextField) getField(
+						uiSchemaDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
+				documentDto.setRefNumber(textField.getText());
+				getRegistrationDTo().addDocument(uiSchemaDTO.getId(), documentDto);
+
+				getField(uiSchemaDTO.getId() + PREVIEW_ICON).setVisible(true);
+				getField(uiSchemaDTO.getId() + CLEAR_ID).setVisible(true);
+
+				getField(uiSchemaDTO.getId() + PREVIEW_ICON).setManaged(true);
+				getField(uiSchemaDTO.getId() + CLEAR_ID).setManaged(true);
+
+				Label label = (Label) getField(uiSchemaDTO.getId()+RegistrationConstants.LABEL);
+				label.getStyleClass().clear();
+				label.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL);
+			}
+		} catch (IOException exception) {
+			LOGGER.error("Unable to parse the buffered images to byte array ", exception);
 			getField(uiSchemaDTO.getId() + PREVIEW_ICON).setVisible(false);
 			getField(uiSchemaDTO.getId() + CLEAR_ID).setVisible(false);
 			documentScanController.generateAlert(RegistrationConstants.ERROR,
 					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_REG_PAGE));
 		}
-
 		refreshFields();
 	}
 
 	@Override
 	public Object getData() {
-
 		return documentScanController.getRegistrationDTOFromSession().getDocuments().get(uiSchemaDTO.getId());
 	}
 

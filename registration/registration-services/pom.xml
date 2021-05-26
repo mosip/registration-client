@@ -176,11 +176,11 @@
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-qrcodegenerator-zxing</artifactId>
 		</dependency>
-		<dependency>
+		<!--<dependency>
 			<groupId>com.jcraft</groupId>
 			<artifactId>jsch</artifactId>
 			<version>0.1.54</version>
-		</dependency>
+		</dependency>-->
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
@@ -213,11 +213,11 @@
 			<artifactId>oshi-core</artifactId>
 			<version>3.6.2</version>
 		</dependency>
-		<dependency>
+		<!--<dependency>
 			<groupId>org.rxtx</groupId>
 			<artifactId>rxtx</artifactId>
 			<version>2.1.7</version>
-		</dependency>
+		</dependency>-->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context-support</artifactId>
@@ -226,11 +226,11 @@
 			<groupId>org.quartz-scheduler</groupId>
 			<artifactId>quartz</artifactId>
 		</dependency>
-		<dependency>
+		<!--<dependency>
 			<groupId>com.github.sarxos</groupId>
 			<artifactId>webcam-capture</artifactId>
 			<version>${webcam-capture.version}</version>
-		</dependency>
+		</dependency>-->
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-templatemanager-velocity</artifactId>
@@ -250,18 +250,18 @@
 			<artifactId>jfreesane</artifactId>
 			<version>0.98</version>
 		</dependency>
-		<dependency>
+		<!--<dependency>
 			<groupId>org.jvnet.com4j</groupId>
 			<artifactId>com4j</artifactId>
 			<version>2.1</version>
-		</dependency>
+		</dependency>-->
 		<!--<dependency> <groupId>io.mosip.kernel</groupId> <artifactId>kernel-crypto-jce</artifactId> 
 			</dependency> -->
-		<dependency>
+		<!--<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>pdfbox</artifactId>
 			<version>1.8.3</version>
-		</dependency>
+		</dependency>-->
 		<dependency>
 			<groupId>com.cronutils</groupId>
 			<artifactId>cron-utils</artifactId>
@@ -318,7 +318,7 @@
 			<version>${mosip.core.kernel.version}</version>
 		</dependency>
 
-		<dependency>
+		<!--<dependency>
 			<groupId>morena7</groupId>
 			<artifactId>morena7</artifactId>
 			<scope>system</scope>
@@ -341,6 +341,16 @@
 			<version>1.0</version>
 			<systemPath>${basedir}/lib/morena/morena7_win.jar</systemPath>
 		</dependency>
+
+		<dependency>
+			<groupId>morena7_osx</groupId>
+			<artifactId>morena7_osx</artifactId>
+			<scope>system</scope>
+			<version>1.0</version>
+			<systemPath>${basedir}/lib/morena/morena7_osx.jar</systemPath>
+		</dependency>-->
+
+
 		<!-- https://mvnrepository.com/artifact/com.github.jai-imageio/jai-imageio-jpeg2000 -->
 		<!-- Used JP2 to jpg image conversion -->
 		<dependency>
@@ -371,6 +381,24 @@
 			<artifactId>tus-java-client</artifactId>
 			<version>0.4.3</version>
 		</dependency>
+
+		<dependency>
+			<groupId>io.mosip.registration.api</groupId>
+			<artifactId>registration-api</artifactId>
+			<version>1.2.0-SNAPSHOT</version>
+		</dependency>
+
+		<!--<dependency>
+			<groupId>io.mosip.gps.rxtx</groupId>
+			<artifactId>geoposition-rxtx</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.mosip.scanner</groupId>
+			<artifactId>document-scanner</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>-->
 
 	</dependencies>
 	<!--<repositories> <repository> <id>local-maven-repo</id> <url>file:///${basedir}/lib</url> 

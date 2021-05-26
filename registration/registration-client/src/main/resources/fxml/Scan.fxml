@@ -82,21 +82,25 @@
                               <RowConstraints percentHeight="2.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <GridPane fx:id="imageViewGridPane" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                                <columnConstraints>
-                                  <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" percentWidth="100.0" />
-                                </columnConstraints>
-                                <rowConstraints>
-                                  <RowConstraints percentHeight="100.0" vgrow="SOMETIMES" />
-                                </rowConstraints>
-                                 <children>
-                                    <Group fx:id="imageGroup">
-                                       <children>
-                                          <ImageView fx:id="scanImage" pickOnBounds="true" preserveRatio="true" />
-                                       </children>
-                                    </Group>
-                                 </children>
-                              </GridPane>
+                                  <GridPane fx:id="imageViewGridPane" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                    <columnConstraints>
+                                      <ColumnConstraints halignment="CENTER" percentWidth="100.0" />
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                      <RowConstraints percentHeight="100.0" />
+                                    </rowConstraints>
+                                     <children>
+                                         <ScrollPane fitToHeight="true" fitToWidth="true" >
+                                         <StackPane fx:id="groupStackPane" alignment="CENTER">
+                                             <Group fx:id="imageGroup">
+                                                 <children>
+                                                     <ImageView fx:id="scanImage" pickOnBounds="true" preserveRatio="true"/>
+                                                 </children>
+                                             </Group>
+                                         </StackPane>
+                                         </ScrollPane>
+                                     </children>
+                                  </GridPane>
                            </children>
                         </GridPane>
                      </children>

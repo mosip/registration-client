@@ -207,7 +207,6 @@ public class RegistrationDAOTest {
 		regobjectrequest.setUpdBy("mosip");
 		regobjectrequest.setApproverRoleCode("SUPERADMIN");
 		regobjectrequest.setAckFilename("file1");
-		regobjectrequest.setRegistrationTransaction(new ArrayList<>());
 
 		PacketStatusDTO packetStatusDTO = new PacketStatusDTO();
 		packetStatusDTO.setFileName("123456");
@@ -219,7 +218,6 @@ public class RegistrationDAOTest {
 		reg.setUpdBy("mosip");
 		reg.setApproverRoleCode("SUPERADMIN");
 		reg.setAckFilename("file1");
-		reg.setRegistrationTransaction(new ArrayList<>());
 		
 		when(registrationRepository.getOne(Mockito.anyString())).thenReturn(regobjectrequest);
 		when(registrationRepository.update(Mockito.any())).thenReturn(reg);
