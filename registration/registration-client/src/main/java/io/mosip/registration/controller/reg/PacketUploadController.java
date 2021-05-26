@@ -11,7 +11,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.math.BigInteger;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,14 +19,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
-import io.mosip.kernel.core.util.exception.JsonProcessingException;
-import io.mosip.registration.exception.ConnectionException;
-import io.mosip.registration.exception.PreConditionCheckException;
 import org.apache.commons.collections.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -49,7 +46,6 @@ import io.mosip.registration.controller.vo.PacketStatusVO;
 import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.packet.PacketHandlerService;
 import io.mosip.registration.service.packet.PacketUploadService;
 import io.mosip.registration.service.sync.PacketSynchService;
@@ -350,14 +346,14 @@ public class PacketUploadController extends BaseController implements Initializa
 				packetStatusVO.setUploadStatus(packet.getUploadStatus());
 				packetsToBeExport.add(packetStatusVO);
 			});
-			Map<String, String> exportedPacketMap = new HashMap<>();
+			Map<String, String> exportedPacketMap = new LinkedHashMap<>();
 			packetsToBeExport.forEach(regPacket -> {
 				exportedPacketMap.put(regPacket.getFileName(), RegistrationClientStatusCode.EXPORT.getCode());
 			});
 			if (!exportedPacketMap.isEmpty()) {
 				displayStatus(populateTableData(exportedPacketMap));
 			}
-			selectedPackets.clear();
+			//selectedPackets.clear();
 		} else {
 			loadInitialPage();
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PACKET_EXPORT_EMPTY_ERROR));
@@ -585,6 +581,7 @@ public class PacketUploadController extends BaseController implements Initializa
 		clientStatusComboBox.setDisable(allApprovedPackets.isEmpty());
 		serverStatusComboBox.setDisable(allApprovedPackets.isEmpty());
 		clearFilters.setDisable(allApprovedPackets.isEmpty());
+		selectedPackets.clear();
 		
 		int count = 1;
 		packetsToBeUploaded = convertToPacketStatusVO(toBeUploadedPacketStatusDTOs, count);

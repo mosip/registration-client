@@ -349,6 +349,7 @@ public class AuthenticationController extends BaseController implements Initiali
 						userAuthenticationTypeListValidation.remove(0);
 						userNameField = username.getText();
 						if (!isEODAuthentication) {
+							getOSIData().setOperatorID(userNameField);
 							getOSIData().setOperatorAuthenticatedByPassword(true);
 						}
 						loadNextScreen();

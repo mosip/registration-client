@@ -16,6 +16,7 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.reg.DocumentScanController;
 import io.mosip.registration.controller.settings.SettingsInterface;
@@ -189,6 +190,8 @@ public class DeviceSettingsController extends BaseController implements Settings
 				&& Integer.parseInt(toPort.getText()) > Integer.parseInt(fromPort.getText())) {
 			ApplicationContext.setGlobalConfigValueOf(RegistrationConstants.MDM_START_PORT_RANGE, fromPort.getText());
 			ApplicationContext.setGlobalConfigValueOf(RegistrationConstants.MDM_END_PORT_RANGE, toPort.getText());
+			SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+					RegistrationConstants.ENABLE);
 			generateAlert(RegistrationConstants.ALERT_INFORMATION,
 					RegistrationUIConstants.getMessageLanguageSpecific("PORT_RANGE_MODIFIED_SUCCESSFULLY"));
 		} else {
@@ -254,9 +257,13 @@ public class DeviceSettingsController extends BaseController implements Settings
 			fromPort.setText((String) ApplicationContext.map().get(RegistrationConstants.MDM_START_PORT_RANGE));
 			toPort.setText((String) ApplicationContext.map().get(RegistrationConstants.MDM_END_PORT_RANGE));
 			fromPort.textProperty().addListener((observable, oldValue, newValue) -> {
+				SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+						RegistrationConstants.DISABLE);
 				submit.setVisible(true);
 			});
 			toPort.textProperty().addListener((observable, oldValue, newValue) -> {
+				SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+						RegistrationConstants.DISABLE);
 				submit.setVisible(true);
 			});
 			Map<String, List<MdmBioDevice>> biometricDevices = MosipDeviceSpecificationFactory.getAvailableDeviceInfo();
@@ -271,6 +278,9 @@ public class DeviceSettingsController extends BaseController implements Settings
 			GridPane gridPane = createGridPane(columnsCount);
 			addContentToGridPane(gridPane, biometricDevices, scannerDevices);
 			contentPane.setContent(gridPane);
+			
+			SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+					RegistrationConstants.ENABLE);
 		} catch (RegBaseCheckedException exception) {
 			LOGGER.error(String.format("%s -> Exception while Opening Settings page  %s -> %s",
 					RegistrationConstants.USER_REG_SCAN_EXP, exception.getMessage(),

@@ -215,7 +215,7 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 			});
 
 			if (!permittedJobs.contains(syncJob.getId())) {
-				submit.setDisable(true);
+				submit.setVisible(false);
 				cronTextField.setEditable(false);
 			}
 
