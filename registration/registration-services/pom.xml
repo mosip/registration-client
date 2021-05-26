@@ -296,7 +296,7 @@
 		<dependency>
 			<groupId>io.mosip.commons</groupId>
 			<artifactId>commons-packet-manager</artifactId>
-			<version>${mosip.core.kernel.version}</version>
+			<version>1.1.5.1-SNAPSHOT</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
