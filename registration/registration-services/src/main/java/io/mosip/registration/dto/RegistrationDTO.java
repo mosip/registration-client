@@ -21,6 +21,7 @@ import io.mosip.commons.packet.dto.packet.AuditDto;
 import io.mosip.commons.packet.dto.packet.BiometricsException;
 import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
+import io.mosip.registration.constants.IntroducerType;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dto.biometric.BiometricDTO;
@@ -127,6 +128,9 @@ public class RegistrationDTO {
 			int minAge = Integer
 					.parseInt((String) applicationContext.getApplicationMap().get(RegistrationConstants.MIN_AGE));
 			this.isChild = this.age < minAge;
+			if (isChild) {
+				osiDataDTO.setIntroducerType(IntroducerType.PARENT.getCode());
+			}
 		}
 	}
 
