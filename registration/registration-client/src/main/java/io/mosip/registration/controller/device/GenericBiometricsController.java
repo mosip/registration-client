@@ -25,7 +25,6 @@ import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 
-import io.mosip.registration.util.control.FxControl;
 import org.mvel2.MVEL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,18 +32,16 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
-import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.commons.packet.dto.packet.BiometricsException;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.constant.PurposeType;
+import io.mosip.kernel.biometrics.entities.BDBInfo;
+import io.mosip.kernel.biometrics.entities.BIR;
+import io.mosip.kernel.biometrics.entities.BIR.BIRBuilder;
+import io.mosip.kernel.biometrics.entities.RegistryIDType;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
-import io.mosip.kernel.core.cbeffutil.entity.BDBInfo;
-import io.mosip.kernel.core.cbeffutil.entity.BIR;
-import io.mosip.kernel.core.cbeffutil.entity.BIR.BIRBuilder;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.PurposeType;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.RegistryIDType;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
@@ -60,7 +57,6 @@ import io.mosip.registration.controller.reg.DocumentScanController;
 import io.mosip.registration.controller.reg.RegistrationController;
 import io.mosip.registration.controller.reg.UserOnboardParentController;
 import io.mosip.registration.dao.UserDetailDAO;
-import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.mastersync.BiometricAttributeDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
@@ -74,6 +70,7 @@ import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.util.common.Modality;
+import io.mosip.registration.util.control.FxControl;
 import io.mosip.registration.util.control.impl.BiometricFxControl;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -1771,7 +1768,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 	private BIR buildBir(byte[] biometricImageISO, BiometricType modality) {
 		return new BIRBuilder().withBdb(biometricImageISO)
 				.withBdbInfo(new BDBInfo.BDBInfoBuilder().withFormat(new RegistryIDType())
-						.withType(Collections.singletonList(SingleType.fromValue(modality.value())))
+						.withType(Collections.singletonList(modality))
 						.withPurpose(PurposeType.IDENTIFY).build())
 				.build();
 	}

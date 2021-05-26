@@ -1,13 +1,45 @@
 package io.mosip.registration.service.operator.impl;
 
+import static io.mosip.registration.constants.LoggerConstants.LOG_REG_USER_ONBOARD;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
+
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import io.mosip.commons.packet.constants.Biometric;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.entities.BIR;
+import io.mosip.kernel.biometrics.entities.SingleAnySubtypeType;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
-import io.mosip.kernel.core.cbeffutil.entity.BIR;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleAnySubtypeType;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.crypto.spi.CryptoCoreSpec;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -27,6 +59,7 @@ import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import io.mosip.kernel.keymanagerservice.util.KeymanagerUtil;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.UserOnboardDAO;
 import io.mosip.registration.dto.ResponseDTO;
@@ -39,31 +72,6 @@ import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateEncodingException;
-import java.sql.Timestamp;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
-import io.mosip.registration.context.ApplicationContext;
-
-import static io.mosip.registration.constants.LoggerConstants.LOG_REG_USER_ONBOARD;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 /**
  * Implementation for {@link UserOnboardService}
@@ -118,7 +126,6 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 		return responseDTO;
 	}
 
-	@SuppressWarnings("unchecked")
 	public boolean validateWithIDA(List<BiometricsDto> biometrics, ResponseDTO responseDTO) throws PreConditionCheckException {
 
 		//Precondition check, proceed only if met, otherwise throws exception
@@ -167,7 +174,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 				String previousHash = HMACUtils2.digestAsPlainText("".getBytes());
 
 				for (BiometricsDto dto : biometrics) {
-					SingleType bioType = Biometric.getSingleTypeByAttribute(dto.getBioAttribute());
+					BiometricType bioType = Biometric.getSingleTypeByAttribute(dto.getBioAttribute());
 					String bioSubType = getSubTypes(bioType, dto.getBioAttribute());
 					LinkedHashMap<String, Object> dataBlock = buildDataBlock(bioType.name(), bioSubType,
 							dto.getAttributeISO(), previousHash, dto);
@@ -209,6 +216,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 		return false;
 	}
 
+	@SuppressWarnings("unchecked")
 	private String getCertificate(Map<String, String> requestParamMap) throws Exception {
 		LOGGER.info(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID, "getCertificate invoked ....");
 		try {
@@ -281,9 +289,9 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 		return dataBlock;
 	}
 
-	private String getSubTypes(SingleType singleType, String bioAttribute) {
+	private String getSubTypes(BiometricType bioType, String bioAttribute) {
 		List<String> subtypes = new LinkedList<>();
-		switch (singleType) {
+		switch (bioType) {
 		case FINGER:
 			subtypes.add(bioAttribute.contains("left") ? SingleAnySubtypeType.LEFT.value()
 					: SingleAnySubtypeType.RIGHT.value());
@@ -300,6 +308,8 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 					: SingleAnySubtypeType.RIGHT.value());
 			break;
 		case FACE:
+			break;
+		default:
 			break;
 		}
 		return String.join(" ", subtypes);

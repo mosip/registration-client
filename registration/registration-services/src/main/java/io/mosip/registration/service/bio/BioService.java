@@ -3,9 +3,9 @@ package io.mosip.registration.service.bio;
 import java.io.InputStream;
 import java.util.List;
 
+import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
+import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
-import io.mosip.kernel.core.cbeffutil.entity.BIR;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.ProcessedLevelType;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
