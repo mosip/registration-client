@@ -312,8 +312,10 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	public void preview() {
 		clearSelection();
 		stopStreaming();
+		showPreview(true);
 		scanImage.setImage(DocScannerUtil.getImage(documentScanController.getScannedImage(documentScanController.getScannedPages().size() - 1)));
 		setupImageView();
+		showPagination();
 	}
 
 

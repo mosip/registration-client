@@ -213,11 +213,7 @@
 			<artifactId>oshi-core</artifactId>
 			<version>3.6.2</version>
 		</dependency>
-		<!--<dependency>
-			<groupId>org.rxtx</groupId>
-			<artifactId>rxtx</artifactId>
-			<version>2.1.7</version>
-		</dependency>-->
+
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context-support</artifactId>
@@ -226,11 +222,7 @@
 			<groupId>org.quartz-scheduler</groupId>
 			<artifactId>quartz</artifactId>
 		</dependency>
-		<!--<dependency>
-			<groupId>com.github.sarxos</groupId>
-			<artifactId>webcam-capture</artifactId>
-			<version>${webcam-capture.version}</version>
-		</dependency>-->
+
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-templatemanager-velocity</artifactId>
@@ -318,39 +310,6 @@
 			<version>${mosip.core.kernel.version}</version>
 		</dependency>
 
-		<!--<dependency>
-			<groupId>morena7</groupId>
-			<artifactId>morena7</artifactId>
-			<scope>system</scope>
-			<version>1.0</version>
-			<systemPath>${basedir}/lib/morena/morena7.jar</systemPath>
-		</dependency>
-
-		<dependency>
-			<groupId>morena7-license</groupId>
-			<artifactId>morena7-license</artifactId>
-			<scope>system</scope>
-			<version>1.0</version>
-			<systemPath>${basedir}/lib/morena/morena_license.jar</systemPath>
-		</dependency>
-
-		<dependency>
-			<groupId>morena7-win</groupId>
-			<artifactId>morena7-win</artifactId>
-			<scope>system</scope>
-			<version>1.0</version>
-			<systemPath>${basedir}/lib/morena/morena7_win.jar</systemPath>
-		</dependency>
-
-		<dependency>
-			<groupId>morena7_osx</groupId>
-			<artifactId>morena7_osx</artifactId>
-			<scope>system</scope>
-			<version>1.0</version>
-			<systemPath>${basedir}/lib/morena/morena7_osx.jar</systemPath>
-		</dependency>-->
-
-
 		<!-- https://mvnrepository.com/artifact/com.github.jai-imageio/jai-imageio-jpeg2000 -->
 		<!-- Used JP2 to jpg image conversion -->
 		<dependency>
@@ -388,17 +347,11 @@
 			<version>1.2.0-SNAPSHOT</version>
 		</dependency>
 
-		<!--<dependency>
-			<groupId>io.mosip.gps.rxtx</groupId>
-			<artifactId>geoposition-rxtx</artifactId>
-			<version>1.0-SNAPSHOT</version>
-		</dependency>
-
 		<dependency>
-			<groupId>io.mosip.scanner</groupId>
-			<artifactId>document-scanner</artifactId>
-			<version>1.0-SNAPSHOT</version>
-		</dependency>-->
+			<groupId>io.mosip.api.impl</groupId>
+			<artifactId>registration-api-default-impl</artifactId>
+			<version>1.2.0-SNAPSHOT</version>
+		</dependency>
 
 	</dependencies>
 	<!--<repositories> <repository> <id>local-maven-repo</id> <url>file:///${basedir}/lib</url> 

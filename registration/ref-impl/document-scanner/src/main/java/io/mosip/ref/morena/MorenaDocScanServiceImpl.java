@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Component
+//@Component
 public class MorenaDocScanServiceImpl implements DocScannerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MorenaDocScanServiceImpl.class);

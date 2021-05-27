@@ -34,7 +34,7 @@ public class GeoPositionServiceImpl implements GeoPositionService, SerialPortEve
                     serialPort = (SerialPort) commPortIdentifier.open("MOSIP", 0);
                     serialPort.notifyOnDataAvailable(true);
                     serialPort.addEventListener(this);
-                    serialPort.setSerialPortParams(4800, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+                    serialPort.setSerialPortParams(geoPosition.getBaudRate(), SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
                     inputStream = serialPort.getInputStream();
                     Thread.sleep(geoPosition.getTimeout());
 

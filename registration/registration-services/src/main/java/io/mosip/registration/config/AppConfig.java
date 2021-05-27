@@ -57,7 +57,7 @@ import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderIm
 		"io.mosip.kernel.core.pdfgenerator.spi", "io.mosip.kernel.pdfgenerator.itext.impl",
 		"io.mosip.kernel.idobjectvalidator.impl", "io.mosip.kernel.biosdk.provider.impl",
 		"io.mosip.kernel.biosdk.provider.factory", "io.mosip.commons.packet",
-				"io.mosip.geoposition", "io.mosip.scanner" })
+		"io.mosip.registration.api.config" })
 @PropertySource(value = { "classpath:spring.properties" })
 @ImportAutoConfiguration(RefreshAutoConfiguration.class)
 @EnableConfigurationProperties

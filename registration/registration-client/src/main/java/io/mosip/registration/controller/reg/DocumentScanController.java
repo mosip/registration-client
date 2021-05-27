@@ -241,7 +241,7 @@ public class DocumentScanController extends BaseController {
 	}
 
 	public BufferedImage getScannedImage(int docPageNumber) {
-		return scannedPages.get(docPageNumber);
+		return scannedPages.get(docPageNumber <= 0 ? 0 : docPageNumber);
 	}
 
 
