@@ -2,11 +2,9 @@ package io.mosip.registration.test.service.packet;
 
 import static org.mockito.Mockito.when;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.sync.PolicySyncService;
 import org.junit.*;
@@ -49,7 +47,7 @@ import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecke
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*" })
-@PrepareForTest({ JsonUtils.class, ApplicationContext.class, SessionContext.class })
+@PrepareForTest({ JsonUtils.class, ApplicationContext.class, SessionContext.class, Role.class })
 public class PacketHandlerServiceTest {
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -99,6 +97,11 @@ public class PacketHandlerServiceTest {
 		mockedSuccessResponse.setSuccessResponseDTO(new SuccessResponseDTO());
 		PowerMockito.mockStatic(SessionContext.class);
 		PowerMockito.mockStatic(ApplicationContext.class);
+		PowerMockito.mockStatic(Role.class);
+
+		SessionContext.UserContext userContext = Mockito.mock(SessionContext.UserContext.class);
+		userContext.setRoles(Arrays.asList("SUPERADMIN", "SUPERVISOR"));
+		PowerMockito.when(SessionContext.userContext()).thenReturn(userContext);
 		
 		Map<String, Object> applicationMap = new HashMap<>();
 		applicationMap.put(RegistrationConstants.INITIAL_SETUP, "N");
@@ -108,7 +111,7 @@ public class PacketHandlerServiceTest {
 		
 	}
 
-	@Ignore
+
 	@Test
 	public void startRegistration() throws RegBaseCheckedException {
 
