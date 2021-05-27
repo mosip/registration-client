@@ -118,7 +118,7 @@ public class MosipDeviceSpecificationHelper {
 		jwtSignatureVerifyRequestDto.setDomain(domain);
 		jwtSignatureVerifyRequestDto.setJwtSignatureData(signedData);
 		
-		JWTSignatureVerifyResponseDto jwtSignatureVerifyResponseDto = signatureService .jwtVerify(jwtSignatureVerifyRequestDto);
+		JWTSignatureVerifyResponseDto jwtSignatureVerifyResponseDto = signatureService.jwtVerify(jwtSignatureVerifyRequestDto);
 		if(!jwtSignatureVerifyResponseDto.isSignatureValid())
 				throw new DeviceException(MDMError.MDM_INVALID_SIGNATURE.getErrorCode(), MDMError.MDM_INVALID_SIGNATURE.getErrorMessage());
 		

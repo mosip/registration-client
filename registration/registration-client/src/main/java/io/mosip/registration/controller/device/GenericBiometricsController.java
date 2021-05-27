@@ -25,6 +25,9 @@ import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 
+import io.mosip.registration.api.docscanner.DocScannerFacade;
+import io.mosip.registration.api.docscanner.dto.DocScanDevice;
+import io.mosip.registration.util.control.FxControl;
 import org.mvel2.MVEL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +35,7 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
+import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.commons.packet.dto.packet.BiometricsException;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
@@ -57,6 +61,7 @@ import io.mosip.registration.controller.reg.DocumentScanController;
 import io.mosip.registration.controller.reg.RegistrationController;
 import io.mosip.registration.controller.reg.UserOnboardParentController;
 import io.mosip.registration.dao.UserDetailDAO;
+import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.mastersync.BiometricAttributeDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
@@ -70,7 +75,6 @@ import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.util.common.Modality;
-import io.mosip.registration.util.control.FxControl;
 import io.mosip.registration.util.control.impl.BiometricFxControl;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -307,6 +311,9 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 	@Autowired
 	private UserOnboardService userOnboardService;
+
+	@Autowired
+	private DocScannerFacade docScannerFacade;
 
 	private Service<List<BiometricsDto>> rCaptureTaskService;
 
@@ -621,7 +628,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 				scanPopUpViewController.getPopupStage().close();
 
-			} catch (RuntimeException | IOException exception) {
+			} catch (Exception exception) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
 				LOGGER.error("Error while capturing exception photo : ", exception);
 
@@ -2333,7 +2340,15 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 		LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Capturing with local camera");
 
-		documentScanController.startStream(this);
+		List<DocScanDevice> devices = docScannerFacade.getConnectedCameraDevices();
+		LOGGER.info("Connected devices : {}", devices);
+		if(devices.isEmpty()) {
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.WEBCAM_ALERT_CONTEXT));
+			return;
+		}
+		LOGGER.info("Connecting to local camera device : {}", devices.get(0).getId());
+		scanPopUpViewController.docScanDevice = devices.get(0);
+		scanPopUpViewController.startStream();
 	}
 
 	public void init(BiometricFxControl fxControl, String subType, Modality modality, List<String> configBioAttributes,

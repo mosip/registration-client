@@ -1,10 +1,5 @@
 package io.mosip.registration.config;
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.FileAppender;
-import ch.qos.logback.core.recovery.ResilientFileOutputStream;
 import io.micrometer.core.aop.CountedAspect;
 import io.micrometer.core.aop.TimedAspect;
 import io.micrometer.core.instrument.Clock;
@@ -18,21 +13,24 @@ import io.mosip.registration.metrics.DiskMetrics;
 import io.mosip.registration.metrics.PacketMetrics;
 import io.mosip.registration.metrics.SystemTimeMetrics;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
+
 import io.tus.java.client.*;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Iterator;
+import java.util.Optional;
 
-//@Configuration
+@Configuration
+@EnableScheduling
 public class MetricsConfig {
 
     private static final Logger LOGGER = AppConfig.getLogger(MetricsConfig.class);
@@ -127,13 +125,12 @@ public class MetricsConfig {
         return packetMetrics;
     }
 
-    /*@Scheduled(initialDelay = 15*60*1000, fixedDelay =  15*60*1000)
+    @Scheduled(initialDelay = 15*60*1000, fixedDelay =  15*60*1000)
     public void exportMetrics() {
 
         try {
             // Create a new TusClient instance
             TusClient client = new TusClient();
-
             // Configure tus HTTP endpoint. This URL will be used for creating new uploads
             // using the Creation extension
             client.setUploadCreationURL(new URL("http://localhost:8080/files"));
@@ -187,6 +184,8 @@ public class MetricsConfig {
 
                     LOGGER.info("Upload finished.");
                     LOGGER.info("Upload available at: {}", uploader.getUploadURL().toString());
+
+                    //TODO delete archive log file
                 }
             };
             executor.makeAttempts();
@@ -195,8 +194,16 @@ public class MetricsConfig {
         }
     }
 
-    private File getFile() {
-       return Path.of(System.getProperty("user.dir"), "logs", "metric.log").toFile();
-    }*/
+    private File getFile() throws Exception {
+        Optional<Path> result = Files.list(Path.of(System.getProperty("user.dir"), "logs"))
+                    .filter(s -> s.toString().startsWith("metrics-archive"))
+                    .sorted()
+                    .findFirst();
+
+        if(result.isPresent())
+            return result.get().toFile();
+
+        throw new Exception("*** No metrics archive files to sync ***");
+    }
 
 }

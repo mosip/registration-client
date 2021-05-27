@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import io.mosip.registration.api.docscanner.DeviceType;
+import io.mosip.registration.api.docscanner.DocScannerFacade;
+import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import io.mosip.registration.dto.BiometricDeviceInfo;
 import io.mosip.registration.dto.ScanDeviceInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,11 +23,9 @@ import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.reg.DocumentScanController;
 import io.mosip.registration.controller.settings.SettingsInterface;
-import io.mosip.registration.device.scanner.dto.ScanDevice;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.mdm.dto.MdmBioDevice;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
-import io.mosip.registration.util.scan.DocumentScanFacade;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -82,7 +83,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 	private MosipDeviceSpecificationFactory mosipDeviceSpecificationFactory;
 
 	@Autowired
-	private DocumentScanFacade documentScanFacade;
+	private DocScannerFacade docScannerFacade;
 
 	@Autowired
 	private DocumentScanController documentScanController;
@@ -268,7 +269,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 			});
 			Map<String, List<MdmBioDevice>> biometricDevices = MosipDeviceSpecificationFactory.getAvailableDeviceInfo();
 			columnsCount = biometricDevices.size();
-			List<ScanDevice> scannerDevices = documentScanFacade.getDevices();
+			List<DocScanDevice> scannerDevices = docScannerFacade.getConnectedDevices();
 			if (!scannerDevices.isEmpty()) {
 				++columnsCount;
 			}
@@ -321,7 +322,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 	}
 
 	private void addContentToGridPane(GridPane gridPane, Map<String, List<MdmBioDevice>> biometricDevices,
-			List<ScanDevice> scannerDevices) throws RegBaseCheckedException {
+			List<DocScanDevice> scannerDevices) throws RegBaseCheckedException {
 		int rowIndex = 0;
 		int columnIndex = 0;
 		for (Entry<String, List<MdmBioDevice>> entry : biometricDevices.entrySet()) {
@@ -345,7 +346,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 	}
 
 	private GridPane createDevicePane(String type, String key, List<MdmBioDevice> bioDevices,
-			List<ScanDevice> scannerDevices) throws RegBaseCheckedException {
+			List<DocScanDevice> scannerDevices) throws RegBaseCheckedException {
 		GridPane mainGridPane = new GridPane();
 		mainGridPane.getStyleClass().add(RegistrationConstants.SYNC_JOB_STYLE);
 
@@ -468,12 +469,12 @@ public class DeviceSettingsController extends BaseController implements Settings
 		return null;
 	}
 
-	private void addScannerDetails(VBox deviceDetailsVbox, List<ScanDevice> scannerDevices) {
+	private void addScannerDetails(VBox deviceDetailsVbox, List<DocScanDevice> scannerDevices) {
 		if (scannerDevices.size() > 1) {
 			ComboBox<ScanDeviceInfo> comboBox = new ComboBox<>();
 			comboBox.getStyleClass().add("deviceDetailsComboBox");
 
-			for (ScanDevice device : scannerDevices) {
+			for (DocScanDevice device : scannerDevices) {
 				comboBox.getItems().add(convertToScanDeviceInfo(device));
 			}
 			comboBox.getSelectionModel().select(getSelectedScanDevice(scannerDevices));
@@ -498,7 +499,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 						// Add our text to the Label
 						label.setText(item.toString());
 						setGraphic(label);
-						documentScanController.setSelectedScanDeviceName(item.getName());
+						documentScanController.setSelectedScanDeviceName(item.getId());
 					}
 				}
 			});
@@ -512,24 +513,22 @@ public class DeviceSettingsController extends BaseController implements Settings
 		}
 	}
 
-	private ScanDeviceInfo getSelectedScanDevice(List<ScanDevice> scannerDevices) {
+	private ScanDeviceInfo getSelectedScanDevice(List<DocScanDevice> scannerDevices) {
 		String selectedScanDevice = documentScanController.getSelectedScanDeviceName();
 		if (selectedScanDevice != null && !selectedScanDevice.isBlank()) {
 			return convertToScanDeviceInfo(scannerDevices.stream()
-					.filter(device -> device.getName().equalsIgnoreCase(selectedScanDevice)).findFirst().get());
+					.filter(device -> device.getId().equalsIgnoreCase(selectedScanDevice)).findFirst().get());
 		}
 		documentScanController.setSelectedScanDeviceName(scannerDevices.get(0).getName());
 		return convertToScanDeviceInfo(scannerDevices.get(0));
 	}
 
-	private ScanDeviceInfo convertToScanDeviceInfo(ScanDevice device) {
+	private ScanDeviceInfo convertToScanDeviceInfo(DocScanDevice device) {
 		ScanDeviceInfo deviceInfo = new ScanDeviceInfo();
 		deviceInfo.setId(device.getId());
 		deviceInfo.setName(device.getName());
-		if (device.isWebCam()) {
+		if (device.getDeviceType().equals(DeviceType.CAMERA)) {
 			deviceInfo.setModel(applicationContext.getApplicationLanguageLabelBundle().getString("webcam"));
-		} else if (device.isWIA()) {
-			deviceInfo.setModel(applicationContext.getApplicationLanguageLabelBundle().getString("wia"));
 		} else {
 			deviceInfo.setModel(RegistrationConstants.HYPHEN);
 		}

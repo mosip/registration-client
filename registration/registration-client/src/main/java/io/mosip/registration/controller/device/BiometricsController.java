@@ -24,6 +24,9 @@ import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 
+import io.mosip.registration.api.docscanner.DocScannerFacade;
+import io.mosip.registration.api.docscanner.dto.DocScanDevice;
+import io.mosip.registration.util.common.Modality;
 import org.apache.commons.io.IOUtils;
 import org.mvel2.MVEL;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +51,7 @@ import io.mosip.registration.constants.AuditReferenceIdTypes;
 import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.FXUtils;
@@ -67,7 +71,6 @@ import io.mosip.registration.mdm.dto.MdmBioDevice;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.operator.UserOnboardService;
-import io.mosip.registration.util.common.Modality;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -312,6 +315,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	@Autowired
 	private DocumentScanController documentScanController;
+
+	@Autowired
+	private DocScannerFacade docScannerFacade;
 
 	private Service<List<BiometricsDto>> rCaptureTaskService;
 
@@ -983,7 +989,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 				scanPopUpViewController.getPopupStage().close();
 
-			} catch (RuntimeException | IOException exception) {
+			} catch (Exception exception) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
 
 				LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
@@ -3048,7 +3054,15 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 		LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Capturing with local camera");
 
-		documentScanController.startStream(this);
+		List<DocScanDevice> devices = docScannerFacade.getConnectedCameraDevices();
+		LOGGER.info("Connected devices : {}", devices);
+		if(devices.isEmpty()) {
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.WEBCAM_ALERT_CONTEXT));
+			return;
+		}
+		LOGGER.info("Connecting to local camera device : {}", devices.get(0).getId());
+		scanPopUpViewController.docScanDevice = devices.get(0);
+		scanPopUpViewController.startStream();
 	}
 
 }

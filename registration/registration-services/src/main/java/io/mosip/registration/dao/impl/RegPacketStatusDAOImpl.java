@@ -15,8 +15,6 @@ import io.mosip.registration.dao.AuditLogControlDAO;
 import io.mosip.registration.dao.RegPacketStatusDAO;
 import io.mosip.registration.entity.AuditLogControl;
 import io.mosip.registration.entity.Registration;
-import io.mosip.registration.entity.RegistrationTransaction;
-import io.mosip.registration.repositories.RegTransactionRepository;
 import io.mosip.registration.repositories.RegistrationRepository;
 
 /**
@@ -30,9 +28,6 @@ public class RegPacketStatusDAOImpl implements RegPacketStatusDAO {
 	/** The registration repository. */
 	@Autowired
 	private RegistrationRepository registrationRepository;
-
-	@Autowired
-	private RegTransactionRepository regTransactionRepository;
 
 	@Autowired
 	private AuditLogControlDAO auditLogControlDAO;
@@ -95,12 +90,6 @@ public class RegPacketStatusDAOImpl implements RegPacketStatusDAO {
 		if(auditLogControl != null) {
 			/* Delete Audit Logs */
 			auditLogControlDAO.delete(auditLogControl);
-		}
-
-		/* Delete Registartion Transaction */
-		Iterable<RegistrationTransaction> iterableTransaction = registration.getRegistrationTransaction();
-		if(iterableTransaction != null) {
-			regTransactionRepository.deleteInBatch(iterableTransaction);
 		}
 
 		/* Delete Registartion */
