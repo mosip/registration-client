@@ -376,7 +376,7 @@ public class BaseService {
 	 */
 	public PacketStatusDTO preparePacketStatusDto(Registration registration) {
 		PacketStatusDTO statusDTO = new PacketStatusDTO();
-		statusDTO.setFileName(registration.getId());
+		statusDTO.setFileName(registration.getAppId());
 		statusDTO.setPacketClientStatus(registration.getClientStatusCode());
 		statusDTO.setClientStatusComments(registration.getClientStatusComments());
 		statusDTO.setPacketServerStatus(registration.getServerStatusCode());

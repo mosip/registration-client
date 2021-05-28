@@ -50,7 +50,7 @@
                         <TableView fx:id="table" GridPane.rowIndex="1">
                            <columns>
                               <TableColumn fx:id="slno" editable="false" prefWidth="${tableContainer.width*7/100}" resizable="false" styleClass="tableId" text="%slno" />
-                              <TableColumn fx:id="id" editable="false" prefWidth="${tableContainer.width*34/100}" resizable="false" styleClass="tableId" text="%registrationid" />
+                              <TableColumn fx:id="id" editable="false" prefWidth="${tableContainer.width*34/100}" resizable="false" styleClass="tableId" text="%applicationId" />
                               <TableColumn fx:id="date" editable="false" prefWidth="${tableContainer.width*22/100}" resizable="false" styleClass="tableId" text="%eodDate" />
                               <TableColumn fx:id="acknowledgementFormPath" editable="false" text="%registrtionid" visible="false" />
                               <TableColumn fx:id="operatorId" editable="false" prefWidth="${tableContainer.width*16/100}" resizable="false" styleClass="tableId" text="%operatorId" />
@@ -59,7 +59,7 @@
                         </TableView>
                         <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0">
                            <children>
-                              <TextField fx:id="filterField" prefWidth="230.0" promptText="%searchRegistration" styleClass="searchBoxTextStyle" />
+                              <TextField fx:id="filterField" prefWidth="230.0" promptText="%searchApplication" styleClass="searchBoxTextStyle" />
                               <ImageView fx:id="exportImageView" fitHeight="33.0" fitWidth="38.0" onMouseClicked="#exportData" pickOnBounds="true" preserveRatio="true">
                                  <image>
                                     <Image url="@../images/export-icon.jpg" />

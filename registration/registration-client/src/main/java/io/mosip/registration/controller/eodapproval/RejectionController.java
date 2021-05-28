@@ -155,7 +155,7 @@ public class RejectionController extends BaseController implements Initializable
 		}
 
 		Map<String, String> map = new WeakHashMap<>();
-		map.put(RegistrationConstants.REGISTRATIONID, rejRegData.getId());
+		map.put(RegistrationConstants.PACKET_APPLICATION_ID, rejRegData.getId());
 		map.put(RegistrationConstants.STATUSCODE, RegistrationClientStatusCode.REJECTED.getCode());
 		map.put(RegistrationConstants.STATUSCOMMENT, rejectionComboBox.getSelectionModel().getSelectedItem());
 		rejectionmapList.add(map);
