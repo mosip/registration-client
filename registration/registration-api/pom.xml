@@ -13,6 +13,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <spring.version>5.0.6.RELEASE</spring.version>
         <mosip.core.kernel.version>1.2.0-SNAPSHOT</mosip.core.kernel.version>
+        <openjfx.version>11.0.2</openjfx.version>
     </properties>
 
     <dependencies>
@@ -22,6 +23,13 @@
             <version>RELEASE</version>
             <scope>compile</scope>
         </dependency>
+        
+        <dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-graphics</artifactId>
+			<version>${openjfx.version}</version>
+			<scope>compile</scope>
+		</dependency>
 
         <dependency>
             <groupId>org.springframework</groupId>
