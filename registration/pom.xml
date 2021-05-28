@@ -170,6 +170,8 @@
 		<module>registration-services</module>
 		<module>registration-client</module>
 		<module>registration-libs</module>
+		<module>registration-test</module>
+		
 	</modules>
 
 	<dependencyManagement>

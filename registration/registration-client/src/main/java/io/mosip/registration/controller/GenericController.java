@@ -691,6 +691,7 @@ public class GenericController extends BaseController {
 		String content = registrationPreviewController.getPreviewContent();
 		if(content != null) {
 			final WebView webView = new WebView();
+webView.setId("webView");
 			webView.prefWidthProperty().bind(tabPane.widthProperty());
 			webView.prefHeightProperty().bind(tabPane.heightProperty());
 			webView.getEngine().loadContent(content);
