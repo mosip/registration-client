@@ -1,10 +1,8 @@
 package io.mosip.registration.test.service.packet.encryption;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Timestamp;
@@ -13,8 +11,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import io.mosip.registration.constants.RegistrationClientStatusCode;
-import io.mosip.registration.exception.ConnectionException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -31,14 +27,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.ResourceAccessException;
 
+import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.dao.RegistrationDAO;
-import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.entity.Registration;
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.RegistrationRepository;
 import io.mosip.registration.service.packet.impl.PacketUploadServiceImpl;
 import io.mosip.registration.util.restclient.RequestHTTPDTO;
@@ -178,7 +172,7 @@ public class PacketUploadServiceTest {
 		List<Registration> packetList = new ArrayList<>();
 		Registration registration1 = new Registration();
 		packetList.add(registration);
-		Mockito.when(registrationDAO.get(Mockito.anyList())).thenReturn(regList);
+		Mockito.when(registrationDAO.getRegistrationByAppId(Mockito.anyString())).thenReturn(registration);
 		Mockito.when(registrationDAO.updateRegStatus(Mockito.anyObject())).thenReturn(registration1);
 		packetUploadServiceImpl.uploadPacket("123456789");
 		assertEquals("PUSHED", registration.getClientStatusCode());
@@ -205,7 +199,7 @@ public class PacketUploadServiceTest {
 		List<Registration> packetList = new ArrayList<>();
 		Registration registration1 = new Registration();
 		packetList.add(registration);
-		Mockito.when(registrationDAO.get(Mockito.anyList())).thenReturn(regList);
+		Mockito.when(registrationDAO.getRegistrationByAppId(Mockito.anyString())).thenReturn(registration);
 		Mockito.when(registrationDAO.updateRegStatus(Mockito.any())).thenReturn(registration1);
 		packetUploadServiceImpl.uploadPacket("123456789");
 		assertEquals("E", registration.getFileUploadStatus());
@@ -221,7 +215,7 @@ public class PacketUploadServiceTest {
 		regList.add(registration);
 		registration.setCrDtime(Timestamp.from(Instant.now()));
 
-		Mockito.when(registrationDAO.get(Mockito.anyList())).thenReturn(regList);
+		Mockito.when(registrationDAO.getRegistrationByAppId(Mockito.anyString())).thenReturn(registration);
 		Mockito.when(registrationDAO.getRegistrationById(Mockito.anyString(), Mockito.anyString()))
 				.thenReturn(registration);
 		packetUploadServiceImpl.uploadPacket("123456789");

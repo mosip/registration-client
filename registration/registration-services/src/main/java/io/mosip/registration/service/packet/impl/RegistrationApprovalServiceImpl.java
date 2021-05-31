@@ -79,7 +79,7 @@ public class RegistrationApprovalServiceImpl extends BaseService implements Regi
 						"Packet  list has been fetched");
 				auditFactory.audit(AuditEvent.PACKET_RETRIVE, Components.PACKET_RETRIVE,
 						SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
-				details.forEach(detail -> list.add(new RegistrationApprovalDTO(detail.getId(),
+				details.forEach(detail -> list.add(new RegistrationApprovalDTO(detail.getAppId(),
 						regDateTimeConversion(detail.getCrDtime().toString()), detail.getAckFilename(), detail.getRegUsrId(), RegistrationConstants.EMPTY)));
 			} catch (RuntimeException runtimeException) {
 				throw new RegBaseUncheckedException(RegistrationConstants.PACKET_RETRIVE_STATUS,
@@ -121,6 +121,26 @@ public class RegistrationApprovalServiceImpl extends BaseService implements Regi
 		}
 		return registration;
 	}
+	
+	@Override
+	@PreAuthorizeUserId(roles = { AuthenticationAdvice.OFFICER_ROLE, AuthenticationAdvice.SUPERVISOR_ROLE,
+			AuthenticationAdvice.ADMIN_ROLE,AuthenticationAdvice.DEFAULT_ROLE })
+	public Registration updateRegistrationWithAppId(String applicationId, String statusComments, String clientStatusCode)
+			throws RegBaseCheckedException {
+
+		LOGGER.info(LoggerConstants.LOG_UPADTE_REGISTER_PKT, APPLICATION_NAME, APPLICATION_ID,
+				"Updating status of Packet");
+		auditFactory.audit(AuditEvent.PACKET_UPDATE, Components.PACKET_UPDATE, SessionContext.userContext().getUserId(),
+				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
+		Registration registration;
+		if (nullCheckForupdateRegistration(applicationId, clientStatusCode)) {
+			registration = registrationDAO.updateRegistrationWithAppId(applicationId, statusComments, clientStatusCode);
+		} else {
+			throw new RegBaseCheckedException(RegistrationConstants.PACKET_UPDATE_STATUS_EXCEPTION,
+					"Application ID/ Client Status Code is empty or null");
+		}
+		return registration;
+	}
 
 	/**
 	 * Null check for getEnrollement by status.
@@ -149,11 +169,11 @@ public class RegistrationApprovalServiceImpl extends BaseService implements Regi
 	 * 					the client status code of the registration packet.
 	 * @return true, if successful
 	 */
-	private boolean nullCheckForupdateRegistration(String registrationID, String clientStatusCode) {
+	private boolean nullCheckForupdateRegistration(String id, String clientStatusCode) {
 
-		if (StringUtils.isEmpty(registrationID)) {
+		if (StringUtils.isEmpty(id)) {
 			LOGGER.info(LoggerConstants.LOG_GET_REGISTER_PKT, APPLICATION_NAME, APPLICATION_ID,
-					"Registration ID is empty or null");
+					"Registration/Application ID is empty or null");
 			return false;
 		} else if (StringUtils.isEmpty(clientStatusCode)) {
 			LOGGER.info(LoggerConstants.LOG_GET_REGISTER_PKT, APPLICATION_NAME, APPLICATION_ID,

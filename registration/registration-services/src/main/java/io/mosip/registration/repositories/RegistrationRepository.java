@@ -167,4 +167,9 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 
 	@Query("select clientStatusCode, serverStatusCode, count(*) from Registration group by clientStatusCode, serverStatusCode")
 	List<Object[]> getStatusBasedCount();
+	
+	Registration findByAppId(String applicationId);
+	
+	@Query("select id from Registration where appId=:appId")
+	String getRIDByAppId(@Param("appId") String appId);
 }

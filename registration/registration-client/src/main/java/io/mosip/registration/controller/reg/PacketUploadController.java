@@ -205,8 +205,8 @@ public class PacketUploadController extends BaseController implements Initializa
 			return;
 		}
 
-		List<String> selectedRIDs = selectedPackets.stream().map(PacketStatusVO::getFileName).collect(Collectors.toList());
-		ResponseDTO responseDTO = packetSynchService.syncPacket(RegistrationConstants.JOB_TRIGGER_POINT_USER, selectedRIDs);
+		List<String> selectedAppIDs = selectedPackets.stream().map(PacketStatusVO::getFileName).collect(Collectors.toList());
+		ResponseDTO responseDTO = packetSynchService.syncPacket(RegistrationConstants.JOB_TRIGGER_POINT_USER, selectedAppIDs);
 		if(responseDTO.getErrorResponseDTOs() != null && !responseDTO.getErrorResponseDTOs().isEmpty()) {
 			selectAllCheckBox.setSelected(false);
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_FAILURE));
