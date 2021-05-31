@@ -34,16 +34,16 @@ import org.springframework.stereotype.Service;
 
 import io.mosip.commons.packet.constants.Biometric;
 import io.mosip.commons.packet.constants.PacketManagerConstants;
-import io.mosip.kernel.core.cbeffutil.entity.BDBInfo;
-import io.mosip.kernel.core.cbeffutil.entity.BIR;
-import io.mosip.kernel.core.cbeffutil.entity.BIRInfo;
-import io.mosip.kernel.core.cbeffutil.entity.BIRVersion;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.ProcessedLevelType;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.PurposeType;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.QualityType;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.RegistryIDType;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleAnySubtypeType;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
+import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
+import io.mosip.kernel.biometrics.constant.PurposeType;
+import io.mosip.kernel.biometrics.constant.QualityType;
+import io.mosip.kernel.biometrics.entities.BDBInfo;
+import io.mosip.kernel.biometrics.entities.BIR;
+import io.mosip.kernel.biometrics.entities.BIRInfo;
+import io.mosip.kernel.biometrics.entities.RegistryIDType;
+import io.mosip.kernel.biometrics.entities.SingleAnySubtypeType;
+import io.mosip.kernel.biometrics.entities.VersionType;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
@@ -376,7 +376,7 @@ public class BaseService {
 	 */
 	public PacketStatusDTO preparePacketStatusDto(Registration registration) {
 		PacketStatusDTO statusDTO = new PacketStatusDTO();
-		statusDTO.setFileName(registration.getId());
+		statusDTO.setFileName(registration.getAppId());
 		statusDTO.setPacketClientStatus(registration.getClientStatusCode());
 		statusDTO.setClientStatusComments(registration.getClientStatusComments());
 		statusDTO.setPacketServerStatus(registration.getServerStatusCode());
@@ -555,11 +555,11 @@ public class BaseService {
 		LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID,
 				"Building BIR for captured biometrics to pass them for quality check with SDK");
 
-		SingleType singleType = Biometric.getSingleTypeByAttribute(bioAttribute);
-
+		BiometricType biometricType = Biometric.getSingleTypeByAttribute(bioAttribute);
+		
 		RegistryIDType birFormat = new RegistryIDType();
 		birFormat.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_FORMAT_ORG);
-		birFormat.setType(String.valueOf(Biometric.getFormatType(singleType)));
+		birFormat.setType(String.valueOf(Biometric.getFormatType(biometricType)));
 
 		RegistryIDType birAlgorithm = new RegistryIDType();
 		birAlgorithm.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_ALG_ORG);
@@ -570,11 +570,11 @@ public class BaseService {
 		qualityType.setScore(qualityScore);
 
 		return new BIR.BIRBuilder().withBdb(iso)
-				.withVersion(new BIRVersion.BIRVersionBuilder().withMajor(1).withMinor(1).build())
-				.withCbeffversion(new BIRVersion.BIRVersionBuilder().withMajor(1).withMinor(1).build())
+				.withVersion(new VersionType(1, 1))
+				.withCbeffversion(new VersionType(1, 1))
 				.withBirInfo(new BIRInfo.BIRInfoBuilder().withIntegrity(false).build())
 				.withBdbInfo(new BDBInfo.BDBInfoBuilder().withFormat(birFormat).withQuality(qualityType)
-						.withType(Arrays.asList(singleType)).withSubtype(getSubTypes(singleType, bioAttribute))
+						.withType(Arrays.asList(biometricType)).withSubtype(getSubTypes(biometricType, bioAttribute))
 						.withPurpose(PurposeType.IDENTIFY).withLevel(processedLevelType)
 						.withCreationDate(LocalDateTime.now(ZoneId.of("UTC"))).withIndex(UUID.randomUUID().toString())
 						.build())
@@ -586,11 +586,11 @@ public class BaseService {
 		LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID,
 				"Building BIR for captured biometrics to pass them for quality check with SDK");
 
-		SingleType singleType = Biometric.getSingleTypeByAttribute(biometricsDto.getBioAttribute());
+		BiometricType biometricType = Biometric.getSingleTypeByAttribute(biometricsDto.getBioAttribute());
 
 		RegistryIDType birFormat = new RegistryIDType();
 		birFormat.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_FORMAT_ORG);
-		birFormat.setType(String.valueOf(Biometric.getFormatType(singleType)));
+		birFormat.setType(String.valueOf(Biometric.getFormatType(biometricType)));
 
 		RegistryIDType birAlgorithm = new RegistryIDType();
 		birAlgorithm.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_ALG_ORG);
@@ -601,21 +601,20 @@ public class BaseService {
 		qualityType.setScore((long) biometricsDto.getQualityScore());
 
 		return new BIR.BIRBuilder().withBdb(biometricsDto.getAttributeISO())
-				.withVersion(new BIRVersion.BIRVersionBuilder().withMajor(1).withMinor(1).build())
-				.withCbeffversion(new BIRVersion.BIRVersionBuilder().withMajor(1).withMinor(1).build())
+				.withVersion(new VersionType(1, 1))
+				.withCbeffversion(new VersionType(1, 1))
 				.withBirInfo(new BIRInfo.BIRInfoBuilder().withIntegrity(false).build())
 				.withBdbInfo(new BDBInfo.BDBInfoBuilder().withFormat(birFormat).withQuality(qualityType)
-						.withType(Arrays.asList(singleType))
-						.withSubtype(getSubTypes(singleType, biometricsDto.getBioAttribute()))
+						.withType(Arrays.asList(biometricType)).withSubtype(getSubTypes(biometricType, biometricsDto.getBioAttribute()))
 						.withPurpose(PurposeType.IDENTIFY).withLevel(ProcessedLevelType.RAW)
 						.withCreationDate(LocalDateTime.now(ZoneId.of("UTC"))).withIndex(UUID.randomUUID().toString())
 						.build())
 				.build();
 	}
 
-	private List<String> getSubTypes(SingleType singleType, String bioAttribute) {
+	private List<String> getSubTypes(BiometricType biometricType, String bioAttribute) {
 		List<String> subtypes = new LinkedList<>();
-		switch (singleType) {
+		switch (biometricType) {
 		case FINGER:
 			subtypes.add(bioAttribute.contains("left") ? SingleAnySubtypeType.LEFT.value()
 					: SingleAnySubtypeType.RIGHT.value());
@@ -632,7 +631,7 @@ public class BaseService {
 					: SingleAnySubtypeType.RIGHT.value());
 			break;
 		case FACE:
-			subtypes.add(SingleType.FACE.value());
+			subtypes.add(BiometricType.FACE.value());
 			break;
 		default:
 			break;

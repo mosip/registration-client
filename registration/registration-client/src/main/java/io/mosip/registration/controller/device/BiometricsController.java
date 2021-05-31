@@ -24,6 +24,8 @@ import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 
+import io.mosip.registration.api.docscanner.DocScannerFacade;
+import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import io.mosip.registration.util.common.Modality;
 import org.apache.commons.io.IOUtils;
 import org.mvel2.MVEL;
@@ -34,14 +36,13 @@ import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.commons.packet.dto.packet.BiometricsException;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.constant.PurposeType;
+import io.mosip.kernel.biometrics.entities.BDBInfo;
+import io.mosip.kernel.biometrics.entities.BIR;
+import io.mosip.kernel.biometrics.entities.BIR.BIRBuilder;
+import io.mosip.kernel.biometrics.entities.RegistryIDType;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
-import io.mosip.kernel.core.cbeffutil.entity.BDBInfo;
-import io.mosip.kernel.core.cbeffutil.entity.BIR;
-import io.mosip.kernel.core.cbeffutil.entity.BIR.BIRBuilder;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.PurposeType;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.RegistryIDType;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
@@ -314,6 +315,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	@Autowired
 	private DocumentScanController documentScanController;
+
+	@Autowired
+	private DocScannerFacade docScannerFacade;
 
 	private Service<List<BiometricsDto>> rCaptureTaskService;
 
@@ -985,7 +989,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 				scanPopUpViewController.getPopupStage().close();
 
-			} catch (RuntimeException | IOException exception) {
+			} catch (Exception exception) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
 
 				LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
@@ -2333,7 +2337,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 	private BIR buildBir(byte[] biometricImageISO, BiometricType modality) {
 		return new BIRBuilder().withBdb(biometricImageISO)
 				.withBdbInfo(new BDBInfo.BDBInfoBuilder().withFormat(new RegistryIDType())
-						.withType(Collections.singletonList(SingleType.fromValue(modality.value())))
+						.withType(Collections.singletonList(modality))
 						.withPurpose(PurposeType.IDENTIFY).build())
 				.build();
 	}
@@ -3050,7 +3054,15 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 		LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Capturing with local camera");
 
-		documentScanController.startStream(this);
+		List<DocScanDevice> devices = docScannerFacade.getConnectedCameraDevices();
+		LOGGER.info("Connected devices : {}", devices);
+		if(devices.isEmpty()) {
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.WEBCAM_ALERT_CONTEXT));
+			return;
+		}
+		LOGGER.info("Connecting to local camera device : {}", devices.get(0).getId());
+		scanPopUpViewController.docScanDevice = devices.get(0);
+		scanPopUpViewController.startStream();
 	}
 
 }

@@ -23,9 +23,8 @@ import io.mosip.kernel.biometrics.entities.BDBInfo;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biometrics.entities.BIRInfo;
 import io.mosip.kernel.biometrics.entities.RegistryIDType;
+import io.mosip.kernel.biometrics.entities.SingleAnySubtypeType;
 import io.mosip.kernel.biometrics.entities.VersionType;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleAnySubtypeType;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.registration.config.AppConfig;
@@ -41,7 +40,7 @@ public class BIRBuilder {
 
 	private static final Logger LOGGER = AppConfig.getLogger(BIRBuilder.class);
 
-	public BIR buildBIR(byte[] bdb, double qualityScore, SingleType singleType, String bioAttribute) {
+	public BIR buildBIR(byte[] bdb, double qualityScore, BiometricType biometricType, String bioAttribute) {
 
 		LOGGER.debug("BIRBUILDER", APPLICATION_NAME, APPLICATION_ID,
 				"started building BIR for for bioAttribute : " + bioAttribute);
@@ -51,9 +50,7 @@ public class BIRBuilder {
 		// Format
 		RegistryIDType birFormat = new RegistryIDType();
 		birFormat.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_FORMAT_ORG);
-		birFormat.setType(String.valueOf(Biometric.getFormatType(singleType)));
-		
-		BiometricType biometricType = BiometricType.fromValue(singleType.name());
+		birFormat.setType(String.valueOf(Biometric.getFormatType(biometricType)));
 
 		LOGGER.debug("BIRBUILDER", APPLICATION_NAME, APPLICATION_ID,
 				"started building BIR algorithm for for bioAttribute : " + bioAttribute);

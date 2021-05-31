@@ -214,7 +214,7 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 						registrationStatus.get(RegistrationConstants.PACKET_STATUS_READER_STATUS_CODE));
 				registration.setServerStatusTimestamp(new Timestamp(System.currentTimeMillis()));
 
-				updateRegistration(registration);
+				registration = regPacketStatusDAO.update(registration);
 			}
 
 			LOGGER.info("packets status sync from server has been ended");

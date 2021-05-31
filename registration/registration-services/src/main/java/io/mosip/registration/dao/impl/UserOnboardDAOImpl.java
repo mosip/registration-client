@@ -11,13 +11,11 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
-import io.mosip.registration.entity.*;
-import io.mosip.registration.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import io.mosip.commons.packet.constants.Biometric;
-import io.mosip.kernel.core.cbeffutil.entity.BIR;
+import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
@@ -30,10 +28,17 @@ import io.mosip.registration.dao.UserOnboardDAO;
 import io.mosip.registration.dto.biometric.BiometricDTO;
 import io.mosip.registration.dto.biometric.FingerprintDetailsDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.entity.UserBiometric;
+import io.mosip.registration.entity.UserDetail;
+import io.mosip.registration.entity.UserMachineMapping;
 import io.mosip.registration.entity.id.UserBiometricId;
 import io.mosip.registration.entity.id.UserMachineMappingID;
-import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
+import io.mosip.registration.repositories.CenterMachineRepository;
+import io.mosip.registration.repositories.MachineMasterRepository;
+import io.mosip.registration.repositories.UserBiometricRepository;
+import io.mosip.registration.repositories.UserDetailRepository;
+import io.mosip.registration.repositories.UserMachineMappingRepository;
 
 /**
  * The implementation class of {@link UserOnboardDAO}
@@ -285,7 +290,7 @@ public class UserOnboardDAOImpl implements UserOnboardDAO {
 	private String getBioAttributeCode(String bioAttribute) {
 
 		Biometric bioType = Biometric.getBiometricByAttribute(bioAttribute);
-		return bioType.getSingleType().value();
+		return bioType.getBiometricType().value();
 
 	}
 	

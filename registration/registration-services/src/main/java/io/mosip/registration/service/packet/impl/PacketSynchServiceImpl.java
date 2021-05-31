@@ -173,11 +173,11 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 
 
 	@Override
-	public ResponseDTO syncPacket(@NonNull String triggerPoint, @NonNull List<String> rids) {
-		LOGGER.info("Syncing specific rids to the server with count {}", rids.size());
+	public ResponseDTO syncPacket(@NonNull String triggerPoint, @NonNull List<String> appIds) {
+		LOGGER.info("Syncing specific rids to the server with count {}", appIds.size());
 		ResponseDTO responseDTO = new ResponseDTO();
 		try {
-
+			List<String> rids = syncRegistrationDAO.getRegistrationIds(appIds);
 			syncRIDToServerWithRetryWrapper(triggerPoint, rids);
 			setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, null);
 

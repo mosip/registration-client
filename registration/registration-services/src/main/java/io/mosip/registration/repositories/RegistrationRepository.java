@@ -175,5 +175,9 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	Long countByclientStatusCodeOrderByCrDtimeAsc(String statusCode);
 	
 	Registration findTopByclientStatusCodeOrderByCrDtimeAsc(String statusCode);
-
+	
+	Registration findByAppId(String applicationId);
+	
+	@Query("select id from Registration where appId=:appId")
+	String getRIDByAppId(@Param("appId") String appId);
 }

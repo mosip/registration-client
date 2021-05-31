@@ -13,8 +13,6 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.dao.RegPacketStatusDAO;
 import io.mosip.registration.entity.Registration;
-import io.mosip.registration.entity.RegistrationTransaction;
-import io.mosip.registration.repositories.RegTransactionRepository;
 import io.mosip.registration.repositories.RegistrationRepository;
 
 /**
@@ -28,9 +26,6 @@ public class RegPacketStatusDAOImpl implements RegPacketStatusDAO {
 	/** The registration repository. */
 	@Autowired
 	private RegistrationRepository registrationRepository;
-
-	@Autowired
-	private RegTransactionRepository regTransactionRepository;
 	
 	/**
 	 * Object for Logger
@@ -84,12 +79,6 @@ public class RegPacketStatusDAOImpl implements RegPacketStatusDAO {
 	@Override
 	public void delete(Registration registration) {
 		LOGGER.info("Delete registration has been started");
-
-		/* Delete Registartion Transaction */
-		Iterable<RegistrationTransaction> iterableTransaction = registration.getRegistrationTransaction();
-		if(iterableTransaction != null) {
-			regTransactionRepository.deleteInBatch(iterableTransaction);
-		}
 
 		/* Delete Registartion */
 		registrationRepository.deleteById(registration.getId());

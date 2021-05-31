@@ -58,7 +58,7 @@
                                  </graphic>
                               </TableColumn>
                                <TableColumn fx:id="slno" editable="false" prefWidth="${tableContainer.width*5/100}" resizable="false" sortable="false" styleClass="tableId" text="%slno" />
-                              <TableColumn fx:id="fileNameColumn" editable="false" prefWidth="${tableContainer.width*20/100}" resizable="false" styleClass="tableId" text="%files" />
+                              <TableColumn fx:id="fileNameColumn" editable="false" prefWidth="${tableContainer.width*20/100}" resizable="false" styleClass="tableId" text="%applicationId" />
                               <TableColumn fx:id="regDate" editable="false" prefWidth="${tableContainer.width*15/100}" resizable="false" styleClass="tableId" text="%registrationDate" />
                               <TableColumn fx:id="clientStatus" editable="false" prefWidth="${tableContainer.width*18/100}" resizable="false" styleClass="tableId" text="%clientStatus" />
                               <TableColumn fx:id="serverStatus" editable="false" prefWidth="${tableContainer.width*17/100}" resizable="false" styleClass="tableId" text="%serverStatus" />
@@ -80,7 +80,7 @@
                         </GridPane>
                         <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.rowIndex="1">
                            <children>
-                              <TextField fx:id="filterField" promptText="%searchPacketIDOpId" styleClass="searchBoxTextStyle" />
+                              <TextField fx:id="filterField" promptText="%searchAppIDOpId" styleClass="searchBoxTextStyle" />
                               <ImageView fx:id="exportCSVIcon" fitHeight="33.0" fitWidth="38.0" onMouseClicked="#exportData" pickOnBounds="true" preserveRatio="true">
                                  <image>
                                     <Image url="@../images/export-icon.jpg" />

@@ -25,6 +25,8 @@ import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 
+import io.mosip.registration.api.docscanner.DocScannerFacade;
+import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import io.mosip.registration.util.control.FxControl;
 import org.mvel2.MVEL;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,14 +39,13 @@ import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.commons.packet.dto.packet.BiometricsException;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.constant.PurposeType;
+import io.mosip.kernel.biometrics.entities.BDBInfo;
+import io.mosip.kernel.biometrics.entities.BIR;
+import io.mosip.kernel.biometrics.entities.BIR.BIRBuilder;
+import io.mosip.kernel.biometrics.entities.RegistryIDType;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
-import io.mosip.kernel.core.cbeffutil.entity.BDBInfo;
-import io.mosip.kernel.core.cbeffutil.entity.BIR;
-import io.mosip.kernel.core.cbeffutil.entity.BIR.BIRBuilder;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.PurposeType;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.RegistryIDType;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
@@ -310,6 +311,9 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 	@Autowired
 	private UserOnboardService userOnboardService;
+
+	@Autowired
+	private DocScannerFacade docScannerFacade;
 
 	private Service<List<BiometricsDto>> rCaptureTaskService;
 
@@ -624,7 +628,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 				scanPopUpViewController.getPopupStage().close();
 
-			} catch (RuntimeException | IOException exception) {
+			} catch (Exception exception) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
 				LOGGER.error("Error while capturing exception photo : ", exception);
 
@@ -1771,7 +1775,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 	private BIR buildBir(byte[] biometricImageISO, BiometricType modality) {
 		return new BIRBuilder().withBdb(biometricImageISO)
 				.withBdbInfo(new BDBInfo.BDBInfoBuilder().withFormat(new RegistryIDType())
-						.withType(Collections.singletonList(SingleType.fromValue(modality.value())))
+						.withType(Collections.singletonList(modality))
 						.withPurpose(PurposeType.IDENTIFY).build())
 				.build();
 	}
@@ -2336,7 +2340,15 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 		LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Capturing with local camera");
 
-		documentScanController.startStream(this);
+		List<DocScanDevice> devices = docScannerFacade.getConnectedCameraDevices();
+		LOGGER.info("Connected devices : {}", devices);
+		if(devices.isEmpty()) {
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.WEBCAM_ALERT_CONTEXT));
+			return;
+		}
+		LOGGER.info("Connecting to local camera device : {}", devices.get(0).getId());
+		scanPopUpViewController.docScanDevice = devices.get(0);
+		scanPopUpViewController.startStream();
 	}
 
 	public void init(BiometricFxControl fxControl, String subType, Modality modality, List<String> configBioAttributes,

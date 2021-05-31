@@ -6,8 +6,8 @@ import java.util.List;
 import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.entity.Registration;
-import io.mosip.registration.entity.RegistrationTransaction;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import lombok.NonNull;
 
 /**
  * This class will be used to fetch/Add/Update details from the
@@ -70,7 +70,7 @@ public interface RegistrationDAO {
 	 * @param clientStatusCode the status to be updated
 	 * @return the updated {@link Registration} entity
 	 */
-	Registration updateRegistration(String registrationID, String statusComments, String clientStatusCode);
+	Registration updateRegistration(String applicationId, String statusComments, String clientStatusCode);
 
 	/**
 	 * <p>
@@ -214,5 +214,11 @@ public interface RegistrationDAO {
 	List<Registration> getRegistrationByStatus(List<String> packetStatus, int limit);
 
 	List<Object[]> getStatusBasedCount();
+
+	Registration updateRegistrationWithAppId(String applicationId, String statusComments, String clientStatusCode);
+
+	List<String> getRegistrationIds(@NonNull List<String> appIds);
+
+	Registration getRegistrationByAppId(String appId);
 
 }

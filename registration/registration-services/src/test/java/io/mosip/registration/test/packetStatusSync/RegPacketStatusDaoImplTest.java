@@ -14,7 +14,7 @@ import org.mockito.junit.MockitoRule;
 
 import io.mosip.registration.dao.impl.RegPacketStatusDAOImpl;
 import io.mosip.registration.entity.Registration;
-import io.mosip.registration.repositories.RegTransactionRepository;
+//github.com/mosip/registration-client
 import io.mosip.registration.repositories.RegistrationRepository;
 
 public class RegPacketStatusDaoImplTest {
@@ -23,9 +23,6 @@ public class RegPacketStatusDaoImplTest {
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
 	@Mock
 	RegistrationRepository registrationRepository;
-
-	@Mock
-	RegTransactionRepository regTransactionRepository;
 
 	@InjectMocks
 	RegPacketStatusDAOImpl packetStatusDao;
@@ -60,7 +57,6 @@ public class RegPacketStatusDaoImplTest {
 		registration.setId("REG12345");
 
 		Mockito.doNothing().when(registrationRepository).deleteById(Mockito.anyString());
-		Mockito.doNothing().when(regTransactionRepository).deleteInBatch(Mockito.anyCollection());
 
 		packetStatusDao.delete(registration);
 
