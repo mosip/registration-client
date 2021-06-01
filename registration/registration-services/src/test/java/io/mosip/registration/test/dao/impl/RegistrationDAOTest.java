@@ -114,7 +114,7 @@ public class RegistrationDAOTest {
 	public void updateRegStatusTest() {
 		Registration updatedPacket = new Registration();
 		updatedPacket.setUploadCount((short)0);
-		Mockito.when(registrationRepository.getOne(Mockito.any())).thenReturn(updatedPacket);
+		Mockito.when(registrationRepository.findByAppId(Mockito.any())).thenReturn(updatedPacket);
 		Mockito.when(registrationRepository.update(updatedPacket)).thenReturn(updatedPacket);
 		
 		PacketStatusDTO packetStatusDTO=new PacketStatusDTO();
