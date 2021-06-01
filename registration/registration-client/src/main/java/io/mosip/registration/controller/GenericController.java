@@ -158,6 +158,10 @@ public class GenericController extends BaseController {
 	private static Map<String, FxControl> fxControlMap = new HashMap<String, FxControl>();
 	
 	private Stage keyboardStage;
+	
+	private boolean keyboardVisible = false;
+	
+	private String previousId;
 
 	public static Map<String, TreeMap<Integer, String>> hierarchyLevels = new HashMap<String, TreeMap<Integer, String>>();
 	public static Map<String, TreeMap<Integer, String>> currentHierarchyMap = new HashMap<String, TreeMap<Integer, String>>();
@@ -478,6 +482,10 @@ public class GenericController extends BaseController {
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
 				LOGGER.debug("Old selection : {} New Selection : {}", oldValue, newValue);
+				
+				if (isKeyboardVisible() && keyboardStage != null) {
+					keyboardStage.close();
+				}
 
 				if(newValue.intValue() < 0) { return; }
 
@@ -788,5 +796,21 @@ public class GenericController extends BaseController {
 	
 	public void setKeyboardStage(Stage keyboardStage) {
 		this.keyboardStage = keyboardStage;
+	}
+
+	public boolean isKeyboardVisible() {
+		return keyboardVisible;
+	}
+
+	public void setKeyboardVisible(boolean keyboardVisible) {
+		this.keyboardVisible = keyboardVisible;
+	}
+
+	public String getPreviousId() {
+		return previousId;
+	}
+
+	public void setPreviousId(String previousId) {
+		this.previousId = previousId;
 	}
 }
