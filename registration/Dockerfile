@@ -28,11 +28,34 @@ ENV client_certificate_env=${client_certificate}
 
 ENV artifactory_url_env=${artifactory_url}
 
-ADD registration-client/target /registration-client/target
+# can be passed during Docker build as build time environment for github branch to pickup configuration from.
+ARG container_user=mosip
 
-ADD registration-libs/target /registration-libs/target
+# can be passed during Docker build as build time environment for github branch to pickup configuration from.
+ARG container_user_group=mosip
 
-ADD registration-libs/src/main/resources registration-libs/resources
+# can be passed during Docker build as build time environment for github branch to pickup configuration from.
+ARG container_user_uid=1001
+
+# can be passed during Docker build as build time environment for github branch to pickup configuration from.
+ARG container_user_gid=1001
+
+# install packages and create user
+RUN apt-get -y update \
+&& apt-get install -y unzip zip \
+&& groupadd -g ${container_user_gid} ${container_user_group} \
+&& useradd -u ${container_user_uid} -g ${container_user_group} -s /bin/sh -m ${container_user}
+
+# set working directory for the user
+WORKDIR /home/${container_user}
+
+ENV work_dir=/home/${container_user}
+
+ADD registration-client/target ./registration-client/target
+
+ADD registration-libs/target ./registration-libs/target
+
+ADD registration-libs/src/main/resources ./registration-libs/resources
 
 ADD configure.sh configure.sh
 
@@ -41,5 +64,11 @@ RUN chmod a+x configure.sh \
  && rm -f  /registration-client/target/registration-client-*-sources.jar \
  && rm -f  /registration-libs/target/registration-libs-*-javadoc.jar \
  && rm  -f /registration-libs/target/registration-libs-*-sources.jar
+
+# change permissions of file inside working dir
+RUN chown -R ${container_user}:${container_user} /home/${container_user}
+
+# select container user for all tasks
+USER ${container_user_uid}:${container_user_gid}
 
 ENTRYPOINT ["./configure.sh" ]
