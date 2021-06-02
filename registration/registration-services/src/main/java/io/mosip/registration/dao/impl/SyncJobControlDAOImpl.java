@@ -73,10 +73,10 @@ public class SyncJobControlDAOImpl implements SyncJobControlDAO {
 				"Fetching the last sync details from database started");
 
 		try {
-			List<Registration> registrationsList = registrationRepository
-					.findByClientStatusCodeInOrderByUpdDtimesDesc(REG_STATUS_CODES);
-			List<Registration> lastExportRegistrationList = registrationRepository
-					.findByClientStatusCodeInOrderByUpdDtimesDesc(LAST_EXPORT_STATUS_CODES);
+			Long registrationsListCount = registrationRepository
+					.countByClientStatusCodeInOrderByUpdDtimesDesc(REG_STATUS_CODES);
+			Registration lastExportRegistration = registrationRepository
+					.findTopByClientStatusCodeInOrderByUpdDtimesDesc(LAST_EXPORT_STATUS_CODES);
 
 			LOGGER.info("REGISTRATION - SYNC - VALIDATION", APPLICATION_NAME, APPLICATION_ID,
 					"Fetching the last sync details from database ended");
@@ -84,7 +84,7 @@ public class SyncJobControlDAOImpl implements SyncJobControlDAO {
 			auditFactory.audit(AuditEvent.SYNCJOB_INFO_FETCH, Components.SYNC_VALIDATE, SessionContext.userId(),
 					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-			return new SyncJobInfo(syncJobRepository.findAll(), registrationsList.size(), lastExportRegistrationList);
+			return new SyncJobInfo(syncJobRepository.findAll(), registrationsListCount, lastExportRegistration);
 
 		} catch (RuntimeException runtimeException) {
 			throw new RegBaseUncheckedException(RegistrationConstants.SYNC_STATUS_VALIDATE,
@@ -155,6 +155,24 @@ public class SyncJobControlDAOImpl implements SyncJobControlDAO {
 
 		return registrationRepository
 				.findByclientStatusCodeOrderByCrDtimeAsc(RegistrationClientStatusCode.CREATED.getCode());
+	}
+	
+	@Override
+	public Long getRegistrationCount() {
+		LOGGER.info(RegistrationConstants.SYNC_JOB_CONTROL_DAO_LOGGER_TITLE, APPLICATION_NAME, APPLICATION_ID,
+				"Fetching the total registration count of Registered Status");
+
+		return registrationRepository
+				.countByclientStatusCodeOrderByCrDtimeAsc(RegistrationClientStatusCode.CREATED.getCode());
+	}
+
+	@Override
+	public Registration getFirstRegistration() {
+		LOGGER.info(RegistrationConstants.SYNC_JOB_CONTROL_DAO_LOGGER_TITLE, APPLICATION_NAME, APPLICATION_ID,
+				"Fetching the first registration from the list of registrations with Registered Status");
+
+		return registrationRepository
+				.findTopByclientStatusCodeOrderByCrDtimeAsc(RegistrationClientStatusCode.CREATED.getCode());
 	}
 
 }

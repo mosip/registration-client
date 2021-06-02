@@ -12,11 +12,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import io.mosip.registration.dao.AuditLogControlDAO;
 import io.mosip.registration.dao.impl.RegPacketStatusDAOImpl;
-import io.mosip.registration.entity.AuditLogControl;
 import io.mosip.registration.entity.Registration;
-import io.mosip.registration.repositories.AuditLogControlRepository;
+//github.com/mosip/registration-client
 import io.mosip.registration.repositories.RegistrationRepository;
 
 public class RegPacketStatusDaoImplTest {
@@ -28,12 +26,6 @@ public class RegPacketStatusDaoImplTest {
 
 	@InjectMocks
 	RegPacketStatusDAOImpl packetStatusDao;
-
-	@Mock
-	AuditLogControlRepository auditLogControlRepository;
-
-	@Mock
-	AuditLogControlDAO auditLogControlDAO;
 
 	@Test
 	public void getTest() {
@@ -52,7 +44,6 @@ public class RegPacketStatusDaoImplTest {
 
 	@Test
 	public void findByClientStatusCodeTest() {
-		Registration registration = new Registration();
 		List<Registration> registrations = null;
 		when(registrationRepository.findByclientStatusCodeOrderByCrDtime(Mockito.any())).thenReturn(registrations);
 
@@ -65,12 +56,7 @@ public class RegPacketStatusDaoImplTest {
 
 		registration.setId("REG12345");
 
-		AuditLogControl auditLogControl = new AuditLogControl();
-		auditLogControl.setRegistrationId(registration.getId());
-
 		Mockito.doNothing().when(registrationRepository).deleteById(Mockito.anyString());
-		Mockito.when(auditLogControlDAO.get("REG12345")).thenReturn(auditLogControl);
-		Mockito.doNothing().when(auditLogControlDAO).delete(auditLogControl);
 
 		packetStatusDao.delete(registration);
 

@@ -1,6 +1,7 @@
 package io.mosip.registration.test.service;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -12,7 +13,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.*;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -158,7 +162,7 @@ public class SyncStatusValidatorServiceTest {
 		Mockito.when(syncJobDAO.getRegistrationDetails()).thenReturn(registrationList);
 		Mockito.when(syncJobDAO.getSyncStatus()).thenReturn(syncJobInfo);
 		Mockito.when(syncJobInfo.getSyncControlList()).thenReturn(listSync);
-		Mockito.when(syncJobInfo.getLastExportRegistrationList()).thenReturn(registrationList);
+		Mockito.when(syncJobInfo.getLastExportRegistration()).thenReturn(registration);
 		Mockito.when(syncJobInfo.getYetToExportCount()).thenReturn((double) 20);
 		Mockito.when(jobConfigDAO.getAll()).thenReturn(listSyncJob);
 
@@ -242,7 +246,7 @@ public class SyncStatusValidatorServiceTest {
 		Mockito.when(syncJobDAO.getRegistrationDetails()).thenReturn(registrationList);
 		Mockito.when(syncJobDAO.getSyncStatus()).thenReturn(syncJobInfo);
 		Mockito.when(syncJobInfo.getSyncControlList()).thenReturn(listSync);
-		Mockito.when(syncJobInfo.getLastExportRegistrationList()).thenReturn(registrationList);
+		Mockito.when(syncJobInfo.getLastExportRegistration()).thenReturn(registration);
 		Mockito.when(syncJobInfo.getYetToExportCount()).thenReturn((double) 20);
 
 		ResponseDTO responseDTO = syncStatusValidatorServiceImpl.validateSyncStatus();
@@ -307,7 +311,7 @@ public class SyncStatusValidatorServiceTest {
 		Mockito.when(syncJobDAO.getRegistrationDetails()).thenReturn(registrationList);
 		Mockito.when(syncJobDAO.getSyncStatus()).thenReturn(syncJobInfo);
 		Mockito.when(syncJobInfo.getSyncControlList()).thenReturn(listSync);
-		Mockito.when(syncJobInfo.getLastExportRegistrationList()).thenReturn(registrationList);
+		Mockito.when(syncJobInfo.getLastExportRegistration()).thenReturn(registration);
 		Mockito.when(syncJobInfo.getYetToExportCount()).thenReturn((double) 20);
 		Mockito.when(globalParamDAO.get(globalParamId)).thenReturn(globalParam);
 
@@ -384,7 +388,7 @@ public class SyncStatusValidatorServiceTest {
 		Mockito.when(syncJobDAO.getRegistrationDetails()).thenReturn(registrationList);
 		Mockito.when(syncJobDAO.getSyncStatus()).thenReturn(syncJobInfo);
 		Mockito.when(syncJobInfo.getSyncControlList()).thenReturn(listSync);
-		Mockito.when(syncJobInfo.getLastExportRegistrationList()).thenReturn(registrationList);
+		Mockito.when(syncJobInfo.getLastExportRegistration()).thenReturn(registration);
 		Mockito.when(syncJobInfo.getYetToExportCount()).thenReturn((double) 20);
 
 		ResponseDTO responseDTO = syncStatusValidatorServiceImpl.validateSyncStatus();
@@ -463,7 +467,7 @@ public class SyncStatusValidatorServiceTest {
 		Mockito.when(syncJobDAO.getRegistrationDetails()).thenReturn(registrationList);
 		Mockito.when(syncJobDAO.getSyncStatus()).thenReturn(syncJobInfo);
 		Mockito.when(syncJobInfo.getSyncControlList()).thenReturn(listSync);
-		Mockito.when(syncJobInfo.getLastExportRegistrationList()).thenReturn(registrationList);
+		Mockito.when(syncJobInfo.getLastExportRegistration()).thenReturn(registration);
 		Mockito.when(syncJobInfo.getYetToExportCount()).thenReturn((double) 20);
 
 		ResponseDTO responseDTO = syncStatusValidatorServiceImpl.validateSyncStatus();
@@ -538,7 +542,7 @@ public class SyncStatusValidatorServiceTest {
 		Mockito.when(syncJobDAO.getRegistrationDetails()).thenReturn(registrationList);
 		Mockito.when(syncJobDAO.getSyncStatus()).thenReturn(syncJobInfo);
 		Mockito.when(syncJobInfo.getSyncControlList()).thenReturn(listSync);
-		Mockito.when(syncJobInfo.getLastExportRegistrationList()).thenReturn(registrationList);
+		Mockito.when(syncJobInfo.getLastExportRegistration()).thenReturn(registration);
 		Mockito.when(syncJobInfo.getYetToExportCount()).thenReturn((double) 20);
 
 		ResponseDTO responseDTO = syncStatusValidatorServiceImpl.validateSyncStatus();
@@ -617,7 +621,7 @@ public class SyncStatusValidatorServiceTest {
 		Mockito.when(syncJobDAO.getRegistrationDetails()).thenReturn(registrationList);
 		Mockito.when(syncJobDAO.getSyncStatus()).thenReturn(syncJobInfo);
 		Mockito.when(syncJobInfo.getSyncControlList()).thenReturn(listSync);
-		Mockito.when(syncJobInfo.getLastExportRegistrationList()).thenReturn(registrationList);
+		Mockito.when(syncJobInfo.getLastExportRegistration()).thenReturn(registration);
 		Mockito.when(syncJobInfo.getYetToExportCount()).thenReturn((double) 20);
 
 		ResponseDTO responseDTO = syncStatusValidatorServiceImpl.validateSyncStatus();
@@ -627,9 +631,7 @@ public class SyncStatusValidatorServiceTest {
 
 	}
 
-	//This is not failing in local
 	@Test
-	@Ignore
 	public void testValidatePacketDurationFailureCase() {
 		SyncControl syncControl1 = new SyncControl();
 		syncControl1.setSyncJobId("MDS_J00001");
@@ -687,12 +689,11 @@ public class SyncStatusValidatorServiceTest {
 		Mockito.when(syncJobDAO.getRegistrationDetails()).thenReturn(registrationList);
 		Mockito.when(syncJobDAO.getSyncStatus()).thenReturn(syncJobInfo);
 		Mockito.when(syncJobInfo.getSyncControlList()).thenReturn(listSync);
-		Mockito.when(syncJobInfo.getLastExportRegistrationList()).thenReturn(registrationList);
+		Mockito.when(syncJobInfo.getLastExportRegistration()).thenReturn(registration);
 		Mockito.when(syncJobInfo.getYetToExportCount()).thenReturn((double) 20);
 
 		ResponseDTO responseDTO = syncStatusValidatorServiceImpl.validateSyncStatus();
 		List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
-		assertFalse(errorResponseDTOs.isEmpty());
 		assertEquals("REG-ICS‌-009", errorResponseDTOs.get(0).getCode());
 		assertEquals("REG_PKT_APPRVL_TIME_EXCEED", errorResponseDTOs.get(0).getMessage());
 

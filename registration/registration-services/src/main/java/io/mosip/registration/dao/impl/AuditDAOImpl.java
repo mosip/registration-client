@@ -1,9 +1,9 @@
 package io.mosip.registration.dao.impl;
 
-import static io.mosip.registration.constants.LoggerConstants.LOG_AUDIT_DAO;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -14,9 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import io.mosip.kernel.auditmanager.entity.Audit;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.AuditDAO;
-import io.mosip.registration.entity.RegistrationAuditDates;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.repositories.RegAuditRepository;
@@ -39,10 +37,9 @@ public class AuditDAOImpl implements AuditDAO {
 
 	@Override
 	@Transactional
-	public void deleteAll(LocalDateTime auditLogFromDtimes, LocalDateTime auditLogToDtimes) {
-		LOGGER.info(LOG_AUDIT_DAO, APPLICATION_NAME,
-				APPLICATION_ID, "Deleting Audit Logs");
-		regAuditRepository.deleteAllInBatchBycreatedAtBetween(auditLogFromDtimes, auditLogToDtimes);
+	public void deleteAudits(LocalDateTime auditLogToDtimes) {
+		LOGGER.info("Deleting Audit Logs created before the given timestamp");
+		regAuditRepository.deleteAllInBatchByCreatedAtLessThan(auditLogToDtimes);
 	}
 
 	/*
@@ -53,21 +50,21 @@ public class AuditDAOImpl implements AuditDAO {
 	 * RegistrationAuditDates)
 	 */
 	@Override
-	public List<Audit> getAudits(RegistrationAuditDates registrationAuditDates, String registrationId) {
+	public List<Audit> getAudits(String registrationId, String timestamp) {
 		LOGGER.info("REGISTRATION - FETCH_UNSYNCED_AUDITS - GET_ALL_AUDITS", APPLICATION_NAME, APPLICATION_ID,
-				"Fetching of unsynchronized which are to be added to Registartion packet started");
+				"Fetching of all the audits which are to be added to Registration packet started");
 
 		try {
 			List<Audit> audits;
-			if (registrationAuditDates == null || registrationAuditDates.getAuditLogToDateTime() == null) {
+			if (timestamp == null) {
 				audits = regAuditRepository.findByIdOrderByCreatedAtAsc(registrationId);
 			} else {
 				audits = regAuditRepository.findByCreatedAtGreaterThanOrderByCreatedAtAsc(
-						registrationAuditDates.getAuditLogToDateTime().toLocalDateTime());
+						Timestamp.valueOf(timestamp).toLocalDateTime());
 			}
 
 			LOGGER.info("REGISTRATION - FETCH_UNSYNCED_AUDITS - GET_ALL_AUDITS", APPLICATION_NAME, APPLICATION_ID,
-					"Fetching of unsynchronized which are to be added to Registartion packet ended");
+					"Fetching of all the audits which are to be added to Registartion packet ended");
 
 			return audits;
 		} catch (RuntimeException exception) {

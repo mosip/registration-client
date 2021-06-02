@@ -8,6 +8,7 @@ import static io.mosip.registration.exception.RegistrationExceptionConstants.REG
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -20,7 +21,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import io.mosip.registration.enums.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -43,6 +43,7 @@ import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.idgenerator.spi.PridGenerator;
 import io.mosip.kernel.core.idgenerator.spi.RidGenerator;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.idgenerator.rid.constant.RidGeneratorPropertyConstant;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
@@ -54,7 +55,6 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.AuditDAO;
-import io.mosip.registration.dao.AuditLogControlDAO;
 import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dao.RegistrationDAO;
 import io.mosip.registration.dto.ErrorResponseDTO;
@@ -72,12 +72,13 @@ import io.mosip.registration.dto.packetmanager.metadata.BiometricsMetaInfoDto;
 import io.mosip.registration.dto.packetmanager.metadata.DocumentMetaInfoDTO;
 import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.entity.Registration;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.IdentitySchemaService;
-import io.mosip.registration.service.bio.BioService;
+import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.packet.PacketHandlerService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.common.BIRBuilder;
@@ -106,7 +107,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	private RegistrationDAO registrationDAO;
 
 	@Autowired
-	private AuditLogControlDAO auditLogControlDAO;
+	private GlobalParamService globalParamService;
 
 	@Autowired
 	private IdentitySchemaService identitySchemaService;
@@ -129,9 +130,6 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 	@Autowired
 	private RidGenerator<String> ridGeneratorImpl;
-	
-	@Autowired
-	private BioService bioService;
 
 	@Autowired
 	private PridGenerator<String> pridGenerator;
@@ -244,9 +242,12 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			successResponseDTO.setCode("0000");
 			successResponseDTO.setMessage("Success");
 			responseDTO.setSuccessResponseDTO(successResponseDTO);
+
 			auditFactory.audit(AuditEvent.PACKET_CREATION_SUCCESS, Components.PACKET_HANDLER,
 					registrationDTO.getRegistrationId(), AuditReferenceIdTypes.REGISTRATION_ID.getReferenceTypeId());
-
+			
+			globalParamService.update(RegistrationConstants.AUDIT_TIMESTAMP,
+					String.valueOf(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime())));
 		} catch (RegBaseCheckedException regBaseCheckedException) {
 			LOGGER.error(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID,
 					"Exception while creating packet " + ExceptionUtils.getStackTrace(regBaseCheckedException));
@@ -583,8 +584,8 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	}
 
 	private void setAudits(RegistrationDTO registrationDTO) {
-		List<Audit> audits = auditDAO.getAudits(auditLogControlDAO.getLatestRegistrationAuditDates(),
-				registrationDTO.getRegistrationId());
+		String auditTimestamp = getGlobalConfigValueOf(RegistrationConstants.AUDIT_TIMESTAMP);
+		List<Audit> audits = auditDAO.getAudits(registrationDTO.getRegistrationId(), auditTimestamp);
 
 		List<Map<String, String>> auditList = new LinkedList<>();
 
