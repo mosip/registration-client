@@ -102,6 +102,7 @@ public class PacketSynchServiceImplTest {
 		reg.setCrDtime(Timestamp.from(Instant.now()));
 		reg.setAckFilename("..//registration-services/src/test/resources/123456789_Ack.png");
 		reg.setId("123456789");
+		reg.setAppId("123456789");
 		reg.setCrDtime(Timestamp.from(Instant.now()));
 		syncList.add(reg);
 		List<PacketStatusDTO> packetsList = new ArrayList<>();

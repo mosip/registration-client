@@ -85,6 +85,7 @@ public class RegistrationApprovalServiceTest {
 		regUserDetail.setName("RegistrationOfficer");
 
 		regobject.setId("123456");
+		regobject.setAppId("123456");
 		regobject.setClientStatusCode("R");
 		regobject.setCrBy("Mosip123");
 		regobject.setCrDtime(time);
