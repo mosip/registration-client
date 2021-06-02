@@ -259,6 +259,7 @@ public class RegistrationApprovalController extends BaseController implements In
 		approvalBtn.setVisible(false);
 		rejectionBtn.setVisible(false);
 		imageAnchorPane.setVisible(false);
+		filterField.clear();
 
 		slno.setCellValueFactory(
 				new PropertyValueFactory<RegistrationApprovalVO, String>(RegistrationConstants.EOD_PROCESS_SLNO));
