@@ -85,7 +85,6 @@ ls -ltr lib | grep bc
 
 ## adding logback.xml
 /usr/bin/zip -j reg-client.zip /build_files/logback.xml
-#/usr/bin/zip reg-client.zip MANIFEST.MF
 
 #Creating Regclient testing framework
 mkdir -p /registration-test-utility
