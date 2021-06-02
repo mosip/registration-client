@@ -85,17 +85,31 @@ ls -ltr lib | grep bc
 
 ## adding logback.xml
 /usr/bin/zip -j reg-client.zip /build_files/logback.xml
+#/usr/bin/zip reg-client.zip MANIFEST.MF
+
+#Creating Regclient testing framework
+mkdir -p /registration-test-utility
+mkdir -p /registration-test-utility/lib
+cp /registration-test/target/registration-test-*-dependencies.jar /registration-test-utility/registration-test.jar
+cp /registration-test/resources/*  /registration-test-utility/
+cp -r /registration-libs/resources/jre /registration-test-utility/
+cp -r /registration-client/target/lib/morena* /registration-test-utility/lib
+cp -r /sdkjars/*.jar /registration-test-utility/lib
+cp /registration-client/target/MANIFEST.MF /registration-test-utility/
+/usr/bin/zip -r /registration-test-utility.zip /registration-test-utility
 
 echo "setting up nginx static content"
 
 mkdir -p /var/www/html/registration-client
 mkdir -p /var/www/html/registration-client/${client_version_env}
 mkdir -p /var/www/html/registration-client/${client_version_env}/lib
+mkdir -p /var/www/html/registration-test/${client_version_env}
 
 cp /registration-client/target/lib/* /var/www/html/registration-client/${client_version_env}/lib
 cp /registration-client/target/MANIFEST.MF /var/www/html/registration-client/${client_version_env}/
 cp /build_files/maven-metadata.xml /var/www/html/registration-client/
 cp reg-client.zip /var/www/html/registration-client/${client_version_env}/
+cp /registration-test-utility.zip /var/www/html/registration-test/${client_version_env}/
 
 echo "setting up nginx static content - completed"
 
