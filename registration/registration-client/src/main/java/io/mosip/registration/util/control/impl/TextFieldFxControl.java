@@ -68,14 +68,8 @@ public class TextFieldFxControl extends FxControl {
 	
 	private Node keyboardNode;
 	
-	private boolean keyboardVisible = false;
-	
 	private static double xPosition;
 	private static double yPosition;
-	
-	private String previousLangCode;
-	
-	private Stage keyBoardStage;
 	
 	private FXComponents fxComponents;
 	
@@ -379,10 +373,10 @@ public class TextFieldFxControl extends FxControl {
 			Node node = (Node) event.getSource();
 			node.requestFocus();
 			Node parentNode = node.getParent().getParent().getParent();
-			if (keyboardVisible) {
-				keyBoardStage.close();
-				keyboardVisible = false;
-				if (!langCode.equalsIgnoreCase(previousLangCode)) {
+			if (genericController.isKeyboardVisible()) {
+				genericController.getKeyboardStage().close();
+				genericController.setKeyboardVisible(false);
+				if (!textField.getId().equalsIgnoreCase(genericController.getPreviousId())) {
 					openKeyBoard(keyBoard, langCode, textField, parentNode);
 				}
 			} else {
@@ -396,8 +390,8 @@ public class TextFieldFxControl extends FxControl {
 	}
 	
 	private void openKeyBoard(VirtualKeyboard keyBoard, String langCode, TextField textField, Node parentNode) {
-		if (keyBoardStage != null)  {
-			keyBoardStage.close();
+		if (genericController.getKeyboardStage() != null)  {
+			genericController.getKeyboardStage().close();
 		}
 		keyboardNode = keyBoard.view();
 		keyBoard.setParentStage(fxComponents.getStage());
@@ -405,8 +399,8 @@ public class TextFieldFxControl extends FxControl {
 		keyboardNode.setManaged(true);
 		getField(textField.getId()).requestFocus();
 		openKeyBoardPopUp();
-		previousLangCode = langCode;
-		keyboardVisible = true;
+		genericController.setPreviousId(textField.getId());
+		genericController.setKeyboardVisible(true);
 	}
 
 	private GridPane prepareMainGridPaneForKeyboard() {
@@ -427,7 +421,8 @@ public class TextFieldFxControl extends FxControl {
 	
 	private void openKeyBoardPopUp() {
 		try {
-			keyBoardStage = new Stage();
+			Stage keyBoardStage = new Stage();
+			genericController.setKeyboardStage(keyBoardStage);
 			keyBoardStage.setAlwaysOnTop(true);
 			keyBoardStage.initStyle(StageStyle.UNDECORATED);
 			keyBoardStage.setX(300);

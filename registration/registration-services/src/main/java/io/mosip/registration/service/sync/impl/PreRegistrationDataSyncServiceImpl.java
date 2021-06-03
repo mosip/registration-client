@@ -135,6 +135,7 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 
 			if(mainResponseDTO != null && mainResponseDTO.getErrors() != null &&
 					mainResponseDTO.getErrors().stream().anyMatch(e -> e.getErrorCode() != null && e.getErrorCode().equals("PRG_BOOK_RCI_032"))) {
+				LOGGER.error("RESPONSE from pre-reg-id sync {}", mainResponseDTO.getErrors());
 				return setSuccessResponse(responseDTO, RegistrationConstants.PRE_REG_SUCCESS_MESSAGE, null);
 			}
 
@@ -262,6 +263,7 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 				preRegistration = preRegistrationDAO.update(preRegistrationList);
 			}
 		}
+		LOGGER.info("Pre-reg-id {} errors from response {}", preRegistrationId, mainResponseDTO.getErrors());
 		return preRegistration;
 	}
 

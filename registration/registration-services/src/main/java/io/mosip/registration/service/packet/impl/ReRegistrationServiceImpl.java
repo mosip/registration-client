@@ -55,7 +55,7 @@ public class ReRegistrationServiceImpl extends BaseService implements ReRegistra
 		List<PacketStatusDTO> uiPacketDto = new ArrayList<>();
 		for (Registration reRegisterPacket : reRegisterPackets) {
 			PacketStatusDTO packetStatusDTO = new PacketStatusDTO();
-			packetStatusDTO.setFileName(reRegisterPacket.getId());
+			packetStatusDTO.setFileName(reRegisterPacket.getAppId());
 			packetStatusDTO.setPacketPath(reRegisterPacket.getAckFilename());
 			packetStatusDTO.setCreatedTime(regDateTimeConversion(reRegisterPacket.getCrDtime().toString()));
 			uiPacketDto.add(packetStatusDTO);

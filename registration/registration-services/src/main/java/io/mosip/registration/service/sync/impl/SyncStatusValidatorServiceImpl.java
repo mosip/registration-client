@@ -212,10 +212,9 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 	 */
 	private void validatingLastExportDurationAndYetToExportCount(List<ErrorResponseDTO> errorResponseDTOList,
 			SyncJobInfo syncJobInfo) {
-		List<Registration> lastExportedRegistrations = syncJobInfo.getLastExportRegistrationList();
-		if (!lastExportedRegistrations.isEmpty()) {
-			Date lastSyncDate = new Date(
-					lastExportedRegistrations.get(RegistrationConstants.PARAM_ZERO).getUpdDtimes().getTime());
+		Registration lastExportedRegistration = syncJobInfo.getLastExportRegistration();
+		if (lastExportedRegistration != null) {
+			Date lastSyncDate = new Date(lastExportedRegistration.getUpdDtimes().getTime());
 			if (ApplicationContext.map().get(RegistrationConstants.OPT_TO_REG_LAST_EXPORT_REG_PKTS_TIME) != null
 					&& Integer.parseInt(String.valueOf(ApplicationContext.map()
 							.get(RegistrationConstants.OPT_TO_REG_LAST_EXPORT_REG_PKTS_TIME))) <= getActualDays(
@@ -250,7 +249,8 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 		LOGGER.info(LoggerConstants.OPT_TO_REG_LOGGER_SESSION_ID, APPLICATION_NAME, APPLICATION_ID,
 				"Fetching Registration details where status is Registered");
 
-		List<Registration> registrationDetails = syncJObDao.getRegistrationDetails();
+		Long registrationCount = syncJObDao.getRegistrationCount();
+		Registration firstRegistration = syncJObDao.getFirstRegistration();
 
 		LOGGER.info(LoggerConstants.OPT_TO_REG_LOGGER_SESSION_ID, APPLICATION_NAME, APPLICATION_ID,
 				"Validating the count of packets of status Registered with configured value");
@@ -258,7 +258,7 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 		auditFactory.audit(AuditEvent.PENDING_PKT_CNT_VALIDATE, Components.SYNC_VALIDATE,
 				RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
 
-		if (registrationDetails.size() >= Integer.parseInt(
+		if (registrationCount >= Integer.parseInt(
 				String.valueOf(ApplicationContext.map().get(RegistrationConstants.REG_PAK_MAX_CNT_APPRV_LIMIT)))) {
 
 			getErrorResponse(RegistrationConstants.PAK_APPRVL_MAX_CNT, RegistrationConstants.REG_PKT_APPRVL_CNT_EXCEED,
@@ -277,8 +277,7 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 		auditFactory.audit(AuditEvent.PENDING_PKT_DUR_VALIDATE, Components.SYNC_VALIDATE,
 				RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
 
-		if (getDifference(!registrationDetails.isEmpty() ? registrationDetails.get(RegistrationConstants.PARAM_ZERO)
-				: null) < 0) {
+		if (getDifference(firstRegistration) < 0) {
 
 			getErrorResponse(RegistrationConstants.PAK_APPRVL_MAX_TIME,
 					RegistrationConstants.REG_PKT_APPRVL_TIME_EXCEED, RegistrationConstants.ERROR,

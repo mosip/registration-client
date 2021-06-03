@@ -21,9 +21,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import io.mosip.kernel.auditmanager.entity.Audit;
-import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.impl.AuditDAOImpl;
-import io.mosip.registration.entity.RegistrationAuditDates;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.RegAuditRepository;
 
@@ -56,7 +54,7 @@ public class AuditDAOTest {
 		when(auditRepository.findByIdOrderByCreatedAtAsc("1234"))
 				.thenReturn(audits);
 
-		Assert.assertThat(auditDAO.getAudits(null, "1234"), is(audits));
+		Assert.assertThat(auditDAO.getAudits("1234", null), is(audits));
 	}
 
 	@Test
@@ -64,18 +62,7 @@ public class AuditDAOTest {
 		when(auditRepository.findByIdOrderByCreatedAtAsc("1234"))
 				.thenReturn(audits);
 
-		Assert.assertThat(auditDAO.getAudits(new RegistrationAuditDates() {
-
-			@Override
-			public Timestamp getAuditLogToDateTime() {
-				return null;
-			}
-
-			@Override
-			public Timestamp getAuditLogFromDateTime() {
-				return null;
-			}
-		}, "1234"), is(audits));
+		Assert.assertThat(auditDAO.getAudits("1234", null), is(audits));
 	}
 
 	@Test
@@ -83,18 +70,7 @@ public class AuditDAOTest {
 		when(auditRepository.findByCreatedAtGreaterThanOrderByCreatedAtAsc(Mockito.any(LocalDateTime.class)))
 				.thenReturn(audits);
 
-		Assert.assertThat(auditDAO.getAudits(new RegistrationAuditDates() {
-
-			@Override
-			public Timestamp getAuditLogToDateTime() {
-				return Timestamp.valueOf(LocalDateTime.now().minusDays(1));
-			}
-
-			@Override
-			public Timestamp getAuditLogFromDateTime() {
-				return null;
-			}
-		}, "1234"), is(audits));
+		Assert.assertThat(auditDAO.getAudits("1234", null), is(audits));
 	}
 
 	@Test(expected = RegBaseUncheckedException.class)
@@ -102,16 +78,15 @@ public class AuditDAOTest {
 		when(auditRepository.findByIdOrderByCreatedAtAsc("1234"))
 				.thenThrow(new RuntimeException("SQL exception"));
 
-		auditDAO.getAudits(null, "1234");
+		auditDAO.getAudits("1234", null);
 	}
 
 	@Test
-	public void deleteAllTest() {
-		LocalDateTime fromTime = new Timestamp(System.currentTimeMillis()).toLocalDateTime();
+	public void deleteAuditsTest() {
 		LocalDateTime toTime = new Timestamp(System.currentTimeMillis()).toLocalDateTime();
 
-		Mockito.doNothing().when(auditRepository).deleteAllInBatchBycreatedAtBetween(fromTime, toTime);
-		auditDAO.deleteAll(fromTime, toTime);
+		Mockito.doNothing().when(auditRepository).deleteAllInBatchByCreatedAtLessThan(toTime);
+		auditDAO.deleteAudits(toTime);
 
 	}
 

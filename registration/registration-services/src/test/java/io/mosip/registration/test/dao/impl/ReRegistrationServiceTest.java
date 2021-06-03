@@ -45,6 +45,7 @@ public class ReRegistrationServiceTest {
 		List<Registration> reRegisterList = new ArrayList<>();
 		Registration reg = new Registration();
 		reg.setId("11111");
+		reg.setAppId("11111");
 		reg.setAckFilename("path");
 		reg.setCrDtime(time);
 		reRegisterList.add(reg);

@@ -44,9 +44,7 @@ import io.mosip.registration.dto.RegistrationApprovalDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
-import io.mosip.registration.service.packet.PacketUploadService;
 import io.mosip.registration.service.packet.RegistrationApprovalService;
-import io.mosip.registration.service.sync.PacketSynchService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -62,7 +60,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
@@ -92,12 +89,6 @@ public class RegistrationApprovalController extends BaseController implements In
 
 	@Autowired
 	private RegistrationApprovalService registration;
-
-	@Autowired
-	private PacketSynchService packetSynchService;
-
-	@Autowired
-	private PacketUploadService packetUploadService;
 
 	/** Table to display the created packets. */
 
@@ -268,6 +259,7 @@ public class RegistrationApprovalController extends BaseController implements In
 		approvalBtn.setVisible(false);
 		rejectionBtn.setVisible(false);
 		imageAnchorPane.setVisible(false);
+		filterField.clear();
 
 		slno.setCellValueFactory(
 				new PropertyValueFactory<RegistrationApprovalVO, String>(RegistrationConstants.EOD_PROCESS_SLNO));
@@ -504,7 +496,7 @@ public class RegistrationApprovalController extends BaseController implements In
 			}
 
 			Map<String, String> map = new WeakHashMap<>();
-			map.put(RegistrationConstants.REGISTRATIONID, table.getSelectionModel().getSelectedItem().getId());
+			map.put(RegistrationConstants.PACKET_APPLICATION_ID, table.getSelectionModel().getSelectedItem().getId());
 			map.put(RegistrationConstants.STATUSCODE, RegistrationClientStatusCode.APPROVED.getCode());
 			map.put(RegistrationConstants.STATUSCOMMENT, RegistrationConstants.EMPTY);
 			approvalmapList.add(map);
@@ -618,7 +610,7 @@ public class RegistrationApprovalController extends BaseController implements In
 
 			List<String> regIds = new ArrayList<>();
 			for (Map<String, String> map : approvalmapList) {
-				registrationApprovalService.updateRegistration(map.get(RegistrationConstants.REGISTRATIONID),
+				registrationApprovalService.updateRegistrationWithAppId(map.get(RegistrationConstants.PACKET_APPLICATION_ID),
 						map.get(RegistrationConstants.STATUSCOMMENT), map.get(RegistrationConstants.STATUSCODE));
 				regIds.add(map.get(RegistrationConstants.REGISTRATIONID));
 			}

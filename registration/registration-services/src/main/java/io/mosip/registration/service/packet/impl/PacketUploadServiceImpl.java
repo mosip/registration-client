@@ -1,7 +1,6 @@
 package io.mosip.registration.service.packet.impl;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -100,21 +99,18 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 	 * lang.String)
 	 */
 	@Override
-	public PacketStatusDTO uploadPacket(@NonNull String rid) throws RegBaseCheckedException {
+	public PacketStatusDTO uploadPacket(@NonNull String appId) throws RegBaseCheckedException {
 		proceedWithPacketSync();
 
-		List<String> list = new ArrayList<String>();
-		list.add(rid);
-		List<Registration> registrations = registrationDAO.get(list);
-		if(registrations == null || registrations.isEmpty()) {
+		Registration registration = registrationDAO.getRegistrationByAppId(appId);
+		if(registration == null) {
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_PKT_ID.getErrorCode(),
 					RegistrationExceptionConstants.REG_PKT_ID.getErrorMessage());
 		}
 
-		Registration registration = registrations.get(0);
 		if(RegistrationConstants.PACKET_UPLOAD_STATUS.contains(registration.getClientStatusCode())
 			&& !( registration.getServerStatusCode() != null && registration.getServerStatusCode().equals(RegistrationConstants.PACKET_STATUS_CODE_REREGISTER))) {
-			registration = uploadSyncedPacket(preparePacketStatusDto(registrations.get(0)));
+			registration = uploadSyncedPacket(preparePacketStatusDto(registration));
 		}
 		return preparePacketStatusDto(registration);
 	}

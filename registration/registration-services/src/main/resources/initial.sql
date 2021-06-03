@@ -17,8 +17,6 @@ CREATE SCHEMA "AUDIT";
 -- DDL Statements for tables
 -- ----------------------------------------------
 
-CREATE TABLE "REG"."AUDIT_LOG_CONTROL" ("REG_ID" VARCHAR(39) NOT NULL, "AUDIT_LOG_FROM_DTIMES" TIMESTAMP NOT NULL, "AUDIT_LOG_TO_DTIMES" TIMESTAMP NOT NULL, "AUDIT_LOG_SYNC_DTIMES" TIMESTAMP, "AUDIT_LOG_PURGE_DTIMES" TIMESTAMP, "CR_BY" VARCHAR(32) NOT NULL, "CR_DTIMES" TIMESTAMP NOT NULL, "UPD_BY" VARCHAR(32), "UPD_DTIMES" TIMESTAMP);
-
 CREATE TABLE "REG"."LOCATION" ("CODE" VARCHAR(36) NOT NULL, "NAME" VARCHAR(128) NOT NULL, "HIERARCHY_LEVEL" SMALLINT NOT NULL, "HIERARCHY_LEVEL_NAME" VARCHAR(64) NOT NULL, "PARENT_LOC_CODE" VARCHAR(32), "LANG_CODE" VARCHAR(3) NOT NULL, "IS_ACTIVE" BOOLEAN NOT NULL, "CR_BY" VARCHAR(32) NOT NULL, "CR_DTIMES" TIMESTAMP NOT NULL, "UPD_BY" VARCHAR(32), "UPD_DTIMES" TIMESTAMP, "IS_DELETED" BOOLEAN, "DEL_DTIMES" TIMESTAMP);
 
 CREATE TABLE "REG"."RID_SEQ" ("CURR_SEQ_NO" INTEGER NOT NULL, "CR_BY" VARCHAR(32) NOT NULL, "CR_DTIMES" TIMESTAMP NOT NULL, "UPD_BY" VARCHAR(32), "UPD_DTIMES" TIMESTAMP);
@@ -258,8 +256,6 @@ ALTER TABLE "REG"."SYNC_JOB_DEF" ADD CONSTRAINT "PK_SYNCJOB_ID" PRIMARY KEY ("ID
 
 ALTER TABLE "REG"."TEMPLATE" ADD CONSTRAINT "PK_TMPLT_ID" PRIMARY KEY ("ID", "LANG_CODE");
 
-ALTER TABLE "REG"."AUDIT_LOG_CONTROL" ADD CONSTRAINT "PK_ALGC" PRIMARY KEY ("REG_ID");
-
 ALTER TABLE "REG"."TEMPLATE_FILE_FORMAT" ADD CONSTRAINT "PK_TFFMT_CODE" PRIMARY KEY ("CODE", "LANG_CODE");
 
 ALTER TABLE "REG"."TRANSACTION_TYPE" ADD CONSTRAINT "PK_TRNTYP_CODE" PRIMARY KEY ("CODE", "LANG_CODE");
@@ -323,8 +319,6 @@ ALTER TABLE "REG"."PERMITTED_LOCAL_CONFIG" ADD CONSTRAINT "PK_PERMCONFIG_CODE" P
 ALTER TABLE "REG"."LOCAL_PREFERENCES" ADD CONSTRAINT "PK_LOCPREF_ID" PRIMARY KEY ("ID");
 
 -- FOREIGN
-ALTER TABLE "REG"."AUDIT_LOG_CONTROL" ADD CONSTRAINT "FK_ALGC_REG" FOREIGN KEY ("REG_ID") REFERENCES "REG"."REGISTRATION" ("ID") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.applicant.type.age.limit','mosip.kernel.applicant.type.age.limit','5','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.jsonvalidator.file-storage-uri','mosip.kernel.jsonvalidator.file-storage-uri','LOCAL','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
@@ -495,3 +489,6 @@ INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.repeating-bloc
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.sequence-limit','mosip.kernel.vid.length.sequence-limit','3','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length','mosip.kernel.vid.length','16','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length','mosip.kernel.vid.length','16','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.audit_timestamp','mosip.registration.audit_timestamp',current timestamp,'CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);

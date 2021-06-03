@@ -40,6 +40,7 @@ import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.repositories.RegistrationRepository;
 import io.mosip.registration.service.IdentitySchemaService;
+import lombok.NonNull;
 
 /**
  * The implementation class of {@link RegistrationDAO}.
@@ -199,6 +200,34 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 					runtimeException.toString());
 		}
 	}
+	
+	@Override
+	public Registration updateRegistrationWithAppId(String applicationId, String statusComments, String clientStatusCode) {
+		try {
+			LOGGER.info("REGISTRATION - UPDATE_STATUS - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
+					"Packet updation has been started");
+
+			Timestamp timestamp = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
+			Registration registration = registrationRepository.findByAppId(applicationId);
+			// registration.setStatusCode(clientStatusCode);
+			registration.setStatusTimestamp(timestamp);
+			registration.setClientStatusCode(clientStatusCode);
+			registration.setClientStatusTimestamp(timestamp);
+			registration.setClientStatusComments(statusComments);
+			registration.setApproverUsrId(SessionContext.userContext().getUserId());
+			registration.setApproverRoleCode(SessionContext.userContext().getRoles().get(0));
+			registration.setUpdBy(SessionContext.userContext().getUserId());
+			registration.setUpdDtimes(timestamp);
+
+			LOGGER.info("REGISTRATION - UPDATE_STATUS - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
+					"Packet updation has been ended");
+
+			return registrationRepository.update(registration);
+		} catch (RuntimeException runtimeException) {
+			throw new RegBaseUncheckedException(RegistrationConstants.PACKET_UPDATE_STATUS,
+					runtimeException.toString());
+		}
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -264,7 +293,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 
 		Timestamp timestamp = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
 
-		Registration reg = registrationRepository.getOne(registrationPacket.getFileName());
+		Registration reg = registrationRepository.findByAppId(registrationPacket.getFileName());
 		reg.setClientStatusCode(registrationPacket.getPacketClientStatus());
 		if (registrationPacket.getUploadStatus() != null) {
 			reg.setFileUploadStatus(registrationPacket.getUploadStatus());
@@ -404,5 +433,19 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	@Override
 	public List<Object[]> getStatusBasedCount() {
 		return registrationRepository.getStatusBasedCount();
+	}
+
+	@Override
+	public List<String> getRegistrationIds(@NonNull List<String> appIds) {
+		List<String> regIds = new ArrayList<>();
+		for (String appId : appIds) {
+			regIds.add(registrationRepository.getRIDByAppId(appId));
+		}
+		return regIds;
+	}
+	
+	@Override
+	public Registration getRegistrationByAppId(String appId) {
+		return registrationRepository.findByAppId(appId);
 	}
 }

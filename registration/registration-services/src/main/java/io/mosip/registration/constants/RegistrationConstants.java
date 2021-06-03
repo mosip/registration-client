@@ -1965,4 +1965,6 @@ public class RegistrationConstants {
 	
 	public static final String  BIOVALUE_KEY  = "bioValue";
 	public static final String BIOVALUE_PLACEHOLDER = "\"<bioValue>\"";
+	
+	public static final String AUDIT_TIMESTAMP = "mosip.registration.audit_timestamp";
 }
