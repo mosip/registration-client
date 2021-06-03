@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import io.mosip.kernel.core.idvalidator.exception.InvalidIDException;
 import io.mosip.registration.entity.LocationHierarchy;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -222,8 +223,12 @@ public class GenericController extends BaseController {
 		button.setOnMouseClicked(new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent event) {
+				boolean isValid = false;
+				try {
+					isValid = pridValidatorImpl.validateId(textField.getText());
+				} catch (InvalidIDException invalidIDException) { isValid = false; }
 
-				if(!pridValidatorImpl.validateId(textField.getText())) {
+				if(!isValid) {
 					generateAlertLanguageSpecific(RegistrationConstants.ERROR, RegistrationUIConstants.PRE_REG_ID_NOT_VALID);
 					return;
 				}
