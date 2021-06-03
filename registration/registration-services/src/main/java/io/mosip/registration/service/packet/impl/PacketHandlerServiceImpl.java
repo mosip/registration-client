@@ -8,6 +8,7 @@ import static io.mosip.registration.exception.RegistrationExceptionConstants.REG
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -15,7 +16,9 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.enums.Role;
+import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,7 +53,6 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.AuditDAO;
-import io.mosip.registration.dao.AuditLogControlDAO;
 import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dao.RegistrationDAO;
 import io.mosip.registration.dto.ErrorResponseDTO;
@@ -105,7 +107,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	private RegistrationDAO registrationDAO;
 
 	@Autowired
-	private AuditLogControlDAO auditLogControlDAO;
+	private GlobalParamService globalParamService;
 
 	@Autowired
 	private IdentitySchemaService identitySchemaService;
