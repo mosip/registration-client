@@ -2378,8 +2378,8 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 	public void initializeWithoutStage(BiometricFxControl fxControl, String subType, Modality modality, List<String> configBioAttributes,
 					 List<String> nonConfigBioAttributes) {
-		if (getRegistrationDTOFromSession().isChild() && subType.equalsIgnoreCase("applicant")) {
-			scanBtn.setId("childScanBtn");
+		if (getRegistrationDTOFromSession().isChild() && subType.equalsIgnoreCase(RegistrationConstants.APPLICANT)) {
+			scanBtn.setId(subType + "ScanBtn");
 		}
 		this.fxControl = fxControl;
 		this.currentSubType = subType;
