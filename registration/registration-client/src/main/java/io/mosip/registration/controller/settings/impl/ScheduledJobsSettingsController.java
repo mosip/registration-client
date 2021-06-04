@@ -312,7 +312,7 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 				.get(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ).equals(RegistrationConstants.ENABLE)) {
 
 			Alert alert = createAlert(AlertType.CONFIRMATION, RegistrationUIConstants.INFORMATION,
-					RegistrationUIConstants.ALERT_NOTE_LABEL, RegistrationUIConstants.getMessageLanguageSpecific("CRON_EXPRESSION_MODIFIED"),
+					RegistrationUIConstants.getMessageLanguageSpecific("ALERT_NOTE_LABEL"), RegistrationUIConstants.getMessageLanguageSpecific("CRON_EXPRESSION_MODIFIED"),
 					RegistrationConstants.RESTART_NOW, RegistrationConstants.RESTART_LATER);
 
 			alert.show();
