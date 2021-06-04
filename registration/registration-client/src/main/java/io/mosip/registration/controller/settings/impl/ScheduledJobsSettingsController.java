@@ -313,7 +313,7 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 			Alert alert = createAlert(AlertType.CONFIRMATION, RegistrationUIConstants.INFORMATION,
 					RegistrationUIConstants.getMessageLanguageSpecific("ALERT_NOTE_LABEL"), RegistrationUIConstants.getMessageLanguageSpecific("CRON_EXPRESSION_MODIFIED"),
-					RegistrationConstants.RESTART_NOW, RegistrationConstants.RESTART_LATER);
+					RegistrationConstants.QUIT_NOW, RegistrationConstants.QUIT_LATER);
 
 			alert.show();
 			Rectangle2D screenSize = Screen.getPrimary().getVisualBounds();
