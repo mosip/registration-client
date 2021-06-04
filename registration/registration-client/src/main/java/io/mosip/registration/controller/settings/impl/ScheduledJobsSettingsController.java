@@ -1,6 +1,8 @@
 package io.mosip.registration.controller.settings.impl;
 
+import java.text.MessageFormat;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -10,13 +12,12 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.RestartController;
 import io.mosip.registration.controller.settings.SettingsInterface;
-import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -236,6 +237,8 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 	}
 
 	private void executeJob(SyncJobDef syncJob) {
+		ResourceBundle resourceBundle = applicationContext.getBundle(ApplicationContext.applicationLanguage(),
+				RegistrationConstants.MESSAGES);
 		progressIndicatorPane.setVisible(true);
 		getStage().getScene().getRoot().setDisable(true);
 
@@ -271,13 +274,13 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 			if (responseDTO.getSuccessResponseDTO() != null) {
 				LOGGER.info("Execution is successful for the job {}", syncJob.getName());
 				
-				SuccessResponseDTO successResponseDTO = responseDTO.getSuccessResponseDTO();
-				generateAlertLanguageSpecific(successResponseDTO.getCode(), successResponseDTO.getMessage());
+				generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION,
+						MessageFormat.format(resourceBundle.getString("JOB_EXECUTION_SUCCESS_MSG"), syncJob.getName()));
 			} else if (responseDTO.getErrorResponseDTOs() != null) {
 				LOGGER.error("Job execution failed with response: " + responseDTO.getErrorResponseDTOs().get(0));
 				
-				ErrorResponseDTO errorResponse = responseDTO.getErrorResponseDTOs().get(0);				
-				generateAlertLanguageSpecific(errorResponse.getCode(), errorResponse.getMessage());
+				generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION,
+						MessageFormat.format(resourceBundle.getString("JOB_EXECUTION_FAILURE_MSG"), syncJob.getName()));
 			}
 		});
 		taskService.setOnFailed(event -> {
@@ -285,6 +288,9 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 			
 			getStage().getScene().getRoot().setDisable(false);
 			progressIndicatorPane.setVisible(false);
+			
+			generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION,
+					MessageFormat.format(resourceBundle.getString("JOB_EXECUTION_FAILURE_MSG"), syncJob.getName()));
 		});
 	}
 
