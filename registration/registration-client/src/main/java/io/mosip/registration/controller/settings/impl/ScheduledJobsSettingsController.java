@@ -128,6 +128,7 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 		int columnIndex = 0;
 		for (SyncJobDef syncJob : syncJobs) {
 			SyncControl syncControl = jobConfigurationService.getSyncControlOfJob(syncJob.getId());
+			String localSyncFrequency = localConfigService.getValue(syncJob.getId());
 
 			GridPane mainGridPane = new GridPane();
 			mainGridPane.setId(syncJob.getName());
@@ -178,7 +179,9 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 			String nextSyncTime = RegistrationConstants.HYPHEN;
 			if (syncJob.getSyncFreq() != null) {
-				nextSyncTime = getLocalZoneTime(jobConfigurationService.getNextRestartTime(syncJob.getSyncFreq()));
+				nextSyncTime = getLocalZoneTime(jobConfigurationService.getNextRestartTime(
+						localSyncFrequency != null && !localSyncFrequency.isBlank() ? localSyncFrequency
+								: syncJob.getSyncFreq()));
 			}
 			Label nextRunLabel = new Label(applicationContext.getApplicationLanguageLabelBundle()
 					.getString(RegistrationConstants.NEXT_RUN_LABEL) + nextSyncTime);
