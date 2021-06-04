@@ -282,6 +282,7 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 				generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION,
 						MessageFormat.format(resourceBundle.getString("JOB_EXECUTION_FAILURE_MSG"), syncJob.getName()));
 			}
+			setContent();
 		});
 		taskService.setOnFailed(event -> {
 			LOGGER.error("Failed execution of the task: ", syncJob.getName());
