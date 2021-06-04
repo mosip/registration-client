@@ -140,7 +140,7 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 				batchCount);
 		if (syncedPackets != null && !syncedPackets.isEmpty()) {
 			for(Registration registration : syncedPackets) {
-				if(registration.getServerStatusCode() != null && registration.getServerStatusCode().equals(RegistrationConstants.PACKET_STATUS_CODE_REREGISTER))
+				if (RegistrationConstants.PACKET_STATUS_CODE_REREGISTER.equalsIgnoreCase(registration.getServerStatusCode()))
 					continue;
 
 				Registration updatedRegDetail = uploadSyncedPacket(preparePacketStatusDto(registration));
