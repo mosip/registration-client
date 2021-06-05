@@ -1,6 +1,8 @@
 package io.mosip.registration.controller.settings.impl;
 
+import java.text.MessageFormat;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -10,13 +12,12 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.RestartController;
 import io.mosip.registration.controller.settings.SettingsInterface;
-import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -127,6 +128,7 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 		int columnIndex = 0;
 		for (SyncJobDef syncJob : syncJobs) {
 			SyncControl syncControl = jobConfigurationService.getSyncControlOfJob(syncJob.getId());
+			String localSyncFrequency = localConfigService.getValue(syncJob.getId());
 
 			GridPane mainGridPane = new GridPane();
 			mainGridPane.setId(syncJob.getName());
@@ -177,7 +179,9 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 			String nextSyncTime = RegistrationConstants.HYPHEN;
 			if (syncJob.getSyncFreq() != null) {
-				nextSyncTime = getLocalZoneTime(jobConfigurationService.getNextRestartTime(syncJob.getSyncFreq()));
+				nextSyncTime = getLocalZoneTime(jobConfigurationService.getNextRestartTime(
+						localSyncFrequency != null && !localSyncFrequency.isBlank() ? localSyncFrequency
+								: syncJob.getSyncFreq()));
 			}
 			Label nextRunLabel = new Label(applicationContext.getApplicationLanguageLabelBundle()
 					.getString(RegistrationConstants.NEXT_RUN_LABEL) + nextSyncTime);
@@ -236,6 +240,8 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 	}
 
 	private void executeJob(SyncJobDef syncJob) {
+		ResourceBundle resourceBundle = applicationContext.getBundle(ApplicationContext.applicationLanguage(),
+				RegistrationConstants.MESSAGES);
 		progressIndicatorPane.setVisible(true);
 		getStage().getScene().getRoot().setDisable(true);
 
@@ -271,20 +277,24 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 			if (responseDTO.getSuccessResponseDTO() != null) {
 				LOGGER.info("Execution is successful for the job {}", syncJob.getName());
 				
-				SuccessResponseDTO successResponseDTO = responseDTO.getSuccessResponseDTO();
-				generateAlertLanguageSpecific(successResponseDTO.getCode(), successResponseDTO.getMessage());
+				generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION,
+						MessageFormat.format(resourceBundle.getString("JOB_EXECUTION_SUCCESS_MSG"), syncJob.getName()));
 			} else if (responseDTO.getErrorResponseDTOs() != null) {
 				LOGGER.error("Job execution failed with response: " + responseDTO.getErrorResponseDTOs().get(0));
 				
-				ErrorResponseDTO errorResponse = responseDTO.getErrorResponseDTOs().get(0);				
-				generateAlertLanguageSpecific(errorResponse.getCode(), errorResponse.getMessage());
+				generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION,
+						MessageFormat.format(resourceBundle.getString("JOB_EXECUTION_FAILURE_MSG"), syncJob.getName()));
 			}
+			setContent();
 		});
 		taskService.setOnFailed(event -> {
 			LOGGER.error("Failed execution of the task: ", syncJob.getName());
 			
 			getStage().getScene().getRoot().setDisable(false);
 			progressIndicatorPane.setVisible(false);
+			
+			generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION,
+					MessageFormat.format(resourceBundle.getString("JOB_EXECUTION_FAILURE_MSG"), syncJob.getName()));
 		});
 	}
 
@@ -305,8 +315,8 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 				.get(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ).equals(RegistrationConstants.ENABLE)) {
 
 			Alert alert = createAlert(AlertType.CONFIRMATION, RegistrationUIConstants.INFORMATION,
-					RegistrationUIConstants.ALERT_NOTE_LABEL, RegistrationUIConstants.getMessageLanguageSpecific("CRON_EXPRESSION_MODIFIED"),
-					RegistrationConstants.RESTART_NOW, RegistrationConstants.RESTART_LATER);
+					RegistrationUIConstants.getMessageLanguageSpecific("ALERT_NOTE_LABEL"), RegistrationUIConstants.getMessageLanguageSpecific("CRON_EXPRESSION_MODIFIED"),
+					RegistrationConstants.QUIT_NOW, RegistrationConstants.QUIT_LATER);
 
 			alert.show();
 			Rectangle2D screenSize = Screen.getPrimary().getVisualBounds();

@@ -1957,8 +1957,8 @@ public class RegistrationConstants {
 	public static final String PERMITTED_CONFIG_TYPE = "CONFIGURATION";
 	public static final String PERMITTED_SHORTCUT = "SHORTCUT";
 	
-	public static final String RESTART_NOW = "RESTART_NOW";
-	public static final String RESTART_LATER = "RESTART_LATER";
+	public static final String QUIT_NOW = "QUIT_NOW";
+	public static final String QUIT_LATER = "QUIT_LATER";
 
 	public static final String RESPONSE_SIGNATURE_PUBLIC_KEY_APP_ID = "SERVER-RESPONSE";
 	public static final String RESPONSE_SIGNATURE_PUBLIC_KEY_REF_ID = "SIGN-VERIFY";
