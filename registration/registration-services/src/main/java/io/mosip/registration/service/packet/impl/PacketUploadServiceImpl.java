@@ -140,12 +140,15 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 				batchCount);
 		if (syncedPackets != null && !syncedPackets.isEmpty()) {
 			for(Registration registration : syncedPackets) {
-				if(registration.getServerStatusCode().equals(RegistrationConstants.PACKET_STATUS_CODE_REREGISTER))
+				if (RegistrationConstants.PACKET_STATUS_CODE_REREGISTER.equalsIgnoreCase(registration.getServerStatusCode()))
 					continue;
 
 				Registration updatedRegDetail = uploadSyncedPacket(preparePacketStatusDto(registration));
-				if(updatedRegDetail.getFileUploadStatus().equals(RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode()))
+				if(updatedRegDetail.getFileUploadStatus().equals(RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode())) {
 					setErrorResponse(responseDTO, RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.name(), null);
+				} else {
+					setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, null);
+				}
 			}
 		} else {
 			SuccessResponseDTO successResponseDTO =new SuccessResponseDTO();

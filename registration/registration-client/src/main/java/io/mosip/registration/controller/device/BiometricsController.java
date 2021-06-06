@@ -24,9 +24,6 @@ import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 
-import io.mosip.registration.api.docscanner.DocScannerFacade;
-import io.mosip.registration.api.docscanner.dto.DocScanDevice;
-import io.mosip.registration.util.common.Modality;
 import org.apache.commons.io.IOUtils;
 import org.mvel2.MVEL;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,13 +42,14 @@ import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.registration.api.docscanner.DocScannerFacade;
+import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
 import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
-import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.FXUtils;
@@ -71,6 +69,7 @@ import io.mosip.registration.mdm.dto.MdmBioDevice;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.operator.UserOnboardService;
+import io.mosip.registration.util.common.Modality;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -416,12 +415,12 @@ public class BiometricsController extends BaseController /* implements Initializ
 			registrationNavlabel.setVisible(false);
 			backButton.setVisible(false);
 			gheaderfooter.setVisible(false);
-			continueBtn.setText("SAVE");
+			continueBtn.setText(applicationContext.getApplicationLanguageLabelBundle().getString("save"));
 		} else {
 			registrationNavlabel.setVisible(true);
 			backButton.setVisible(true);
 			gheaderfooter.setVisible(true);
-			continueBtn.setText("CONTINUE");
+			continueBtn.setText(applicationContext.getApplicationLanguageLabelBundle().getString("continue"));
 		}
 
 		checkBoxPane.getChildren().clear();

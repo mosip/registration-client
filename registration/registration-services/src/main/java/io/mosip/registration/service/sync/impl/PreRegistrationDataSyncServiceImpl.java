@@ -1,31 +1,33 @@
 package io.mosip.registration.service.sync.impl;
 
 import java.io.File;
-import java.net.SocketTimeoutException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TimeZone;
+import java.util.UUID;
+import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import lombok.NonNull;
+import javax.annotation.PreDestroy;
+
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.ResourceAccessException;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.mosip.kernel.core.exception.ExceptionUtils;
-import io.mosip.kernel.core.exception.IOException;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.FileUtils;
@@ -45,14 +47,11 @@ import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.entity.PreRegistrationList;
 import io.mosip.registration.entity.SyncTransaction;
 import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.SyncManager;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.external.PreRegZipHandlingService;
 import io.mosip.registration.service.sync.PreRegistrationDataSyncService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
-
-import javax.annotation.PreDestroy;
+import lombok.NonNull;
 
 /**
  * Implementation for {@link PreRegistrationDataSyncService}
@@ -110,7 +109,6 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 	public ResponseDTO getPreRegistrationIds(@NonNull String syncJobId) {
 		LOGGER.info("Fetching Pre-Registration Id's started, syncJobId : {}", syncJobId);
 		ResponseDTO responseDTO = new ResponseDTO();
-		boolean noRecordsError = false;
 
 		try {
 			//Precondition check, proceed only if met, otherwise throws exception
@@ -130,6 +128,7 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 				Map<String, String> preRegIds = (Map<String, String>) preRegistrationIdsDTO.getPreRegistrationIds();
 				getPreRegistrationPackets(preRegIds);
 				LOGGER.info("Fetching Pre-Registration data ended successfully");
+				setSuccessResponse(responseDTO, RegistrationConstants.PRE_REG_SUCCESS_MESSAGE, null);
 				return responseDTO;
 			}
 
