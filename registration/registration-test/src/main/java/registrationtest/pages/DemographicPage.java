@@ -621,12 +621,15 @@ public class DemographicPage {
 					scrollVerticalDirection2(0,schema);
 					scrollVerticalDirection2(0,schema);
 					scrollVerticalDirection2(0,schema);
-					
-					
-					scrollVerticalDirection2(0,schema);
-					scrollVerticalDirection2(0,schema);
-					scrollVerticalDirection2(0,schema);
 					//16
+					
+					scrollVerticalDirection2(0,schema);
+					scrollVerticalDirection2(0,schema);
+					scrollVerticalDirection2(0,schema);
+					scrollVerticalDirection2(0,schema);
+					scrollVerticalDirection2(0,schema);
+					scrollVerticalDirection2(0,schema);
+					//12
 					Thread.sleep(400);
 				biometricUploadPage.newRegbioUpload(schema.getSubType(),schema.getBioAttributes(),id,identity);
 				 
