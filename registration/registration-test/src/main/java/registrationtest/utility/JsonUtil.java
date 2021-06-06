@@ -13,6 +13,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -176,7 +177,7 @@ public class JsonUtil {
 	}
 
 
-	public static double JsonObjIntParsing(String jsonIdentity,String idfield) throws Exception {
+	public static double JsonObjDoubleParsing(String jsonIdentity,String idfield) throws Exception {
 		double value =0; 
 		JSONObject json = new JSONObject(jsonIdentity); 
 		JSONObject identity = json.getJSONObject(PropertiesUtil.getKeyValue("jsonObjName"));
@@ -188,6 +189,24 @@ public class JsonUtil {
 	}
 
 
+	public static List<String> JsonObjArrayListParsing(String jsonIdentity,String idfield) throws Exception {
+		List<String> list=new LinkedList<String>();
+		JSONObject json = new JSONObject(jsonIdentity); 
+		
+		JSONObject identity = json.getJSONObject(PropertiesUtil.getKeyValue("jsonObjName"));
+
+
+		JSONArray identityitems = identity.getJSONArray(idfield);
+		if (identityitems != null) { 
+			   for (int i=0;i<identityitems.length();i++){ 
+			    list.add(identityitems.getString(i));
+			   } 
+			} 
+		return list;
+		
+	}
+		
+	
 
 
 

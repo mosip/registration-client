@@ -1,11 +1,21 @@
 package registrationtest.utility;
 
 
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageOutputStream;
 
 import static org.awaitility.Awaitility.*;
 
@@ -17,11 +27,12 @@ import org.testfx.api.FxRobot;
 import org.testfx.service.support.Capture;
 import org.testfx.util.DebugUtils;
 
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-
+import javafx.scene.image.Image;
 import registrationtest.runapplication.NewRegistrationAdultTest;
 import org.apache.log4j.BasicConfigurator;  
 import org.apache.log4j.LogManager;  
@@ -68,7 +79,8 @@ public class WaitsUtil {
 				});
 		} catch (TimeoutException e) {
 		
-			e.printStackTrace();
+			logger.error(e.getMessage());
+			capture();
 		}
 			return robot.lookup(controlId).query();
 		
@@ -99,16 +111,13 @@ public class WaitsUtil {
 		}catch(Exception e)
 		{
 			logger.error(e.getMessage());
-			Rectangle2D r=new Rectangle2D(0, 0, 600, 700);
-			Capture c=robot.capture(r);
-			c.getImage();
+			capture();
 
 
 		}
 
 		return robot.lookup(controlId).queryAs(TextField.class);
-
-	}
+		}
 
 
 	public <T extends Node> Button lookupByIdButton( String controlId,FxRobot robot) {
@@ -121,10 +130,7 @@ public class WaitsUtil {
 		}catch(Exception e)
 		{
 			logger.error(e.getMessage());
-			Rectangle2D r=new Rectangle2D(0, 0, 600, 700);
-			Capture c=robot.capture(r);
-			c.getImage();
-
+		capture();
 
 		}
 
@@ -132,5 +138,21 @@ public class WaitsUtil {
 
 	}
 
-
+public void capture()
+{	try {
+	Robot rb=new Robot();
+	Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+	
+	Rectangle rec=new Rectangle(0, 0, screenSize.width, screenSize.height);
+	BufferedImage image=rb.createScreenCapture(rec);
+	Image myImage=SwingFXUtils.toFXImage(image, null);
+	String datetim=DateUtil.getDateTime();
+	String fileName="Out"+datetim+".jpg";
+	ImageIO.write(image, "jpg",new File(fileName));
+	} catch (Exception e) {
+		logger.error(e.getMessage());
+		
+	}
+	
+}
 }

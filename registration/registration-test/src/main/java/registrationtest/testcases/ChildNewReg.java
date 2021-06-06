@@ -100,8 +100,7 @@ public class ChildNewReg {
 	SelectLanguagePage selectLanguagePage;
 	
 	public RID newRegistrationChild(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
-			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,HashMap<String, String> documentUpload
-			,RID rid1,String scenario)  {
+			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,RID rid1,String scenario)  {
 
 		try {
 		ExtentReportUtil.test3=ExtentReportUtil.reports.createTest("New Child Registration Scenario");
@@ -137,23 +136,20 @@ public class ChildNewReg {
 		
 		ExtentReportUtil.step3=ExtentReportUtil.test3.createNode("STEP 3-Demographic, Biometric upload ");
 
-		webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonIdentity,documentUpload,scenario);
+		webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonIdentity,scenario,rid1);
 
 
 		ExtentReportUtil.step3.log(Status.PASS, "Demographic, Biometric upload done");
 
-		//buttons.clickContinueBtn();
-
-		//webViewDocument=biometricUploadPage.bioUpload(list);
-
-		buttons.clickContinueBtn();
+		
+		buttons.clicknextBtn();
 
 		ExtentReportUtil.step4=ExtentReportUtil.test3.createNode("STEP 4-Accept Preview ");
 		
 		
 		rid=webViewDocument.acceptPreview(); //return thread and wait on thread
 
-		buttons.clickContinueBtn();
+		buttons.clicknextBtn();
 
 		ExtentReportUtil.step4.log(Status.PASS, "Accept Preview done" + rid.getWebviewPreview());
 
@@ -161,10 +157,10 @@ public class ChildNewReg {
 		 * Authentication enter password
 		 * Click Continue 
 		 */
-
+		authenticationPage.enterUserName(loginUserid);
 		authenticationPage.enterPassword(loginPwd);
 
-		buttons.clickContinueBtn();
+		buttons.clickAuthenticateBtn();
 
 
 		/**

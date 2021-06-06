@@ -70,7 +70,7 @@ import registrationtest.utility.RobotActions;
  * Fxrobot will take control of primary stage and perform keyboard and mouse driven activities.
  *
  */
-public class LostUINLogout {
+public class ChildLostUIN {
 
 	FxRobot robot;
 	Schema schema;
@@ -99,17 +99,13 @@ public class LostUINLogout {
 	UploadPacketPage uploadPacketPage;
 	SelectLanguagePage selectLanguagePage;
 	
-	
-	public RID LostUINAdult(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
-			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,RID rid1,String scenario
-			)  {
+	public RID newRegistrationChildLost(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
+			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,RID rid1,String scenario)  {
 
 		try {
-		ExtentReportUtil.test2=ExtentReportUtil.reports.createTest("Lost UIN Scenario");
+		ExtentReportUtil.test4=ExtentReportUtil.reports.createTest("New Child Registration Scenario");
 		
-		
-		
-		ExtentReportUtil.step1=ExtentReportUtil.test2.createNode("STEP 1-Loading RegClient");
+		ExtentReportUtil.step1=ExtentReportUtil.test4.createNode("STEP 1-Loading RegClient");
 		
 		loginPage=new LoginPage(robot);
 		buttons=new Buttons(robot);
@@ -117,14 +113,14 @@ public class LostUINLogout {
 		robotActions=new RobotActions(robot);
 		selectLanguagePage=new SelectLanguagePage(robot);
 		
+		
 		//Load Login screen
 		loginPage.loadLoginScene(applicationPrimaryStage1);
 		
 		
-		ExtentReportUtil.step2=ExtentReportUtil.test2.createNode("STEP 2-Operator Enter Details ");
+		ExtentReportUtil.step2=ExtentReportUtil.test4.createNode("STEP 2-Operator Enter Details ");
 		
 		//Enter userid and password
-		//loginPage.selectAppLang();
 		loginPage.setUserId(loginUserid);
 		homePage=loginPage.setPassword(loginPwd);
 		ExtentReportUtil.step2.log(Status.PASS, "Operator logs in");
@@ -138,44 +134,51 @@ public class LostUINLogout {
 		selectLanguagePage.selectLang();
 		buttons.clicksubmitBtn();
 		
-		ExtentReportUtil.step3=ExtentReportUtil.test2.createNode("STEP 3-Demographic, Biometric upload ");
-		
+		ExtentReportUtil.step3=ExtentReportUtil.test4.createNode("STEP 3-Demographic, Biometric upload ");
+
 		webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonIdentity,scenario,rid1);
-		
+
 
 		ExtentReportUtil.step3.log(Status.PASS, "Demographic, Biometric upload done");
 
-		ExtentReportUtil.step4=ExtentReportUtil.test2.createNode("STEP 4-Accept Preview ");
-		
+	
+
 		buttons.clicknextBtn();
+
+		ExtentReportUtil.step4=ExtentReportUtil.test4.createNode("STEP 4-Accept Preview ");
+		
 		
 		rid=webViewDocument.acceptPreview(); //return thread and wait on thread
 
 		buttons.clicknextBtn();
 
-		ExtentReportUtil.step4.log(Status.PASS, "Accept Preview done"  + rid.getWebviewPreview());
+		ExtentReportUtil.step4.log(Status.PASS, "Accept Preview done" + rid.getWebviewPreview());
 
 		/**
 		 * Authentication enter password
 		 * Click Continue 
 		 */
+
 		authenticationPage.enterUserName(loginUserid);
 		authenticationPage.enterPassword(loginPwd);
 
 		buttons.clickAuthenticateBtn();
 
 
+
 		/**
 		 * Click Home, eodapprove, approval Button, authenticate button
 		 * Enter user details
 		 */
-
 		rid2=webViewDocument.getacknowledgement();
+
+
+		
 		homePage.clickHomeImg();
 		
 		
 		
-		ExtentReportUtil.step5=ExtentReportUtil.test2.createNode("STEP 5-Approve Packet ");
+		ExtentReportUtil.step5=ExtentReportUtil.test4.createNode("STEP 5-Approve Packet ");
 		
 		
 
@@ -190,14 +193,16 @@ public class LostUINLogout {
 		robotActions.clickWindow();
 		homePage.clickHomeImg();	
 		buttons.clickConfirmBtn();
-		ExtentReportUtil.step5.log(Status.PASS, "Approve Packet done"  + rid2.getWebViewAck());
+		ExtentReportUtil.step5.log(Status.PASS, "Approve Packet done" + rid2.getWebViewAck());
 
+		
 		assertEquals(rid.getRid(), rid2.getRid());
+		
 		/**
 		 * Upload the packet
 		 */
 		
-		ExtentReportUtil.step6=ExtentReportUtil.test2.createNode("STEP 6-Upload Packet ");
+		ExtentReportUtil.step6=ExtentReportUtil.test4.createNode("STEP 6-Upload Packet ");
 		
 
 		uploadPacketPage=homePage.clickuploadPacketImageView( applicationPrimaryStage, scene);
@@ -221,19 +226,22 @@ public class LostUINLogout {
 		if(result==true)
 		{ExtentReportUtil.step6.log(Status.PASS, "Upload Packet done");
 
-			ExtentReportUtil.test2.log(Status.PASS, "TESTCASE PASS\n" +" RID-"+ rid.rid +" DATE TIME-"+ rid.ridDateTime +" ENVIRONMENT-" +System.getProperty("mosip.hostname"));
-		}		else {
-			ExtentReportUtil.step6.log(Status.FAIL, "Upload Fail");
+			ExtentReportUtil.test4.log(Status.PASS, "TESTCASE PASS\n" +" RID-"+ rid.rid +" DATE TIME-"+ rid.ridDateTime +" ENVIRONMENT-" +System.getProperty("mosip.hostname"));
+		}		else
+			ExtentReportUtil.test4.log(Status.FAIL, "TESTCASE FAIL");
 
-			ExtentReportUtil.test2.log(Status.FAIL, "TESTCASE FAIL");
-		}
-		//assertTrue(result,"TestCase Failed");
+		assertTrue(result,"TestCase Failed");
+
 		}catch(Exception e)
 		{
 			e.printStackTrace();
 		}
 		
+		
+		
+		
 return rid;
 	}
+
 }
 

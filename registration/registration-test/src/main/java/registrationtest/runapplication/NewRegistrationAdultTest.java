@@ -45,11 +45,11 @@ public class NewRegistrationAdultTest{
 	private static final Logger logger = LogManager.getLogger(NewRegistrationAdultTest.class);  
 	static FxRobot robot;
 	static String[] Strinrid;
-	static RID rid1,rid2,rid3;
+	static RID rid1,rid2,rid3,rid4;
 	static String[] scenario;
 	
 	public static void invokeRegClientNewReg(
-			HashMap<String, String> documentUpload,
+		
 			String operatorId,String operatorPwd,
 			String supervisorId,
 			String supervisorPwd
@@ -58,6 +58,7 @@ public class NewRegistrationAdultTest{
 		LoginNewRegLogout loginNewRegLogout=new LoginNewRegLogout();  
 		LostUINLogout lostUINLogout=new LostUINLogout();
 		ChildNewReg childNewReg=new ChildNewReg(); 
+		ChildLostUIN childLostUIN=new ChildLostUIN();
 
 		Thread thread = new Thread() { 
 			@Override
@@ -74,26 +75,37 @@ public class NewRegistrationAdultTest{
 					for(String sc : scenario )
 					{
 						switch(sc) {
-						case "adult": rid1=loginNewRegLogout.newRegistrationAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
+						case "adult": 
+							rid1=loginNewRegLogout.newRegistrationAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,readJsonFileText("path.idjson.adult"),
-							documentUpload,sc);
+							sc,rid1);
 					logger.info("RID RESULTS-"+ rid1.result +"\t"+ rid1.ridDateTime +"\t"+ rid1.rid + "\t "+ rid1.firstName );
 					ExtentReportUtil.reports.flush();
 					break;
-						case "lost":
+						case "lostadult":
+							
 					 rid2=lostUINLogout.LostUINAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,readJsonFileText("path.idjson.adult"),
-							documentUpload,sc);
+							rid1,sc);
 					logger.info("RID RESULTS-"+ rid2.result +"\t"+ rid2.ridDateTime +"\t"+ rid2.rid);
 					ExtentReportUtil.reports.flush();
 					break;
 						case "child":
+							
 					 rid3=childNewReg.newRegistrationChild(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,readJsonFileText("path.idjson.child"),
-							documentUpload,rid1,sc);
+							rid1,sc);
 					logger.info("RID RESULTS-"+ rid3.result +"\t"+ rid3.ridDateTime +"\t"+ rid3.rid);
 					ExtentReportUtil.reports.flush();
 					break;
+						case "lostchild":
+							
+							 rid4=childLostUIN.newRegistrationChildLost(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
+									StartApplication.primaryStage,readJsonFileText("path.idjson.child"),
+									rid1,sc);
+							logger.info("RID RESULTS-"+ rid4.result +"\t"+ rid4.ridDateTime +"\t"+ rid4.rid);
+							ExtentReportUtil.reports.flush();
+							break;
 						
 						}
 					}
@@ -153,7 +165,6 @@ public class NewRegistrationAdultTest{
 				System.setProperty("mosip.hostname",PropertiesUtil.getKeyValue("mosip.hostname"));
 				
 				invokeRegClientNewReg(
-						readMapDocumentValues(),
 						PropertiesUtil.getKeyValue("operatorId"), 
 						PropertiesUtil.getKeyValue("operatorPwd"),
 						PropertiesUtil.getKeyValue("supervisorUserid"), 
@@ -189,17 +200,6 @@ public class NewRegistrationAdultTest{
 			}
 
 			
-			public static HashMap<String, String> readMapDocumentValues()
-			{
-				HashMap<String, String> map=new HashMap<String, String>();
-			//	map.put("proofOfConsent","Registration Form");
-				map.put("proofOfAddress","Barangay ID");
-				map.put("proofOfIdentity","Passport");
-				map.put("proofOfRelationship","Passport");
-
-				return map;
-
-			}
 
 		}
 

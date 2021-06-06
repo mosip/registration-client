@@ -144,7 +144,7 @@ public class LoginNewRegLogout {
 		return flag;
 	}
 	public RID newRegistrationAdult(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
-			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,HashMap<String, String> documentUpload,String scenario
+			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,String scenario,RID rid1
 			)  {
 
 		try {
@@ -190,14 +190,14 @@ public class LoginNewRegLogout {
 		
 		ExtentReportUtil.step3=ExtentReportUtil.test1.createNode("STEP 3-Demographic, Biometric upload ");
 		
-		webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonIdentity,documentUpload,scenario);
+		webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonIdentity,scenario,rid1);
 
 		ExtentReportUtil.step3.log(Status.PASS, "Demographic, Biometric upload done");
 
-	
+		buttons.clicknextBtn();
 
 		ExtentReportUtil.step4=ExtentReportUtil.test1.createNode("STEP 4-Accept Preview ");
-		buttons.clicknextBtn();
+		
 		
 		rid=webViewDocument.acceptPreview();
 

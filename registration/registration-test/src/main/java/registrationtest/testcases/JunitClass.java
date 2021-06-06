@@ -47,7 +47,7 @@ public class JunitClass {
 
 	
 		try {
-			NewRegistrationAdultTest.invokeRegClientNewReg(NewRegistrationAdultTest.readMapDocumentValues(),
+			NewRegistrationAdultTest.invokeRegClientNewReg(
 					PropertiesUtil.getKeyValue("operatorId"), 
 					PropertiesUtil.getKeyValue("operatorPwd"),
 					PropertiesUtil.getKeyValue("supervisorUserid"), 
