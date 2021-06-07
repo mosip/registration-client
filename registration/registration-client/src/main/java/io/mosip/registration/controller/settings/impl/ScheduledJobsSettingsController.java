@@ -24,6 +24,7 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.config.JobConfigurationService;
 import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.sync.impl.MasterSyncServiceImpl;
+import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -217,6 +218,8 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 			submit.setOnAction(event -> {
 				modifyCronExpression(syncJob, cronTextField.getText());
 			});
+			
+			Platform.runLater( () -> cronTextField.requestFocus() );
 
 			if (!permittedJobs.contains(syncJob.getId())) {
 				submit.setVisible(false);
