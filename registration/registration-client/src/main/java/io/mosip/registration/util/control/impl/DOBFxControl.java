@@ -140,14 +140,8 @@ public class DOBFxControl extends FxControl {
 
 	@Override
 	public boolean isValid() {
-		TextField dd = (TextField) getField(
-				uiSchemaDTO.getId() + RegistrationConstants.DD + RegistrationConstants.TEXT_FIELD);
-		TextField mm = (TextField) getField(
-				uiSchemaDTO.getId() + RegistrationConstants.MM + RegistrationConstants.TEXT_FIELD);
-		TextField yyyy = (TextField) getField(
-				uiSchemaDTO.getId() + RegistrationConstants.YYYY + RegistrationConstants.TEXT_FIELD);
-		return dd != null && !dd.getText().isEmpty() && mm != null && !mm.getText().isEmpty() && yyyy != null
-				&& !yyyy.getText().isEmpty();
+		return dateValidation.validateDateWithMaxAndMinDays((Pane) getNode(), uiSchemaDTO.getId(),
+				getUiSchemaDTO().getMinimum(), getUiSchemaDTO().getMaximum());
 	}
 
 	@Override
@@ -183,16 +177,17 @@ public class DOBFxControl extends FxControl {
 
 	}
 
-	private void addListener(TextField textField, String dateTyep) {
+	private void addListener(TextField textField, String dateType) {
 		textField.textProperty().addListener((ob, ov, nv) -> {
 			fxUtils.toggleUIField((Pane) node,
 					textField.getId().replaceAll(RegistrationConstants.TEXT_FIELD, "") + RegistrationConstants.LABEL,
 					!textField.getText().isEmpty());
 
-			if (!dateValidation.isNewValueValid(nv, dateTyep)) {
+			if (!dateValidation.isNewValueValid(nv, dateType)) {
 				textField.setText(ov);
 			}
-			boolean isValid = dateValidation.validateDate((Pane) node, uiSchemaDTO.getId());
+			boolean isValid = dateValidation.validateDateWithMaxAndMinDays((Pane) getNode(), uiSchemaDTO.getId(),
+					getUiSchemaDTO().getMinimum(), getUiSchemaDTO().getMaximum());
 			if (isValid) {
 				setData(null);
 				refreshFields();

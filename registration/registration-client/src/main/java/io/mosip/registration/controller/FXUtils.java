@@ -21,6 +21,7 @@ import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DateCell;
@@ -264,6 +265,13 @@ public class FXUtils {
 		});
 		field.getStyleClass().add("demoGraphicTextFieldFocused");
 		toggleUIField(parentPane, field.getId() + RegistrationConstants.MESSAGE, true);
+	}
+
+	public void toggleComboBoxStyle(ComboBox field, boolean isError) {
+		field.getStyleClass().removeIf((s) -> {
+			return s.equals("demoGraphicTextFieldFocused");
+		});
+		if(isError) { field.getStyleClass().add("demoGraphicTextFieldFocused"); }
 	}
 
 	public void focusedAction(Pane parentPane, TextField field) {
