@@ -15,7 +15,7 @@ public class Alerts {
 	private static final Logger logger = LogManager.getLogger(Alerts.class); 
 	String alertImage="#alertImage";
 	String exit="#exit";
-	String success="Success";
+	String success="#context";
 
 
 	WaitsUtil waitsUtil;

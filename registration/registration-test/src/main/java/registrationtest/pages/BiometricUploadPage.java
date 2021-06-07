@@ -29,7 +29,7 @@ public class BiometricUploadPage {
 	String EXCEPTION_PHOTO="EXCEPTION_PHOTO";
 	String alertImage="#alertImage";
 	String exit="#exit";
-	String success="Success";
+	String success="#context";
 	Buttons buttons;
 
 
