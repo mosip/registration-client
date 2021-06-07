@@ -76,8 +76,8 @@ public class SyncJobControlDAOImplTest {
 		comparableList.add(syncControl1);
 
 		Mockito.when(syncStatusRepository.findAll()).thenReturn(comparableList);
-		Mockito.when(registrationRepository.findByClientStatusCodeInOrderByUpdDtimesDesc(REG_STATUS_CODES))
-				.thenReturn(registrationsList);
+		Mockito.when(registrationRepository.countByClientStatusCodeInOrderByUpdDtimesDesc(REG_STATUS_CODES))
+				.thenReturn((long) registrationsList.size());
 
 		syncJobnfo = syncJobDAOImpl.getSyncStatus();
 		assertEquals("MDS_J00001", syncJobnfo.getSyncControlList().get(0).getSyncJobId());
@@ -87,7 +87,7 @@ public class SyncJobControlDAOImplTest {
 	@SuppressWarnings("unchecked")
 	@Test(expected = RegBaseUncheckedException.class)
 	public void testValidateException() throws RegBaseCheckedException {
-		when(registrationRepository.findByClientStatusCodeInOrderByUpdDtimesDesc(Mockito.anyList()))
+		when(registrationRepository.countByClientStatusCodeInOrderByUpdDtimesDesc(Mockito.anyList()))
 				.thenThrow(RegBaseUncheckedException.class);
 		syncJobDAOImpl.getSyncStatus();
 	}

@@ -6,11 +6,14 @@ import static org.mockito.Mockito.when;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.registration.dao.AuditDAO;
+import io.mosip.registration.service.config.LocalConfigService;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,7 +67,13 @@ public class AuditFactoryTest {
 	private GlobalParamService globalParamService;
 
 	@Mock
+	private LocalConfigService localConfigService;
+
+	@Mock
 	private SessionContext.SecurityContext securityContext;
+
+	@Mock
+	private AuditDAO auditDAO;
 
 	@Before
 	public void init() throws Exception {
@@ -108,23 +117,11 @@ public class AuditFactoryTest {
 	//Java11 correction
 	@Test
 	public void deleteAuditLogsSuccessTest() {
-		List<Registration> registrations = new LinkedList<>();
-		Registration registration = new Registration();
-		registration.setId("REG123456");
-		registrations.add(registration);
-
-		Mockito.when(registrationDAO.get(Mockito.anyList())).thenReturn(registrations);
-
-		Mockito.doNothing().when(regPacketStatusService).deleteRegistrations(registrations);
-
-		/*
-		 * assertSame(RegistrationConstants.AUDIT_LOGS_DELETION_SUCESS_MSG,
-		 * auditFactory.deleteAuditLogs().getSuccessResponseDTO().getMessage());
-		 *///list.clear();
-		
-		assertSame(RegistrationConstants.AUDIT_LOGS_DELETION_EMPTY_MSG,
+		when(ApplicationContext.map()).thenReturn(applicationMap);
+		Mockito.when(applicationMap.get(Mockito.anyString())).thenReturn("2020-12-12 12:12:12");
+		Mockito.doNothing().when(auditDAO).deleteAudits(Mockito.any(LocalDateTime.class));
+		assertSame(RegistrationConstants.AUDIT_LOGS_DELETION_SUCESS_MSG,
 				auditFactory.deleteAuditLogs().getSuccessResponseDTO().getMessage());
-
 	}
 
 
