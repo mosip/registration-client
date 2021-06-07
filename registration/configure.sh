@@ -95,6 +95,10 @@ cp /registration-test/target/registration-test-*-dependencies.jar /registration-
 cp /registration-test/resources/*  /registration-test-utility/
 cp -r /registration-libs/resources/jre /registration-test-utility/
 cp -r /registration-client/target/lib/morena* /registration-test-utility/lib
+cp -r /registration-client/target/lib/icu4j.jar /registration-test-utility/lib
+cp -r /registration-client/target/lib/kernel-transliteration-icu4j.jar /registration-test-utility/lib
+cp -r /registration-client/target/lib/clamav.jar /registration-test-utility/lib
+cp -r /registration-client/target/lib/kernel-virusscanner-clamav.jar /registration-test-utility/lib
 cp -r /sdkjars/*.jar /registration-test-utility/lib
 cp /registration-client/target/MANIFEST.MF /registration-test-utility/
 /usr/bin/zip -r /registration-test-utility.zip /registration-test-utility
