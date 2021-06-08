@@ -14,13 +14,9 @@ import java.util.Optional;
 
 import javax.imageio.ImageIO;
 
+import eu.gnome.morena.*;
 import org.springframework.stereotype.Service;
 
-import eu.gnome.morena.Configuration;
-import eu.gnome.morena.Device;
-import eu.gnome.morena.DeviceBase;
-import eu.gnome.morena.Manager;
-import eu.gnome.morena.TransferDoneListener;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
@@ -38,6 +34,7 @@ public class DocumentScannerServiceImpl extends DocumentScannerService {
 
 	private static final Logger LOGGER = AppConfig.getLogger(DocumentScannerServiceImpl.class);
 	private static final String DEFAULT_EXCEPTIONAL_DEVICE_TYPES = ".*fficejet.*;.*Jet.*";
+	private static final String DOC_SCAN_MODE= "mosip.registration.document_scanner_mode";
 
 	@Override
 	@Deprecated
@@ -143,6 +140,7 @@ public class DocumentScannerServiceImpl extends DocumentScannerService {
 	}
 
 	public BufferedImage scanImage(Device paramDevice) throws Exception {
+		setScannerSettings(paramDevice);
 		ImageTransferHandler imageTransferHandler = new ImageTransferHandler();
 		synchronized (imageTransferHandler) {
 			((DeviceBase) paramDevice).startTransfer(imageTransferHandler);
@@ -152,6 +150,17 @@ public class DocumentScannerServiceImpl extends DocumentScannerService {
 		if (imageTransferHandler.image != null)
 			return imageTransferHandler.image;
 		throw new Exception(imageTransferHandler.error);
+	}
+
+	private void setScannerSettings(Device scanDevice) {
+		if(scanDevice instanceof Scanner) {
+			((Scanner)scanDevice).setResolution(Integer.parseInt(String.valueOf(
+					ApplicationContext.map().get(RegistrationConstants.DOC_SCAN_DPI))));
+
+			((Scanner)scanDevice).setMode(Integer.parseInt(String.valueOf(
+					ApplicationContext.map().getOrDefault(DOC_SCAN_MODE, Scanner.RGB_8))));
+
+		}
 	}
 }
 
