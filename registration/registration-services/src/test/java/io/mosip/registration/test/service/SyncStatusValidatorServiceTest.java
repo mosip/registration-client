@@ -607,7 +607,7 @@ public class SyncStatusValidatorServiceTest {
 		applicationMap.put("mosip.registration.geo.capture.frequency", "N");
 		applicationMap.put("mosip.registration.masterSyncJob.frequency", "20");
 		applicationMap.put("mosip.registration.last_export_registration_config_time", "20");
-		applicationMap.put("mosip.registration.reg_pak_max_cnt_apprv_limit", "1");
+		applicationMap.put("mosip.registration.reg_pak_max_cnt_apprv_limit", "20");
 		applicationMap.put("mosip.registration.reg_pak_max_time_apprv_limit", "5");
 		applicationMap.put(RegistrationConstants.GPS_DEVICE_DISABLE_FLAG, "N");
 		applicationMap.put(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE, "N");
@@ -692,6 +692,7 @@ public class SyncStatusValidatorServiceTest {
 		Mockito.when(syncJobInfo.getSyncControlList()).thenReturn(listSync);
 		Mockito.when(syncJobInfo.getLastExportRegistration()).thenReturn(registration);
 		Mockito.when(syncJobInfo.getYetToExportCount()).thenReturn((double) 20);
+		Mockito.when(syncJobDAO.getRegistrationCount()).thenReturn(20L);
 		Mockito.when(syncJobDAO.getFirstRegistration()).thenReturn(registration);
 
 		ResponseDTO responseDTO = syncStatusValidatorServiceImpl.validateSyncStatus();
