@@ -502,6 +502,7 @@ public class GenericController extends BaseController {
 				//Hide continue button in preview page
 				next.setVisible(newScreenName.equals("AUTH") ? false : true);
 				authenticate.setVisible(newScreenName.equals("AUTH") ? true : false);
+				notification.setText(EMPTY);
 
 				//request to load Preview / Auth page, allowed only when no errors are found in visible screens
 				if((newScreenName.equals("AUTH") || newScreenName.equals("PREVIEW")) && getInvalidScreenName(tabPane).equals(EMPTY)) {
