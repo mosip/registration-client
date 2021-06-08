@@ -697,8 +697,8 @@ public class SyncStatusValidatorServiceTest {
 
 		ResponseDTO responseDTO = syncStatusValidatorServiceImpl.validateSyncStatus();
 		List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
-		assertEquals("REG-ICS‌-009", errorResponseDTOs.get(0).getCode());
-		assertEquals("REG_PKT_APPRVL_TIME_EXCEED", errorResponseDTOs.get(0).getMessage());
+		assertEquals("REG-ICS‌-009", errorResponseDTOs.get(1).getCode());
+		assertEquals("REG_PKT_APPRVL_TIME_EXCEED", errorResponseDTOs.get(1).getMessage());
 
 	}
 

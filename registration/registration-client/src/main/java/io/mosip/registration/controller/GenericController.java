@@ -202,6 +202,8 @@ public class GenericController extends BaseController {
 	}
 
 	private HBox getPreRegistrationFetchComponent() {
+		String langCode = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0);
+
 		HBox hBox = new HBox();
 		hBox.setAlignment(Pos.CENTER_LEFT);
 		hBox.setSpacing(20);
@@ -210,7 +212,7 @@ public class GenericController extends BaseController {
 
 		Label label = new Label();
 		label.setId("preRegistrationLabel");
-		label.setText(applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS)
+		label.setText(applicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("search_for_Pre_registration_id"));
 		hBox.getChildren().add(label);
 		TextField textField = new TextField();
@@ -220,7 +222,7 @@ public class GenericController extends BaseController {
 		Button button = new Button();
 		button.setId("fetchBtn");
 		button.getStyleClass().add("demoGraphicPaneContentButton");
-		button.setText(applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS)
+		button.setText(applicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("fetch"));
 
 		button.setOnMouseClicked(new EventHandler<MouseEvent>() {
