@@ -22,7 +22,13 @@ public class Schema {
     public Object groupLabel;
     public Object changeAction;
     public boolean transliterate;
-    public String templateName;
+    public boolean isTransliterate() {
+		return transliterate;
+	}
+	public void setTransliterate(boolean transliterate) {
+		this.transliterate = transliterate;
+	}
+	public String templateName;
     public Object fieldLayout;
     public Object locationHierarchy;
     public boolean required;

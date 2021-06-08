@@ -49,7 +49,7 @@ public class LoginPage {
 	String homeSelectionMenu="#homeSelectionMenu";
 	String logout="#logout";
 	String submit="#submit1";
-	String success="Success";
+	String success="#context";
 	String exit="#exit";
 	String appLanguage="#appLanguage";
 

@@ -103,7 +103,7 @@ public class ChildLostUIN {
 			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,RID rid1,String scenario)  {
 
 		try {
-		ExtentReportUtil.test4=ExtentReportUtil.reports.createTest("New Child Registration Scenario");
+		ExtentReportUtil.test4=ExtentReportUtil.reports.createTest("Lost UIN Child Registration Scenario");
 		
 		ExtentReportUtil.step1=ExtentReportUtil.test4.createNode("STEP 1-Loading RegClient");
 		

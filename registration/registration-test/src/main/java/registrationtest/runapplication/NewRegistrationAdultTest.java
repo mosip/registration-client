@@ -113,6 +113,7 @@ public class NewRegistrationAdultTest{
 				} catch (Exception e) {
 
 					logger.error(e.getMessage());
+					ExtentReportUtil.reports.flush();
 				}	
 			}
 

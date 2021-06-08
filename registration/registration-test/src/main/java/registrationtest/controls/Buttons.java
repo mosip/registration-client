@@ -14,7 +14,7 @@ public class Buttons {
 	private static final Logger logger = LogManager.getLogger(Buttons.class); 
 	String continueBtn="#continueBtn",
 			backBtn="#backBtn",
-			Confirm="Confirm",
+			confirm="#confirm",
 			uploadBtn="#uploadBtn",
 			cancel="#cancel",
 			submit="#submit",
@@ -63,7 +63,7 @@ public class Buttons {
 	public void clickConfirmBtn()
 	{
 		logger.info("clickConfirmBtn");
-		waitsUtil.clickNodeAssert( Confirm);
+		waitsUtil.clickNodeAssert( confirm);
 	}
 	
 	/**

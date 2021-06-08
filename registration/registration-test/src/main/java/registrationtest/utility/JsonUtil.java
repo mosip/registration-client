@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.LogManager;
@@ -96,6 +97,7 @@ public class JsonUtil {
 	      
 	  	public static LinkedHashMap<String,String> JsonObjSimpleParsing(String jsonIdentity,String idfield) throws Exception {
 			LinkedHashMap<String,String> mapLang= new LinkedHashMap<String, String>();
+			LinkedHashMap<String,String> mapLangorder= new LinkedHashMap<String, String>();
 			JSONObject json = new JSONObject(jsonIdentity); 
 			
 			JSONObject identity = json.getJSONObject(PropertiesUtil.getKeyValue("jsonObjName"));
@@ -108,20 +110,25 @@ public class JsonUtil {
 				 JSONObject idItem = identityitems.getJSONObject(i);
 				  String lang = idItem.getString("language");
 				  String val = idItem.getString("value");
+				  mapLang.put(lang, val);
+			    }
 				String[] listLang=PropertiesUtil.getKeyValue("langcode").split("@@");
+				Set<String> keys = mapLang.keySet();
+				
+					
 				for(String list:listLang)
 				{
-					if(lang.equals(list))
+					for(String ky:keys) {
+					if(list.equals(ky))
 					{	
-						mapLang.put(list, val);
-						
+						mapLangorder.put(list, mapLang.get(ky));
 					}
 				}
 			
 
 			}
 
-			return mapLang; 
+			return mapLangorder; 
 		}
 
 	  	

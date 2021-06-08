@@ -6,6 +6,8 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.testfx.api.FxRobot;
 
+import javafx.scene.control.TextField;
+
 //import com.itextpdf.text.log.SysoCounter;
 
 import javafx.scene.input.KeyCode;
@@ -18,10 +20,11 @@ public class UploadPacketPage {
 	
 	FxRobot robot;
 	WaitsUtil waitsUtil;
-	String filterField="#filterField";
+	TextField filterField;
+	String filterField1="#filterField";
 	String approvalBtn="#approvalBtn";
 	String authenticateBtn="#authenticateBtn";
-	String uploaded="UPLOADED";
+	String uploaded="PUSHED";
 	RobotActions robotActions;
 	UploadPacketPage(FxRobot robot)
 	{
@@ -34,7 +37,7 @@ public class UploadPacketPage {
 	public void clickOnfilterField(FxRobot robot)
 	{
 		logger.info("clickOnfilterField");
-		waitsUtil.clickNodeAssert( filterField);
+		waitsUtil.clickNodeAssert( filterField1);
 	}
 
 	public void enterFilterDetails(String rid) {
@@ -59,14 +62,18 @@ public class UploadPacketPage {
 	public void selectPacket(String rid) {
 		
 		logger.info("selectPacket" + rid);
-		waitsUtil.clickNodeAssert( "#filterField");
-		robot.write(rid);
+//		waitsUtil.clickNodeAssert( "#filterField");
+//		robot.write(rid);
+//		
+		filterField=waitsUtil.lookupByIdTextField(filterField1, robot);
+		filterField.setText(rid);
 		
 		waitsUtil.clickNodeAssert( rid);
 		robot.press(KeyCode.TAB).release(KeyCode.TAB);
 		robot.press(KeyCode.TAB).release(KeyCode.TAB);
 		robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
-
+		
+		
 		
 	}
 

@@ -1,19 +1,27 @@
 { "identity" : {
-  
+	
   "gender" : [ {
     "language" : "eng",
     "value" : "Female"
   }, {
     "language" : "ara",
     "value" : "أنثى"
-  } ],
+  },
+  {
+	    "language" : "fra",
+	    "value" : "Femme"
+	  }],
   "city" : [ {
-    "language" : "eng",
-    "value" : "Kenitra"
-  }, {
-    "language" : "ara",
-    "value" : "القنيطرة"
-  } ],
+	    "language" : "eng",
+	    "value" : "Kenitra"
+	  }, {
+	    "language" : "ara",
+	    "value" : "االقنيطرة"
+	  },
+	  {
+		    "language" : "fra",
+		    "value" : "Kénitra"
+		  } ],
   "postalCode" : "14022",
   "fullName" : [ {
     "language" : "eng",
@@ -22,7 +30,7 @@
     "language" : "ara",
     "value" : "القنيطرة"
   } ],
-  "dateOfBirth" : "2019/01/01",
+  "dateOfBirth" : "2020/01/01",
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
     "format" : "cbeff",
@@ -36,15 +44,23 @@
     "value" : "Kenitra"
   }, {
     "language" : "ara",
-    "value" : "القنيطرة"
-  } ],
+    "value" : "االقنيطرة"
+  },
+  {
+	    "language" : "fra",
+	    "value" : "Kénitra"
+	  } ],
   "zone" : [ {
     "language" : "eng",
     "value" : "Ben Mansour"
   }, {
     "language" : "ara",
     "value" : "بن منصور"
-  } ],
+  },
+  {
+	    "language" : "fra",
+	    "value" : "Ben Mansour"
+	  }],
   "phone" : "8600097143",
   "addressLine1" : [ {
     "language" : "eng",
@@ -61,12 +77,16 @@
     "value" : "بن منصور"
   } ],
   "residenceStatus" : [ {
-    "language" : "eng",
-    "value" : "Non-Foreigner"
+    "language" : "fra",
+    "value" : "Étrangère"
   }, {
     "language" : "ara",
-    "value" : "غير أجنبي"
-  } ],
+    "value" :"غير أجنبي"
+  },
+  {
+	    "language" : "eng",
+	    "value" :"Foreigner"
+	  } ],
   "addressLine3" :[ {
 	    "language" : "eng",
 	    "value" : "Upgrade1.1.4"
@@ -79,8 +99,11 @@
     "value" : "Rabat Sale Kenitra"
   }, {
     "language" : "ara",
-    "value" : "الرباط سلا القنيطرة"
-  } ],
+    "value" : "جهة الرباط سلا القنيطرة"
+  },{
+	    "language" : "fra",
+	    "value" : "Rabat-Salé-Kénitra"
+	  } ],
   "modeOfClaim" : [ {
 	    "language" : "eng",
 	    "value" : "Pick-up"
@@ -91,7 +114,7 @@
   "email" : "abc@abc.co.in",
   "consent":"Y",
   "parentOrGuardianRID" : "10002100870000320210420134337",
-  "parentOrGuardianUIN" : "1111111111",
+  "parentOrGuardianUIN" : "5931539704",
    "parentOrGuardianName" : [ {
     "language" : "eng",
     "value" : "Upgrade1.1.4"
@@ -99,7 +122,7 @@
     "language" : "ara",
     "value" : "يلتقط"
   } ],
-  "bioExceptionAttributes": [
+  "bioExceptionAttributes2": [
 		"leftEye",
 		
 		
@@ -136,17 +159,23 @@
 		    "language" : "ara",
 		    "value" : "إستمارة تسجيل"
 		  } ],
-		  "proofOfAddress" : [ {
+		  "proofOfAddress" :  [ {
 			    "language" : "eng",
-			    "value" : "Barangay ID"
+			    "value" : "Passport"
 			  }, {
+				    "language" : "fra",
+				    "value" : "Passeport"
+				  }, {
 			    "language" : "ara",
-			    "value" : "معرف بارانجاي"
+			    "value" : "جواز سفر"
 			  } ],
 			  "proofOfIdentity" : [ {
 				    "language" : "eng",
 				    "value" : "Passport"
 				  }, {
+					    "language" : "fra",
+					    "value" : "Passeport"
+					  }, {
 				    "language" : "ara",
 				    "value" : "جواز سفر"
 				  } ],
@@ -154,8 +183,12 @@
 					    "language" : "eng",
 					    "value" : "Passport"
 					  }, {
-					    "language" : "ara",
-					    "value" : "جواز سفر"
-					  } ]
+					    "language" : "fra",
+					    "value" : "Passeport"
+					  },
+					  {
+						    "language" : "ara",
+						    "value" : "جواز سفر"
+						  } ]
 } } 
 

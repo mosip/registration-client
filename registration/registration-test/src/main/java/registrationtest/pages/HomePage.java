@@ -36,7 +36,7 @@ public class HomePage {
 	Alerts alerts;
 	String homeimg="#homeImgView";
 	String exit="#exit";
-	String success="Success";
+	String success="#context";
 
 	//operationalTasks
 	String syncDataImageView ="#syncDataImageView",

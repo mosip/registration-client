@@ -1292,6 +1292,7 @@ public class BaseController {
 				.add(ClassLoader.getSystemClassLoader().getResource(getCssName()).toExternalForm());
 		Button okButton = (Button) alert.getDialogPane().lookupButton(ButtonType.OK);
 		okButton.setText(RegistrationUIConstants.getMessageLanguageSpecific(confirmButtonText));
+		okButton.setId("confirm");
 
 		if (alertType == Alert.AlertType.CONFIRMATION) {
 			Button cancelButton = (Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL);

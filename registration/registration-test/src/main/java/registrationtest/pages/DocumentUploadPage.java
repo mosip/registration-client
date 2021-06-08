@@ -27,7 +27,7 @@ public class DocumentUploadPage {
 	FxRobot robot;
 	WaitsUtil waitsUtil;
 	String captureBtn="#captureBtn";
-	String success="Success";
+	String success="#context";
 	String saveBtn="#saveBtn";
 	String UploadDocImg="#UploadDocImg";
 
@@ -89,32 +89,8 @@ public class DocumentUploadPage {
 		logger.info( comboBoxId +  dto +"CHOOSEN" );
 	}
 
-	public void documentScan( String testdata, Schema schema, String id) 
 
-	{
-		try {
-
-			documentCategoryDto.setName(testdata);
-			documentCategoryDto.setCode(schema.getSubType());
-			documentCategoryDto.setLangCode("eng");
-			user_selects_combo_item(robot,id,documentCategoryDto);
-
-			String scanBtn=id+"button";
-
-			Button scanButton = waitsUtil.lookupByIdButton(scanBtn,robot);
-
-			//waitsUtil.lookupById(docPreviewImgViewPane);
-
-			robot.clickOn(scanButton);
-			selectDocumentScan();
-		}
-		catch (Exception e) {
-			// TODO Auto-generated catch block
-			logger.error(e.getMessage());
-		}
-	}
-
-	public void documentDropDownScan(Schema schema,String id,String JsonIdentity,String key,boolean trans) {
+	public void documentDropDownScan(Schema schema,String id,String JsonIdentity,String key) {
 		LinkedHashMap<String,String> mapDropValue;
 	
 		try {
@@ -140,30 +116,7 @@ public class DocumentUploadPage {
 					selectDocumentScan();
 					break;
 				}
-			}
-			else if (trans==false){
-
-				mapDropValue=JsonUtil.JsonObjSimpleParsingnoTranslate(JsonIdentity,key);
-				Set<String> dropkeys = mapDropValue.keySet();
-				for(String ky:dropkeys)
-				{
-
-					documentCategoryDto.setCode(ky);
-					documentCategoryDto.setLangCode(ky);
-					documentCategoryDto.setName(mapDropValue.get(ky));
-					user_selects_combo_item(robot,id,documentCategoryDto);
-					String scanBtn=id+"button";
-
-					Button scanButton = waitsUtil.lookupByIdButton(scanBtn,robot);
-
-					//waitsUtil.lookupById(docPreviewImgViewPane);
-
-					robot.clickOn(scanButton);
-					selectDocumentScan();
-					break;
-				}
-			}
-		}
+			}	}
 		catch (Exception e) {
 			// TODO Auto-generated catch block
 			logger.error(e.getMessage());
