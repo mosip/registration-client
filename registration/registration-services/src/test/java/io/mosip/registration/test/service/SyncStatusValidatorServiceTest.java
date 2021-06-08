@@ -623,6 +623,7 @@ public class SyncStatusValidatorServiceTest {
 		Mockito.when(syncJobInfo.getSyncControlList()).thenReturn(listSync);
 		Mockito.when(syncJobInfo.getLastExportRegistration()).thenReturn(registration);
 		Mockito.when(syncJobInfo.getYetToExportCount()).thenReturn((double) 20);
+		Mockito.when(syncJobDAO.getRegistrationCount()).thenReturn(20L);
 
 		ResponseDTO responseDTO = syncStatusValidatorServiceImpl.validateSyncStatus();
 		List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
@@ -691,6 +692,7 @@ public class SyncStatusValidatorServiceTest {
 		Mockito.when(syncJobInfo.getSyncControlList()).thenReturn(listSync);
 		Mockito.when(syncJobInfo.getLastExportRegistration()).thenReturn(registration);
 		Mockito.when(syncJobInfo.getYetToExportCount()).thenReturn((double) 20);
+		Mockito.when(syncJobDAO.getFirstRegistration()).thenReturn(registration);
 
 		ResponseDTO responseDTO = syncStatusValidatorServiceImpl.validateSyncStatus();
 		List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();

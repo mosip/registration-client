@@ -70,7 +70,7 @@ public class AuditDAOTest {
 		when(auditRepository.findByCreatedAtGreaterThanOrderByCreatedAtAsc(Mockito.any(LocalDateTime.class)))
 				.thenReturn(audits);
 
-		Assert.assertThat(auditDAO.getAudits("1234", null), is(audits));
+		Assert.assertThat(auditDAO.getAudits("1234", "2020-12-12 12:12:12"), is(audits));
 	}
 
 	@Test(expected = RegBaseUncheckedException.class)

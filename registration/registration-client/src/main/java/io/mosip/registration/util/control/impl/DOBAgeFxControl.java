@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import io.mosip.registration.dto.mastersync.GenericDto;
+import javafx.scene.control.Label;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -162,15 +163,7 @@ public class DOBAgeFxControl extends FxControl {
 
 	@Override
 	public boolean isValid() {
-		TextField dd = (TextField) getField(
-				uiSchemaDTO.getId() + RegistrationConstants.DD + RegistrationConstants.TEXT_FIELD);
-		TextField mm = (TextField) getField(
-				uiSchemaDTO.getId() + RegistrationConstants.MM + RegistrationConstants.TEXT_FIELD);
-		TextField yyyy = (TextField) getField(
-				uiSchemaDTO.getId() + RegistrationConstants.YYYY + RegistrationConstants.TEXT_FIELD);
-
-		return dd != null && !dd.getText().isEmpty() && mm != null && !mm.getText().isEmpty() && yyyy != null
-				&& !yyyy.getText().isEmpty();
+		return dateValidation.validateDate((Pane) node, uiSchemaDTO.getId());
 	}
 
 	@Override
