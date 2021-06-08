@@ -601,7 +601,6 @@ public class GenericController extends BaseController {
 			});
 
 			Tab screenTab = new Tab();
-			screenTab.setStyle("-fx-background-color: rgb(246, 246, 246);");
 			screenTab.setId(screenDTO.getName()+"_tab");
 			screenTab.setText(labels.get(0));
 			screenTab.setTooltip(new Tooltip(String.join(RegistrationConstants.SLASH, labels)));

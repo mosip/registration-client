@@ -267,13 +267,6 @@ public class FXUtils {
 		toggleUIField(parentPane, field.getId() + RegistrationConstants.MESSAGE, true);
 	}
 
-	public void toggleComboBoxStyle(ComboBox field, boolean isError) {
-		field.getStyleClass().removeIf((s) -> {
-			return s.equals("demoGraphicTextFieldFocused");
-		});
-		if(isError) { field.getStyleClass().add("demoGraphicTextFieldFocused"); }
-	}
-
 	public void focusedAction(Pane parentPane, TextField field) {
 
 		if (parentPane != null && field != null) {
