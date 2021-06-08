@@ -21,6 +21,7 @@ import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DateCell;
