@@ -1808,6 +1808,7 @@ public class RegistrationConstants {
 	public static final String REF_NUMBER = "REF_NUMBER";
 	public static final String INVALID_AGE = "INVALID_AGE";
 	public static final String INVALID_DATE = "INVALID_DATE";
+	public static final String INVALID_DATE_LIMIT = "INVALID_DATE_LIMIT";
 
 	public static final String ICONS_HBOX = "iconsHBox";
 	public static final String KEYBOARD_PANE = "keyboardPane";
