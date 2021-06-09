@@ -88,16 +88,33 @@ ls -ltr lib | grep bc
 ## adding logback.xml
 /usr/bin/zip -j reg-client.zip "${work_dir}"/build_files/logback.xml
 
+#Creating Regclient testing framework
+mkdir -p "${work_dir}"/registration-test-utility
+mkdir -p "${work_dir}"/registration-test-utility/lib
+cp "${work_dir}"/registration-test/target/registration-test-*-dependencies.jar "${work_dir}"/registration-test-utility/registration-test.jar
+cp "${work_dir}"/registration-test/resources/*  "${work_dir}"/registration-test-utility/
+cp -r "${work_dir}"/registration-libs/resources/jre "${work_dir}"/registration-test-utility/
+cp -r "${work_dir}"/registration-client/target/lib/morena* "${work_dir}"/registration-test-utility/lib
+cp -r "${work_dir}"/registration-client/target/lib/icu4j.jar "${work_dir}"/registration-test-utility/lib
+cp -r "${work_dir}"/registration-client/target/lib/kernel-transliteration-icu4j.jar "${work_dir}"/registration-test-utility/lib
+cp -r "${work_dir}"/registration-client/target/lib/clamav.jar "${work_dir}"/registration-test-utility/lib
+cp -r "${work_dir}"/registration-client/target/lib/kernel-virusscanner-clamav.jar "${work_dir}"/registration-test-utility/lib
+cp -r "${work_dir}"/sdkjars/*.jar "${work_dir}"/registration-test-utility/lib
+cp "${work_dir}"/registration-client/target/MANIFEST.MF "${work_dir}"/registration-test-utility/
+/usr/bin/zip -r "${work_dir}"/registration-test-utility.zip "${work_dir}"/registration-test-utility
+
 echo "setting up nginx static content"
 
 mkdir -p /var/www/html/registration-client
 mkdir -p /var/www/html/registration-client/${client_version_env}
 mkdir -p /var/www/html/registration-client/${client_version_env}/lib
+mkdir -p /var/www/html/registration-test/${client_version_env}
 
 cp "${work_dir}"/registration-client/target/lib/* /var/www/html/registration-client/${client_version_env}/lib
 cp "${work_dir}"/registration-client/target/MANIFEST.MF /var/www/html/registration-client/${client_version_env}/
 cp "${work_dir}"/build_files/maven-metadata.xml /var/www/html/registration-client/
 cp reg-client.zip /var/www/html/registration-client/${client_version_env}/
+cp "${work_dir}"/registration-test-utility.zip /var/www/html/registration-test/${client_version_env}/
 
 echo "setting up nginx static content - completed"
 
