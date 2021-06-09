@@ -273,7 +273,7 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 	}
 
 	private void updateIsDeleted(GlobalParam globalParam) {
-		globalParam.setIsActive(true);
+		globalParam.setIsActive(false);
 		globalParam.setIsDeleted(true);
 		globalParam.setDelDtimes(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 		globalParam.setUpdBy(getUserIdFromSession());
