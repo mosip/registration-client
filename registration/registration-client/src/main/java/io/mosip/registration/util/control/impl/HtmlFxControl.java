@@ -83,9 +83,10 @@ public class HtmlFxControl extends FxControl {
         getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(langCode -> {
             final TitledPane titledPane = new TitledPane(resourceBundle.getString(langCode), buildWebView(langCode));
             accordion.getPanes().add(titledPane);
+titledPane.setId(uiSchemaDTO.getId()+langCode);
         });
 
-        accordion.setExpandedPane(accordion.getPanes().get(0));
+        //accordion.setExpandedPane(accordion.getPanes().get(0));
         vBox.getChildren().add(accordion);
 
         this.node = vBox;
