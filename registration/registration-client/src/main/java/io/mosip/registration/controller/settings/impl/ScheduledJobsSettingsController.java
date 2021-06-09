@@ -219,7 +219,16 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 				modifyCronExpression(syncJob, cronTextField.getText());
 			});
 			
-			Platform.runLater( () -> cronTextField.requestFocus() );
+			cronTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
+			    if (newValue) {
+			        Platform.runLater(() -> {
+			            int carretPosition = cronTextField.getCaretPosition();
+			            if (cronTextField.getAnchor() != carretPosition) {
+			            	cronTextField.selectRange(carretPosition, carretPosition);
+			            }
+			        });
+			    }
+			});
 
 			if (!permittedJobs.contains(syncJob.getId())) {
 				submit.setVisible(false);
