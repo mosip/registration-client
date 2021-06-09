@@ -18,9 +18,12 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
 
+import io.mosip.registration.dto.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,14 +39,6 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.PreRegistrationDataSyncDAO;
-import io.mosip.registration.dto.MainResponseDTO;
-import io.mosip.registration.dto.PreRegArchiveDTO;
-import io.mosip.registration.dto.PreRegistrationDTO;
-import io.mosip.registration.dto.PreRegistrationDataSyncDTO;
-import io.mosip.registration.dto.PreRegistrationDataSyncRequestDTO;
-import io.mosip.registration.dto.PreRegistrationIdsDTO;
-import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.entity.PreRegistrationList;
 import io.mosip.registration.entity.SyncTransaction;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -134,7 +129,8 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 
 			if(mainResponseDTO != null && mainResponseDTO.getErrors() != null &&
 					mainResponseDTO.getErrors().stream().anyMatch(e -> e.getErrorCode() != null && e.getErrorCode().equals("PRG_BOOK_RCI_032"))) {
-				LOGGER.error("RESPONSE from pre-reg-id sync {}", mainResponseDTO.getErrors());
+				LOGGER.error("RESPONSE from pre-reg-id sync {}",
+						mainResponseDTO.getErrors().stream().map(PreRegistrationExceptionJSONInfoDTO::getErrorCode).collect(Collectors.toList()));
 				return setSuccessResponse(responseDTO, RegistrationConstants.PRE_REG_SUCCESS_MESSAGE, null);
 			}
 
@@ -262,7 +258,9 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 				preRegistration = preRegistrationDAO.update(preRegistrationList);
 			}
 		}
-		LOGGER.info("Pre-reg-id {} errors from response {}", preRegistrationId, mainResponseDTO.getErrors());
+		LOGGER.info("Pre-reg-id {} errors from response {}", preRegistrationId,
+				mainResponseDTO.getErrors() != null ?
+						mainResponseDTO.getErrors().stream().map(PreRegistrationExceptionJSONInfoDTO::getErrorCode).collect(Collectors.toList()) : "-");
 		return preRegistration;
 	}
 

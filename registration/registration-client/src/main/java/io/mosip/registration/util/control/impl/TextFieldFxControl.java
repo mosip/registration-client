@@ -164,6 +164,7 @@ public class TextFieldFxControl extends FxControl {
 		/** Title label */
 		Label fieldTitle = getLabel(uiSchemaDTO.getId() + RegistrationConstants.LABEL, "",
 				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, true, simpleTypeVBox.getWidth());
+		changeNodeOrientation(fieldTitle, getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
 
 		simpleTypeVBox.getChildren().add(fieldTitle);
 
