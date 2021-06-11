@@ -3,6 +3,7 @@ package io.mosip.registration.controller;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
@@ -30,6 +31,8 @@ import io.mosip.registration.exception.RemapException;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -2000,5 +2003,19 @@ public class BaseController {
 			return false;
 		}
 		return true;
+	}
+
+	public static Image getImage(BufferedImage bufferedImage) {
+		WritableImage wr = null;
+		if (bufferedImage != null) {
+			wr = new WritableImage(bufferedImage.getWidth(), bufferedImage.getHeight());
+			PixelWriter pw = wr.getPixelWriter();
+			for (int x = 0; x < bufferedImage.getWidth(); x++) {
+				for (int y = 0; y < bufferedImage.getHeight(); y++) {
+					pw.setArgb(x, y, bufferedImage.getRGB(x, y));
+				}
+			}
+		}
+		return wr;
 	}
 }

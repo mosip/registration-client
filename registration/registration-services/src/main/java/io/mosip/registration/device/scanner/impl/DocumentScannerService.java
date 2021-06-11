@@ -11,12 +11,18 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.stereotype.Service;
 
 import com.itextpdf.text.Document;
@@ -83,34 +89,22 @@ public abstract class DocumentScannerService implements IMosipDocumentScannerSer
 	 */
 	@Override
 	public byte[] asPDF(List<BufferedImage> bufferedImages) {
-
-		byte[] scannedPdfFile = null;
-		Document document = new Document();
-		try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-
-			PdfWriter writer = PdfWriter.getInstance(document, byteArrayOutputStream);
-			document.open();
-
-			PdfContentByte pdfPage = new PdfContentByte(writer);
-			for (BufferedImage bufferedImage : bufferedImages) {
-				Image image = Image.getInstance(pdfPage, bufferedImage, 1);
-				image.scaleToFit(PageSize.A4.getWidth(), PageSize.A4.getHeight());
-				float x = (PageSize.A4.getWidth() - image.getScaledWidth()) / 2;
-				float y = (PageSize.A4.getHeight() - image.getScaledHeight()) / 2;
-				image.setAbsolutePosition(x, y);
-				document.add(image);
-				document.newPage();
+		try (PDDocument pdDocument = new PDDocument();
+			 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+			for(BufferedImage bufferedImage : bufferedImages) {
+				PDPage pdPage = new PDPage();
+				PDImageXObject pdImageXObject = LosslessFactory.createFromImage(pdDocument, bufferedImage);
+				try (PDPageContentStream contentStream = new PDPageContentStream(pdDocument, pdPage)) {
+					contentStream.drawImage(pdImageXObject, 20, 20);
+				}
+				pdDocument.addPage(pdPage);
 			}
-
-			document.close();
-			writer.close();
-			scannedPdfFile = byteArrayOutputStream.toByteArray();
-			byteArrayOutputStream.close();
-		} catch (DocumentException | IOException exception) {
-			LOGGER.error(LOG_REG_DOC_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, exception.getMessage());
+			pdDocument.save(byteArrayOutputStream);
+			return byteArrayOutputStream.toByteArray();
+		} catch (IOException e) {
+			LOGGER.error(LOG_REG_DOC_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, e.getMessage());
 		}
-		return scannedPdfFile;
-
+		return null;
 	}
 
 	/*
@@ -155,17 +149,19 @@ public abstract class DocumentScannerService implements IMosipDocumentScannerSer
 
 	@Override
 	public List<BufferedImage> pdfToImages(byte[] pdfBytes) throws IOException {
-
 		List<BufferedImage> bufferedImages = new ArrayList<>();
-		PDDocument document = PDDocument.load(new ByteArrayInputStream(pdfBytes));
-		@SuppressWarnings("unchecked")
-		List<PDPage> list = document.getDocumentCatalog().getAllPages();
-
-		for (PDPage page : list) {
-			BufferedImage image = page.convertToImage();
-			bufferedImages.add(image);
+		try(PDDocument document = PDDocument.load(new ByteArrayInputStream(pdfBytes));) {
+			for(int i=0; i<document.getNumberOfPages(); i++) {
+				Iterable<COSName> objectNames =  document.getPage(i).getResources().getXObjectNames();
+				Iterator<COSName> itr = objectNames.iterator();
+				while (itr.hasNext()) {
+					PDXObject pdxObject = document.getPage(i).getResources().getXObject(itr.next());
+					if(pdxObject instanceof PDImageXObject) {
+						bufferedImages.add(((PDImageXObject)pdxObject).getImage());
+					}
+				}
+			}
 		}
-		document.close();
 		return bufferedImages;
 	}
 

@@ -252,13 +252,6 @@
 			<artifactId>com4j</artifactId>
 			<version>2.1</version>
 		</dependency>
-		<!--<dependency> <groupId>io.mosip.kernel</groupId> <artifactId>kernel-crypto-jce</artifactId> 
-			</dependency> -->
-		<dependency>
-			<groupId>org.apache.pdfbox</groupId>
-			<artifactId>pdfbox</artifactId>
-			<version>1.8.3</version>
-		</dependency>
 		<dependency>
 			<groupId>com.cronutils</groupId>
 			<artifactId>cron-utils</artifactId>
@@ -357,6 +350,11 @@
 			<version>1.1.5.3</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>2.0.23</version>
+		</dependency>
 
 	</dependencies>
 	<!--<repositories> <repository> <id>local-maven-repo</id> <url>file:///${basedir}/lib</url> 
