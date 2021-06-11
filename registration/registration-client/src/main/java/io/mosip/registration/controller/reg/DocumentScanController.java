@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
 import org.assertj.core.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -760,44 +762,22 @@ public class DocumentScanController extends BaseController {
 	 * This method will get the stubbed data for the scan
 	 */
 	private void scanFromStubbed(Stage popupStage) throws IOException {
-
-		byte[] byteArray = null;
 		documentScanFacade.setStubScannerFactory();
-		BufferedImage bufferedImage = null;
-		String poeDocValue = getValueFromApplicationContext(RegistrationConstants.POE_DOCUMENT_VALUE);
-		if (poeDocValue != null && selectedComboBox.getValue().getCode().matches(poeDocValue)) {
-
-//			bufferedImage = webcamSarxosServiceImpl.captureImage(webcam);
-			bufferedImage = documentScanFacade.getScannedDocument();
-
-		} else {
-
-			bufferedImage = documentScanFacade.getScannedDocument();
-
-		}
-
+		BufferedImage bufferedImage = documentScanFacade.getScannedDocument();
 		if (bufferedImage == null) {
 			LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 					RegistrationConstants.APPLICATION_ID, "captured buffered image was null");
-
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.SCAN_DOCUMENT_ERROR);
 			return;
 		}
+
 		if (scannedPages == null) {
 			scannedPages = new ArrayList<>();
 		}
 		scannedPages.add(bufferedImage);
-
-		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "converting image bytes from buffered image");
-
-		byteArray = documentScanFacade.getImageBytesFromBufferedImage(bufferedImage);
-
 		/* show the scanned page in the preview */
-		scanPopUpViewController.getScanImage().setImage(convertBytesToImage(byteArray));
-
+		scanPopUpViewController.getScanImage().setImage(getImage(bufferedImage));
 		scanPopUpViewController.getScanningMsg().setVisible(false);
-
 	}
 
 	public byte[] captureAndConvertBufferedImage() throws IOException {
@@ -817,9 +797,6 @@ public class DocumentScanController extends BaseController {
 	private void scanFromScanner() throws IOException {
 		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Scanning from scanner");
-
-		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Setting scanner factory");
 
 		/* setting the scanner factory */
 		if (!documentScanFacade.setScannerFactory()) {
@@ -842,7 +819,6 @@ public class DocumentScanController extends BaseController {
 
 		scanPopUpViewController.getScanningMsg().setVisible(true);
 
-		byte[] byteArray;
 		BufferedImage bufferedImage;
 
 		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
@@ -876,15 +852,13 @@ public class DocumentScanController extends BaseController {
 		}
 		scannedPages.add(bufferedImage);
 
-		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "converting image bytes from buffered image");
-
-		byteArray = documentScanFacade.getImageBytesFromBufferedImage(bufferedImage);
 		/* show the scanned page in the preview */
-		scanPopUpViewController.getScanImage().setImage(convertBytesToImage(byteArray));
-
+		scanPopUpViewController.getImageGroup().getChildren().clear();
+		scanPopUpViewController.getImageGroup().getChildren().add(new ImageView(getImage(bufferedImage)));
+		//scanPopUpViewController.getScanImage().setImage(getImage(bufferedImage));
 		scanPopUpViewController.getScanningMsg().setVisible(false);
 	}
+
 
 	/**
 	 * This method is to attach the document to the screen
@@ -1049,7 +1023,8 @@ public class DocumentScanController extends BaseController {
 			try {
 				docPages = documentScanFacade.pdfToImages(document);
 				if (!docPages.isEmpty()) {
-					docPreviewImgView.setImage(SwingFXUtils.toFXImage(docPages.get(0), null));
+					docPreviewImgView.setPreserveRatio(true);
+					docPreviewImgView.setImage(getImage(docPages.get(0)));
 
 					docPreviewLabel.setVisible(true);
 					if (docPages.size() > 1) {
