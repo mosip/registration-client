@@ -57,6 +57,10 @@ ADD registration-libs/target ./registration-libs/target
 
 ADD registration-libs/src/main/resources ./registration-libs/resources
 
+ADD registration-test/target ./registration-test/target
+
+ADD registration-test/src/main/resources ./registration-test/resources
+
 ADD configure.sh configure.sh
 
 RUN chmod a+x configure.sh \
