@@ -76,7 +76,7 @@ public class NewRegistrationAdultTest{
 					robot=new FxRobot();
 					ExtentReportUtil.ExtentSetting();
 					
-					LinkedHashMap<String,String> map=readJsonFileText1(readFolderJsonList(PropertiesUtil.getKeyValue("datadir")));
+					LinkedHashMap<String,String> map=readJsonFileText(readFolderJsonList(PropertiesUtil.getKeyValue("datadir")));
 					System.out.println(map);
 					
                     Set<String> fileNameSet = map.keySet();
@@ -202,28 +202,7 @@ public class NewRegistrationAdultTest{
 
 			
 			
-			
-			public static String readJsonFileText(String key)
-			{
-				String jsonTxt=null;
-				try {
-				File f = new File(System.getProperty("user.dir")+PropertiesUtil.getKeyValue(key));
-				
-				if (f.exists()){
-					InputStream is = new FileInputStream(f);
-					jsonTxt = IOUtils.toString(is, "UTF-8");
-					System.out.println(jsonTxt);
-					logger.info("readJsonFileText");
 
-				}}
-				catch(Exception e)
-				{
-					logger.error(e.getMessage());
-				}
-				return jsonTxt;
-			}
-
-			
 			
 			public static String[] readFolderJsonList(String key)
 			{
@@ -246,7 +225,7 @@ public class NewRegistrationAdultTest{
 			}
 			
 			
-			public static LinkedHashMap<String,String> readJsonFileText1(String[] documentList)
+			public static LinkedHashMap<String,String> readJsonFileText(String[] documentList)
 			{
 				LinkedHashMap<String,String> map=new LinkedHashMap<String, String>();
 				String jsonTxt=null;
