@@ -6,7 +6,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -25,8 +27,10 @@ import com.aventstack.extentreports.reporter.ExtentHtmlReporter;
 import registrationtest.pojo.output.RID;
 import registrationtest.testcases.*;
 import registrationtest.utility.ExtentReportUtil;
+import registrationtest.utility.JsonUtil;
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.RobotActions;
+import registrationtest.utility.WaitsUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 
@@ -46,7 +50,7 @@ public class NewRegistrationAdultTest{
 	static FxRobot robot;
 	static String[] Strinrid;
 	static RID rid1,rid2,rid3,rid4;
-	static String[] scenario;
+	static String flow;
 	
 	public static void invokeRegClientNewReg(
 		
@@ -59,61 +63,80 @@ public class NewRegistrationAdultTest{
 		LostUINLogout lostUINLogout=new LostUINLogout();
 		ChildNewReg childNewReg=new ChildNewReg(); 
 		ChildLostUIN childLostUIN=new ChildLostUIN();
+		WaitsUtil waitsUtil=new WaitsUtil();
 
 		Thread thread = new Thread() { 
 			@Override
 			public void run() {
 				try {
-
+					Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait"))); 
+					
 					logger.info("thread inside calling testcase"); 
 
-					Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait"))); 
 					robot=new FxRobot();
 					ExtentReportUtil.ExtentSetting();
-				
-					scenario=PropertiesUtil.getKeyValue("scenario").split("@@");
-					for(String sc : scenario )
-					{
-						switch(sc) {
+					
+					LinkedHashMap<String,String> map=readJsonFileText1(readFolderJsonList(PropertiesUtil.getKeyValue("datadir")));
+					System.out.println(map);
+					
+                    Set<String> fileNameSet = map.keySet();
+                   
+                    for(String fileName:fileNameSet) {
+                    	 String jsonContent=map.get(fileName);
+                    	String flowid= PropertiesUtil.getKeyValue("flow");
+                       flow= JsonUtil.JsonObjParsing(jsonContent,flowid);
+               	
+					
+				try {
+						switch(flow) {
 						case "adult": 
-							rid1=loginNewRegLogout.newRegistrationAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
-							StartApplication.primaryStage,readJsonFileText("path.idjson.adult"),
-							sc,rid1);
+					rid1=loginNewRegLogout.newRegistrationAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
+							StartApplication.primaryStage,jsonContent,
+							flow,fileName);
 					logger.info("RID RESULTS-"+ rid1.result +"\t"+ rid1.ridDateTime +"\t"+ rid1.rid + "\t "+ rid1.firstName );
 					ExtentReportUtil.reports.flush();
 					break;
 						case "lostadult":
 							
 					 rid2=lostUINLogout.LostUINAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
-							StartApplication.primaryStage,readJsonFileText("path.idjson.adult"),
-							rid1,sc);
+							StartApplication.primaryStage,jsonContent,
+							fileName,flow);
 					logger.info("RID RESULTS-"+ rid2.result +"\t"+ rid2.ridDateTime +"\t"+ rid2.rid);
 					ExtentReportUtil.reports.flush();
 					break;
 						case "child":
 							
 					 rid3=childNewReg.newRegistrationChild(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
-							StartApplication.primaryStage,readJsonFileText("path.idjson.child"),
-							rid1,sc);
+							StartApplication.primaryStage,jsonContent,
+							fileName,flow);
 					logger.info("RID RESULTS-"+ rid3.result +"\t"+ rid3.ridDateTime +"\t"+ rid3.rid);
 					ExtentReportUtil.reports.flush();
 					break;
 						case "lostchild":
 							
 							 rid4=childLostUIN.newRegistrationChildLost(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
-									StartApplication.primaryStage,readJsonFileText("path.idjson.child"),
-									rid1,sc);
+									StartApplication.primaryStage,jsonContent,
+									fileName,flow);
 							logger.info("RID RESULTS-"+ rid4.result +"\t"+ rid4.ridDateTime +"\t"+ rid4.rid);
 							ExtentReportUtil.reports.flush();
 							break;
 						
 						}
+						}
+				catch (Exception e) {
+
+					logger.error(e.getMessage());
+					ExtentReportUtil.reports.flush();
+					waitsUtil.capture();
+				}	
+
 					}
 				System.exit(0);	
 				} catch (Exception e) {
 
 					logger.error(e.getMessage());
 					ExtentReportUtil.reports.flush();
+					waitsUtil.capture();
 				}	
 			}
 
@@ -201,6 +224,53 @@ public class NewRegistrationAdultTest{
 			}
 
 			
+			
+			public static String[] readFolderJsonList(String key)
+			{
+				String contents[]=null;
+				try {
+				File directoryPath = new File(System.getProperty("user.dir")+key);
+				
+				if (directoryPath.exists()){
+					 contents= directoryPath.list();
+				      System.out.println("List of files and directories in the specified directory:");
+				      for(int i=0; i<contents.length; i++) {
+				         System.out.println(contents[i]);
+				      }
+				}}
+				catch(Exception e)
+				{
+					logger.error(e.getMessage());
+				}
+				return contents;
+			}
+			
+			
+			public static LinkedHashMap<String,String> readJsonFileText1(String[] documentList)
+			{
+				LinkedHashMap<String,String> map=new LinkedHashMap<String, String>();
+				String jsonTxt=null;
+			
+				try {
+					for(String doc:documentList) {
+				File f = new File(System.getProperty("user.dir")+PropertiesUtil.getKeyValue("datadir")+doc);
+				
+				if (f.exists()){
+					InputStream is = new FileInputStream(f);
+					jsonTxt = IOUtils.toString(is, "UTF-8");
+					System.out.println(jsonTxt);
+					logger.info("readJsonFileText");
+					
+					map.put(doc, jsonTxt);
+
+				}}}
+				catch(Exception e)
+				{
+					logger.error(e.getMessage());
+				}
+				return map;
+			}
+
 
 		}
 

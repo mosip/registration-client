@@ -40,6 +40,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import registrationtest.controls.Alerts;
 import registrationtest.controls.Buttons;
 import registrationtest.pages.AuthenticationPage;
 import registrationtest.pages.BiometricUploadPage;
@@ -57,6 +58,9 @@ import  registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.JsonUtil;
 import  registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.RobotActions;
+import org.apache.log4j.LogManager; 
+
+import org.apache.log4j.Logger;
 
 
 
@@ -71,6 +75,7 @@ import registrationtest.utility.RobotActions;
  *
  */
 public class LostUINLogout {
+	private static final Logger logger = LogManager.getLogger(LostUINLogout.class);  
 
 	FxRobot robot;
 	Schema schema;
@@ -99,24 +104,25 @@ public class LostUINLogout {
 	UploadPacketPage uploadPacketPage;
 	SelectLanguagePage selectLanguagePage;
 	
-	
+	Alerts alerts;
 	public RID LostUINAdult(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
-			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,RID rid1,String scenario
+			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,String fileName,String flow
 			)  {
 
 		try {
-		ExtentReportUtil.test2=ExtentReportUtil.reports.createTest("Lost UIN Scenario");
+		ExtentReportUtil.test2=ExtentReportUtil.reports.createTest("Lost UIN Scenario : " + flow +" FileName : " + fileName);
 		
 		
 		
-		ExtentReportUtil.step1=ExtentReportUtil.test2.createNode("STEP 1-Loading RegClient");
+		ExtentReportUtil.step1=ExtentReportUtil.test2.createNode("STEP 1-Loading RegClient" );
 		
 		loginPage=new LoginPage(robot);
 		buttons=new Buttons(robot);
 		authenticationPage=new AuthenticationPage(robot);	
 		robotActions=new RobotActions(robot);
 		selectLanguagePage=new SelectLanguagePage(robot);
-		
+		alerts=new Alerts(robot);
+
 		//Load Login screen
 		loginPage.loadLoginScene(applicationPrimaryStage1);
 		
@@ -131,7 +137,9 @@ public class LostUINLogout {
 		
 		//New Registration
 		homePage.clickHomeImg();
-		//homePage.clickSynchronizeData();
+	if(PropertiesUtil.getKeyValue("sync").equals("Y"))
+		homePage.clickSynchronizeData();
+	
 		
 		demographicPage=homePage.clicklostUINImage();
 		
@@ -140,7 +148,7 @@ public class LostUINLogout {
 		
 		ExtentReportUtil.step3=ExtentReportUtil.test2.createNode("STEP 3-Demographic, Biometric upload ");
 		
-		webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonIdentity,scenario,rid1);
+		webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonIdentity,flow);
 		
 
 		ExtentReportUtil.step3.log(Status.PASS, "Demographic, Biometric upload done");
@@ -196,6 +204,9 @@ public class LostUINLogout {
 		/**
 		 * Upload the packet
 		 */
+if(PropertiesUtil.getKeyValue("upload").equals("Y"))
+			{
+		
 		
 		ExtentReportUtil.step6=ExtentReportUtil.test2.createNode("STEP 6-Upload Packet ");
 		
@@ -208,32 +219,50 @@ public class LostUINLogout {
 		 */
 		result=uploadPacketPage.verifyPacketUpload(rid.getRid());
 
+		ExtentReportUtil.step6.log(Status.PASS, "Upload Packet done");
 
-		//Logout Regclient
+		}
+		else if(PropertiesUtil.getKeyValue("upload").equals("N")){
+			result=true;
+		}
+//Logout Regclient
+		}catch(Exception e)
+		{
+
+			logger.error(e.getMessage());
+		}
+		try {
+			alerts.clickAlertexit();
+			homePage.clickHomeImg();
+		}catch(Exception e)
+		{
+			logger.error(e.getMessage());
+
+
+		}
 		loginPage.logout();
 
+		try
+		{
+			buttons.clickConfirmBtn();
+		}
+		catch(Exception e)
+		{
+			logger.error(e.getMessage());
+		}
 
-		buttons.clickConfirmBtn();
 
 	
 		rid.setResult(result);
 		
 		if(result==true)
-		{ExtentReportUtil.step6.log(Status.PASS, "Upload Packet done");
-
-			ExtentReportUtil.test2.log(Status.PASS, "TESTCASE PASS\n" +" RID-"+ rid.rid +" DATE TIME-"+ rid.ridDateTime +" ENVIRONMENT-" +System.getProperty("mosip.hostname"));
-		}		else {
-			ExtentReportUtil.step6.log(Status.FAIL, "Upload Fail");
-
-			ExtentReportUtil.test2.log(Status.FAIL, "TESTCASE FAIL");
-		}
-		//assertTrue(result,"TestCase Failed");
-		}catch(Exception e)
 		{
-			e.printStackTrace();
-		}
+			ExtentReportUtil.test2.log(Status.PASS, "TESTCASE PASS\n" +" RID-"+ rid.rid +" DATE TIME-"+ rid.ridDateTime +" ENVIRONMENT-" +System.getProperty("mosip.hostname"));
+		}		else 
+			ExtentReportUtil.test2.log(Status.FAIL, "TESTCASE FAIL");
 		
-return rid;
+		assertTrue(result,"TestCase Failed");
+		return rid;
 	}
 }
 

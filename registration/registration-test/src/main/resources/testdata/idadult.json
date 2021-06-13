@@ -1,5 +1,5 @@
 { "identity" : {
-	
+	"flow":"adult",
   "gender" : [ {
     "language" : "eng",
     "value" : "Female"
@@ -30,7 +30,7 @@
     "language" : "ara",
     "value" : "القنيطرة"
   } ],
-  "dateOfBirth" : "2020/01/01",
+  "dateOfBirth" : "2000/01/01",
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
     "format" : "cbeff",

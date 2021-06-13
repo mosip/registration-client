@@ -1,5 +1,6 @@
 package registrationtest.pojo.schema;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class Schema {
@@ -9,7 +10,7 @@ public class Schema {
     public int minimum;
     public int maximum;
     public String description;
-    public Label label;
+    HashMap<String, String> label;
     public String controlType;
     public String fieldType;
     public String format;
@@ -39,7 +40,7 @@ public class Schema {
     public Schema()
     {}
 	public Schema(String id, boolean inputRequired, String type, int minimum, int maximum, String description,
-			Label label, String controlType, String fieldType, String format, List<Validator> validators,
+			HashMap<String, String> label, String controlType, String fieldType, String format, List<Validator> validators,
 			String fieldCategory, Object alignmentGroup, Object visible, String contactType, String group,
 			Object changeAction, boolean required, List<String> bioAttributes, List<RequiredOn> requiredOn,
 			String subType) {
@@ -101,12 +102,6 @@ public class Schema {
 	}
 	public void setDescription(String description) {
 		this.description = description;
-	}
-	public Label getLabel() {
-		return label;
-	}
-	public void setLabel(Label label) {
-		this.label = label;
 	}
 	public String getControlType() {
 		return controlType;
@@ -192,6 +187,13 @@ public class Schema {
 	public void setSubType(String subType) {
 		this.subType = subType;
 	}
+	 public HashMap<String, String> getLabel() {
+			return label;
+		}
+		public void setLabel(HashMap<String, String> label) {
+			this.label = label;
+		}
+		
     
     
     

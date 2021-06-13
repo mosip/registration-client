@@ -1,13 +1,14 @@
 
 package registrationtest.pojo.schema;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class Screens{
     public int order;
     public String name;
-    public Label label;
-    public Caption caption;
+    public HashMap<String, String> label;
+    public HashMap<String, String> caption;
     public List<String> fields;
     public Object layoutTemplate;
     public boolean preRegFetchRequired;
@@ -24,16 +25,16 @@ public class Screens{
 	public void setName(String name) {
 		this.name = name;
 	}
-	public Label getLabel() {
+	public HashMap<String, String> getLabel() {
 		return label;
 	}
-	public void setLabel(Label label) {
+	public void setLabel(HashMap<String, String> label) {
 		this.label = label;
 	}
-	public Caption getCaption() {
+	public HashMap<String, String> getCaption() {
 		return caption;
 	}
-	public void setCaption(Caption caption) {
+	public void setCaption(HashMap<String, String> caption) {
 		this.caption = caption;
 	}
 	public List<String> getFields() {
