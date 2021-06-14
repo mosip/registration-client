@@ -129,6 +129,7 @@ public class ChildNewReg {
 			ExtentReportUtil.step2=ExtentReportUtil.test3.createNode("STEP 2-Operator Enter Details ");
 
 			//Enter userid and password
+			loginPage.selectAppLang();
 			loginPage.setUserId(loginUserid);
 			homePage=loginPage.setPassword(loginPwd);
 			ExtentReportUtil.step2.log(Status.PASS, "Operator logs in");

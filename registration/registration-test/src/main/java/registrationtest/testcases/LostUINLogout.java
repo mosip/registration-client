@@ -130,14 +130,15 @@ public class LostUINLogout {
 		ExtentReportUtil.step2=ExtentReportUtil.test2.createNode("STEP 2-Operator Enter Details ");
 		
 		//Enter userid and password
-		//loginPage.selectAppLang();
+		
+		loginPage.selectAppLang();
 		loginPage.setUserId(loginUserid);
 		homePage=loginPage.setPassword(loginPwd);
 		ExtentReportUtil.step2.log(Status.PASS, "Operator logs in");
 		
 		//New Registration
 		homePage.clickHomeImg();
-	if(PropertiesUtil.getKeyValue("sync").equals("Y"))
+		if(PropertiesUtil.getKeyValue("sync").equals("Y"))
 		homePage.clickSynchronizeData();
 	
 		

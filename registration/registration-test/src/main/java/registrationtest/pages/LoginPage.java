@@ -77,32 +77,27 @@ public class LoginPage {
 
 	public void selectAppLang()
 	{
-		try {
-//			Platform.runLater(new Runnable() {
-//				public void run() {
-
+		String[] listLang=null;
+					try {
+						listLang=PropertiesUtil.getKeyValue("appLanguage").split("@@");
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
 					GenericDto dto=new GenericDto();
-					dto.setCode("fra");
-					dto.setName("français");
-					dto.setLangCode("fra");
+					
+					dto.setCode(listLang[0]);
+					dto.setLangCode(listLang[1]);
+					dto.setName(listLang[2]);
+					try {
+						Platform.runLater(new Runnable() {
+							public void run() {
 
 					ComboBox comboBox= waitsUtil.lookupById(appLanguage);
 
 					comboBox.getSelectionModel().select(dto); 
-
-
-					try {
-						Thread.sleep(5000);
-						//Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
-					} catch (NumberFormatException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-//				}
-//			});
+					
+				}
+			});
 		} catch (Exception e) {
 
 			e.printStackTrace();
@@ -119,6 +114,8 @@ public class LoginPage {
 		logger.info("setUserId" +userIdText);
 
 		try {
+
+				   Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait6")));
 			
 					userIdTextField=waitsUtil.lookupByIdTextField(userId, robot);
 
@@ -132,8 +129,6 @@ public class LoginPage {
 						
 					System.out.println("User id Entered ");
 					waitsUtil.clickNodeAssert("#sub1");
-					//	robot.press(KeyCode.ENTER).release(KeyCode.ENTER);
-					//Thread.sleep(5000);
 					assertEquals(userIdText, userIdTextField.getText(),"User id is not as same as entered");
 				
 
@@ -161,15 +156,10 @@ public class LoginPage {
 
 			assertNotNull(passwordTextField, "passwordTextField Not Present");
 
-			//robot.clickOn(passwordTextField);
-
-			passwordTextField.setText(pwd);
+						passwordTextField.setText(pwd);
 
 			waitsUtil.clickNodeAssert("#sub2");
-			//robot.press(KeyCode.ENTER).release(KeyCode.ENTER);
-
-			//robot.clickOn(submit);
-			
+						
 		}catch(Exception e)
 		{
 			logger.error(e.getMessage());
@@ -219,7 +209,7 @@ public class LoginPage {
 		logger.info("In Login test Loaded");
 
 		try {
-			waitsUtil.clickNodeAssert("Update Later");
+			alerts.clickAlertCancel();
 			waitsUtil.clickNodeAssert(loginScreen);
 
 

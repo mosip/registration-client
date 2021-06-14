@@ -178,7 +178,8 @@ public class LoginNewRegLogout {
 		//Enter userid and password
 		
 		
-	//	loginPage.selectAppLang();
+		loginPage.selectAppLang();
+		
 		loginPage.setUserId(loginUserid);
 		
 		homePage=loginPage.setPassword(loginPwd);
@@ -217,7 +218,7 @@ public class LoginNewRegLogout {
 		 * Authentication enter password
 		 * Click Continue 
 		 */
-authenticationPage.enterUserName(loginUserid);
+		authenticationPage.enterUserName(loginUserid);
 		authenticationPage.enterPassword(loginPwd);
 
 		buttons.clickAuthenticateBtn();

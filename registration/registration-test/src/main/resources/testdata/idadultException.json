@@ -29,7 +29,11 @@
   }, {
     "language" : "ara",
     "value" : "القنيطرة"
-  } ],
+  } ,
+  {
+	    "language" : "fra",
+	    "value" : "Kénitra"
+	  }],
   "dateOfBirth" : "2000/01/01",
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
@@ -68,14 +72,22 @@
   }, {
     "language" : "ara",
     "value" : "بن منصور"
-  } ],
+  } ,
+  {
+	    "language" : "fra",
+	    "value" : "Kénitra"
+	  }],
   "addressLine2" : [ {
     "language" : "eng",
     "value" : "Upgrade1.1.4"
   }, {
     "language" : "ara",
     "value" : "بن منصور"
-  } ],
+  },
+  {
+	    "language" : "fra",
+	    "value" : "Kénitra"
+	  } ],
   "residenceStatus" : [ {
     "language" : "fra",
     "value" : "Étrangère"
@@ -93,7 +105,11 @@
 	  }, {
 	    "language" : "ara",
 	    "value" : "غير أجنبي"
-	  } ],
+	  },
+	  {
+		    "language" : "fra",
+		    "value" : "Kénitra"
+		  } ],
   "region" : [ {
     "language" : "eng",
     "value" : "Rabat Sale Kenitra"
@@ -121,21 +137,13 @@
   }, {
     "language" : "ara",
     "value" : "يلتقط"
-  } ],
+  },
+  {
+	    "language" : "fra",
+	    "value" : "Kénitra"
+	  } ],
   "bioExceptionAttributes": [
-		"leftEye",
-		
-		
-		"rightLittle",
-		"rightRing",
-		"rightMiddle",
-		
-		"leftLittle",
-		"leftRing",
-		"leftMiddle",
-		
-		"rightThumb"
-		
+		"leftEye"
 	],
 	 "bioExceptionAttributes1": [
 			"leftEye",
