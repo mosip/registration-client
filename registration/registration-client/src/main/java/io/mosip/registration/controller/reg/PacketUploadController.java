@@ -527,21 +527,16 @@ public class PacketUploadController extends BaseController implements Initializa
 			String lowerCaseFilter = newValue.toLowerCase();
 
 			if (reg.getFileName().contains(lowerCaseFilter)) {
-				table.getSelectionModel().selectFirst();
 				return true; // Filter matches packet name.
 			} else if (reg.getUserId().toLowerCase().contains(lowerCaseFilter)) {
-				table.getSelectionModel().selectFirst();
 				return true; // Filter matches operator ID.
 			} else if (newValue.equalsIgnoreCase(reg.getPacketClientStatus())) {
-				table.getSelectionModel().selectFirst();
 				return true; // Filter matches packet client status.
 			} else if (newValue.equalsIgnoreCase(reg.getPacketServerStatus())) {
-				table.getSelectionModel().selectFirst();
 				return true; // Filter matches packet server status.
 			}
 			return false; // Does not match.
 		});
-		table.getSelectionModel().selectFirst();
 	}
 
 	/**
