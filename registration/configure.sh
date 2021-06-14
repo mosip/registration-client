@@ -102,7 +102,7 @@ cp -r "${work_dir}"/registration-client/target/lib/clamav.jar "${work_dir}"/regi
 cp -r "${work_dir}"/registration-client/target/lib/kernel-virusscanner-clamav.jar "${work_dir}"/registration-test-utility/lib
 #cp -r "${work_dir}"/sdkjars/*.jar "${work_dir}"/registration-test-utility/lib
 cp "${work_dir}"/registration-client/target/MANIFEST.MF "${work_dir}"/registration-test-utility/
-/usr/bin/zip -r -j "${work_dir}"/registration-test-utility.zip "${work_dir}"/registration-test-utility
+/usr/bin/zip -r "${work_dir}"/registration-test-utility.zip "${work_dir}"/registration-test-utility
 
 echo "setting up nginx static content"
 
