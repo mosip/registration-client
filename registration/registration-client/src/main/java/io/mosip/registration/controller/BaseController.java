@@ -4,10 +4,8 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -349,8 +347,16 @@ public class BaseController {
 	}
 
 	public static <T> T loadWithNewInstance(URL url, Object controller) throws IOException {
-		FXMLLoader loader = new FXMLLoader(url, ApplicationContext.getInstance()
-				.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS));
+		String langCode = ApplicationContext.applicationLanguage();
+		if (SessionContext.map() != null || !SessionContext.map().isEmpty()) {
+			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.map()
+					.get(RegistrationConstants.REGISTRATION_DATA);
+			if (registrationDTO != null && registrationDTO.getSelectedLanguagesByApplicant() != null) {
+				langCode = registrationDTO.getSelectedLanguagesByApplicant().get(0);
+			}
+		}
+		FXMLLoader loader = new FXMLLoader(url,
+				ApplicationContext.getInstance().getBundle(langCode, RegistrationConstants.LABELS));
 		loader.setController(controller);
 		return loader.load();
 	}

@@ -25,9 +25,6 @@ import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 
-import io.mosip.registration.api.docscanner.DocScannerFacade;
-import io.mosip.registration.api.docscanner.dto.DocScanDevice;
-import io.mosip.registration.util.control.FxControl;
 import org.mvel2.MVEL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,7 +32,6 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
-import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.commons.packet.dto.packet.BiometricsException;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
@@ -47,12 +43,15 @@ import io.mosip.kernel.biometrics.entities.RegistryIDType;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.registration.api.docscanner.DocScannerFacade;
+import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
 import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.FXUtils;
@@ -61,7 +60,6 @@ import io.mosip.registration.controller.reg.DocumentScanController;
 import io.mosip.registration.controller.reg.RegistrationController;
 import io.mosip.registration.controller.reg.UserOnboardParentController;
 import io.mosip.registration.dao.UserDetailDAO;
-import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.mastersync.BiometricAttributeDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
@@ -75,6 +73,7 @@ import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.util.common.Modality;
+import io.mosip.registration.util.control.FxControl;
 import io.mosip.registration.util.control.impl.BiometricFxControl;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -1389,7 +1388,11 @@ public class GenericBiometricsController extends BaseController /* implements In
 		thresholdLabel.setAlignment(Pos.CENTER);
 
 		double thresholdValDouble = threshold != null && !threshold.isEmpty() ? Double.parseDouble(threshold) : 0;
-		thresholdLabel.setText(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.THRESHOLD).concat("  ").concat(String.valueOf(thresholdValDouble))
+		String langCode = ApplicationContext.applicationLanguage();
+		if (getRegistrationDTOFromSession() != null && getRegistrationDTOFromSession().getSelectedLanguagesByApplicant() != null) {
+			langCode = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0);
+		}
+		thresholdLabel.setText(applicationContext.getBundle(langCode, RegistrationConstants.LABELS).getString("threshold").concat("  ").concat(String.valueOf(thresholdValDouble))
 				.concat(RegistrationConstants.PERCENTAGE));
 		thresholdPane1.setPercentWidth(thresholdValDouble);
 		thresholdPane2.setPercentWidth(100.00 - (thresholdValDouble));
