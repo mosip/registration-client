@@ -236,7 +236,9 @@ public class BiometricFxControl extends FxControl {
 
 	private Button addModalityButton(Modality modality) {
 		Button button = new Button();
-		button.setPrefSize(80, 80);
+		button.setMaxSize(100, 90);
+		button.setMinSize(100, 90);
+		button.setPrefSize(100, 90);
 
 		List<BiometricsDto> capturedData = getRegistrationDTo().getBiometric(uiSchemaDTO.getSubType(), modality.getAttributes());
 		
