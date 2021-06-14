@@ -123,7 +123,11 @@ public class ScanPopUpViewController extends BaseController {
 	private Button streamBtn;
 	@FXML
 	private Button previewBtn;
-	
+
+	public GridPane getImageViewGridPane() {
+		return imageViewGridPane;
+	}
+
 	@FXML
 	private GridPane imageViewGridPane;
 	
@@ -321,11 +325,10 @@ public class ScanPopUpViewController extends BaseController {
 		}
 		else {
 			baseController.scan(popupStage);
-			docCurrentPageNumber.setText(String.valueOf(documentScanController.getScannedPages().size()));
 			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.DOC_CAPTURE_SUCCESS);
 		}
 
-		if (!documentScanController.getScannedPages().isEmpty()) {
+		if (documentScanController.getScannedPages() != null && !documentScanController.getScannedPages().isEmpty()) {
 			previewBtn.setDisable(false);
 			saveBtn.setDisable(false);
 		} else {
