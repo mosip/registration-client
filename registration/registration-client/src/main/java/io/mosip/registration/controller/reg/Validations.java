@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javafx.scene.Group;
 import javafx.scene.control.*;
 import org.bridj.cpp.std.list;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -150,10 +151,10 @@ public class Validations extends BaseController {
 	private boolean nodeToValidate(List<String> notTovalidate, Node node) {
 		if (node.getId() != null && (node.getId().contains("gender") || node.getId().contains("residence"))) {
 			return !(node.getId() == null || notTovalidate.contains(node.getId()) || node instanceof ImageView
-					|| node instanceof Label || node instanceof Hyperlink );
+					|| node instanceof Label || node instanceof Hyperlink || node instanceof Group);
 		}
 		return !(node.getId() == null || notTovalidate.contains(node.getId()) || node instanceof ImageView
-				|| node instanceof Button || node instanceof Label || node instanceof Hyperlink);
+				|| node instanceof Button || node instanceof Label || node instanceof Hyperlink || node instanceof Group);
 	}
 
 	/**

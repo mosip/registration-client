@@ -682,6 +682,7 @@ public class ScanPopUpViewController extends BaseController {
 	public void preview() {
 		isStreamPaused = true;
 		showPreview(true);
+		initializeDocPages(1, documentScanController.getScannedPages().size());
 		int lastImgIndex = documentScanController.getScannedPages().size() - 1;
 		scanImage.setImage(getImage(documentScanController.getScannedPages().get(lastImgIndex)));
 	}
@@ -691,7 +692,6 @@ public class ScanPopUpViewController extends BaseController {
 		scanImage.setVisible(true);
 		cancelBtn.setDisable(false);
 		cropButton.setDisable(false);
-
 	}
 
 	private void showStream(boolean isVisible) {
