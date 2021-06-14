@@ -3,13 +3,11 @@ package io.mosip.registration.controller.reg;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.ResourceBundle;
 import java.util.TimeZone;
 
@@ -21,7 +19,6 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.controller.BaseController;
 import javafx.scene.Node;
@@ -169,9 +166,7 @@ public class DateValidation extends BaseController {
 			ResourceBundle rb = ApplicationContext.getInstance().getBundle(
 					getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0),
 					RegistrationConstants.MESSAGES);
-			dobMessage.setText(rb.getString(RegistrationConstants.INVALID_DATE).concat(" / ").concat(
-					ageField == null ? rb.getString(RegistrationConstants.INVALID_DATE_LIMIT) :
-					rb.getString(RegistrationConstants.INVALID_AGE) + getValueFromApplicationContext(RegistrationConstants.MAX_AGE)));
+			dobMessage.setText(rb.getString(RegistrationConstants.DOB_REQUIRED));
 			dobMessage.setVisible(true);
 			generateAlert(parentPane, RegistrationConstants.DOB, dobMessage.getText());
 		} else {
