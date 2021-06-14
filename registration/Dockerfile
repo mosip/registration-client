@@ -73,6 +73,6 @@ RUN chmod a+x configure.sh \
 RUN chown -R ${container_user}:${container_user} /home/${container_user}
 
 # select container user for all tasks
-USER ${container_user_uid}:${container_user_gid}
+# USER ${container_user_uid}:${container_user_gid}
 
 ENTRYPOINT ["./configure.sh" ]
