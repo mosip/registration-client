@@ -4,6 +4,11 @@ RUN apt-get update
 
 RUN apt install -y zip nginx
 
+ARG SOURCE
+ARG COMMIT
+LABEL commit=${COMMIT}
+LABEL source=${SOURCE}
+
 ARG client_version
 
 ARG crypto_key
