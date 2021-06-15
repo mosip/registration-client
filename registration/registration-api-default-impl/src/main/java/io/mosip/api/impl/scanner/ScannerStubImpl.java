@@ -11,6 +11,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,7 +21,14 @@ public class ScannerStubImpl implements DocScannerService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScannerStubImpl.class);
     private static final String SERVICE_NAME = "MOSIP-STUB";
     private static final String DEVICE_NAME = "STUB-SCANNER";
-    private static final String DOC_STUB_PATH = "/images/stubdoc.png";
+    private static final List<String> DOC_STUB_PATHS = new ArrayList<>();
+    private static int index = 0;
+
+    static {
+        DOC_STUB_PATHS.add("/images/morena_img.BMP");
+        DOC_STUB_PATHS.add("/images/stubdoc.png");
+
+    }
 
     @Override
     public String getServiceName() {
@@ -29,7 +37,7 @@ public class ScannerStubImpl implements DocScannerService {
 
     @Override
     public BufferedImage scan(DocScanDevice docScanDevice) {
-        try(InputStream inputStream = this.getClass().getResourceAsStream(DOC_STUB_PATH)) {
+        try(InputStream inputStream = this.getClass().getResourceAsStream(getStubPath())) {
             BufferedImage bufferedImage = ImageIO.read(inputStream);
 
             if(docScanDevice.getFrame() != null && docScanDevice.getFrame().length > 3) {
@@ -51,5 +59,10 @@ public class ScannerStubImpl implements DocScannerService {
         docScanDevice.setName(DEVICE_NAME);
         docScanDevice.setId(getServiceName()+":"+DEVICE_NAME);
         return Arrays.asList(docScanDevice);
+    }
+
+    private String getStubPath() {
+        index = index % DOC_STUB_PATHS.size();
+        return DOC_STUB_PATHS.get(index++);
     }
 }
