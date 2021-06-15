@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
+import javafx.scene.Group;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import org.assertj.core.util.Arrays;
@@ -167,6 +168,8 @@ public class DocumentScanController extends BaseController {
 	private ImageView backImageView;
 	@FXML
 	private Label biometricExceptionReq;
+	@FXML
+	private Group docPreviewImgGroup;
 
 	@Autowired
 	private Validations validation;
@@ -1023,16 +1026,21 @@ public class DocumentScanController extends BaseController {
 			try {
 				docPages = documentScanFacade.pdfToImages(document);
 				if (!docPages.isEmpty()) {
-					docPreviewImgView.setPreserveRatio(true);
-					docPreviewImgView.setImage(getImage(docPages.get(0)));
 
-					docPreviewLabel.setVisible(true);
 					if (docPages.size() > 1) {
 						docPageNumber.setText(RegistrationConstants.ONE);
 						docPreviewNext.setVisible(true);
 						docPreviewPrev.setVisible(true);
 						docPreviewNext.setDisable(false);
 					}
+
+					docPreviewImgGroup.getChildren().clear();
+					docPreviewImgGroup.getChildren().add(new ImageView(getImage(docPages.get(0))));
+					//docPreviewImgView.setPreserveRatio(true);
+					//docPreviewImgView.setImage(getImage(docPages.get(0)));
+
+					docPreviewLabel.setVisible(true);
+
 				}
 			} catch (IOException ioException) {
 				LOGGER.error("DOCUMENT_SCAN_CONTROLLER", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
@@ -1042,7 +1050,9 @@ public class DocumentScanController extends BaseController {
 			}
 		} else {
 			docPreviewLabel.setVisible(true);
-			docPreviewImgView.setImage(convertBytesToImage(document));
+			docPreviewImgGroup.getChildren().clear();
+			docPreviewImgGroup.getChildren().add(new ImageView(new Image(new ByteArrayInputStream(document))));
+			//docPreviewImgView.setImage(convertBytesToImage(document));
 		}
 		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Scanned document displayed succesfully");
@@ -1095,7 +1105,9 @@ public class DocumentScanController extends BaseController {
 	 * @param pageNumber - page number for the preview section
 	 */
 	private void setDocPreview(int index, int pageNumber) {
-		docPreviewImgView.setImage(SwingFXUtils.toFXImage(docPages.get(index), null));
+		//docPreviewImgView.setImage(SwingFXUtils.toFXImage(docPages.get(index), null));
+		docPreviewImgGroup.getChildren().clear();
+		docPreviewImgGroup.getChildren().add(new ImageView(getImage(docPages.get(index))));
 		docPageNumber.setText(String.valueOf(pageNumber));
 	}
 
@@ -1315,6 +1327,7 @@ public class DocumentScanController extends BaseController {
 		docPreviewNext.setDisable(true);
 		docPreviewPrev.setDisable(true);
 		docPageNumber.setText(RegistrationConstants.EMPTY);
+		docPreviewImgGroup.getChildren().clear();
 		docPreviewImgView.setImage(null);
 		docPages = null;
 	}

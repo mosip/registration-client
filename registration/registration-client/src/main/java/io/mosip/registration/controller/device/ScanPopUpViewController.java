@@ -123,7 +123,11 @@ public class ScanPopUpViewController extends BaseController {
 	private Button streamBtn;
 	@FXML
 	private Button previewBtn;
-	
+
+	public GridPane getImageViewGridPane() {
+		return imageViewGridPane;
+	}
+
 	@FXML
 	private GridPane imageViewGridPane;
 	
@@ -321,11 +325,10 @@ public class ScanPopUpViewController extends BaseController {
 		}
 		else {
 			baseController.scan(popupStage);
-			docCurrentPageNumber.setText(String.valueOf(documentScanController.getScannedPages().size()));
 			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.DOC_CAPTURE_SUCCESS);
 		}
 
-		if (!documentScanController.getScannedPages().isEmpty()) {
+		if (documentScanController.getScannedPages() != null && !documentScanController.getScannedPages().isEmpty()) {
 			previewBtn.setDisable(false);
 			saveBtn.setDisable(false);
 		} else {
@@ -682,6 +685,7 @@ public class ScanPopUpViewController extends BaseController {
 	public void preview() {
 		isStreamPaused = true;
 		showPreview(true);
+		initializeDocPages(1, documentScanController.getScannedPages().size());
 		int lastImgIndex = documentScanController.getScannedPages().size() - 1;
 		scanImage.setImage(getImage(documentScanController.getScannedPages().get(lastImgIndex)));
 	}
@@ -691,7 +695,6 @@ public class ScanPopUpViewController extends BaseController {
 		scanImage.setVisible(true);
 		cancelBtn.setDisable(false);
 		cropButton.setDisable(false);
-
 	}
 
 	private void showStream(boolean isVisible) {
