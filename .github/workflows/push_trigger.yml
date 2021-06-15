@@ -100,7 +100,7 @@ jobs:
       if: failure() # Pick up events even if the job fails or is canceled.
 
 
-  Sonar Analysis:
+  sonar_analysis:
     runs-on: ubuntu-latest
     env:
       NAMESPACE: mosipdev
