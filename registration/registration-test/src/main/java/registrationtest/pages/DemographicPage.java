@@ -160,7 +160,6 @@ public class DemographicPage {
 	 * @return
 	 */
 	public WebViewDocument scemaDemoDocUploadAdult(String JsonIdentity,String scenario)  {
-		Boolean trans = true;
 
 		/**
 		 *  convert jsonFromSchema intoJava
@@ -257,7 +256,7 @@ public class DemographicPage {
 						{logger.error(e.getMessage());
 						}
 						System.out.println("Automaiton Script - id="+i + "=" +schema.getId() + "\tSchemaControlType=" + schema.getControlType());
-						contolType(schema,JsonIdentity,trans,scenario);
+						contolType(schema,JsonIdentity,scenario);
 					}
 				}
 				catch(Exception e)
@@ -416,7 +415,7 @@ public class DemographicPage {
 	} catch (IOException e) {
 		logger.error(e.getMessage());
 	}
-	
+
 	try
 	{
 		for (int i = 0; i < rootSchema.getSchema().size(); i++) {
@@ -426,11 +425,11 @@ public class DemographicPage {
 
 		scn.setOrder(0);
 		scn.setName("SingleScreen");
-		
+
 		label.put(listLang[0],"SingleScreen");
 		scn.setLabel(label);
 		scn.setCaption(label);
-		
+
 		scn.setFields(fieldList);
 		scn.setLayoutTemplate(null);
 		scn.setPreRegFetchRequired(true);
@@ -449,49 +448,25 @@ public class DemographicPage {
 
 
 
-	public void getTextboxKeyValue(String id,String JsonIdentity,String key,Boolean trans,String scenario)
+	public void getTextboxKeyValueUpdate(String id,String JsonIdentity,String key,Schema schema,Boolean trans,String scenario)
 	{
-		logger.info("Schema Control Type textbox");
-		mapValue=null;
-		if(schema.isRequired() && schema.isInputRequired())
-		{	if(schema.getType().contains("simpleType"))
-		{
-			try {
-				mapValue=JsonUtil.JsonObjSimpleParsing(JsonIdentity,key);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			Set<String> keys = mapValue.keySet();
-			for(String ky:keys)
+		List<String> updateUINAttributes=null;
+		try {
+			updateUINAttributes=JsonUtil.JsonObjArrayListParsing(JsonIdentity, "updateUINAttributes");
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		for(String uinlist:updateUINAttributes) {
+			if(schema.getGroup().equals(uinlist))
 			{
-				String idk=id+ky;
-				String v=mapValue.get(ky);
-				setTextFields(idk,v);
-				if(trans==true) return;
+				if(scenario.contains("child"))
+					getTextboxKeyValueChild(id,JsonIdentity,key,schema.isTransliterate(),scenario);
+				else 
+					getTextboxKeyValue(id,JsonIdentity,key,schema.isTransliterate(),scenario);
+					
 			}
 		}
-
-		else
-		{
-			value=null;
-			try {
-				value = JsonUtil.JsonObjParsing(JsonIdentity,key);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			try {
-				String[] listLang=PropertiesUtil.getKeyValue("langcode").split("@@");
-
-				setTextFields(id+listLang[0],value);
-			} catch (IOException e) {
-
-				logger.error(e.getMessage());
-			}
-		}
-		}
-
 	}
 
 
@@ -650,7 +625,7 @@ public class DemographicPage {
 	}
 
 
-	public void contolType(Schema schema,String JsonIdentity,Boolean trans,String scenario)
+	public void contolType(Schema schema,String JsonIdentity,String scenario)
 	{
 		String id="#"+schema.getId(); 
 		String key=schema.getId(); 
@@ -663,6 +638,9 @@ public class DemographicPage {
 			case "textbox":
 				if(scenario.contains("child"))
 					getTextboxKeyValueChild(id,JsonIdentity,key,schema.isTransliterate(),scenario);
+				else if(scenario.contains("update"))
+					getTextboxKeyValueUpdate(id,JsonIdentity,key,schema,schema.isTransliterate(),scenario);
+
 				else
 					getTextboxKeyValue(id,JsonIdentity,key,schema.isTransliterate(),scenario);
 				break;
@@ -693,6 +671,159 @@ public class DemographicPage {
 		{
 			logger.error(e.getMessage());
 		}
+	}
+
+	private void getTextboxKeyValue(String id, String JsonIdentity, String key, boolean transliterate,
+			String scenario) {
+		logger.info("Schema Control Type textbox");
+		mapValue=null;
+		if(schema.isRequired() && schema.isInputRequired())
+		{	if(schema.getType().contains("simpleType"))
+		{
+			try {
+				mapValue=JsonUtil.JsonObjSimpleParsing(JsonIdentity,key);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			Set<String> keys = mapValue.keySet();
+			for(String ky:keys)
+			{
+				String idk=id+ky;
+				String v=mapValue.get(ky);
+				setTextFields(idk,v);
+				if(transliterate==true) return;
+			}
+		}
+
+		else
+		{
+			value=null;
+			try {
+				value = JsonUtil.JsonObjParsing(JsonIdentity,key);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			try {
+				String[] listLang=PropertiesUtil.getKeyValue("langcode").split("@@");
+
+				setTextFields(id+listLang[0],value);
+			} catch (IOException e) {
+
+				logger.error(e.getMessage());
+			}
+		}
+		}
+
+	}
+	public WebViewDocument scemaGroupUpdate(String JsonIdentity, String scenario) {
+		
+		/**
+		 *  convert jsonFromSchema intoJava
+		 */
+
+		try {
+			jsonFromSchema=getSchemaJsonTxt(JsonIdentity);
+			rootSchema = JsonUtil.convertJsonintoJava(jsonFromSchema, Root.class);
+			logger.info(rootSchema.getIdVersion()); logger.info("Automaiton Script - Printing Input file Json" + JsonIdentity);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+
+		/**
+		 * sortSchemaScreen Based on Order
+		 * 
+		 * Set Array index Based on the Order of the screens
+		 * 
+		 */
+		unOrderedScreensList=rootSchema.getScreens();
+
+
+
+		if(!unOrderedScreensList.isEmpty())
+		{
+			orderedScreensList=sortSchemaScreen(unOrderedScreensList);
+		}
+		else
+		{orderedScreensList=singleSchemaScreen(rootSchema);
+		}
+		for(int k=0;k<orderedScreensList.size();k++)
+		{	
+			if(k>0) buttons.clicknextBtn();	
+
+			screens=orderedScreensList.get(k);
+
+			logger.info("Order" + screens.getOrder()+ " Fields" + screens.getFields());
+			fieldsList=screens.getFields();
+
+			nameTab=screens.getName();
+			//waitsUtil.clickNodeAssert("#"+nameTab);
+
+			for(String field: fieldsList)
+			{
+				try {
+					for (int i = 0; i < rootSchema.getSchema().size(); i++)
+					{
+						schema = rootSchema.getSchema().get(i);
+						if(!field.equals(schema.getId())) continue;
+						try {
+							if(field.contains("proofOf")&&schema.isRequired())
+							{	if(flagproofOf) //22
+							{
+								scrollVerticalDirection2(i,schema);
+								scrollVerticalDirection2(i,schema);
+								scrollVerticalDirection2(i,schema);
+								scrollVerticalDirection2(i,schema);
+								scrollVerticalDirection2(i,schema);
+								scrollVerticalDirection2(i,schema);
+								scrollVerticalDirection2(i,schema);
+								scrollVerticalDirection2(i,schema);
+
+								scrollVerticalDirection2(i,schema);
+								scrollVerticalDirection2(i,schema);
+								scrollVerticalDirection2(i,schema);
+
+								flagproofOf=false;
+							}
+							}else if(field.contains("Biometrics")) 
+							{	if(flagBiometrics) { //16
+								//								scrollVerticalDirection2(i,schema);
+								//								Thread.sleep(400);
+								//								flagBiometrics=false;
+							}
+							}
+							else	if(field.contains("consent"))//8
+							{
+								scrollVerticalDirection2(i,schema);
+								scrollVerticalDirection2(i,schema);
+								scrollVerticalDirection2(i,schema);
+								scrollVerticalDirection2(i,schema);
+
+							}
+							else if(schema.isRequired())
+							{
+								scrollVerticalDirection1(i,schema); 
+
+							}
+
+
+						}catch(Exception e)
+						{logger.error(e.getMessage());
+						}
+						System.out.println("Automaiton Script - id="+i + "=" +schema.getId() + "\tSchemaControlType=" + schema.getControlType());
+						contolType(schema,JsonIdentity,scenario);
+					}
+				}
+				catch(Exception e)
+				{
+					logger.error(e.getMessage());
+				}
+			}
+		}
+		return webViewDocument;
+
 	}
 }
 
