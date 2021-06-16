@@ -2,12 +2,8 @@ package io.mosip.registration.service.packet;
 
 import java.util.List;
 
-import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.PacketStatusDTO;
-import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.entity.Registration;
-import io.mosip.registration.exception.RegBaseCheckedException;
 
 /**
  * Service class for Exporting the Registration Packets
@@ -44,25 +40,10 @@ public interface PacketExportService {
 	 * <li>Server Status Code</li>
 	 * </ul>
 	 * 
-	 * <p>
-	 * Returns the status of the virus scan as {@link ResponseDTO} object.
-	 * </p>
-	 * 
-	 * <p>
-	 * If virus scan has completed successfully, {@link SuccessResponseDTO} will be
-	 * set in {@link ResponseDTO} object
-	 * </p>
-	 * 
-	 * <p>
-	 * If any exception occurs, {@link ErrorResponseDTO} will be set in
-	 * {@link ResponseDTO} object
-	 * </p>
 	 * 
 	 * @param exportedPackets
 	 *            The list of exported packets
-	 * @return Return the response based on the success or failure response
-	 * @throws RegBaseCheckedException 
 	 */
-	ResponseDTO updateRegistrationStatus(List<PacketStatusDTO> exportedPackets) throws RegBaseCheckedException;
+	void updateRegistrationStatus(List<PacketStatusDTO> exportedPackets);
 
 }
