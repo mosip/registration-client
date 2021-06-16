@@ -115,7 +115,7 @@ cp "${work_dir}"/registration-client/target/lib/* /var/www/html/registration-cli
 cp "${work_dir}"/registration-client/target/MANIFEST.MF /var/www/html/registration-client/${client_version_env}/
 cp "${work_dir}"/build_files/maven-metadata.xml /var/www/html/registration-client/
 cp reg-client.zip /var/www/html/registration-client/${client_version_env}/
-cp "${work_dir}"/registration-test-utility.zip /var/www/html/registration-test/${client_version_env}/
+cp "${work_dir}"/registration-test-utility.zip /var/www/html/registration-client/${client_version_env}/
 
 echo "setting up nginx static content - completed"
 
