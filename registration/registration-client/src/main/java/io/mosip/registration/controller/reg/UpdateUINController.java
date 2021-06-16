@@ -139,11 +139,12 @@ public class UpdateUINController extends BaseController implements Initializable
 	private GridPane addCheckBox(String groupName, UiSchemaDTO field) {
 		String groupLabel = getLabelsForGroup(groupName, field);
 		CheckBox checkBox = new CheckBox(groupLabel);
+		checkBox.setId(groupName);
 		checkBox.setTooltip(new Tooltip(groupLabel));
 		checkBox.getStyleClass().add(RegistrationConstants.updateUinCheckBox);
 		fxUtils.listenOnSelectedCheckBox(checkBox);
 		checkBoxKeeper.put(groupName, checkBox);
-
+		
 		GridPane gridPane = new GridPane();
 		gridPane.setPrefWidth(400);
 		gridPane.setPrefHeight(40);
