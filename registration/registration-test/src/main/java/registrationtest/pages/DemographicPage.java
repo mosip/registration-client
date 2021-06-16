@@ -42,8 +42,6 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import registrationtest.controls.Buttons;
 import registrationtest.pojo.output.RID;
-import registrationtest.pojo.schema.Caption;
-import registrationtest.pojo.schema.Label;
 import registrationtest.pojo.schema.Root;
 import registrationtest.pojo.schema.Schema;
 import registrationtest.pojo.schema.Screens;
@@ -128,7 +126,7 @@ public class DemographicPage {
 		});	
 	}
 
-	public void setTextFieldsChild(String id,String idSchema,RID rid1) {
+	public void setTextFieldsChild(String id,String idSchema) {
 		logger.info(" setTextFields in " + id +" " + idSchema );
 		Platform.runLater(new Runnable() {
 			@Override
@@ -161,7 +159,7 @@ public class DemographicPage {
 	 * @param documentUpload
 	 * @return
 	 */
-	public WebViewDocument scemaDemoDocUploadAdult(String JsonIdentity,String scenario,RID rid1)  {
+	public WebViewDocument scemaDemoDocUploadAdult(String JsonIdentity,String scenario)  {
 		Boolean trans = true;
 
 		/**
@@ -256,15 +254,15 @@ public class DemographicPage {
 
 
 						}catch(Exception e)
-						{logger.info(e.getMessage());
+						{logger.error(e.getMessage());
 						}
 						System.out.println("Automaiton Script - id="+i + "=" +schema.getId() + "\tSchemaControlType=" + schema.getControlType());
-						contolType(schema,JsonIdentity,trans,scenario,rid1);
+						contolType(schema,JsonIdentity,trans,scenario);
 					}
 				}
 				catch(Exception e)
 				{
-					logger.info(e.getMessage());
+					logger.error(e.getMessage());
 				}
 			}
 		}
@@ -408,11 +406,17 @@ public class DemographicPage {
 
 	public List<Screens> singleSchemaScreen(Root rootSchema)
 	{Screens scn = new Screens();
-	Caption cap=new Caption();
-	Label lab=new Label();
+	//Label lab=new Label();
 	List<String> fieldList=new LinkedList<String>();
 	List<Screens> screenList=new LinkedList<Screens>();
-
+	HashMap<String, String> label = new HashMap<>();
+	String[] listLang=null;;
+	try {
+		listLang = PropertiesUtil.getKeyValue("langcode").split("@@");
+	} catch (IOException e) {
+		logger.error(e.getMessage());
+	}
+	
 	try
 	{
 		for (int i = 0; i < rootSchema.getSchema().size(); i++) {
@@ -422,10 +426,11 @@ public class DemographicPage {
 
 		scn.setOrder(0);
 		scn.setName("SingleScreen");
-		cap.setEng("SingleScreen");
-		scn.setCaption(cap);
-		lab.setEng("SingleScreen");
-		scn.setLabel(lab);
+		
+		label.put(listLang[0],"SingleScreen");
+		scn.setLabel(label);
+		scn.setCaption(label);
+		
 		scn.setFields(fieldList);
 		scn.setLayoutTemplate(null);
 		scn.setPreRegFetchRequired(true);
@@ -437,14 +442,14 @@ public class DemographicPage {
 	}
 	catch(Exception e)
 	{
-		logger.info(e.getMessage());
+		logger.error(e.getMessage());
 	}
 	return screenList;
 	}
 
 
 
-	public void getTextboxKeyValue(String id,String JsonIdentity,String key,Boolean trans,String scenario,RID rid1)
+	public void getTextboxKeyValue(String id,String JsonIdentity,String key,Boolean trans,String scenario)
 	{
 		logger.info("Schema Control Type textbox");
 		mapValue=null;
@@ -491,7 +496,7 @@ public class DemographicPage {
 
 
 
-	public void getTextboxKeyValueChild(String id,String JsonIdentity,String key,Boolean trans,String scenario,RID rid1)
+	public void getTextboxKeyValueChild(String id,String JsonIdentity,String key,Boolean trans,String scenario)
 	{
 		logger.info("Schema Control Type textbox");
 		mapValue=null;
@@ -509,7 +514,7 @@ public class DemographicPage {
 			{
 				String idk=id+ky;
 				String v=mapValue.get(ky);
-				setTextFieldsChild(idk,v,rid1);
+				setTextFieldsChild(idk,v);
 				if(trans==true) return;
 			}
 		}
@@ -640,12 +645,12 @@ public class DemographicPage {
 
 			}}catch(Exception e)
 		{
-				logger.info(e.getMessage());
+				logger.error(e.getMessage());
 		}
 	}
 
 
-	public void contolType(Schema schema,String JsonIdentity,Boolean trans,String scenario,RID rid1)
+	public void contolType(Schema schema,String JsonIdentity,Boolean trans,String scenario)
 	{
 		String id="#"+schema.getId(); 
 		String key=schema.getId(); 
@@ -657,9 +662,9 @@ public class DemographicPage {
 				break;
 			case "textbox":
 				if(scenario.contains("child"))
-					getTextboxKeyValueChild(id,JsonIdentity,key,schema.isTransliterate(),scenario,rid1);
+					getTextboxKeyValueChild(id,JsonIdentity,key,schema.isTransliterate(),scenario);
 				else
-					getTextboxKeyValue(id,JsonIdentity,key,schema.isTransliterate(),scenario,rid1);
+					getTextboxKeyValue(id,JsonIdentity,key,schema.isTransliterate(),scenario);
 				break;
 			case "ageDate":
 				String dateofbirth[]=JsonUtil.JsonObjParsing(JsonIdentity,key).split("/");

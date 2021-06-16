@@ -1303,6 +1303,7 @@ public class BaseController {
 		if (alertType == Alert.AlertType.CONFIRMATION) {
 			Button cancelButton = (Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL);
 			cancelButton.setText(RegistrationUIConstants.getMessageLanguageSpecific(cancelButtonText));
+			cancelButton.setId("cancel");
 		}
 		alert.initStyle(StageStyle.UNDECORATED);
 		alert.initModality(Modality.WINDOW_MODAL);

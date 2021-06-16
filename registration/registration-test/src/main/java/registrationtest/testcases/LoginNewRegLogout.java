@@ -41,6 +41,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import registrationtest.controls.Alerts;
 import registrationtest.controls.Buttons;
 import registrationtest.pages.AuthenticationPage;
 import registrationtest.pages.BiometricUploadPage;
@@ -54,11 +55,14 @@ import registrationtest.pages.WebViewDocument;
 import registrationtest.pojo.output.*;
 import registrationtest.pojo.schema.Root;
 import registrationtest.pojo.schema.Schema;
+import registrationtest.runapplication.NewRegistrationAdultTest;
 import  registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.JsonUtil;
 import  registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.RobotActions;
+import org.apache.log4j.LogManager; 
 
+import org.apache.log4j.Logger;
 
 
 /***
@@ -72,7 +76,8 @@ import registrationtest.utility.RobotActions;
  *
  */
 public class LoginNewRegLogout {
-
+	private static final Logger logger = LogManager.getLogger(LoginNewRegLogout.class);  
+	
 	FxRobot robot;
 	Schema schema;
 	Root root; 
@@ -99,7 +104,7 @@ public class LoginNewRegLogout {
 	EodApprovalPage eodApprovalPage;
 	UploadPacketPage uploadPacketPage;
 	SelectLanguagePage selectLanguagePage;
-	
+	Alerts alerts;
 	
 	public boolean initialRegclientSet(FxRobot robot,String loginUserid,String loginPwd,Stage applicationPrimaryStage1)
 	{
@@ -114,7 +119,8 @@ public class LoginNewRegLogout {
 			authenticationPage=new AuthenticationPage(robot);	
 			robotActions=new RobotActions(robot);
 			webViewDocument=new WebViewDocument(robot);
-			
+			alerts=new Alerts(robot);
+
 			//Load Login screen
 			loginPage.loadLoginScene(applicationPrimaryStage1);
 			ExtentReportUtil.step1.log(Status.PASS, "RegclientScreen Loaded");
@@ -138,18 +144,19 @@ public class LoginNewRegLogout {
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+
+			logger.error(e.getMessage());
 		}
 		
 		return flag;
 	}
 	public RID newRegistrationAdult(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
-			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,String scenario,RID rid1
+			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonContent,String flow,String fileName
 			)  {
 
 		try {
 		
-		ExtentReportUtil.test1=ExtentReportUtil.reports.createTest("New Adult Registration Scenario");
+		ExtentReportUtil.test1=ExtentReportUtil.reports.createTest("New Adult Registration Scenario : " + flow +" FileName : " + fileName);
 		
 		
 		
@@ -171,7 +178,8 @@ public class LoginNewRegLogout {
 		//Enter userid and password
 		
 		
-	//	loginPage.selectAppLang();
+		loginPage.selectAppLang();
+		
 		loginPage.setUserId(loginUserid);
 		
 		homePage=loginPage.setPassword(loginPwd);
@@ -181,7 +189,8 @@ public class LoginNewRegLogout {
 		
 		//New Registration
 		homePage.clickHomeImg();
-	//	homePage.clickSynchronizeData();
+		if(PropertiesUtil.getKeyValue("sync").equals("Y"))
+		homePage.clickSynchronizeData();
 		
 		demographicPage=homePage.clickNewRegistration();
 		
@@ -190,7 +199,7 @@ public class LoginNewRegLogout {
 		
 		ExtentReportUtil.step3=ExtentReportUtil.test1.createNode("STEP 3-Demographic, Biometric upload ");
 		
-		webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonIdentity,scenario,rid1);
+		webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonContent,flow);
 
 		ExtentReportUtil.step3.log(Status.PASS, "Demographic, Biometric upload done");
 
@@ -209,7 +218,7 @@ public class LoginNewRegLogout {
 		 * Authentication enter password
 		 * Click Continue 
 		 */
-authenticationPage.enterUserName(loginUserid);
+		authenticationPage.enterUserName(loginUserid);
 		authenticationPage.enterPassword(loginPwd);
 
 		buttons.clickAuthenticateBtn();
@@ -242,10 +251,11 @@ authenticationPage.enterUserName(loginUserid);
 		buttons.clickConfirmBtn();
 		ExtentReportUtil.step5.log(Status.PASS, "Approve Packet done" + rid2.getWebViewAck());
 		assertEquals(rid.getRid(), rid2.getRid());
-		
 		/**
 		 * Upload the packet
 		 */
+		if(PropertiesUtil.getKeyValue("upload").equals("Y"))
+			{
 		
 		ExtentReportUtil.step6=ExtentReportUtil.test1.createNode("STEP 6-Upload Packet ");
 		
@@ -257,30 +267,49 @@ authenticationPage.enterUserName(loginUserid);
 		 * Verify Success Upload
 		 */
 		result=uploadPacketPage.verifyPacketUpload(rid.getRid());
+		ExtentReportUtil.step6.log(Status.PASS, "Upload Packet done");
 
-
+		}
+		else if(PropertiesUtil.getKeyValue("upload").equals("N")){
+			result=true;
+		}
 		//Logout Regclient
-		loginPage.logout();
+				}catch(Exception e)
+				{
+
+					logger.error(e.getMessage());
+				}
+				try {
+					alerts.clickAlertexit();
+					homePage.clickHomeImg();
+				}catch(Exception e)
+				{
+					logger.error(e.getMessage());
 
 
-		buttons.clickConfirmBtn();
+				}
+				loginPage.logout();
+
+				try
+				{
+					buttons.clickConfirmBtn();
+				}
+				catch(Exception e)
+				{
+					logger.error(e.getMessage());
+				}
 
 	
 		rid.setResult(result);
 		
 		if(result==true)
-		{ExtentReportUtil.step6.log(Status.PASS, "Upload Packet done");
-
+		{
 			ExtentReportUtil.test1.log(Status.PASS, "TESTCASE PASS\n" +" RID-"+ rid.rid +" DATE TIME-"+ rid.ridDateTime +" ENVIRONMENT-" +System.getProperty("mosip.hostname"));
 		}		else
 			ExtentReportUtil.test1.log(Status.FAIL, "TESTCASE FAIL");
 
 		assertTrue(result,"TestCase Failed");
-		}catch(Exception e)
-		{
-			e.printStackTrace();
-		}
-		
+				
 return rid;
 	}
 

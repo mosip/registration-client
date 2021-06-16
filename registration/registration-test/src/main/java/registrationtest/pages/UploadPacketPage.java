@@ -62,9 +62,6 @@ public class UploadPacketPage {
 	public void selectPacket(String rid) {
 		
 		logger.info("selectPacket" + rid);
-//		waitsUtil.clickNodeAssert( "#filterField");
-//		robot.write(rid);
-//		
 		filterField=waitsUtil.lookupByIdTextField(filterField1, robot);
 		filterField.setText(rid);
 		

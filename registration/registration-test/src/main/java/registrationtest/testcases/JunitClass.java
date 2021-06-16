@@ -6,12 +6,19 @@ import org.json.JSONException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import javafx.application.Application;
 import registrationtest.runapplication.NewRegistrationAdultTest;
+import registrationtest.runapplication.StartApplication;
 import registrationtest.utility.PropertiesUtil;
 
 public class JunitClass {
 
+@BeforeAll
+public void testcase()
+{String args[]= {};
 
+	Application.launch(StartApplication.class, args); 
+}
 	@Test
 	public void testcase1()
 	{

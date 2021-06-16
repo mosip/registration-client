@@ -1,6 +1,7 @@
 package registrationtest.pages;
 
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.LogManager;
@@ -31,8 +32,8 @@ public class BiometricUploadPage {
 	String exit="#exit";
 	String success="#context";
 	Buttons buttons;
-
-
+	
+	
 	BiometricUploadPage(FxRobot robot)
 	{logger.info("BiometricUploadPage Constructor");
 
@@ -51,7 +52,7 @@ public class BiometricUploadPage {
 		List<String> listException=null;
 		Boolean flag=false;
 		try {
-			listException = JsonUtil.JsonObjArrayListParsing(identity, "bioExceptionAttributes");
+			listException = exceptionList(identity);
 			// IRIS DOUBLE
 			waitsUtil.clickNodeAssert(id);
 			Thread.sleep(400);
@@ -73,7 +74,7 @@ public class BiometricUploadPage {
 			if(flag==false)
 			clickScanBtn(subType);
 		} catch (Exception e) {
-			logger.info(e.getMessage());
+			logger.error(e.getMessage());
 		}
 	}
 
@@ -84,8 +85,7 @@ public class BiometricUploadPage {
 
 		List<String> listException=null;
 		Boolean flag=false;
-		try {
-			listException = JsonUtil.JsonObjArrayListParsing(identity, "bioExceptionAttributes");
+		try {listException = exceptionList(identity);
 			// FINGERPRINT_SLAB_THUMBS
 			waitsUtil.clickNodeAssert(id);
 			Thread.sleep(400);
@@ -107,7 +107,7 @@ public class BiometricUploadPage {
 			if(flag==false)
 			clickScanBtn(subType);
 		} catch (Exception e) {
-			logger.info(e.getMessage());
+			logger.error(e.getMessage());
 		}
 	}
 	
@@ -119,7 +119,7 @@ public class BiometricUploadPage {
 		List<String> listException=null;
 		Boolean flag=false;
 		try {
-			listException = JsonUtil.JsonObjArrayListParsing(identity, "bioExceptionAttributes");
+			listException = exceptionList(identity);
 			//FINGERPRINT_SLAB_RIGHT
 			waitsUtil.clickNodeAssert(id);
 			Thread.sleep(400);
@@ -151,13 +151,27 @@ public class BiometricUploadPage {
 			if(flag==false)
 			clickScanBtn(subType);
 		} catch (Exception e) {
-			logger.info(e.getMessage());
+			logger.error(e.getMessage());
 		}
 	}
 
 	
 	
-
+public List<String> exceptionList(String identity)
+{
+	List<String> listException=new LinkedList<String>();
+	String bioExceptionAttributes=null;
+	try {
+		 bioExceptionAttributes=PropertiesUtil.getKeyValue("bioExceptionAttributes");
+	
+	
+	listException=JsonUtil.JsonObjArrayListParsing(identity, bioExceptionAttributes);
+	} catch (Exception e) {
+		logger.error(e.getMessage());
+	}
+	
+	return listException;
+}
 	
 	public void exceptionsFingerPrintSlabLeft(String id,String identity,String subType)
 	{
@@ -167,7 +181,7 @@ public class BiometricUploadPage {
 		List<String> listException=null;
 		Boolean flag=false;
 		try {
-			listException = JsonUtil.JsonObjArrayListParsing(identity, "bioExceptionAttributes");
+			listException = exceptionList(identity);
 			//FINGERPRINT_SLAB_LEFT
 			waitsUtil.clickNodeAssert(id);
 			Thread.sleep(400);
@@ -200,7 +214,7 @@ public class BiometricUploadPage {
 			if(flag==false)
 			clickScanBtn(subType);
 		} catch (Exception e) {
-			logger.info(e.getMessage());
+			logger.error(e.getMessage());
 		}
 	}
 
@@ -252,12 +266,12 @@ public class BiometricUploadPage {
 
 			List<String> listException = null;
 			try {
-				listException = JsonUtil.JsonObjArrayListParsing(identity, "bioExceptionAttributes");
+				listException = exceptionList(identity);
 			}catch(Exception e)
 			{
-				logger.info(e.getMessage());
+				logger.error(e.getMessage());
 			}
-			if(listException==null){
+			if(listException.isEmpty()){
 				if(list.contains(PropertiesUtil.getKeyValue("leftEye"))||list.contains(PropertiesUtil.getKeyValue("rightEye")))
 
 					bioScan(subtype,id+IRIS_DOUBLE,identity);

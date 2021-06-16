@@ -65,34 +65,6 @@ public class JsonUtil {
 		return  payload;
 	}
 
-/**
- * For Simple Type
- * @param json
- * @param jsonObjName
- * @param idfield
- * @param lang
- * @return
- * @throws Exception
- */
-//	public static String JsonObjParsing1(JSONObject json,String jsonObjName,String idfield,String lang) throws Exception {
-//		String value =null;   
-//
-//		JSONObject identity = json.getJSONObject(jsonObjName);
-//
-//
-//		JSONArray identityitems = identity.getJSONArray(idfield);
-//		for (Object o : identityitems) {
-//			JSONObject idItem = (JSONObject) o;
-//
-//			String language = idItem.getString("language");
-//			if(language.equals(lang))
-//				value = idItem.getString("value");
-//
-//		}
-//
-//		return value; 
-//	}
-
 
 	      
 	  	public static LinkedHashMap<String,String> JsonObjSimpleParsing(String jsonIdentity,String idfield) throws Exception {

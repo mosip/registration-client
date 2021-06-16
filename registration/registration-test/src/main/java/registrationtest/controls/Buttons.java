@@ -19,8 +19,8 @@ public class Buttons {
 			cancel="#cancel",
 			submit="#submit",
 			next="#next",
-					authenticate="#authenticate",
-	print="#print";
+			authenticate="#authenticate",
+			print="#print";
 
 
 	WaitsUtil waitsUtil;

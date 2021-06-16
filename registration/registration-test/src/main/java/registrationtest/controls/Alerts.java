@@ -16,7 +16,8 @@ public class Alerts {
 	String alertImage="#alertImage";
 	String exit="#exit";
 	String success="#context";
-
+	String cancel="#cancel";
+	String confirm="#confirm";
 
 	WaitsUtil waitsUtil;
 	FxRobot robot;
@@ -57,4 +58,24 @@ public class Alerts {
 		waitsUtil.clickNodeAssert(success);
 		logger.info("clickAlertSuccess");
 	}
+	
+	/**
+	 * clickAlertcancel - cancel Text
+	 */
+	public void clickAlertCancel()
+	{
+		waitsUtil.clickNodeAssert(cancel);
+		logger.info("clickAlertCancel");
+	}
+
+	/**
+	 * clickAlertConfirm - confirm Text
+	 */
+	public void clickAlertConfirm()
+	{
+		waitsUtil.clickNodeAssert(confirm);
+		logger.info("clickAlertConfirm");
+	}
+	
+	
 }
