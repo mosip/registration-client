@@ -93,7 +93,7 @@ ls -ltr lib | grep bc
 mkdir -p "${work_dir}"/registration-test-utility
 mkdir -p "${work_dir}"/registration-test-utility/lib
 cp "${work_dir}"/registration-test/target/registration-test-*-dependencies.jar "${work_dir}"/registration-test-utility/registration-test.jar
-cp "${work_dir}"/registration-test/resources/*  "${work_dir}"/registration-test-utility/
+cp -r "${work_dir}"/registration-test/resources/*  "${work_dir}"/registration-test-utility/
 cp -r "${work_dir}"/registration-libs/resources/jre "${work_dir}"/registration-test-utility/
 #cp -r "${work_dir}"/registration-client/target/lib/morena* "${work_dir}"/registration-test-utility/lib
 cp -r "${work_dir}"/registration-client/target/lib/icu4j.jar "${work_dir}"/registration-test-utility/lib
