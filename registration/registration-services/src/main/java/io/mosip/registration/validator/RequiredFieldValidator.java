@@ -80,30 +80,32 @@ public class RequiredFieldValidator {
 		return visible;
 	}
 
-	public List<String> isRequiredBiometricField(String subType, RegistrationDTO registrationDTO)
-			throws RegBaseCheckedException {
+	public List<String> isRequiredBiometricField(String subType, RegistrationDTO registrationDTO) {
 		List<String> requiredAttributes = new ArrayList<String>();
-		SchemaDto schema = identitySchemaService.getIdentitySchema(registrationDTO.getIdSchemaVersion());
-		List<UiSchemaDTO> fields = schema.getSchema().stream()
-				.filter(field -> field.getType() != null
-						&& PacketManagerConstants.BIOMETRICS_DATATYPE.equals(field.getType())
-						&& field.getSubType() != null && field.getSubType().equals(subType))
-				.collect(Collectors.toList());
+		try {
+			SchemaDto schema = identitySchemaService.getIdentitySchema(registrationDTO.getIdSchemaVersion());
+			List<UiSchemaDTO> fields = schema.getSchema().stream()
+					.filter(field -> field.getType() != null
+							&& PacketManagerConstants.BIOMETRICS_DATATYPE.equals(field.getType())
+							&& field.getSubType() != null && field.getSubType().equals(subType))
+					.collect(Collectors.toList());
 
-		for (UiSchemaDTO schemaField : fields) {
-			if (isRequiredField(schemaField, registrationDTO) && schemaField.getBioAttributes() != null)
-				requiredAttributes.addAll(schemaField.getBioAttributes());
+			for (UiSchemaDTO schemaField : fields) {
+				if (isRequiredField(schemaField, registrationDTO) && schemaField.getBioAttributes() != null)
+					requiredAttributes.addAll(schemaField.getBioAttributes());
+			}
+
+			// Reg-client will capture the face of Infant and send it in Packet as part of
+			// IndividualBiometrics CBEFF (If Face is captured for the country)
+			if ((registrationDTO.isChild() && APPLICANT_SUBTYPE.equals(subType) && requiredAttributes.contains("face"))
+					|| (registrationDTO.getRegistrationCategory().equalsIgnoreCase(RegistrationConstants.PACKET_TYPE_UPDATE)
+					&& registrationDTO.getUpdatableFieldGroups().contains("GuardianDetails")
+					&& APPLICANT_SUBTYPE.equals(subType) && requiredAttributes.contains("face"))) {
+				return Arrays.asList("face"); // Only capture face
+			}
+		}catch (RegBaseCheckedException exception) {
+			LOGGER.error("Failed to get required bioattributes", exception);
 		}
-
-		// Reg-client will capture the face of Infant and send it in Packet as part of
-		// IndividualBiometrics CBEFF (If Face is captured for the country)
-		if ((registrationDTO.isChild() && APPLICANT_SUBTYPE.equals(subType) && requiredAttributes.contains("face"))
-				|| (registrationDTO.getRegistrationCategory().equalsIgnoreCase(RegistrationConstants.PACKET_TYPE_UPDATE)
-						&& registrationDTO.getUpdatableFieldGroups().contains("GuardianDetails")
-						&& APPLICANT_SUBTYPE.equals(subType) && requiredAttributes.contains("face"))) {
-			return Arrays.asList("face"); // Only capture face
-		}
-
 		return requiredAttributes;
 	}
 
