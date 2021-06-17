@@ -30,7 +30,6 @@ public class PacketExportServiceTest {
 	@InjectMocks
 	private PacketExportServiceImpl packetExportServiceImpl;
 	
-	@SuppressWarnings("unchecked")
 	@Test
 	public void getSynchedRecordsTest() {
 		Registration reg = new Registration();
@@ -46,8 +45,8 @@ public class PacketExportServiceTest {
 		PacketStatusDTO statusDTO=new PacketStatusDTO();
 		List<PacketStatusDTO> updatedExportPackets = new ArrayList<>();
 		updatedExportPackets.add(statusDTO);
-		Mockito.when(registrationDAO.updateRegStatus(Mockito.anyObject())).thenReturn(reg);
-		assertEquals("Success", packetExportServiceImpl.updateRegistrationStatus(updatedExportPackets).getSuccessResponseDTO().getMessage());
+		Mockito.when(registrationDAO.updateRegStatus(Mockito.any())).thenReturn(reg);
+		packetExportServiceImpl.updateRegistrationStatus(updatedExportPackets);
 	}
 	
 

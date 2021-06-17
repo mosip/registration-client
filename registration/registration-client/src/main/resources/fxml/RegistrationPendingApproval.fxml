@@ -50,10 +50,10 @@
                         <TableView fx:id="table" GridPane.rowIndex="1">
                            <columns>
                               <TableColumn fx:id="slno" editable="false" prefWidth="${tableContainer.width*7/100}" resizable="false" styleClass="tableId" text="%slno" />
-                              <TableColumn fx:id="id" editable="false" prefWidth="${tableContainer.width*34/100}" resizable="false" styleClass="tableId" text="%applicationId" />
-                              <TableColumn fx:id="date" editable="false" prefWidth="${tableContainer.width*22/100}" resizable="false" styleClass="tableId" text="%eodDate" />
+                              <TableColumn fx:id="id" editable="false" prefWidth="${tableContainer.width*30/100}" resizable="false" styleClass="tableId" text="%applicationId" />
+                              <TableColumn fx:id="date" editable="false" prefWidth="${tableContainer.width*22/100}" resizable="false" styleClass="tableId" text="%date" />
                               <TableColumn fx:id="acknowledgementFormPath" editable="false" text="%registrtionid" visible="false" />
-                              <TableColumn fx:id="operatorId" editable="false" prefWidth="${tableContainer.width*16/100}" resizable="false" styleClass="tableId" text="%operatorId" />
+                              <TableColumn fx:id="operatorId" editable="false" prefWidth="${tableContainer.width*20/100}" resizable="false" styleClass="tableId" text="%operatorId" />
                               <TableColumn fx:id="statusComment" editable="false" prefWidth="${tableContainer.width*21/100}" resizable="false" styleClass="pendingApprovalStatus" text="%status" />
                            </columns>
                         </TableView>
