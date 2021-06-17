@@ -79,6 +79,6 @@ RUN chown -R ${container_user}:${container_user} /home/${container_user}
 RUN chown -R ${container_user}:${container_user} /var/www
 
 # select container user for all tasks
-USER ${container_user_uid}:${container_user_gid}
+#USER ${container_user_uid}:${container_user_gid}
 
 ENTRYPOINT ["./configure.sh" ]
