@@ -137,6 +137,24 @@ public abstract class FxControl  {
 	 * Refresh the field
 	 */
 	public void refresh() {
+		boolean isFieldVisible =  isFieldVisible(uiSchemaDTO);
+		if(!isFieldVisible) {
+			switch (uiSchemaDTO.getType()) {
+				case "documentType":
+					getRegistrationDTo().removeDocument(uiSchemaDTO.getId());
+					break;
+				case "biometricsType":
+					List<String> requiredAttributes = requiredFieldValidator.isRequiredBiometricField(uiSchemaDTO.getSubType(), getRegistrationDTo());
+					for(String bioAttribute : uiSchemaDTO.getBioAttributes()) {
+						if(!requiredAttributes.contains(bioAttribute))
+							getRegistrationDTo().removeBiometric(uiSchemaDTO.getSubType(), bioAttribute);
+					}
+					break;
+				default:
+					getRegistrationDTo().removeDemographicField(uiSchemaDTO.getId());
+					break;
+			}
+		}
 		visible(this.node, isFieldVisible(uiSchemaDTO));
 	}
 

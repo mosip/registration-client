@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
@@ -443,7 +444,8 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 		applicationLabelBundle = applicationContext.getBundle(applicationContext.getApplicationLanguage(), RegistrationConstants.LABELS);
 
-		retryBox.setVisible(true);
+		retryBox.setVisible(!isExceptionPhoto(modality));
+		thresholdBox.setVisible(!isExceptionPhoto(modality));
 		biometricBox.setVisible(true);
 		checkBoxPane.getChildren().clear();
 		biometricType.setText(applicationLabelBundle.getString(modality.name()));
@@ -640,10 +642,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 		DocumentDto documentDto = new DocumentDto();
 		documentDto.setDocument(byteArray);
 		documentDto.setType("EOP");
-		String docType = getValueFromApplicationContext(RegistrationConstants.DOC_TYPE);
-		docType = RegistrationConstants.SCANNER_IMG_TYPE;
-
-		documentDto.setFormat(docType);
+		documentDto.setFormat(RegistrationConstants.SCANNER_IMG_TYPE);
 		documentDto.setCategory(RegistrationConstants.POE_DOCUMENT);
 		documentDto.setOwner(RegistrationConstants.APPLICANT);
 		documentDto.setValue(documentDto.getCategory().concat(RegistrationConstants.UNDER_SCORE).concat(documentDto.getType()));
@@ -687,8 +686,8 @@ public class GenericBiometricsController extends BaseController /* implements In
 						LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 								"device search request started" + System.currentTimeMillis());
 						
-						String modality = isFace(currentModality) || isExceptionPhoto(currentModality)
-								? RegistrationConstants.FACE_FULLFACE : currentModality.name();
+						String modality = isFace(currentModality) || isExceptionPhoto(currentModality) ?
+								 RegistrationConstants.FACE_FULLFACE : currentModality.name();
 						 MdmBioDevice bioDevice =deviceSpecificationFactory.getDeviceInfoByModality(modality);
 						    
 						    if (deviceSpecificationFactory.isDeviceAvailable(bioDevice)) {
@@ -714,11 +713,11 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 				try {
 
-					if (isExceptionPhoto(currentModality) && (mdmBioDevice == null || mdmBioDevice.getSpecVersion()
+					/*if (isExceptionPhoto(currentModality) && (mdmBioDevice == null || mdmBioDevice.getSpecVersion()
 							.equalsIgnoreCase(RegistrationConstants.SPEC_VERSION_092))) {
 						streamLocalCamera();
 						return;
-					}
+					}*/
 
 					// Disable Auto-Logout
 					SessionContext.setAutoLogout(false);
@@ -755,11 +754,11 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 				} catch (RegBaseCheckedException | IOException exception) {
 
-					if (isExceptionPhoto(currentModality)) {
+					/*if (isExceptionPhoto(currentModality)) {
 						LOGGER.error("Its exception photo starting local camera streaming");
 						streamLocalCamera();
 						return;
-					}
+					}*/
 
 					LOGGER.error("Error while streaming : " + currentModality,  exception);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
@@ -776,13 +775,13 @@ public class GenericBiometricsController extends BaseController /* implements In
 			@Override
 			public void handle(WorkerStateEvent t) {
 
-				LOGGER.error("Exception while finding bio device");
+				/*LOGGER.error("Exception while finding bio device");
 
 				if (isExceptionPhoto(currentModality)) {
 					LOGGER.error("Its exception photo starting local camera streaming");
 					streamLocalCamera();
 					return;
-				}
+				}*/
 
 				setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
 			}
@@ -1210,7 +1209,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 		clearBioLabels();
 		setScanButtonVisibility((!isFace(currentModality) && !isExceptionPhoto(currentModality)) ?
-				fxControl.isAnyExceptions(currentModality) : false, scanBtn);
+				fxControl.isAllExceptions(currentModality) : false, scanBtn);
 
 		LOGGER.info("Updated biometrics and cleared previous data");
 	}
@@ -1223,7 +1222,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 		attemptSlap.setText(RegistrationConstants.HYPHEN);
 		// duplicateCheckLbl.setText(RegistrationConstants.EMPTY);
 
-		retryBox.setVisible(true);
+		retryBox.setVisible(!isExceptionPhoto(currentModality));
 		biometricBox.setVisible(true);
 
 		bioProgress.setProgress(0);
@@ -1459,7 +1458,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 	private void clearUiElements() {
 
-		retryBox.setVisible(false);
+		retryBox.setVisible(!isExceptionPhoto(currentModality));
 		biometricBox.setVisible(false);
 
 	}
@@ -1509,8 +1508,21 @@ public class GenericBiometricsController extends BaseController /* implements In
 	}
 
 	public Image getBioStreamImage(String subType, Modality modality, int attempt) {
-
 		return STREAM_IMAGES.get(String.format("%s_%s_%s", subType, modality.name(), attempt));
+	}
+
+	public void removeBioStreamImage(String subType) {
+		List<String> keysToRemove = STREAM_IMAGES.keySet()
+				.stream()
+				.filter(k -> k.startsWith(String.format("%s_", subType))).collect(Collectors.toList());
+		for(String k : keysToRemove){ STREAM_IMAGES.remove(k); };
+	}
+
+	public void removeBioScores(String subType) {
+		List<String> keysToRemove = BIO_SCORES.keySet()
+				.stream()
+				.filter(k -> k.startsWith(String.format("%s_", subType))).collect(Collectors.toList());
+		for(String k : keysToRemove){ BIO_SCORES.remove(k); };
 	}
 
 	/*
@@ -1702,7 +1714,6 @@ public class GenericBiometricsController extends BaseController /* implements In
 	}
 
 	public double getBioScores(String subType, Modality modality, int attempt) {
-
 		double qualityScore = 0.0;
 		try {
 			qualityScore = BIO_SCORES.get(String.format("%s_%s_%s", subType, modality, attempt));
@@ -1713,13 +1724,12 @@ public class GenericBiometricsController extends BaseController /* implements In
 		return qualityScore;
 	}
 
-	/*public void clearBioCaptureInfo() {
-
+	public void clearBioCaptureInfo() {
 		BIO_SCORES.clear();
 		STREAM_IMAGES.clear();
 	}
 
-	private String getStubStreamImagePath(String modality) {
+	/*private String getStubStreamImagePath(String modality) {
 		String path = "";
 		switch (modality) {
 		case PacketManagerConstants.FINGERPRINT_SLAB_LEFT:
@@ -1895,7 +1905,6 @@ public class GenericBiometricsController extends BaseController /* implements In
 			}
 
 		}
-		genericController.refreshFields();
 		displayBiometric(currentModality);
 		setScanButtonVisibility(isAllMarked, scanBtn);
 	}
@@ -1939,7 +1948,7 @@ public class GenericBiometricsController extends BaseController /* implements In
 				else {
 					getRegistrationDTOFromSession().addBiometricException(currentSubType, node.getId(),
 							node.getId(), "Temporary", "Temporary");
-					genericController.refreshFields();
+					//genericController.refreshFields();
 				}
 			}
 		}
@@ -2354,10 +2363,10 @@ public class GenericBiometricsController extends BaseController /* implements In
 		scanPopUpViewController.startStream();
 	}
 
-	public void init(BiometricFxControl fxControl, String subType, Modality modality, List<String> configBioAttributes,
+	public void init(FxControl fxControl, String subType, Modality modality, List<String> configBioAttributes,
 			List<String> nonConfigBioAttributes) throws IOException {
 
-		this.fxControl = fxControl;
+		this.fxControl = (BiometricFxControl) fxControl;
 		this.currentSubType = subType;
 		this.currentModality = modality;
 		this.configBioAttributes = configBioAttributes;
@@ -2379,11 +2388,11 @@ public class GenericBiometricsController extends BaseController /* implements In
 
 	}
 
-	public void initializeWithoutStage(BiometricFxControl fxControl, String subType, Modality modality, List<String> configBioAttributes,
+	public void initializeWithoutStage(FxControl fxControl, String subType, Modality modality, List<String> configBioAttributes,
 					 List<String> nonConfigBioAttributes) {
 
 		this.scanBtn.setId(subType == null ? "ScanBtn" : subType+"ScanBtn");
-		this.fxControl = fxControl;
+		this.fxControl = (BiometricFxControl) fxControl;
 		this.currentSubType = subType;
 		this.currentModality = modality;
 		this.configBioAttributes = configBioAttributes;
