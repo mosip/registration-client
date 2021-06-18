@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.registration.controller.device.BiometricsController;
 import io.mosip.registration.service.packet.PacketHandlerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -86,6 +87,9 @@ public class RegistrationController extends BaseController {
 
 	@Autowired
 	private PacketHandlerService packetHandlerService;
+
+	@Autowired
+	private BiometricsController biometricsController;
 
 
 	/*
@@ -187,6 +191,8 @@ public class RegistrationController extends BaseController {
 			// Put the RegistrationDTO object to SessionContext Map
 			SessionContext.map().put(RegistrationConstants.REGISTRATION_DATA, packetHandlerService.startRegistration(null,
 					registrationCategory));
+			biometricsController.clearBioCaptureInfo();
+
 		} catch (RegBaseCheckedException ex) {
 			LOGGER.error(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME,
 					RegistrationConstants.APPLICATION_ID, ExceptionUtils.getStackTrace(ex));

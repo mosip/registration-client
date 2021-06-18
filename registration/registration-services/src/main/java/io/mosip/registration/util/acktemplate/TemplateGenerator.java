@@ -1,5 +1,6 @@
 package io.mosip.registration.util.acktemplate;
 
+import static io.mosip.registration.constants.LoggerConstants.LOG_REG_BIOMETRIC_CONTROLLER;
 import static io.mosip.registration.constants.LoggerConstants.LOG_TEMPLATE_GENERATOR;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
@@ -286,11 +287,11 @@ public class TemplateGenerator extends BaseService {
 		if(!capturedFace.isEmpty()) {
 			setBiometricImage(bio_data, RegistrationConstants.TEMPLATE_FACE_IMAGE_SOURCE,
 					isPrevTemplate ? null : RegistrationConstants.FACE_IMG_PATH,
-					isPrevTemplate ? getStreamImageBytes(capturedFace, registration) : null);
+					isPrevTemplate ? getSegmentedImageBytes(capturedFace.get(0), registration) : null);
 
 			if("applicant".equalsIgnoreCase(capturedFace.get(0).getSubType())) {
 				setBiometricImage(templateValues, RegistrationConstants.TEMPLATE_APPLICANT_IMAGE_SOURCE,
-						RegistrationConstants.FACE_IMG_PATH,  getStreamImageBytes(capturedFace.get(0), registration));
+						RegistrationConstants.FACE_IMG_PATH,  getSegmentedImageBytes(capturedFace.get(0), registration));
 			}
 		}
 		return bio_data;
@@ -613,6 +614,16 @@ public class TemplateGenerator extends BaseService {
 	private byte[] getSegmentedImageBytes(BiometricsDto biometricsDto, RegistrationDTO registration) {
 		return registration.streamImages.get(String.format("%s_%s_%s", biometricsDto.getSubType(),
 				biometricsDto.getBioAttribute(), biometricsDto.getNumOfRetries()));
+		/*if(bytes == null)
+			return null;
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try {
+			ImageIO.write(ImageIO.read(new ByteArrayInputStream(bytes)), "jpg", baos);
+		} catch (IOException e) {
+			LOGGER.error("Failed to get jpg image", e);
+		}
+		return baos.toByteArray();*/
 	}
 	
 	public ResponseDTO generateDashboardTemplate(String templateText, TemplateManagerBuilder templateManagerBuilder,
