@@ -16,12 +16,12 @@ This project is licensed under the terms of [Mozilla Public License 2.0](https:/
 
 ### Setting up Registration client
 
-####Step-1. Download TPM utility and run the to get machine keys
+#### Step-1. Download TPM utility and run the to get machine keys
    
    Please find the instructions to check out, build and run the utility [here](https://github.com/mosip/mosip-infra/blob/develop/deployment/sandbox-v2/utils/tpm/key_extractor/README.md)
 
 
-####Step-2. Whitelist the machine keys in server DB
+#### Step-2. Whitelist the machine keys in server DB
    
    Machine name and keys output from utility should be updated in server.
    
@@ -35,9 +35,10 @@ This project is licensed under the terms of [Mozilla Public License 2.0](https:/
     -> In case, you are trying to whitelist NON-TPM machine, Please set publicKey and signPublicKey with same value 
     -> check the machine status - it must be active
     -> Machine whitelisting can be done from admin portal - https://<HOSTNAME>/admin-ui
+    -> ipAddress, macAddress,serialNum are optional
 
 
-####Step-3. Know your userId and required roles
+#### Step-3. Know your userId and required roles
 
    Create the user in the keycloak.
    
@@ -51,12 +52,12 @@ This project is licensed under the terms of [Mozilla Public License 2.0](https:/
     -> Same operations can be done through admin portal
 
 
-####Step-4. Setup MDS (mock)
+#### Step-4. Setup MDS (mock)
 
    Please find the instructions to check out, build and run the mock MDS [here](https://github.com/mosip/mosip-mock-services/blob/master/MockMDS/README.md)
 
 
-####Step-5. Download registration client and start registration-client
+#### Step-5. Download registration client and start registration-client
 
 Registration client package can be downloaded from below URL, if env is setup with mosip standard deployment.
 
@@ -74,7 +75,7 @@ Start registration client using run.bat
 
 ## Troubleshooting:
 
-#######1. Incorrect username/password
+##### 1. Incorrect username/password
    
     -> Cross-check the machine keys mapping in server ('Machine not found' error in logs)
    
@@ -86,6 +87,6 @@ Start registration client using run.bat
 
     -> check logs/registration.log for more details
 
-#######2. Configuration / masterdata Sync failed
+##### 2. Configuration / masterdata Sync failed
     
     -> check if kernel-syncdata-service is up. Swagger url for the same - https://<HOSTNAME>/v1/syncdata/swagger-ui.html
