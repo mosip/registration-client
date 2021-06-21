@@ -18,7 +18,7 @@ This project is licensed under the terms of [Mozilla Public License 2.0](https:/
 
 #### Step-1. Download TPM utility and run the to get machine keys
    
-      Please find the instructions to check out, build and run the utility [here](https://github.com/mosip/mosip-infra/blob/develop/deployment/sandbox-v2/utils/tpm/key_extractor/README.md)
+      Please find the instructions to check out, build and run the utility https://github.com/mosip/mosip-infra/blob/develop/deployment/sandbox-v2/utils/tpm/key_extractor/README.md
 
 
 #### Step-2. Whitelist the machine keys in server DB
@@ -54,7 +54,7 @@ This project is licensed under the terms of [Mozilla Public License 2.0](https:/
 
 #### Step-4. Setup MDS (mock)
 
-      Please find the instructions to check out, build and run the mock MDS [here](https://github.com/mosip/mosip-mock-services/blob/master/MockMDS/README.md)
+      Please find the instructions to check out, build and run the mock MDS https://github.com/mosip/mosip-mock-services/blob/master/MockMDS/README.md
 
 
 #### Step-5. Download registration client and start registration-client
