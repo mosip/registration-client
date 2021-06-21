@@ -719,7 +719,9 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 		LOGGER.debug(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID,
 				"addOperatorBiometrics >>> operatorType :: " + operatorType + " bioAttribute :: " + uiSchemaAttribute);
 
-		operatorBiometrics.put(String.format(BIOMETRIC_KEY_PATTERN, operatorType, uiSchemaAttribute, ""), value);
+		BiometricsDto savedValue = operatorBiometrics.get(String.format(BIOMETRIC_KEY_PATTERN, operatorType, uiSchemaAttribute, ""));
+		if(savedValue == null || (savedValue != null && value.getQualityScore() >= savedValue.getQualityScore()))
+			operatorBiometrics.put(String.format(BIOMETRIC_KEY_PATTERN, operatorType, uiSchemaAttribute, ""), value);
 		return value;
 	}
 
