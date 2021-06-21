@@ -18,14 +18,14 @@ This project is licensed under the terms of [Mozilla Public License 2.0](https:/
 
 #### Step-1. Download TPM utility and run the to get machine keys
    
-   Please find the instructions to check out, build and run the utility [here](https://github.com/mosip/mosip-infra/blob/develop/deployment/sandbox-v2/utils/tpm/key_extractor/README.md)
+      Please find the instructions to check out, build and run the utility [here](https://github.com/mosip/mosip-infra/blob/develop/deployment/sandbox-v2/utils/tpm/key_extractor/README.md)
 
 
 #### Step-2. Whitelist the machine keys in server DB
    
-   Machine name and keys output from utility should be updated in server.
+      Machine name and keys output from utility should be updated in server.
    
-   Use the below API to create / whitelist your machine
+      Use the below API to create / whitelist your machine
    
    `curl -X POST "https://<HOSTNAME>/v1/masterdata/machines" -H "accept: */*" -H "Content-Type: application/json" -d "{ \"id\": \"string\", \"metadata\": {}, \"request\": { \"id\": \"string\", \"ipAddress\": \"string\", \"isActive\": true, \"langCode\": \"string\", \"macAddress\": \"string\", \"machineSpecId\": \"string\", \"name\": \"string\", \"publicKey\": \"string\", \"regCenterId\": \"string\", \"serialNum\": \"string\", \"signPublicKey\": \"string\", \"validityDateTime\": \"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'\", \"zoneCode\": \"string\" }, \"requesttime\": \"2018-12-10T06:12:52.994Z\", \"version\": \"string\"}"`
 
@@ -40,11 +40,11 @@ This project is licensed under the terms of [Mozilla Public License 2.0](https:/
 
 #### Step-3. Know your userId and required roles
 
-   Create the user in the keycloak.
+      Create the user in the keycloak.
    
-   Map the user to same center as that of the machine that is created/whitelisted in Step-2.
+      Map the user to same center as that of the machine that is created/whitelisted in Step-2.
    
-   Either one of these roles must be assigned to the user in keycloak - "REGISTRATION_SUPERVISOR", "REGISTRATION_OFFICER"
+      Either one of these roles must be assigned to the user in keycloak - "REGISTRATION_SUPERVISOR", "REGISTRATION_OFFICER"
   
   
     NOTE:
@@ -54,18 +54,18 @@ This project is licensed under the terms of [Mozilla Public License 2.0](https:/
 
 #### Step-4. Setup MDS (mock)
 
-   Please find the instructions to check out, build and run the mock MDS [here](https://github.com/mosip/mosip-mock-services/blob/master/MockMDS/README.md)
+      Please find the instructions to check out, build and run the mock MDS [here](https://github.com/mosip/mosip-mock-services/blob/master/MockMDS/README.md)
 
 
 #### Step-5. Download registration client and start registration-client
 
-Registration client package can be downloaded from below URL, if env is setup with mosip standard deployment.
+      Registration client package can be downloaded from below URL, if env is setup with mosip standard deployment.
 
-`https://<HOSTNAME>/registration-client/<VERSION>/reg-client.zip`
+      `https://<HOSTNAME>/registration-client/<VERSION>/reg-client.zip`
 
-set "mosip.hostname" environment variable
+      set "mosip.hostname" environment variable
 
-Start registration client using run.bat
+      Start registration client using run.bat
 
 
     NOTE:
