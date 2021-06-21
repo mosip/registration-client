@@ -214,6 +214,8 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	private static Map<String, Double> BIO_SCORES = new HashMap<String, Double>();
 
+	private static Map<String, Integer> ATTEMPTS = new HashMap<String, Integer>();
+
 	/** The face capture controller. */
 	// @Autowired
 	// private IrisCaptureController irisCaptureController;
@@ -596,6 +598,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	private void clearScoresAndStreamImages(String modality, String subType) {
 		List<String> keys = BIO_SCORES.keySet().stream().filter(k -> k.startsWith(String.format("%s_%s_", subType, modality))).collect(Collectors.toList());
+		ATTEMPTS.remove(String.format("%s_%s", subType, modality));
 		for(String key : keys) {
 			BIO_SCORES.remove(key);
 		}
@@ -862,10 +865,10 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 		updateBiometric(modality, getImageIconPath(modality), getBiometricThreshold(modality), getRetryCount(modality));
 
-		if (capturedBiometrics != null && !capturedBiometrics.isEmpty()) {
+		//if (capturedBiometrics != null && !capturedBiometrics.isEmpty()) {
 
 			loadBiometricsUIElements(capturedBiometrics, currentSubType, modality);
-		}
+		//}
 
 		LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"Parent/Guardian Biometrics captured");
@@ -1325,6 +1328,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 						}
 					}
 
+					ATTEMPTS.put(String.format("%s_%s", currentSubType, currentModality),
+							ATTEMPTS.getOrDefault(String.format("%s_%s", currentSubType, currentModality), 0) + 1);
+
 					List<BiometricsDto> registrationDTOBiometricsList = new LinkedList<>();
 					double qualityScore = 0;
 					List<String> exceptionBioAttributes = getSelectedExceptionsByBioType(currentSubType,
@@ -1344,11 +1350,12 @@ public class BiometricsController extends BaseController /* implements Initializ
 						} else {
 							qualityScore += biometricDTO.getQualityScore();
 							biometricDTO.setSubType(currentSubType);
+							biometricDTO.setNumOfRetries(ATTEMPTS.get(String.format("%s_%s", currentSubType, currentModality)));
 							registrationDTOBiometricsList.add(biometricDTO);
 						}
 					}
 
-					if (isExceptionPhoto(currentModality)) {
+					if (!isUserOnboardFlag && isExceptionPhoto(currentModality)) {
 						LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 								"started Saving Exception photo captured using MDS");
 						saveProofOfExceptionDocument(extractFaceImageData(registrationDTOBiometricsList.get(0).getAttributeISO()));
@@ -1358,17 +1365,16 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 					LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 							"started Saving filtered biometrics into registration DTO");
-					registrationDTOBiometricsList = saveCapturedBiometricData(currentSubType,
-							registrationDTOBiometricsList);
+					saveCapturedBiometricData(currentSubType, registrationDTOBiometricsList);
 					LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 							"Completed Saving filtered biometrics into registration DTO");
 
-					if(registrationDTOBiometricsList.isEmpty()) { // request response mismatch
+					/*if(registrationDTOBiometricsList.isEmpty()) { // request response mismatch
 						LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 								"registrationDTOBiometricsList is emtpy!!");
 						showRcaptureResult(RegistrationConstants.ALERT_INFORMATION,	RegistrationUIConstants.BIOMETRIC_CAPTURE_FAILURE);
 						return;
-					}
+					}*/
 
 					// if all the above check success show alert capture success
 					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS);
@@ -1419,9 +1425,8 @@ public class BiometricsController extends BaseController /* implements Initializ
 				case "FINGERPRINT_SLAB_LEFT":
 				case "FINGERPRINT_SLAB_RIGHT":
 				case "FINGERPRINT_SLAB_THUMBS":
-					image = streamer.getStreamImageBytes();
-					addRegistrationStreamImage(currentSubType, biometricsDtos.get(0).getModalityName(), biometricsDtos.get(0).getNumOfRetries(),
-							image);
+					image= streamer.getStreamImageBytes();
+					addRegistrationStreamImage(currentSubType, biometricsDtos.get(0).getModalityName(), biometricsDtos.get(0).getNumOfRetries(), image);
 					STREAM_IMAGES.put(String.format("%s_%s_%s", currentSubType, currentModality, biometricsDtos.get(0).getNumOfRetries()),
 							new Image(image == null ? this.getClass().getResourceAsStream(getStubStreamImagePath(currentModality)):
 									new ByteArrayInputStream(image)));
@@ -1466,11 +1471,10 @@ public class BiometricsController extends BaseController /* implements Initializ
 		}
 	}
 
-
-	private Image concatImages(byte[] image1, byte[] image2) throws IOException {
+	public Image concatImages(byte[] image1, byte[] image2) throws IOException {
 		BufferedImage img1 = ImageIO.read((image1 == null || image1.length == 0) ?
-			this.getClass().getResourceAsStream("/images/Eye.png") :
-			new ByteArrayInputStream(image1));
+				this.getClass().getResourceAsStream("/images/Eye.png") :
+				new ByteArrayInputStream(image1));
 		BufferedImage img2 = ImageIO.read((image2 == null || image2.length == 0) ?
 				this.getClass().getResourceAsStream("/images/Eye.png") :
 				new ByteArrayInputStream(image2));
@@ -1488,7 +1492,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 		g2.dispose();
 		return getImage(newImage);
 	}
-
 
 	private void showRcaptureResult(String title, String message) {
 		generateAlert(title, message);
@@ -1623,7 +1626,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	private void loadBiometricsUIElements(List<BiometricsDto> biometricDTOList, String subType, String modality) {
 
-		int retry = biometricDTOList.get(0).getNumOfRetries();
+		int retry = ATTEMPTS.getOrDefault(String.format("%s_%s", subType, modality), 1);
 
 		LOGGER.info("Updating progress Bar,Text and attempts Box in UI for retry :: {}", retry);
 
@@ -1631,9 +1634,35 @@ public class BiometricsController extends BaseController /* implements Initializ
 				getThresholdScoreInInt(getThresholdKeyByBioType(modality)));
 
 		// Get the stream image from Bio ServiceImpl and load it in the image pane
-		biometricImage.setImage(getBioStreamImage(subType, modality, retry));
+		Image image = getBioStreamImage(subType, modality, retry);
+		biometricImage.setImage(image == null ? new Image(this.getClass().getResourceAsStream(getImageIconPath(modality))) :
+				image);
 
-		addImageInUIPane(subType, modality, getBioStreamImage(subType, modality, retry), true);
+		List<BiometricsDto> savedBiometrics = getBiometrics(subType, getAllBioAttributes(modality));
+		int bestAttempt = 0;
+		if(savedBiometrics != null) {
+			Optional<BiometricsDto> result = savedBiometrics.stream()
+					.sorted(Comparator.comparingDouble(BiometricsDto::getNumOfRetries)).findFirst();
+			bestAttempt = result.isPresent() ? result.get().getNumOfRetries() : 0;
+		}
+		addImageInUIPane(subType, modality, getBioStreamImage(subType, modality, bestAttempt),
+				biometricDTOList == null || biometricDTOList.isEmpty() ? false : true);
+	}
+
+	private List<String> getAllBioAttributes(String modality) {
+		switch (modality) {
+			case RegistrationConstants.FINGERPRINT_SLAB_LEFT:
+				return RegistrationConstants.leftHandUiAttributes;
+			case RegistrationConstants.FINGERPRINT_SLAB_RIGHT:
+				return RegistrationConstants.rightHandUiAttributes;
+			case RegistrationConstants.FINGERPRINT_SLAB_THUMBS:
+				return RegistrationConstants.twoThumbsUiAttributes;
+			case RegistrationConstants.IRIS_DOUBLE:
+				return RegistrationConstants.eyesUiAttributes;
+			case RegistrationConstants.FACE:
+				return RegistrationConstants.faceUiAttributes;
+		}
+		return Collections.EMPTY_LIST;
 	}
 
 	private double getAverageQualityScore(List<BiometricsDto> biometricDTOList) {
@@ -1795,6 +1824,8 @@ public class BiometricsController extends BaseController /* implements Initializ
 	 * @param thresholdValue threshold value
 	 */
 	private void setCapturedValues(double qltyScore, int retry, double thresholdValue) {
+		if(!BIO_SCORES.containsKey(String.format("%s_%s_%s", currentSubType, currentModality, retry)))
+			return;
 
 		LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"Updating captured values of biometrics");
@@ -1809,14 +1840,17 @@ public class BiometricsController extends BaseController /* implements Initializ
 		qualityText.setText(getQualityScore(qltyScore));
 
 		retry = retry == 0 ? 1 : retry;
+
+		clearAttemptsBox(thresholdValue, retry);
+
 		if (Double.valueOf(getQualityScore(qltyScore).split(RegistrationConstants.PERCENTAGE)[0]) >= thresholdValue) {
-			clearAttemptsBox(RegistrationConstants.QUALITY_LABEL_GREEN, retry);
+			//clearAttemptsBox(RegistrationConstants.QUALITY_LABEL_GREEN, retry);
 			bioProgress.getStyleClass().removeAll(RegistrationConstants.PROGRESS_BAR_RED);
 			bioProgress.getStyleClass().add(RegistrationConstants.PROGRESS_BAR_GREEN);
 			qualityText.getStyleClass().removeAll(RegistrationConstants.LABEL_RED);
 			qualityText.getStyleClass().add(RegistrationConstants.LABEL_GREEN);
 		} else {
-			clearAttemptsBox(RegistrationConstants.QUALITY_LABEL_RED, retry);
+			//clearAttemptsBox(RegistrationConstants.QUALITY_LABEL_RED, retry);
 			bioProgress.getStyleClass().removeAll(RegistrationConstants.PROGRESS_BAR_GREEN);
 			bioProgress.getStyleClass().add(RegistrationConstants.PROGRESS_BAR_RED);
 			qualityText.getStyleClass().removeAll(RegistrationConstants.LABEL_GREEN);
@@ -1913,7 +1947,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 		String retryCountVal = getValueFromApplicationContext(retryCount);
 
-		retryCountVal = retryCountVal == null || retryCountVal.isEmpty() ? "3" : retryCountVal;
+		retryCountVal = retryCountVal == null || retryCountVal.isEmpty() ? "0" : retryCountVal;
 		for (int retry = 0; retry < Integer.parseInt(retryCountVal); retry++) {
 			Label label = new Label();
 			label.getStyleClass().add(RegistrationConstants.QUALITY_LABEL_GREY);
@@ -1926,7 +1960,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		}
 		bioRetryBox.setOnMouseClicked(mouseEventHandler);
 
-		String threshold = biometricThreshold != null ? getValueFromApplicationContext(biometricThreshold) : "40";
+		String threshold = biometricThreshold != null ? getValueFromApplicationContext(biometricThreshold) : null;
 
 		thresholdLabel.setAlignment(Pos.CENTER);
 
@@ -1945,17 +1979,18 @@ public class BiometricsController extends BaseController /* implements Initializ
 	/**
 	 * Clear attempts box.
 	 *
-	 * @param styleClass the style class
+	 * @param threshold the style class
 	 * @param retries    the retries
 	 */
-	private void clearAttemptsBox(String styleClass, int retries) {
+	private void clearAttemptsBox(double threshold, int retries) {
 		for (int retryBox = 1; retryBox <= retries; retryBox++) {
 
 			Node node = bioRetryBox.lookup(RegistrationConstants.RETRY_ATTEMPT + retryBox);
 
 			if (node != null) {
 				node.getStyleClass().clear();
-				node.getStyleClass().add(styleClass);
+				node.getStyleClass().add(getBioScores(currentSubType, currentModality, retryBox) >= threshold ?
+						RegistrationConstants.QUALITY_LABEL_GREEN : RegistrationConstants.QUALITY_LABEL_RED);
 			}
 		}
 
@@ -2297,6 +2332,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 	public void clearBioCaptureInfo() {
 		BIO_SCORES.clear();
 		STREAM_IMAGES.clear();
+		ATTEMPTS.clear();
 	}
 
 	private String getStubStreamImagePath(String modality) {
@@ -2383,7 +2419,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 		Image image = null;
 		if (biometricsDtos != null && !biometricsDtos.isEmpty()) {
-
 			image = getBioStreamImage(subtype, modality, biometricsDtos.get(0).getNumOfRetries());
 		}
 
@@ -2458,6 +2493,10 @@ public class BiometricsController extends BaseController /* implements Initializ
 						((ImageView) (hBox.getChildren().get(0))).setImage(uiImage != null ? uiImage
 								: new Image(this.getClass().getResourceAsStream(getImageIconPath(modality))));
 
+						if (hBox.getChildren().size() > 1) {
+							hBox.getChildren().remove(1);
+						}
+
 						if (isCaptured) {
 							if (hBox.getChildren().size() == 1) {
 								ImageView imageView;
@@ -2473,13 +2512,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 								imageView.setFitHeight(40);
 								hBox.getChildren().add(imageView);
 							}
-						} else {
-
-							if (hBox.getChildren().size() > 1) {
-								hBox.getChildren().remove(1);
-							}
 						}
-
 					}
 				}
 

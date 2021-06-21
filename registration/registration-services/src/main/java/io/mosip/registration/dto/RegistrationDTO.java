@@ -231,11 +231,11 @@ public class RegistrationDTO {
 
 	public BiometricsDto addBiometric(String subType, String bioAttribute, BiometricsDto value) {
 		String key = String.format("%s_%s", subType, bioAttribute);
-		int currentCount = 0;
+		/*int currentCount = 0;
 		if (this.biometrics.get(key) != null) {
 			currentCount = this.biometrics.get(key).getNumOfRetries();
-		}
-		value.setNumOfRetries(currentCount + 1);
+		}*/
+		value.setNumOfRetries(value.getNumOfRetries());
 		value.setSubType(subType);
 		this.biometrics.put(key, value);
 		this.biometricExceptions.remove(key);
@@ -329,7 +329,7 @@ public class RegistrationDTO {
 
 			savedBiometrics = new LinkedList<>();
 
-			boolean isForceCaptured = false;
+			boolean isQualityCheckPassed = false, isForceCaptured = false;
 			
 			if (!biometricsDTOMap.isEmpty()) {
 				thresholdScore = thresholdScore * biometricsDTOMap.size();
@@ -346,11 +346,13 @@ public class RegistrationDTO {
 					BiometricsDto biometricsDto = getBiometric(subType, Biometric
 							.getBiometricByAttribute(biometricsList.get(0).getBioAttribute()).getAttributeName());
 
-					if (biometricsDto != null && biometricsDto.getNumOfRetries() + 1 >= maxRetryAttempt) {
+					if (biometricsDto == null && biometricsList.get(0).getNumOfRetries() >= maxRetryAttempt) {
 						isForceCaptured = true;
 					}
 				}
 			}
+			else
+				isQualityCheckPassed = true;
 
 			/** Modify the Biometrics DTO and save */
 			for (Entry<String, BiometricsDto> entry : biometricsDTOMap.entrySet()) {
@@ -358,16 +360,14 @@ public class RegistrationDTO {
 				BiometricsDto savedRegistrationBiometric = getBiometric(subType, entry.getKey());
 
 				BiometricsDto value = entry.getValue();
-
-				if (savedRegistrationBiometric != null
-						&& savedRegistrationBiometric.getQualityScore() > value.getQualityScore()) {
-					value = savedRegistrationBiometric;
-				}
 				value.setForceCaptured(isForceCaptured);
-
 				value.setSubType(subType);
-				savedBiometrics.add(addBiometric(subType, entry.getKey(), value));
 
+				if( (savedRegistrationBiometric == null && (isQualityCheckPassed || isForceCaptured)) ||
+						(savedRegistrationBiometric != null &&
+								value.getQualityScore() >= savedRegistrationBiometric.getQualityScore())) {
+					savedBiometrics.add(addBiometric(subType, entry.getKey(), value));
+				}
 			}
 		}
 

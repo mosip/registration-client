@@ -356,12 +356,6 @@
 			<version>2.0.23</version>
 		</dependency>
 
-		<dependency>
-			<groupId>io.mosip.biometric.util</groupId>
-			<artifactId>biometrics-util</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-
 	</dependencies>
 	<!--<repositories> <repository> <id>local-maven-repo</id> <url>file:///${basedir}/lib</url> 
 		</repository> </repositories> -->

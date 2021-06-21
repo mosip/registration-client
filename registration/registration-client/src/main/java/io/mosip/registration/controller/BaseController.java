@@ -612,6 +612,9 @@ public class BaseController {
 	 */
 	public void goToHomePage() {
 		try {
+
+			guardianBiometricsController.clearBioCaptureInfo();
+
 			if (isAckOpened() || pageNavigantionAlert()) {
 				setIsAckOpened(false);
 				BaseController.load(getClass().getResource(RegistrationConstants.HOME_PAGE));
