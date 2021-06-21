@@ -2332,6 +2332,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 	public void clearBioCaptureInfo() {
 		BIO_SCORES.clear();
 		STREAM_IMAGES.clear();
+		ATTEMPTS.clear();
 	}
 
 	private String getStubStreamImagePath(String modality) {
