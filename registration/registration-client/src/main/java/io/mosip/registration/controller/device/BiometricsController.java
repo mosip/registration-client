@@ -2492,6 +2492,10 @@ public class BiometricsController extends BaseController /* implements Initializ
 						((ImageView) (hBox.getChildren().get(0))).setImage(uiImage != null ? uiImage
 								: new Image(this.getClass().getResourceAsStream(getImageIconPath(modality))));
 
+						if (hBox.getChildren().size() > 1) {
+							hBox.getChildren().remove(1);
+						}
+
 						if (isCaptured) {
 							if (hBox.getChildren().size() == 1) {
 								ImageView imageView;
@@ -2507,13 +2511,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 								imageView.setFitHeight(40);
 								hBox.getChildren().add(imageView);
 							}
-						} else {
-
-							if (hBox.getChildren().size() > 1) {
-								hBox.getChildren().remove(1);
-							}
 						}
-
 					}
 				}
 
