@@ -446,18 +446,21 @@ public class DemographicPage {
 	return screenList;
 	}
 
-
+public List<String> getupdateUINAttributes(String JsonIdentity)
+{
+	List<String> updateUINAttributes=null;
+	try {
+		updateUINAttributes=JsonUtil.JsonObjArrayListParsing(JsonIdentity, "updateUINAttributes");
+	} catch (Exception e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+	}
+	return updateUINAttributes;
+}
 
 	public void getTextboxKeyValueUpdate(String id,String JsonIdentity,String key,Schema schema,Boolean trans,String scenario)
-	{
-		List<String> updateUINAttributes=null;
-		try {
-			updateUINAttributes=JsonUtil.JsonObjArrayListParsing(JsonIdentity, "updateUINAttributes");
-		} catch (Exception e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		for(String uinlist:updateUINAttributes) {
+	{	
+		for(String uinlist:getupdateUINAttributes(JsonIdentity)) {
 			if(schema.getGroup().equals(uinlist))
 			{
 				if(scenario.contains("child"))
@@ -515,7 +518,18 @@ public class DemographicPage {
 
 	}
 
-
+	public void biometricsUpdate(Schema schema,String scenario,String id,String JsonIdentity)
+	{
+			if(schema.getGroup().equals("Biometrics")&&(getupdateUINAttributes(JsonIdentity).contains("Biometrics")))
+			{
+	biometrics(schema,scenario,id,JsonIdentity);
+			}
+			else
+				{
+				biometrics(schema,scenario,id,JsonIdentity);
+				}
+				
+	}
 	public void biometrics(Schema schema,String scenario,String id,String identity)
 	{
 		try {
@@ -543,9 +557,11 @@ public class DemographicPage {
 			else if(
 					schema.subType.equalsIgnoreCase("introducer")&&
 					scenario.contains("child")&&
-					(schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))&&
-					(schema.getRequiredOn().get(0).getExpr().contains("identity.isNew"))
-					)
+					(
+							((schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))&&
+							(schema.getRequiredOn().get(0).getExpr().contains("identity.isNew")))||
+					(schema.getRequiredOn().get(0).getExpr().contains("identity.isUpdate") && (getupdateUINAttributes(identity).contains("GuardianDetails")))
+					))
 
 			{
 				System.out.println();
@@ -571,14 +587,18 @@ public class DemographicPage {
 
 
 			}
-
-
 		}catch(Exception e)
 		{
 			logger.error(e.getMessage());
 		}}
 
-
+	public void fileuploadUpdate(Schema schema,String JsonIdentity,String key,String id,String scenario)
+	{	if(schema.getGroup().equals("Documents")&&(getupdateUINAttributes(JsonIdentity).contains("Documents")))
+			{
+				fileupload(schema,JsonIdentity,key,id,scenario);
+			}
+	
+	}
 
 	public void fileupload(Schema schema,String JsonIdentity,String key,String id,String scenario)
 	{
@@ -586,6 +606,8 @@ public class DemographicPage {
 			if(schema.isInputRequired() && schema.isRequired() && (schema.getRequiredOn()).get(0).getExpr().contains("identity.isNew"))
 				documentUploadPage.documentDropDownScan(schema, id, JsonIdentity, key);
 			else if(scenario.contains("child")&&(schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))&&(schema.getRequiredOn().get(0).getExpr().contains("identity.isNew")))
+				documentUploadPage.documentDropDownScan(schema, id, JsonIdentity, key);
+			else if(scenario.contains("update"))
 				documentUploadPage.documentDropDownScan(schema, id, JsonIdentity, key);
 		}catch(Exception e)
 		{
@@ -595,7 +617,13 @@ public class DemographicPage {
 
 	}
 
-
+	public void dropdownUpdate(String id,String JsonIdentity,String key) {
+		for(String uinlist:getupdateUINAttributes(JsonIdentity)) {
+			if(schema.getGroup().equals(uinlist))
+			{
+				dropdown(id,JsonIdentity,key);
+			}}
+	}
 	public void dropdown(String id,String JsonIdentity,String key) {
 		GenericDto dto=new GenericDto();
 		try {
@@ -624,7 +652,28 @@ public class DemographicPage {
 		}
 	}
 
+	public void setageDate(String id,String JsonIdentity,String key)
+	{
+		String dateofbirth[] = null;
+		try {
+			dateofbirth = JsonUtil.JsonObjParsing(JsonIdentity,key).split("/");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		setTextFields(id+"ddTextField",dateofbirth[2]);
+		setTextFields(id+"mmTextField",dateofbirth[1]);
+		setTextFields(id+"yyyyTextField",dateofbirth[0]);
+	}
 
+	public void setageDateUpdate(String id,String JsonIdentity,String key,String scenario)
+	{
+		for(String uinlist:getupdateUINAttributes(JsonIdentity)) {
+			if(schema.getGroup().equals(uinlist))
+			{
+				
+		setageDate(id,JsonIdentity,key);
+	}}}
 	public void contolType(Schema schema,String JsonIdentity,String scenario)
 	{
 		String id="#"+schema.getId(); 
@@ -640,28 +689,42 @@ public class DemographicPage {
 					getTextboxKeyValueChild(id,JsonIdentity,key,schema.isTransliterate(),scenario);
 				else if(scenario.contains("update"))
 					getTextboxKeyValueUpdate(id,JsonIdentity,key,schema,schema.isTransliterate(),scenario);
-
 				else
 					getTextboxKeyValue(id,JsonIdentity,key,schema.isTransliterate(),scenario);
 				break;
 			case "ageDate":
-				String dateofbirth[]=JsonUtil.JsonObjParsing(JsonIdentity,key).split("/");
-				setTextFields(id+"ddTextField",dateofbirth[2]);
-				setTextFields(id+"mmTextField",dateofbirth[1]);
-				setTextFields(id+"yyyyTextField",dateofbirth[0]);
+				if(scenario.contains("update"))
+				{
+					setageDateUpdate(id,JsonIdentity,key,scenario);
+				}
+				else
+					setageDate(id,JsonIdentity,key);
 				break;
+				
 			case "dropdown": 
+				if(scenario.contains("update"))
+				{dropdownUpdate(id,JsonIdentity,key);}else
 				dropdown(id,JsonIdentity,key);
 				break;
 			case "checkbox":
-				waitsUtil.clickNodeAssert(id);
+				if(scenario.contains("update"))
+				{
+					waitsUtil.clickNodeAssert(id);
+				}else
+					waitsUtil.clickNodeAssert(id);
+				
 				break;
 			case "fileupload":
-
+				if(scenario.contains("update"))
+				{fileuploadUpdate(schema,JsonIdentity,key,id,scenario);}else
 				fileupload(schema,JsonIdentity,key,id,scenario);
 				break;
 			case "biometrics":
-				biometrics(schema,scenario,id,JsonIdentity);
+				if(scenario.contains("update"))
+				{
+				biometricsUpdate(schema,scenario,id,JsonIdentity);
+				}else
+					biometrics(schema,scenario,id,JsonIdentity);
 				break;
 
 			}

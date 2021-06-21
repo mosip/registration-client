@@ -107,7 +107,7 @@ public class ChildNewReg {
 	Alerts alerts;
 	
 	public RID newRegistrationChild(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
-			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,String fileName,String flow)  {
+			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,String fileName,String flow,ApplicationContext applicationContext)  {
 
 		try {
 			ExtentReportUtil.test3=ExtentReportUtil.reports.createTest("New Child Registration Scenario : " + flow +" FileName : " + fileName);
@@ -231,41 +231,43 @@ public class ChildNewReg {
 				result=true;
 			}
 			//Logout Regclient
+			rid.appidrid=rid.getAppidrid(applicationContext, rid.rid);
+			rid.setResult(result);
 					}catch(Exception e)
 					{
 
 						logger.error(e.getMessage());
 					}
-					try {
-						alerts.clickAlertexit();
-						homePage.clickHomeImg();
-					}catch(Exception e)
-					{
-						logger.error(e.getMessage());
-
-
-					}
-					loginPage.logout();
+//					try {
+//						homePage.clickHomeImg();
+//						alerts.clickAlertConfirm();
+//						
+//					}catch(Exception e)
+//					{
+//						logger.error(e.getMessage());
+//
+//
+//					}
+					
 
 					try
 					{
+						loginPage.logout();
 						buttons.clickConfirmBtn();
+						
 					}
 					catch(Exception e)
 					{
 						logger.error(e.getMessage());
 					}
 
-
-			rid.setResult(result);
-
 			if(result==true)
 			{
-			ExtentReportUtil.test3.log(Status.PASS, "TESTCASE PASS\n" +" RID-"+ rid.rid +" DATE TIME-"+ rid.ridDateTime +" ENVIRONMENT-" +System.getProperty("mosip.hostname"));
+			ExtentReportUtil.test3.log(Status.PASS, "TESTCASE PASS\n" +"[Appid="+ rid.rid +"] [RID="+ rid.appidrid +"] [DATE TIME="+ rid.ridDateTime +"] [ENVIRONMENT=" +System.getProperty("mosip.hostname")+"]");
 			}		else
 				ExtentReportUtil.test3.log(Status.FAIL, "TESTCASE FAIL");
 
-			assertTrue(result,"TestCase Failed");
+			ExtentReportUtil.reports.flush();
 
 				return rid;
 	}

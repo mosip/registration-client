@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.testfx.api.FxRobot;
@@ -24,6 +27,8 @@ import com.aventstack.extentreports.Status;
 
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.controller.Initialization;
+import io.mosip.registration.dao.RegistrationDAO;
+import io.mosip.registration.dao.impl.RegistrationDAOImpl;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -80,7 +85,8 @@ import org.apache.log4j.Logger;
  */
 public class UpdateReg {
 	private static final Logger logger = LogManager.getLogger(UpdateReg.class);  
-	
+	@Autowired
+	private RegistrationDAO registrationDAO;
 	FxRobot robot;
 	Schema schema;
 	Root root; 
@@ -113,7 +119,7 @@ public class UpdateReg {
 
 	public RID updateRegistration(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
 			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonContent,String flow,String fileName
-			)  {
+			,ApplicationContext applicationContext)  {
 		try {
 		
 		ExtentReportUtil.test1=ExtentReportUtil.reports.createTest("New Adult Registration Scenario : " + flow +" FileName : " + fileName);
@@ -153,13 +159,140 @@ public class UpdateReg {
 		buttons.clickContinueBtn();
 		
 		
+		ExtentReportUtil.step3=ExtentReportUtil.test1.createNode("STEP 3-Demographic, Biometric upload ");
+		
 		webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonContent,flow);
-		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
-		}
-		return rid;
 
-}}
+		ExtentReportUtil.step3.log(Status.PASS, "Demographic, Biometric upload done");
+
+		buttons.clicknextBtn();
+
+		ExtentReportUtil.step4=ExtentReportUtil.test1.createNode("STEP 4-Accept Preview ");
+		
+		
+		rid=webViewDocument.acceptPreview();
+
+		buttons.clicknextBtn();
+
+		ExtentReportUtil.step4.log(Status.PASS, "Accept Preview done" + rid.getWebviewPreview());
+
+		/**
+		 * Authentication enter password
+		 * Click Continue 
+		 */
+		authenticationPage.enterUserName(loginUserid);
+		authenticationPage.enterPassword(loginPwd);
+
+		buttons.clickAuthenticateBtn();
+
+
+		/**
+		 * Click Home, eodapprove, approval Button, authenticate button
+		 * Enter user details
+		 */
+		rid2=webViewDocument.getacknowledgement();
+		
+		homePage.clickHomeImg();
+		
+		
+		
+		ExtentReportUtil.step5=ExtentReportUtil.test1.createNode("STEP 5-Approve Packet ");
+		
+		
+
+		eodApprovalPage=homePage.clickeodApprovalImageView( applicationPrimaryStage, scene);
+		eodApprovalPage.clickOnfilterField();
+		eodApprovalPage.enterFilterDetails(rid.getRid());
+		eodApprovalPage.clickOnApprovalBtn();
+		authenticationPage=eodApprovalPage.clickOnAuthenticateBtn();
+		authenticationPage.enterUserName(supervisorUserid);
+		authenticationPage.enterPassword(supervisorUserpwd);
+		authenticationPage.clicksubmitBtn();
+		robotActions.clickWindow();
+		homePage.clickHomeImg();	
+		buttons.clickConfirmBtn();
+		ExtentReportUtil.step5.log(Status.PASS, "Approve Packet done" + rid2.getWebViewAck());
+		assertEquals(rid.getRid(), rid2.getRid());
+		/**
+		 * Upload the packet
+		 */
+		if(PropertiesUtil.getKeyValue("upload").equals("Y"))
+			{
+		
+		ExtentReportUtil.step6=ExtentReportUtil.test1.createNode("STEP 6-Upload Packet ");
+		
+
+		uploadPacketPage=homePage.clickuploadPacketImageView( applicationPrimaryStage, scene);
+		uploadPacketPage.selectPacket(rid.getRid());
+		buttons.clickuploadBtn();
+		/**
+		 * Verify Success Upload
+		 */
+		result=uploadPacketPage.verifyPacketUpload(rid.getRid());
+		ExtentReportUtil.step6.log(Status.PASS, "Upload Packet done");
+
+		}
+		else if(PropertiesUtil.getKeyValue("upload").equals("N")){
+			result=true;
+		}
+		//Logout Regclient
+		rid.appidrid=rid.getAppidrid(applicationContext, rid.rid);
+		rid.setResult(result);
+				}catch(Exception e)
+				{
+
+					logger.error(e.getMessage());
+				}
+				
+				
+
+				try
+				{
+					loginPage.logout();
+					buttons.clickConfirmBtn();
+					
+				}
+				catch(Exception e)
+				{
+					logger.error(e.getMessage());
+				}
+
+		
+		if(result==true)
+		{
+			ExtentReportUtil.test1.log(Status.PASS, "TESTCASE PASS\n" +"[Appid="+ rid.rid +"] [RID="+ rid.appidrid +"] [DATE TIME="+ rid.ridDateTime +"] [ENVIRONMENT=" +System.getProperty("mosip.hostname")+"]");
+		}		else
+			ExtentReportUtil.test1.log(Status.FAIL, "TESTCASE FAIL");
+		ExtentReportUtil.reports.flush();
+		
+				
+return rid;
+	}
+
+
+	public RID loginlogout(FxRobot robot2, String loginUserid, String loginPwd, String supervisorUserid,
+			String supervisorUserpwd, Stage primaryStage, JSONObject idjson, HashMap<String, String> documentUpload,
+			String lang, String schemaversion, String jsonObjName, String idJsonPath) throws InterruptedException {
+		
+		loginPage=new LoginPage(robot);
+		buttons=new Buttons(robot);
+		authenticationPage=new AuthenticationPage(robot);	
+		robotActions=new RobotActions(robot);
+
+		//Load Login screen
+		//loadLoginScene verb
+		loginPage.loadLoginScene(primaryStage);
+
+		//Enter userid and password
+		loginPage.setUserId(loginUserid);
+
+
+		homePage=loginPage.setPassword(loginPwd);
+
+		//Logout Regclient
+		loginPage.logout();
+		
+		return null;
+	}
+}
 

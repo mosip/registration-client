@@ -50,7 +50,7 @@ public class NewRegistrationAdultTest{
 	private static final Logger logger = LogManager.getLogger(NewRegistrationAdultTest.class);  
 	static FxRobot robot;
 	static String[] Strinrid;
-	static RID rid1,rid2,rid3,rid4,rid5;
+	static RID rid1,rid2,rid3,rid4,rid5,rid6;
 	static String flow;
 	
 	public static void invokeRegClientNewReg(	
@@ -91,7 +91,7 @@ public class NewRegistrationAdultTest{
 						case "adult": 
 					rid1=loginNewRegLogout.newRegistrationAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonContent,
-							flow,fileName);
+							flow,fileName,StartApplication.applicationContext);
 					logger.info("RID RESULTS-"+ rid1.result +"\t"+ rid1.ridDateTime +"\t"+ rid1.rid + "\t "+ rid1.firstName );
 					ExtentReportUtil.reports.flush();
 					break;
@@ -99,7 +99,7 @@ public class NewRegistrationAdultTest{
 							
 					 rid2=lostUINLogout.LostUINAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonContent,
-							fileName,flow);
+							fileName,flow,StartApplication.applicationContext);
 					logger.info("RID RESULTS-"+ rid2.result +"\t"+ rid2.ridDateTime +"\t"+ rid2.rid);
 					ExtentReportUtil.reports.flush();
 					break;
@@ -107,7 +107,7 @@ public class NewRegistrationAdultTest{
 							
 					 rid3=childNewReg.newRegistrationChild(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonContent,
-							fileName,flow);
+							fileName,flow,StartApplication.applicationContext);
 					logger.info("RID RESULTS-"+ rid3.result +"\t"+ rid3.ridDateTime +"\t"+ rid3.rid);
 					ExtentReportUtil.reports.flush();
 					break;
@@ -115,16 +115,24 @@ public class NewRegistrationAdultTest{
 							
 							 rid4=childLostUIN.newRegistrationChildLost(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 									StartApplication.primaryStage,jsonContent,
-									fileName,flow);
+									fileName,flow,StartApplication.applicationContext);
 							logger.info("RID RESULTS-"+ rid4.result +"\t"+ rid4.ridDateTime +"\t"+ rid4.rid);
 							ExtentReportUtil.reports.flush();
 							break;
-						case "update":
+						case "updateadult":
 							
 							 rid5=updatereg.updateRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 									StartApplication.primaryStage,jsonContent,
-									fileName,flow);
+									fileName,flow,StartApplication.applicationContext);
 							logger.info("RID RESULTS-"+ rid5.result +"\t"+ rid5.ridDateTime +"\t"+ rid5.rid);
+							ExtentReportUtil.reports.flush();
+							break;
+						case "updatechild":
+							
+							 rid6=updatereg.updateRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
+									StartApplication.primaryStage,jsonContent,
+									fileName,flow,StartApplication.applicationContext);
+							logger.info("RID RESULTS-"+ rid6.result +"\t"+ rid6.ridDateTime +"\t"+ rid6.rid);
 							ExtentReportUtil.reports.flush();
 							break;
 						}

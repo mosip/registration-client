@@ -1,15 +1,37 @@
 package registrationtest.pojo.output;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 
+import io.mosip.registration.dao.RegistrationDAO;
 import registrationtest.pages.UploadPacketPage;
 
 public class RID {
 	private static final Logger logger = LogManager.getLogger(RID.class); 
-	
+	@Autowired
+	private RegistrationDAO registrationDAO;
 	   public String rid;
-	   public String firstName;
+	   public String appidrid;
+	   public String getAppidrid(ApplicationContext applicationContext,String appid) {
+			registrationDAO= applicationContext.getBean(RegistrationDAO.class);
+			List<String> appidList=new LinkedList<String>();
+			List<String> ridid=new LinkedList<String>();
+			appidList.add(appid);
+			ridid=registrationDAO.getRegistrationIds(appidList);
+			System.out.println(ridid);
+			appidrid=ridid.get(0);
+		return appidrid;
+	}
+
+	public void setAppidrid(String appidrid) {
+		this.appidrid = appidrid;
+	}
+	public String firstName;
 	    public String getFirstName() {
 		return firstName;
 	}

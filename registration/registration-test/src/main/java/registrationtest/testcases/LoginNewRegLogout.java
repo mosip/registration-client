@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.testfx.api.FxRobot;
@@ -24,6 +27,8 @@ import com.aventstack.extentreports.Status;
 
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.controller.Initialization;
+import io.mosip.registration.dao.RegistrationDAO;
+import io.mosip.registration.dao.impl.RegistrationDAOImpl;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -77,7 +82,6 @@ import org.apache.log4j.Logger;
  */
 public class LoginNewRegLogout {
 	private static final Logger logger = LogManager.getLogger(LoginNewRegLogout.class);  
-	
 	FxRobot robot;
 	Schema schema;
 	Root root; 
@@ -152,7 +156,7 @@ public class LoginNewRegLogout {
 	}
 	public RID newRegistrationAdult(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
 			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonContent,String flow,String fileName
-			)  {
+			,ApplicationContext applicationContext)  {
 
 		try {
 		
@@ -274,41 +278,35 @@ public class LoginNewRegLogout {
 			result=true;
 		}
 		//Logout Regclient
+		rid.appidrid=rid.getAppidrid(applicationContext, rid.rid);
+		rid.setResult(result);
 				}catch(Exception e)
 				{
 
 					logger.error(e.getMessage());
 				}
-				try {
-					alerts.clickAlertexit();
-					homePage.clickHomeImg();
-				}catch(Exception e)
-				{
-					logger.error(e.getMessage());
-
-
-				}
-				loginPage.logout();
+				
+				
 
 				try
 				{
+					loginPage.logout();
 					buttons.clickConfirmBtn();
+					
 				}
 				catch(Exception e)
 				{
 					logger.error(e.getMessage());
 				}
 
-	
-		rid.setResult(result);
 		
 		if(result==true)
 		{
-			ExtentReportUtil.test1.log(Status.PASS, "TESTCASE PASS\n" +" RID-"+ rid.rid +" DATE TIME-"+ rid.ridDateTime +" ENVIRONMENT-" +System.getProperty("mosip.hostname"));
+			ExtentReportUtil.test1.log(Status.PASS, "TESTCASE PASS\n" +"[Appid="+ rid.rid +"] [RID="+ rid.appidrid +"] [DATE TIME="+ rid.ridDateTime +"] [ENVIRONMENT=" +System.getProperty("mosip.hostname")+"]");
 		}		else
 			ExtentReportUtil.test1.log(Status.FAIL, "TESTCASE FAIL");
-
-		assertTrue(result,"TestCase Failed");
+		ExtentReportUtil.reports.flush();
+		
 				
 return rid;
 	}

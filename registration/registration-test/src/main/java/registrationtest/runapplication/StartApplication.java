@@ -26,7 +26,7 @@ public class StartApplication extends Application{
 	 private static final Logger logger = LogManager.getLogger(StartApplication.class);  
 	 
 	static Stage primaryStage;
-	ApplicationContext applicationContext;
+	static ApplicationContext applicationContext;
 	String upgradeServer = null;
 	String tpmRequired = "Y";
 	FxRobotContext context;
