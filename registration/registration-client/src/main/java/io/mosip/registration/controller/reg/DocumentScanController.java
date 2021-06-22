@@ -22,9 +22,15 @@ import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.Group;
+import javafx.scene.control.*;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.ScrollEvent;
 import org.assertj.core.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -66,12 +72,6 @@ import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -194,6 +194,11 @@ public class DocumentScanController extends BaseController {
 		this.webcam = webcam;
 	}
 
+	final DoubleProperty zoomProperty = new SimpleDoubleProperty(200);
+
+	@FXML
+	private ScrollPane docPreviewScrollPane;
+
 	/*
 	 * (non-Javadoc)
 	 *
@@ -242,6 +247,25 @@ public class DocumentScanController extends BaseController {
 					exception.getMessage() + ExceptionUtils.getStackTrace(exception));
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UNABLE_LOAD_REG_PAGE);
 		}
+
+		zoomProperty.addListener(new InvalidationListener() {
+			@Override
+			public void invalidated(Observable arg0) {
+				docPreviewImgView.setFitWidth(zoomProperty.get() * 4);
+				docPreviewImgView.setFitHeight(zoomProperty.get() * 3);
+			}
+		});
+
+		docPreviewScrollPane.addEventFilter(ScrollEvent.ANY, new EventHandler<ScrollEvent>() {
+			@Override
+			public void handle(ScrollEvent event) {
+				if (event.getDeltaY() > 0) {
+					zoomProperty.set(zoomProperty.get() * 1.1);
+				} else if (event.getDeltaY() < 0) {
+					zoomProperty.set(zoomProperty.get() / 1.1);
+				}
+			}
+		});
 	}
 
 	/**
@@ -372,7 +396,8 @@ public class DocumentScanController extends BaseController {
 		/* show the scan doc info label for format and size */
 		Label fileSizeInfoLabel = new Label();
 		fileSizeInfoLabel.setWrapText(true);
-		fileSizeInfoLabel.setText(RegistrationUIConstants.SCAN_DOC_INFO);
+		int sizeMB = Integer.valueOf(getValueFromApplicationContext(RegistrationConstants.DOC_SIZE))/1024*1024;
+		fileSizeInfoLabel.setText(RegistrationUIConstants.SCAN_DOC_INFO.replace("1", Integer.toString(sizeMB)));
 		docScanVbox.getChildren().add(fileSizeInfoLabel);
 
 		for (UiSchemaDTO documentCategory : documentFields) {
@@ -956,9 +981,6 @@ public class DocumentScanController extends BaseController {
 			}
 		}
 		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Set details to DocumentDetailsDTO");
-
-		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Set DocumentDetailsDTO to RegistrationDTO");
 		addDocumentsToScreen(documentDto.getValue(), documentDto.getFormat(), vboxElement);
 
@@ -971,8 +993,8 @@ public class DocumentScanController extends BaseController {
 
 		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.SCAN_DOC_SUCCESS);
 
-		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Adding document to session");
+		LOGGER.info("Adding document- {} to session with size : {}", documentDto.getValue(), documentDto.getDocument() != null ?
+				documentDto.getDocument().length : 0);
 
 		getRegistrationDTOFromSession().addDocument(selectedComboBox.getId(), documentDto);
 	}
@@ -1034,10 +1056,10 @@ public class DocumentScanController extends BaseController {
 						docPreviewNext.setDisable(false);
 					}
 
-					docPreviewImgGroup.getChildren().clear();
-					docPreviewImgGroup.getChildren().add(new ImageView(getImage(docPages.get(0))));
-					//docPreviewImgView.setPreserveRatio(true);
-					//docPreviewImgView.setImage(getImage(docPages.get(0)));
+					//docPreviewImgGroup.getChildren().clear();
+					//docPreviewImgGroup.getChildren().add(new ImageView(getImage(docPages.get(0))));
+					docPreviewImgView.preserveRatioProperty().set(true);
+					docPreviewImgView.setImage(getImage(docPages.get(0)));
 
 					docPreviewLabel.setVisible(true);
 
@@ -1050,9 +1072,9 @@ public class DocumentScanController extends BaseController {
 			}
 		} else {
 			docPreviewLabel.setVisible(true);
-			docPreviewImgGroup.getChildren().clear();
-			docPreviewImgGroup.getChildren().add(new ImageView(new Image(new ByteArrayInputStream(document))));
-			//docPreviewImgView.setImage(convertBytesToImage(document));
+			//docPreviewImgGroup.getChildren().clear();
+			//docPreviewImgGroup.getChildren().add(new ImageView(new Image(new ByteArrayInputStream(document))));
+			docPreviewImgView.setImage(convertBytesToImage(document));
 		}
 		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Scanned document displayed succesfully");
@@ -1105,9 +1127,9 @@ public class DocumentScanController extends BaseController {
 	 * @param pageNumber - page number for the preview section
 	 */
 	private void setDocPreview(int index, int pageNumber) {
-		//docPreviewImgView.setImage(SwingFXUtils.toFXImage(docPages.get(index), null));
-		docPreviewImgGroup.getChildren().clear();
-		docPreviewImgGroup.getChildren().add(new ImageView(getImage(docPages.get(index))));
+		docPreviewImgView.setImage(SwingFXUtils.toFXImage(docPages.get(index), null));
+		//docPreviewImgGroup.getChildren().clear();
+		//docPreviewImgGroup.getChildren().add(new ImageView(getImage(docPages.get(index))));
 		docPageNumber.setText(String.valueOf(pageNumber));
 	}
 
@@ -1327,7 +1349,7 @@ public class DocumentScanController extends BaseController {
 		docPreviewNext.setDisable(true);
 		docPreviewPrev.setDisable(true);
 		docPageNumber.setText(RegistrationConstants.EMPTY);
-		docPreviewImgGroup.getChildren().clear();
+		//docPreviewImgGroup.getChildren().clear();
 		docPreviewImgView.setImage(null);
 		docPages = null;
 	}

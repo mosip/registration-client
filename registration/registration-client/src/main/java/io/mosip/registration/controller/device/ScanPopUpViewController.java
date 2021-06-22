@@ -200,7 +200,8 @@ public class ScanPopUpViewController extends BaseController {
 			popupStage.initStyle(StageStyle.UNDECORATED);
 
 			LOGGER.info(LOG_REG_IRIS_CAPTURE_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "loading scan.fxml");
-			Parent scanPopup = BaseController.load(getClass().getResource(RegistrationConstants.SCAN_PAGE));
+			Parent scanPopup = BaseController.load(getClass().getResource(RegistrationUIConstants.SCAN_DOC_TITLE.equals(title) ?
+					RegistrationConstants.SCAN_PAGE : RegistrationConstants.BIOMETRICS_SCAN_PAGE));
 
 			scanImage.setPreserveRatio(true);
 			//scanImage.fitWidthProperty().bind(imageViewGridPane.widthProperty());
@@ -386,8 +387,16 @@ public class ScanPopUpViewController extends BaseController {
 		if (baseController instanceof DocumentScanController) {
 			DocumentScanController documentScanController = (DocumentScanController) baseController;
 			try {
-				documentScanController.attachScannedDocument(popupStage);
 
+				if(rectangleSelection != null) {
+					String docNumber = docCurrentPageNumber.getText();
+					int currentPage = (docNumber == null || docNumber.isEmpty() || docNumber.equals("0")) ? 1 : Integer.valueOf(docNumber);
+					save(rectangleSelection.getBounds(), documentScanController.getScannedPages().get(currentPage - 1));
+					rectangleSelection.removeEventHandlers();
+					rectangleSelection = null;
+				}
+
+				documentScanController.attachScannedDocument(popupStage);
 				documentScanController.getScannedPages().clear();
 				popupStage.close();
 			} catch (IOException | RuntimeException ioException) {
@@ -685,9 +694,11 @@ public class ScanPopUpViewController extends BaseController {
 	public void preview() {
 		isStreamPaused = true;
 		showPreview(true);
-		initializeDocPages(1, documentScanController.getScannedPages().size());
-		int lastImgIndex = documentScanController.getScannedPages().size() - 1;
-		scanImage.setImage(getImage(documentScanController.getScannedPages().get(lastImgIndex)));
+
+		if(documentScanController.getScannedPages() != null && !documentScanController.getScannedPages().isEmpty()) {
+			initializeDocPages(1, documentScanController.getScannedPages().size());
+			scanImage.setImage(getImage(documentScanController.getScannedPages().get(0)));
+		}
 	}
 
 	private void showPreview(boolean isVisible) {
