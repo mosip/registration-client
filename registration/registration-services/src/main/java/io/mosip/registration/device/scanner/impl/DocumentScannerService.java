@@ -4,8 +4,7 @@ import static io.mosip.registration.constants.LoggerConstants.LOG_REG_DOC_SCAN_C
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -104,18 +103,11 @@ public abstract class DocumentScannerService implements IMosipDocumentScannerSer
 				byte[] image = getCompressedImage(bufferedImage);
 				LOGGER.info("image size after compression : {}", image.length);
 				PDImageXObject pdImageXObject = PDImageXObject.createFromByteArray(pdDocument, image, "");
-
-				int w = pdImageXObject.getWidth();
-				int h = pdImageXObject.getHeight();
-
+				Dimension scaledDimension = getScaledDimension(new Dimension(pdImageXObject.getWidth(), pdImageXObject.getHeight()),
+						new Dimension((int)pdPage.getMediaBox().getWidth(), (int)pdPage.getMediaBox().getHeight()));
 				//PDImageXObject pdImageXObject = LosslessFactory.createFromImage(pdDocument, bufferedImage);
 				try (PDPageContentStream contentStream = new PDPageContentStream(pdDocument, pdPage)) {
-					float x_pos = pdPage.getCropBox().getWidth();
-					float y_pos = pdPage.getCropBox().getHeight();
-
-					float x_adjusted = ( x_pos - w ) / 2 + pdPage.getCropBox().getLowerLeftX();
-					float y_adjusted = ( y_pos - h ) / 2 + pdPage.getCropBox().getLowerLeftY();
-					contentStream.drawImage(pdImageXObject, x_adjusted, y_adjusted, w, h);
+					contentStream.drawImage(pdImageXObject, 1, 1, scaledDimension.width, scaledDimension.height);
 				}
 				pdDocument.addPage(pdPage);
 			}
@@ -141,6 +133,33 @@ public abstract class DocumentScannerService implements IMosipDocumentScannerSer
 			if(imageWriter != null)
 				imageWriter.dispose();
 		}
+	}
+
+	private Dimension getScaledDimension(Dimension imgSize, Dimension boundary) {
+		int original_width = imgSize.width;
+		int original_height = imgSize.height;
+		int bound_width = boundary.width;
+		int bound_height = boundary.height;
+		int new_width = original_width;
+		int new_height = original_height;
+
+		// first check if we need to scale width
+		if (original_width > bound_width) {
+			//scale width to fit
+			new_width = bound_width;
+			//scale height to maintain aspect ratio
+			new_height = (new_width * original_height) / original_width;
+		}
+
+		// then check if we need to scale even with the new height
+		if (new_height > bound_height) {
+			//scale height to fit instead
+			new_height = bound_height;
+			//scale width to maintain aspect ratio
+			new_width = (new_height * original_width) / original_height;
+		}
+
+		return new Dimension(new_width, new_height);
 	}
 
 	/*
