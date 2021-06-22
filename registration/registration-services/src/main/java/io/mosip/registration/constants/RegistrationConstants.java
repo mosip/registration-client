@@ -51,7 +51,8 @@ public class RegistrationConstants {
 	public static final String SEND_NOTIFICATION_PAGE = "/fxml/SendNotification.fxml";
 	public static final String PACKET_UPLOAD_STATUS_UI = "/fxml/PacketUploadStatus.fxml";
 	public static final String ALERT_GENERATION = "/fxml/Alert.fxml";
-  public static final String DASHBOARD_PAGE = "/fxml/Dashboard.fxml";
+  	public static final String DASHBOARD_PAGE = "/fxml/Dashboard.fxml";
+	public static final String BIOMETRICS_SCAN_PAGE = "/fxml/BiometricsScan.fxml";
 
 	// FXML Id
 	public static final String DEMOGRAPHIC_DETAIL = "demographicDetail";
@@ -116,7 +117,7 @@ public class RegistrationConstants {
 	// Images path
 	public static final String CLOSE_IMAGE_PATH = "/images/Close.png";
 	public static final String DONE_IMAGE_PATH = "/images/done.png";
-	public static final String DOC_STUB_PATH = "/images/PANStubbed.jpg";
+	public static final String DOC_STUB_PATH = "/images/docstub.png";//"/images/PANStubbed.jpg";
 	public static final String FP_IMG_PATH = "/images/fingerprint.jpg";
 	public static final String IRIS_IMG_PATH = "/images/iris.jpg";
 	public static final String FACE_IMG_PATH = "/images/Photo.png";

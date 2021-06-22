@@ -164,8 +164,8 @@ public class RegistrationUIConstants {
 	public static final String SCAN_DOC_CATEGORY_MULTIPLE = bundle.getString("SCAN_DOC_CATEGORY_MULTIPLE");
 	public static final String SCAN_DOC_SUCCESS = bundle.getString("SCAN_DOC_SUCCESS");
 	public static final String CROP_DOC_SUCCESS = bundle.getString("CROP_DOC_SUCCESS");
-	public static final String SCAN_DOC_SIZE = bundle.getString("SCAN_DOC_SIZE");
-	public static final String SCAN_DOC_INFO = bundle.getString("SCAN_DOC_INFO");
+	public static String SCAN_DOC_SIZE = bundle.getString("SCAN_DOC_SIZE");
+	public static String SCAN_DOC_INFO = bundle.getString("SCAN_DOC_INFO");
 	public static final String SELECTED_SCANNER = bundle.getString("SELECTED_SCANNER");
 	public static final String NO_SCANNER_FOUND = bundle.getString("NO_SCANNER_FOUND");
 	public static final String SCAN_DOCUMENT_CONNECTION_ERR = bundle.getString("SCAN_DOCUMENT_CONNECTION_ERR");

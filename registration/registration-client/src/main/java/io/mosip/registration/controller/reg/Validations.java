@@ -151,10 +151,10 @@ public class Validations extends BaseController {
 	private boolean nodeToValidate(List<String> notTovalidate, Node node) {
 		if (node.getId() != null && (node.getId().contains("gender") || node.getId().contains("residence"))) {
 			return !(node.getId() == null || notTovalidate.contains(node.getId()) || node instanceof ImageView
-					|| node instanceof Label || node instanceof Hyperlink || node instanceof Group);
+					|| node instanceof Label || node instanceof Hyperlink || node instanceof Group || node instanceof ScrollPane);
 		}
 		return !(node.getId() == null || notTovalidate.contains(node.getId()) || node instanceof ImageView
-				|| node instanceof Button || node instanceof Label || node instanceof Hyperlink || node instanceof Group);
+				|| node instanceof Button || node instanceof Label || node instanceof Hyperlink || node instanceof Group || node instanceof ScrollPane);
 	}
 
 	/**

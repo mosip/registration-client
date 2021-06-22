@@ -203,10 +203,6 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 					String.valueOf(registrationDTO.getIdSchemaVersion()), schema.getSchemaJson(), source.toUpperCase(),
 					registrationDTO.getRegistrationCategory().toUpperCase(), true);
 
-//			packetWriter.persistPacket(registrationDTO.getRegistrationId(),
-//					String.valueOf(registrationDTO.getIdSchemaVersion()), schema.getSchemaJson(), source,
-//					registrationDTO.getRegistrationCategory(), getPublicKeyToEncrypt(), true);
-
 			String filePath = baseLocation + SLASH + packetManagerAccount + SLASH + registrationDTO.getRegistrationId();
 
 			LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID,

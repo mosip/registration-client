@@ -188,7 +188,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	/** The scan popup controller. */
 	@Autowired
-	private ScanPopUpViewController scanPopUpViewController;
+	private BiometricsScanPopUpController scanPopUpViewController;
 
 	/** The registration controller. */
 	@Autowired

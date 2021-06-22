@@ -145,11 +145,13 @@
                                                           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                                         </rowConstraints>
                                                          <children>
-                                                          <Group fx:id="docPreviewImgGroup" GridPane.halignment="CENTER" GridPane.valignment="CENTER" >
-                                                          <children>
-                                                            <ImageView fx:id="docPreviewImgView" pickOnBounds="true" preserveRatio="true" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
-                                                          </children>
-                                                          </Group>
+                                                             <ScrollPane fx:id="docPreviewScrollPane" fitToHeight="true" fitToWidth="true" >
+                                                                 <Group fx:id="docPreviewImgGroup" GridPane.halignment="CENTER" GridPane.valignment="CENTER" >
+                                                                     <children>
+                                                                         <ImageView fx:id="docPreviewImgView" pickOnBounds="true" preserveRatio="true" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+                                                                     </children>
+                                                                 </Group>
+                                                             </ScrollPane>
                                                           </children>
                                                       </GridPane>
                                                       <GridPane GridPane.rowIndex="1">

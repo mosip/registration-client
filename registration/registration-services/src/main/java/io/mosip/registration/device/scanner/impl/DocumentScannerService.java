@@ -15,6 +15,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.MemoryCacheImageOutputStream;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -23,6 +26,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.itextpdf.text.Document;
@@ -59,6 +63,10 @@ public abstract class DocumentScannerService implements IMosipDocumentScannerSer
 //	@Value("${DOCUMENT_SCANNER_TIMEOUT}")
 //	protected long scannerTimeout;
 
+
+	@Value("${mosip.registration.doc.jpg.compression:0.7f}")
+	private float compressionQuality;
+
 	private static final Logger LOGGER = AppConfig.getLogger(DocumentScannerService.class);
 
 	/**
@@ -93,9 +101,21 @@ public abstract class DocumentScannerService implements IMosipDocumentScannerSer
 			 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
 			for(BufferedImage bufferedImage : bufferedImages) {
 				PDPage pdPage = new PDPage();
-				PDImageXObject pdImageXObject = LosslessFactory.createFromImage(pdDocument, bufferedImage);
+				byte[] image = getCompressedImage(bufferedImage);
+				LOGGER.info("image size after compression : {}", image.length);
+				PDImageXObject pdImageXObject = PDImageXObject.createFromByteArray(pdDocument, image, "");
+
+				int w = pdImageXObject.getWidth();
+				int h = pdImageXObject.getHeight();
+
+				//PDImageXObject pdImageXObject = LosslessFactory.createFromImage(pdDocument, bufferedImage);
 				try (PDPageContentStream contentStream = new PDPageContentStream(pdDocument, pdPage)) {
-					contentStream.drawImage(pdImageXObject, 20, 20);
+					float x_pos = pdPage.getCropBox().getWidth();
+					float y_pos = pdPage.getCropBox().getHeight();
+
+					float x_adjusted = ( x_pos - w ) / 2 + pdPage.getCropBox().getLowerLeftX();
+					float y_adjusted = ( y_pos - h ) / 2 + pdPage.getCropBox().getLowerLeftY();
+					contentStream.drawImage(pdImageXObject, x_adjusted, y_adjusted, w, h);
 				}
 				pdDocument.addPage(pdPage);
 			}
@@ -105,6 +125,22 @@ public abstract class DocumentScannerService implements IMosipDocumentScannerSer
 			LOGGER.error(LOG_REG_DOC_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, e.getMessage());
 		}
 		return null;
+	}
+
+	private byte[] getCompressedImage(BufferedImage bufferedImage) throws IOException {
+		ImageWriter imageWriter = null;
+		try(ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+			imageWriter = ImageIO.getImageWritersByFormatName("jpg").next();
+			ImageWriteParam imageWriteParam = imageWriter.getDefaultWriteParam();
+			imageWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+			imageWriteParam.setCompressionQuality(compressionQuality);
+			imageWriter.setOutput(new MemoryCacheImageOutputStream(bos));
+			imageWriter.write(bufferedImage);
+			return bos.toByteArray();
+		} finally {
+			if(imageWriter != null)
+				imageWriter.dispose();
+		}
 	}
 
 	/*
