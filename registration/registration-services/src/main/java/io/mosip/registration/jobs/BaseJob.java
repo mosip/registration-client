@@ -190,7 +190,13 @@ public abstract class BaseJob extends QuartzJobBean {
 				: RegistrationConstants.JOB_EXECUTION_FAILURE;
 		try {
 
-			addToCompletedJobMap(syncJobId, status);
+			if (responseDTO != null && responseDTO.getSuccessResponseDTO() != null
+					&& responseDTO.getSuccessResponseDTO().getOtherAttributes() != null && responseDTO
+							.getSuccessResponseDTO().getOtherAttributes().containsKey(RegistrationConstants.RESTART)) {
+				addToCompletedJobMap(syncJobId, RegistrationConstants.JOB_EXECUTION_SUCCESS_RESTART);
+			} else {
+				addToCompletedJobMap(syncJobId, status);
+			}
 
 			/* Insert Sync Transaction of executed with Success/failure */
 			SyncTransaction syncTransaction = syncManager.createSyncTransaction(status, status, triggerPoint,
