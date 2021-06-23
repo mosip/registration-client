@@ -867,6 +867,7 @@ public class RegistrationConstants {
 	public static final String JOB_EXECUTION_COMPLETED = "Execution completed";
 	public static final String JOB_EXECUTION_SUCCESS = "Executed with success";
 	public static final String JOB_EXECUTION_FAILURE = "Executed with failure";
+	public static final String JOB_EXECUTION_SUCCESS_RESTART = "Executed with success, Restart";
 	public static final String JOB_TRIGGER_MIS_FIRED = "Trigger Mis-Fired";
 	public static final String JOB_EXECUTION_REJECTED = "Execution Rejected";
 	public static final String RETRIEVED_PRE_REG_ID = "Retrieved Pre Registration";

@@ -790,7 +790,7 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 
 		/* Child Job's check */
 		BaseJob.getCompletedJobMap().forEach((jobId, status) -> {
-			if (!status.equalsIgnoreCase(RegistrationConstants.JOB_EXECUTION_SUCCESS)) {
+			if (!status.toLowerCase().contains(RegistrationConstants.JOB_EXECUTION_SUCCESS.toLowerCase())) {
 				failureJobs.add(syncActiveJobMap.get(jobId).getName());
 			}
 		});
@@ -824,7 +824,7 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 		for (String jobId : restartableJobList) {
 
 			/* Check the job completed with success/failure */
-			if (RegistrationConstants.JOB_EXECUTION_SUCCESS.equals(completedSyncJobMap.get(jobId))) {
+			if (completedSyncJobMap.get(jobId) != null && completedSyncJobMap.get(jobId).contains(RegistrationConstants.RESTART)) {
 
 				/* Store job info in attributes of response */
 				Map<String, Object> successJobAttribute = new WeakHashMap<>();
