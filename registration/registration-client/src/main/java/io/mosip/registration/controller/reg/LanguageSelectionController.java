@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.exception.PreConditionCheckException;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.logging.log4j.message.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -98,6 +99,14 @@ public class LanguageSelectionController extends BaseController implements Initi
 			String mandatoryLanguagesText = mandatoryLanguages.stream()
 					.map(GenericDto::getName)
 					.collect(Collectors.joining(RegistrationConstants.COMMA));
+
+			if (mandatoryLanguagesText == null || mandatoryLanguagesText.isEmpty()) {
+
+				mandatoryLanguagesText= resourceBundle.getString("nolanguage");
+
+			}
+
+
 
 			String selectLangText = MessageFormat.format(resourceBundle.getString("selectLanguageText"),
 					minLangCount, mandatoryLanguagesText);
