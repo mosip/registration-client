@@ -99,6 +99,14 @@ public class LanguageSelectionController extends BaseController implements Initi
 					.map(GenericDto::getName)
 					.collect(Collectors.joining(RegistrationConstants.COMMA));
 
+			if (mandatoryLanguagesText == null || mandatoryLanguagesText.isEmpty()) {
+
+				mandatoryLanguagesText= resourceBundle.getString("nolanguage");
+
+			}
+
+
+
 			String selectLangText = MessageFormat.format(resourceBundle.getString("selectLanguageText"),
 					minLangCount, mandatoryLanguagesText);
 
