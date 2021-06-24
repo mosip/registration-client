@@ -243,7 +243,9 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 
 			// save in Pre-Reg List
 			PreRegistrationList preRegistrationList = preparePreRegistration(syncTransaction, preRegistrationDTO);
-			preRegistrationList.setAppointmentDate(DateUtils.parseUTCToDate(mainResponseDTO.getResponse().getAppointmentDate(),
+
+			if(mainResponseDTO.getResponse().getAppointmentDate() != null)
+				preRegistrationList.setAppointmentDate(DateUtils.parseUTCToDate(mainResponseDTO.getResponse().getAppointmentDate(),
 					"yyyy-MM-dd"));
 
 			preRegistrationList.setLastUpdatedPreRegTimeStamp(lastUpdatedTimeStamp == null ?
