@@ -156,8 +156,23 @@ public class BiometricUploadPage {
 	}
 
 	
-	
-public List<String> exceptionList(String identity)
+	public List<String> bioAuthAttributeList(String identity)
+	{
+		List<String> bioAuthAttList=new LinkedList<String>();
+		String bioAuthAttributes=null;
+		try {
+			 bioAuthAttributes=PropertiesUtil.getKeyValue("bioAuthAttributes");
+		
+		
+		bioAuthAttList=JsonUtil.JsonObjArrayListParsing(identity, bioAuthAttributes);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		
+		return bioAuthAttList;
+	}
+
+	public List<String> exceptionList(String identity)
 {
 	List<String> listException=new LinkedList<String>();
 	String bioExceptionAttributes=null;

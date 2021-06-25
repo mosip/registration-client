@@ -143,9 +143,12 @@ public class ChildNewReg {
 
 			demographicPage=homePage.clickNewRegistration();
 
+			if(PropertiesUtil.getKeyValue("multilang").equals("Y"))
+			{
+		
 			selectLanguagePage.selectLang();
 			buttons.clicksubmitBtn();
-
+			}
 			ExtentReportUtil.step3=ExtentReportUtil.test3.createNode("STEP 3-Demographic, Biometric upload ");
 
 			webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonIdentity,flow);

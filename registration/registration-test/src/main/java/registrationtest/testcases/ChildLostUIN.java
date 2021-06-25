@@ -142,9 +142,12 @@ public class ChildLostUIN {
 
 			demographicPage=homePage.clicklostUINImage();
 
+			if(PropertiesUtil.getKeyValue("multilang").equals("Y"))
+			{
+		
 			selectLanguagePage.selectLang();
 			buttons.clicksubmitBtn();
-
+			}
 			ExtentReportUtil.step3=ExtentReportUtil.test4.createNode("STEP 3-Demographic, Biometric upload ");
 
 			webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonIdentity,flow);
@@ -203,14 +206,8 @@ public class ChildLostUIN {
 			authenticationPage.clicksubmitBtn();
 			robotActions.clickWindow();
 			homePage.clickHomeImg();	
-			try
-			{
-				buttons.clickConfirmBtn();
-			}
-			catch(Exception e)
-			{
-				logger.error(e.getMessage());
-			}
+			buttons.clickConfirmBtn();
+			
 			ExtentReportUtil.step5.log(Status.PASS, "Approve Packet done" + rid2.getWebViewAck());
 
 
@@ -248,16 +245,6 @@ public class ChildLostUIN {
 
 						logger.error(e.getMessage());
 					}
-//					try {
-//						homePage.clickHomeImg();
-//						alerts.clickAlertConfirm();
-//						
-//					}catch(Exception e)
-//					{
-//						logger.error(e.getMessage());
-//
-//
-//					}
 					
 
 					try

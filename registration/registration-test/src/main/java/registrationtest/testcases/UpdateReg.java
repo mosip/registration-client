@@ -151,9 +151,12 @@ public class UpdateReg {
 		ExtentReportUtil.step2.log(Status.PASS, "Operator logs in");
 		
 		homePage.clickuinUpdateImage();
+		
+		if(PropertiesUtil.getKeyValue("multilang").equals("Y"))
+		{
 		selectLanguagePage.selectLang();
 		buttons.clicksubmitBtn();
-		
+		}
 		updatePage.enterUinId("5931539704");
 		updatePage.selectRadioButton(robot,jsonContent);
 		buttons.clickContinueBtn();
@@ -161,7 +164,7 @@ public class UpdateReg {
 		
 		ExtentReportUtil.step3=ExtentReportUtil.test1.createNode("STEP 3-Demographic, Biometric upload ");
 		
-		webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonContent,flow);
+		webViewDocument=demographicPage.scemaRegistrationUpdate(jsonContent,flow);
 
 		ExtentReportUtil.step3.log(Status.PASS, "Demographic, Biometric upload done");
 
@@ -269,30 +272,5 @@ public class UpdateReg {
 return rid;
 	}
 
-
-	public RID loginlogout(FxRobot robot2, String loginUserid, String loginPwd, String supervisorUserid,
-			String supervisorUserpwd, Stage primaryStage, JSONObject idjson, HashMap<String, String> documentUpload,
-			String lang, String schemaversion, String jsonObjName, String idJsonPath) throws InterruptedException {
-		
-		loginPage=new LoginPage(robot);
-		buttons=new Buttons(robot);
-		authenticationPage=new AuthenticationPage(robot);	
-		robotActions=new RobotActions(robot);
-
-		//Load Login screen
-		//loadLoginScene verb
-		loginPage.loadLoginScene(primaryStage);
-
-		//Enter userid and password
-		loginPage.setUserId(loginUserid);
-
-
-		homePage=loginPage.setPassword(loginPwd);
-
-		//Logout Regclient
-		loginPage.logout();
-		
-		return null;
-	}
 }
 

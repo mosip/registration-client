@@ -111,7 +111,8 @@ public class DocumentUploadPage {
 					Button scanButton = waitsUtil.lookupByIdButton(scanBtn,robot);
 
 					//waitsUtil.lookupById(docPreviewImgViewPane);
-
+					
+					robot.moveTo(scanButton);
 					robot.clickOn(scanButton);
 					selectDocumentScan();
 					break;

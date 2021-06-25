@@ -144,8 +144,11 @@ public class LostUINLogout {
 		
 		demographicPage=homePage.clicklostUINImage();
 		
-		selectLanguagePage.selectLang();
+		if(PropertiesUtil.getKeyValue("multilang").equals("Y"))
+		{
+			selectLanguagePage.selectLang();
 		buttons.clicksubmitBtn();
+		}
 		
 		ExtentReportUtil.step3=ExtentReportUtil.test2.createNode("STEP 3-Demographic, Biometric upload ");
 		
