@@ -14,10 +14,7 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.RegistrationDAO;
 import io.mosip.registration.dto.PacketStatusDTO;
-import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.entity.Registration;
-import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.packet.PacketExportService;
 import io.mosip.registration.util.advice.AuthenticationAdvice;
 import io.mosip.registration.util.advice.PreAuthorizeUserId;
@@ -71,22 +68,12 @@ public class PacketExportServiceImpl implements PacketExportService {
 	 */
 	@Override
 	@PreAuthorizeUserId(roles= {AuthenticationAdvice.OFFICER_ROLE,AuthenticationAdvice.SUPERVISOR_ROLE, AuthenticationAdvice.ADMIN_ROLE,AuthenticationAdvice.DEFAULT_ROLE})
-	public ResponseDTO updateRegistrationStatus(List<PacketStatusDTO> exportedPackets) throws RegBaseCheckedException{
+	public void updateRegistrationStatus(List<PacketStatusDTO> exportedPackets) {
 
-		LOGGER.debug("REGISTRATION - UPDATE_EXPORTED_PACKETS - PACKET_EXPORT_SERVICE", APPLICATION_NAME, APPLICATION_ID,
-				"Updating the table with the updated status");
+		LOGGER.debug("Updating the table with the exported status");
 
-		ResponseDTO responseDTO = new ResponseDTO();
-		List<Registration> updatedExportPackets = new ArrayList<>();
 		exportedPackets.forEach(regPacket -> {
-			updatedExportPackets.add(registrationDAO.updateRegStatus(regPacket));
+			registrationDAO.updateRegStatus(regPacket);
 		});
-		if (exportedPackets.size() == updatedExportPackets.size() || !updatedExportPackets.isEmpty()) {
-			SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
-			successResponseDTO.setMessage(RegistrationConstants.SUCCESS);
-			responseDTO.setSuccessResponseDTO(successResponseDTO);
-		}
-
-		return responseDTO;
 	}
 }

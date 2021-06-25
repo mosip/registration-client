@@ -43,4 +43,7 @@ public interface RegPacketStatusDAO {
 	 * @param registration	- the registration entity that has to be deleted
 	 */
 	void delete(Registration registration);
+
+
+	List<Registration> getPacketIdsByStatusExported();
 }

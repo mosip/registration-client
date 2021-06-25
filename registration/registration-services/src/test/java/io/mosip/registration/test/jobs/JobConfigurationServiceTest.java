@@ -366,7 +366,7 @@ public class JobConfigurationServiceTest {
 	public void isRestartTestSuccess() {
 		initiateJobTest();
 		HashMap<String, String> completedJobMap = new HashMap<>();
-		completedJobMap.put("RCS_J00005", RegistrationConstants.JOB_EXECUTION_SUCCESS);
+		completedJobMap.put("RCS_J00005", RegistrationConstants.RESTART);
 
 		PowerMockito.mockStatic(BaseJob.class);
 

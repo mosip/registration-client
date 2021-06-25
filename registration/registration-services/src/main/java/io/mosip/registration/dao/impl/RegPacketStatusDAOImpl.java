@@ -47,6 +47,15 @@ public class RegPacketStatusDAOImpl implements RegPacketStatusDAO {
 				.findByclientStatusCodeOrderByCrDtime(RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode());
 
 	}
+	
+	@Override
+	public List<Registration> getPacketIdsByStatusExported() {
+		LOGGER.info("Getting packets by status comment - EXPORTED has been started");
+
+		return registrationRepository
+				.findByClientStatusCommentsOrderByCrDtime(RegistrationClientStatusCode.EXPORT.getCode());
+
+	}
 
 	/*
 	 * (non-Javadoc)

@@ -359,7 +359,6 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		}
 
 		String docNumber = docCurrentPageNumber.getText();
-		totalScannedPages.setText(String.valueOf(documentScanController.getScannedPages() == null ? 0 : documentScanController.getScannedPages().size()));
 		int currentPage = (docNumber == null || docNumber.isEmpty() || docNumber.equals("0")) ? 1 : Integer.valueOf(docNumber);
 
 		if (currentPage <= 1) {
@@ -376,13 +375,12 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 		if(rectangleSelection != null) {
 			save(rectangleSelection.getBounds(), documentScanController.getScannedPages().get(currentPage - 1));
-			rectangleSelection.removeEventHandlers();
-			rectangleSelection = null;
 		}
 		else {
 			documentScanController.scan(popupStage);
 			docCurrentPageNumber.setText(String.valueOf(documentScanController.getScannedPages().size()));
 		}
+		totalScannedPages.setText(String.valueOf(documentScanController.getScannedPages() == null ? 0 : documentScanController.getScannedPages().size()));
 		clearSelection();
 	}
 
@@ -734,6 +732,10 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	}
 
 	private void clearSelection() {
+		if(rectangleSelection != null) {
+			rectangleSelection.removeEventHandlers();
+			rectangleSelection = null;
+		}
 		imageGroup.getChildren().remove(1,imageGroup.getChildren().size());
 	}
 

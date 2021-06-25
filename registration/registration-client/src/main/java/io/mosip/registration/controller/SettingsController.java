@@ -62,12 +62,19 @@ public class SettingsController extends BaseController {
 
 	@Autowired
 	private DeviceSettingsController deviceSettingsController;
+	
+	@Autowired
+	private GenericController genericController;
 
 	private Stage popupStage;
 
 	public void init(List<SettingsSchema> settingsByRole) {
 		try {
 			LOGGER.info("Opening pop-up screen to show Settings Page");
+			
+			if (genericController.getKeyboardStage() != null && genericController.getKeyboardStage().isShowing()) {
+				genericController.getKeyboardStage().close();
+			}
 
 			popupStage = new Stage();
 			popupStage.initStyle(StageStyle.UNDECORATED);

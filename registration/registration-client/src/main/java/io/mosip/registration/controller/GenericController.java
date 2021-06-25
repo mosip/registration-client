@@ -630,7 +630,7 @@ public class GenericController extends BaseController {
 
 				for(UiSchemaDTO fieldDTO : groupEntry.getValue()) {
 					try {
-						FxControl fxControl = buildFxElement(fieldDTO);
+						FxControl fxControl = buildFxElement(fieldDTO, schema);
 						if(fxControl.getNode() instanceof GridPane) {
 							((GridPane)fxControl.getNode()).prefWidthProperty().bind(groupFlowPane.widthProperty());
 						}
@@ -708,7 +708,7 @@ public class GenericController extends BaseController {
 		String content = registrationPreviewController.getPreviewContent();
 		if(content != null) {
 			final WebView webView = new WebView();
-webView.setId("webView");
+			webView.setId("webView");
 			webView.prefWidthProperty().bind(tabPane.widthProperty());
 			webView.prefHeightProperty().bind(tabPane.heightProperty());
 			webView.getEngine().loadContent(content);
@@ -742,7 +742,7 @@ webView.setId("webView");
 	}
 
 
-	private FxControl buildFxElement(UiSchemaDTO uiSchemaDTO) throws Exception {
+	private FxControl buildFxElement(UiSchemaDTO uiSchemaDTO, SchemaDto schema) throws Exception {
 		LOGGER.info("Building fxControl for field : {}", uiSchemaDTO.getId());
 
 		FxControl fxControl = null;
@@ -753,7 +753,7 @@ webView.setId("webView");
 					break;
 
 				case CONTROLTYPE_BIOMETRICS:
-					fxControl = new BiometricFxControl().build(uiSchemaDTO);
+					fxControl = new BiometricFxControl(getProofOfExceptionFields(schema)).build(uiSchemaDTO);
 					break;
 
 				case CONTROLTYPE_BUTTON:
@@ -794,6 +794,11 @@ webView.setId("webView");
 
 	public void refreshFields() {
 		orderedScreens.values().forEach(screen -> { refreshScreenVisibility(screen.getName()); });
+	}
+
+	public List<UiSchemaDTO> getProofOfExceptionFields(SchemaDto schema) {
+		return schema.getSchema().stream().filter(field ->
+				field.getSubType().contains(RegistrationConstants.POE_DOCUMENT)).collect(Collectors.toList());
 	}
 
 	private FxControl getFxControl(String fieldId) {
