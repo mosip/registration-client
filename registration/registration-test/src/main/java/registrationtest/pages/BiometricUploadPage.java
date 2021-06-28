@@ -277,7 +277,7 @@ public class BiometricUploadPage {
 		try
 
 		{
-			logger.info("  Bio attributes upload with List");
+			logger.info("Bio attributes upload with List");
 
 			List<String> listException = null;
 			try {
@@ -332,6 +332,8 @@ public class BiometricUploadPage {
 
 				if(list.contains(PropertiesUtil.getKeyValue("face")))
 					bioScan(subtype,id+FACE,identity);
+					
+				bioScan(subtype,id+EXCEPTION_PHOTO,identity);
 
 			}
 		}
