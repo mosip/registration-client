@@ -306,18 +306,7 @@ public class ScanPopUpViewController extends BaseController {
 		}
 
 		String docNumber = docCurrentPageNumber.getText();
-		totalScannedPages.setText(String.valueOf(documentScanController.getScannedPages() == null ? 0 : documentScanController.getScannedPages().size()));
 		int currentPage = (docNumber == null || docNumber.isEmpty() || docNumber.equals("0")) ? 1 : Integer.valueOf(docNumber);
-
-		if (currentPage <= 1) {
-			docCurrentPageNumber.setText("1");
-			docPreviewPrev.setDisable(true);
-			docPreviewNext.setDisable(true);
-		} else {
-			docCurrentPageNumber.setText(String.valueOf(documentScanController.getScannedPages().size()));
-			docPreviewPrev.setDisable(false);
-			docPreviewNext.setDisable(true);
-		}
 
 		if(rectangleSelection != null) {
 			save(rectangleSelection.getBounds(), documentScanController.getScannedPages().get(currentPage - 1));
@@ -329,12 +318,8 @@ public class ScanPopUpViewController extends BaseController {
 			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.DOC_CAPTURE_SUCCESS);
 		}
 
-		if (documentScanController.getScannedPages() != null && !documentScanController.getScannedPages().isEmpty()) {
-			previewBtn.setDisable(false);
-			saveBtn.setDisable(false);
-		} else {
-			previewBtn.setDisable(true);
-		}
+		preview();
+		saveBtn.setDisable(false);
 	}
 
 	private void clearSelection() {
@@ -697,7 +682,9 @@ public class ScanPopUpViewController extends BaseController {
 
 		if(documentScanController.getScannedPages() != null && !documentScanController.getScannedPages().isEmpty()) {
 			initializeDocPages(1, documentScanController.getScannedPages().size());
-			scanImage.setImage(getImage(documentScanController.getScannedPages().get(0)));
+			getImageGroup().getChildren().clear();
+			getImageGroup().getChildren().add(new ImageView(getImage(documentScanController.getScannedPages().get(0))));
+			//scanImage.setImage(getImage(documentScanController.getScannedPages().get(0)));
 		}
 	}
 
