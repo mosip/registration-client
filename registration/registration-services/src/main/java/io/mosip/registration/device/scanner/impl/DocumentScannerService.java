@@ -107,7 +107,9 @@ public abstract class DocumentScannerService implements IMosipDocumentScannerSer
 						new Dimension((int)pdPage.getMediaBox().getWidth(), (int)pdPage.getMediaBox().getHeight()));
 				//PDImageXObject pdImageXObject = LosslessFactory.createFromImage(pdDocument, bufferedImage);
 				try (PDPageContentStream contentStream = new PDPageContentStream(pdDocument, pdPage)) {
-					contentStream.drawImage(pdImageXObject, 1, 1, scaledDimension.width, scaledDimension.height);
+					float startx = (pdPage.getMediaBox().getWidth() - scaledDimension.width)/2;
+					float starty = (pdPage.getMediaBox().getHeight() - scaledDimension.height)/2;
+					contentStream.drawImage(pdImageXObject, startx, starty, scaledDimension.width, scaledDimension.height);
 				}
 				pdDocument.addPage(pdPage);
 			}
