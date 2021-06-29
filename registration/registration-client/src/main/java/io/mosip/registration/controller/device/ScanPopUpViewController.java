@@ -316,14 +316,15 @@ public class ScanPopUpViewController extends BaseController {
 		else {
 			baseController.scan(popupStage);
 			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.DOC_CAPTURE_SUCCESS);
+			currentPage = documentScanController.getScannedPages().size();
 		}
 
 		showPreview(true);
 		if(documentScanController.getScannedPages() != null && !documentScanController.getScannedPages().isEmpty()) {
 			int totalCount = documentScanController.getScannedPages().size();
-			initializeDocPages(totalCount, totalCount);
+			initializeDocPages(currentPage, totalCount);
 			getImageGroup().getChildren().clear();
-			getImageGroup().getChildren().add(new ImageView(getImage(documentScanController.getScannedPages().get(totalCount-1))));
+			getImageGroup().getChildren().add(new ImageView(getImage(documentScanController.getScannedPages().get(currentPage-1))));
 		}
 		saveBtn.setDisable(false);
 	}
