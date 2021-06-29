@@ -102,6 +102,7 @@ jobs:
         echo VERSION=$VERSION
         docker tag $SERVICE_NAME $IMAGE_ID:$VERSION
         docker push $IMAGE_ID:$VERSION
+        
     - uses: 8398a7/action-slack@v3
       with:
         status: ${{ job.status }}
