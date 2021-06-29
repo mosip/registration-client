@@ -318,7 +318,13 @@ public class ScanPopUpViewController extends BaseController {
 			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.DOC_CAPTURE_SUCCESS);
 		}
 
-		preview();
+		showPreview(true);
+		if(documentScanController.getScannedPages() != null && !documentScanController.getScannedPages().isEmpty()) {
+			int totalCount = documentScanController.getScannedPages().size();
+			initializeDocPages(totalCount, totalCount);
+			getImageGroup().getChildren().clear();
+			getImageGroup().getChildren().add(new ImageView(getImage(documentScanController.getScannedPages().get(totalCount-1))));
+		}
 		saveBtn.setDisable(false);
 	}
 
@@ -348,6 +354,7 @@ public class ScanPopUpViewController extends BaseController {
 		if (documentScanController.getScannedPages() != null) {
 			documentScanController.getScannedPages().clear();
 		}
+		documentScanController.initializePreviewSection();
 
 		LOGGER.info(LOG_REG_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Popup is closed");
 
@@ -383,6 +390,7 @@ public class ScanPopUpViewController extends BaseController {
 
 				documentScanController.attachScannedDocument(popupStage);
 				documentScanController.getScannedPages().clear();
+				documentScanController.initializePreviewSection();
 				popupStage.close();
 			} catch (IOException | RuntimeException ioException) {
 				LOGGER.error(LOG_REG_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
@@ -689,6 +697,7 @@ public class ScanPopUpViewController extends BaseController {
 	}
 
 	private void showPreview(boolean isVisible) {
+		isStreamPaused = true;
 		previewOption.setVisible(isVisible);
 		scanImage.setVisible(true);
 		cancelBtn.setDisable(false);

@@ -396,7 +396,7 @@ public class DocumentScanController extends BaseController {
 		/* show the scan doc info label for format and size */
 		Label fileSizeInfoLabel = new Label();
 		fileSizeInfoLabel.setWrapText(true);
-		int sizeMB = Integer.valueOf(getValueFromApplicationContext(RegistrationConstants.DOC_SIZE))/1024*1024;
+		int sizeMB = (int) Math.ceil(Integer.parseInt(getValueFromApplicationContext(RegistrationConstants.DOC_SIZE))/(1024*1024));
 		fileSizeInfoLabel.setText(RegistrationUIConstants.SCAN_DOC_INFO.replace("1", Integer.toString(sizeMB)));
 		docScanVbox.getChildren().add(fileSizeInfoLabel);
 
@@ -896,7 +896,7 @@ public class DocumentScanController extends BaseController {
 		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Converting byte array to image");
 		String documentSize = getValueFromApplicationContext(RegistrationConstants.DOC_SIZE);
-		int docSize = Integer.parseInt(documentSize) / (1024 * 1024);
+		int docSize = (int) Math.ceil(Integer.parseInt(documentSize) / (1024 * 1024));
 		if (scannedPages == null || scannedPages.isEmpty()) {
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.SCAN_DOCUMENT_EMPTY);
 			return;
