@@ -32,9 +32,9 @@ import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.jobs.JobManager;
 import io.mosip.registration.jobs.SyncManager;
-import io.mosip.registration.jobs.impl.RegistrationPacketVirusScanJob;
+import io.mosip.registration.jobs.impl.RegistrationclientVirusScanJob;
 import io.mosip.registration.service.config.impl.JobConfigurationServiceImpl;
-import io.mosip.registration.service.packet.RegistrationPacketVirusScanService;
+import io.mosip.registration.service.packet.RegistrationclientVirusScanService;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
@@ -54,7 +54,7 @@ public class RegistrationPacketVirusScanJobTest {
 	private SyncJobConfigDAO jobConfigDAO;
 
 	@Mock
-	private RegistrationPacketVirusScanService registrationPacketVirusScanService;
+	private RegistrationclientVirusScanService registrationPacketVirusScanService;
 
 	@Mock
 	JobManager jobManager;
@@ -74,7 +74,7 @@ public class RegistrationPacketVirusScanJobTest {
 	BaseJob baseJob;
 
 	@InjectMocks
-	RegistrationPacketVirusScanJob registrationPacketVirusScanJob;
+	RegistrationclientVirusScanJob registrationPacketVirusScanJob;
 	private LinkedList<SyncJobDef> syncJobList;
 
 	@Before
@@ -124,7 +124,7 @@ public class RegistrationPacketVirusScanJobTest {
 		Mockito.when(jobDataMap.get(Mockito.any())).thenReturn(applicationContext);
 		Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
 		Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
-		Mockito.when(applicationContext.getBean(RegistrationPacketVirusScanService.class))
+		Mockito.when(applicationContext.getBean(RegistrationclientVirusScanService.class))
 				.thenReturn(registrationPacketVirusScanService);
 
 //		Mockito.when(jobManager.getChildJobs(Mockito.any())).thenReturn(jobMap);

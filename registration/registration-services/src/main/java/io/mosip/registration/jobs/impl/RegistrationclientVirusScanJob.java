@@ -12,43 +12,43 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
-import io.mosip.registration.service.packet.RegistrationPacketVirusScanService;
+import io.mosip.registration.service.packet.RegistrationclientVirusScanService;
 
 /**
  * This is a job to scan the Registration packets for viruses.
- * 
+ *
  * <p>
  * This Job will be automatically triggered based on sync_frequency which has in
  * local DB.
  * </p>
- * 
+ *
  * <p>
  * If Sync_frequency = "0 0 11 * * ?" this job will be triggered everyday 11:00
  * AM, if it was missed on 11:00 AM, trigger on immediate application launch.
  * </p>
- * 
+ *
  * @author SARAVANAKUMAR G
  * @since 1.0.0
  *
  */
 @Component(value = "registrationPacketVirusScanJob")
-public class RegistrationPacketVirusScanJob extends BaseJob {
+public class RegistrationclientVirusScanJob extends BaseJob {
 
 	/**
 	 * The RegPacketStatusServiceImpl
 	 */
 
 	@Autowired
-	private RegistrationPacketVirusScanService packetVirusScanService;
+	private RegistrationclientVirusScanService packetVirusScanService;
 
 	/**
 	 * LOGGER for logging
 	 */
-	private static final Logger LOGGER = AppConfig.getLogger(RegistrationPacketVirusScanJob.class);
+	private static final Logger LOGGER = AppConfig.getLogger(RegistrationclientVirusScanJob.class);
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.scheduling.quartz.QuartzJobBean#executeInternal(org.
 	 * quartz.JobExecutionContext)
 	 */
@@ -62,7 +62,7 @@ public class RegistrationPacketVirusScanJob extends BaseJob {
 		try {
 
 			this.jobId = loadContext(context);
-			packetVirusScanService = applicationContext.getBean(RegistrationPacketVirusScanService.class);
+			packetVirusScanService = applicationContext.getBean(RegistrationclientVirusScanService.class);
 
 			// Execute Parent Job
 			this.responseDTO = executeParentJob(jobId);
@@ -88,7 +88,7 @@ public class RegistrationPacketVirusScanJob extends BaseJob {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see io.mosip.registration.jobs.BaseJob#executeJob(java.lang.String,
 	 * java.lang.String)
 	 */
