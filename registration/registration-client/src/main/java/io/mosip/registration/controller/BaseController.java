@@ -1972,10 +1972,20 @@ public class BaseController {
 
 	protected List<GenericDto> getConfiguredLanguages() {
 		List<GenericDto> languages = new ArrayList<>();
-		for(String langCode : getConfiguredLangCodes()) {
-			languages.add(new GenericDto(langCode,
-					applicationContext.getBundle(langCode, RegistrationConstants.LABELS).getString("language"),
-					langCode));
+		for (String langCode : getConfiguredLangCodes()) {
+			ResourceBundle bundle = applicationContext.getBundle(langCode, RegistrationConstants.LABELS);
+			languages.add(new GenericDto(langCode, bundle != null ? bundle.getString("language") : langCode, langCode));
+		}
+		return languages;
+	}
+	
+	protected List<GenericDto> getConfiguredLanguagesForLogin() {
+		List<GenericDto> languages = new ArrayList<>();
+		for (String langCode : getConfiguredLangCodes()) {
+			ResourceBundle bundle = applicationContext.getBundle(langCode, RegistrationConstants.LABELS);
+			if (bundle != null) {
+				languages.add(new GenericDto(langCode, bundle.getString("language"), langCode));
+			}
 		}
 		return languages;
 	}
