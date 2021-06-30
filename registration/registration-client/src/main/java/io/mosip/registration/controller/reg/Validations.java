@@ -254,7 +254,7 @@ public class Validations extends BaseController {
 
 		boolean isNonBlacklisted = validateBlackListedWords(parentPane, node, node.getId(), blackListedWords, showAlert,
 				String.format("%s %s %s", messageBundle.getString(RegistrationConstants.BLACKLISTED_1),
-						getFromLabelMap(fieldId), messageBundle.getString(RegistrationConstants.BLACKLISTED_2)),
+						getFromLabelMap(fieldId + langCode), messageBundle.getString(RegistrationConstants.BLACKLISTED_2)),
 				messageBundle.getString(RegistrationConstants.BLACKLISTED_ARE),
 				messageBundle.getString(RegistrationConstants.BLACKLISTED_IS));
 
