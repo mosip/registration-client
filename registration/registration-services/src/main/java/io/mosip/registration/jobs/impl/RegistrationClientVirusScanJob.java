@@ -31,8 +31,8 @@ import io.mosip.registration.service.packet.RegistrationclientVirusScanService;
  * @since 1.0.0
  *
  */
-@Component(value = "registrationClientVirusScanJob")
-public class RegistrationClientVirusScanJob extends BaseJob {
+@Component(value = "registrationPacketVirusScanJob")
+public class RegistrationclientVirusScanJob extends BaseJob {
 
 	/**
 	 * The RegPacketStatusServiceImpl
@@ -44,7 +44,7 @@ public class RegistrationClientVirusScanJob extends BaseJob {
 	/**
 	 * LOGGER for logging
 	 */
-	private static final Logger LOGGER = AppConfig.getLogger(RegistrationClientVirusScanJob.class);
+	private static final Logger LOGGER = AppConfig.getLogger(RegistrationclientVirusScanJob.class);
 
 	/*
 	 * (non-Javadoc)
