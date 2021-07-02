@@ -34,7 +34,7 @@ public class RegistrationUIConstants {
 		try {
 			return bundle.getString(key);
 		} catch (Exception exception) {
-			LOGGER.error("Exception in finding property in ResourceBundle ", exception);
+			LOGGER.error("Could not find value in the resourcebundle for the key - {}", key);
 		}
 		return key != null ? key : ERROR;
 	}
