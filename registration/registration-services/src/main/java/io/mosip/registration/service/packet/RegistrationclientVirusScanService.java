@@ -10,7 +10,7 @@ import io.mosip.registration.dto.SuccessResponseDTO;
  * @author saravanakumar gnanaguru
  * @since 1.0.0
  */
-public interface RegistrationPacketVirusScanService {
+public interface RegistrationclientVirusScanService {
 
 	/**
 	 * Performs the virus scan in the configured locations
