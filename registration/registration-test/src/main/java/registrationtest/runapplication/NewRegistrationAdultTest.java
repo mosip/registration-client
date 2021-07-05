@@ -99,7 +99,7 @@ public class NewRegistrationAdultTest{
 							
 					 rid2=lostUINLogout.LostUINAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonContent,
-							fileName,flow,StartApplication.applicationContext);
+							flow,fileName,StartApplication.applicationContext);
 					logger.info("RID RESULTS-"+ rid2.result +"\t"+ rid2.ridDateTime +"\t"+ rid2.rid);
 					ExtentReportUtil.reports.flush();
 					break;
@@ -107,7 +107,7 @@ public class NewRegistrationAdultTest{
 							
 					 rid3=childNewReg.newRegistrationChild(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonContent,
-							fileName,flow,StartApplication.applicationContext);
+							flow,fileName,StartApplication.applicationContext);
 					logger.info("RID RESULTS-"+ rid3.result +"\t"+ rid3.ridDateTime +"\t"+ rid3.rid);
 					ExtentReportUtil.reports.flush();
 					break;
@@ -115,7 +115,7 @@ public class NewRegistrationAdultTest{
 							
 							 rid4=childLostUIN.newRegistrationChildLost(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 									StartApplication.primaryStage,jsonContent,
-									fileName,flow,StartApplication.applicationContext);
+									flow,fileName,StartApplication.applicationContext);
 							logger.info("RID RESULTS-"+ rid4.result +"\t"+ rid4.ridDateTime +"\t"+ rid4.rid);
 							ExtentReportUtil.reports.flush();
 							break;
@@ -123,7 +123,7 @@ public class NewRegistrationAdultTest{
 							
 							 rid5=updatereg.updateRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 									StartApplication.primaryStage,jsonContent,
-									fileName,flow,StartApplication.applicationContext);
+									flow,fileName,StartApplication.applicationContext);
 							logger.info("RID RESULTS-"+ rid5.result +"\t"+ rid5.ridDateTime +"\t"+ rid5.rid);
 							ExtentReportUtil.reports.flush();
 							break;
@@ -131,7 +131,7 @@ public class NewRegistrationAdultTest{
 							
 							 rid6=updatereg.updateRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 									StartApplication.primaryStage,jsonContent,
-									fileName,flow,StartApplication.applicationContext);
+									flow,fileName,StartApplication.applicationContext);
 							logger.info("RID RESULTS-"+ rid6.result +"\t"+ rid6.ridDateTime +"\t"+ rid6.rid);
 							ExtentReportUtil.reports.flush();
 							break;

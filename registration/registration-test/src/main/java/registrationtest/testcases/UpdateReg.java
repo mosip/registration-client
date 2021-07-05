@@ -157,14 +157,14 @@ public class UpdateReg {
 		selectLanguagePage.selectLang();
 		buttons.clicksubmitBtn();
 		}
-		updatePage.enterUinId("5931539704");
+		updatePage.enterUinId(JsonUtil.JsonObjParsing(jsonContent,"UIN"));
 		updatePage.selectRadioButton(robot,jsonContent);
 		buttons.clickContinueBtn();
 		
 		
 		ExtentReportUtil.step3=ExtentReportUtil.test1.createNode("STEP 3-Demographic, Biometric upload ");
 		
-		webViewDocument=demographicPage.scemaRegistrationUpdate(jsonContent,flow);
+		webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonContent,flow);
 
 		ExtentReportUtil.step3.log(Status.PASS, "Demographic, Biometric upload done");
 

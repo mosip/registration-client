@@ -332,7 +332,8 @@ public class BiometricUploadPage {
 
 				if(list.contains(PropertiesUtil.getKeyValue("face")))
 					bioScan(subtype,id+FACE,identity);
-					
+				
+				//if(!list.contains(PropertiesUtil.getKeyValue("leftEye")) && !list.contains(PropertiesUtil.getKeyValue("rightEye")))		
 				bioScan(subtype,id+EXCEPTION_PHOTO,identity);
 
 			}
