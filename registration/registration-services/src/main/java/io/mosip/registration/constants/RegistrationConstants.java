@@ -99,6 +99,7 @@ public class RegistrationConstants {
 	public static final String QUALITY_LABEL_GREY = "qualityLabelGrey";
 	public static final String QUALITY_LABEL_GREEN = "qualityLabelGreen";
 	public static final String QUALITY_LABEL_RED = "qualityLabelRed";
+	public static final String QUALITY_LABEL_BLUE_BORDER = "qualityLabelBlueBorder" ;
 	public static final String PROGRESS_BAR_RED = "progress-barRed";
 	public static final String PROGRESS_BAR_GREEN = "progress-barGreen";
 	public static final String LABEL_RED = "labelRed";
@@ -215,14 +216,6 @@ public class RegistrationConstants {
 	public static final String ROLES_LIST = "roleList";
 	public static final String USER_NAME_VALIDATION = "USER_NAME_VALIDATION";
 
-	// FingerPrint
-	public static final String FINGER_TYPE_MINUTIA = "minutia";
-	public static final String FP_TIMEOUT = "TIMEOUT";
-
-	// Authorization Info
-	public static final String ROLES_EMPTY = "RolesEmpty";
-	public static final String MACHINE_MAPPING = "MachineMapping";
-
 	// Generic
 	public static final String ERROR = "ERROR";
 	public static final int PARAM_ONE = 1;
@@ -244,8 +237,6 @@ public class RegistrationConstants {
 	public static final String DISABLE = "N";
 	public static final String VALIDATION_SPLITTER = "\\s,";
 	public static final String ON_TYPE = "_ontype";
-	public static final String POR_DOCUMENTS = "porDocuments";
-	public static final String DOCUMENT_SCAN_PANE = "documentScanPane";
 	public static final String POR_BOX = "porBox";
 	public static final String VALIDATION_LOGGER = "VALIDATIONS";
 	public static final String REG_LGN_001 = "REG_LGN_001";
@@ -297,11 +288,6 @@ public class RegistrationConstants {
 	public static final String REGISTRATION_LOCAL_LANGUAGE = "local_language";
 	public static final String PACKET_TYPE_NEW = "New";
 	public static final String REGISTRATION_DTO = "registrationDto";
-	public static final String ADDRESS_LINE1 = "addressLine1";
-	public static final String ADDRESS_LINE2 = "addressLine2";
-	public static final String ADDRESS_LINE3 = "addressLine3";
-	public static final String FULL_NAME = "fullName";
-	public static final String PARENT_NAME = "parentName";
 	public static final String UIN_LENGTH = "mosip.kernel.uin.length";
 
 	public static final String CHILD = "Child";
@@ -464,9 +450,6 @@ public class RegistrationConstants {
 
 	// Constants for Registration ID Generator - will be removed after Kernel
 	// Integration
-	public static final String AGENCY_CODE = "2018";
-	public static final String STATION_NUMBER = "78213";
-	public static final String RID_DATE_FORMAT = "ddMMyyyyHHmmss";
 	public static final String DATE_FORMAT_REG = "dd-MM-yyyy";
 
 	// Logger - Constants
@@ -911,10 +894,10 @@ public class RegistrationConstants {
 	public static final String GPS_SIGNAL = "$GP";
 
 	// Documents
-	public static final String POA_DOCUMENT = "POA";
+	/*public static final String POA_DOCUMENT = "POA";
 	public static final String POI_DOCUMENT = "POI";
 	public static final String POR_DOCUMENT = "POR";
-	public static final String DOB_DOCUMENT = "POB";
+	public static final String DOB_DOCUMENT = "POB";*/
 	public static final String POE_DOCUMENT = "POE";
 	public static final String SERVER_STATUS_RESEND = "RESEND";
 	public static final String CLIENT_STATUS_APPROVED = "APPROVED";
@@ -992,7 +975,7 @@ public class RegistrationConstants {
 	public static final String FACE_RETRY_COUNT = "mosip.registration.num_of_face_retries";
 	public static final String PHOTO_RETRY_COUNT = "mosip.registration.num_of_photo_retries";
 
-	public static final String[] LEFTHAND_SEGMNTD_FILE_PATHS = new String[] { "/fingerprints/lefthand/leftIndex/",
+	/*public static final String[] LEFTHAND_SEGMNTD_FILE_PATHS = new String[] { "/fingerprints/lefthand/leftIndex/",
 			"/fingerprints/lefthand/leftLittle/", "/fingerprints/lefthand/leftMiddle/",
 			"/fingerprints/lefthand/leftRing/" };
 	public static final String[] RIGHTHAND_SEGMNTD_DUPLICATE_FILE_PATHS = new String[] {
@@ -1002,20 +985,20 @@ public class RegistrationConstants {
 			"/fingerprints/Srighthand/rightLittle/", "/fingerprints/Srighthand/rightMiddle/",
 			"/fingerprints/Srighthand/rightRing/" };
 	public static final String[] THUMBS_SEGMNTD_FILE_PATHS = new String[] { "/fingerprints/thumb/leftThumb/",
-			"/fingerprints/thumb/rightThumb/" };
+			"/fingerprints/thumb/rightThumb/" };*/
 	public static final String THUMB = "Thumb";
 	public static final String LEFT_HAND = "Left Hand ";
 	public static final String RIGHT_HAND = "Right Hand ";
 	public static final String RIGHT_IRIS = "Right Iris ";
 	public static final String LEFT_IRIS = "Left Iris ";
-	public static final String[] LEFTHAND_SEGMNTD_FILE_PATHS_USERONBOARD = new String[] {
+	/*public static final String[] LEFTHAND_SEGMNTD_FILE_PATHS_USERONBOARD = new String[] {
 			"/UserOnboard/leftHand/leftIndex/", "/UserOnboard/leftHand/leftLittle/",
 			"/UserOnboard/leftHand/leftMiddle/", "/UserOnboard/leftHand/leftRing/" };
 	public static final String[] RIGHTHAND_SEGMNTD_FILE_PATHS_USERONBOARD = new String[] {
 			"/UserOnboard/rightHand/rightIndex/", "/UserOnboard/rightHand/rightLittle/",
 			"/UserOnboard/rightHand/rightMiddle/", "/UserOnboard/rightHand/rightRing/" };
 	public static final String[] THUMBS_SEGMNTD_FILE_PATHS_USERONBOARD = new String[] { "/UserOnboard/thumb/leftThumb/",
-			"/UserOnboard/thumb/rightThumb/" };
+			"/UserOnboard/thumb/rightThumb/" };*/
 	public static final String COMMA = ",";
 	public static final String HYPHEN = "-";
 	public static final String FINGERPRINT_PANES_SELECTED = "fingerPrintPanesSelected";
@@ -1098,21 +1081,22 @@ public class RegistrationConstants {
 	public static final String USER_REG_SCAN_EXP = USER_REG_SCAN_EXP_CODE + "DOC-001";
 
 	// Regex Constants
-	public static final String FULL_NAME_REGEX = "([A-z]+\\s?\\.?)+";
-	public static final int FULL_NAME_LENGTH = 50;
-	public static final String ADDRESS_LINE1_REGEX = "^.{1,50}$";
+	//public static final String FULL_NAME_REGEX = "([A-z]+\\s?\\.?)+";
+	//public static final int FULL_NAME_LENGTH = 50;
+	//public static final String ADDRESS_LINE1_REGEX = "^.{1,50}$";
 	public static final String NUMBER_REGEX = "\\d+";
-	public static final String NUMBER_OR_NOTHING_REGEX = "^\\d*$";
+	//public static final String NUMBER_OR_NOTHING_REGEX = "^\\d*$";
 	public static final String FOUR_NUMBER_REGEX = "\\d{4}";
 	public static final String NUMBER_REGEX_ZERO_TO_THREE = "\\d{0,3}";
-	public static final int MOBILE_NUMBER_LENGTH = 9;
-	public static final String EMAIL_ID_REGEX = "^([\\w\\-\\.]+)@((\\[([0-9]{1,3}\\.){3}[0-9]{1,3}\\])|(([\\w\\-]+\\.)+)([a-zA-Z]{2,4}))$";
-	public static final String EMAIL_ID_REGEX_INITIAL = "([a-zA-Z]+\\.?\\-?\\@?(\\d+)?)+";
+	//public static final int MOBILE_NUMBER_LENGTH = 9;
+	//public static final String EMAIL_ID_REGEX = "^([\\w\\-\\.]+)@((\\[([0-9]{1,3}\\.){3}[0-9]{1,3}\\])|(([\\w\\-]+\\.)+)([a-zA-Z]{2,4}))$";
+	/*public static final String EMAIL_ID_REGEX_INITIAL = "([a-zA-Z]+\\.?\\-?\\@?(\\d+)?)+";
 	public static final String CNI_OR_PIN_NUMBER_REGEX = "\\d{0,30}";
 	public static final String AGE_REGEX = "\\d{1,2}";
 	public static final String UIN_REGEX = "\\d{1,30}";
 	public static final String POSTAL_CODE_REGEX = "\\d{5}";
 	public static final String POSTAL_CODE_REGEX_INITIAL = "\\d{1,5}";
+	*/
 	public static final String REGEX_ANY = ".*";
 	public static final String ONE = "1";
 	public static final String BIOMETRIC_SEPERATOR = "(?<=\\.)(.*)(?=\\.)";
@@ -1293,7 +1277,7 @@ public class RegistrationConstants {
 	}
 
 	// ID JSON Business Validation
-	private static final String ID_JSON_BIZ_VALIDATION_PREFIX = "mosip.id.validation.identity";
+	/*private static final String ID_JSON_BIZ_VALIDATION_PREFIX = "mosip.id.validation.identity";
 	public static final String LENGTH = "length";
 	public static final String EMAIL_VALIDATION_REGEX = ID_JSON_BIZ_VALIDATION_PREFIX.concat(DOT).concat("email");
 	public static final String EMAIL_VALIDATION_LENGTH = EMAIL_VALIDATION_REGEX.concat(DOT).concat(LENGTH);
@@ -1314,7 +1298,7 @@ public class RegistrationConstants {
 	public static final String ADDRESS_LINE_3_REGEX = ID_JSON_BIZ_VALIDATION_PREFIX.concat(DOT)
 			.concat("addressLine3.[*].value");
 	public static final String AGE_VALIDATION_REGEX = ID_JSON_BIZ_VALIDATION_PREFIX.concat(DOT).concat("age");
-	public static final String TRUE = String.valueOf(true);
+*/	public static final String TRUE = String.valueOf(true);
 	public static final String FALSE = String.valueOf(false);
 	public static String CNI_MANDATORY = String.valueOf(false);
 
@@ -1351,7 +1335,7 @@ public class RegistrationConstants {
 	public static final String LABEL_SMALL_CASE = "label";
 
 	public static final Object UI_SYNC_DATA = "mosip.registration.ui_sync_data";
-	public static final String MDM_ENABLED = "mosip.mdm.enabled";
+	//public static final String MDM_ENABLED = "mosip.mdm.enabled";
 
 	public static final String MESSAGE = "Message";
 	public static final String HASH = "#";
@@ -1615,21 +1599,16 @@ public class RegistrationConstants {
 	public static final String rightEyeUiAttribute = "rightEye";
 
 	public static final List<String> rightHandUiAttributes = Arrays.asList(rightIndexUiAttribute,
-			rightLittleUiAttribute, rightMiddleUiAttribute, rightRingUiAttribute);
-
-	public static final List<String> leftHandUiAttributes = Arrays.asList(leftIndexUiAttribute, leftLittleUiAttribute,
-			leftMiddleUiAttribute, leftRingUiAttribute);
-
-	public static final List<String> twoThumbsUiAttributes = Arrays.asList(rightThumbUiAttribute, leftThumbUiAttribute);
-
+			rightMiddleUiAttribute, rightRingUiAttribute, rightLittleUiAttribute);
+	public static final List<String> leftHandUiAttributes = Arrays.asList(leftLittleUiAttribute,
+			leftRingUiAttribute, leftMiddleUiAttribute, leftIndexUiAttribute);
+	public static final List<String> twoThumbsUiAttributes = Arrays.asList(leftThumbUiAttribute, rightThumbUiAttribute);
 	public static final List<String> eyesUiAttributes = Arrays.asList(leftEyeUiAttribute, rightEyeUiAttribute);
-
 	public static final List<String> faceUiAttributes = Arrays.asList("face");
-	public static final String indBiometrics = "individualBiometrics";
 
 	public static final String ID_SCHEMA_SYNC_SERVICE = "idschema_key";
 
-	public static final Map<String, String> regBioMap = new HashMap<String, String>() {
+	/*public static final Map<String, String> regBioMap = new HashMap<String, String>() {
 
 		{
 			put("leftIndex", LeftIndex);
@@ -1647,9 +1626,9 @@ public class RegistrationConstants {
 
 		}
 
-	};
+	};*/
 
-	public static final Map<String, String> mdsToRegBioMap = new HashMap<String, String>() {
+	/*public static final Map<String, String> mdsToRegBioMap = new HashMap<String, String>() {
 
 		{
 			put("LF_INDEX", LeftIndex);
@@ -1666,13 +1645,13 @@ public class RegistrationConstants {
 			put("R_IRIS", RIGHT_EYE);
 		}
 
-	};
+	};*/
 
 	public static final String BIOMETRICS_TYPE = "biometricsType";
 	public static final String APPLICANT = "applicant";
 
-	public static final String MOSIP_CLEINT_ID = "mosip.registration.client.id";
-	public static final String MOSIP_SECRET_KEY = "mosip.registration.secret.Key";
+	//public static final String MOSIP_CLEINT_ID = "mosip.registration.client.id";
+	//public static final String MOSIP_SECRET_KEY = "mosip.registration.secret.Key";
 
 	/** BELOW WERE EXTERNALISING Spring.properties to external configs */
 
@@ -1970,4 +1949,5 @@ public class RegistrationConstants {
 	public static final String BIOVALUE_PLACEHOLDER = "\"<bioValue>\"";
 	
 	public static final String AUDIT_TIMESTAMP = "mosip.registration.audit_timestamp";
+	public static final String AGE_GROUP_CONFIG = "mosip.regproc.packet.classifier.tagging.agegroup.ranges";
 }

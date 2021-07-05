@@ -6,16 +6,21 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import io.mosip.registration.api.docscanner.DocScannerUtil;
+import io.mosip.registration.audit.AuditManagerService;
+import io.mosip.registration.constants.AuditEvent;
+import io.mosip.registration.constants.AuditReferenceIdTypes;
+import io.mosip.registration.constants.Components;
+import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
-import io.mosip.registration.util.common.Modality;
+import io.mosip.registration.dto.schema.ConditionalBioAttributes;
+import io.mosip.registration.service.bio.BioService;
+import io.mosip.registration.enums.Modality;
 import javafx.scene.layout.*;
 import org.apache.commons.collections4.ListUtils;
 
-import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
@@ -23,9 +28,8 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.controller.device.GenericBiometricsController;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.mastersync.GenericDto;
-import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.util.control.FxControl;
@@ -42,17 +46,17 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import lombok.SneakyThrows;
+import org.mvel2.MVEL;
 
 import javax.imageio.ImageIO;
 
 public class BiometricFxControl extends FxControl {
 
 	protected static final Logger LOGGER = AppConfig.getLogger(BiometricFxControl.class);
-	private static final String APPLICANT_SUBTYPE = "applicant";
 
 	private GenericBiometricsController biometricsController;
 	private IdentitySchemaService identitySchemaService;
+	private BioService bioService;
 	private Modality currentModality;
 	private Map<Modality, List<List<String>>> modalityAttributeMap = new HashMap<>();
 	private List<UiSchemaDTO> exceptionProofFields;
@@ -62,7 +66,9 @@ public class BiometricFxControl extends FxControl {
 		org.springframework.context.ApplicationContext applicationContext = Initialization.getApplicationContext();
 		this.biometricsController = applicationContext.getBean(GenericBiometricsController.class);
 		this.identitySchemaService = applicationContext.getBean(IdentitySchemaService.class);
+		this.bioService = applicationContext.getBean(BioService.class);
 		this.requiredFieldValidator = applicationContext.getBean(RequiredFieldValidator.class);
+		this.auditFactory = applicationContext.getBean(AuditManagerService.class);
 		exceptionProofFields = biometricExceptionProofFields;
 	}
 
@@ -77,10 +83,9 @@ public class BiometricFxControl extends FxControl {
 	@Override
 	public void setData(Object data) {
 		if (data != null) {
-			getRegistrationDTo().addAllBiometrics(uiSchemaDTO.getSubType(),
-					(Map<String, BiometricsDto>) data,
-					biometricsController.getThresholdScoreInDouble(biometricsController.getThresholdKeyByBioType(currentModality)),
-					biometricsController.getMaxRetryByModality(currentModality));
+			getRegistrationDTo().addAllBiometrics(uiSchemaDTO.getSubType(), currentModality,
+					(Map<String, BiometricsDto>) data, bioService.getMDMQualityThreshold(currentModality),
+					bioService.getRetryCount(currentModality));
 		}
 
 		//refresh();
@@ -94,7 +99,7 @@ public class BiometricFxControl extends FxControl {
 
 	@Override
 	public Object getData() {
-		List<String> requiredAttributes = requiredFieldValidator.isRequiredBiometricField(uiSchemaDTO.getSubType(), getRegistrationDTo());
+		List<String> requiredAttributes = requiredFieldValidator.getRequiredBioAttributes(uiSchemaDTO, getRegistrationDTo());
 		List<String> configBioAttributes = ListUtils.intersection(requiredAttributes,
 				Modality.getAllBioAttributes(currentModality));
 		return getRegistrationDTo().getBiometric(uiSchemaDTO.getSubType(), configBioAttributes);
@@ -210,7 +215,7 @@ public class BiometricFxControl extends FxControl {
 	private List<HBox> getModalityButtons() {
 		this.currentModality = null;
 		List<HBox> modalityList = new ArrayList<>();
-		List<String> requiredBioAttributes = requiredFieldValidator.isRequiredBiometricField(this.uiSchemaDTO.getSubType(), getRegistrationDTo());
+		List<String> requiredBioAttributes = requiredFieldValidator.getRequiredBioAttributes(this.uiSchemaDTO, getRegistrationDTo());
 		//if(!requiredBioAttributes.isEmpty()) {
 			for(Modality modality : Modality.values()) {
 				List<String> modalityAttributes = ListUtils.intersection(requiredBioAttributes, modality.getAttributes());
@@ -291,7 +296,7 @@ public class BiometricFxControl extends FxControl {
 		if(modality == null)
 			return;
 
-		List<String> requiredAttributes = requiredFieldValidator.isRequiredBiometricField(uiSchemaDTO.getSubType(), getRegistrationDTo());
+		List<String> requiredAttributes = requiredFieldValidator.getRequiredBioAttributes(uiSchemaDTO, getRegistrationDTo());
 		List<String> configBioAttributes = ListUtils.intersection(requiredAttributes, Modality.getAllBioAttributes(modality));
 		List<String> nonConfigBioAttributes = ListUtils.subtract(Modality.getAllBioAttributes(modality), configBioAttributes);
 
@@ -309,35 +314,6 @@ public class BiometricFxControl extends FxControl {
 						configBioAttributes,nonConfigBioAttributes);
 		}
 	}
-
-	/*public List<String> getRequiredBioAttributes(String subType) {
-		List<String> requiredAttributes = new ArrayList<String>();
-		try {
-			SchemaDto schema = identitySchemaService.getIdentitySchema(getRegistrationDTo().getIdSchemaVersion());
-			List<UiSchemaDTO> fields = schema.getSchema().stream()
-					.filter(field -> field.getType() != null
-							&& PacketManagerConstants.BIOMETRICS_DATATYPE.equals(field.getType())
-							&& field.getSubType() != null && field.getSubType().equals(subType))
-					.collect(Collectors.toList());
-
-			for (UiSchemaDTO schemaField : fields) {
-				if (requiredFieldValidator.isRequiredField(schemaField, getRegistrationDTo()) && schemaField.getBioAttributes() != null)
-					requiredAttributes.addAll(schemaField.getBioAttributes());
-			}
-
-			// Reg-client will capture the face of Infant and send it in Packet as part of
-			// IndividualBiometrics CBEFF (If Face is captured for the country)
-			if ((getRegistrationDTo().isChild() && APPLICANT_SUBTYPE.equals(subType) && requiredAttributes.contains("face"))
-					|| (getRegistrationDTo().getRegistrationCategory().equalsIgnoreCase(RegistrationConstants.PACKET_TYPE_UPDATE)
-					&& getRegistrationDTo().getUpdatableFieldGroups().contains("GuardianDetails")
-					&& APPLICANT_SUBTYPE.equals(subType) && requiredAttributes.contains("face"))) {
-				return Arrays.asList("face"); // Only capture face
-			}
-		}catch (RegBaseCheckedException exception) {
-			LOGGER.error("Failed to get required bioattributes", exception);
-		}
-		return requiredAttributes;
-	}*/
 
 	public String getImageIconPath(String modality) {
 		String imageIconPath = RegistrationConstants.DEFAULT_EXCEPTION_IMG;
@@ -391,13 +367,13 @@ public class BiometricFxControl extends FxControl {
 			scanForModality(this.control, this.currentModality);
 		}
 
-		List<String> requiredAttributes = requiredFieldValidator.isRequiredBiometricField(uiSchemaDTO.getSubType(), getRegistrationDTo());
+		List<String> requiredAttributes = requiredFieldValidator.getRequiredBioAttributes(uiSchemaDTO, getRegistrationDTo());
 		for(String bioAttribute : uiSchemaDTO.getBioAttributes()) {
 			if(!requiredAttributes.contains(bioAttribute)) {
-				getRegistrationDTo().removeBiometric(uiSchemaDTO.getSubType(), bioAttribute);
-				getRegistrationDTo().removeBiometricException(uiSchemaDTO.getSubType(), bioAttribute);
-				this.biometricsController.removeBioStreamImage(uiSchemaDTO.getSubType());
-				this.biometricsController.removeBioScores(uiSchemaDTO.getSubType());
+				getRegistrationDTo().clearBIOCache(uiSchemaDTO.getSubType(), bioAttribute);
+				//getRegistrationDTo().removeBiometricException(uiSchemaDTO.getSubType(), bioAttribute);
+				//this.biometricsController.removeBioStreamImage(uiSchemaDTO.getSubType());
+				//this.biometricsController.removeBioScores(uiSchemaDTO.getSubType());
 			}
 		}
 	}
@@ -405,8 +381,24 @@ public class BiometricFxControl extends FxControl {
 
 	@Override
 	public boolean canContinue() {
-		return biometricsController.canContinue(uiSchemaDTO.getSubType(),
-				requiredFieldValidator.isRequiredBiometricField(uiSchemaDTO.getSubType(), getRegistrationDTo()));
+		Map<String, Boolean> capturedDetails = bioService.getCapturedBiometrics(uiSchemaDTO.getId(),
+				getRegistrationDTo().getIdSchemaVersion(), getRegistrationDTo());
+
+		String expression = String.join(" && ", uiSchemaDTO.getBioAttributes());
+		ConditionalBioAttributes selectedCondition = requiredFieldValidator.getConditionalBioAttributes(uiSchemaDTO,
+				getRegistrationDTo());
+		if(selectedCondition != null) {
+			expression = selectedCondition.getValidationExpr();
+		}
+
+		boolean valid = MVEL.evalToBoolean(expression, capturedDetails);
+		valid =  biometricsController.hasApplicantBiometricException() ? biometricsController.isBiometricExceptionProofCollected() : valid;
+		//TODO - display message about exception proof
+		if (valid) {
+			auditFactory.audit(AuditEvent.REG_BIO_CAPTURE_NEXT, Components.REG_BIOMETRICS, SessionContext.userId(),
+					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
+		}
+		return valid;
 	}
 
 	private void createExceptionPhoto(List<HBox> modalityList) {
@@ -464,7 +456,11 @@ public class BiometricFxControl extends FxControl {
 
 	public void refreshModalityButton(Modality modality) {
 		LOGGER.info("Refreshing biometric field {} modality : {}", uiSchemaDTO.getId(), modality);
-		HBox modalityView = (HBox) getField(uiSchemaDTO.getId()+modality);
+		Node tempNode = getField(uiSchemaDTO.getId()+modality);
+		if(tempNode == null)
+			return;
+
+		HBox modalityView = (HBox) tempNode;
 		Button button = (Button) modalityView.getChildren().get(0);
 		List<BiometricsDto> capturedData = getRegistrationDTo().getBiometric(uiSchemaDTO.getSubType(), modality.getAttributes());
 		if(!capturedData.isEmpty()) {
@@ -543,7 +539,7 @@ public class BiometricFxControl extends FxControl {
 	}
 
 	//TODO check how multiple exception photos can be taken, and also displayed in biometric field
-	private Image getExceptionDocumentAsImage() {
+	public Image getExceptionDocumentAsImage() {
 		try {
 			DocumentDto documentDto = null;
 			for(String key : getRegistrationDTo().getDocuments().keySet()) {

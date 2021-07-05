@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import io.mosip.registration.dto.mastersync.GenericDto;
-import javafx.scene.control.Label;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -17,7 +16,7 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.controller.FXUtils;
 import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.controller.reg.DateValidation;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.util.control.FxControl;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
@@ -35,7 +34,7 @@ public class DOBAgeFxControl extends FxControl {
 	 * Instance of {@link Logger}
 	 */
 	private static final Logger LOGGER = AppConfig.getLogger(DOBAgeFxControl.class);
-
+	private static final String DOBSubType = "dateOfBirth";
 	private static String loggerClassName = "DOB Age Control Type Class";
 	private FXUtils fxUtils;
 
@@ -144,7 +143,6 @@ public class DOBAgeFxControl extends FxControl {
 
 	@Override
 	public void setData(Object data) {
-
 		TextField dd = (TextField) getField(
 				uiSchemaDTO.getId() + RegistrationConstants.DD + RegistrationConstants.TEXT_FIELD);
 		TextField mm = (TextField) getField(
@@ -152,7 +150,8 @@ public class DOBAgeFxControl extends FxControl {
 		TextField yyyy = (TextField) getField(
 				uiSchemaDTO.getId() + RegistrationConstants.YYYY + RegistrationConstants.TEXT_FIELD);
 
-		getRegistrationDTo().setDateField(uiSchemaDTO.getId(), dd.getText(), mm.getText(), yyyy.getText());
+		getRegistrationDTo().setDateField(uiSchemaDTO.getId(), dd.getText(), mm.getText(), yyyy.getText(),
+				DOBSubType.equalsIgnoreCase(uiSchemaDTO.getSubType()));
 	}
 
 	@Override

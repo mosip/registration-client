@@ -146,6 +146,11 @@
 	-fx-text-fill: #FFFFFF;
 }
 
+.qualityLabelBlueBorder {
+	-fx-border-color: #021E68;
+	-fx-border-width: 4px;
+}
+
 .labelGreen {
 	-fx-text-fill: #45A30A;
 	-fx-font-size: 20.0px;
@@ -2588,7 +2593,7 @@ Working on new Css by taleev
 }
 
 .modalityButtons {
-	-fx-border-width:3;
+	/*-fx-border-width:3;*/
 	-fx-border-color:pink;
 	-fx-background-color:white;
 }

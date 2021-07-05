@@ -1,4 +1,4 @@
-package io.mosip.registration.dto;
+package io.mosip.registration.dto.schema;
 
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +56,6 @@ public class UiSchemaDTO {
 	private String templateName;
 	private String fieldLayout;
 	private List<String> locationHierarchy;
-
+	private List<ConditionalBioAttributes> conditionalBioAttributes;
 
 }
