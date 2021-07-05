@@ -1,15 +1,11 @@
 package io.mosip.registration.validator;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
+import io.mosip.registration.dto.schema.ConditionalBioAttributes;
 import org.mvel2.MVEL;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.integration.impl.MapVariableResolverFactory;
@@ -19,20 +15,17 @@ import org.springframework.stereotype.Component;
 import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.RequiredOnExpr;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.RequiredOnExpr;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.IdentitySchemaService;
-
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 @Component
 public class RequiredFieldValidator {
 
 	private static final Logger LOGGER = AppConfig.getLogger(RequiredFieldValidator.class);
-	private static final String APPLICANT_SUBTYPE = "applicant";
+	//private static final String APPLICANT_SUBTYPE = "applicant";
 
 	@Autowired
 	private IdentitySchemaService identitySchemaService;
@@ -80,7 +73,40 @@ public class RequiredFieldValidator {
 		return visible;
 	}
 
-	public List<String> isRequiredBiometricField(String subType, RegistrationDTO registrationDTO) {
+	public List<String> getRequiredBioAttributes(UiSchemaDTO field, RegistrationDTO registrationDTO) {
+		if(!isRequiredField(field, registrationDTO))
+			return Collections.EMPTY_LIST;
+
+		if(field.getConditionalBioAttributes() != null) {
+			ConditionalBioAttributes selectedCondition = getConditionalBioAttributes(field, registrationDTO);
+			if(selectedCondition != null)
+				return selectedCondition.getBioAttributes();
+		}
+		return field.getBioAttributes();
+	}
+
+	public ConditionalBioAttributes getConditionalBioAttributes(UiSchemaDTO uiSchemaDTO, RegistrationDTO registrationDTO) {
+		if(uiSchemaDTO.getConditionalBioAttributes() == null)
+			return null;
+
+		Optional<ConditionalBioAttributes> result = uiSchemaDTO.getConditionalBioAttributes().stream().filter(c ->
+				c.getAgeGroup().equalsIgnoreCase(registrationDTO.getAgeGroup()) &&
+						c.getProcess().equalsIgnoreCase(registrationDTO.getRegistrationCategory())).findFirst();
+
+		if(!result.isPresent()) {
+			result = uiSchemaDTO.getConditionalBioAttributes().stream().filter(c ->
+					(c.getAgeGroup().equalsIgnoreCase(registrationDTO.getAgeGroup()) &&
+							c.getProcess().equalsIgnoreCase("ALL")) ||
+							(c.getAgeGroup().equalsIgnoreCase("ALL") &&
+									c.getProcess().equalsIgnoreCase(registrationDTO.getRegistrationCategory())) ||
+							(c.getAgeGroup().equalsIgnoreCase("ALL") &&
+									c.getProcess().equalsIgnoreCase("ALL"))).findFirst();
+		}
+		return result.isPresent() ? result.get() : null;
+	}
+
+	/*public List<String> isRequiredBiometricField(String subType, RegistrationDTO registrationDTO,
+												 List<ConditionalBioAttributes> conditionalBioAttributes) {
 		List<String> requiredAttributes = new ArrayList<String>();
 		try {
 			SchemaDto schema = identitySchemaService.getIdentitySchema(registrationDTO.getIdSchemaVersion());
@@ -107,6 +133,6 @@ public class RequiredFieldValidator {
 			LOGGER.error("Failed to get required bioattributes", exception);
 		}
 		return requiredAttributes;
-	}
+	}*/
 
 }

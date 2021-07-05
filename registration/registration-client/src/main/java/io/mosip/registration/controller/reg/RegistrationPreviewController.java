@@ -119,7 +119,7 @@ public class RegistrationPreviewController extends BaseController implements Ini
 		 */
 	}
 
-	private void updateUINFlowMethod() {
+	/*private void updateUINFlowMethod() {
 
 		long fingerPrintCount = getRegistrationDTOFromSession().getBiometricDTO().getApplicantBiometricDTO()
 				.getBiometricExceptionDTO().stream()
@@ -147,7 +147,7 @@ public class RegistrationPreviewController extends BaseController implements Ini
 		} else {
 			SessionContext.map().put(RegistrationConstants.UIN_UPDATE_DEMOGRAPHICDETAIL, true);
 		}
-	}
+	}*/
 
 	@FXML
 	public void goToNextPage(ActionEvent event) {

@@ -9,12 +9,6 @@ import io.mosip.registration.dto.UserBiometricDTO;
 import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.dto.UserMachineMappingDTO;
 import io.mosip.registration.dto.UserRoleDTO;
-import io.mosip.registration.dto.demographic.AddressDTO;
-import io.mosip.registration.dto.demographic.DemographicDTO;
-import io.mosip.registration.dto.demographic.DemographicInfoDTO;
-import io.mosip.registration.dto.json.demo.Address;
-import io.mosip.registration.dto.json.demo.Demographic;
-import io.mosip.registration.dto.json.demo.DemographicInfo;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.RegCenterUser;
 import io.mosip.registration.entity.UserBiometric;
@@ -73,13 +67,7 @@ public class CustomObjectMapper extends ConfigurableMapper {
 		converterFactory.registerConverter(new PassThroughConverter(OffsetDateTime.class));
 		//converterFactory.registerConverter("packetMetaInfo", new PacketMetaInfoConverter());
 
-		mapperFactory.classMap(DemographicInfoDTO.class, DemographicInfo.class).byDefault().register();
 
-		mapperFactory.classMap(AddressDTO.class, Address.class).byDefault().register();
-
-		mapperFactory.classMap(DemographicDTO.class, Demographic.class).exclude("applicantDocumentDTO")
-				.exclude("introducerRID").exclude("introducerUIN").byDefault().register();
-		
 		mapperFactory.classMap(UserRole.class, UserRoleDTO.class)
 		.customize(new CustomMapper<UserRole, UserRoleDTO>() {
 			@Override

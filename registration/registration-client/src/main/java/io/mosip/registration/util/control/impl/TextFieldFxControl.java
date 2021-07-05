@@ -26,7 +26,7 @@ import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.controller.VirtualKeyboard;
 import io.mosip.registration.controller.reg.Validations;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.util.common.DemographicChangeActionHandler;
 import io.mosip.registration.util.control.FxControl;

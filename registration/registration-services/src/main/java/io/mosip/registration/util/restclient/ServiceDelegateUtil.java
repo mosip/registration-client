@@ -166,87 +166,6 @@ public class ServiceDelegateUtil {
 		return responseBody;
 	}
 
-	/**
-	 * Builds the request and passess it to REST client util
-	 * 
-	 * @param url
-	 *            - MDM service url
-	 * @param serviceName
-	 *            - MDM service name
-	 * @param request
-	 *            - request data
-	 * @param responseType
-	 *            - response format
-	 * @return Object - response body
-	 * @throws RegBaseCheckedException
-	 *             - generalized exception with errorCode and errorMessage
-	 */
-	/*public Object invokeRestService(String url, String serviceName, Object request, Class<?> responseType)
-			throws RegBaseCheckedException {
-
-		LOGGER.debug(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_GET, APPLICATION_NAME, APPLICATION_ID,
-				"invokeRestService method has been called");
-
-		Map<String, Object> responseMap = null;
-		Object responseBody = null;
-
-		RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
-
-		prepareRequest(requestHTTPDTO, serviceName, request, responseType, url);
-
-		try {
-			responseMap = restClientUtil.invoke(requestHTTPDTO);
-		} catch (HttpClientErrorException | HttpServerErrorException | ResourceAccessException
-				| SocketTimeoutException exception) {
-			throw new RegBaseUncheckedException(
-					RegistrationExceptionConstants.REG_SERVICE_DELEGATE_UTIL_CODE.getErrorCode(),
-					RegistrationExceptionConstants.REG_SERVICE_DELEGATE_UTIL_CODE.getErrorMessage(), exception);
-		}
-		if (isResponseValid(responseMap, RegistrationConstants.REST_RESPONSE_BODY)) {
-			responseBody = responseMap.get(RegistrationConstants.REST_RESPONSE_BODY);
-		}
-		LOGGER.debug(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_GET, APPLICATION_NAME, APPLICATION_ID,
-				"invokeRestService method has been ended");
-
-		return responseBody;
-
-	}*/
-
-	/**
-	 * prepares the request
-	 * 
-	 * @param requestHTTPDTO
-	 *            - holds the request data for a REST call
-	 * @param serviceName
-	 *            - service name
-	 * @param request
-	 *            - request data
-	 * @param responseType
-	 *            - response format
-	 * @param url
-	 *            - the URL
-	 */
-	/*protected void prepareRequest(RequestHTTPDTO requestHTTPDTO, String serviceName, Object request,
-			Class<?> responseType, String url) {
-		LOGGER.info(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_PREPARE_REQUEST, APPLICATION_NAME, APPLICATION_ID,
-				"Preparing request");
-
-		requestHTTPDTO.setHttpMethod(
-				HttpMethod.valueOf(getEnvironmentProperty(serviceName, RegistrationConstants.HTTPMETHOD)));
-		requestHTTPDTO.setHttpHeaders(new HttpHeaders());
-		requestHTTPDTO.setRequestBody(request);
-		requestHTTPDTO.setClazz(Object.class);
-		requestHTTPDTO.setIsSignRequired(false);
-		try {
-			requestHTTPDTO.setUri(new URI(url));
-		} catch (URISyntaxException uriSyntaxException) {
-		}
-		// set timeout
-		setTimeout(requestHTTPDTO);
-		// Headers
-		setHeaders(requestHTTPDTO.getHttpHeaders(), getEnvironmentProperty(serviceName, RegistrationConstants.HEADERS));
-		requestHTTPDTO.setAuthRequired(false);
-	}*/
 
 	/**
 	 * Prepare GET request.
@@ -422,39 +341,6 @@ public class ServiceDelegateUtil {
 		requestHTTPDTO.setSimpleClientHttpRequestFactory(requestFactory);
 	}
 
-	/*private AuthNRequestDTO prepareAuthNRequestDTO(LoginMode loginMode) {
-		LOGGER.info(LoggerConstants.LOG_SERVICE_DELEGATE_AUTH_DTO, APPLICATION_NAME, APPLICATION_ID,
-				"Preparing AuthNRequestDTO Based on Login Mode >>>> " + loginMode);
-
-		AuthNRequestDTO authNRequestDTO = new AuthNRequestDTO();
-		LoginUserDTO loginUserDTO = (LoginUserDTO) ApplicationContext.map().get(RegistrationConstants.USER_DTO);
-
-		switch (loginMode) {
-		case PASSWORD:
-			AuthNUserPasswordDTO authNUserPasswordDTO = new AuthNUserPasswordDTO();
-			authNUserPasswordDTO
-					.setAppId(String.valueOf(ApplicationContext.map().get(RegistrationConstants.REGISTRATION_CLIENT)));
-			authNUserPasswordDTO.setUserName(loginUserDTO.getUserId());
-			authNUserPasswordDTO.setPassword(loginUserDTO.getPassword());
-			authNRequestDTO.setRequest(authNUserPasswordDTO);
-			break;
-		case OTP:
-			AuthNUserOTPDTO authNUserOTPDTO = new AuthNUserOTPDTO();
-			authNUserOTPDTO
-					.setAppId(String.valueOf(ApplicationContext.map().get(RegistrationConstants.REGISTRATION_CLIENT)));
-			authNUserOTPDTO.setUserId(loginUserDTO.getUserId());
-			authNUserOTPDTO.setOtp(loginUserDTO.getOtp());
-			authNRequestDTO.setRequest(authNUserOTPDTO);
-			break;
-		}
-
-		LOGGER.info(LoggerConstants.LOG_SERVICE_DELEGATE_AUTH_DTO, APPLICATION_NAME, APPLICATION_ID,
-				"Completed preparing AuthNRequestDTO Based on Login Mode >>> " + loginMode);
-
-		return authNRequestDTO;
-	}*/
-
-
 
 	private String getEnvironmentProperty(String serviceName, String serviceComponent) {
 		return environment.getProperty(serviceName.concat(RegistrationConstants.DOT).concat(serviceComponent));
@@ -466,37 +352,4 @@ public class ServiceDelegateUtil {
 		return !(null == responseMap || responseMap.isEmpty() || !responseMap.containsKey(key));
 	}
 
-
-
-
-	/**
-	 * Create a {@link RequestHTTPDTO} for a web-service. Add Cookie to the request
-	 * 	  header and URL to request
-	 * @param cookie
-	 * @param requestURL
-	 * @param httpMethod
-	 * @return
-	 * @throws URISyntaxException
-	 */
-	/*private RequestHTTPDTO buildRequestHTTPDTO(String cookie, String requestURL, HttpMethod httpMethod)
-			throws URISyntaxException {
-		RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
-		// setting headers
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.add("Cookie", cookie);
-		requestHTTPDTO.setClazz(Object.class);
-		requestHTTPDTO.setHttpHeaders(headers);
-
-		requestHTTPDTO.setUri(new URI(requestURL));
-
-		requestHTTPDTO.setHttpMethod(httpMethod);
-		requestHTTPDTO.setIsSignRequired(false);
-		requestHTTPDTO.setRequestSignRequired(false);
-
-		// set simple client http request
-		setTimeout(requestHTTPDTO);
-
-		return requestHTTPDTO;
-	}*/
 }
