@@ -201,12 +201,16 @@ public class PacketUploadController extends BaseController implements Initializa
 		service.reset();
 
 		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+			packetUploadPane.setDisable(false);
+			progressIndicatorPane.setVisible(false);
 			loadInitialPage();
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NETWORK_ERROR));
 			return;
 		}
 
 		if (selectedPackets.isEmpty()) {
+			packetUploadPane.setDisable(false);
+			progressIndicatorPane.setVisible(false);
 			loadInitialPage();
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PACKET_UPLOAD_EMPTY_ERROR));
 			return;
@@ -582,7 +586,7 @@ public class PacketUploadController extends BaseController implements Initializa
 		uploadBtn.setVisible(!toBeUploadedPacketStatusDTOs.isEmpty());
 		selectAllCheckBox.setSelected(false);
 		clientStatusComboBox.setDisable(allApprovedPackets.isEmpty());
-		serverStatusComboBox.setDisable(allApprovedPackets.isEmpty());
+		serverStatusComboBox.setDisable(allApprovedPackets.isEmpty() || uploadedPacketStatusDTOs.isEmpty());
 		clearFilters.setDisable(allApprovedPackets.isEmpty());
 		selectedPackets.clear();
 		
