@@ -1,8 +1,5 @@
 package io.mosip.registration.service.packet.impl;
 
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +10,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.kernel.core.virusscanner.exception.VirusScannerException;
@@ -25,16 +21,16 @@ import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.service.BaseService;
-import io.mosip.registration.service.packet.RegistrationPacketVirusScanService;
+import io.mosip.registration.service.packet.RegistrationclientVirusScanService;
 
 /**
- * Implementation class for {@link RegistrationPacketVirusScanService}
+ * Implementation class for {@link RegistrationclientVirusScanService}
  * 
  * @author saravanakumar gnanaguru
  * @since 1.0.0
  */
 @Service
-public class RegistrationPacketVirusScanServiceImpl extends BaseService implements RegistrationPacketVirusScanService {
+public class RegistrationPacketVirusScanServiceImpl extends BaseService implements RegistrationclientVirusScanService {
 
 	@Autowired
 	private org.springframework.context.ApplicationContext applicationContext;
