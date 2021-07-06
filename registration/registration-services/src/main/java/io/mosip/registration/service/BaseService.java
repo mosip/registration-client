@@ -814,19 +814,19 @@ public class BaseService {
 		return RegistrationConstants.ENABLE.equalsIgnoreCase(getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP));
 	}
 
-	public BufferedImage concatImages(byte[] image1, byte[] image2, byte[] image3, byte[] image4) {
+	public BufferedImage concatImages(byte[] image1, byte[] image2, byte[] image3, byte[] image4, String imagePath) {
 		try {
 			BufferedImage img1 = ImageIO.read((image1 == null || image1.length == 0) ?
-					this.getClass().getResourceAsStream("/images/exclamation.png") :
+					this.getClass().getResourceAsStream(imagePath) :
 					new ByteArrayInputStream(image1));
 			BufferedImage img2 = ImageIO.read((image2 == null || image2.length == 0) ?
-					this.getClass().getResourceAsStream("/images/exclamation.png") :
+					this.getClass().getResourceAsStream(imagePath) :
 					new ByteArrayInputStream(image2));
 			BufferedImage img3 = ImageIO.read((image3 == null || image3.length == 0) ?
-					this.getClass().getResourceAsStream("/images/exclamation.png") :
+					this.getClass().getResourceAsStream(imagePath) :
 					new ByteArrayInputStream(image3));
 			BufferedImage img4 = ImageIO.read((image4 == null || image4.length == 0) ?
-					this.getClass().getResourceAsStream("/images/exclamation.png") :
+					this.getClass().getResourceAsStream(imagePath) :
 					new ByteArrayInputStream(image4));
 			int offset = 2;
 			int width = img1.getWidth() + img2.getWidth() + img3.getWidth() + img4.getWidth() + offset;
@@ -849,13 +849,13 @@ public class BaseService {
 		return null;
 	}
 
-	public BufferedImage concatImages(byte[] image1, byte[] image2) {
+	public BufferedImage concatImages(byte[] image1, byte[] image2, String imagePath) {
 		try {
 			BufferedImage img1 = ImageIO.read((image1 == null || image1.length == 0) ?
-					this.getClass().getResourceAsStream("/images/exclamation.png") :
+					this.getClass().getResourceAsStream(imagePath) :
 					new ByteArrayInputStream(image1));
 			BufferedImage img2 = ImageIO.read((image2 == null || image2.length == 0) ?
-					this.getClass().getResourceAsStream("/images/exclamation.png") :
+					this.getClass().getResourceAsStream(imagePath) :
 					new ByteArrayInputStream(image2));
 			int offset = 2;
 			int width = img1.getWidth() + img2.getWidth() + offset;

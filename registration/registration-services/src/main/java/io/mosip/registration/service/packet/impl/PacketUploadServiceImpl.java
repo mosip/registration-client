@@ -177,16 +177,18 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 			packetStatusDTO.setPacketClientStatus(RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode());
 			packetStatusDTO.setUploadStatus(RegistrationClientStatusCode.UPLOAD_SUCCESS_STATUS.getCode());
 			packetStatusDTO.setPacketServerStatus(status);
-		} catch (Throwable t) {
-			LOGGER.error("Error while pushing packets to the server", t);
-			if(t.getMessage().toLowerCase().contains(RegistrationConstants.PACKET_DUPLICATE)) {
+		} catch (RegBaseCheckedException exception) {
+			LOGGER.error("Error while pushing packets to the server", exception);
+			if(exception.getMessage().toLowerCase().contains(RegistrationConstants.PACKET_DUPLICATE)) {
 				packetStatusDTO.setPacketClientStatus(RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode());
 				packetStatusDTO.setUploadStatus(RegistrationClientStatusCode.UPLOAD_SUCCESS_STATUS.getCode());
 				packetStatusDTO.setPacketServerStatus(RegistrationConstants.PACKET_DUPLICATE.toUpperCase());
 			}
-			else
-				packetStatusDTO.setUploadStatus(RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode());
-		}
+		} catch (Throwable t) {
+			LOGGER.error("Error while pushing packets to the server", t);
+			
+			packetStatusDTO.setUploadStatus(RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode());
+		} 
 		//Update status in registration table
 		return registrationDAO.updateRegStatus(packetStatusDTO);
 	}

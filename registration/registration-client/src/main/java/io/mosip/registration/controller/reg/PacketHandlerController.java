@@ -552,7 +552,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 				String guidelines = getValueFromApplicationContext(key);
 				templateGenerator.setGuidelines(guidelines);
 				ResponseDTO templateResponse = templateGenerator.generateTemplate(ackTemplateText, registrationDTO,
-						templateManagerBuilder, RegistrationConstants.ACKNOWLEDGEMENT_TEMPLATE);
+						templateManagerBuilder, RegistrationConstants.ACKNOWLEDGEMENT_TEMPLATE, getImagePath(RegistrationConstants.CROSS_IMG, true));
 				if (templateResponse != null && templateResponse.getSuccessResponseDTO() != null) {
 					Writer stringWriter = (Writer) templateResponse.getSuccessResponseDTO().getOtherAttributes()
 							.get(RegistrationConstants.TEMPLATE_NAME);
