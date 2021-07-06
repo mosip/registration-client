@@ -316,8 +316,8 @@ public class BaseService {
 		String machineName = RegistrationSystemPropertiesChecker.getMachineId();
 		MachineMaster machineMaster = machineMasterRepository.findByNameIgnoreCase(machineName.toLowerCase());
 
-		if(machineMaster != null && machineMaster.getRegMachineSpecId().getId() != null && machineMaster.getIsActive())
-			return machineMaster.getRegMachineSpecId().getId();
+		if(machineMaster != null && machineMaster.getId() != null && machineMaster.getIsActive())
+			return machineMaster.getId();
 		return null;
 	}
 

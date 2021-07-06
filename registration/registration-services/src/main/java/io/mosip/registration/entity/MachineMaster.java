@@ -3,14 +3,7 @@ package io.mosip.registration.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import io.mosip.registration.entity.id.RegMachineSpecId;
 
@@ -31,11 +24,12 @@ public class MachineMaster extends RegistrationCommonFields implements Serializa
 	 */
 	private static final long serialVersionUID = -5585825705521742941L;
 
-	/**
-	 * Field for machine ID
-	 */
-	@EmbeddedId
-	private RegMachineSpecId regMachineSpecId;
+	@Id
+	@Column(name = "id")
+	private String id;
+
+	@Column(name = "lang_code")
+	private String langCode;
 
 	/**
 	 * Field for machine name
@@ -78,23 +72,12 @@ public class MachineMaster extends RegistrationCommonFields implements Serializa
 	@Column(name = "key_index")
 	private String keyIndex;
 
-	@ManyToOne(fetch=FetchType.LAZY)
-	@JoinColumns({ @JoinColumn(name = "mspec_id", referencedColumnName = "id", insertable = false, updatable = false),
-			@JoinColumn(name = "lang_code", referencedColumnName = "lang_code", insertable = false, updatable = false) })
-	private RegMachineSpec machineSpecification;
-
-	/**
-	 * @return the regMachineSpecId
-	 */
-	public RegMachineSpecId getRegMachineSpecId() {
-		return regMachineSpecId;
+	public String getId() {
+		return id;
 	}
 
-	/**
-	 * @param regMachineSpecId the regMachineSpecId to set
-	 */
-	public void setRegMachineSpecId(RegMachineSpecId regMachineSpecId) {
-		this.regMachineSpecId = regMachineSpecId;
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	/**
@@ -179,14 +162,6 @@ public class MachineMaster extends RegistrationCommonFields implements Serializa
 	 */
 	public void setValidityDateTime(LocalDateTime validityDateTime) {
 		this.validityDateTime = validityDateTime;
-	}
-
-	public RegMachineSpec getMachineSpecification() {
-		return machineSpecification;
-	}
-
-	public void setMachineSpecification(RegMachineSpec machineSpecification) {
-		this.machineSpecification = machineSpecification;
 	}
 
 	public String getPublicKey() {

@@ -119,10 +119,7 @@ public class PolicySyncServiceTest {
 		Mockito.when(RegistrationSystemPropertiesChecker.getMachineId()).thenReturn("11002");
 
 		MachineMaster machine = new MachineMaster();
-		RegMachineSpecId regMachineSpecId = new RegMachineSpecId();
-		regMachineSpecId.setId("11002");
-		regMachineSpecId.setLangCode("eng");
-		machine.setRegMachineSpecId(regMachineSpecId);
+		machine.setId("11002");
 		machine.setIsActive(true);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
 

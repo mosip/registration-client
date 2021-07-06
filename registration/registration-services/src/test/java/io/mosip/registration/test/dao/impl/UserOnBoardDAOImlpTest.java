@@ -354,10 +354,8 @@ public class UserOnBoardDAOImlpTest {
 		machineMaster.setName("localhost");
 		machineMaster.setIsActive(true);
 		machineMaster.setMacAddress("8C-16-45-88-E7-0C");
-		RegMachineSpecId regMachineSpecId = new RegMachineSpecId();
-		regMachineSpecId.setId("100311");
-		regMachineSpecId.setLangCode("eng");
-		machineMaster.setRegMachineSpecId(regMachineSpecId);
+
+		machineMaster.setId("100311");
 		Mockito.when(machineMasterRepository
 				.findByNameIgnoreCase(Mockito.anyString()))
 				.thenReturn(machineMaster);

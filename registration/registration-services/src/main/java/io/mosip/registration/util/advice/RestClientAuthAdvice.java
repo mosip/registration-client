@@ -268,9 +268,8 @@ public class RestClientAuthAdvice {
 		try {
 			httpHeaders.add("request-signature", String.format("Authorization:%s", CryptoUtil
 					.encodeBase64(clientCryptoFacade.getClientSecurity().signData(JsonUtils.javaObjectToJsonString(requestBody).getBytes()))));
-			httpHeaders.add(RegistrationConstants.KEY_INDEX, CryptoUtil.encodeBase64String(String
-					.valueOf(machineMappingDAO.getKeyIndexByMachineName(RegistrationSystemPropertiesChecker.getMachineId()))
-					.getBytes()));
+			httpHeaders.add(RegistrationConstants.KEY_INDEX, CryptoUtil.computeFingerPrint(
+					clientCryptoFacade.getClientSecurity().getEncryptionPublicPart(), null));
 		} catch (JsonProcessingException jsonProcessingException) {
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTHZ_ADDING_REQUEST_SIGN.getErrorCode(),
 					RegistrationExceptionConstants.AUTHZ_ADDING_REQUEST_SIGN.getErrorMessage(),

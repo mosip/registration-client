@@ -46,7 +46,6 @@ public class MasterDataResponseDto {
 	private List<IndividualTypeDto> individualTypes;
 	private List<ValidDocumentDto> validDocumentMapping;
 	private List<AppAuthenticationMethodDto> appAuthenticationMethods;
-	private List<AppDetailDto> appDetails;
 	private List<AppRolePriorityDto> appRolePriorities;
 	private List<ScreenAuthorizationDto> screenAuthorizations;
 	private List<ProcessListDto> processList;

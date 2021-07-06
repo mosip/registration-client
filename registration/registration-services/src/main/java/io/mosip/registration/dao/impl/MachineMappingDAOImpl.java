@@ -67,11 +67,10 @@ public class MachineMappingDAOImpl implements MachineMappingDAO {
 
 		try {
 			MachineMaster machineMaster = machineMasterRepository
-					.findByIsActiveTrueAndNameIgnoreCaseAndRegMachineSpecIdLangCode(machineName.toLowerCase(),
-							ApplicationContext.applicationLanguage());
+					.findByIsActiveTrueAndNameIgnoreCase(machineName.toLowerCase());
 
-			if (machineMaster != null && machineMaster.getRegMachineSpecId().getId() != null) {
-				return machineMaster.getRegMachineSpecId().getId();
+			if (machineMaster != null && machineMaster.getId() != null) {
+				return machineMaster.getId();
 			} else {
 				return null;
 			}
@@ -115,8 +114,7 @@ public class MachineMappingDAOImpl implements MachineMappingDAO {
 				"Fetching Key Index of Machine based on Machine name");
 
 		MachineMaster machineMaster = machineMasterRepository
-				.findByIsActiveTrueAndNameIgnoreCaseAndRegMachineSpecIdLangCode(machineName.toLowerCase(),
-						ApplicationContext.applicationLanguage());
+				.findByIsActiveTrueAndNameIgnoreCase(machineName.toLowerCase());
 
 		LOGGER.info(MACHINE_MAPPING_LOGGER_TITLE, APPLICATION_NAME, APPLICATION_ID,
 				"Completed fetching Key Index of Machine based on Machine name");

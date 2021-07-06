@@ -48,10 +48,7 @@ public class RequiredFieldValidator {
 					.filter(field -> "MVEL".equalsIgnoreCase(field.getEngine()) && field.getExpr() != null).findFirst();
 
 			if (expression.isPresent()) {
-				Map context = new HashMap();
-				context.put("identity", registrationDTO.getMVELDataContext());
-				VariableResolverFactory resolverFactory = new MapVariableResolverFactory(context);
-				required = MVEL.evalToBoolean(expression.get().getExpr(), resolverFactory);
+				required = executeMVEL(expression.get().getExpr(), registrationDTO);
 				LOGGER.info("Refreshed {} field isRequired check, required ? {} ", schemaField.getId(), required);
 			}
 		}
@@ -63,11 +60,7 @@ public class RequiredFieldValidator {
 
 		if (schemaField != null && schemaField.getVisible() != null && schemaField.getVisible().getEngine().equalsIgnoreCase("MVEL")
 				&& schemaField.getVisible().getExpr() != null) {
-
-			Map context = new HashMap();
-			context.put("identity", registrationDTO.getMVELDataContext());
-			VariableResolverFactory resolverFactory = new MapVariableResolverFactory(context);
-			visible = MVEL.evalToBoolean(schemaField.getVisible().getExpr(), resolverFactory);
+			visible = executeMVEL(schemaField.getVisible().getExpr(), registrationDTO);
 			LOGGER.info("Refreshed {} field visibility : {} ", schemaField.getId(), visible);
 		}
 		return visible;
@@ -105,34 +98,16 @@ public class RequiredFieldValidator {
 		return result.isPresent() ? result.get() : null;
 	}
 
-	/*public List<String> isRequiredBiometricField(String subType, RegistrationDTO registrationDTO,
-												 List<ConditionalBioAttributes> conditionalBioAttributes) {
-		List<String> requiredAttributes = new ArrayList<String>();
+	private boolean executeMVEL(String expression, RegistrationDTO registrationDTO) {
 		try {
-			SchemaDto schema = identitySchemaService.getIdentitySchema(registrationDTO.getIdSchemaVersion());
-			List<UiSchemaDTO> fields = schema.getSchema().stream()
-					.filter(field -> field.getType() != null
-							&& PacketManagerConstants.BIOMETRICS_DATATYPE.equals(field.getType())
-							&& field.getSubType() != null && field.getSubType().equals(subType))
-					.collect(Collectors.toList());
-
-			for (UiSchemaDTO schemaField : fields) {
-				if (isRequiredField(schemaField, registrationDTO) && schemaField.getBioAttributes() != null)
-					requiredAttributes.addAll(schemaField.getBioAttributes());
-			}
-
-			// Reg-client will capture the face of Infant and send it in Packet as part of
-			// IndividualBiometrics CBEFF (If Face is captured for the country)
-			if ((registrationDTO.isChild() && APPLICANT_SUBTYPE.equals(subType) && requiredAttributes.contains("face"))
-					|| (registrationDTO.getRegistrationCategory().equalsIgnoreCase(RegistrationConstants.PACKET_TYPE_UPDATE)
-					&& registrationDTO.getUpdatableFieldGroups().contains("GuardianDetails")
-					&& APPLICANT_SUBTYPE.equals(subType) && requiredAttributes.contains("face"))) {
-				return Arrays.asList("face"); // Only capture face
-			}
-		}catch (RegBaseCheckedException exception) {
-			LOGGER.error("Failed to get required bioattributes", exception);
+			Map context = new HashMap();
+			context.put("identity", registrationDTO.getMVELDataContext());
+			VariableResolverFactory resolverFactory = new MapVariableResolverFactory(context);
+			return MVEL.evalToBoolean(expression, resolverFactory);
+		} catch (Throwable t) {
+			LOGGER.error("Failed to evaluate mvel expr", t);
 		}
-		return requiredAttributes;
-	}*/
+		return false;
+	}
 
 }

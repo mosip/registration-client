@@ -12,6 +12,6 @@ import io.mosip.registration.entity.id.RegMachineSpecId;
  *
  */
 
-public interface MachineSpecificationRepository extends BaseRepository<RegMachineSpec, RegMachineSpecId> {
+public interface MachineSpecificationRepository extends BaseRepository<RegMachineSpec, String> {
 
 }
