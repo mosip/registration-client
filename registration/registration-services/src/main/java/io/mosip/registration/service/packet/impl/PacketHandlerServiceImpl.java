@@ -194,7 +194,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			LOGGER.debug("Requesting packet manager to persist packet");
 			packetWriter.persistPacket(registrationDTO.getRegistrationId(),
 					String.valueOf(registrationDTO.getIdSchemaVersion()), schema.getSchemaJson(), source.toUpperCase(),
-					registrationDTO.getRegistrationCategory().toUpperCase(), null, registrationDTO.getAppId(), true);
+					registrationDTO.getRegistrationCategory().toUpperCase(), true);
 
 			LOGGER.info("Saving registration info in DB and on disk.");
 			registrationDAO.save(baseLocation + SLASH + packetManagerAccount + SLASH + registrationDTO.getRegistrationId(), registrationDTO);
@@ -588,12 +588,11 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		registrationDTO.setRegistrationCategory(registrationCategory);
 
 		// Set RID
-		/*String registrationID = ridGeneratorImpl.generateId(
+		String registrationID = ridGeneratorImpl.generateId(
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_CENTER_ID),
-				(String) ApplicationContext.map().get(RegistrationConstants.USER_STATION_ID));*/
+				(String) ApplicationContext.map().get(RegistrationConstants.USER_STATION_ID));
 		registrationDTO.setAppId(pridGenerator.generateId());
-		registrationDTO.setRegistrationId(registrationDTO.getAppId());
-		//registrationDTO.setAppId(pridGenerator.generateId());
+		registrationDTO.setRegistrationId(registrationID);
 
 		LOGGER.info(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID,

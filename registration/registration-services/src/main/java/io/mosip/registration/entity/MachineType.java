@@ -2,10 +2,7 @@ package io.mosip.registration.entity;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import io.mosip.registration.entity.id.CodeAndLanguageCodeID;
 
@@ -22,8 +19,9 @@ public class MachineType extends RegistrationCommonFields implements Serializabl
 
 	private static final long serialVersionUID = -8541947587557590379L;
 
-	@EmbeddedId
-	private CodeAndLanguageCodeID codeAndLanguageCodeID;
+	@Id
+	@Column(name = "code")
+	private String code;
 
 	@Column(name = "name")
 	private String name;
@@ -31,19 +29,6 @@ public class MachineType extends RegistrationCommonFields implements Serializabl
 	@Column(name = "descr")
 	private String description;
 
-	/**
-	 * @return the codeAndLanguageCodeID
-	 */
-	public CodeAndLanguageCodeID getCodeAndLanguageCodeID() {
-		return codeAndLanguageCodeID;
-	}
-
-	/**
-	 * @param codeAndLanguageCodeID the codeAndLanguageCodeID to set
-	 */
-	public void setCodeAndLanguageCodeID(CodeAndLanguageCodeID codeAndLanguageCodeID) {
-		this.codeAndLanguageCodeID = codeAndLanguageCodeID;
-	}
 
 	/**
 	 * @return the name

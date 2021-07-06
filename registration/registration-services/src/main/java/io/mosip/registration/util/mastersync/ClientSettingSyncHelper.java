@@ -38,7 +38,6 @@ import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.DynamicField;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.AppAuthenticationRepository;
-import io.mosip.registration.repositories.AppDetailRepository;
 import io.mosip.registration.repositories.AppRolePriorityRepository;
 import io.mosip.registration.repositories.ApplicantValidDocumentRepository;
 import io.mosip.registration.repositories.BiometricAttributeRepository;
@@ -176,10 +175,6 @@ public class ClientSettingSyncHelper {
 	/** Object for Sync app role Repository. */
 	@Autowired
 	private AppRolePriorityRepository appRolePriorityRepository;
-
-	/** Object for Sync app detail Repository. */
-	@Autowired
-	private AppDetailRepository appDetailRepository;
 
 	/** Object for Sync screen auth Repository. */
 	@Autowired
@@ -376,7 +371,6 @@ public class ClientSettingSyncHelper {
 	@Async
 	private CompletableFuture handleAppDetailSync(SyncDataResponseDto syncDataResponseDto) throws SyncFailedException {
 		try {
-			appDetailRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "AppDetail")));
 			appRolePriorityRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "AppRolePriority")));
 			appAuthenticationRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "AppAuthenticationMethod")));
 		} catch (Exception e) {

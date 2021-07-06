@@ -137,10 +137,7 @@ public class PacketHandlerServiceTest {
 		MachineMaster machineMaster = new MachineMaster();
 		machineMaster.setIsActive(true);
 
-		RegMachineSpecId machineSpecId = new RegMachineSpecId();
-		machineSpecId.setId("123");
-
-		machineMaster.setRegMachineSpecId(machineSpecId);
+		machineMaster.setId("123");
 
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(machineName.toLowerCase())).thenReturn(machineMaster);
 

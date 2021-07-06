@@ -72,7 +72,7 @@ public class UserClientMachineMappingDAOTest {
 
 	@Test(expected = RegBaseUncheckedException.class)
 	public void getStationIDRunException() throws RegBaseCheckedException {
-		Mockito.when(machineMasterRepository.findByIsActiveTrueAndNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(), Mockito.anyString()))
+		Mockito.when(machineMasterRepository.findByIsActiveTrueAndNameIgnoreCase(Mockito.anyString()))
 				.thenThrow(new RegBaseUncheckedException());
 		machineMappingDAOImpl.getStationID("localhost");
 	}
@@ -82,11 +82,9 @@ public class UserClientMachineMappingDAOTest {
 		MachineMaster machineMaster = new MachineMaster();
 		machineMaster.setName("localhost");
 		machineMaster.setMacAddress("8C-16-45-88-E7-0C");
-		RegMachineSpecId specId = new RegMachineSpecId();
-		specId.setId("100131");
-		specId.setLangCode("eng");
-		machineMaster.setRegMachineSpecId(specId);
-		Mockito.when(machineMasterRepository.findByIsActiveTrueAndNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(), Mockito.anyString()))
+
+		machineMaster.setId("100131");
+		Mockito.when(machineMasterRepository.findByIsActiveTrueAndNameIgnoreCase(Mockito.anyString()))
 				.thenReturn(machineMaster);
 		String stationId = machineMappingDAOImpl.getStationID("localhost");
 		Assert.assertSame("100131", stationId);
@@ -147,7 +145,7 @@ public class UserClientMachineMappingDAOTest {
 		MachineMaster machineMaster = PowerMockito.mock(MachineMaster.class);
 		machineMaster.setKeyIndex("keyIndex");
 
-		PowerMockito.when(machineMasterRepository.findByIsActiveTrueAndNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(), Mockito.anyString()))
+		PowerMockito.when(machineMasterRepository.findByIsActiveTrueAndNameIgnoreCase(Mockito.anyString()))
 				.thenReturn(machineMaster);
 
 		Assert.assertEquals(machineMaster.getKeyIndex(), machineMappingDAOImpl.getKeyIndexByMachineName("name"));
@@ -157,7 +155,7 @@ public class UserClientMachineMappingDAOTest {
 	@Test
 	public void getKeyIndexByMachineNameNullTest() {
 
-		PowerMockito.when(machineMasterRepository.findByIsActiveTrueAndNameIgnoreCaseAndRegMachineSpecIdLangCode(Mockito.anyString(), Mockito.anyString()))
+		PowerMockito.when(machineMasterRepository.findByIsActiveTrueAndNameIgnoreCase(Mockito.anyString()))
 				.thenReturn(null);
 
 		Assert.assertNull(machineMappingDAOImpl.getKeyIndexByMachineName("name"));

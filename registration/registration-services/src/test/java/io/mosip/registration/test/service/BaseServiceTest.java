@@ -88,10 +88,7 @@ public class BaseServiceTest {
 	@Test
 	public void getStationIdTest() {
 		MachineMaster machine = new MachineMaster();
-		RegMachineSpecId regMachineSpecId = new RegMachineSpecId();
-		regMachineSpecId.setId("11002");
-		regMachineSpecId.setLangCode("eng");
-		machine.setRegMachineSpecId(regMachineSpecId);
+		machine.setId("11002");
 		machine.setIsActive(true);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
 
@@ -101,10 +98,7 @@ public class BaseServiceTest {
 	@Test
 	public void getNegativeStationIdTest() {
 		MachineMaster machine = new MachineMaster();
-		RegMachineSpecId regMachineSpecId = new RegMachineSpecId();
-		regMachineSpecId.setId("11002");
-		regMachineSpecId.setLangCode("eng");
-		machine.setRegMachineSpecId(regMachineSpecId);
+		machine.setId("11002");
 		machine.setIsActive(false);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
 

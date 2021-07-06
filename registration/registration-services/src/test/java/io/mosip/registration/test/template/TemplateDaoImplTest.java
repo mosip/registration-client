@@ -59,13 +59,10 @@ public class TemplateDaoImplTest {
 	public void getTemplateTypesTest() {
 		List<TemplateType> templateTypes = new ArrayList<>();
 		TemplateType templateType = new TemplateType();
-		TemplateEmbeddedKeyCommonFields typePrimaryKey = new TemplateEmbeddedKeyCommonFields();
-		typePrimaryKey.setCode("vel");
-		typePrimaryKey.setLangCode("eng");
-		templateType.setPkTmpltCode(typePrimaryKey);
+		templateType.setCode("vel");
 		templateType.setIsActive(true);
 		templateTypes.add(templateType);
-		when(typeRepository.findByIsActiveTrueAndPkTmpltCodeCodeAndPkTmpltCodeLangCode("ackTemplate", "eng"))
+		when(typeRepository.findByIsActiveTrueAndCode("ackTemplate"))
 				.thenReturn(templateTypes);
 		assertThat(templateDao.getAllTemplateTypes("ackTemplate", "eng"), is(templateTypes));
 	}
@@ -74,10 +71,7 @@ public class TemplateDaoImplTest {
 	public void getTemplateFileFormatsTest() {
 		List<TemplateFileFormat> fileFormats = new ArrayList<>();
 		TemplateFileFormat fileFormat = new TemplateFileFormat();
-		TemplateEmbeddedKeyCommonFields fileFormatPK = new TemplateEmbeddedKeyCommonFields();
-		fileFormatPK.setCode("vel");
-		fileFormatPK.setLangCode("eng");
-		fileFormat.setPkTfftCode(fileFormatPK);
+		fileFormat.setCode("vel");
 		fileFormat.setIsActive(true);
 		fileFormats.add(fileFormat);
 		when(fileFormatRepository.findByIsActiveTrue()).thenReturn(fileFormats);

@@ -129,9 +129,6 @@ public class ClientSettingsHelperTest {
 	private AppRolePriorityRepository appRolePriorityRepository;
 
 	@Mock
-	private AppDetailRepository appDetailRepository;
-
-	@Mock
 	private ScreenAuthorizationRepository screenAuthorizationRepository;
 
 	@Mock

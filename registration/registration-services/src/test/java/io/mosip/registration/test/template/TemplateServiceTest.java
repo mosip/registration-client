@@ -54,10 +54,7 @@ public class TemplateServiceTest {
 	public List<TemplateType> getAllDummyTemplateTypes(){
 		List<TemplateType> templateTypes = new ArrayList<>();
 		TemplateType templateType = new TemplateType();
-		TemplateEmbeddedKeyCommonFields typePrimaryKey = new TemplateEmbeddedKeyCommonFields();
-		typePrimaryKey.setCode("ackTemplate");
-		typePrimaryKey.setLangCode("eng");
-		templateType.setPkTmpltCode(typePrimaryKey);
+		templateType.setCode("ackTemplate");
 		templateType.setIsActive(true);
 		templateTypes.add(templateType);
 		return templateTypes;
@@ -66,10 +63,7 @@ public class TemplateServiceTest {
 	public List<TemplateFileFormat> getAllDummyFormats(){
 		List<TemplateFileFormat> fileFormats = new ArrayList<>();
 		TemplateFileFormat fileFormat = new TemplateFileFormat();
-		TemplateEmbeddedKeyCommonFields fileFormatPK = new TemplateEmbeddedKeyCommonFields();
-		fileFormatPK.setCode("vel");
-		fileFormatPK.setLangCode("eng");
-		fileFormat.setPkTfftCode(fileFormatPK);
+		fileFormat.setCode("vel");
 		fileFormat.setIsActive(true);
 		fileFormats.add(fileFormat);
 		return fileFormats;

@@ -261,8 +261,12 @@ public class BiometricFxControl extends FxControl {
 		List<BiometricsDto> capturedData = getRegistrationDTo().getBiometric(uiSchemaDTO.getSubType(), modality.getAttributes());
 		
 		try {
-			Image image = !capturedData.isEmpty() ? biometricsController.getBioStreamImage(uiSchemaDTO.getSubType(), modality,
-						capturedData.get(0).getNumOfRetries()) : biometricsController.getImage(getImageIconPath(modality.name()),true);
+			Image image = null;
+			if(Modality.EXCEPTION_PHOTO == modality) {
+				image = getExceptionDocumentAsImage();
+			}
+			image = !capturedData.isEmpty() ? biometricsController.getBioStreamImage(uiSchemaDTO.getSubType(), modality,
+						capturedData.get(0).getNumOfRetries()) : (image == null ? biometricsController.getImage(getImageIconPath(modality.name()),true) : image);
 			button.setGraphic(getImageView(image, 80));
 		} catch (RegBaseCheckedException exception) {
 			LOGGER.error("Exception while Getting Image", exception);
@@ -543,10 +547,10 @@ public class BiometricFxControl extends FxControl {
 		try {
 			DocumentDto documentDto = null;
 			for(String key : getRegistrationDTo().getDocuments().keySet()) {
-				documentDto = getRegistrationDTo().getDocuments().get(key);
-				if(documentDto.getCategory().equals(RegistrationConstants.POE_DOCUMENT) &&
-						documentDto.getType().equals("EOP") &&
-						documentDto.getFormat().equals(RegistrationConstants.SCANNER_IMG_TYPE)) {
+				if(getRegistrationDTo().getDocuments().get(key).getCategory().equals(RegistrationConstants.POE_DOCUMENT) &&
+						getRegistrationDTo().getDocuments().get(key).getType().equals("EOP") &&
+						getRegistrationDTo().getDocuments().get(key).getFormat().equals(RegistrationConstants.SCANNER_IMG_TYPE)) {
+					documentDto = getRegistrationDTo().getDocuments().get(key);
 					break;
 				}
 			}
