@@ -98,16 +98,19 @@ public class PreRegZipHandlingServiceTest {
 		UiSchemaDTO field1 = new UiSchemaDTO();
 		field1.setId("fullName");
 		field1.setType("simpleType");
+		field1.setControlType("textbox");
 		schemaFields.add(field1);
 		
 		UiSchemaDTO field2 = new UiSchemaDTO();
 		field2.setId("gender");
 		field2.setType("simpleType");
+		field2.setControlType("textbox");
 		schemaFields.add(field2);		
 		
 		UiSchemaDTO field3 = new UiSchemaDTO();
 		field3.setId("postalCode");
 		field3.setType("string");
+		field3.setControlType("dropdown");
 		schemaFields.add(field3);
 	}
 	
