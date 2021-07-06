@@ -111,9 +111,6 @@ public class GenericBiometricsController extends BaseController {
 	private ComboBox<BiometricAttributeDto> biometricTypecombo;*/
 
 	@FXML
-	private Label biometricType;
-
-	@FXML
 	private ImageView biometricImage;
 
 	@FXML
@@ -343,7 +340,6 @@ public class GenericBiometricsController extends BaseController {
 		thresholdBox.setVisible(!isExceptionPhoto(modality));
 		biometricBox.setVisible(true);
 		checkBoxPane.getChildren().clear();
-		biometricType.setText(applicationLabelBundle.getString(modality.name()));
 
 		// get List of captured Biometrics based on nonExceptionBio Attributes
 		List<BiometricsDto> capturedBiometrics = null;
@@ -1085,10 +1081,10 @@ public class GenericBiometricsController extends BaseController {
 							new Image(new ByteArrayInputStream(images.get(0)));
 				case IRIS_DOUBLE:
 				case FINGERPRINT_SLAB_THUMBS:
-					return getImage(baseService.concatImages(images.get(0), images.get(1)));
+					return getImage(baseService.concatImages(images.get(0), images.get(1), getImagePath(RegistrationConstants.CROSS_IMG, true)));
 				case FINGERPRINT_SLAB_LEFT:
 				case FINGERPRINT_SLAB_RIGHT:
-					return getImage(baseService.concatImages(images.get(0), images.get(1), images.get(2), images.get(3)));
+					return getImage(baseService.concatImages(images.get(0), images.get(1), images.get(2), images.get(3), getImagePath(RegistrationConstants.CROSS_IMG, true)));
 			}
 		} catch (RegBaseCheckedException e) {
 			LOGGER.error("Failed to get stream image for modality "+ modality, e);

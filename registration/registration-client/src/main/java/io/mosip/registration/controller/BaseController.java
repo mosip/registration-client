@@ -1552,6 +1552,13 @@ public class BaseController {
 		return String.format(TEMPLATE, configFolder, String.join("/", names));
 	}
 	
+	public String getImagePath(String imageName, boolean canDefault) throws RegBaseCheckedException {
+		if (imageName == null || imageName.isEmpty()) {
+			throw new RegBaseCheckedException();
+		}
+		return getImageFilePath(getConfiguredFolder(),imageName);
+	}
+	
 	public void changeNodeOrientation(Node node) {
 		if (node != null && applicationContext.isPrimaryLanguageRightToLeft()) {
 			node.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);

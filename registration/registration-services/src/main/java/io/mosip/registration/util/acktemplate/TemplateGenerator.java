@@ -125,7 +125,7 @@ public class TemplateGenerator extends BaseService {
 	}
 
 	public ResponseDTO generateTemplate(String templateText, RegistrationDTO registration, TemplateManagerBuilder
-			templateManagerBuilder, String templateType) throws RegBaseCheckedException {
+			templateManagerBuilder, String templateType, String crossImagePath) throws RegBaseCheckedException {
 		ResponseDTO response = new ResponseDTO();
 
 		try {
@@ -155,7 +155,7 @@ public class TemplateGenerator extends BaseService {
 						break;
 
 					case "biometricsType":
-						Map<String, Object> bio_data = getBiometericData(registration, field, isPrevTemplate, templateValues);
+						Map<String, Object> bio_data = getBiometericData(registration, field, isPrevTemplate, templateValues, crossImagePath);
 						if(bio_data != null) { biometricsData.put(field.getId(), bio_data); }
 						break;
 
@@ -190,7 +190,7 @@ public class TemplateGenerator extends BaseService {
 	}
 
 	private Map<String, Object> getBiometericData(RegistrationDTO registration, UiSchemaDTO field, boolean isPrevTemplate,
-												  Map<String, Object> templateValues)
+												  Map<String, Object> templateValues, String crossImagePath)
 			throws RegBaseCheckedException {
 		List<BiometricsDto> capturedList = new ArrayList<>();
 		for (String attribute : field.getBioAttributes()) {
@@ -248,7 +248,7 @@ public class TemplateGenerator extends BaseService {
 			setFingerRankings(resultList, Biometric.getDefaultAttributes("FINGERPRINT_SLAB_LEFT"), bio_data);
 			setBiometricImage(bio_data, RegistrationConstants.TEMPLATE_CAPTURED_LEFT_SLAP,
 					isPrevTemplate ? null : RegistrationConstants.LEFTPALM_IMG_PATH,
-					isPrevTemplate ? getImage(getImageFromISO(Modality.FINGERPRINT_SLAB_LEFT, resultList), Modality.FINGERPRINT_SLAB_LEFT) : null);
+					isPrevTemplate ? getImage(getImageFromISO(Modality.FINGERPRINT_SLAB_LEFT, resultList), Modality.FINGERPRINT_SLAB_LEFT, crossImagePath) : null);
 		}
 
 		resultList = capturedFingers.stream().filter(b -> b.getModalityName().equalsIgnoreCase("FINGERPRINT_SLAB_RIGHT"))
@@ -257,7 +257,7 @@ public class TemplateGenerator extends BaseService {
 			setFingerRankings(resultList, Biometric.getDefaultAttributes("FINGERPRINT_SLAB_RIGHT"), bio_data);
 			setBiometricImage(bio_data, RegistrationConstants.TEMPLATE_CAPTURED_RIGHT_SLAP,
 					isPrevTemplate ? null : RegistrationConstants.RIGHTPALM_IMG_PATH,
-					isPrevTemplate ? getImage(getImageFromISO(Modality.FINGERPRINT_SLAB_RIGHT, resultList), Modality.FINGERPRINT_SLAB_RIGHT): null);
+					isPrevTemplate ? getImage(getImageFromISO(Modality.FINGERPRINT_SLAB_RIGHT, resultList), Modality.FINGERPRINT_SLAB_RIGHT, crossImagePath): null);
 		}
 
 		resultList = capturedFingers.stream().filter(b -> b.getModalityName().toLowerCase().contains("thumb"))
@@ -266,7 +266,7 @@ public class TemplateGenerator extends BaseService {
 			setFingerRankings(resultList, Biometric.getDefaultAttributes("FINGERPRINT_SLAB_THUMBS"), bio_data);
 			setBiometricImage(bio_data, RegistrationConstants.TEMPLATE_CAPTURED_THUMBS,
 					isPrevTemplate ? null : RegistrationConstants.THUMB_IMG_PATH,
-					isPrevTemplate ? getImage(getImageFromISO(Modality.FINGERPRINT_SLAB_THUMBS, resultList), Modality.FINGERPRINT_SLAB_THUMBS) : null);
+					isPrevTemplate ? getImage(getImageFromISO(Modality.FINGERPRINT_SLAB_THUMBS, resultList), Modality.FINGERPRINT_SLAB_THUMBS, crossImagePath) : null);
 		}
 
 		if(!capturedFace.isEmpty()) {
@@ -443,15 +443,15 @@ public class TemplateGenerator extends BaseService {
 		return images;
 	}
 
-	private byte[] getImage(List<byte[]> imageList, Modality modality) {
+	private byte[] getImage(List<byte[]> imageList, Modality modality, String crossImagePath) {
 		BufferedImage bufferedImage = null;
 		switch (modality) {
 			case FINGERPRINT_SLAB_LEFT:
 			case FINGERPRINT_SLAB_RIGHT:
-				bufferedImage = concatImages(imageList.get(0), imageList.get(1), imageList.get(2), imageList.get(3));
+				bufferedImage = concatImages(imageList.get(0), imageList.get(1), imageList.get(2), imageList.get(3), crossImagePath);
 				break;
 			case FINGERPRINT_SLAB_THUMBS:
-				bufferedImage = concatImages(imageList.get(0), imageList.get(1));
+				bufferedImage = concatImages(imageList.get(0), imageList.get(1), crossImagePath);
 				break;
 		}
 

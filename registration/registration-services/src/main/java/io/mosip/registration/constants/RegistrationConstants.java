@@ -1873,6 +1873,7 @@ public class RegistrationConstants {
 	public static final String THUMB_IMG = "thumbs.png";
 	public static final String TICK_CIRICLE_IMG = "tick-circle.png";
 	public static final String EXCLAMATION_IMG = "exclamation.png";
+	public static final String CROSS_IMG = "cross-mark.png";
 	// Exception Images Path
 	public static final String LEFTMIDDLE_IMG = "exceptionmarks/leftMiddle.png";
 	public static final String LEFTINDEX_IMG = "exceptionmarks/leftIndex.png";
