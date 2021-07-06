@@ -128,7 +128,8 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 			}
 
 			if(mainResponseDTO != null && mainResponseDTO.getErrors() != null &&
-					mainResponseDTO.getErrors().stream().anyMatch(e -> e.getErrorCode() != null && e.getErrorCode().equals("PRG_BOOK_RCI_032"))) {
+					mainResponseDTO.getErrors().stream().anyMatch(e -> e.getErrorCode() != null &&
+							(e.getErrorCode().equals("PRG_BOOK_RCI_032") || e.getErrorCode().equals("PRG_DATA_SYNC_016") ) )) {
 				LOGGER.error("RESPONSE from pre-reg-id sync {}",
 						mainResponseDTO.getErrors().stream().map(PreRegistrationExceptionJSONInfoDTO::getErrorCode).collect(Collectors.toList()));
 				return setSuccessResponse(responseDTO, RegistrationConstants.PRE_REG_SUCCESS_MESSAGE, null);

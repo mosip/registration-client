@@ -172,6 +172,7 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 		String packetPath = ackFileName.substring(0, lastIndex);
 		File packet = FileUtils.getFile(packetPath + RegistrationConstants.ZIP_FILE_EXTENSION);
 
+		packetStatusDTO.setUploadStatus(RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode());
 		try {
 			String status = pushPacketWithRetryWrapper(packet);
 			packetStatusDTO.setPacketClientStatus(RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode());
@@ -186,8 +187,6 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 			}
 		} catch (Throwable t) {
 			LOGGER.error("Error while pushing packets to the server", t);
-			
-			packetStatusDTO.setUploadStatus(RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode());
 		} 
 		//Update status in registration table
 		return registrationDAO.updateRegStatus(packetStatusDTO);

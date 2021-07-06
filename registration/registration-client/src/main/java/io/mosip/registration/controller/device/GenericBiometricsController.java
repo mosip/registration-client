@@ -1205,6 +1205,7 @@ public class GenericBiometricsController extends BaseController {
 		}
 		displayBiometric(currentModality);
 		setScanButtonVisibility(isAllMarked);
+		fxControl.refreshModalityButton(currentModality);
 	}
 
 
