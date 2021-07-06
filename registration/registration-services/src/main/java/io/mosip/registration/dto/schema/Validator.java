@@ -1,4 +1,4 @@
-package io.mosip.registration.dto;
+package io.mosip.registration.dto.schema;
 
 import java.util.List;
 

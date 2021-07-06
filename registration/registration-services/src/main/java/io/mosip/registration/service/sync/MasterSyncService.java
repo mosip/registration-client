@@ -2,16 +2,8 @@ package io.mosip.registration.service.sync;
 
 import java.util.List;
 
-import io.mosip.registration.dto.IndividualTypeDto;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.mastersync.BiometricAttributeDto;
-import io.mosip.registration.dto.mastersync.BlacklistedWordsDto;
-import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
-import io.mosip.registration.dto.mastersync.GenderDto;
-import io.mosip.registration.dto.mastersync.GenericDto;
-import io.mosip.registration.dto.mastersync.LocationDto;
-import io.mosip.registration.dto.mastersync.ReasonListDto;
-import io.mosip.registration.entity.DocumentCategory;
+import io.mosip.registration.dto.mastersync.*;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.entity.Location;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -104,24 +96,6 @@ public interface MasterSyncService {
 	 * @throws RegBaseCheckedException
 	 */
 	DocumentType getDocumentType(String docCode, String langCode);
-
-	/**
-	 * Gets the gender details.
-	 *
-	 * @param langCode the lang code
-	 * @return the gender dtls
-	 * @throws RegBaseCheckedException
-	 */
-	List<GenericDto> getGenderDtls(String langCode) throws RegBaseCheckedException;
-
-	/**
-	 * Gets the individual type.
-	 * 
-	 * @param langCode the lang code
-	 * @return the individual type
-	 * @throws RegBaseCheckedException
-	 */
-	List<GenericDto> getIndividualType(String langCode) throws RegBaseCheckedException;
 
 	/**
 	 * Gets the biometric type.

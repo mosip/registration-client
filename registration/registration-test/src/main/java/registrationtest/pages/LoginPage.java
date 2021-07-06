@@ -5,28 +5,21 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 
+import io.mosip.registration.dto.mastersync.GenericDto;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.springframework.web.util.WebUtils;
 import org.testfx.api.FxRobot;
 
 import com.aventstack.extentreports.Status;
 
-import io.mosip.registration.dto.mastersync.GenericDto;
-import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import registrationtest.controls.Alerts;
-import registrationtest.pojo.output.RID;
-import registrationtest.runapplication.StartApplication;
-import registrationtest.utility.ComboBoxUtil;
 import registrationtest.utility.ExtentReportUtil;
-import registrationtest.utility.JsonUtil;
 import registrationtest.utility.PropertiesUtil;
 import  registrationtest.utility.WaitsUtil;
 

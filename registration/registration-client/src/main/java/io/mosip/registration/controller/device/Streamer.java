@@ -110,8 +110,7 @@ public class Streamer {
 						streamImage.setImage(img);
 						if (null != scanImage) {
 							// scanImage.setImage(img);
-
-							setImageView(scanImage);
+							//setImageView(scanImage);
 							setStreamImage(img);
 						}
 					} catch (RuntimeException | IOException exception) {

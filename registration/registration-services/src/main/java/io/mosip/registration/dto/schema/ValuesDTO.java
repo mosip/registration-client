@@ -1,4 +1,4 @@
-package io.mosip.registration.dto.demographic;
+package io.mosip.registration.dto.schema;
 
 /**
  * This class will contains the language code and value for the field

@@ -1,4 +1,4 @@
-package io.mosip.registration.util.common;
+package io.mosip.registration.enums;
 
 import io.mosip.registration.constants.RegistrationConstants;
 
@@ -48,6 +48,33 @@ public enum Modality {
                 return FACE.attributes;
         }
         return Collections.EMPTY_LIST;
+    }
+
+    public static Modality getModality(String bioAttribute) {
+        switch (bioAttribute) {
+            case RegistrationConstants.rightIndexUiAttribute:
+            case RegistrationConstants.rightLittleUiAttribute:
+            case RegistrationConstants.rightMiddleUiAttribute:
+            case RegistrationConstants.rightRingUiAttribute:
+                return Modality.FINGERPRINT_SLAB_RIGHT;
+
+            case RegistrationConstants.leftIndexUiAttribute:
+            case RegistrationConstants.leftLittleUiAttribute:
+            case RegistrationConstants.leftMiddleUiAttribute:
+            case RegistrationConstants.leftRingUiAttribute:
+                return Modality.FINGERPRINT_SLAB_LEFT;
+
+            case RegistrationConstants.rightThumbUiAttribute:
+            case RegistrationConstants.leftThumbUiAttribute:
+                return Modality.FINGERPRINT_SLAB_THUMBS;
+
+            case RegistrationConstants.rightEyeUiAttribute:
+            case RegistrationConstants.leftEyeUiAttribute:
+                return Modality.IRIS_DOUBLE;
+
+            case "face": return Modality.FACE;
+        }
+        return null;
     }
 
 }

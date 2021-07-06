@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 import io.mosip.registration.dao.MasterSyncDao;
 import org.springframework.context.ApplicationContext;
 
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
@@ -13,10 +14,8 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.controller.FXUtils;
 import io.mosip.registration.controller.GenericController;
 import io.mosip.registration.controller.Initialization;
-import io.mosip.registration.controller.reg.DemographicDetailController;
 import io.mosip.registration.controller.reg.Validations;
-import io.mosip.registration.dto.UiSchemaDTO;
-import io.mosip.registration.dto.mastersync.GenericDto;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.entity.Location;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.util.common.ComboBoxAutoComplete;
@@ -35,7 +34,7 @@ public class DropDownFxControl extends FxControl {
 	/**
 	 * Instance of {@link Logger}
 	 */
-	private static final Logger LOGGER = AppConfig.getLogger(DemographicDetailController.class);
+	private static final Logger LOGGER = AppConfig.getLogger(DropDownFxControl.class);
 	private static final String loggerClassName = "DropDownFxControl";
 	private int hierarchyLevel;
 	private Validations validation;

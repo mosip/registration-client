@@ -1,14 +1,11 @@
 package registrationtest.utility;
 
-import java.io.IOException;
-
+import io.mosip.registration.dto.mastersync.GenericDto;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-import io.mosip.registration.dto.mastersync.GenericDto;
 import javafx.application.Platform;
 import javafx.scene.control.ComboBox;
-import registrationtest.pages.LoginPage;
 
 public class ComboBoxUtil {
 	private static final Logger logger = LogManager.getLogger(ComboBoxUtil.class); 

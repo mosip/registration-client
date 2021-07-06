@@ -748,9 +748,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 			getScene(headerRoot);
 			userOnboardParentController.userOnboardId.lookup("#onboardUser").setVisible(false);
 		} catch (IOException ioException) {
-			LOGGER.error("REGISTRATION - ONBOARD_USER_UPDATE - REGISTRATION_OFFICER_DETAILS_CONTROLLER",
-					APPLICATION_NAME, APPLICATION_ID,
-					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
+			LOGGER.error("Failed to load user onboard page", ioException);
 		}
 		userOnboardController.initUserOnboard();
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "User Onboard Update page is loaded");
@@ -770,12 +768,12 @@ public class PacketHandlerController extends BaseController implements Initializ
 					APPLICATION_ID, ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
 		}
 
-		if (RegistrationConstants.ENABLE
+		/*if (RegistrationConstants.ENABLE
 				.equalsIgnoreCase(getValueFromApplicationContext(RegistrationConstants.ACK_INSIDE_PACKET))) {
 			registrationDTO.setAcknowledgeReceipt(ackInBytes);
 			registrationDTO.setAcknowledgeReceiptName(
 					"RegistrationAcknowledgement." + RegistrationConstants.ACKNOWLEDGEMENT_FORMAT);
-		}
+		}*/
 
 		// packet creation
 		ResponseDTO response = packetHandlerService.handle(registrationDTO);
