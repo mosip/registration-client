@@ -3,10 +3,11 @@ package io.mosip.registration.util.control.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.util.common.DemographicChangeActionHandler;
 import org.springframework.context.ApplicationContext;
 
+
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;

@@ -18,6 +18,8 @@ import javafx.scene.layout.VBox;
 import org.apache.commons.io.IOUtils;
 import org.w3c.dom.Document;
 
+
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.templatemanager.spi.TemplateManager;
 import io.mosip.kernel.core.templatemanager.spi.TemplateManagerBuilder;
@@ -29,7 +31,6 @@ import io.mosip.registration.constants.Components;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.dto.schema.UiSchemaDTO;
-import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.template.TemplateService;
 import io.mosip.registration.util.control.FxControl;
