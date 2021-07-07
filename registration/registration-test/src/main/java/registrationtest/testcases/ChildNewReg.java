@@ -93,12 +93,12 @@ public class ChildNewReg {
 	HomePage homePage;
 	PropertiesUtil propertiesUtil;
 	FxRobotContext context;
-	Boolean result=false;
+	Boolean result;
 	DemographicPage demographicPage;
 	BiometricUploadPage biometricUploadPage;
 	Buttons buttons;
 	WebViewDocument webViewDocument;
-	RID rid,rid2;
+	RID rid1,rid2;
 	AuthenticationPage authenticationPage;
 	RobotActions robotActions;
 	EodApprovalPage eodApprovalPage;
@@ -107,9 +107,10 @@ public class ChildNewReg {
 	Alerts alerts;
 	
 	public RID newRegistrationChild(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
-			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,String fileName,String flow,ApplicationContext applicationContext)  {
+			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,String flow,String fileName,ApplicationContext applicationContext)  {
 
 		try {
+			logger.info("New Child Registration Scenario : " + flow +" FileName : " + fileName);
 			ExtentReportUtil.test3=ExtentReportUtil.reports.createTest("New Child Registration Scenario : " + flow +" FileName : " + fileName);
 
 			ExtentReportUtil.step1=ExtentReportUtil.test3.createNode("STEP 1-Loading RegClient");
@@ -120,7 +121,9 @@ public class ChildNewReg {
 			robotActions=new RobotActions(robot);
 			selectLanguagePage=new SelectLanguagePage(robot);
 			alerts=new Alerts(robot);
-
+			rid1=new RID();
+			rid2=new RID();
+			result=false;
 
 			//Load Login screen
 			loginPage.loadLoginScene(applicationPrimaryStage1);
@@ -162,12 +165,16 @@ public class ChildNewReg {
 			ExtentReportUtil.step4=ExtentReportUtil.test3.createNode("STEP 4-Accept Preview ");
 
 
-			rid=webViewDocument.acceptPreview(); //return thread and wait on thread
+			rid1=webViewDocument.acceptPreview(flow); //return thread and wait on thread
 
 			buttons.clicknextBtn();
 
-			ExtentReportUtil.step4.log(Status.PASS, "Accept Preview done" + rid.getWebviewPreview());
-
+			if(!rid1.rid.trim().isEmpty())
+				ExtentReportUtil.step4.log(Status.PASS, "Accept Preview done" + rid1.getWebviewPreview());
+				else
+				{	ExtentReportUtil.step4.log(Status.FAIL,"Preview not valid");	
+				return rid1;
+				}
 			/**
 			 * Authentication enter password
 			 * Click Continue 
@@ -182,7 +189,7 @@ public class ChildNewReg {
 			 * Click Home, eodapprove, approval Button, authenticate button
 			 * Enter user details
 			 */
-			rid2=webViewDocument.getacknowledgement();
+			rid2=webViewDocument.getacknowledgement(flow);
 
 
 
@@ -196,7 +203,7 @@ public class ChildNewReg {
 
 			eodApprovalPage=homePage.clickeodApprovalImageView( applicationPrimaryStage, scene);
 			eodApprovalPage.clickOnfilterField();
-			eodApprovalPage.enterFilterDetails(rid.getRid());
+			eodApprovalPage.enterFilterDetails(rid1.getRid());
 			eodApprovalPage.clickOnApprovalBtn();
 			authenticationPage=eodApprovalPage.clickOnAuthenticateBtn();
 			authenticationPage.enterUserName(supervisorUserid);
@@ -205,11 +212,14 @@ public class ChildNewReg {
 			robotActions.clickWindow();
 			homePage.clickHomeImg();	
 			buttons.clickConfirmBtn();
+			if(!rid2.rid.trim().isEmpty())
+			{
 			ExtentReportUtil.step5.log(Status.PASS, "Approve Packet done" + rid2.getWebViewAck());
-
-
-			assertEquals(rid.getRid(), rid2.getRid());
-
+			assertEquals(rid1.getRid(), rid2.getRid());
+			}else
+			{	ExtentReportUtil.step5.log(Status.FAIL,"Approve Packet valid");	
+			return rid1;
+			}
 			/**
 			 * Upload the packet
 			 */
@@ -220,12 +230,12 @@ public class ChildNewReg {
 
 
 				uploadPacketPage=homePage.clickuploadPacketImageView( applicationPrimaryStage, scene);
-				uploadPacketPage.selectPacket(rid.getRid());
+				uploadPacketPage.selectPacket(rid1.getRid());
 				buttons.clickuploadBtn();
 				/**
 				 * Verify Success Upload
 				 */
-				result=uploadPacketPage.verifyPacketUpload(rid.getRid());
+				result=uploadPacketPage.verifyPacketUpload(rid1.getRid());
 				ExtentReportUtil.step6.log(Status.PASS, "Upload Packet done");
 
 
@@ -234,8 +244,8 @@ public class ChildNewReg {
 				result=true;
 			}
 			//Logout Regclient
-			rid.appidrid=rid.getAppidrid(applicationContext, rid.rid);
-			rid.setResult(result);
+			rid1.appidrid=rid1.getAppidrid(applicationContext, rid1.rid);
+			rid1.setResult(result);
 					}catch(Exception e)
 					{
 
@@ -266,13 +276,13 @@ public class ChildNewReg {
 
 			if(result==true)
 			{
-			ExtentReportUtil.test3.log(Status.PASS, "TESTCASE PASS\n" +"[Appid="+ rid.rid +"] [RID="+ rid.appidrid +"] [DATE TIME="+ rid.ridDateTime +"] [ENVIRONMENT=" +System.getProperty("mosip.hostname")+"]");
+			ExtentReportUtil.test3.log(Status.PASS, "TESTCASE PASS\n" +"[Appid="+ rid1.rid +"] [RID="+ rid1.appidrid +"] [DATE TIME="+ rid1.ridDateTime +"] [ENVIRONMENT=" +System.getProperty("mosip.hostname")+"]");
 			}		else
 				ExtentReportUtil.test3.log(Status.FAIL, "TESTCASE FAIL");
 
 			ExtentReportUtil.reports.flush();
 
-				return rid;
+				return rid1;
 	}
 
 }

@@ -89,14 +89,15 @@ public class NewRegistrationAdultTest{
                	try {
 						switch(flow) {
 						case "adult": 
+							rid1=null;
 					rid1=loginNewRegLogout.newRegistrationAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonContent,
 							flow,fileName,StartApplication.applicationContext);
-					logger.info("RID RESULTS-"+ rid1.result +"\t"+ rid1.ridDateTime +"\t"+ rid1.rid + "\t "+ rid1.firstName );
+					logger.info("RID RESULTS-"+ rid1.result +"\t"+ rid1.ridDateTime +"\t"+ rid1.rid );
 					ExtentReportUtil.reports.flush();
 					break;
 						case "lostadult":
-							
+							rid2=null;
 					 rid2=lostUINLogout.LostUINAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonContent,
 							flow,fileName,StartApplication.applicationContext);
@@ -104,7 +105,7 @@ public class NewRegistrationAdultTest{
 					ExtentReportUtil.reports.flush();
 					break;
 						case "child":
-							
+							rid3=null;	
 					 rid3=childNewReg.newRegistrationChild(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonContent,
 							flow,fileName,StartApplication.applicationContext);
@@ -112,7 +113,7 @@ public class NewRegistrationAdultTest{
 					ExtentReportUtil.reports.flush();
 					break;
 						case "lostchild":
-							
+							rid4=null;
 							 rid4=childLostUIN.newRegistrationChildLost(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 									StartApplication.primaryStage,jsonContent,
 									flow,fileName,StartApplication.applicationContext);
@@ -120,7 +121,7 @@ public class NewRegistrationAdultTest{
 							ExtentReportUtil.reports.flush();
 							break;
 						case "updateadult":
-							
+							rid5=null;
 							 rid5=updatereg.updateRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 									StartApplication.primaryStage,jsonContent,
 									flow,fileName,StartApplication.applicationContext);
@@ -128,7 +129,7 @@ public class NewRegistrationAdultTest{
 							ExtentReportUtil.reports.flush();
 							break;
 						case "updatechild":
-							
+							rid6=null;
 							 rid6=updatereg.updateRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 									StartApplication.primaryStage,jsonContent,
 									flow,fileName,StartApplication.applicationContext);

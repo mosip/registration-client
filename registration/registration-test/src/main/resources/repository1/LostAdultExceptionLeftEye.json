@@ -1,0 +1,202 @@
+{ "identity" : {
+	"flow":"lostadult",
+  "gender" : [ {
+    "language" : "eng",
+    "value" : "Female"
+  }, {
+    "language" : "ara",
+    "value" : "أنثى"
+  },
+  {
+	    "language" : "fra",
+	    "value" : "Femme"
+	  }],
+  "city" : [ {
+	    "language" : "eng",
+	    "value" : "Kenitra"
+	  }, {
+	    "language" : "ara",
+	    "value" : "االقنيطرة"
+	  },
+	  {
+		    "language" : "fra",
+		    "value" : "Kénitra"
+		  } ],
+  "postalCode" : "14022",
+  "fullName" : [ {
+    "language" : "eng",
+    "value" : "Test Automation"
+  }, {
+    "language" : "ara",
+    "value" : "القنيطرة"
+  } ,
+  {
+	    "language" : "fra",
+	    "value" : "Kénitra"
+	  }],
+  "dateOfBirth" : "20",
+  "referenceIdentityNumber" : "23444444444444322",
+  "individualBiometrics" : {
+    "format" : "cbeff",
+    "version" : 1.0,
+    "value" : "individualBiometrics_bio_CBEFF"
+  },
+ 
+  "IDSchemaVersion" : 0.1,
+  "province" : [ {
+    "language" : "eng",
+    "value" : "Kenitra"
+  }, {
+    "language" : "ara",
+    "value" : "االقنيطرة"
+  },
+  {
+	    "language" : "fra",
+	    "value" : "Kénitra"
+	  } ],
+  "zone" : [ {
+    "language" : "eng",
+    "value" : "Ben Mansour"
+  }, {
+    "language" : "ara",
+    "value" : "بن منصور"
+  },
+  {
+	    "language" : "fra",
+	    "value" : "Ben Mansour"
+	  }],
+  "phone" : "8600097143",
+  "addressLine1" : [ {
+    "language" : "eng",
+    "value" : "Upgrade1.1.4aa"
+  }, {
+    "language" : "ara",
+    "value" : "بن منصور"
+  } ,
+  {
+	    "language" : "fra",
+	    "value" : "Kénitra"
+	  }],
+  "addressLine2" : [ {
+    "language" : "eng",
+    "value" : "Upgrade1.1.4"
+  }, {
+    "language" : "ara",
+    "value" : "بن منصور"
+  },
+  {
+	    "language" : "fra",
+	    "value" : "Kénitra"
+	  } ],
+  "residenceStatus" : [ {
+    "language" : "fra",
+    "value" : "Étrangère"
+  }, {
+    "language" : "ara",
+    "value" :"غير أجنبي"
+  },
+  {
+	    "language" : "eng",
+	    "value" :"Foreigner"
+	  } ],
+  "addressLine3" :[ {
+	    "language" : "eng",
+	    "value" : "Upgrade1.1.4"
+	  }, {
+	    "language" : "ara",
+	    "value" : "غير أجنبي"
+	  },
+	  {
+		    "language" : "fra",
+		    "value" : "Kénitra"
+		  } ],
+  "region" : [ {
+    "language" : "eng",
+    "value" : "Rabat Sale Kenitra"
+  }, {
+    "language" : "ara",
+    "value" : "جهة الرباط سلا القنيطرة"
+  },{
+	    "language" : "fra",
+	    "value" : "Rabat-Salé-Kénitra"
+	  } ],
+  "modeOfClaim" : [ {
+	    "language" : "eng",
+	    "value" : "Pick-up"
+	  }, {
+	    "language" : "ara",
+	    "value" : "يلتقط"
+	  } ],
+  "email" : "abc@abc.co.in",
+  "consent":"Y",
+  "introducerRID" : "10002100870000320210420134337",
+  "introducerUIN" : "5931539704",
+   "introducerName" : [ {
+    "language" : "eng",
+    "value" : "Upgrade1.1.4"
+  }, {
+    "language" : "ara",
+    "value" : "يلتقط"
+  },
+  {
+	    "language" : "fra",
+	    "value" : "Kénitra"
+	  } ],
+  "bioExceptionAttributes": [
+		"leftEye"
+	],
+	 "bioExceptionAttributes1": [
+			"leftEye",
+			"rightEye",
+			"rightIndex",
+			"rightLittle",
+			"rightRing",
+			"rightMiddle",
+			"leftIndex",
+			"leftLittle",
+			"leftRing",
+			"leftMiddle",
+			"leftThumb",
+			"rightThumb"
+			
+		],
+	  "proofOfConsent" : [ {
+		    "language" : "eng",
+		    "value" : "Registration Form"
+		  }, {
+		    "language" : "ara",
+		    "value" : "إستمارة تسجيل"
+		  } ],
+		  "proofOfAddress" :  [ {
+			    "language" : "eng",
+			    "value" : "Passport"
+			  }, {
+				    "language" : "fra",
+				    "value" : "Passeport"
+				  }, {
+			    "language" : "ara",
+			    "value" : "جواز سفر"
+			  } ],
+			  "proofOfIdentity" : [ {
+				    "language" : "eng",
+				    "value" : "Passport"
+				  }, {
+					    "language" : "fra",
+					    "value" : "Passeport"
+					  }, {
+				    "language" : "ara",
+				    "value" : "جواز سفر"
+				  } ],
+				  "proofOfRelationship" : [ {
+					    "language" : "eng",
+					    "value" : "Passport"
+					  }, {
+					    "language" : "fra",
+					    "value" : "Passeport"
+					  },
+					  {
+						    "language" : "ara",
+						    "value" : "جواز سفر"
+						  } ]
+} } 
+

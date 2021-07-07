@@ -31,14 +31,7 @@ public class RID {
 	public void setAppidrid(String appidrid) {
 		this.appidrid = appidrid;
 	}
-	public String firstName;
-	    public String getFirstName() {
-		return firstName;
-	}
-
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
+	
 		public String ridDateTime;
 	    public Boolean result;
 	    public Object webviewPreview;
@@ -80,13 +73,13 @@ public class RID {
 			this.ridDateTime = ridDateTime;
 		}
 		
-public RID(String rid, String ridDateTime,String firstName,Object webviewPreview,Object webViewAck) {
+public RID(String rid, String ridDateTime,Object webviewPreview,Object webViewAck) {
 			
 			this.rid = rid;
 			this.ridDateTime = ridDateTime;
 			this.webviewPreview=webviewPreview;
 			this.webViewAck=webViewAck;
-			this.firstName=firstName;
+		
 		}
 
 		public String getRid() {

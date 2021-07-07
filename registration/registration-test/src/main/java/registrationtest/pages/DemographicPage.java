@@ -553,7 +553,8 @@ public class DemographicPage {
 	{
 		logger.info("Schema Control Type textbox");
 		mapValue=null;
-		if((schema.isInputRequired()) || (schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))) 
+		//if((schema.isInputRequired()) || (schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))) 
+		if(schema.isInputRequired())
 		{	if(schema.getType().contains("simpleType"))
 		{
 			try {
@@ -598,8 +599,8 @@ public class DemographicPage {
 	{
 		logger.info("Schema Control Type textbox");
 		mapValue=null;
-		if((schema.isRequired() && schema.isInputRequired()) || (schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))) 
-		{	if(schema.getType().contains("simpleType"))
+	//	if(schema.isInputRequired()  && (schema.isRequired() || (schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))))
+		if(schema.isInputRequired()){	if(schema.getType().contains("simpleType"))
 		{
 			try {
 				mapValue=JsonUtil.JsonObjSimpleParsing(JsonIdentity,key);
@@ -645,6 +646,8 @@ public class DemographicPage {
 					scenario.contains("update") &&schema.subType.equalsIgnoreCase("applicant-auth"))
 
 			{
+				scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+
 				System.out.println("");
 				Thread.sleep(400);
 				biometricUploadPage.newRegbioUpload(schema.getSubType(),biometricUploadPage.bioAuthAttributeList(identity),id,identity);
@@ -663,10 +666,14 @@ public class DemographicPage {
 		
 		try {
 		int infantmaxage=Integer.parseInt(PropertiesUtil.getKeyValue("infantmaxage"));
-	
+
+		int minormaxage=Integer.parseInt(PropertiesUtil.getKeyValue("minormaxage"));
+
 			if(schema.isInputRequired() && schema.subType.equalsIgnoreCase("applicant"))
 			{
-				if(scenario.contains("updatechild")&&schema.getBioAttributes().contains("face") && age<infantmaxage)
+				if(
+						//scenario.contains("updatechild")&&
+						schema.getBioAttributes().contains("face") && age<infantmaxage)
 //					
 //				if(scenario.contains("updatechild")&&schema.getBioAttributes().contains("face")
 //						|| (getupdateUINAttributes(identity).contains(PropertiesUtil.getKeyValue("GuardianDetails"))&&schema.getBioAttributes().contains("face")))
@@ -685,8 +692,8 @@ public class DemographicPage {
 			}
 			else if(
 					schema.subType.equalsIgnoreCase("introducer")&&
-					scenario.contains("child")&&
-					age<infantmaxage 
+					//scenario.contains("child")&&
+					age<minormaxage 
 //					&&
 //						(
 //							((schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))&&
@@ -697,6 +704,11 @@ public class DemographicPage {
 
 			{
 
+				if(age<infantmaxage) {
+					scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+					scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+				}
+				else
 				scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
 
 				Thread.sleep(400);
@@ -715,16 +727,24 @@ public class DemographicPage {
 	{
 		try {
 			int infantmaxage=Integer.parseInt(PropertiesUtil.getKeyValue("infantmaxage"));
+
+			int minormaxage=Integer.parseInt(PropertiesUtil.getKeyValue("minormaxage"));
+			
 			if(schema.isInputRequired() && schema.subType.equalsIgnoreCase("applicant"))
 			{
-				if(scenario.contains("child")&&schema.getBioAttributes().contains("face") && age<infantmaxage)
+				if(
+						//scenario.contains("child")&&
+						schema.getBioAttributes().contains("face") && age<=infantmaxage)
 				{	
 					scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
 					
 					biometricUploadPage.newRegbioUpload(schema.getSubType(),"face",id,identity);
 				}
 				else {
-
+					
+					if(age>infantmaxage && age <= minormaxage)
+						scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
+					else
 					scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
 
 					Thread.sleep(400);
@@ -732,16 +752,25 @@ public class DemographicPage {
 				}
 			}
 			else if(
-					schema.subType.equalsIgnoreCase("introducer")&& (!scenario.contains("lost")) &&
-					scenario.contains("child")&&
-					(
-							((schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))&&
-									(schema.getRequiredOn().get(0).getExpr().contains("identity.isNew")))||
-							(schema.getRequiredOn().get(0).getExpr().contains("identity.isUpdate") && 
-									(getupdateUINAttributes(identity).contains(PropertiesUtil.getKeyValue("GuardianDetails"))))
-							))
+					schema.subType.equalsIgnoreCase("introducer")
+					&&
+					age<minormaxage)
+				//	&& (!scenario.contains("lost")) 
+//					&&
+//					scenario.contains("child")&&
+//					(
+//							((schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))&&
+//									(schema.getRequiredOn().get(0).getExpr().contains("identity.isNew")))||
+//							(schema.getRequiredOn().get(0).getExpr().contains("identity.isUpdate") && 
+//									(getupdateUINAttributes(identity).contains(PropertiesUtil.getKeyValue("GuardianDetails"))))
+//							))
 
 			{
+				if(age<infantmaxage) {
+					scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+					scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+				}
+				else
 				scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
 
 				Thread.sleep(400);
@@ -783,7 +812,7 @@ public class DemographicPage {
 	public void fileupload(Schema schema,String JsonIdentity,String key,String id,String scenario)
 	{
 		try {
-			if(schema.isInputRequired() && schema.isRequired() && (schema.getRequiredOn()).get(0).getExpr().contains("identity.isNew"))
+			if(schema.isInputRequired() && ( schema.isRequired() || (schema.getRequiredOn()).get(0).getExpr().contains("identity.isNew")))
 				documentUploadPage.documentDropDownScan(schema, id, JsonIdentity, key);
 			else if(scenario.contains("child")&&(schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))&&(schema.getRequiredOn().get(0).getExpr().contains("identity.isNew")))
 				documentUploadPage.documentDropDownScan(schema, id, JsonIdentity, key);

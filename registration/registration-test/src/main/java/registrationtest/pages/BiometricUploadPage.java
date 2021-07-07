@@ -255,6 +255,7 @@ public class BiometricUploadPage {
 		try {
 			logger.info("bioScan");
 			waitsUtil.clickNodeAssert(id);
+			//waitsUtil.scrollclickNodeAssert(id);
 			Thread.sleep(400);
 			clickScanBtn(subtype);
 		}
