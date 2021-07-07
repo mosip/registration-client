@@ -476,6 +476,16 @@ public class GenericBiometricsController extends BaseController {
 		}
 	}
 
+	public void deleteProofOfExceptionDocument() {
+		Optional<FxControl> result = GenericController.getFxControlMap().values().stream()
+				.filter(control -> control.getUiSchemaDTO().getSubType().equals(RegistrationConstants.POE_DOCUMENT)).findFirst();
+
+		if(result.isPresent()) {
+			getRegistrationDTOFromSession().removeDocument(result.get().getUiSchemaDTO().getId());
+			LOGGER.info("Removing Proof of exception document into field : {}", result.get().getUiSchemaDTO().getId());
+		}
+	}
+
 	/**
 	 * Scan the biometrics
 	 *
@@ -1204,6 +1214,7 @@ public class GenericBiometricsController extends BaseController {
 			}
 			isAllMarked = isAllMarked && exceptionImageView.getOpacity() == 1 ? true : false;
 		}
+
 		displayBiometric(currentModality);
 		setScanButtonVisibility(isAllMarked);
 		fxControl.refreshModalityButton(currentModality);
