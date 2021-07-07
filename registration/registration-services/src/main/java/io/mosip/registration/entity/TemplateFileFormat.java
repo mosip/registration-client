@@ -2,10 +2,7 @@ package io.mosip.registration.entity;
 
 import java.sql.Date;
 
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,10 +18,12 @@ import lombok.Setter;
 @Getter
 @Setter
 public class TemplateFileFormat extends RegistrationCommonFields {
-	@EmbeddedId
-	@Column(name="pk_tfft_code")
-	private TemplateEmbeddedKeyCommonFields pkTfftCode;
-	
+
+	@Id
+	@Column(name="code")
+	private String code;
+	@Column(name="lang_code")
+	private String langCode;
 	@Column(name="descr")
 	private String description;
 	@Column(name="is_deleted")

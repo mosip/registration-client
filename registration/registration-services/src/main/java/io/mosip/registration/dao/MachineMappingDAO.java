@@ -3,7 +3,6 @@ package io.mosip.registration.dao;
 import java.util.List;
 
 import io.mosip.registration.constants.DeviceTypes;
-import io.mosip.registration.entity.RegDeviceMaster;
 import io.mosip.registration.entity.UserMachineMapping;
 import io.mosip.registration.exception.RegBaseCheckedException;
 
@@ -28,15 +27,6 @@ public interface MachineMappingDAO {
 	String getStationID(String machineName) throws RegBaseCheckedException;
 
 	/**
-	 * This method is used to check the validity of the device.
-	 * 
-	 * @param deviceType device type
-	 * @param serialNo   serial number of the device
-	 * @return It returns true when record found for the device else false
-	 */
-	boolean isValidDevice(DeviceTypes deviceType, String serialNo);
-
-	/**
 	 * This method is used to get the user mapping details that are mapped to the
 	 * given machine id.
 	 * 
@@ -45,14 +35,6 @@ public interface MachineMappingDAO {
 	 */
 	List<UserMachineMapping> getUserMappingDetails(String machineId);
 
-	/**
-	 * This method is udes to fetches all the devices mapped to the registration
-	 * center based on the language code
-	 * 
-	 * @param langCode the language code of the device
-	 * @return All the devices mapped to registration center
-	 */
-	List<RegDeviceMaster> getDevicesMappedToRegCenter(String langCode);
 
 	/**
 	 * This method is used to find whether the user exists or not
@@ -69,12 +51,5 @@ public interface MachineMappingDAO {
 	 * @return
 	 */
 	String getKeyIndexByMachineName(String machineName);
-
-	/**
-	 * This method is used to get registered device with particular device code
-	 * 
-	 * @return List of Registered device
-	 */
-	public List<RegDeviceMaster> getRegisteredDevicesBySerialNumber(String serialNumber);
 
 }

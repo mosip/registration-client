@@ -4,7 +4,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -15,7 +14,7 @@ import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.controller.reg.Validations;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 
 /**
  * This class will give the Page Flow

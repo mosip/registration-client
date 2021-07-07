@@ -6,13 +6,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
 import io.mosip.registration.dao.IdentitySchemaDao;
+import io.mosip.registration.dao.impl.MasterSyncDaoImpl;
 import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -40,7 +40,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.SessionContext;
-import io.mosip.registration.dao.impl.MasterSyncDaoImpl;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
@@ -69,22 +68,10 @@ public class ClientSettingsHelperTest {
 	private BlacklistedWordsRepository masterSyncBlacklistedWordsRepository;
 
 	@Mock
-	private DeviceMasterRepository masterSyncDeviceRepository;
-
-	@Mock
-	private DeviceSpecificationRepository masterSyncDeviceSpecificationRepository;
-
-	@Mock
-	private DeviceTypeRepository masterSyncDeviceTypeRepository;
-
-	@Mock
 	private DocumentCategoryRepository masterSyncDocumentCategoryRepository;
 
 	@Mock
 	private DocumentTypeRepository masterSyncDocumentTypeRepository;
-
-	@Mock
-	private GenderRepository masterSyncGenderTypeRepository;
 
 	@Mock
 	private IdTypeRepository masterSyncIdTypeRepository;
@@ -130,16 +117,10 @@ public class ClientSettingsHelperTest {
 	private TemplateTypeRepository masterSyncTemplateTypeRepository;
 
 	@Mock
-	private TitleRepository masterSyncTitleRepository;
-
-	@Mock
 	private ApplicantValidDocumentRepository masterSyncValidDocumentRepository;
 
 	@Mock
 	private ValidDocumentRepository validDocumentRepository;
-
-	@Mock
-	private IndividualTypeRepository individualTypeRepository;
 
 	@Mock
 	private AppAuthenticationRepository appAuthenticationRepository;
@@ -148,19 +129,10 @@ public class ClientSettingsHelperTest {
 	private AppRolePriorityRepository appRolePriorityRepository;
 
 	@Mock
-	private AppDetailRepository appDetailRepository;
-
-	@Mock
 	private ScreenAuthorizationRepository screenAuthorizationRepository;
 
 	@Mock
 	private ProcessListRepository processListRepository;
-
-	@Mock
-	private RegistrationCenterDeviceRepository registrationCenterDeviceRepository;
-
-	@Mock
-	private RegistrationCenterMachineDeviceRepository registrationCenterMachineDeviceRepository;
 
 	@Mock
 	private UserMachineMappingRepository userMachineMappingRepository;
@@ -182,21 +154,6 @@ public class ClientSettingsHelperTest {
 
 	@Mock
 	private SyncJobDefRepository syncJobDefRepository;
-
-	@Mock
-	private RegisteredDeviceTypeRepository registeredDeviceTypeRepository;
-
-	@Mock
-	private RegisteredSubDeviceTypeRepository registeredSubDeviceTypeRepository;
-
-	@Mock
-	private MosipDeviceServiceRepository mosipDeviceServiceRepository;
-
-	@Mock
-	private FoundationalTrustProviderRepository foundationalTrustProviderRepository;
-
-	@Mock
-	private DeviceProviderRepository deviceProviderRepository;
 
 	@InjectMocks
 	private ClientSettingSyncHelper clientSettingSyncHelper;

@@ -49,7 +49,7 @@ import io.mosip.registration.dao.DocumentTypeDAO;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.PreRegistrationDTO;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -66,6 +66,8 @@ import io.mosip.registration.service.external.PreRegZipHandlingService;
  */
 @Service
 public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
+
+	private static final String DOBSubType = "dateOfBirth";
 
 	@Autowired
 	private DocumentTypeDAO documentTypeDAO;
@@ -180,7 +182,8 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 			
 			if (!StringUtils.isEmpty(jsonString) && validateDemographicInfoObject()) {
 				JSONObject jsonObject = (JSONObject) new JSONObject(jsonString.toString()).get("identity");
-				List<UiSchemaDTO> fieldList = identitySchemaService.getUISchema(getRegistrationDtoContent().getIdSchemaVersion());
+				//Always use latest schema, ignoring missing / removed fields
+				List<UiSchemaDTO> fieldList = identitySchemaService.getLatestEffectiveUISchema();
 
 				for(UiSchemaDTO field : fieldList) {
 					if(field.getId().equalsIgnoreCase("IDSchemaVersion"))
@@ -211,10 +214,15 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 					default:
 						Object fieldValue = getValueFromJson(field.getId(), field.getType(), jsonObject);
 						if(fieldValue != null) {
-							if(field.getControlType().equalsIgnoreCase("ageDate"))
-								getRegistrationDtoContent().setDateField(field.getId(), (String)fieldValue);
-							else
-								getRegistrationDtoContent().getDemographics().put(field.getId(), fieldValue);
+							switch (field.getControlType().toLowerCase()) {
+								case "agedate":
+								case "date":
+									getRegistrationDtoContent().setDateField(field.getId(), (String)fieldValue,
+											DOBSubType.equalsIgnoreCase(field.getSubType()));
+									break;
+								default:
+									getRegistrationDtoContent().getDemographics().put(field.getId(), fieldValue);
+							}
 						}
 						break;
 					}
@@ -230,18 +238,22 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 	private Object getValueFromJson(String key, String fieldType, JSONObject jsonObject) throws IOException, JSONException {
 		if(!jsonObject.has(key))
 			return null;
-			
-		switch (fieldType) {
-		case "string":	return jsonObject.getString(key);
-		case "integer":	return jsonObject.getInt(key);
-		case "number": return jsonObject.getLong(key);
-		case "simpleType": 
-			List<SimpleDto> list = new ArrayList<SimpleDto>(); 
-			for(int i=0;i<jsonObject.getJSONArray(key).length();i++) {
-				JSONObject object = jsonObject.getJSONArray(key).getJSONObject(i);
-				list.add(new SimpleDto(object.getString("language"), object.getString("value")));
+
+		try {
+			switch (fieldType) {
+				case "string":	return jsonObject.getString(key);
+				case "integer":	return jsonObject.getInt(key);
+				case "number": return jsonObject.getLong(key);
+				case "simpleType":
+					List<SimpleDto> list = new ArrayList<SimpleDto>();
+					for(int i=0;i<jsonObject.getJSONArray(key).length();i++) {
+						JSONObject object = jsonObject.getJSONArray(key).getJSONObject(i);
+						list.add(new SimpleDto(object.getString("language"), object.getString("value")));
+					}
+					return list;
 			}
-			return list;
+		} catch (Throwable t) {
+			LOGGER.error("Failed to parse the pre-reg packet field {}", key, t);
 		}
 		return null;
 	}

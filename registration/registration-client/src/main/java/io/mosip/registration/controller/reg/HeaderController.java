@@ -37,7 +37,7 @@ import io.mosip.registration.controller.auth.LoginController;
 import io.mosip.registration.controller.device.Streamer;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.SettingsSchema;
+import io.mosip.registration.dto.schema.SettingsSchema;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.exception.PreConditionCheckException;

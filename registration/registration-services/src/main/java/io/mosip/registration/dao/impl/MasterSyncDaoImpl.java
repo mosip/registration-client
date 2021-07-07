@@ -1,6 +1,5 @@
 package io.mosip.registration.dao.impl;
 
-import static io.mosip.registration.constants.LoggerConstants.LOG_REG_MASTER_SYNC;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
@@ -10,7 +9,6 @@ import javax.transaction.Transactional;
 
 import io.mosip.registration.entity.*;
 import io.mosip.registration.repositories.*;
-import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -55,10 +53,6 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	@Autowired
 	private DocumentTypeRepository documentTypeRepository;
 
-	/** Object for Sync Gender Type Repository. */
-	@Autowired
-	private GenderRepository genderRepository;
-
 	/** Object for Sync Location Repository. */
 	@Autowired
 	private LocationRepository locationRepository;
@@ -78,10 +72,6 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	/** Object for Sync language Repository. */
 	@Autowired
 	private LanguageRepository languageRepository;
-
-	/** Object for Sync Individual type Repository. */
-	@Autowired
-	private IndividualTypeRepository individualTypeRepository;
 
 	/** Object for Sync screen auth Repository. */
 	@Autowired
@@ -206,16 +196,7 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 		return documentTypeRepository.findByIsActiveTrueAndLangCodeAndCode(langCode, docCode);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see io.mosip.registration.dao.MasterSyncDao#getGenderDtls(java.lang.String)
-	 */
-	@Override
-	public List<Gender> getGenderDtls(String langCode) {
 
-		return genderRepository.findByIsActiveTrueAndLangCodeOrderByCodeAsc(langCode);
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -226,32 +207,6 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	@Override
 	public List<ValidDocument> getValidDocumets(String docCategoryCode) {
 		return validDocumentRepository.findByIsActiveTrueAndDocCategoryCode(docCategoryCode);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * io.mosip.registration.dao.MasterSyncDao#getIndividulType(java.lang.String,
-	 * java.lang.String)
-	 */
-	@Override
-	public List<IndividualType> getIndividulType(String code, String langCode) {
-		return individualTypeRepository.findByIndividualTypeIdCodeAndIndividualTypeIdLangCodeAndIsActiveTrue(code,
-				langCode);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * io.mosip.registration.dao.MasterSyncDao#getIndividulType(java.lang.String,
-	 * java.lang.String)
-	 */
-	@Override
-	public List<IndividualType> getIndividulType(String langCode) {
-		return individualTypeRepository
-				.findByIndividualTypeIdLangCodeAndIsActiveTrueOrderByIndividualTypeIdCodeDesc(langCode);
 	}
 
 	public List<SyncJobDef> getSyncJobs() {
@@ -272,10 +227,6 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	public List<Language> getActiveLanguages() {
 
 		return languageRepository.findAllByIsActiveTrue();
-	}
-
-	public List<Gender> getGenders() {
-		return genderRepository.findAllByIsActiveTrue();
 	}
 
 	public List<DocumentCategory> getDocumentCategory() {

@@ -3,10 +3,11 @@ package io.mosip.registration.util.control.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.util.common.DemographicChangeActionHandler;
 import org.springframework.context.ApplicationContext;
 
+
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
@@ -16,7 +17,7 @@ import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.Initialization;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.util.control.FxControl;
 import javafx.scene.Node;
 import javafx.scene.control.CheckBox;

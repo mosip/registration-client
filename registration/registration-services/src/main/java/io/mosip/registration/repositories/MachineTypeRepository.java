@@ -11,6 +11,6 @@ import io.mosip.registration.entity.id.CodeAndLanguageCodeID;
  * @since 1.0.0
  *
  */
-public interface MachineTypeRepository extends BaseRepository<MachineType, CodeAndLanguageCodeID> {
+public interface MachineTypeRepository extends BaseRepository<MachineType, String> {
 
 }

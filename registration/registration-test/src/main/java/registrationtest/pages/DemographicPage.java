@@ -1,15 +1,11 @@
 package registrationtest.pages;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.Date;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -18,38 +14,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
+import io.mosip.registration.dto.mastersync.GenericDto;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.assertj.core.api.SoftAssertions;
-import org.awaitility.Awaitility;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.testfx.api.FxRobot;
-
-import com.itextpdf.text.log.SysoCounter;
-
-import ch.qos.logback.classic.gaffer.PropertyUtil;
-import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
-import io.mosip.registration.dto.mastersync.GenericDto;
 import javafx.application.Platform;
 import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import registrationtest.controls.Buttons;
-import registrationtest.pojo.output.RID;
 import registrationtest.pojo.schema.Root;
 import registrationtest.pojo.schema.Schema;
 import registrationtest.pojo.schema.Screens;
-import registrationtest.utility.DateUtil;
 import  registrationtest.utility.JsonUtil;
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;

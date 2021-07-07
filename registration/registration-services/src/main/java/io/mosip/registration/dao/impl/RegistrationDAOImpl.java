@@ -33,7 +33,7 @@ import io.mosip.registration.dao.RegistrationDAO;
 import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationDataDto;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;

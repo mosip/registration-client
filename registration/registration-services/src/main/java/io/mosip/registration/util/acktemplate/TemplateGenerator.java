@@ -18,21 +18,17 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
+import io.mosip.biometrics.util.ConvertRequestDto;
+import io.mosip.biometrics.util.face.FaceDecoder;
+import io.mosip.biometrics.util.finger.FingerDecoder;
+import io.mosip.biometrics.util.iris.IrisDecoder;
+import io.mosip.registration.enums.Modality;
 import io.mosip.registration.enums.Role;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
@@ -57,7 +53,7 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.entity.SyncJobDef;
@@ -129,7 +125,7 @@ public class TemplateGenerator extends BaseService {
 	}
 
 	public ResponseDTO generateTemplate(String templateText, RegistrationDTO registration, TemplateManagerBuilder
-			templateManagerBuilder, String templateType) throws RegBaseCheckedException {
+			templateManagerBuilder, String templateType, String crossImagePath) throws RegBaseCheckedException {
 		ResponseDTO response = new ResponseDTO();
 
 		try {
@@ -159,7 +155,7 @@ public class TemplateGenerator extends BaseService {
 						break;
 
 					case "biometricsType":
-						Map<String, Object> bio_data = getBiometericData(registration, field, isPrevTemplate, templateValues);
+						Map<String, Object> bio_data = getBiometericData(registration, field, isPrevTemplate, templateValues, crossImagePath);
 						if(bio_data != null) { biometricsData.put(field.getId(), bio_data); }
 						break;
 
@@ -194,7 +190,7 @@ public class TemplateGenerator extends BaseService {
 	}
 
 	private Map<String, Object> getBiometericData(RegistrationDTO registration, UiSchemaDTO field, boolean isPrevTemplate,
-												  Map<String, Object> templateValues)
+												  Map<String, Object> templateValues, String crossImagePath)
 			throws RegBaseCheckedException {
 		List<BiometricsDto> capturedList = new ArrayList<>();
 		for (String attribute : field.getBioAttributes()) {
@@ -232,7 +228,7 @@ public class TemplateGenerator extends BaseService {
 					RegistrationConstants.TEMPLATE_RIGHT_MARK : RegistrationConstants.TEMPLATE_CROSS_MARK);
 			setBiometricImage(bio_data, RegistrationConstants.TEMPLATE_CAPTURED_LEFT_EYE,
 					isPrevTemplate ? null : RegistrationConstants.TEMPLATE_EYE_IMAGE_PATH,
-					isPrevTemplate ? getSegmentedImageBytes(biometricsDto, registration) : null);
+					isPrevTemplate ? getImageFromISO(Modality.IRIS_DOUBLE, Arrays.asList(biometricsDto)).get(0) : null);
 		}
 
 		result = capturedIris.stream()
@@ -243,7 +239,7 @@ public class TemplateGenerator extends BaseService {
 					RegistrationConstants.TEMPLATE_RIGHT_MARK : RegistrationConstants.TEMPLATE_CROSS_MARK);
 			setBiometricImage(bio_data, RegistrationConstants.TEMPLATE_CAPTURED_RIGHT_EYE,
 					isPrevTemplate ? null : RegistrationConstants.TEMPLATE_EYE_IMAGE_PATH,
-					isPrevTemplate ? getSegmentedImageBytes(biometricsDto, registration) : null);
+					isPrevTemplate ? getImageFromISO(Modality.IRIS_DOUBLE, Arrays.asList(biometricsDto)).get(1) : null);
 		}
 
 		List<BiometricsDto> resultList = capturedFingers.stream().filter(b -> b.getModalityName().equalsIgnoreCase("FINGERPRINT_SLAB_LEFT"))
@@ -252,7 +248,7 @@ public class TemplateGenerator extends BaseService {
 			setFingerRankings(resultList, Biometric.getDefaultAttributes("FINGERPRINT_SLAB_LEFT"), bio_data);
 			setBiometricImage(bio_data, RegistrationConstants.TEMPLATE_CAPTURED_LEFT_SLAP,
 					isPrevTemplate ? null : RegistrationConstants.LEFTPALM_IMG_PATH,
-					isPrevTemplate ? getStreamImageBytes(resultList, registration) : null);
+					isPrevTemplate ? getImage(getImageFromISO(Modality.FINGERPRINT_SLAB_LEFT, resultList), Modality.FINGERPRINT_SLAB_LEFT, crossImagePath) : null);
 		}
 
 		resultList = capturedFingers.stream().filter(b -> b.getModalityName().equalsIgnoreCase("FINGERPRINT_SLAB_RIGHT"))
@@ -261,7 +257,7 @@ public class TemplateGenerator extends BaseService {
 			setFingerRankings(resultList, Biometric.getDefaultAttributes("FINGERPRINT_SLAB_RIGHT"), bio_data);
 			setBiometricImage(bio_data, RegistrationConstants.TEMPLATE_CAPTURED_RIGHT_SLAP,
 					isPrevTemplate ? null : RegistrationConstants.RIGHTPALM_IMG_PATH,
-					isPrevTemplate ? getStreamImageBytes(resultList, registration) : null);
+					isPrevTemplate ? getImage(getImageFromISO(Modality.FINGERPRINT_SLAB_RIGHT, resultList), Modality.FINGERPRINT_SLAB_RIGHT, crossImagePath): null);
 		}
 
 		resultList = capturedFingers.stream().filter(b -> b.getModalityName().toLowerCase().contains("thumb"))
@@ -270,17 +266,17 @@ public class TemplateGenerator extends BaseService {
 			setFingerRankings(resultList, Biometric.getDefaultAttributes("FINGERPRINT_SLAB_THUMBS"), bio_data);
 			setBiometricImage(bio_data, RegistrationConstants.TEMPLATE_CAPTURED_THUMBS,
 					isPrevTemplate ? null : RegistrationConstants.THUMB_IMG_PATH,
-					isPrevTemplate ? getStreamImageBytes(resultList, registration) : null);
+					isPrevTemplate ? getImage(getImageFromISO(Modality.FINGERPRINT_SLAB_THUMBS, resultList), Modality.FINGERPRINT_SLAB_THUMBS, crossImagePath) : null);
 		}
 
 		if(!capturedFace.isEmpty()) {
 			setBiometricImage(bio_data, RegistrationConstants.TEMPLATE_FACE_IMAGE_SOURCE,
 					isPrevTemplate ? null : RegistrationConstants.FACE_IMG_PATH,
-					isPrevTemplate ? getStreamImageBytes(capturedFace, registration) : null);
+					isPrevTemplate ? getImageFromISO(Modality.FACE, capturedFace).get(0) : null);
 
 			if("applicant".equalsIgnoreCase(capturedFace.get(0).getSubType())) {
 				setBiometricImage(templateValues, RegistrationConstants.TEMPLATE_APPLICANT_IMAGE_SOURCE,
-						RegistrationConstants.FACE_IMG_PATH,  getStreamImageBytes(capturedFace.get(0), registration));
+						RegistrationConstants.FACE_IMG_PATH, getImageFromISO(Modality.FACE, capturedFace).get(0));
 			}
 		}
 		return bio_data;
@@ -409,17 +405,79 @@ public class TemplateGenerator extends BaseService {
 		templateValues.put(RegistrationConstants.TEMPLATE_GUIDELINES, Arrays.asList(importantGuidelines));
 	}
 
+
+	private List<byte[]> getImageFromISO(Modality modality, List<BiometricsDto> biometricsDtos) {
+		List<byte[]> images = new LinkedList<>();
+		try {
+			for(String attribute : modality.getAttributes()) {
+				Optional<BiometricsDto> result = biometricsDtos.stream()
+						.filter(d -> d.getBioAttribute().equalsIgnoreCase(attribute)).findFirst();
+
+				if (!result.isPresent() || (result.isPresent() && result.get().getAttributeISO() == null)) {
+					images.add(null);
+					continue;
+				}
+
+				ConvertRequestDto convertRequestDto = new ConvertRequestDto();
+				convertRequestDto.setInputBytes(result.get().getAttributeISO());
+				switch (modality) {
+					case FINGERPRINT_SLAB_LEFT:
+					case FINGERPRINT_SLAB_RIGHT:
+					case FINGERPRINT_SLAB_THUMBS:
+						convertRequestDto.setVersion("ISO19794_4_2011");
+						images.add(FingerDecoder.convertFingerISOToImageBytes(convertRequestDto));
+						break;
+					case IRIS_DOUBLE:
+						convertRequestDto.setVersion("ISO19794_6_2011");
+						images.add(IrisDecoder.convertIrisISOToImageBytes(convertRequestDto));
+						break;
+					case FACE:
+						convertRequestDto.setVersion("ISO19794_5_2011");
+						images.add(FaceDecoder.convertFaceISOToImageBytes(convertRequestDto));
+						break;
+				}
+			}
+		} catch (Exception exception) {
+			LOGGER.error("Failed to extract image from ISO", exception);
+		}
+		return images;
+	}
+
+	private byte[] getImage(List<byte[]> imageList, Modality modality, String crossImagePath) {
+		BufferedImage bufferedImage = null;
+		switch (modality) {
+			case FINGERPRINT_SLAB_LEFT:
+			case FINGERPRINT_SLAB_RIGHT:
+				bufferedImage = concatImages(imageList.get(0), imageList.get(1), imageList.get(2), imageList.get(3), crossImagePath);
+				break;
+			case FINGERPRINT_SLAB_THUMBS:
+				bufferedImage = concatImages(imageList.get(0), imageList.get(1), crossImagePath);
+				break;
+		}
+
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ImageIO.write(bufferedImage, "jpg", baos);
+			return baos.toByteArray();
+		} catch (Exception e) {
+			LOGGER.error("Failed to convert buffered image to byte array", e);
+		}
+		return null;
+	}
+
+
 	private byte[] getStreamImageBytes(List<BiometricsDto> biometricsDtos, RegistrationDTO registration) {
 		Optional<BiometricsDto> biometricsDto = biometricsDtos.stream().filter(b-> b.getAttributeISO() != null).findFirst();
 		if(biometricsDto.isPresent()) {
-			return registration.streamImages.get(String.format("%s_%s_%s", biometricsDto.get().getSubType(),
+			return registration.BIO_CAPTURES.get(String.format("%s_%s_%s", biometricsDto.get().getSubType(),
 					biometricsDto.get().getModalityName(), biometricsDto.get().getNumOfRetries()));
 		}
 		return null;
 	}
 
+	//TODO
 	private byte[] getStreamImageBytes(BiometricsDto biometricsDto, RegistrationDTO registration) {
-		return registration.streamImages.get(String.format("%s_%s_%s", biometricsDto.getSubType(),
+		return registration.BIO_CAPTURES.get(String.format("%s_%s_%s", biometricsDto.getSubType(),
 				biometricsDto.getModalityName(), biometricsDto.getNumOfRetries()));
 	}
 
@@ -551,7 +609,7 @@ public class TemplateGenerator extends BaseService {
 	}
 
 	private byte[] getSegmentedImageBytes(BiometricsDto biometricsDto, RegistrationDTO registration) {
-		return registration.streamImages.get(String.format("%s_%s_%s", biometricsDto.getSubType(),
+		return registration.BIO_CAPTURES.get(String.format("%s_%s_%s", biometricsDto.getSubType(),
 				biometricsDto.getBioAttribute(), biometricsDto.getNumOfRetries()));
 	}
 

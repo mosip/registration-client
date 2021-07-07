@@ -3,8 +3,8 @@ package io.mosip.registration.dao;
 import java.io.IOException;
 import java.util.List;
 
-import io.mosip.registration.dto.SettingsSchema;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.SettingsSchema;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.entity.IdentitySchema;
 import io.mosip.registration.exception.RegBaseCheckedException;

@@ -22,7 +22,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<scope>test</scope>
+			<!--<scope>test</scope>-->
 		</dependency>
 		<dependency>
 			<groupId>org.powermock</groupId>
@@ -35,9 +35,6 @@
 			<artifactId>mvel2</artifactId>
 			<version>2.4.7.Final</version>
 		</dependency>
-		<!--<dependency> <groupId>com.machinezoo.sourceafis</groupId> <artifactId>sourceafis</artifactId> 
-			<version>3.5.3</version> </dependency> <dependency> <groupId>org.tensorflow</groupId> 
-			<artifactId>tensorflow</artifactId> <version>1.12.0</version> </dependency> -->
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
@@ -122,8 +119,6 @@
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-idvalidator-rid</artifactId>
 		</dependency>
-		<!--<dependency> <groupId>io.mosip.kernel</groupId> <artifactId>kernel-crypto-signature</artifactId> 
-			</dependency> -->
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-idvalidator-uin</artifactId>
@@ -176,11 +171,6 @@
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-qrcodegenerator-zxing</artifactId>
 		</dependency>
-		<!--<dependency>
-			<groupId>com.jcraft</groupId>
-			<artifactId>jsch</artifactId>
-			<version>0.1.54</version>
-		</dependency>-->
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
@@ -242,18 +232,6 @@
 			<artifactId>jfreesane</artifactId>
 			<version>0.98</version>
 		</dependency>
-		<!--<dependency>
-			<groupId>org.jvnet.com4j</groupId>
-			<artifactId>com4j</artifactId>
-			<version>2.1</version>
-		</dependency>-->
-		<!--<dependency> <groupId>io.mosip.kernel</groupId> <artifactId>kernel-crypto-jce</artifactId> 
-			</dependency> -->
-		<!--<dependency>
-			<groupId>org.apache.pdfbox</groupId>
-			<artifactId>pdfbox</artifactId>
-			<version>1.8.3</version>
-		</dependency>-->
 		<dependency>
 			<groupId>com.cronutils</groupId>
 			<artifactId>cron-utils</artifactId>
@@ -351,6 +329,12 @@
 			<groupId>io.mosip.api.impl</groupId>
 			<artifactId>registration-api-default-impl</artifactId>
 			<version>1.2.0-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.mosip.biometric.util</groupId>
+			<artifactId>biometrics-util</artifactId>
+			<version>1.1.5</version>
 		</dependency>
 
 	</dependencies>
