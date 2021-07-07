@@ -476,6 +476,16 @@ public class GenericBiometricsController extends BaseController {
 		}
 	}
 
+	public void deleteProofOfExceptionDocument() {
+		Optional<FxControl> result = GenericController.getFxControlMap().values().stream()
+				.filter(control -> control.getUiSchemaDTO().getSubType().equals(RegistrationConstants.POE_DOCUMENT)).findFirst();
+
+		if(result.isPresent()) {
+			getRegistrationDTOFromSession().removeDocument(result.get().getUiSchemaDTO().getId());
+			LOGGER.info("Removing Proof of exception document into field : {}", result.get().getUiSchemaDTO().getId());
+		}
+	}
+
 	/**
 	 * Scan the biometrics
 	 *
@@ -847,7 +857,6 @@ public class GenericBiometricsController extends BaseController {
 
 
 	private String getCaptureTimeOut() {
-
 		/* Get Configued capture timeOut */
 		return getValueFromApplicationContext(RegistrationConstants.CAPTURE_TIME_OUT);
 	}
@@ -1022,7 +1031,9 @@ public class GenericBiometricsController extends BaseController {
 			if (node != null) {
 				node.getStyleClass().clear();
 				node.getStyleClass().add(getBioScores(currentSubType, currentModality, retryBox) >= threshold ?
-						RegistrationConstants.QUALITY_LABEL_GREEN : RegistrationConstants.QUALITY_LABEL_RED);
+						RegistrationConstants.QUALITY_LABEL_GREEN :
+						getRegistrationDTOFromSession().ATTEMPTS.getOrDefault(String.format("%s_%s", currentSubType, currentModality), 0) == 0 ?
+								RegistrationConstants.QUALITY_LABEL_GREY : RegistrationConstants.QUALITY_LABEL_RED);
 			}
 		}
 
@@ -1203,6 +1214,7 @@ public class GenericBiometricsController extends BaseController {
 			}
 			isAllMarked = isAllMarked && exceptionImageView.getOpacity() == 1 ? true : false;
 		}
+
 		displayBiometric(currentModality);
 		setScanButtonVisibility(isAllMarked);
 		fxControl.refreshModalityButton(currentModality);
@@ -1420,8 +1432,6 @@ public class GenericBiometricsController extends BaseController {
 	}
 
 	public void addException(MouseEvent event) {
-
-		LOGGER.info("Clicked on exception Image");
 
 		ImageView exceptionImage = (ImageView) event.getSource();
 

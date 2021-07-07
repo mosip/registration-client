@@ -13,6 +13,7 @@ import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
 import io.mosip.registration.constants.Components;
 import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.controller.GenericController;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
@@ -88,8 +89,11 @@ public class BiometricFxControl extends FxControl {
 					bioService.getRetryCount(currentModality));
 		}
 
-		//refresh();
-		// TODO - remove EOP document if there are no biometric exception
+		//remove POE_EOP document if there are no biometric exception
+		if(getRegistrationDTo().getBiometricExceptions(uiSchemaDTO.getSubType()).isEmpty()) {
+			LOGGER.info("Removing exception photo as no exceptions are marked currently");
+			biometricsController.deleteProofOfExceptionDocument();
+		}
 	}
 
 	@Override
@@ -375,9 +379,6 @@ public class BiometricFxControl extends FxControl {
 		for(String bioAttribute : uiSchemaDTO.getBioAttributes()) {
 			if(!requiredAttributes.contains(bioAttribute)) {
 				getRegistrationDTo().clearBIOCache(uiSchemaDTO.getSubType(), bioAttribute);
-				//getRegistrationDTo().removeBiometricException(uiSchemaDTO.getSubType(), bioAttribute);
-				//this.biometricsController.removeBioStreamImage(uiSchemaDTO.getSubType());
-				//this.biometricsController.removeBioScores(uiSchemaDTO.getSubType());
 			}
 		}
 	}
@@ -396,7 +397,7 @@ public class BiometricFxControl extends FxControl {
 		}
 
 		boolean valid = MVEL.evalToBoolean(expression, capturedDetails);
-		valid =  biometricsController.hasApplicantBiometricException() ? biometricsController.isBiometricExceptionProofCollected() : valid;
+		valid =  biometricsController.hasApplicantBiometricException() ? valid && biometricsController.isBiometricExceptionProofCollected() : valid;
 		//TODO - display message about exception proof
 		if (valid) {
 			auditFactory.audit(AuditEvent.REG_BIO_CAPTURE_NEXT, Components.REG_BIOMETRICS, SessionContext.userId(),
@@ -466,20 +467,19 @@ public class BiometricFxControl extends FxControl {
 
 		HBox modalityView = (HBox) tempNode;
 		Button button = (Button) modalityView.getChildren().get(0);
+		Image image = null;
 		List<BiometricsDto> capturedData = getRegistrationDTo().getBiometric(uiSchemaDTO.getSubType(), modality.getAttributes());
 		if(!capturedData.isEmpty()) {
 			Optional<BiometricsDto> bestCopy = capturedData.stream().sorted(Comparator.comparingDouble(BiometricsDto::getQualityScore)).findFirst();
-			Image image = biometricsController.getBioStreamImage(uiSchemaDTO.getSubType(), modality,
+			image = biometricsController.getBioStreamImage(uiSchemaDTO.getSubType(), modality,
 					bestCopy.get().getNumOfRetries());
-			button.setGraphic(getImageView(image, 80));
-			button.setPrefSize(105, 80);
+		} else {
+			image = biometricsController.getBioStreamImage(uiSchemaDTO.getSubType(), modality, 0);
 		}
 
-		if( modality == Modality.EXCEPTION_PHOTO ) {
-			Image image = getExceptionDocumentAsImage();
-			button.setGraphic(getImageView(image, 80));
-			button.setPrefSize(105, 80);
-		}
+		button.setGraphic(getImageView(image, 80));
+		button.setPrefSize(105, 80);
+
 		addRemoveCaptureStatusMark(modalityView, modality);
 		displayExceptionPhoto();
 	}
