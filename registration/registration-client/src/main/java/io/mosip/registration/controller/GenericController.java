@@ -44,9 +44,9 @@ import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.response.SchemaDto;
-import io.mosip.registration.dto.response.UiScreenDTO;
+import io.mosip.registration.dto.schema.UiScreenDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.sync.MasterSyncService;
@@ -129,6 +129,9 @@ public class GenericController extends BaseController {
 	@FXML
 	private Button authenticate;
 
+	@FXML
+	private Label notification;
+
 	@Autowired
 	private RegistrationController registrationController;
 
@@ -199,6 +202,8 @@ public class GenericController extends BaseController {
 	}
 
 	private HBox getPreRegistrationFetchComponent() {
+		String langCode = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0);
+
 		HBox hBox = new HBox();
 		hBox.setAlignment(Pos.CENTER_LEFT);
 		hBox.setSpacing(20);
@@ -207,7 +212,7 @@ public class GenericController extends BaseController {
 
 		Label label = new Label();
 		label.setId("preRegistrationLabel");
-		label.setText(applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS)
+		label.setText(applicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("search_for_Pre_registration_id"));
 		hBox.getChildren().add(label);
 		TextField textField = new TextField();
@@ -217,7 +222,7 @@ public class GenericController extends BaseController {
 		Button button = new Button();
 		button.setId("fetchBtn");
 		button.getStyleClass().add("demoGraphicPaneContentButton");
-		button.setText(applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS)
+		button.setText(applicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("fetch"));
 
 		button.setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -335,7 +340,7 @@ public class GenericController extends BaseController {
 
 				for (UiSchemaDTO uiSchemaDTO : schemaDTOs) {
 					List<String> configBioAttributes = requiredFieldValidator
-							.isRequiredBiometricField(uiSchemaDTO.getSubType(), getRegistrationDTOFromSession());
+							.getRequiredBioAttributes(uiSchemaDTO, getRegistrationDTOFromSession());
 
 					if (configBioAttributes != null && !configBioAttributes.isEmpty()) {
 						defaultUpdateFields.add(uiSchemaDTO.getId());
@@ -483,6 +488,7 @@ public class GenericController extends BaseController {
 	}
 
 	private void setTabSelectionChangeEventHandler(TabPane tabPane) {
+
 		tabPane.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>(){
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
@@ -492,43 +498,35 @@ public class GenericController extends BaseController {
 					keyboardStage.close();
 				}
 
-				if(newValue.intValue() < 0) { return; }
-
-				final String newScreenName = tabPane.getTabs().get(newValue.intValue()).getId().replace("_tab", EMPTY);
+				int newSelection = newValue.intValue() < 0 ? 0 : newValue.intValue();
+				final String newScreenName = tabPane.getTabs().get(newSelection).getId().replace("_tab", EMPTY);
 
 				//Hide continue button in preview page
 				next.setVisible(newScreenName.equals("AUTH") ? false : true);
 				authenticate.setVisible(newScreenName.equals("AUTH") ? true : false);
+				notification.setText(EMPTY);
 
-				if(newScreenName.equals("AUTH") || newScreenName.equals("PREVIEW")) {
-					if(getInvalidScreenName(tabPane).equals(EMPTY)) {
-						loadPreviewOrAuthScreen(tabPane, tabPane.getTabs().get(newValue.intValue()));
-						return;
-					}
-					//Not eligible to preview / auth
-					tabPane.getSelectionModel().selectPrevious();
+				//request to load Preview / Auth page, allowed only when no errors are found in visible screens
+				if((newScreenName.equals("AUTH") || newScreenName.equals("PREVIEW")) && getInvalidScreenName(tabPane).equals(EMPTY)) {
+					loadPreviewOrAuthScreen(tabPane, tabPane.getTabs().get(newValue.intValue()));
 					return;
 				}
-
-				if(oldValue == null || oldValue.intValue() < 0)
-					return;
 
 				//Refresh screen visibility
-				tabPane.getTabs().get(newValue.intValue()).setDisable(!refreshScreenVisibility(newScreenName));
-				boolean isSelectedDisabledTab = tabPane.getTabs().get(newValue.intValue()).isDisabled();
-				if(newValue.intValue() <= oldValue.intValue() && !isSelectedDisabledTab)
-					return;
+				tabPane.getTabs().get(newSelection).setDisable(!refreshScreenVisibility(newScreenName));
+				boolean isSelectedDisabledTab = tabPane.getTabs().get(newSelection).isDisabled();
 
-				if(!isScreenValid(tabPane.getTabs().get(oldValue.intValue()).getId())) {
+				if(oldValue.intValue() <0 || isSelectedDisabledTab) {
+					tabPane.getSelectionModel().select(oldValue.intValue() < 0 ? 0 : oldValue.intValue());
+					return;
+				}
+
+				if(oldValue.intValue() < newSelection && !isScreenValid(tabPane.getTabs().get(oldValue.intValue()).getId())) {
 					LOGGER.error("Current screen is not fully valid : {}", oldValue.intValue());
-					tabPane.getSelectionModel().selectPrevious();
+					tabPane.getSelectionModel().select(oldValue.intValue());
 					return;
 				}
-
-				if(isSelectedDisabledTab) {
-					LOGGER.error("Current selected new screen is disabled finding new screen");
-					tabPane.getSelectionModel().selectPrevious();
-				}
+				tabPane.getSelectionModel().select(newValue.intValue());
 			}
 		});
 	}
@@ -542,12 +540,18 @@ public class GenericController extends BaseController {
 			for(String fieldId : result.get().getFields()) {
 				if(getFxControl(fieldId) != null && !getFxControl(fieldId).canContinue()) {
 					LOGGER.error("Screen validation , fieldId : {} has invalid value", fieldId);
+					String label = getFxControl(fieldId).getUiSchemaDTO().getLabel().getOrDefault(ApplicationContext.applicationLanguage(), fieldId);
+					notification.setText(applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
+							.getString("SCREEN_VALIDATION_ERROR") + " [ " + label + " ]");
+					notification.setVisible(true);
 					isValid = false;
 					break;
 				}
 			}
 		}
 		if (isValid) {
+			notification.setText(EMPTY);
+			notification.setVisible(false);
 			auditFactory.audit(AuditEvent.REG_NAVIGATION, Components.REGISTRATION_CONTROLLER,
 					SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 		}
@@ -628,7 +632,7 @@ public class GenericController extends BaseController {
 
 				for(UiSchemaDTO fieldDTO : groupEntry.getValue()) {
 					try {
-						FxControl fxControl = buildFxElement(fieldDTO);
+						FxControl fxControl = buildFxElement(fieldDTO, schema);
 						if(fxControl.getNode() instanceof GridPane) {
 							((GridPane)fxControl.getNode()).prefWidthProperty().bind(groupFlowPane.widthProperty());
 						}
@@ -681,6 +685,7 @@ public class GenericController extends BaseController {
 		switch (tab.getId()) {
 			case "PREVIEW":
 				try {
+					tabPane.getSelectionModel().select(tab);
 					tab.setContent(getPreviewContent(tabPane));
 				} catch (Exception exception) {
 					LOGGER.error("Failed to load preview page!!, clearing registration data.");
@@ -690,6 +695,7 @@ public class GenericController extends BaseController {
 
 			case "AUTH":
 				try {
+					tabPane.getSelectionModel().select(tab);
 					tab.setContent(loadAuthenticationPage(tabPane));
 					authenticationController.initData(ProcessNames.PACKET.getType());
 				} catch (Exception exception) {
@@ -704,6 +710,7 @@ public class GenericController extends BaseController {
 		String content = registrationPreviewController.getPreviewContent();
 		if(content != null) {
 			final WebView webView = new WebView();
+			webView.setId("webView");
 			webView.prefWidthProperty().bind(tabPane.widthProperty());
 			webView.prefHeightProperty().bind(tabPane.heightProperty());
 			webView.getEngine().loadContent(content);
@@ -737,7 +744,7 @@ public class GenericController extends BaseController {
 	}
 
 
-	private FxControl buildFxElement(UiSchemaDTO uiSchemaDTO) throws Exception {
+	private FxControl buildFxElement(UiSchemaDTO uiSchemaDTO, SchemaDto schema) throws Exception {
 		LOGGER.info("Building fxControl for field : {}", uiSchemaDTO.getId());
 
 		FxControl fxControl = null;
@@ -748,7 +755,7 @@ public class GenericController extends BaseController {
 					break;
 
 				case CONTROLTYPE_BIOMETRICS:
-					fxControl = new BiometricFxControl().build(uiSchemaDTO);
+					fxControl = new BiometricFxControl(getProofOfExceptionFields(schema)).build(uiSchemaDTO);
 					break;
 
 				case CONTROLTYPE_BUTTON:
@@ -789,6 +796,11 @@ public class GenericController extends BaseController {
 
 	public void refreshFields() {
 		orderedScreens.values().forEach(screen -> { refreshScreenVisibility(screen.getName()); });
+	}
+
+	public List<UiSchemaDTO> getProofOfExceptionFields(SchemaDto schema) {
+		return schema.getSchema().stream().filter(field ->
+				field.getSubType().contains(RegistrationConstants.POE_DOCUMENT)).collect(Collectors.toList());
 	}
 
 	private FxControl getFxControl(String fieldId) {

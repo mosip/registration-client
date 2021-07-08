@@ -60,9 +60,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
-import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
@@ -88,6 +86,9 @@ import javafx.util.Callback;
 
 @Controller
 public class PacketUploadController extends BaseController implements Initializable {
+	
+	@FXML
+	private StackPane progressIndicatorPane;
 
 	@FXML
 	private ProgressIndicator progressIndicator;
@@ -175,6 +176,9 @@ public class PacketUploadController extends BaseController implements Initializa
 	private List<PacketStatusVO> uploadedPackets = new ArrayList<>();
 
 	@FXML
+	private GridPane packetUploadPane;
+	
+	@FXML
 	private GridPane uploadPacketRoot;
 
 	public GridPane getUploadPacketRoot() {
@@ -186,20 +190,27 @@ public class PacketUploadController extends BaseController implements Initializa
 	 * 
 	 */
 	public void syncAndUploadPacket() {
-
 		LOGGER.info("REGISTRATION - SYNC_PACKETS_AND_PUSH_TO_SERVER - PACKET_UPLOAD_CONTROLLER", APPLICATION_NAME,
 				APPLICATION_ID, "Sync the packets and push it to the server");
+		
+		packetUploadPane.setDisable(true);
+		progressIndicatorPane.setVisible(true);
+		
 		observableList.clear();
 		table.refresh();
 		service.reset();
 
 		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+			packetUploadPane.setDisable(false);
+			progressIndicatorPane.setVisible(false);
 			loadInitialPage();
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NETWORK_ERROR));
 			return;
 		}
 
 		if (selectedPackets.isEmpty()) {
+			packetUploadPane.setDisable(false);
+			progressIndicatorPane.setVisible(false);
 			loadInitialPage();
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PACKET_UPLOAD_EMPTY_ERROR));
 			return;
@@ -218,14 +229,18 @@ public class PacketUploadController extends BaseController implements Initializa
 
 		progressIndicator.progressProperty().bind(service.progressProperty());
 		service.start();
-		service.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
-			@Override
-			public void handle(WorkerStateEvent t) {
-				String status = service.getValue();
-				if (!status.equals(RegistrationConstants.EMPTY)) {
-					generateAlert(RegistrationConstants.ERROR, status);
-				}
+		service.setOnSucceeded(event -> {
+			packetUploadPane.setDisable(false);
+			progressIndicatorPane.setVisible(false);
+			
+			String status = service.getValue();
+			if (!status.equals(RegistrationConstants.EMPTY)) {
+				generateAlert(RegistrationConstants.ERROR, status);
 			}
+		});
+		service.setOnFailed(event -> {
+			packetUploadPane.setDisable(false);
+			progressIndicatorPane.setVisible(false);
 		});
 	}
 
@@ -260,8 +275,6 @@ public class PacketUploadController extends BaseController implements Initializa
 						auditFactory.audit(AuditEvent.PACKET_UPLOAD, Components.PACKET_UPLOAD,
 								SessionContext.userContext().getUserId(), RegistrationConstants.PACKET_UPLOAD_REF_ID);
 
-						progressIndicator.setVisible(true);
-
 						for (int i = 0; i < selectedPackets.size(); i++) {
 							try {
 								PacketStatusDTO dto = packetUploadService.uploadPacket(selectedPackets.get(i).getFileName());
@@ -271,8 +284,7 @@ public class PacketUploadController extends BaseController implements Initializa
 							}
 							this.updateProgress(i+1, selectedPackets.size());
 						}
-
-						progressIndicator.setVisible(false);
+						
 						if (!tableMap.isEmpty()) {
 							displayStatus(populateTableData(tableMap));
 						} else {
@@ -527,21 +539,16 @@ public class PacketUploadController extends BaseController implements Initializa
 			String lowerCaseFilter = newValue.toLowerCase();
 
 			if (reg.getFileName().contains(lowerCaseFilter)) {
-				table.getSelectionModel().selectFirst();
 				return true; // Filter matches packet name.
 			} else if (reg.getUserId().toLowerCase().contains(lowerCaseFilter)) {
-				table.getSelectionModel().selectFirst();
 				return true; // Filter matches operator ID.
 			} else if (newValue.equalsIgnoreCase(reg.getPacketClientStatus())) {
-				table.getSelectionModel().selectFirst();
 				return true; // Filter matches packet client status.
 			} else if (newValue.equalsIgnoreCase(reg.getPacketServerStatus())) {
-				table.getSelectionModel().selectFirst();
 				return true; // Filter matches packet server status.
 			}
 			return false; // Does not match.
 		});
-		table.getSelectionModel().selectFirst();
 	}
 
 	/**
@@ -579,7 +586,7 @@ public class PacketUploadController extends BaseController implements Initializa
 		uploadBtn.setVisible(!toBeUploadedPacketStatusDTOs.isEmpty());
 		selectAllCheckBox.setSelected(false);
 		clientStatusComboBox.setDisable(allApprovedPackets.isEmpty());
-		serverStatusComboBox.setDisable(allApprovedPackets.isEmpty());
+		serverStatusComboBox.setDisable(allApprovedPackets.isEmpty() || uploadedPacketStatusDTOs.isEmpty());
 		clearFilters.setDisable(allApprovedPackets.isEmpty());
 		selectedPackets.clear();
 		

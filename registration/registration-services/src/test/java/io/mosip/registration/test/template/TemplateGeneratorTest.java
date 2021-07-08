@@ -4,20 +4,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.*;
 
 import javax.imageio.ImageIO;
 
-import com.amazonaws.services.opsworks.model.App;
-import io.mosip.registration.dao.IdentitySchemaDao;
-import io.mosip.registration.dto.UiSchemaDTO;
-import io.mosip.registration.service.BaseService;
-import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.impl.IdentitySchemaServiceImpl;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -77,10 +69,10 @@ public class TemplateGeneratorTest {
 		List<FingerprintDetailsDTO> segmentedFingerprints = new ArrayList<>();
 		segmentedFingerprints.add(new FingerprintDetailsDTO());
 		
-		registrationDTO.getBiometricDTO().getApplicantBiometricDTO().getFingerprintDetailsDTO()
+		/*registrationDTO.getBiometricDTO().getApplicantBiometricDTO().getFingerprintDetailsDTO()
 				.forEach(fingerPrintDTO -> {
 					fingerPrintDTO.setSegmentedFingerprints(segmentedFingerprints);
-				});
+				});*/
 		appMap.put(RegistrationConstants.DOC_DISABLE_FLAG, "Y");
 		appMap.put(RegistrationConstants.FINGERPRINT_DISABLE_FLAG, "Y");
 		appMap.put(RegistrationConstants.IRIS_DISABLE_FLAG, "Y");
@@ -143,14 +135,14 @@ public class TemplateGeneratorTest {
 	@Test
 	public void generateTemplateWithEmptyFieldsTest() throws RegBaseCheckedException {
 		ResponseDTO response = templateGenerator.generateTemplate("sample text", registrationDTO, template,
-				RegistrationConstants.ACKNOWLEDGEMENT_TEMPLATE);
+				RegistrationConstants.ACKNOWLEDGEMENT_TEMPLATE, "");
 		assertNotNull(response.getSuccessResponseDTO());
 	}
 	
 	@Test
 	public void generateTemplateWithDemographicFieldsTest() throws  RegBaseCheckedException {
 		Mockito.when(identitySchemaServiceImpl.getUISchema(Mockito.anyDouble())).thenReturn(DataProvider.getFields());
-		ResponseDTO response = templateGenerator.generateTemplate("sample text", registrationDTO, template, RegistrationConstants.TEMPLATE_PREVIEW);
+		ResponseDTO response = templateGenerator.generateTemplate("sample text", registrationDTO, template, RegistrationConstants.TEMPLATE_PREVIEW, "");
 		assertNotNull(response.getSuccessResponseDTO());
 	}
 }

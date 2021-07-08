@@ -1,23 +1,21 @@
 package io.mosip.registration.service.bio.impl;
 
 import static io.mosip.registration.constants.LoggerConstants.BIO_SERVICE;
-import static io.mosip.registration.constants.LoggerConstants.LOG_REG_FINGERPRINT_FACADE;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import org.apache.commons.io.IOUtils;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.enums.Modality;
+import io.mosip.registration.service.IdentitySchemaService;
+import lombok.NonNull;
+import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import io.mosip.commons.packet.constants.Biometric;
-import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
 import io.mosip.kernel.biometrics.entities.BIR;
@@ -46,13 +44,11 @@ import io.mosip.registration.service.bio.BioService;
  * validations through MDM service
  * 
  * @author taleev.aalam
+ * @author anusha
  *
  */
 @Service
 public class BioServiceImpl extends BaseService implements BioService {
-
-	@Autowired
-	private MosipDeviceSpecificationFactory deviceSpecificationFactory;
 
 	/**
 	 * Instance of {@link Logger}
@@ -62,17 +58,12 @@ public class BioServiceImpl extends BaseService implements BioService {
 	@Autowired
 	private BioAPIFactory bioAPIFactory;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see io.mosip.registration.service.bio.BioService#isMdmEnabled()
-	 */
-	@Override
-	public boolean isMdmEnabled() {
-		return true;
-//		return RegistrationConstants.ENABLE
-//				.equalsIgnoreCase(((String) ApplicationContext.map().get(RegistrationConstants.MDM_ENABLED)));
-	}
+	@Autowired
+	private MosipDeviceSpecificationFactory deviceSpecificationFactory;
+
+	@Autowired
+	private IdentitySchemaService identitySchemaService;
+
 
 	/**
 	 * Gets the registration DTO from session.
@@ -85,166 +76,62 @@ public class BioServiceImpl extends BaseService implements BioService {
 
 	@Override
 	public List<BiometricsDto> captureModality(MDMRequestDto mdmRequestDto) throws RegBaseCheckedException {
-
-		List<BiometricsDto> biometricsDtos = null;
-		if (isMdmEnabled()) {
-
-			biometricsDtos = captureRealModality(mdmRequestDto);
-
-		} else {
-			biometricsDtos = captureMockModality(mdmRequestDto, false);
-
-		}
-
-		return biometricsDtos;
+		return captureRealModality(mdmRequestDto);
 	}
 
 	private List<BiometricsDto> captureRealModality(MDMRequestDto mdmRequestDto) throws RegBaseCheckedException {
-		LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-				"Entering into captureModality method.." + System.currentTimeMillis());
-
+		LOGGER.info("Entering into captureModality method.. {}", System.currentTimeMillis());
 		List<BiometricsDto> list = new ArrayList<BiometricsDto>();
-
 		MdmBioDevice bioDevice = deviceSpecificationFactory.getDeviceInfoByModality(mdmRequestDto.getModality());
-
 		MosipDeviceSpecificationProvider deviceSpecificationProvider = deviceSpecificationFactory
 				.getMdsProvider(bioDevice.getSpecVersion());
-
 		List<BiometricsDto> biometricsDtos = deviceSpecificationProvider.rCapture(bioDevice, mdmRequestDto);
 
 		
-			for (BiometricsDto biometricsDto : biometricsDtos) {
-				if (biometricsDto != null
-						&& isQualityScoreMaxInclusive(String.valueOf(biometricsDto.getQualityScore()))) {
-						try {
-							biometricsDto.setSdkScore(getSDKScore(biometricsDto));
-						} catch (Exception exception) {
-							LOGGER.error("Unable to fetch SDK Score ", exception.getCause());
-							if(RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map()
-							                 .getOrDefault(RegistrationConstants.QUALITY_CHECK_WITH_SDK, RegistrationConstants.DISABLE)) ) {
-							    throw new RegBaseCheckedException(
-									RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorCode(),
-									RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorMessage()
-											+ ExceptionUtils.getStackTrace(exception));
-						     }
-						}
-						
-					  if(RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map().getOrDefault(
-								RegistrationConstants.UPDATE_SDK_QUALITY_SCORE, RegistrationConstants.DISABLE))) {
-						LOGGER.info("Quality check with Biometric SDK flag is enabled..");
+		for (BiometricsDto biometricsDto : biometricsDtos) {
+			if (biometricsDto != null
+					&& isQualityScoreMaxInclusive(String.valueOf(biometricsDto.getQualityScore()))) {
+					try {
+						biometricsDto.setSdkScore(getSDKScore(biometricsDto));
+					} catch (Exception exception) {
+						LOGGER.error("Unable to fetch SDK Score ", exception.getCause());
+						if(RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map()
+										 .getOrDefault(RegistrationConstants.QUALITY_CHECK_WITH_SDK, RegistrationConstants.DISABLE)) ) {
+							throw new RegBaseCheckedException(
+								RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorCode(),
+								RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorMessage()
+										+ ExceptionUtils.getStackTrace(exception));
+						 }
+					}
 
-						
-						
-							LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-									"Flag to update quality score evaluated from Biometric SDK is enabled");
-
-							biometricsDto.setQualityScore(biometricsDto.getSdkScore());
-
-							LOGGER.info("Quality score is evaluated and assigned to biometricsDto");
-						
-					  }
-					
-					list.add(biometricsDto);
-				}
+				  if(RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map().getOrDefault(
+							RegistrationConstants.UPDATE_SDK_QUALITY_SCORE, RegistrationConstants.DISABLE))) {
+						LOGGER.info("Update MDM Quality score with Biometric SDK score flag is enabled..");
+						biometricsDto.setQualityScore(biometricsDto.getSdkScore());
+				  }
+				list.add(biometricsDto);
 			}
-		 
-
+		}
 		LOGGER.info("Ended captureModality method.. {}" , System.currentTimeMillis());
 		return list;
 	}
 
-	private List<BiometricsDto> captureMockModality(MDMRequestDto mdmRequestDto, boolean isUserOnboarding)
-			throws RegBaseCheckedException {
-		LOGGER.info(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
-				"Scanning of mock modality for user registration");
-		List<BiometricsDto> list = new ArrayList<>();
-		try {
-
-			List<String> attributes = Biometric.getDefaultAttributes(mdmRequestDto.getModality());
-			if (mdmRequestDto.getExceptions() != null)
-				attributes.removeAll(Arrays.asList(mdmRequestDto.getExceptions()));
-
-			for (String bioAttribute : attributes) {
-				BiometricsDto biometricDto = new BiometricsDto(
-						Biometric.getBiometricByAttribute(bioAttribute).getAttributeName(), IOUtils.resourceToByteArray(
-								getFilePath(mdmRequestDto.getModality(), bioAttribute, isUserOnboarding)),
-						90.0);
-				biometricDto.setCaptured(true);
-				list.add(biometricDto);
-			}
-		} catch (Exception e) {
-			throw new RegBaseCheckedException(
-					RegistrationExceptionConstants.REG_FINGERPRINT_SCANNING_ERROR.getErrorCode(),
-					RegistrationExceptionConstants.REG_FINGERPRINT_SCANNING_ERROR.getErrorMessage()
-							+ ExceptionUtils.getStackTrace(e));
-		}
-		return list;
-	}
-
-	private String getFilePath(String modality, String bioAttribute, boolean isUserOnboarding) throws IOException {
-		LOGGER.info(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
-				"Current Modality >>>>>>>>>>>>>>>>>>>>>>>>> " + modality + "  bioAttribute >>>>> " + bioAttribute);
-
-		String path = null;
-		switch (modality) {
-		case PacketManagerConstants.FINGERPRINT_SLAB_LEFT:
-			path = String.format(isUserOnboarding ? "/UserOnboard/leftHand/%s/ISOTemplate.iso"
-					: "/fingerprints/lefthand/%s/ISOTemplate.iso", bioAttribute);
-			break;
-		case PacketManagerConstants.FINGERPRINT_SLAB_RIGHT:
-			path = String.format(isUserOnboarding ? "/UserOnboard/rightHand/%s/ISOTemplate.iso"
-					: "/fingerprints/Srighthand/%s/ISOTemplate.iso", bioAttribute);
-			break;
-		case PacketManagerConstants.FINGERPRINT_SLAB_THUMBS:
-			path = String.format(isUserOnboarding ? "/UserOnboard/thumb/%s/ISOTemplate.iso"
-					: "/fingerprints/thumb/%s/ISOTemplate.iso", bioAttribute);
-			break;
-		case PacketManagerConstants.IRIS_DOUBLE:
-			path = String.format("/images/%s.iso", bioAttribute);
-			break;
-		case "FACE":
-		case PacketManagerConstants.FACE_FULLFACE:
-			path = String.format("/images/%s.iso", "face");
-			break;
-		}
-		return path;
-	}
-
 	@Override
 	public List<BiometricsDto> captureModalityForAuth(MDMRequestDto mdmRequestDto) throws RegBaseCheckedException {
+		LOGGER.info("Started {} capture for authentication at {} ", mdmRequestDto.getModality(), System.currentTimeMillis());
+		if (deviceSpecificationFactory.isDeviceAvailable(mdmRequestDto.getModality()))
+			return captureRealModality(mdmRequestDto);
 
-		LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-				"Started capture for authentication" + System.currentTimeMillis() + mdmRequestDto.getModality());
-
-		List<BiometricsDto> biometrics = null;
-
-		if (isMdmEnabled()) {
-			// if (getStream(mdmRequestDto.getModality()) != null) {
-
-			if (deviceSpecificationFactory.isDeviceAvailable(mdmRequestDto.getModality())) {
-				biometrics = captureRealModality(mdmRequestDto);
-			} else {
-				throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
-						RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
-			}
-		} else {
-			biometrics = captureMockModality(mdmRequestDto, true);
-		}
-		return biometrics;
+		throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
+					RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
 	}
 
 	@Override
 	public InputStream getStream(String modality) throws RegBaseCheckedException {
-		LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-				"Stream request : " + System.currentTimeMillis() + modality);
-
+		LOGGER.info("Streaming {} request at {}",modality, System.currentTimeMillis());
 		MdmBioDevice bioDevice = deviceSpecificationFactory.getDeviceInfoByModality(modality);
-
-		LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-				"Bio Device found for modality : " + modality + "  " + System.currentTimeMillis() + modality);
-
+		LOGGER.info("Bio-device found {} at {}",modality, System.currentTimeMillis());
 		return getStream(bioDevice, modality);
-
 	}
 
 	@Override
@@ -254,20 +141,12 @@ public class BioServiceImpl extends BaseService implements BioService {
 		if (deviceSpecificationFactory.isDeviceAvailable(mdmBioDevice)) {
 			MosipDeviceSpecificationProvider deviceSpecificationProvider = deviceSpecificationFactory
 					.getMdsProvider(mdmBioDevice.getSpecVersion());
-
-			LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-					"MosipDeviceSpecificationProvider found for spec version : " + mdmBioDevice.getSpecVersion() + "  "
-							+ System.currentTimeMillis() + deviceSpecificationProvider);
-
+			LOGGER.info("{} found for spec version {} at {}",deviceSpecificationProvider,
+					mdmBioDevice.getSpecVersion(), System.currentTimeMillis());
 			return deviceSpecificationProvider.stream(mdmBioDevice, modality);
-
-		} else {
-			LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID, "Bio Device is null");
-
-			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
-					RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
 		}
-
+		throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
+				RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
 	}
 
 	private boolean isQualityScoreMaxInclusive(String qualityScore) {
@@ -294,4 +173,130 @@ public class BioServiceImpl extends BaseService implements BioService {
 
 		
 	}
+
+	@Override
+	public Map<String, Boolean> getCapturedBiometrics(String fieldId, double idVersion,
+													  @NonNull RegistrationDTO registrationDTO) {
+		Map<String, Boolean> capturedContext = new HashMap<>();
+		try {
+			Optional<UiSchemaDTO> fieldDto = identitySchemaService.getUISchema(idVersion).stream().filter(field ->
+				RegistrationConstants.BIOMETRICS_TYPE.equals(field.getType()) ).findFirst();
+			if(!fieldDto.isPresent())
+				return capturedContext;
+
+			Map<Modality, List<String>> groupedAttributes = getGroupedAttributes(fieldDto.get().getBioAttributes());
+			for(Modality modality : groupedAttributes.keySet()) {
+				double quality = 0;
+				List<String> capturedAttributes = new ArrayList<>();
+				//iterating through configured bio-attributes
+				for(String attribute : groupedAttributes.get(modality)) {
+					BiometricsDto biometricsDto = registrationDTO.getBiometric(fieldDto.get().getSubType(), attribute);
+					//its null, then check exception list
+					if(biometricsDto == null) {
+						capturedContext.put(attribute, registrationDTO.isBiometricExceptionAvailable(fieldDto.get().getSubType(), attribute));
+						continue;
+					}
+					//its force captured, not required to validate threshold
+					if(biometricsDto.isForceCaptured()) {
+						capturedContext.put(attribute, true);
+						continue;
+					}
+					quality = quality + biometricsDto.getQualityScore();
+					capturedAttributes.add(attribute);
+				}
+				//if some attributes are captured, determine capture status based on threshold check
+				for(String attr : capturedAttributes) {
+					capturedContext.put(attr, (quality / capturedAttributes.size()) >= getMDMQualityThreshold(modality));
+				}
+			}
+		} catch (RegBaseCheckedException e) {
+			LOGGER.error("Failed to fetch Id schema with version {} due to {}", idVersion, e);
+		}
+		LOGGER.info("Biometric field {} biometrics-captured-context >> {}", fieldId, capturedContext);
+		return capturedContext;
+	}
+
+	@Override
+	public Map<String, List<String>> getSupportedBioAttributes(@NonNull List<String> modalities) {
+		Map<String, List<String>> configuredAttributes= new HashMap<>();
+		modalities.forEach( modality -> {
+			switch (modality) {
+				case RegistrationConstants.FINGERPRINT_SLAB_LEFT:
+					configuredAttributes.put(modality, RegistrationConstants.leftHandUiAttributes);
+					break;
+				case RegistrationConstants.FINGERPRINT_SLAB_RIGHT:
+					configuredAttributes.put(modality, RegistrationConstants.rightHandUiAttributes);
+					break;
+				case RegistrationConstants.FINGERPRINT_SLAB_THUMBS:
+					configuredAttributes.put(modality, RegistrationConstants.twoThumbsUiAttributes);
+					break;
+				case RegistrationConstants.IRIS:
+				case RegistrationConstants.IRIS_DOUBLE:
+					configuredAttributes.put(modality, RegistrationConstants.eyesUiAttributes);
+					break;
+				case RegistrationConstants.FACE:
+				case RegistrationConstants.FACE_FULLFACE:
+					configuredAttributes.put(modality, RegistrationConstants.faceUiAttributes);
+					break;
+			}
+		});
+		return configuredAttributes;
+	}
+
+
+	private Map<Modality, List<String>> getGroupedAttributes(@NonNull List<String> attributes) {
+		Map<Modality, List<String>> groupedAttributes = new HashMap<>();
+		for(Modality modality : Modality.values()) {
+			groupedAttributes.put(modality,	ListUtils.intersection(modality.getAttributes(), attributes));
+		}
+		return groupedAttributes;
+	}
+
+
+	@Override
+	public double getMDMQualityThreshold(@NonNull Modality modality) {
+		String thresholdScore = null;
+		switch (modality) {
+			case FINGERPRINT_SLAB_LEFT:
+				thresholdScore = getGlobalConfigValueOf(RegistrationConstants.LEFTSLAP_FINGERPRINT_THRESHOLD);
+				break;
+			case FINGERPRINT_SLAB_RIGHT:
+				thresholdScore = getGlobalConfigValueOf(RegistrationConstants.RIGHTSLAP_FINGERPRINT_THRESHOLD);
+				break;
+			case FINGERPRINT_SLAB_THUMBS:
+				thresholdScore = getGlobalConfigValueOf(RegistrationConstants.THUMBS_FINGERPRINT_THRESHOLD);
+				break;
+			case IRIS_DOUBLE:
+				thresholdScore = getGlobalConfigValueOf(RegistrationConstants.IRIS_THRESHOLD);
+				break;
+			case FACE:
+				thresholdScore = getGlobalConfigValueOf(RegistrationConstants.FACE_THRESHOLD);
+				break;
+		}
+		return thresholdScore == null ? 0 : Double.valueOf(thresholdScore);
+	}
+
+	@Override
+	public int getRetryCount(@NonNull Modality modality) {
+		String retryCount = null;
+		switch (modality) {
+			case FACE:
+				retryCount = getGlobalConfigValueOf(RegistrationConstants.FACE_RETRY_COUNT);
+				break;
+			case IRIS_DOUBLE:
+				retryCount = getGlobalConfigValueOf(RegistrationConstants.IRIS_RETRY_COUNT);
+				break;
+			case FINGERPRINT_SLAB_RIGHT:
+			case FINGERPRINT_SLAB_LEFT:
+			case FINGERPRINT_SLAB_THUMBS:
+				retryCount = getGlobalConfigValueOf(RegistrationConstants.FINGERPRINT_RETRIES_COUNT);
+				break;
+			case EXCEPTION_PHOTO:
+				retryCount = getGlobalConfigValueOf(RegistrationConstants.PHOTO_RETRY_COUNT);
+				break;
+		}
+		return retryCount == null ? 0 : Integer.valueOf(retryCount);
+	}
+
+
 }

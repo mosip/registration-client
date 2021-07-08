@@ -1,6 +1,8 @@
 package io.mosip.registration.controller.settings.impl;
 
+import java.text.MessageFormat;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -10,19 +12,19 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.RestartController;
 import io.mosip.registration.controller.settings.SettingsInterface;
-import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.config.JobConfigurationService;
 import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.sync.impl.MasterSyncServiceImpl;
+import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -77,7 +79,7 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 	@Autowired
 	private LocalConfigService localConfigService;
-	
+
 	@Autowired
 	private RestartController restartController;
 
@@ -127,6 +129,7 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 		int columnIndex = 0;
 		for (SyncJobDef syncJob : syncJobs) {
 			SyncControl syncControl = jobConfigurationService.getSyncControlOfJob(syncJob.getId());
+			String localSyncFrequency = localConfigService.getValue(syncJob.getId());
 
 			GridPane mainGridPane = new GridPane();
 			mainGridPane.setId(syncJob.getName());
@@ -177,7 +180,9 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 			String nextSyncTime = RegistrationConstants.HYPHEN;
 			if (syncJob.getSyncFreq() != null) {
-				nextSyncTime = getLocalZoneTime(jobConfigurationService.getNextRestartTime(syncJob.getSyncFreq()));
+				nextSyncTime = getLocalZoneTime(jobConfigurationService.getNextRestartTime(
+						localSyncFrequency != null && !localSyncFrequency.isBlank() ? localSyncFrequency
+								: syncJob.getSyncFreq()));
 			}
 			Label nextRunLabel = new Label(applicationContext.getApplicationLanguageLabelBundle()
 					.getString(RegistrationConstants.NEXT_RUN_LABEL) + nextSyncTime);
@@ -214,6 +219,17 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 				modifyCronExpression(syncJob, cronTextField.getText());
 			});
 
+			cronTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
+				if (newValue) {
+					Platform.runLater(() -> {
+						int carretPosition = cronTextField.getCaretPosition();
+						if (cronTextField.getAnchor() != carretPosition) {
+							cronTextField.selectRange(carretPosition, carretPosition);
+						}
+					});
+				}
+			});
+
 			if (!permittedJobs.contains(syncJob.getId())) {
 				submit.setVisible(false);
 				cronTextField.setEditable(false);
@@ -226,7 +242,7 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 			subGridPane.add(jobVbox, 1, 0);
 
 			mainGridPane.add(subGridPane, 0, 0);
-			
+
 			changeNodeOrientation(mainGridPane);
 
 			gridPane.add(mainGridPane, columnIndex, rowIndex);
@@ -236,6 +252,8 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 	}
 
 	private void executeJob(SyncJobDef syncJob) {
+		ResourceBundle resourceBundle = applicationContext.getBundle(ApplicationContext.applicationLanguage(),
+				RegistrationConstants.MESSAGES);
 		progressIndicatorPane.setVisible(true);
 		getStage().getScene().getRoot().setDisable(true);
 
@@ -270,21 +288,29 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 			if (responseDTO.getSuccessResponseDTO() != null) {
 				LOGGER.info("Execution is successful for the job {}", syncJob.getName());
-				
-				SuccessResponseDTO successResponseDTO = responseDTO.getSuccessResponseDTO();
-				generateAlertLanguageSpecific(successResponseDTO.getCode(), successResponseDTO.getMessage());
+
+				generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION, MessageFormat
+						.format(resourceBundle.getString("JOB_EXECUTION_SUCCESS_MSG"), syncJob.getName()));
+				if ((responseDTO.getSuccessResponseDTO().getOtherAttributes() != null && responseDTO
+						.getSuccessResponseDTO().getOtherAttributes().containsKey(RegistrationConstants.RESTART)) && configUpdateAlert("RESTART_MSG")) {
+					restartController.restart();
+				}
 			} else if (responseDTO.getErrorResponseDTOs() != null) {
 				LOGGER.error("Job execution failed with response: " + responseDTO.getErrorResponseDTOs().get(0));
-				
-				ErrorResponseDTO errorResponse = responseDTO.getErrorResponseDTOs().get(0);				
-				generateAlertLanguageSpecific(errorResponse.getCode(), errorResponse.getMessage());
+
+				generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION,
+						MessageFormat.format(resourceBundle.getString("JOB_EXECUTION_FAILURE_MSG"), syncJob.getName()));
 			}
+			setContent();
 		});
 		taskService.setOnFailed(event -> {
 			LOGGER.error("Failed execution of the task: ", syncJob.getName());
-			
+
 			getStage().getScene().getRoot().setDisable(false);
 			progressIndicatorPane.setVisible(false);
+
+			generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION,
+					MessageFormat.format(resourceBundle.getString("JOB_EXECUTION_FAILURE_MSG"), syncJob.getName()));
 		});
 	}
 
@@ -295,18 +321,19 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 			return;
 		}
 		localConfigService.modifyJob(syncJob.getId(), cronExpression);
-		if (configUpdateAlert()) {
+		if (configUpdateAlert("CRON_EXPRESSION_MODIFIED")) {
 			restartController.restart();
 		}
 	}
-	
-	private boolean configUpdateAlert() {
+
+	private boolean configUpdateAlert(String context) {
 		if (!fXComponents.getScene().getRoot().getId().equals("mainBox") && !SessionContext.map()
 				.get(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ).equals(RegistrationConstants.ENABLE)) {
 
 			Alert alert = createAlert(AlertType.CONFIRMATION, RegistrationUIConstants.INFORMATION,
-					RegistrationUIConstants.ALERT_NOTE_LABEL, RegistrationUIConstants.getMessageLanguageSpecific("CRON_EXPRESSION_MODIFIED"),
-					RegistrationConstants.RESTART_NOW, RegistrationConstants.RESTART_LATER);
+					RegistrationUIConstants.getMessageLanguageSpecific("ALERT_NOTE_LABEL"),
+					RegistrationUIConstants.getMessageLanguageSpecific(context),
+					RegistrationConstants.QUIT_NOW, RegistrationConstants.QUIT_LATER);
 
 			alert.show();
 			Rectangle2D screenSize = Screen.getPrimary().getVisualBounds();

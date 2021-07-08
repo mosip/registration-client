@@ -99,6 +99,10 @@ public class LanguageSelectionController extends BaseController implements Initi
 					.map(GenericDto::getName)
 					.collect(Collectors.joining(RegistrationConstants.COMMA));
 
+			if (mandatoryLanguagesText == null || mandatoryLanguagesText.isEmpty()) {
+				mandatoryLanguagesText= resourceBundle.getString("nolanguage");
+			}
+
 			String selectLangText = MessageFormat.format(resourceBundle.getString("selectLanguageText"),
 					minLangCount, mandatoryLanguagesText);
 
@@ -107,32 +111,35 @@ public class LanguageSelectionController extends BaseController implements Initi
 			for (GenericDto language : langCodes) {
 				CheckBox checkBox = new CheckBox();
 				checkBox.setId(language.getCode());
-				checkBox.setText(
-						applicationContext.getBundle(language.getCode(), RegistrationConstants.LABELS).getString("language"));
+				checkBox.setText(language.getName());
 				checkBox.getStyleClass().add("languageCheckBox");
-				checkBox.selectedProperty().addListener((options, oldValue, newValue) -> {
-					if (newValue) {
-						selectedLanguages.add(checkBox.getId());
-						if (!mandatoryLangCodes.isEmpty() && mandatoryLangCodes.contains(language.getCode())) {
-							errorMessage.setVisible(false);
+				if (language.getCode().equalsIgnoreCase(language.getName())) {
+					checkBox.setDisable(true); //If ResourceBundle is not present for configured language, show the checkbox but disable it for selection
+				} else {
+					checkBox.selectedProperty().addListener((options, oldValue, newValue) -> {
+						if (newValue) {
+							selectedLanguages.add(checkBox.getId());
+							if (!mandatoryLangCodes.isEmpty() && mandatoryLangCodes.contains(language.getCode())) {
+								errorMessage.setVisible(false);
+							}
+						} else {
+							selectedLanguages.remove(checkBox.getId());
+							if (!mandatoryLangCodes.isEmpty()
+									&& !CollectionUtils.containsAny(selectedLanguages, mandatoryLangCodes)) {
+								errorMessage.setVisible(true);
+							}
 						}
-					} else {
-						selectedLanguages.remove(checkBox.getId());
-						if (!mandatoryLangCodes.isEmpty()
-								&& !CollectionUtils.containsAny(selectedLanguages, mandatoryLangCodes)) {
-							errorMessage.setVisible(true);
-						}
-					}
 
-					//check if selected languages are as per the min and max lang count
-					//selected languages should contain all the mandatory languages
-					if (selectedLanguages.size() >= minLangCount && selectedLanguages.size() <= maxLangCount
-							&& (mandatoryLangCodes.isEmpty() || (!mandatoryLangCodes.isEmpty() && selectedLanguages.containsAll(mandatoryLangCodes)))) {
-						submit.setDisable(false);
-					} else {
-						submit.setDisable(true);
-					}
-				});
+						//check if selected languages are as per the min and max lang count
+						//selected languages should contain all the mandatory languages
+						if (selectedLanguages.size() >= minLangCount && selectedLanguages.size() <= maxLangCount
+								&& (mandatoryLangCodes.isEmpty() || (!mandatoryLangCodes.isEmpty() && selectedLanguages.containsAll(mandatoryLangCodes)))) {
+							submit.setDisable(false);
+						} else {
+							submit.setDisable(true);
+						}
+					});
+				}
 				checkBoxesPane.getChildren().add(checkBox);
 			}
 		} catch (PreConditionCheckException e) {

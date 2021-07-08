@@ -50,7 +50,6 @@ public class Initialization extends Application {
 							+ new SimpleDateFormat(RegistrationConstants.HH_MM_SS).format(System.currentTimeMillis()));
 
 			io.mosip.registration.context.ApplicationContext.setUpgradeServerURL(upgradeServer);
-			io.mosip.registration.context.ApplicationContext.setTPMUsageFlag(tpmRequired);
 
 			setPrimaryStage(primaryStage);
 			LoginController loginController = applicationContext.getBean(LoginController.class);

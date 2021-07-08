@@ -11,7 +11,7 @@ import io.mosip.registration.entity.TemplateType;
  *
  * @author Himaja Dhanyamraju
  */
-public interface TemplateTypeRepository<P> extends BaseRepository<TemplateType, TemplateEmbeddedKeyCommonFields> {
+public interface TemplateTypeRepository<P> extends BaseRepository<TemplateType, String> {
 
 	/**
 	 * This method returns the list of {@link TemplateType} which are active and
@@ -19,9 +19,8 @@ public interface TemplateTypeRepository<P> extends BaseRepository<TemplateType, 
 	 * 
 	 * @param code
 	 *            the templateTypeCode
-	 * @param langCode
 	 * 				the language code required to generate the template
 	 * @return the list of {@link TemplateType}
 	 */
-	List<TemplateType> findByIsActiveTrueAndPkTmpltCodeCodeAndPkTmpltCodeLangCode(String code, String langCode);
+	List<TemplateType> findByIsActiveTrueAndCode(String code);
 }

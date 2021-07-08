@@ -11,7 +11,7 @@ import javafx.scene.shape.StrokeLineCap;
 public class RectangleSelection {
 
     final DragContext dragContext = new DragContext();
-    Rectangle rect = new Rectangle();
+    Rectangle rect = null;
 
     Group group;
 
@@ -23,13 +23,14 @@ public class RectangleSelection {
 
         this.group = group;
 
-        rect = new Rectangle(0, 0, 0, 0);
+        rect = new ResizableRectangle(0, 0, 0, 0, group);
         rect.setStroke(Color.BLUE);
         rect.setStrokeWidth(1);
         rect.setStrokeLineCap(StrokeLineCap.ROUND);
         rect.setFill(Color.LIGHTBLUE.deriveColor(0, 1.2, 1, 0.6));
 
         //If this is not set x, y co-ordinates go wrong
+
         javafx.scene.image.ImageView imageView = (javafx.scene.image.ImageView) this.group.getChildren().get(0);
         imageView.fitWidthProperty().bind(imageView.getImage().widthProperty());
         imageView.fitHeightProperty().bind(imageView.getImage().heightProperty());
@@ -38,6 +39,13 @@ public class RectangleSelection {
         imageView.addEventHandler(MouseEvent.MOUSE_PRESSED, onMousePressedEventHandler);
         imageView.addEventHandler(MouseEvent.MOUSE_DRAGGED, onMouseDraggedEventHandler);
         imageView.addEventHandler(MouseEvent.MOUSE_RELEASED, onMouseReleasedEventHandler);
+    }
+
+    public void removeEventHandlers() {
+        javafx.scene.image.ImageView imageView = (javafx.scene.image.ImageView) this.group.getChildren().get(0);
+        imageView.removeEventHandler(MouseEvent.MOUSE_PRESSED, onMousePressedEventHandler);
+        imageView.removeEventHandler(MouseEvent.MOUSE_DRAGGED, onMouseDraggedEventHandler);
+        imageView.removeEventHandler(MouseEvent.MOUSE_RELEASED, onMouseReleasedEventHandler);
     }
 
     EventHandler<MouseEvent> onMousePressedEventHandler = e -> {
@@ -92,7 +100,6 @@ public class RectangleSelection {
 
         if (e.isSecondaryButtonDown()) {
         }
-
     };
 
     private static final class DragContext {

@@ -183,11 +183,11 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 		LOGGER.debug("getting packetIds to sync server status started");
 
 		List<Registration> registrationList = regPacketStatusDAO.getPacketIdsByStatusUploaded();
+		registrationList.addAll(regPacketStatusDAO.getPacketIdsByStatusExported());
 
 		List<String> packetIds = new ArrayList<>();
 		for (Registration registration : registrationList) {
 			String registrationId = registration.getId();
-
 			registrationMap.put(registrationId, registration);
 			packetIds.add(registrationId);
 		}

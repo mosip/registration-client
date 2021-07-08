@@ -14,6 +14,7 @@ import io.mosip.registration.api.docscanner.DocScannerFacade;
 import io.mosip.registration.api.docscanner.DocScannerUtil;
 import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import io.mosip.registration.util.control.FxControl;
+import javafx.geometry.Rectangle2D;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -138,7 +139,11 @@ public class DocumentScanController extends BaseController {
 			}
 
 			getScannedPages().add(pageNumber - 1,	bufferedImage);
-			scanPopUpViewController.getScanImage().setImage(DocScannerUtil.getImage(bufferedImage));
+			scanPopUpViewController.getImageGroup().getChildren().clear();
+			scanPopUpViewController.getImageGroup().getChildren().add(new ImageView(DocScannerUtil.getImage(bufferedImage)));
+			//scanPopUpViewController.getScanImage().setImage(DocScannerUtil.getImage(bufferedImage));
+			//scanPopUpViewController.getGroupStackPane().setMinWidth((int)scanPopUpViewController.getScanImage().getImage().getWidth()*6);
+			//scanPopUpViewController.getScanImage().setCache(false);
 			scanPopUpViewController.getScanningMsg().setVisible(false);
 			scanPopUpViewController.showPreview(true);
 			return true;
@@ -170,14 +175,16 @@ public class DocumentScanController extends BaseController {
 			}
 
 			scannedPages.add(bufferedImage);
-			byte[] byteArray = DocScannerUtil.getImageBytesFromBufferedImage(bufferedImage);
-			scanPopUpViewController.getScanImage().setImage(convertBytesToImage(byteArray));
+			scanPopUpViewController.getImageGroup().getChildren().clear();
+			scanPopUpViewController.getImageGroup().getChildren().add(new ImageView(DocScannerUtil.getImage(bufferedImage)));
+			//scanPopUpViewController.getScanImage().setImage(DocScannerUtil.getImage(bufferedImage));
+			//scanPopUpViewController.getGroupStackPane().setMinWidth((int)scanPopUpViewController.getScanImage().getImage().getWidth()*6);
 			scanPopUpViewController.getScanImage().setVisible(true);
 			scanPopUpViewController.getScanningMsg().setVisible(false);
 			scanPopUpViewController.showPreview(true);
 			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.DOC_CAPTURE_SUCCESS));
 
-		} catch (RuntimeException | IOException exception) {
+		} catch (RuntimeException exception) {
 			LOGGER.error("Exception while scanning documents for registration", exception);
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOCUMENT_ERROR));
 		}

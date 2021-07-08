@@ -52,19 +52,20 @@ then
 	echo "Found thirdparty SDK"
 	wget "$reg_client_sdk_url"
 	/usr/bin/unzip "${work_dir}"/sdkDependency.zip
-	cp "${work_dir}"/sdkDependency/*.jar "${work_dir}"/registration-client/target/lib/
+	cp "${work_dir}"/sdkDependency/*.jar "${work_dir}"/sdkjars/
 else
 	echo "Downloading MOCK SDK..."
-	wget "${artifactory_url}/artifactory/libs-release-local/mock-sdk/1.1.5/mock-sdk.jar" -O "${work_dir}"/registration-client/target/lib/mock-sdk.jar
+	wget "${artifactory_url}/artifactory/libs-release-local/mock-sdk/1.1.5/mock-sdk.jar" -O "${work_dir}"/sdkjars/mock-sdk.jar
 fi
 
-
+cp "${work_dir}"/sdkjars/*.jar "${work_dir}"/registration-client/target/lib/
 wget "${artifactory_url}/artifactory/libs-release-local/icu4j/icu4j.jar" -O "${work_dir}"/registration-client/target/lib/icu4j.jar
 wget "${artifactory_url}/artifactory/libs-release-local/icu4j/kernel-transliteration-icu4j.jar" -O "${work_dir}"/registration-client/target/lib/kernel-transliteration-icu4j.jar
 wget "${artifactory_url}/artifactory/libs-release-local/clamav/clamav.jar" -O "${work_dir}"/registration-client/target/lib/clamav.jar
 wget "${artifactory_url}/artifactory/libs-release-local/clamav/kernel-virusscanner-clamav.jar" -O "${work_dir}"/registration-client/target/lib/kernel-virusscanner-clamav.jar
 
 #unzip Jre to be bundled
+wget "${artifactory_url}/artifactory/libs-release-local/zulu11.41.23-ca-fx-jre11.0.8-win_x64.zip" -O "${work_dir}"/zulu11.41.23-ca-fx-jre11.0.8-win_x64.zip
 /usr/bin/unzip "${work_dir}"/zulu11.41.23-ca-fx-jre11.0.8-win_x64.zip
 mkdir -p "${work_dir}"/registration-libs/resources/jre
 mv "${work_dir}"/zulu11.41.23-ca-fx-jre11.0.8-win_x64/* "${work_dir}"/registration-libs/resources/jre/
@@ -88,16 +89,35 @@ ls -ltr lib | grep bc
 ## adding logback.xml
 /usr/bin/zip -j reg-client.zip "${work_dir}"/build_files/logback.xml
 
+#Creating Regclient testing framework
+mkdir -p "${work_dir}"/registration-test-utility
+mkdir -p "${work_dir}"/registration-test-utility/lib
+cp "${work_dir}"/registration-test/target/registration-test-*-dependencies.jar "${work_dir}"/registration-test-utility/registration-test.jar
+cp -r "${work_dir}"/registration-test/resources/*  "${work_dir}"/registration-test-utility/
+cp -r "${work_dir}"/registration-libs/resources/jre "${work_dir}"/registration-test-utility/
+#cp -r "${work_dir}"/registration-client/target/lib/morena* "${work_dir}"/registration-test-utility/lib
+cp -r "${work_dir}"/registration-client/target/lib/icu4j.jar "${work_dir}"/registration-test-utility/lib
+cp -r "${work_dir}"/registration-client/target/lib/kernel-transliteration-icu4j.jar "${work_dir}"/registration-test-utility/lib
+cp -r "${work_dir}"/registration-client/target/lib/clamav.jar "${work_dir}"/registration-test-utility/lib
+cp -r "${work_dir}"/registration-client/target/lib/kernel-virusscanner-clamav.jar "${work_dir}"/registration-test-utility/lib
+cp -r "${work_dir}"/sdkjars/*.jar "${work_dir}"/registration-test-utility/lib
+cp "${work_dir}"/registration-client/target/MANIFEST.MF "${work_dir}"/registration-test-utility/
+
+cd "${work_dir}"
+/usr/bin/zip -r ./registration-test-utility.zip ./registration-test-utility/*
+
 echo "setting up nginx static content"
 
 mkdir -p /var/www/html/registration-client
 mkdir -p /var/www/html/registration-client/${client_version_env}
 mkdir -p /var/www/html/registration-client/${client_version_env}/lib
-
+mkdir -p /var/www/html/registration-test/${client_version_env}
+ 
 cp "${work_dir}"/registration-client/target/lib/* /var/www/html/registration-client/${client_version_env}/lib
 cp "${work_dir}"/registration-client/target/MANIFEST.MF /var/www/html/registration-client/${client_version_env}/
 cp "${work_dir}"/build_files/maven-metadata.xml /var/www/html/registration-client/
-cp reg-client.zip /var/www/html/registration-client/${client_version_env}/
+cp "${work_dir}"/registration-client/target/reg-client.zip /var/www/html/registration-client/${client_version_env}/
+cp "${work_dir}"/registration-test-utility.zip /var/www/html/registration-client/${client_version_env}/
 
 echo "setting up nginx static content - completed"
 

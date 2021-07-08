@@ -1,15 +1,11 @@
 package io.mosip.registration.validator;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
+import io.mosip.registration.dto.schema.ConditionalBioAttributes;
 import org.mvel2.MVEL;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.integration.impl.MapVariableResolverFactory;
@@ -19,20 +15,17 @@ import org.springframework.stereotype.Component;
 import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.RequiredOnExpr;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.RequiredOnExpr;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.IdentitySchemaService;
-
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 @Component
 public class RequiredFieldValidator {
 
 	private static final Logger LOGGER = AppConfig.getLogger(RequiredFieldValidator.class);
-	private static final String APPLICANT_SUBTYPE = "applicant";
+	//private static final String APPLICANT_SUBTYPE = "applicant";
 
 	@Autowired
 	private IdentitySchemaService identitySchemaService;
@@ -55,10 +48,7 @@ public class RequiredFieldValidator {
 					.filter(field -> "MVEL".equalsIgnoreCase(field.getEngine()) && field.getExpr() != null).findFirst();
 
 			if (expression.isPresent()) {
-				Map context = new HashMap();
-				context.put("identity", registrationDTO.getMVELDataContext());
-				VariableResolverFactory resolverFactory = new MapVariableResolverFactory(context);
-				required = MVEL.evalToBoolean(expression.get().getExpr(), resolverFactory);
+				required = executeMVEL(expression.get().getExpr(), registrationDTO);
 				LOGGER.info("Refreshed {} field isRequired check, required ? {} ", schemaField.getId(), required);
 			}
 		}
@@ -70,41 +60,54 @@ public class RequiredFieldValidator {
 
 		if (schemaField != null && schemaField.getVisible() != null && schemaField.getVisible().getEngine().equalsIgnoreCase("MVEL")
 				&& schemaField.getVisible().getExpr() != null) {
-
-			Map context = new HashMap();
-			context.put("identity", registrationDTO.getMVELDataContext());
-			VariableResolverFactory resolverFactory = new MapVariableResolverFactory(context);
-			visible = MVEL.evalToBoolean(schemaField.getVisible().getExpr(), resolverFactory);
+			visible = executeMVEL(schemaField.getVisible().getExpr(), registrationDTO);
 			LOGGER.info("Refreshed {} field visibility : {} ", schemaField.getId(), visible);
 		}
 		return visible;
 	}
 
-	public List<String> isRequiredBiometricField(String subType, RegistrationDTO registrationDTO)
-			throws RegBaseCheckedException {
-		List<String> requiredAttributes = new ArrayList<String>();
-		SchemaDto schema = identitySchemaService.getIdentitySchema(registrationDTO.getIdSchemaVersion());
-		List<UiSchemaDTO> fields = schema.getSchema().stream()
-				.filter(field -> field.getType() != null
-						&& PacketManagerConstants.BIOMETRICS_DATATYPE.equals(field.getType())
-						&& field.getSubType() != null && field.getSubType().equals(subType))
-				.collect(Collectors.toList());
+	public List<String> getRequiredBioAttributes(UiSchemaDTO field, RegistrationDTO registrationDTO) {
+		if(!isRequiredField(field, registrationDTO))
+			return Collections.EMPTY_LIST;
 
-		for (UiSchemaDTO schemaField : fields) {
-			if (isRequiredField(schemaField, registrationDTO) && schemaField.getBioAttributes() != null)
-				requiredAttributes.addAll(schemaField.getBioAttributes());
+		if(field.getConditionalBioAttributes() != null) {
+			ConditionalBioAttributes selectedCondition = getConditionalBioAttributes(field, registrationDTO);
+			if(selectedCondition != null)
+				return selectedCondition.getBioAttributes();
 		}
+		return field.getBioAttributes();
+	}
 
-		// Reg-client will capture the face of Infant and send it in Packet as part of
-		// IndividualBiometrics CBEFF (If Face is captured for the country)
-		if ((registrationDTO.isChild() && APPLICANT_SUBTYPE.equals(subType) && requiredAttributes.contains("face"))
-				|| (registrationDTO.getRegistrationCategory().equalsIgnoreCase(RegistrationConstants.PACKET_TYPE_UPDATE)
-						&& registrationDTO.getUpdatableFieldGroups().contains("GuardianDetails")
-						&& APPLICANT_SUBTYPE.equals(subType) && requiredAttributes.contains("face"))) {
-			return Arrays.asList("face"); // Only capture face
+	public ConditionalBioAttributes getConditionalBioAttributes(UiSchemaDTO uiSchemaDTO, RegistrationDTO registrationDTO) {
+		if(uiSchemaDTO.getConditionalBioAttributes() == null)
+			return null;
+
+		Optional<ConditionalBioAttributes> result = uiSchemaDTO.getConditionalBioAttributes().stream().filter(c ->
+				c.getAgeGroup().equalsIgnoreCase(registrationDTO.getAgeGroup()) &&
+						c.getProcess().equalsIgnoreCase(registrationDTO.getRegistrationCategory())).findFirst();
+
+		if(!result.isPresent()) {
+			result = uiSchemaDTO.getConditionalBioAttributes().stream().filter(c ->
+					(c.getAgeGroup().equalsIgnoreCase(registrationDTO.getAgeGroup()) &&
+							c.getProcess().equalsIgnoreCase("ALL")) ||
+							(c.getAgeGroup().equalsIgnoreCase("ALL") &&
+									c.getProcess().equalsIgnoreCase(registrationDTO.getRegistrationCategory())) ||
+							(c.getAgeGroup().equalsIgnoreCase("ALL") &&
+									c.getProcess().equalsIgnoreCase("ALL"))).findFirst();
 		}
+		return result.isPresent() ? result.get() : null;
+	}
 
-		return requiredAttributes;
+	private boolean executeMVEL(String expression, RegistrationDTO registrationDTO) {
+		try {
+			Map context = new HashMap();
+			context.put("identity", registrationDTO.getMVELDataContext());
+			VariableResolverFactory resolverFactory = new MapVariableResolverFactory(context);
+			return MVEL.evalToBoolean(expression, resolverFactory);
+		} catch (Throwable t) {
+			LOGGER.error("Failed to evaluate mvel expr", t);
+		}
+		return false;
 	}
 
 }

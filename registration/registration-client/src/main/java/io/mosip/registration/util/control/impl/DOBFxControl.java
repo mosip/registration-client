@@ -4,16 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-import io.mosip.registration.dto.mastersync.GenericDto;
 import org.springframework.context.ApplicationContext;
 
+
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.controller.FXUtils;
 import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.controller.reg.DateValidation;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.util.control.FxControl;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
@@ -27,7 +28,7 @@ public class DOBFxControl extends FxControl {
 	 * Instance of {@link Logger}
 	 */
 	private static final Logger LOGGER = AppConfig.getLogger(DOBAgeFxControl.class);
-
+	private static final String DOBSubType = "dateOfBirth";
 	private static String loggerClassName = "DOB Age Control Type Class";
 
 	private FXUtils fxUtils;
@@ -130,7 +131,8 @@ public class DOBFxControl extends FxControl {
 		TextField yyyy = (TextField) getField(
 				uiSchemaDTO.getId() + RegistrationConstants.YYYY + RegistrationConstants.TEXT_FIELD);
 
-		getRegistrationDTo().setDateField(uiSchemaDTO.getId(), dd.getText(), mm.getText(), yyyy.getText());
+		getRegistrationDTo().setDateField(uiSchemaDTO.getId(), dd.getText(), mm.getText(), yyyy.getText(),
+				DOBSubType.equalsIgnoreCase(uiSchemaDTO.getSubType()));
 	}
 
 	@Override
@@ -140,14 +142,8 @@ public class DOBFxControl extends FxControl {
 
 	@Override
 	public boolean isValid() {
-		TextField dd = (TextField) getField(
-				uiSchemaDTO.getId() + RegistrationConstants.DD + RegistrationConstants.TEXT_FIELD);
-		TextField mm = (TextField) getField(
-				uiSchemaDTO.getId() + RegistrationConstants.MM + RegistrationConstants.TEXT_FIELD);
-		TextField yyyy = (TextField) getField(
-				uiSchemaDTO.getId() + RegistrationConstants.YYYY + RegistrationConstants.TEXT_FIELD);
-		return dd != null && !dd.getText().isEmpty() && mm != null && !mm.getText().isEmpty() && yyyy != null
-				&& !yyyy.getText().isEmpty();
+		return dateValidation.validateDateWithMaxAndMinDays((Pane) getNode(), uiSchemaDTO.getId(),
+				getUiSchemaDTO().getMinimum(), getUiSchemaDTO().getMaximum());
 	}
 
 	@Override
@@ -183,16 +179,17 @@ public class DOBFxControl extends FxControl {
 
 	}
 
-	private void addListener(TextField textField, String dateTyep) {
+	private void addListener(TextField textField, String dateType) {
 		textField.textProperty().addListener((ob, ov, nv) -> {
 			fxUtils.toggleUIField((Pane) node,
 					textField.getId().replaceAll(RegistrationConstants.TEXT_FIELD, "") + RegistrationConstants.LABEL,
 					!textField.getText().isEmpty());
 
-			if (!dateValidation.isNewValueValid(nv, dateTyep)) {
+			if (!dateValidation.isNewValueValid(nv, dateType)) {
 				textField.setText(ov);
 			}
-			boolean isValid = dateValidation.validateDate((Pane) node, uiSchemaDTO.getId());
+			boolean isValid = dateValidation.validateDateWithMaxAndMinDays((Pane) getNode(), uiSchemaDTO.getId(),
+					getUiSchemaDTO().getMinimum(), getUiSchemaDTO().getMaximum());
 			if (isValid) {
 				setData(null);
 				refreshFields();

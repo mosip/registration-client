@@ -140,12 +140,15 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 				batchCount);
 		if (syncedPackets != null && !syncedPackets.isEmpty()) {
 			for(Registration registration : syncedPackets) {
-				if(registration.getServerStatusCode().equals(RegistrationConstants.PACKET_STATUS_CODE_REREGISTER))
+				if (RegistrationConstants.PACKET_STATUS_CODE_REREGISTER.equalsIgnoreCase(registration.getServerStatusCode()))
 					continue;
 
 				Registration updatedRegDetail = uploadSyncedPacket(preparePacketStatusDto(registration));
-				if(updatedRegDetail.getFileUploadStatus().equals(RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode()))
+				if(updatedRegDetail.getFileUploadStatus().equals(RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode())) {
 					setErrorResponse(responseDTO, RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.name(), null);
+				} else {
+					setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, null);
+				}
 			}
 		} else {
 			SuccessResponseDTO successResponseDTO =new SuccessResponseDTO();
@@ -169,21 +172,22 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 		String packetPath = ackFileName.substring(0, lastIndex);
 		File packet = FileUtils.getFile(packetPath + RegistrationConstants.ZIP_FILE_EXTENSION);
 
+		packetStatusDTO.setUploadStatus(RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode());
 		try {
 			String status = pushPacketWithRetryWrapper(packet);
 			packetStatusDTO.setPacketClientStatus(RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode());
 			packetStatusDTO.setUploadStatus(RegistrationClientStatusCode.UPLOAD_SUCCESS_STATUS.getCode());
 			packetStatusDTO.setPacketServerStatus(status);
-		} catch (Throwable t) {
-			LOGGER.error("Error while pushing packets to the server", t);
-			if(t.getMessage().toLowerCase().contains(RegistrationConstants.PACKET_DUPLICATE)) {
+		} catch (RegBaseCheckedException exception) {
+			LOGGER.error("Error while pushing packets to the server", exception);
+			if(exception.getMessage().toLowerCase().contains(RegistrationConstants.PACKET_DUPLICATE)) {
 				packetStatusDTO.setPacketClientStatus(RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode());
 				packetStatusDTO.setUploadStatus(RegistrationClientStatusCode.UPLOAD_SUCCESS_STATUS.getCode());
 				packetStatusDTO.setPacketServerStatus(RegistrationConstants.PACKET_DUPLICATE.toUpperCase());
 			}
-			else
-				packetStatusDTO.setUploadStatus(RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode());
-		}
+		} catch (Throwable t) {
+			LOGGER.error("Error while pushing packets to the server", t);
+		} 
 		//Update status in registration table
 		return registrationDAO.updateRegStatus(packetStatusDTO);
 	}

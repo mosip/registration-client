@@ -3,8 +3,8 @@ package io.mosip.registration.service;
 
 import java.util.List;
 
-import io.mosip.registration.dto.SettingsSchema;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.SettingsSchema;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.exception.RegBaseCheckedException;
 

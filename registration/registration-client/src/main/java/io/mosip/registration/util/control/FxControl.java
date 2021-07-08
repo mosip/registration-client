@@ -7,7 +7,6 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.util.List;
-import java.util.Map;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -18,11 +17,9 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.GenericController;
 import io.mosip.registration.controller.Initialization;
-import io.mosip.registration.controller.reg.DemographicDetailController;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.mastersync.GenericDto;
-import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.validator.RequiredFieldValidator;
 import javafx.geometry.NodeOrientation;
 import javafx.scene.Node;
@@ -42,7 +39,7 @@ import javafx.scene.layout.VBox;
  */
 public abstract class FxControl  {
 
-	protected static final Logger LOGGER = AppConfig.getLogger(DemographicDetailController.class);
+	protected static final Logger LOGGER = AppConfig.getLogger(FxControl.class);
 	private static final String loggerClassName = "FxControl";
 
 	protected UiSchemaDTO uiSchemaDTO;
@@ -137,6 +134,24 @@ public abstract class FxControl  {
 	 * Refresh the field
 	 */
 	public void refresh() {
+		boolean isFieldVisible =  isFieldVisible(uiSchemaDTO);
+		if(!isFieldVisible) {
+			switch (uiSchemaDTO.getType()) {
+				case "documentType":
+					getRegistrationDTo().removeDocument(uiSchemaDTO.getId());
+					break;
+				case "biometricsType":
+					List<String> requiredAttributes = requiredFieldValidator.getRequiredBioAttributes(uiSchemaDTO, getRegistrationDTo());
+					for(String bioAttribute : uiSchemaDTO.getBioAttributes()) {
+						if(!requiredAttributes.contains(bioAttribute))
+							getRegistrationDTo().clearBIOCache(uiSchemaDTO.getSubType(), bioAttribute);
+					}
+					break;
+				default:
+					getRegistrationDTo().removeDemographicField(uiSchemaDTO.getId());
+					break;
+			}
+		}
 		visible(this.node, isFieldVisible(uiSchemaDTO));
 	}
 

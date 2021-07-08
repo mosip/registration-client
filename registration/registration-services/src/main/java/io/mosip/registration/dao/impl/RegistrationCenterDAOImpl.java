@@ -93,8 +93,8 @@ public class RegistrationCenterDAOImpl implements RegistrationCenterDAO {
 			String machineName = RegistrationSystemPropertiesChecker.getMachineId();
 			MachineMaster machineMaster = machineMasterRepository.findByNameIgnoreCase(machineName.toLowerCase());
 
-			if (machineMaster != null && machineMaster.getRegMachineSpecId().getId() != null) {
-				machineId = machineMaster.getRegMachineSpecId().getId();
+			if (machineMaster != null && machineMaster.getId() != null) {
+				machineId = machineMaster.getId();
 			}
 		}
 

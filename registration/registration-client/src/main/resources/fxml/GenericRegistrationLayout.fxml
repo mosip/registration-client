@@ -37,7 +37,7 @@
             <Button fx:id="authenticate" alignment="BASELINE_CENTER" mnemonicParsing="false" styleClass="contiuneButton" text="%authenticate" GridPane.rowIndex="1" />
          </children>
       </GridPane>
-
+      <Label fx:id="notification" alignment="TOP_LEFT" mnemonicParsing="false" styleClass="registrationErrorMsg" GridPane.columnIndex="1" GridPane.rowIndex="1" />
      <!-- <GridPane fx:id="footerGridPane2" alignment="TOP_CENTER" GridPane.columnIndex="0" GridPane.rowIndex="1">
          <columnConstraints>
             <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="10.0" percentWidth="100.0" prefWidth="100.0" />

@@ -14,20 +14,14 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.OSIDataDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.biometric.BiometricDTO;
 import io.mosip.registration.dto.biometric.BiometricExceptionDTO;
 import io.mosip.registration.dto.biometric.BiometricInfoDTO;
 import io.mosip.registration.dto.biometric.FaceDetailsDTO;
 import io.mosip.registration.dto.biometric.FingerprintDetailsDTO;
 import io.mosip.registration.dto.biometric.IrisDetailsDTO;
-import io.mosip.registration.dto.demographic.ApplicantDocumentDTO;
-import io.mosip.registration.dto.demographic.DemographicDTO;
-import io.mosip.registration.dto.demographic.DemographicInfoDTO;
-import io.mosip.registration.dto.demographic.Identity;
-import io.mosip.registration.dto.demographic.IndividualIdentity;
-import io.mosip.registration.dto.demographic.ValuesDTO;
-import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.dto.schema.ValuesDTO;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.exception.RegBaseCheckedException;
 
@@ -67,7 +61,7 @@ public class DataProvider {
 
 		//registrationDTO.setDemographicDTO(DataProvider.getDemographicDTO());
 		registrationDTO.setDemographics(new HashMap<String, Object>());
-		registrationDTO.setBiometricDTO(DataProvider.getBiometricDTO());
+		//registrationDTO.setBiometricDTO(DataProvider.getBiometricDTO());
 		HashMap<String, Object> selectionListDTO=new HashMap<>();
 		registrationDTO.setSelectionListDTO(selectionListDTO);
 		registrationDTO.setSelectedLanguagesByApplicant(Arrays.asList("eng", "ara", "fra"));
@@ -84,7 +78,7 @@ public class DataProvider {
 		registrationDTO.setRegistrationId("10011100110016320190307151917");
 
 		registrationDTO.setDemographics(getDemographicData(selectedLanguages));
-		registrationDTO.setBiometricDTO(DataProvider.getBiometricDTO());
+//		registrationDTO.setBiometricDTO(DataProvider.getBiometricDTO());
 		HashMap<String, Object> selectionListDTO=new HashMap<>();
 		registrationDTO.setSelectionListDTO(selectionListDTO);
 		registrationDTO.setSelectedLanguagesByApplicant(selectedLanguages);
@@ -94,8 +88,8 @@ public class DataProvider {
 
 	private static BiometricDTO getBiometricDTO() throws RegBaseCheckedException {
 		BiometricDTO biometricDTO = new BiometricDTO();
-		biometricDTO.setApplicantBiometricDTO(DataProvider.buildBioMerticDTO(DataProvider.APPLICANT));
-		biometricDTO.setIntroducerBiometricDTO(DataProvider.buildBioMerticDTO("introducer"));
+//		biometricDTO.setApplicantBiometricDTO(DataProvider.buildBioMerticDTO(DataProvider.APPLICANT));
+//		biometricDTO.setIntroducerBiometricDTO(DataProvider.buildBioMerticDTO("introducer"));
 		biometricDTO.setSupervisorBiometricDTO(DataProvider.buildBioMerticDTO("supervisor"));
 		biometricDTO.setOperatorBiometricDTO(DataProvider.buildBioMerticDTO("officer"));
 		return biometricDTO;
@@ -244,14 +238,14 @@ public class DataProvider {
 		return irisExcepList;
 	}
 
-	private static DemographicDTO getDemographicDTO() throws RegBaseCheckedException {
+	/*private static DemographicDTO getDemographicDTO() throws RegBaseCheckedException {
 		DemographicDTO demographicDTO = new DemographicDTO();
 
 		demographicDTO.setDemographicInfoDTO(DataProvider.getDemoInLocalLang());
 		getDocumentDetailsDTO(demographicDTO.getDemographicInfoDTO().getIdentity(),
 				new RegistrationDTO().getDocuments());
 		return demographicDTO;
-	}
+	}*/
 
 	private static Map<String, Object> getDemographicData(List<String> selectedLanguages) {
 		Map<String, Object> demographicMap = new HashMap<>();
@@ -280,7 +274,7 @@ public class DataProvider {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static DemographicInfoDTO getDemoInLocalLang() {
+	/*private static DemographicInfoDTO getDemoInLocalLang() {
 		String platformLanguageCode = "eng";
 		String localLanguageCode = "ara";
 
@@ -390,13 +384,13 @@ public class DataProvider {
 		ApplicantDocumentDTO applicantDocumentDTO = new ApplicantDocumentDTO();
 		
 		//applicantDocumentDTO.setDocumentDetailsDTO(DataProvider.getDocumentDetailsDTO());
-		/*applicantDocumentDTO.setPhoto(DataProvider.getImageBytes("/applicantPhoto.jpg"));
+		*//*applicantDocumentDTO.setPhoto(DataProvider.getImageBytes("/applicantPhoto.jpg"));
 		applicantDocumentDTO.setPhotographName("ApplicantPhoto.jpg");
 		applicantDocumentDTO.setHasExceptionPhoto(true);
 		applicantDocumentDTO.setExceptionPhoto(DataProvider.getImageBytes("/applicantPhoto.jpg"));
 		applicantDocumentDTO.setExceptionPhotoName("ExceptionPhoto.jpg");
 		applicantDocumentDTO.setQualityScore(89.0);
-		applicantDocumentDTO.setNumRetry(1);*/
+		applicantDocumentDTO.setNumRetry(1);*//*
 		applicantDocumentDTO.setAcknowledgeReceipt(DataProvider.getImageBytes("/acknowledgementReceipt.jpg"));
 		applicantDocumentDTO.setAcknowledgeReceiptName("RegistrationAcknowledgement.jpg");
 		return applicantDocumentDTO;
@@ -445,7 +439,7 @@ public class DataProvider {
 		
 		individualIdentity.setProofOfDateOfBirth(documentDetailsResidenceDTO);
 		documents.put("POB", documentDetailsResidenceDTO);
-	}
+	}*/
 
 	private static RegistrationMetaDataDTO getRegistrationMetaDataDTO() {
 

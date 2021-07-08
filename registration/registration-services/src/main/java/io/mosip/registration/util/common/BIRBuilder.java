@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
+import io.mosip.kernel.biometrics.entities.*;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -15,12 +16,6 @@ import io.mosip.kernel.biometrics.constant.BiometricType;
 import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
 import io.mosip.kernel.biometrics.constant.PurposeType;
 import io.mosip.kernel.biometrics.constant.QualityType;
-import io.mosip.kernel.biometrics.entities.BDBInfo;
-import io.mosip.kernel.biometrics.entities.BIR;
-import io.mosip.kernel.biometrics.entities.BIRInfo;
-import io.mosip.kernel.biometrics.entities.RegistryIDType;
-import io.mosip.kernel.biometrics.entities.SingleAnySubtypeType;
-import io.mosip.kernel.biometrics.entities.VersionType;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.registration.config.AppConfig;
@@ -65,6 +60,14 @@ public class BIRBuilder {
 			payLoad = bioDto.getPayLoad().replace(bioValue, RegistrationConstants.BIOVALUE_PLACEHOLDER);
 		}
 
+		List<Entry> otherEntries = new ArrayList<>();
+		otherEntries.add(new Entry(OtherKey.EXCEPTION, bioDto.getAttributeISO()==null ? "true" : "false"));
+		otherEntries.add(new Entry(OtherKey.RETRIES, bioDto.getNumOfRetries()+RegistrationConstants.EMPTY));
+		otherEntries.add(new Entry(OtherKey.SDK_SCORE, bioDto.getSdkScore()+RegistrationConstants.EMPTY));
+		otherEntries.add(new Entry(OtherKey.FORCE_CAPTURED, bioDto.isForceCaptured()+RegistrationConstants.EMPTY));
+		otherEntries.add(new Entry(OtherKey.PAYLOAD, payLoad == null ? RegistrationConstants.EMPTY : payLoad));
+		otherEntries.add(new Entry(OtherKey.SPEC_VERSION, bioDto.getSpecVersion() == null ? RegistrationConstants.EMPTY : bioDto.getSpecVersion()));
+
 		return new BIR.BIRBuilder().withBdb(bioDto.getAttributeISO() == null ? new byte[0] : bioDto.getAttributeISO())
 				.withVersion(versionType)
 				.withCbeffversion(versionType)
@@ -75,12 +78,7 @@ public class BIRBuilder {
 						.withCreationDate(LocalDateTime.now(ZoneId.of("UTC"))).withIndex(UUID.randomUUID().toString())
 						.build())
 				.withSb(bioDto.getSignature() == null ? new byte[0] : bioDto.getSignature().getBytes(StandardCharsets.UTF_8))
-				.withOther(OtherKey.EXCEPTION, bioDto.getAttributeISO()==null ? "true" : "false")
-				.withOther(OtherKey.RETRIES, bioDto.getNumOfRetries()+RegistrationConstants.EMPTY)
-				.withOther(OtherKey.SDK_SCORE, bioDto.getSdkScore()+RegistrationConstants.EMPTY)
-				.withOther(OtherKey.FORCE_CAPTURED, bioDto.isForceCaptured()+RegistrationConstants.EMPTY)
-				.withOther(OtherKey.PAYLOAD, payLoad == null ? RegistrationConstants.EMPTY : payLoad)
-				.withOther(OtherKey.SPEC_VERSION, bioDto.getSpecVersion() == null ? RegistrationConstants.EMPTY : bioDto.getSpecVersion())
+				.withOthers(otherEntries)
 				.build();
 	}
 

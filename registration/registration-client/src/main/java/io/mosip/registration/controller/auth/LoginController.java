@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-import io.mosip.registration.enums.Role;
+import io.mosip.registration.dto.mastersync.GenericDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -45,7 +45,7 @@ import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.LoginUserDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.UserDTO;
-import io.mosip.registration.dto.mastersync.GenericDto;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
@@ -67,7 +67,6 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.NodeOrientation;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -249,8 +248,9 @@ public class LoginController extends BaseController implements Initializable {
 		}).start();
 
 		try {
-			List<GenericDto> languages = getConfiguredLanguages();
+			List<GenericDto> languages = getConfiguredLanguagesForLogin();
 			appLanguage.getItems().addAll(languages);
+			
 			appLanguage.setConverter(FXUtils.getInstance().getStringConverterForComboBox());
 			Optional<GenericDto> selectedLang = languages.stream().filter( l ->
 					ApplicationContext.getInstance().getApplicationLanguage() != null &&
@@ -356,6 +356,9 @@ public class LoginController extends BaseController implements Initializable {
 		} catch (IOException | RuntimeException | PreConditionCheckException exception) {
 			LOGGER.error("Failed to load screen", exception);
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_LOGIN_SCREEN));
+		} catch (RegBaseCheckedException exception) {
+			LOGGER.error("Terminating the application... ", exception);
+			System.exit(0);
 		}
 	}
 

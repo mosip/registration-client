@@ -11,9 +11,8 @@ import org.junit.Test;
 
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.UserDTO;
-import io.mosip.registration.dto.demographic.DemographicDTO;
-import io.mosip.registration.dto.demographic.DemographicInfoDTO;
-import io.mosip.registration.dto.demographic.IndividualIdentity;
+/*import io.mosip.registration.dto.demographic.DemographicDTO;
+import io.mosip.registration.dto.demographic.DemographicInfoDTO;*/
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.RegCenterUser;
 import io.mosip.registration.entity.UserBiometric;
@@ -33,8 +32,8 @@ public class CustomObjectMapperTest {
 
 	private MapperFacade mapperFacade = CustomObjectMapper.MAPPER_FACADE;
 	private static RegistrationDTO registrationDTO;
-	private static DemographicInfoDTO demographicInfoDTO;
-	private static DemographicDTO demographicDTO;
+//	private static DemographicInfoDTO demographicInfoDTO;
+//	private static DemographicDTO demographicDTO;
 
 	@BeforeClass
 	public static void initialize() throws RegBaseCheckedException {
@@ -58,29 +57,6 @@ public class CustomObjectMapperTest {
 		assertEquals(time, convertedTime);
 	}
 
-	/*@Test
-	public void testDemographicInfoConversion() {
-		assertDemographicInfo(mapperFacade.map(demographicInfoDTO.getIdentity(), IndividualIdentity.class));
-	}
-
-	private void assertDemographicInfo(IndividualIdentity actualIdentity) {
-		IndividualIdentity expectedIdentity = (IndividualIdentity) demographicInfoDTO.getIdentity();
-		assertEquals(expectedIdentity.getDateOfBirth(), actualIdentity.getDateOfBirth());
-		assertEquals(expectedIdentity.getGender().get(0).getValue(), actualIdentity.getGender().get(0).getValue());
-		assertEquals(expectedIdentity.getAddressLine1().get(0).getValue(),
-				actualIdentity.getAddressLine1().get(0).getValue());
-		assertEquals(expectedIdentity.getAddressLine2().get(0).getValue(),
-				actualIdentity.getAddressLine2().get(0).getValue());
-		assertEquals(expectedIdentity.getAddressLine3().get(0).getValue(),
-				actualIdentity.getAddressLine3().get(0).getValue());
-		assertEquals(expectedIdentity.getRegion().get(0).getValue(), actualIdentity.getRegion().get(0).getValue());
-		assertEquals(expectedIdentity.getProvince().get(0).getValue(), actualIdentity.getProvince().get(0).getValue());
-		assertEquals(expectedIdentity.getCity().get(0).getValue(), actualIdentity.getCity().get(0).getValue());
-		assertEquals(expectedIdentity.getResidenceStatus().get(0).getValue(), actualIdentity.getResidenceStatus().get(0).getValue());
-		assertEquals(expectedIdentity.getEmail(), actualIdentity.getEmail());
-		assertEquals(expectedIdentity.getPhone(), actualIdentity.getPhone());
-	}*/
-	
 	@Test
 	public void testUserDetailConversion() {		
 		UserDTO user = mapperFacade.map(assertUserDetailInfo(), UserDTO.class);		

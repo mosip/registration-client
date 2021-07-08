@@ -18,7 +18,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import io.mosip.kernel.core.idgenerator.spi.PridGenerator;
 import io.mosip.kernel.core.idgenerator.spi.RidGenerator;
@@ -31,7 +30,7 @@ import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.id.RegMachineSpecId;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -138,10 +137,7 @@ public class PacketHandlerServiceTest {
 		MachineMaster machineMaster = new MachineMaster();
 		machineMaster.setIsActive(true);
 
-		RegMachineSpecId machineSpecId = new RegMachineSpecId();
-		machineSpecId.setId("123");
-
-		machineMaster.setRegMachineSpecId(machineSpecId);
+		machineMaster.setId("123");
 
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(machineName.toLowerCase())).thenReturn(machineMaster);
 

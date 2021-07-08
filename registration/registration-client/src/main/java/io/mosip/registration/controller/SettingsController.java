@@ -21,7 +21,7 @@ import io.mosip.registration.controller.reg.HeaderController;
 import io.mosip.registration.controller.settings.impl.DeviceSettingsController;
 import io.mosip.registration.controller.settings.impl.GlobalConfigSettingsController;
 import io.mosip.registration.controller.settings.impl.ScheduledJobsSettingsController;
-import io.mosip.registration.dto.SettingsSchema;
+import io.mosip.registration.dto.schema.SettingsSchema;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -62,12 +62,19 @@ public class SettingsController extends BaseController {
 
 	@Autowired
 	private DeviceSettingsController deviceSettingsController;
+	
+	@Autowired
+	private GenericController genericController;
 
 	private Stage popupStage;
 
 	public void init(List<SettingsSchema> settingsByRole) {
 		try {
 			LOGGER.info("Opening pop-up screen to show Settings Page");
+			
+			if (genericController.getKeyboardStage() != null && genericController.getKeyboardStage().isShowing()) {
+				genericController.getKeyboardStage().close();
+			}
 
 			popupStage = new Stage();
 			popupStage.initStyle(StageStyle.UNDECORATED);

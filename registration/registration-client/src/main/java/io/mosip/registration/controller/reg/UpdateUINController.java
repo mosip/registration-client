@@ -26,7 +26,7 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.FXUtils;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.response.SchemaDto;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -38,7 +38,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
@@ -139,11 +138,12 @@ public class UpdateUINController extends BaseController implements Initializable
 	private GridPane addCheckBox(String groupName, UiSchemaDTO field) {
 		String groupLabel = getLabelsForGroup(groupName, field);
 		CheckBox checkBox = new CheckBox(groupLabel);
+		checkBox.setId(groupName);
 		checkBox.setTooltip(new Tooltip(groupLabel));
 		checkBox.getStyleClass().add(RegistrationConstants.updateUinCheckBox);
 		fxUtils.listenOnSelectedCheckBox(checkBox);
 		checkBoxKeeper.put(groupName, checkBox);
-
+		
 		GridPane gridPane = new GridPane();
 		gridPane.setPrefWidth(400);
 		gridPane.setPrefHeight(40);
@@ -229,8 +229,8 @@ public class UpdateUINController extends BaseController implements Initializable
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_UIN_VALIDATION_ALERT));
 		} catch (Throwable exception) {
 			LOGGER.error(exception.getMessage(), exception);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_REG_PAGE));
 		}
 		clearRegistrationData();
-		generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_REG_PAGE));
 	}
 }

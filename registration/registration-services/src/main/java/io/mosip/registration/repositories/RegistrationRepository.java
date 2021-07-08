@@ -180,4 +180,6 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	
 	@Query("select id from Registration where appId=:appId")
 	String getRIDByAppId(@Param("appId") String appId);
+
+	List<Registration> findByClientStatusCommentsOrderByCrDtime(String statusComment);
 }

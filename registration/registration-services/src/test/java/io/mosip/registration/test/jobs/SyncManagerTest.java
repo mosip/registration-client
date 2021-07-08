@@ -151,10 +151,8 @@ public class SyncManagerTest {
 		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
 
 		MachineMaster machine = new MachineMaster();
-		RegMachineSpecId regMachineSpecId = new RegMachineSpecId();
-		regMachineSpecId.setId("11002");
-		regMachineSpecId.setLangCode("eng");
-		machine.setRegMachineSpecId(regMachineSpecId);
+
+		machine.setId("11002");
 		machine.setIsActive(true);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
 

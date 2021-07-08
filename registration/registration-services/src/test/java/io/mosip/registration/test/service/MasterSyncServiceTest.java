@@ -6,12 +6,9 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,7 +32,6 @@ import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -70,9 +66,7 @@ import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.mastersync.BiometricAttributeDto;
 import io.mosip.registration.dto.mastersync.MasterDataResponseDto;
-import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
-import io.mosip.registration.entity.id.IndividualTypeId;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.SyncManager;
@@ -194,10 +188,7 @@ public class MasterSyncServiceTest {
 		Mockito.when(RegistrationSystemPropertiesChecker.getMachineId()).thenReturn("11002");
 
 		MachineMaster machine = new MachineMaster();
-		RegMachineSpecId regMachineSpecId = new RegMachineSpecId();
-		regMachineSpecId.setId("11002");
-		regMachineSpecId.setLangCode("eng");
-		machine.setRegMachineSpecId(regMachineSpecId);
+		machine.setId("11002");
 		machine.setIsActive(true);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
 
@@ -897,41 +888,7 @@ public class MasterSyncServiceTest {
 
 	}
 
-	@Test
-	public void findGender() throws RegBaseCheckedException {
 
-		List<Gender> genderList = new ArrayList<>();
-		Gender gender = new Gender();
-		gender.setCode("1");
-		gender.setGenderName("male");
-		gender.setLangCode("ENG");
-		gender.setIsActive(true);
-		genderList.add(gender);
-
-		Mockito.when(masterSyncDao.getGenderDtls(Mockito.anyString())).thenReturn(genderList);
-
-		masterSyncServiceImpl.getGenderDtls("ENG");
-
-	}
-
-	/*@Test
-	public void findIndividualType() throws RegBaseCheckedException {
-
-		List<IndividualType> masterIndividualType = new ArrayList<>();
-		IndividualType individualTypeEntity = new IndividualType();
-		IndividualTypeId individualTypeId = new IndividualTypeId();
-		individualTypeId.setCode("NFR");
-		individualTypeId.setLangCode("eng");
-		individualTypeEntity.setIndividualTypeId(individualTypeId);
-		individualTypeEntity.setName("National");
-		individualTypeEntity.setIsActive(true);
-		masterIndividualType.add(individualTypeEntity);
-
-		Mockito.when(masterSyncDao.getIndividulType(Mockito.anyString(), Mockito.anyString()))
-				.thenReturn(masterIndividualType);
-
-		assertEquals("NFR", masterSyncServiceImpl.getIndividualType("NFR", "eng").get(0).getCode());
-	}*/
 	
 	@SuppressWarnings("unused")
 	@Test

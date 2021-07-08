@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.springframework.context.ApplicationContext;
 
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -26,8 +27,7 @@ import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.controller.VirtualKeyboard;
 import io.mosip.registration.controller.reg.Validations;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
-import io.mosip.registration.dto.mastersync.GenericDto;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.util.common.DemographicChangeActionHandler;
 import io.mosip.registration.util.control.FxControl;
 import javafx.collections.ObservableList;
@@ -164,6 +164,7 @@ public class TextFieldFxControl extends FxControl {
 		/** Title label */
 		Label fieldTitle = getLabel(uiSchemaDTO.getId() + RegistrationConstants.LABEL, "",
 				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, true, simpleTypeVBox.getWidth());
+		changeNodeOrientation(fieldTitle, getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
 
 		simpleTypeVBox.getChildren().add(fieldTitle);
 

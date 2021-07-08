@@ -97,7 +97,7 @@
                                           <Label styleClass="attemptsLabel" text="%attempts" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
                                           <HBox fx:id="bioRetryBox" prefHeight="100.0" prefWidth="200.0" spacing="30.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                           <Label fx:id="qualityText" alignment="CENTER" prefHeight="12.0" prefWidth="60.0" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                                          <Label fx:id="thresholdLabel" prefWidth="${parentProgressPane.width}" text="threshold" GridPane.columnIndex="1" />
+                                          <Label fx:id="thresholdLabel" prefWidth="${parentProgressPane.width}" text="%threshold" GridPane.columnIndex="1" />
                                           <GridPane prefWidth="${parentProgressPane.width}" GridPane.columnIndex="1" GridPane.rowIndex="1">
                                              <children>
                                                 <AnchorPane fx:id="thresholdBar" prefHeight="200.0" prefWidth="200.0" />

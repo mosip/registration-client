@@ -146,6 +146,11 @@
 	-fx-text-fill: #FFFFFF;
 }
 
+.qualityLabelBlueBorder {
+	-fx-border-color: #021E68;
+	-fx-border-width: 4px;
+}
+
 .labelGreen {
 	-fx-text-fill: #45A30A;
 	-fx-font-size: 20.0px;
@@ -2586,27 +2591,10 @@ Working on new Css by taleev
 }
 
 .modalityButtons {
-	-fx-border-width:3;
+	/*-fx-border-width: 1;*/
 	-fx-border-color:#0286f7;
 	-fx-background-color:white;
 }
-
-/* tab pane related CSS */
-/* .tab-pane .tab-header-area .tab-header-background {
-    -fx-opacity: 0;
-}
-
-.tab {
-    -fx-pref-width: 250
-}
-
-.tab-header-background {
-    -fx-background-color:transparent
-}
-
-.tab-pane{
-    -fx-padding: 0 -1 -1 -1
-} */
 
 .tab-pane .tab-header-area .tab-header-background {
     -fx-opacity: 0;
@@ -2642,4 +2630,9 @@ Working on new Css by taleev
 .tab-pane:top *.tab-header-area {
     -fx-background-insets: 0, 0 0 1 0;
     -fx-padding: 0.416667em 0.166667em 0.0em 0.0em;
+}
+
+.registrationErrorMsg {
+	-fx-text-fill: #FF0000;
+    -fx-font-size: 15.0px;
 }

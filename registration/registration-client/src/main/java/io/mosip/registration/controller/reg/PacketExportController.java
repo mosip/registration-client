@@ -20,11 +20,13 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
 import io.mosip.registration.constants.Components;
+import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.dto.PacketStatusDTO;
+import io.mosip.registration.service.packet.PacketExportService;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
@@ -32,6 +34,9 @@ import javafx.stage.Stage;
 public class PacketExportController extends BaseController {
 
 	private static final Logger LOGGER = AppConfig.getLogger(PacketExportController.class);
+	
+	@Autowired
+	private PacketExportService packetExportServiceImpl;
 
 	@Autowired
 	private PacketUploadController packetUploadController;
@@ -75,6 +80,7 @@ public class PacketExportController extends BaseController {
 					if (packet.length() < destinationPath.getUsableSpace()) {
 						try {
 							FileUtils.copyFileToDirectory(packet, destinationPath);
+							packetToCopy.setClientStatusComments(RegistrationClientStatusCode.EXPORT.getCode());
 							exportedPackets.add(packetToCopy);
 						} catch (IOException ioException) {
 							LOGGER.error("REGISTRATION - HANDLE_PACKET_EXPORT_ERROR - PACKET_EXPORT_CONTROLLER",
@@ -85,6 +91,9 @@ public class PacketExportController extends BaseController {
 						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PACKET_EXPORT_FAILURE));
 						break;
 					}
+				}
+				if (!exportedPackets.isEmpty()) {
+					packetExportServiceImpl.updateRegistrationStatus(exportedPackets);
 				}
 			}
 		} else {

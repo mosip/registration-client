@@ -119,7 +119,7 @@ public class RegistrationPreviewController extends BaseController implements Ini
 		 */
 	}
 
-	private void updateUINFlowMethod() {
+	/*private void updateUINFlowMethod() {
 
 		long fingerPrintCount = getRegistrationDTOFromSession().getBiometricDTO().getApplicantBiometricDTO()
 				.getBiometricExceptionDTO().stream()
@@ -147,7 +147,7 @@ public class RegistrationPreviewController extends BaseController implements Ini
 		} else {
 			SessionContext.map().put(RegistrationConstants.UIN_UPDATE_DEMOGRAPHICDETAIL, true);
 		}
-	}
+	}*/
 
 	@FXML
 	public void goToNextPage(ActionEvent event) {
@@ -178,7 +178,7 @@ public class RegistrationPreviewController extends BaseController implements Ini
 			if (ackTemplateText != null && !ackTemplateText.isEmpty()) {
 				ResponseDTO templateResponse = templateGenerator.generateTemplate(ackTemplateText,
 						getRegistrationDTOFromSession(), templateManagerBuilder,
-						RegistrationConstants.TEMPLATE_PREVIEW);
+						RegistrationConstants.TEMPLATE_PREVIEW, getImagePath(RegistrationConstants.CROSS_IMG, true));
 				if (templateResponse != null && templateResponse.getSuccessResponseDTO() != null) {
 					Writer stringWriter = (Writer) templateResponse.getSuccessResponseDTO().getOtherAttributes()
 							.get(RegistrationConstants.TEMPLATE_NAME);
@@ -210,7 +210,7 @@ public class RegistrationPreviewController extends BaseController implements Ini
 			if (ackTemplateText != null && !ackTemplateText.isEmpty()) {
 				ResponseDTO templateResponse = templateGenerator.generateTemplate(ackTemplateText,
 						getRegistrationDTOFromSession(), templateManagerBuilder,
-						RegistrationConstants.TEMPLATE_PREVIEW);
+						RegistrationConstants.TEMPLATE_PREVIEW, getImagePath(RegistrationConstants.CROSS_IMG, true));
 				if (templateResponse != null && templateResponse.getSuccessResponseDTO() != null) {
 					Writer stringWriter = (Writer) templateResponse.getSuccessResponseDTO().getOtherAttributes()
 							.get(RegistrationConstants.TEMPLATE_NAME);

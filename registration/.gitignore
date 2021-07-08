@@ -13,7 +13,6 @@ bin/
 tmp/
 *.tmp
 *.html
-*.json
 *.bak
 *.swp
 *~.nib

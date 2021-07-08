@@ -90,9 +90,9 @@
                                       <RowConstraints percentHeight="100.0" />
                                     </rowConstraints>
                                      <children>
-                                         <ScrollPane fitToHeight="true" fitToWidth="true" >
+                                         <ScrollPane fitToWidth="false" fitToHeight="false">
                                          <StackPane fx:id="groupStackPane" alignment="CENTER">
-                                             <Group fx:id="imageGroup">
+                                             <Group fx:id="imageGroup" >
                                                  <children>
                                                      <ImageView fx:id="scanImage" pickOnBounds="true" preserveRatio="true"/>
                                                  </children>

@@ -1,11 +1,7 @@
 package io.mosip.registration.constants;
 
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
-
 import java.util.ResourceBundle;
 
-import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.context.ApplicationContext;
@@ -37,9 +33,8 @@ public class RegistrationUIConstants {
 	public static String getMessageLanguageSpecific(String key) {
 		try {
 			return bundle.getString(key);
-		} catch (Exception runtimeException) {
-			LOGGER.error("REGISTRATION_UI_CONSTANTS", APPLICATION_NAME, APPLICATION_ID,
-					ExceptionUtils.getStackTrace(runtimeException));
+		} catch (Exception exception) {
+			LOGGER.error("Could not find value in the resourcebundle for the key - {}", key);
 		}
 		return key != null ? key : ERROR;
 	}

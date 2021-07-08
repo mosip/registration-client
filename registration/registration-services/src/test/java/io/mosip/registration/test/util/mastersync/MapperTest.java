@@ -7,8 +7,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -22,11 +20,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.dto.mastersync.LanguageDto;
-import io.mosip.registration.dto.mastersync.TitleDto;
 import io.mosip.registration.entity.Language;
-import io.mosip.registration.entity.RegistrationCenter;
-import io.mosip.registration.entity.Title;
-import io.mosip.registration.util.mastersync.EmptyCheckUtils;
 
 /**
  * 
@@ -38,18 +32,10 @@ import io.mosip.registration.util.mastersync.EmptyCheckUtils;
 @PrepareForTest({ SessionContext.class })
 public class MapperTest {
 	
-	private static List<TitleDto> rcdDtos = null;
-	private static TitleDto rcdDto = null;
+
 
 	@Before
 	public void setup() throws Exception{
-		rcdDtos = new ArrayList<>();
-		rcdDto = new TitleDto();
-		rcdDto.setTitleName("Admin");
-		rcdDto.setLangCode("ENG");
-		rcdDto.setCode("T1001");
-		rcdDto.setIsActive(true);
-		rcdDtos.add(rcdDto);
 		UserContext userContext = Mockito.mock(SessionContext.UserContext.class);
 		PowerMockito.mockStatic(SessionContext.class);
 		PowerMockito.doReturn(userContext).when(SessionContext.class, "userContext");
@@ -68,18 +54,6 @@ public class MapperTest {
 		setCreateMetaData(new LanguageDto(), null);
 	}
 
-	@Test
-	public void testMapWithDestinationObject() {
-		Title rcd = null;
-
-		rcd = setCreateMetaData(rcdDto, Title.class);
-		assertTrue(rcd != null);
-
-		TitleDto newRcdDto = map(rcd, TitleDto.class);
-
-		assertTrue(newRcdDto != null);
-
-	}
 
 	@Test
 	public void testSetUpdateMetaData() {
@@ -108,10 +82,4 @@ public class MapperTest {
 		assertTrue(entity.getUpdDtimes() != null);
 	}
 
-	@Test
-	public void testSetCreateMetaDataList() {
-		List<RegistrationCenter> rcds = setCreateMetaData(rcdDtos, Title.class);
-		assertTrue(!EmptyCheckUtils.isNullEmpty(rcds));
-	}
-	
 }

@@ -38,39 +38,26 @@ import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.DynamicField;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.AppAuthenticationRepository;
-import io.mosip.registration.repositories.AppDetailRepository;
 import io.mosip.registration.repositories.AppRolePriorityRepository;
 import io.mosip.registration.repositories.ApplicantValidDocumentRepository;
 import io.mosip.registration.repositories.BiometricAttributeRepository;
 import io.mosip.registration.repositories.BiometricTypeRepository;
 import io.mosip.registration.repositories.BlacklistedWordsRepository;
 import io.mosip.registration.repositories.CenterMachineRepository;
-import io.mosip.registration.repositories.DeviceMasterRepository;
-import io.mosip.registration.repositories.DeviceProviderRepository;
-import io.mosip.registration.repositories.DeviceSpecificationRepository;
-import io.mosip.registration.repositories.DeviceTypeRepository;
 import io.mosip.registration.repositories.DocumentCategoryRepository;
 import io.mosip.registration.repositories.DocumentTypeRepository;
 import io.mosip.registration.repositories.DynamicFieldRepository;
-import io.mosip.registration.repositories.FoundationalTrustProviderRepository;
-import io.mosip.registration.repositories.GenderRepository;
 import io.mosip.registration.repositories.IdTypeRepository;
-import io.mosip.registration.repositories.IndividualTypeRepository;
 import io.mosip.registration.repositories.LanguageRepository;
 import io.mosip.registration.repositories.LocationHierarchyRepository;
 import io.mosip.registration.repositories.LocationRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.repositories.MachineSpecificationRepository;
 import io.mosip.registration.repositories.MachineTypeRepository;
-import io.mosip.registration.repositories.MosipDeviceServiceRepository;
 import io.mosip.registration.repositories.PermittedLocalConfigRepository;
 import io.mosip.registration.repositories.ProcessListRepository;
 import io.mosip.registration.repositories.ReasonCategoryRepository;
 import io.mosip.registration.repositories.ReasonListRepository;
-import io.mosip.registration.repositories.RegisteredDeviceTypeRepository;
-import io.mosip.registration.repositories.RegisteredSubDeviceTypeRepository;
-import io.mosip.registration.repositories.RegistrationCenterDeviceRepository;
-import io.mosip.registration.repositories.RegistrationCenterMachineDeviceRepository;
 import io.mosip.registration.repositories.RegistrationCenterRepository;
 import io.mosip.registration.repositories.RegistrationCenterTypeRepository;
 import io.mosip.registration.repositories.RegistrationCenterUserRepository;
@@ -80,7 +67,6 @@ import io.mosip.registration.repositories.SyncJobDefRepository;
 import io.mosip.registration.repositories.TemplateFileFormatRepository;
 import io.mosip.registration.repositories.TemplateRepository;
 import io.mosip.registration.repositories.TemplateTypeRepository;
-import io.mosip.registration.repositories.TitleRepository;
 import io.mosip.registration.repositories.ValidDocumentRepository;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
@@ -106,18 +92,6 @@ public class ClientSettingSyncHelper {
 	@Autowired
 	private BlacklistedWordsRepository blacklistedWordsRepository;
 
-	/** Object for Sync Device Repository. */
-	@Autowired
-	private DeviceMasterRepository deviceMasterRepository;
-
-	/** Object for Sync Device Specification Repository. */
-	@Autowired
-	private DeviceSpecificationRepository deviceSpecificationRepository;
-
-	/** Object for Sync Device Type Repository. */
-	@Autowired
-	private DeviceTypeRepository deviceTypeRepository;
-
 	/** Object for Sync Document Category Repository. */
 	@Autowired
 	private DocumentCategoryRepository documentCategoryRepository;
@@ -125,10 +99,6 @@ public class ClientSettingSyncHelper {
 	/** Object for Sync Document Type Repository. */
 	@Autowired
 	private DocumentTypeRepository documentTypeRepository;
-
-	/** Object for Sync Gender Type Repository. */
-	@Autowired
-	private GenderRepository genderRepository;
 
 	/** Object for Sync Id Type Repository. */
 	@Autowired
@@ -170,10 +140,6 @@ public class ClientSettingSyncHelper {
 	@Autowired
 	private TemplateTypeRepository templateTypeRepository;
 
-	/** Object for Sync Title Repository. */
-	@Autowired
-	private TitleRepository titleRepository;
-
 	/** Object for Sync Applicant Valid Document Repository. */
 	@Autowired
 	private ApplicantValidDocumentRepository applicantValidDocumentRepository;
@@ -185,14 +151,6 @@ public class ClientSettingSyncHelper {
 	/** Object for Sync language Repository. */
 	@Autowired
 	private LanguageRepository languageRepository;
-
-	/** Object for Sync language Repository. */
-	@Autowired
-	private RegistrationCenterDeviceRepository registrationCenterDeviceRepository;
-
-	/** Object for Sync language Repository. */
-	@Autowired
-	private RegistrationCenterMachineDeviceRepository registrationCenterMachineDeviceRepository;
 
 	/** Object for Sync language Repository. */
 	@Autowired
@@ -210,10 +168,6 @@ public class ClientSettingSyncHelper {
 	@Autowired
 	private RegistrationCenterTypeRepository registrationCenterTypeRepository;
 
-	/** Object for Sync Individual type Repository. */
-	@Autowired
-	private IndividualTypeRepository individualTypeRepository;
-
 	/** Object for Sync app authentication Repository. */
 	@Autowired
 	private AppAuthenticationRepository appAuthenticationRepository;
@@ -221,10 +175,6 @@ public class ClientSettingSyncHelper {
 	/** Object for Sync app role Repository. */
 	@Autowired
 	private AppRolePriorityRepository appRolePriorityRepository;
-
-	/** Object for Sync app detail Repository. */
-	@Autowired
-	private AppDetailRepository appDetailRepository;
 
 	/** Object for Sync screen auth Repository. */
 	@Autowired
@@ -241,23 +191,7 @@ public class ClientSettingSyncHelper {
 	/** Object for Sync screen auth Repository. */
 	@Autowired
 	private SyncJobDefRepository syncJobDefRepository;
-	
 
-	@Autowired
-	private RegisteredDeviceTypeRepository registeredDeviceTypeRepository;
-	
-	@Autowired
-	private RegisteredSubDeviceTypeRepository registeredSubDeviceTypeRepository;
-	
-	@Autowired
-	private MosipDeviceServiceRepository mosipDeviceServiceRepository;
-	
-	@Autowired
-	private FoundationalTrustProviderRepository foundationalTrustProviderRepository;
-	
-	@Autowired
-	private DeviceProviderRepository deviceProviderRepository;
-	
 	@Autowired
 	private DynamicFieldRepository dynamicFieldRepository;
 
@@ -309,7 +243,6 @@ public class ClientSettingSyncHelper {
 		long start = System.currentTimeMillis();
 		try {
 			List<CompletableFuture> futures = new ArrayList<CompletableFuture>();
-			futures.add(handleDeviceSync(syncDataResponseDto));
 			futures.add(handleMachineSync(syncDataResponseDto));
 			futures.add(handleRegistrationCenterSync(syncDataResponseDto));
 			futures.add(handleAppDetailSync(syncDataResponseDto));
@@ -391,25 +324,7 @@ public class ClientSettingSyncHelper {
 			return Class.forName(ENTITY_PACKAGE_NAME + "Reg" + entityName);
 		}
 	}
-	
-	/**
-	 * save the entities data in respective repository
-	 * @param syncDataResponseDto
-	 * @throws Exception 
-	 */
-	@Async
-	private CompletableFuture<Boolean> handleDeviceSync(SyncDataResponseDto syncDataResponseDto) throws Exception {
-		try {		
-			deviceTypeRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "DeviceType")));
-			deviceSpecificationRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto,"DeviceSpecification")));
-			deviceMasterRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto,"Device")));
-			foundationalTrustProviderRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "FoundationalTrustProvider")));
-		} catch (Exception e) {
-			LOGGER.error("Device Data sync failed", e);
-			throw new SyncFailedException(e.getMessage()+"Saving the entities into machine sync is failed ");
-		}
-		return CompletableFuture.completedFuture(true);
-	}
+
 	
 	/**
 	 * save the entities data in respective repository
@@ -439,9 +354,7 @@ public class ClientSettingSyncHelper {
 		try {
 			registrationCenterTypeRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "RegistrationCenterType")));
 			registrationCenterRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "RegistrationCenter")));			
-			registrationCenterDeviceRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "RegistrationCenterDevice")));
 			centerMachineRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "RegistrationCenterMachine")));
-			registrationCenterMachineDeviceRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "RegistrationCenterMachineDevice")));
 			registrationCenterUserRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "RegistrationCenterUser")));
 		} catch (Exception e ) {
 			LOGGER.error("RegistrationCenter Data sync failed", e);
@@ -458,7 +371,6 @@ public class ClientSettingSyncHelper {
 	@Async
 	private CompletableFuture handleAppDetailSync(SyncDataResponseDto syncDataResponseDto) throws SyncFailedException {
 		try {
-			appDetailRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "AppDetail")));
 			appRolePriorityRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "AppRolePriority")));
 			appAuthenticationRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "AppAuthenticationMethod")));
 		} catch (Exception e) {
@@ -518,7 +430,6 @@ public class ClientSettingSyncHelper {
 			idTypeRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "IdType")));
 			locationRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "Location")));
 			locationHierarchyRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "LocationHierarchy")));
-			titleRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "Title")));
 		} catch (Exception e) {
 			LOGGER.error("Data sync failed", e);
 			throw new SyncFailedException("IdSchema data sync failed due to " +  e.getMessage());

@@ -1,17 +1,13 @@
 package io.mosip.registration.util.control.impl;
 
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
-
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-import io.mosip.kernel.core.exception.ExceptionUtils;
+
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.api.docscanner.DocScannerUtil;
 import io.mosip.registration.audit.AuditManagerService;
@@ -26,9 +22,8 @@ import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.FXUtils;
 import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.controller.reg.DocumentScanController;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
-import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.service.sync.MasterSyncService;
@@ -101,30 +96,11 @@ public class DocumentFxControl extends FxControl {
 
 		// CLEAR IMAGE
 		GridPane clearGridPane = getImageGridPane(CLEAR_ID, RegistrationConstants.CLOSE_IMAGE_PATH);
-		clearGridPane.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {			
-			AuditEvent auditEvent = null;
-			try {
-				auditEvent = AuditEvent.valueOf(String.format("REG_DOC_%S_DELETE", uiSchemaDTO.getSubType()));
-			} catch (Exception exception) {
-				LOGGER.error("Unable to find audit event for button : " + uiSchemaDTO.getSubType());
-
-				auditEvent = AuditEvent.REG_DOC_DELETE;
-			}
-			auditFactory.audit(auditEvent, Components.REG_DOCUMENTS, SessionContext.userId(),
-					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
-			
-			getRegistrationDTo().getDocuments().remove(this.uiSchemaDTO.getId());
+		clearGridPane.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
 			ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(
 					uiSchemaDTO.getId());
 			comboBox.getSelectionModel().clearSelection();
-			TextField textField = (TextField) getField(
-					uiSchemaDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
-			textField.setText(RegistrationConstants.EMPTY);
-			
-			getField(uiSchemaDTO.getId() + PREVIEW_ICON).setVisible(false);
-			getField(uiSchemaDTO.getId() + CLEAR_ID).setVisible(false);
-			getField(uiSchemaDTO.getId() + PREVIEW_ICON).setManaged(true);
-			getField(uiSchemaDTO.getId() + CLEAR_ID).setManaged(true);
+			clearCapturedDocuments();
 		});
 		hBox.getChildren().add(clearGridPane);
 
@@ -141,6 +117,30 @@ public class DocumentFxControl extends FxControl {
 				getRegistrationDTo().getSelectedLanguagesByApplicant().get(0)));
 
 		return this.control;
+	}
+
+	private void clearCapturedDocuments() {
+		AuditEvent auditEvent = null;
+		try {
+			auditEvent = AuditEvent.valueOf(String.format("REG_DOC_%S_DELETE", uiSchemaDTO.getSubType()));
+		} catch (Exception exception) {
+			LOGGER.error("Unable to find audit event for button : " + uiSchemaDTO.getSubType());
+
+			auditEvent = AuditEvent.REG_DOC_DELETE;
+		}
+		auditFactory.audit(auditEvent, Components.REG_DOCUMENTS, SessionContext.userId(),
+				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
+		
+		getRegistrationDTo().getDocuments().remove(this.uiSchemaDTO.getId());
+		
+		TextField textField = (TextField) getField(
+				uiSchemaDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
+		textField.setText(RegistrationConstants.EMPTY);
+		
+		getField(uiSchemaDTO.getId() + PREVIEW_ICON).setVisible(false);
+		getField(uiSchemaDTO.getId() + CLEAR_ID).setVisible(false);
+		getField(uiSchemaDTO.getId() + PREVIEW_ICON).setManaged(true);
+		getField(uiSchemaDTO.getId() + CLEAR_ID).setManaged(true);
 	}
 
 	private GridPane getImageGridPane(String id, String imagePath) {
@@ -277,6 +277,7 @@ public class DocumentFxControl extends FxControl {
 
 		comboBox.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> {
 			if (comboBox.getSelectionModel().getSelectedItem() != null) {
+				clearCapturedDocuments();
 				List<String> toolTipTextList = new ArrayList<>();
 				String selectedCode = comboBox.getSelectionModel().getSelectedItem().getCode();
 				for (String langCode : getRegistrationDTo().getSelectedLanguagesByApplicant()) {

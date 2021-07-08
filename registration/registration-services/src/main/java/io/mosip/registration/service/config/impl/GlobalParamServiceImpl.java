@@ -4,7 +4,6 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,18 +14,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.kernel.core.util.CryptoUtil;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.ResourceAccessException;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
@@ -42,6 +38,7 @@ import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 
 /**
  * Class for implementing GlobalContextParam service
@@ -261,7 +258,7 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 	}
 
 	private boolean isPropertyRequireRestart(String key) {
-		return (key.contains("kernel") || key.contains("mosip.primary") || key.contains("mosip.biometric.sdk"));
+		return (key.contains("kernel") || key.contains("mosip.primary") || key.contains("mosip.biometric.sdk") || key.contains("languages"));
 	}
 
 	private void updateVal(GlobalParam globalParam, String val) {
@@ -273,7 +270,7 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 	}
 
 	private void updateIsDeleted(GlobalParam globalParam) {
-		globalParam.setIsActive(true);
+		globalParam.setIsActive(false);
 		globalParam.setIsDeleted(true);
 		globalParam.setDelDtimes(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 		globalParam.setUpdBy(getUserIdFromSession());
