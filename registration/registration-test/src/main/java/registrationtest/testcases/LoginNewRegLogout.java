@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.testfx.api.FxRobot;
@@ -24,6 +27,8 @@ import com.aventstack.extentreports.Status;
 
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.controller.Initialization;
+import io.mosip.registration.dao.RegistrationDAO;
+import io.mosip.registration.dao.impl.RegistrationDAOImpl;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -77,7 +82,6 @@ import org.apache.log4j.Logger;
  */
 public class LoginNewRegLogout {
 	private static final Logger logger = LogManager.getLogger(LoginNewRegLogout.class);  
-	
 	FxRobot robot;
 	Schema schema;
 	Root root; 
@@ -93,12 +97,12 @@ public class LoginNewRegLogout {
 	HomePage homePage;
 	PropertiesUtil propertiesUtil;
 	FxRobotContext context;
-	Boolean result=false;
+	Boolean result;
 	DemographicPage demographicPage;
 	BiometricUploadPage biometricUploadPage;
 	Buttons buttons;
 	WebViewDocument webViewDocument;
-	RID rid,rid2;
+	RID rid1,rid2;
 	AuthenticationPage authenticationPage;
 	RobotActions robotActions;
 	EodApprovalPage eodApprovalPage;
@@ -120,6 +124,9 @@ public class LoginNewRegLogout {
 			robotActions=new RobotActions(robot);
 			webViewDocument=new WebViewDocument(robot);
 			alerts=new Alerts(robot);
+			rid1=new RID();
+			rid2=new RID();
+			result=false;
 
 			//Load Login screen
 			loginPage.loadLoginScene(applicationPrimaryStage1);
@@ -152,10 +159,10 @@ public class LoginNewRegLogout {
 	}
 	public RID newRegistrationAdult(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
 			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonContent,String flow,String fileName
-			)  {
+			,ApplicationContext applicationContext)  {
 
 		try {
-		
+		logger.info("New Adult Registration Scenario : " + flow +" FileName : " + fileName);
 		ExtentReportUtil.test1=ExtentReportUtil.reports.createTest("New Adult Registration Scenario : " + flow +" FileName : " + fileName);
 		
 		
@@ -194,9 +201,11 @@ public class LoginNewRegLogout {
 		
 		demographicPage=homePage.clickNewRegistration();
 		
+		if(PropertiesUtil.getKeyValue("multilang").equals("Y"))
+		{
 		selectLanguagePage.selectLang();
 		buttons.clicksubmitBtn();
-		
+		}	
 		ExtentReportUtil.step3=ExtentReportUtil.test1.createNode("STEP 3-Demographic, Biometric upload ");
 		
 		webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonContent,flow);
@@ -208,12 +217,16 @@ public class LoginNewRegLogout {
 		ExtentReportUtil.step4=ExtentReportUtil.test1.createNode("STEP 4-Accept Preview ");
 		
 		
-		rid=webViewDocument.acceptPreview();
+		rid1=webViewDocument.acceptPreview(flow);
 
 		buttons.clicknextBtn();
 
-		ExtentReportUtil.step4.log(Status.PASS, "Accept Preview done" + rid.getWebviewPreview());
-
+		if(!rid1.rid.trim().isEmpty())
+			ExtentReportUtil.step4.log(Status.PASS, "Accept Preview done" + rid1.getWebviewPreview());
+			else
+			{	ExtentReportUtil.step4.log(Status.FAIL,"Preview not valid");	
+			return rid1;
+			}
 		/**
 		 * Authentication enter password
 		 * Click Continue 
@@ -228,7 +241,7 @@ public class LoginNewRegLogout {
 		 * Click Home, eodapprove, approval Button, authenticate button
 		 * Enter user details
 		 */
-		rid2=webViewDocument.getacknowledgement();
+		rid2=webViewDocument.getacknowledgement(flow);
 		
 		homePage.clickHomeImg();
 		
@@ -240,7 +253,7 @@ public class LoginNewRegLogout {
 
 		eodApprovalPage=homePage.clickeodApprovalImageView( applicationPrimaryStage, scene);
 		eodApprovalPage.clickOnfilterField();
-		eodApprovalPage.enterFilterDetails(rid.getRid());
+		eodApprovalPage.enterFilterDetails(rid1.getRid());
 		eodApprovalPage.clickOnApprovalBtn();
 		authenticationPage=eodApprovalPage.clickOnAuthenticateBtn();
 		authenticationPage.enterUserName(supervisorUserid);
@@ -249,8 +262,15 @@ public class LoginNewRegLogout {
 		robotActions.clickWindow();
 		homePage.clickHomeImg();	
 		buttons.clickConfirmBtn();
+		if(!rid2.rid.trim().isEmpty())
+		{
 		ExtentReportUtil.step5.log(Status.PASS, "Approve Packet done" + rid2.getWebViewAck());
-		assertEquals(rid.getRid(), rid2.getRid());
+		assertEquals(rid1.getRid(), rid2.getRid());
+		}else
+		{	ExtentReportUtil.step5.log(Status.FAIL,"Approve Packet valid");	
+		return rid1;
+		}
+		
 		/**
 		 * Upload the packet
 		 */
@@ -261,12 +281,12 @@ public class LoginNewRegLogout {
 		
 
 		uploadPacketPage=homePage.clickuploadPacketImageView( applicationPrimaryStage, scene);
-		uploadPacketPage.selectPacket(rid.getRid());
+		uploadPacketPage.selectPacket(rid1.getRid());
 		buttons.clickuploadBtn();
 		/**
 		 * Verify Success Upload
 		 */
-		result=uploadPacketPage.verifyPacketUpload(rid.getRid());
+		result=uploadPacketPage.verifyPacketUpload(rid1.getRid());
 		ExtentReportUtil.step6.log(Status.PASS, "Upload Packet done");
 
 		}
@@ -274,43 +294,37 @@ public class LoginNewRegLogout {
 			result=true;
 		}
 		//Logout Regclient
+		rid1.appidrid=rid1.getAppidrid(applicationContext, rid1.rid);
+		rid1.setResult(result);
 				}catch(Exception e)
 				{
 
 					logger.error(e.getMessage());
 				}
-				try {
-					alerts.clickAlertexit();
-					homePage.clickHomeImg();
-				}catch(Exception e)
-				{
-					logger.error(e.getMessage());
-
-
-				}
-				loginPage.logout();
+				
+				
 
 				try
 				{
+					loginPage.logout();
 					buttons.clickConfirmBtn();
+					
 				}
 				catch(Exception e)
 				{
 					logger.error(e.getMessage());
 				}
 
-	
-		rid.setResult(result);
 		
 		if(result==true)
 		{
-			ExtentReportUtil.test1.log(Status.PASS, "TESTCASE PASS\n" +" RID-"+ rid.rid +" DATE TIME-"+ rid.ridDateTime +" ENVIRONMENT-" +System.getProperty("mosip.hostname"));
+			ExtentReportUtil.test1.log(Status.PASS, "TESTCASE PASS\n" +"[Appid="+ rid1.rid +"] [RID="+ rid1.appidrid +"] [DATE TIME="+ rid1.ridDateTime +"] [ENVIRONMENT=" +System.getProperty("mosip.hostname")+"]");
 		}		else
 			ExtentReportUtil.test1.log(Status.FAIL, "TESTCASE FAIL");
-
-		assertTrue(result,"TestCase Failed");
+		ExtentReportUtil.reports.flush();
+		
 				
-return rid;
+return rid1;
 	}
 
 

@@ -1776,7 +1776,7 @@ public class RegistrationConstants {
 //	Code CleanUp 
 	public static final String LABELS = "labels";
 	public static final String MESSAGES = "messages";
-	public static final String Resident_Information = "Resident Information";
+	public static final String Resident_Information = "Resident_Information";
 	public static final String previewHeader = "previewHeader";
 	public static final String authentication = "authentication";
 	public static final String SLASH = "/";

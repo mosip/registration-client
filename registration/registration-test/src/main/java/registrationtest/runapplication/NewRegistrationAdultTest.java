@@ -24,6 +24,7 @@ import com.aventstack.extentreports.ExtentReporter;
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.reporter.ExtentHtmlReporter;
 
+import registrationtest.pages.UpdatePage;
 import registrationtest.pojo.output.RID;
 import registrationtest.testcases.*;
 import registrationtest.utility.ExtentReportUtil;
@@ -49,11 +50,10 @@ public class NewRegistrationAdultTest{
 	private static final Logger logger = LogManager.getLogger(NewRegistrationAdultTest.class);  
 	static FxRobot robot;
 	static String[] Strinrid;
-	static RID rid1,rid2,rid3,rid4;
+	static RID rid1,rid2,rid3,rid4,rid5,rid6;
 	static String flow;
 	
-	public static void invokeRegClientNewReg(
-		
+	public static void invokeRegClientNewReg(	
 			String operatorId,String operatorPwd,
 			String supervisorId,
 			String supervisorPwd
@@ -63,6 +63,7 @@ public class NewRegistrationAdultTest{
 		LostUINLogout lostUINLogout=new LostUINLogout();
 		ChildNewReg childNewReg=new ChildNewReg(); 
 		ChildLostUIN childLostUIN=new ChildLostUIN();
+		UpdateReg updatereg=new UpdateReg();
 		WaitsUtil waitsUtil=new WaitsUtil();
 
 		Thread thread = new Thread() { 
@@ -85,45 +86,60 @@ public class NewRegistrationAdultTest{
                     	 String jsonContent=map.get(fileName);
                     	String flowid= PropertiesUtil.getKeyValue("flow");
                        flow= JsonUtil.JsonObjParsing(jsonContent,flowid);
-               	
-					
-				try {
+               	try {
 						switch(flow) {
 						case "adult": 
+							rid1=null;
 					rid1=loginNewRegLogout.newRegistrationAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonContent,
-							flow,fileName);
-					logger.info("RID RESULTS-"+ rid1.result +"\t"+ rid1.ridDateTime +"\t"+ rid1.rid + "\t "+ rid1.firstName );
+							flow,fileName,StartApplication.applicationContext);
+					logger.info("RID RESULTS-"+ rid1.result +"\t"+ rid1.ridDateTime +"\t"+ rid1.rid );
 					ExtentReportUtil.reports.flush();
 					break;
 						case "lostadult":
-							
+							rid2=null;
 					 rid2=lostUINLogout.LostUINAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonContent,
-							fileName,flow);
+							flow,fileName,StartApplication.applicationContext);
 					logger.info("RID RESULTS-"+ rid2.result +"\t"+ rid2.ridDateTime +"\t"+ rid2.rid);
 					ExtentReportUtil.reports.flush();
 					break;
 						case "child":
-							
+							rid3=null;	
 					 rid3=childNewReg.newRegistrationChild(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonContent,
-							fileName,flow);
+							flow,fileName,StartApplication.applicationContext);
 					logger.info("RID RESULTS-"+ rid3.result +"\t"+ rid3.ridDateTime +"\t"+ rid3.rid);
 					ExtentReportUtil.reports.flush();
 					break;
 						case "lostchild":
-							
+							rid4=null;
 							 rid4=childLostUIN.newRegistrationChildLost(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 									StartApplication.primaryStage,jsonContent,
-									fileName,flow);
+									flow,fileName,StartApplication.applicationContext);
 							logger.info("RID RESULTS-"+ rid4.result +"\t"+ rid4.ridDateTime +"\t"+ rid4.rid);
 							ExtentReportUtil.reports.flush();
 							break;
-						
+						case "updateadult":
+							rid5=null;
+							 rid5=updatereg.updateRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
+									StartApplication.primaryStage,jsonContent,
+									flow,fileName,StartApplication.applicationContext);
+							logger.info("RID RESULTS-"+ rid5.result +"\t"+ rid5.ridDateTime +"\t"+ rid5.rid);
+							ExtentReportUtil.reports.flush();
+							break;
+						case "updatechild":
+							rid6=null;
+							 rid6=updatereg.updateRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
+									StartApplication.primaryStage,jsonContent,
+									flow,fileName,StartApplication.applicationContext);
+							logger.info("RID RESULTS-"+ rid6.result +"\t"+ rid6.ridDateTime +"\t"+ rid6.rid);
+							ExtentReportUtil.reports.flush();
+							break;
 						}
 						}
 				catch (Exception e) {
+					
 
 					logger.error(e.getMessage());
 					ExtentReportUtil.reports.flush();

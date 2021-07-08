@@ -156,8 +156,23 @@ public class BiometricUploadPage {
 	}
 
 	
-	
-public List<String> exceptionList(String identity)
+	public List<String> bioAuthAttributeList(String identity)
+	{
+		List<String> bioAuthAttList=new LinkedList<String>();
+		String bioAuthAttributes=null;
+		try {
+			 bioAuthAttributes=PropertiesUtil.getKeyValue("bioAuthAttributes");
+		
+		
+		bioAuthAttList=JsonUtil.JsonObjArrayListParsing(identity, bioAuthAttributes);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		
+		return bioAuthAttList;
+	}
+
+	public List<String> exceptionList(String identity)
 {
 	List<String> listException=new LinkedList<String>();
 	String bioExceptionAttributes=null;
@@ -240,6 +255,7 @@ public List<String> exceptionList(String identity)
 		try {
 			logger.info("bioScan");
 			waitsUtil.clickNodeAssert(id);
+			//waitsUtil.scrollclickNodeAssert(id);
 			Thread.sleep(400);
 			clickScanBtn(subtype);
 		}
@@ -262,7 +278,7 @@ public List<String> exceptionList(String identity)
 		try
 
 		{
-			logger.info("  Bio attributes upload with List");
+			logger.info("Bio attributes upload with List");
 
 			List<String> listException = null;
 			try {
@@ -317,6 +333,9 @@ public List<String> exceptionList(String identity)
 
 				if(list.contains(PropertiesUtil.getKeyValue("face")))
 					bioScan(subtype,id+FACE,identity);
+				
+				//if(!list.contains(PropertiesUtil.getKeyValue("leftEye")) && !list.contains(PropertiesUtil.getKeyValue("rightEye")))		
+				bioScan(subtype,id+EXCEPTION_PHOTO,identity);
 
 			}
 		}

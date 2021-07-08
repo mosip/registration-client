@@ -648,6 +648,7 @@ public class GenericController extends BaseController {
 			screenGridPane.add(gridPane, 1, 1);
 			final ScrollPane scrollPane = new ScrollPane(screenGridPane);
 			scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+			scrollPane.setId("scrollPane");
 			screenTab.setContent(scrollPane);
 			tabPane.getTabs().add(screenTab);
 		}
