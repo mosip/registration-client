@@ -2929,9 +2929,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 		ImageView topImageView = getImageView(null, RegistrationConstants.THUMB_IMG, 144, 171, 18, 22, true, true,
 				false);
 
-		ImageView left = getImageView("leftThumb", RegistrationConstants.LEFTTHUMB_IMG, 92, 30, 55, 37, true, true,
+		ImageView left = getImageView("leftThumb", RegistrationConstants.LEFTTHUMB_IMG, 92, 30, 60, 46, true, true,
 				true);
-		ImageView right = getImageView("rightThumb", RegistrationConstants.LEFTTHUMB_IMG, 99, 30, 123, 38, true,
+		ImageView right = getImageView("rightThumb", RegistrationConstants.LEFTTHUMB_IMG, 99, 30, 118, 46, true,
 				true, true);
 
 		pane.getChildren().add(topImageView);
