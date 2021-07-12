@@ -1577,6 +1577,8 @@ public class RegistrationConstants {
 	public static String DEDUPLICATION_ENABLE_FLAG = "mosip.registration.mds.deduplication.enable.flag";
 
 	public static final String SERVER_ACTIVE_PROFILE = "mosip.registration.server_profile";
+	public static final String ID_AUTH_DOMAIN_URI = "mosip.registration.ida.domainuri";
+	public static final String MDS_RESP_ALLOWED_LAG_MINS = "mosip.registration.mds.allowed.lag.mins";
 
 	public static final String applicantBiometricDTO = "applicantBiometricDTO";
 	public static final String introducerBiometricDTO = "introducerBiometricDTO";

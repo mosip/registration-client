@@ -212,7 +212,7 @@ public class BioServiceImpl extends BaseService implements BioService {
 		} catch (RegBaseCheckedException e) {
 			LOGGER.error("Failed to fetch Id schema with version {} due to {}", idVersion, e);
 		}
-		LOGGER.debug("Biometric field {} captured context >> {}", fieldId, capturedContext);
+		LOGGER.info("Biometric field {} biometrics-captured-context >> {}", fieldId, capturedContext);
 		return capturedContext;
 	}
 

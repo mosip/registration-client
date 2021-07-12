@@ -196,6 +196,12 @@ public class RegistrationDTO {
 		return biometricExceptions.containsKey(String.format("%s_%s", subType, bioAttribute));
 	}
 
+	public List<String> getBiometricExceptions(String subType) {
+		return biometricExceptions.keySet().stream()
+				.filter(k -> k.startsWith(String.format("%s_", subType)))
+				.collect(Collectors.toList());
+	}
+
 	public BiometricsDto getBiometric(String subType, String bioAttribute) {
 		String key = String.format("%s_%s", subType, bioAttribute);
 		return this.biometrics.get(key);
@@ -204,27 +210,21 @@ public class RegistrationDTO {
 	public void clearBIOCache(String subType, String bioAttribute) {
 		Modality modality = Modality.getModality(bioAttribute);
 		List<String> keys = new ArrayList<>();
+		keys.addAll(this.BIO_CAPTURES.keySet());
+		keys.addAll(this.biometrics.keySet());
+		keys.addAll(this.biometricExceptions.keySet());
+
 		for(String attr : modality.getAttributes()) {
-			keys.addAll(this.BIO_CAPTURES.keySet().stream()
+			keys.stream()
 					.filter( k -> k.startsWith(String.format("%s_%s", subType, attr)))
-					.collect(Collectors.toList()));
-
-			keys.addAll(this.biometrics.keySet().stream()
-					.filter( k -> k.startsWith(String.format("%s_%s", subType, attr)))
-					.collect(Collectors.toList()));
-
-			keys.addAll(this.biometricExceptions.keySet().stream()
-					.filter( k -> k.startsWith(String.format("%s_%s", subType, attr)))
-					.collect(Collectors.toList()));
+					.forEach( k -> {
+						this.BIO_SCORES.remove(k);
+						this.BIO_CAPTURES.remove(k);
+						this.biometrics.remove(k);
+						this.biometricExceptions.remove(k);
+					});
 		}
-
-		keys.forEach(k -> {
-			this.BIO_SCORES.remove(k);
-			this.BIO_CAPTURES.remove(k);
-			this.biometrics.remove(k);
-			this.biometricExceptions.remove(k);
-		});
-		this.ATTEMPTS.remove(String.format("%s_%s", subType, Modality.getModality(bioAttribute)));
+		this.ATTEMPTS.remove(String.format("%s_%s", subType, modality.name()));
 	}
 
 	public void addSupervisorBiometrics(List<BiometricsDto> biometrics) {

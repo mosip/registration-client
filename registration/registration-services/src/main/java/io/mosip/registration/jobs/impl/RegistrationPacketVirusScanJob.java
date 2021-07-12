@@ -31,7 +31,7 @@ import io.mosip.registration.service.packet.RegistrationPacketVirusScanService;
  * @since 1.0.0
  *
  */
-@Component(value = "registrationPacketVirusScanJob")
+@Component(value = "registrationClientVirusScanJob")
 public class RegistrationPacketVirusScanJob extends BaseJob {
 
 	/**

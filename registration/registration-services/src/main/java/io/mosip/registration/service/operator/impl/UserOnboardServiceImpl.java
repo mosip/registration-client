@@ -1,8 +1,7 @@
 package io.mosip.registration.service.operator.impl;
 
 import static io.mosip.registration.constants.LoggerConstants.LOG_REG_USER_ONBOARD;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
+import static io.mosip.registration.constants.RegistrationConstants.*;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -83,6 +82,8 @@ import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 @Service
 public class UserOnboardServiceImpl extends BaseService implements UserOnboardService {
 
+	public static final String DOMAIN_URI_VALUE = "https://${mosip.hostname}";
+
 	@Autowired
 	private UserOnboardDAO userOnBoardDao;
 
@@ -138,8 +139,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 				DateUtils.formatToISOString(DateUtils.getUTCCurrentDateTime()));
 		idaRequestMap.put(RegistrationConstants.ENV, io.mosip.registration.context.ApplicationContext
 				.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE));
-		idaRequestMap.put(RegistrationConstants.DOMAIN_URI, RegistrationAppHealthCheckUtil
-				.prepareURLByHostName(RegistrationAppHealthCheckUtil.mosipHostNamePlaceHolder));
+		idaRequestMap.put(RegistrationConstants.DOMAIN_URI, getDomainUriValue());
 		idaRequestMap.put(RegistrationConstants.TRANSACTION_ID, RegistrationConstants.TRANSACTION_ID_VALUE);
 		idaRequestMap.put(RegistrationConstants.CONSENT_OBTAINED, true);
 		idaRequestMap.put(RegistrationConstants.INDIVIDUAL_ID, SessionContext.userContext().getUserId());
@@ -262,8 +262,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 		data.put(RegistrationConstants.PURPOSE, RegistrationConstants.PURPOSE_AUTH);
 		data.put(RegistrationConstants.ENV, io.mosip.registration.context.ApplicationContext
 				.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE));
-		data.put(RegistrationConstants.DOMAIN_URI, RegistrationAppHealthCheckUtil
-				.prepareURLByHostName(RegistrationAppHealthCheckUtil.mosipHostNamePlaceHolder));
+		data.put(RegistrationConstants.DOMAIN_URI, getDomainUriValue());
 		String dataBlockJsonString = RegistrationConstants.EMPTY;
 		try {
 			dataBlockJsonString = new ObjectMapper().writeValueAsString(data);
@@ -287,6 +286,12 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 				"Returning the dataBlock for User Onboard Authentication with IDA");
 
 		return dataBlock;
+	}
+
+	private String getDomainUriValue() {
+		String pattern = String.valueOf(ApplicationContext.map().getOrDefault(RegistrationConstants.ID_AUTH_DOMAIN_URI,
+				DOMAIN_URI_VALUE));
+		return RegistrationAppHealthCheckUtil.prepareURLByHostName(pattern);
 	}
 
 	private String getSubTypes(BiometricType bioType, String bioAttribute) {

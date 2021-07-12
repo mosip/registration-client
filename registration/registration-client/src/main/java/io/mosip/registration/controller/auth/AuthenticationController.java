@@ -741,7 +741,7 @@ public class AuthenticationController extends BaseController implements Initiali
 
 		Set<String> roleSet = new HashSet<>(SessionContext.userContext().getRoles());
 
-		if (isSupervisor) {
+		if (isSupervisor && !Role.isDefaultUser(SessionContext.userContext().getRoles())) {
 
 			LOGGER.info("REGISTRATION - OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
 					"Setting role as only supervisor");
