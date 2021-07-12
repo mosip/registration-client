@@ -45,6 +45,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 public class MosipDeviceSpecificationHelper {
 
 	private static final Logger LOGGER = AppConfig.getLogger(MosipDeviceSpecificationHelper.class);
+	private static final String MDM_DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
 	private ObjectMapper mapper = new ObjectMapper();
 
@@ -212,9 +213,10 @@ public class MosipDeviceSpecificationHelper {
 	
 	public void validateResponseTimestamp(String responseTime) throws RegBaseCheckedException {
 		if(responseTime != null) {
-			LocalDateTime ts = DateUtils.convertUTCToLocalDateTime(responseTime);
-			if(ts.isAfter(LocalDateTime.now(ZoneOffset.UTC).minusMinutes(5))
-					&& ts.isBefore(LocalDateTime.now(ZoneOffset.UTC).plusMinutes(5)))
+			LocalDateTime ts = DateUtils.parseUTCToLocalDateTime(responseTime, MDM_DATETIME_PATTERN);
+			//LocalDateTime ts = DateUtils.convertUTCToLocalDateTime(responseTime);
+			if(ts.isAfter(LocalDateTime.now().minusMinutes(5))
+					&& ts.isBefore(LocalDateTime.now().plusMinutes(5)))
 				return;
 		}
 
