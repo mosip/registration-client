@@ -10,6 +10,7 @@ import io.mosip.kernel.signature.dto.JWTSignatureVerifyResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.exception.DeviceException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
@@ -215,14 +216,19 @@ public class MosipDeviceSpecificationHelper {
 		if(responseTime != null) {
 			LocalDateTime ts = DateUtils.parseUTCToLocalDateTime(responseTime, MDM_DATETIME_PATTERN);
 			//LocalDateTime ts = DateUtils.convertUTCToLocalDateTime(responseTime);
-			if(ts.isAfter(LocalDateTime.now().minusMinutes(5))
-					&& ts.isBefore(LocalDateTime.now().plusMinutes(5)))
+			if(ts.isAfter(LocalDateTime.now().minusMinutes(getAllowedLagInMinutes()))
+					&& ts.isBefore(LocalDateTime.now().plusMinutes(getAllowedLagInMinutes())))
 				return;
 		}
 
 		throw new RegBaseCheckedException(
 				RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorCode(),
 				RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorMessage());
+	}
+
+	private int getAllowedLagInMinutes() {
+		return Integer.parseInt((String) ApplicationContext.map()
+				.getOrDefault(RegistrationConstants.MDS_RESP_ALLOWED_LAG_MINS, "5"));
 	}
 	
 	
