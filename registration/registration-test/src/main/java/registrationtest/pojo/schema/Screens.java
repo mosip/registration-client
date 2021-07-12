@@ -1,4 +1,4 @@
-
+	
 package registrationtest.pojo.schema;
 
 import java.util.HashMap;

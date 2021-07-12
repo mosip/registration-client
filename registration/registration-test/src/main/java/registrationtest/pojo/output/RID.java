@@ -17,21 +17,7 @@ public class RID {
 	private RegistrationDAO registrationDAO;
 	   public String rid;
 	   public String appidrid;
-	   public String getAppidrid(ApplicationContext applicationContext,String appid) {
-			registrationDAO= applicationContext.getBean(RegistrationDAO.class);
-			List<String> appidList=new LinkedList<String>();
-			List<String> ridid=new LinkedList<String>();
-			appidList.add(appid);
-			ridid=registrationDAO.getRegistrationIds(appidList);
-			System.out.println(ridid);
-			appidrid=ridid.get(0);
-		return appidrid;
-	}
-
-	public void setAppidrid(String appidrid) {
-		this.appidrid = appidrid;
-	}
-	
+	  
 		public String ridDateTime;
 	    public Boolean result;
 	    public Object webviewPreview;
@@ -94,4 +80,19 @@ public RID(String rid, String ridDateTime,Object webviewPreview,Object webViewAc
 		public void setRidDateTime(String ridDateTime) {
 			this.ridDateTime = ridDateTime;
 		}
+		 public String getAppidrid(ApplicationContext applicationContext,String appid) {
+				registrationDAO= applicationContext.getBean(RegistrationDAO.class);
+				List<String> appidList=new LinkedList<String>();
+				List<String> ridid=new LinkedList<String>();
+				appidList.add(appid);
+				ridid=registrationDAO.getRegistrationIds(appidList);
+				System.out.println(ridid);
+				appidrid=ridid.get(0);
+			return appidrid;
+		}
+
+		public void setAppidrid(String appidrid) {
+			this.appidrid = appidrid;
+		}
+		
 }

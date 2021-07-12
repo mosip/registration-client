@@ -247,23 +247,30 @@ if(PropertiesUtil.getKeyValue("upload").equals("Y"))
 //Logout Regclient
 		rid1.appidrid=rid1.getAppidrid(applicationContext, rid1.rid);
 		rid1.setResult(result);
-				}catch(Exception e)
-				{
+		}catch(Exception e)
+		{
 
-					logger.error(e.getMessage());
-				}
+			logger.error("",e);
 			
+		}
+		try
+		{
+			homePage.clickHomeImg();	
+			buttons.clickConfirmBtn();
+		}
+			catch(Exception e)
+			{
+				logger.error("",e);
+			}
+			try {
+				loginPage.logout();
+				buttons.clickConfirmBtn();
 
-				try
-				{
-					loginPage.logout();
-					buttons.clickConfirmBtn();
-					
-				}
-				catch(Exception e)
-				{
-					logger.error(e.getMessage());
-				}
+			}
+			catch(Exception e)
+			{
+				logger.error("",e);
+			}
 	
 		if(result==true)
 		{

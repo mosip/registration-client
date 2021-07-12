@@ -35,7 +35,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  }],
-  "dateOfBirth" : "1",
+	  "dateOfBirth" : "2021/01/02",
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
     "format" : "cbeff",
@@ -144,8 +144,9 @@
 	    "value" : "Kénitra"
 	  } ],
   "bioExceptionAttributes2": [
-		"leftEye"
-	],
+		"rightThumb"
+	], 
+		  "bioAuthAttributes":["rightThumb"],
 	 "bioExceptionAttributes1": [
 			"leftEye",
 			"rightEye",
@@ -198,6 +199,17 @@
 					  {
 						    "language" : "ara",
 						    "value" : "جواز سفر"
-						  } ]
+						  } ],
+						  "proofOfDateOfBirth" : [ {
+							    "language" : "eng",
+							    "value" : "Certificate of Birth"
+							  }, {
+							    "language" : "fra",
+							    "value" : "Certificat de naissance"
+							  },
+							  {
+								    "language" : "ara",
+								    "value" : "شهادة الميلاد"
+								  } ]
 } } 
 

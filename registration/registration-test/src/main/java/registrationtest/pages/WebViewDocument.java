@@ -67,71 +67,8 @@ public class WebViewDocument  {
 
 
 
-
-
-	/*
-
-	public String acceptPreviewPickRID(Stage applicationPrimaryStage2, Scene scene2) {
-
-		try {	
-			Platform.runLater(new Runnable() {
-				@Override
-				public void run() {
-
-					javafx.scene.web.WebView mywebview=waitsUtil.lookupById(webView);
-
-					String RegistrationID=(String) mywebview.getEngine().executeScript("document.body.getElementsByTagName('td')[0].innerHTML;");
-					RID=RegistrationID.split("<br>");
-
-				}
-			});
-
-			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("WebviewTimeWait"))); 
-		}catch(Exception e)
-		{
-			logger.error(e.getMessage());
-		}
-
-		return RID[1];
-	}
-
-
-
-	public String acceptPreview1() {
-
-		try {	
-			Platform.runLater(new Runnable() {
-				@Override
-				public void run() {
-					waitsUtil.clickNodeAssert(webView);
-					javafx.scene.web.WebView mywebview=waitsUtil.lookupById(webView);
-					System.out.println(mywebview.getEngine().executeScript("document.body.innerHTML;"));
-
-
-					String RegistrationID=(String) mywebview.getEngine().executeScript("document.body.getElementsByTagName('td')[0].innerHTML;");
-					RID=RegistrationID.split("<br>");
-
-				}
-			});
-
-			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("WebviewTimeWait"))); 
-		}catch(Exception e)
-		{
-			logger.error(e.getMessage());
-		}
-
-		return RID[1];
-	}
-
-*/
-
-
-
 	public RID acceptPreview(String scenario)
 	{
-		//		Thread taskThread = new Thread(new Runnable() {
-		//		      @Override
-		//		      public void run() {
 		try {	
 			Platform.runLater(new Runnable() {
 				@Override
@@ -143,7 +80,6 @@ public class WebViewDocument  {
 					//				System.out.println(mywebview.getEngine().getLocation());
 					//	mywebview.getEngine().executeScript("document.getElementById('consent-yes').click();");
 
-					System.out.println(mywebview.getEngine().executeScript("document.body.innerHTML;"));
 					rid.setWebviewPreview(mywebview.getEngine().executeScript("document.body.innerHTML;"));
 
 					String RegistrationID=(String) mywebview.getEngine().executeScript("document.body.getElementsByTagName('td')[0].innerHTML;");
@@ -181,7 +117,7 @@ public class WebViewDocument  {
 			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("WebviewTimeWait"))); 
 		}catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 		return new RID(RID[1], RIDDateTime[1],rid.getWebviewPreview(),rid.getWebviewPreview());
 
@@ -202,7 +138,6 @@ public class WebViewDocument  {
 				public void run() {
 					javafx.scene.web.WebView mywebview=waitsUtil.lookupById(webView);
 
-					System.out.println(mywebview.getEngine().executeScript("document.body.innerHTML;"));
 					rid.setWebViewAck(mywebview.getEngine().executeScript("document.body.innerHTML;"));
 
 					String RegistrationID=(String) mywebview.getEngine().executeScript("document.body.getElementsByTagName('td')[1].innerHTML;");
@@ -227,7 +162,7 @@ public class WebViewDocument  {
 			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("WebviewTimeWait"))); 
 		}catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 		return new RID(RID[1], RIDDateTime[1],rid.getWebViewAck(),rid.getWebViewAck());
 

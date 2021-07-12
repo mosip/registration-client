@@ -261,13 +261,8 @@ public class UpdateReg {
 		}catch(Exception e)
 		{
 
-			logger.error(e.getMessage());
-			try {
-				Thread.sleep(5000);
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			logger.error("",e);
+			
 		}
 		try
 		{
@@ -276,7 +271,7 @@ public class UpdateReg {
 		}
 			catch(Exception e)
 			{
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 			try {
 				loginPage.logout();
@@ -285,7 +280,7 @@ public class UpdateReg {
 			}
 			catch(Exception e)
 			{
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 
 

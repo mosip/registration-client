@@ -98,7 +98,7 @@ public class HomePage {
 
 		}
 		catch(Exception e)
-		{logger.error(e.getMessage());
+		{logger.error("",e);
 		}
 
 	}
@@ -110,7 +110,7 @@ public class HomePage {
 	}
 	catch(Exception e)
 	{
-		logger.error(e.getMessage());
+		logger.error("",e);
 	}
 
 	}
@@ -122,7 +122,7 @@ public class HomePage {
 		}
 		catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 	}
 
@@ -134,7 +134,7 @@ public class HomePage {
 	}
 	catch(Exception e)
 	{
-		logger.error(e.getMessage());
+		logger.error("",e);
 	}
 	return new UploadPacketPage(robot);
 	}
@@ -145,7 +145,7 @@ public class HomePage {
 	}
 	catch(Exception e)
 	{
-		logger.error(e.getMessage());
+		logger.error("",e);
 	}
 	}
 
@@ -155,7 +155,7 @@ public class HomePage {
 	}
 	catch(Exception e)
 	{
-		logger.error(e.getMessage());
+		logger.error("",e);
 	}
 	}
 
@@ -168,7 +168,7 @@ public class HomePage {
 	}
 	catch(Exception e)
 	{
-		logger.error(e.getMessage());
+		logger.error("",e);
 	}
 	return new DemographicPage(robot);
 	}
@@ -179,7 +179,7 @@ public class HomePage {
 	}
 	catch(Exception e)
 	{
-		logger.error(e.getMessage());
+		logger.error("",e);
 	}
 	}
 
@@ -190,7 +190,7 @@ public class HomePage {
 	}
 	catch(Exception e)
 	{
-		logger.error(e.getMessage());
+		logger.error("",e);
 	}
 	return new DemographicPage(robot);
 	}
@@ -201,7 +201,7 @@ public class HomePage {
 	}
 	catch(Exception e)
 	{
-		logger.error(e.getMessage());
+		logger.error("",e);
 	}
 	return new EodApprovalPage(robot);
 	}
@@ -212,7 +212,7 @@ public class HomePage {
 	}
 	catch(Exception e)
 	{
-		logger.error(e.getMessage());
+		logger.error("",e);
 	}
 	}
 
@@ -224,7 +224,7 @@ public class HomePage {
 		}
 		catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 	}
 

@@ -85,10 +85,8 @@ public class UploadPacketPage {
 			result=true;
 			robotActions.closeWindow();
 		} catch (Exception e) {
-			logger.error(e.getMessage());
-			logger.info("Failure Unable to upload");
+			logger.error("Failure Unable to upload",e);
 			result=false;
-			e.printStackTrace();
 		} 
 		
 		

@@ -74,7 +74,7 @@ public class BiometricUploadPage {
 			if(flag==false)
 			clickScanBtn(subType);
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 	}
 
@@ -107,7 +107,7 @@ public class BiometricUploadPage {
 			if(flag==false)
 			clickScanBtn(subType);
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 	}
 	
@@ -151,7 +151,7 @@ public class BiometricUploadPage {
 			if(flag==false)
 			clickScanBtn(subType);
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 	}
 
@@ -166,7 +166,7 @@ public class BiometricUploadPage {
 		
 		bioAuthAttList=JsonUtil.JsonObjArrayListParsing(identity, bioAuthAttributes);
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 		
 		return bioAuthAttList;
@@ -182,7 +182,7 @@ public class BiometricUploadPage {
 	
 	listException=JsonUtil.JsonObjArrayListParsing(identity, bioExceptionAttributes);
 	} catch (Exception e) {
-		logger.error(e.getMessage());
+		logger.error("",e);
 	}
 	
 	return listException;
@@ -229,7 +229,7 @@ public class BiometricUploadPage {
 			if(flag==false)
 			clickScanBtn(subType);
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 	}
 
@@ -255,13 +255,13 @@ public class BiometricUploadPage {
 		try {
 			logger.info("bioScan");
 			waitsUtil.clickNodeAssert(id);
-			//waitsUtil.scrollclickNodeAssert(id);
+			//waitsUtil.scrollclickNodeAssert1(id);
 			Thread.sleep(400);
 			clickScanBtn(subtype);
 		}
 		catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 
 
@@ -285,7 +285,7 @@ public class BiometricUploadPage {
 				listException = exceptionList(identity);
 			}catch(Exception e)
 			{
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 			if(listException.isEmpty()){
 				if(list.contains(PropertiesUtil.getKeyValue("leftEye"))||list.contains(PropertiesUtil.getKeyValue("rightEye")))
@@ -334,14 +334,14 @@ public class BiometricUploadPage {
 				if(list.contains(PropertiesUtil.getKeyValue("face")))
 					bioScan(subtype,id+FACE,identity);
 				
-				//if(!list.contains(PropertiesUtil.getKeyValue("leftEye")) && !list.contains(PropertiesUtil.getKeyValue("rightEye")))		
+				if(subtype.equals("applicant"))		
 				bioScan(subtype,id+EXCEPTION_PHOTO,identity);
 
 			}
 		}
 		catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 
 
@@ -354,7 +354,7 @@ public class BiometricUploadPage {
 			if(biostring.contains(PropertiesUtil.getKeyValue("face")))
 				bioScan(subtype,id+FACE,identity);
 		} catch (IOException e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 
 	}

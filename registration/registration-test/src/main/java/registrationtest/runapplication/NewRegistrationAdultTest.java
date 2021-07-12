@@ -141,7 +141,7 @@ public class NewRegistrationAdultTest{
 				catch (Exception e) {
 					
 
-					logger.error(e.getMessage());
+					logger.error("",e);
 					ExtentReportUtil.reports.flush();
 					waitsUtil.capture();
 				}	
@@ -150,7 +150,7 @@ public class NewRegistrationAdultTest{
 				System.exit(0);	
 				} catch (Exception e) {
 
-					logger.error(e.getMessage());
+					logger.error("",e);
 					ExtentReportUtil.reports.flush();
 					waitsUtil.capture();
 				}	
@@ -185,7 +185,7 @@ public class NewRegistrationAdultTest{
 						ExtentReportUtil.reports.flush();
 
 					} catch (Exception e) {
-						logger.error(e.getMessage());
+						logger.error("",e);
 					}
 
 			}};
@@ -211,7 +211,7 @@ public class NewRegistrationAdultTest{
 						PropertiesUtil.getKeyValue("supervisorUserpwd"));
 				}catch(Exception e)
 				{
-					logger.error(e.getMessage());
+					logger.error("",e);
 				}
 				
 			}
@@ -235,7 +235,7 @@ public class NewRegistrationAdultTest{
 				}}
 				catch(Exception e)
 				{
-					logger.error(e.getMessage());
+					logger.error("",e);
 				}
 				return contents;
 			}
@@ -261,7 +261,7 @@ public class NewRegistrationAdultTest{
 				}}}
 				catch(Exception e)
 				{
-					logger.error(e.getMessage());
+					logger.error("",e);
 				}
 				return map;
 			}

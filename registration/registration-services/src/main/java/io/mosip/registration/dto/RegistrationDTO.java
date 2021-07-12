@@ -139,6 +139,9 @@ public class RegistrationDTO {
 	public String getAgeGroup() {
 		return (String)AGE_GROUPS.getOrDefault("ageGroup", null);
 	}
+	public int getAge() {
+		return (int) AGE_GROUPS.getOrDefault("age", null);
+	}
 
 	public void setDateField(String fieldId, String dateString, boolean computeAgeGroup) {
 		if (isValidValue(dateString)) {

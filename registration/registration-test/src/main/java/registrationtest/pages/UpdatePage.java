@@ -53,8 +53,7 @@ public class UpdatePage {
 		try {
 			updateUINAttributes=JsonUtil.JsonObjArrayListParsing(JsonIdentity, "updateUINAttributes");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("",e);
 		}
 		for(String attr:updateUINAttributes)
 		waitsUtil.clickNodeAssert("#"+attr);
