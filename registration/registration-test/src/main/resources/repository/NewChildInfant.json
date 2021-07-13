@@ -1,6 +1,7 @@
 { "identity" : {
-	"flow":"lostchild",
-  "gender" : [ {
+	"flow":"child",
+	"UIN":"5931539704",
+	"gender" : [ {
     "language" : "eng",
     "value" : "Female"
   }, {
@@ -34,7 +35,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  }],
-  "dateOfBirth" : "2020/01/01",
+  "dateOfBirth" : "3",
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
     "format" : "cbeff",
@@ -129,9 +130,9 @@
 	  } ],
   "email" : "abc@abc.co.in",
   "consent":"Y",
-  "parentOrGuardianRID" : "10002100870000320210420134337",
-  "parentOrGuardianUIN" : "5931539704",
-   "parentOrGuardianName" : [ {
+  "introducerRID" : "10002100870000320210420134337",
+  "introducerUIN" : "5931539704",
+   "introducerName" : [ {
     "language" : "eng",
     "value" : "Upgrade1.1.4"
   }, {
@@ -143,7 +144,19 @@
 	    "value" : "Kénitra"
 	  } ],
   "bioExceptionAttributes2": [
-		"leftEye"
+		"leftEye",
+		
+		
+		"rightLittle",
+		"rightRing",
+		"rightMiddle",
+		
+		"leftLittle",
+		"leftRing",
+		"leftMiddle",
+		
+		"rightThumb"
+		
 	],
 	 "bioExceptionAttributes1": [
 			"leftEye",

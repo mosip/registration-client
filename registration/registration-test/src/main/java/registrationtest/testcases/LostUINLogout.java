@@ -92,12 +92,12 @@ public class LostUINLogout {
 	HomePage homePage;
 	PropertiesUtil propertiesUtil;
 	FxRobotContext context;
-	Boolean result=false;
+	Boolean result;
 	DemographicPage demographicPage;
 	BiometricUploadPage biometricUploadPage;
 	Buttons buttons;
 	WebViewDocument webViewDocument;
-	RID rid,rid2;
+	RID rid1,rid2;
 	AuthenticationPage authenticationPage;
 	RobotActions robotActions;
 	EodApprovalPage eodApprovalPage;
@@ -106,10 +106,11 @@ public class LostUINLogout {
 	
 	Alerts alerts;
 	public RID LostUINAdult(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
-			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,String fileName,String flow
+			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,String flow,String fileName,ApplicationContext applicationContext
 			)  {
 
 		try {
+			logger.info("Lost UIN Scenario : " + flow +" FileName : " + fileName);
 		ExtentReportUtil.test2=ExtentReportUtil.reports.createTest("Lost UIN Scenario : " + flow +" FileName : " + fileName);
 		
 		
@@ -122,6 +123,9 @@ public class LostUINLogout {
 		robotActions=new RobotActions(robot);
 		selectLanguagePage=new SelectLanguagePage(robot);
 		alerts=new Alerts(robot);
+		rid1=new RID();
+		rid2=new RID();
+		result=false;
 
 		//Load Login screen
 		loginPage.loadLoginScene(applicationPrimaryStage1);
@@ -144,8 +148,11 @@ public class LostUINLogout {
 		
 		demographicPage=homePage.clicklostUINImage();
 		
-		selectLanguagePage.selectLang();
+		if(PropertiesUtil.getKeyValue("multilang").equals("Y"))
+		{
+			selectLanguagePage.selectLang();
 		buttons.clicksubmitBtn();
+		}
 		
 		ExtentReportUtil.step3=ExtentReportUtil.test2.createNode("STEP 3-Demographic, Biometric upload ");
 		
@@ -158,12 +165,16 @@ public class LostUINLogout {
 		
 		buttons.clicknextBtn();
 		
-		rid=webViewDocument.acceptPreview(); //return thread and wait on thread
+		rid1=webViewDocument.acceptPreview(flow); //return thread and wait on thread
 
 		buttons.clicknextBtn();
 
-		ExtentReportUtil.step4.log(Status.PASS, "Accept Preview done"  + rid.getWebviewPreview());
-
+		if(!rid1.rid.trim().isEmpty())
+			ExtentReportUtil.step4.log(Status.PASS, "Accept Preview done" + rid1.getWebviewPreview());
+			else
+			{	ExtentReportUtil.step4.log(Status.FAIL,"Preview not valid");	
+			return rid1;
+			}
 		/**
 		 * Authentication enter password
 		 * Click Continue 
@@ -179,7 +190,7 @@ public class LostUINLogout {
 		 * Enter user details
 		 */
 
-		rid2=webViewDocument.getacknowledgement();
+		rid2=webViewDocument.getacknowledgement(flow);
 		homePage.clickHomeImg();
 		
 		
@@ -190,7 +201,7 @@ public class LostUINLogout {
 
 		eodApprovalPage=homePage.clickeodApprovalImageView( applicationPrimaryStage, scene);
 		eodApprovalPage.clickOnfilterField();
-		eodApprovalPage.enterFilterDetails(rid.getRid());
+		eodApprovalPage.enterFilterDetails(rid1.getRid());
 		eodApprovalPage.clickOnApprovalBtn();
 		authenticationPage=eodApprovalPage.clickOnAuthenticateBtn();
 		authenticationPage.enterUserName(supervisorUserid);
@@ -199,9 +210,16 @@ public class LostUINLogout {
 		robotActions.clickWindow();
 		homePage.clickHomeImg();	
 		buttons.clickConfirmBtn();
-		ExtentReportUtil.step5.log(Status.PASS, "Approve Packet done"  + rid2.getWebViewAck());
-
-		assertEquals(rid.getRid(), rid2.getRid());
+		if(!rid2.rid.trim().isEmpty())
+		{
+		ExtentReportUtil.step5.log(Status.PASS, "Approve Packet done" + rid2.getWebViewAck());
+		assertEquals(rid1.getRid(), rid2.getRid());
+		}else
+		{	ExtentReportUtil.step5.log(Status.FAIL,"Approve Packet valid");	
+		return rid1;
+		}
+		
+		
 		/**
 		 * Upload the packet
 		 */
@@ -213,12 +231,12 @@ if(PropertiesUtil.getKeyValue("upload").equals("Y"))
 		
 
 		uploadPacketPage=homePage.clickuploadPacketImageView( applicationPrimaryStage, scene);
-		uploadPacketPage.selectPacket(rid.getRid());
+		uploadPacketPage.selectPacket(rid1.getRid());
 		buttons.clickuploadBtn();
 		/**
 		 * Verify Success Upload
 		 */
-		result=uploadPacketPage.verifyPacketUpload(rid.getRid());
+		result=uploadPacketPage.verifyPacketUpload(rid1.getRid());
 
 		ExtentReportUtil.step6.log(Status.PASS, "Upload Packet done");
 
@@ -227,43 +245,34 @@ if(PropertiesUtil.getKeyValue("upload").equals("Y"))
 			result=true;
 		}
 //Logout Regclient
-		}catch(Exception e)
-		{
+		rid1.appidrid=rid1.getAppidrid(applicationContext, rid1.rid);
+		rid1.setResult(result);
+				}catch(Exception e)
+				{
 
-			logger.error(e.getMessage());
-		}
-		try {
-			alerts.clickAlertexit();
-			homePage.clickHomeImg();
-		}catch(Exception e)
-		{
-			logger.error(e.getMessage());
+					logger.error(e.getMessage());
+				}
+			
 
-
-		}
-		loginPage.logout();
-
-		try
-		{
-			buttons.clickConfirmBtn();
-		}
-		catch(Exception e)
-		{
-			logger.error(e.getMessage());
-		}
-
-
+				try
+				{
+					loginPage.logout();
+					buttons.clickConfirmBtn();
+					
+				}
+				catch(Exception e)
+				{
+					logger.error(e.getMessage());
+				}
 	
-		rid.setResult(result);
-		
 		if(result==true)
 		{
-			ExtentReportUtil.test2.log(Status.PASS, "TESTCASE PASS\n" +" RID-"+ rid.rid +" DATE TIME-"+ rid.ridDateTime +" ENVIRONMENT-" +System.getProperty("mosip.hostname"));
+			ExtentReportUtil.test2.log(Status.PASS, "TESTCASE PASS\n" +"[Appid="+ rid1.rid +"] [RID="+ rid1.appidrid +"] [DATE TIME="+ rid1.ridDateTime +"] [ENVIRONMENT=" +System.getProperty("mosip.hostname")+"]");
 		}		else 
 			ExtentReportUtil.test2.log(Status.FAIL, "TESTCASE FAIL");
 		
-		assertTrue(result,"TestCase Failed");
-		return rid;
+		ExtentReportUtil.reports.flush();
+		return rid1;
 	}
 }
 

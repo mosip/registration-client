@@ -173,7 +173,7 @@ public class HomePage {
 	return new DemographicPage(robot);
 	}
 
-	public void clickuinUpdateImage(Stage applicationPrimaryStage,Scene scene)
+	public void clickuinUpdateImage()
 	{try {
 		waitsUtil.clickNodeAssert( uinUpdateImage);
 	}
