@@ -1,5 +1,6 @@
 { "identity" : {
 	"flow":"adult",
+	"preferredLang":"English",
   "gender" : [ {
     "language" : "eng",
     "value" : "Female"

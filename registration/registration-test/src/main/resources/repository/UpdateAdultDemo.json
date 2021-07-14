@@ -1,5 +1,6 @@
 { "identity" : {
 	"flow":"updateadult",
+	"preferredLang":"English",
 	"UIN":"5931539704",
   "gender" : [ {
     "language" : "eng",
