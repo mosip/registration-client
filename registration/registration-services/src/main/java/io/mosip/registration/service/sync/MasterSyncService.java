@@ -6,6 +6,7 @@ import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.mastersync.*;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.entity.Location;
+import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.exception.RegBaseCheckedException;
 
 /**
@@ -130,4 +131,10 @@ public interface MasterSyncService {
 	 * @return Location
 	 */
 	public Location getLocation(String code, String langCode);
+
+	/**
+	 *
+	 * @return
+	 */
+	public List<SyncJobDef> getSyncJobs();
 }

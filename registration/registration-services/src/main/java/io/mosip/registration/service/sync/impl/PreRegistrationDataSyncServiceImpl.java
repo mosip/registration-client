@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import io.mosip.registration.dto.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,6 +102,8 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 	 * @see io.mosip.registration.service.sync.PreRegistrationDataSyncService#
 	 * getPreRegistrationIds(java.lang.String)
 	 */
+	@Counted(value = "pre-registration", extraTags = {"type", "sync"})
+	@Timed(value = "pre-registration", extraTags = {"type", "sync"})
 	@Override
 	public ResponseDTO getPreRegistrationIds(@NonNull String syncJobId) {
 		LOGGER.info("Fetching Pre-Registration Id's started, syncJobId : {}", syncJobId);
@@ -155,6 +159,9 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 			try {
 				executorServiceForPreReg.execute(
 						new Runnable() {
+
+							@Counted(value = "pre-registration", extraTags = {"type", "packet-download"})
+							@Timed(value = "pre-registration", extraTags = {"type", "packet-download"})
 							public void run() {
 								//TODO - Need to inform pre-reg team to correct date format
 								preRegDetail.setValue(preRegDetail.getValue().endsWith("Z") ? preRegDetail.getValue() : preRegDetail.getValue() + "Z");

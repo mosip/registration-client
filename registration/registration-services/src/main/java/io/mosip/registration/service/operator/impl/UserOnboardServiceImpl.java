@@ -27,6 +27,8 @@ import java.util.stream.Stream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,6 +129,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 		return responseDTO;
 	}
 
+	@Timed(value = "onboard")
 	public boolean validateWithIDA(List<BiometricsDto> biometrics, ResponseDTO responseDTO) throws PreConditionCheckException {
 
 		//Precondition check, proceed only if met, otherwise throws exception
@@ -410,6 +413,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 		return responseDTO;
 	}
 
+	@Timed(value = "sdk", extraTags = {"function", "EXTRACT"})
 	private List<BIR> getExtractedTemplates(List<BiometricsDto> biometrics) throws BiometricException {
 		List<BIR> templates = new ArrayList<>();
 		if (biometrics != null && !biometrics.isEmpty()) {
@@ -441,6 +445,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 	 * @return the boolean
 	 */
 	@SuppressWarnings("unchecked")
+	@Counted(value = "failed", recordFailuresOnly = true, extraTags = {"operation", "onboard"})
 	private Boolean userOnBoardStatusFlag(Map<String, Object> onBoardResponseMap, ResponseDTO responseDTO) {
 
 		Boolean userOnbaordFlag = false;

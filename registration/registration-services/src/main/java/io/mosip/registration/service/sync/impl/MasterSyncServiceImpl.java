@@ -14,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.micrometer.core.annotation.Timed;
 import io.mosip.registration.dto.mastersync.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,6 +120,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	 * @return success or failure status as Response DTO.
 	 * @throws RegBaseCheckedException
 	 */
+	@Timed(value = "sync", longTask = true, extraTags = {"type", "masterdata"})
 	@Override
 	public ResponseDTO getMasterSync(String masterSyncDtls, String triggerPoint) throws RegBaseCheckedException {
 		LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID, "Initiating the Master Sync");
@@ -654,6 +656,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 		return isMatch;
 	}
 
+	@Override
 	public List<SyncJobDef> getSyncJobs() {
 		return masterSyncDao.getSyncJobs();
 	}

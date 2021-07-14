@@ -30,6 +30,9 @@ import io.mosip.biometrics.util.finger.FingerDecoder;
 import io.mosip.biometrics.util.iris.IrisDecoder;
 import io.mosip.registration.enums.Modality;
 import io.mosip.registration.enums.Role;
+import io.mosip.registration.service.IdentitySchemaService;
+import io.mosip.registration.service.packet.PacketHandlerService;
+import io.mosip.registration.service.sync.MasterSyncService;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.io.IOUtils;
@@ -88,7 +91,7 @@ public class TemplateGenerator extends BaseService {
 	private QrCodeGenerator<QrVersion> qrCodeGenerator;
 
 	@Autowired
-	private IdentitySchemaServiceImpl identitySchemaServiceImpl;
+	private IdentitySchemaService identitySchemaServiceImpl;
 
 	@Autowired
 	private UserDetailService userDetailService;
@@ -97,7 +100,7 @@ public class TemplateGenerator extends BaseService {
 	private UserMachineMappingService userMachineMappingService;
 
 	@Autowired
-	private PacketHandlerServiceImpl packetHandlerServiceImpl;
+	private PacketHandlerService packetHandlerServiceImpl;
 
 	@Autowired
 	private RegistrationApprovalService registrationApprovalService;
@@ -106,7 +109,7 @@ public class TemplateGenerator extends BaseService {
 	private PacketSynchService packetSynchService;
 
 	@Autowired
-	private MasterSyncServiceImpl masterSyncServiceImpl;
+	private MasterSyncService masterSyncServiceImpl;
 
 	@Autowired
 	private JobConfigurationService jobConfigurationService;

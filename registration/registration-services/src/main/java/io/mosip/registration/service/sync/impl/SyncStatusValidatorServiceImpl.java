@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import io.mosip.registration.api.geoposition.GeoPositionFacade;
 import io.mosip.registration.api.geoposition.dto.GeoPosition;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -245,6 +247,7 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 	 * @param errorResponseDTOList
 	 *            the error response DTO list
 	 */
+	@Timed(value = "pending-check", extraTags = {"function", "packetcount"})
 	private void validatingRegisteredPacketCountAndDuration(List<ErrorResponseDTO> errorResponseDTOList) {
 		LOGGER.info(LoggerConstants.OPT_TO_REG_LOGGER_SESSION_ID, APPLICATION_NAME, APPLICATION_ID,
 				"Fetching Registration details where status is Registered");

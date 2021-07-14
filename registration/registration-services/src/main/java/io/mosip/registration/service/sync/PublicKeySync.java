@@ -28,5 +28,11 @@ public interface PublicKeySync {
 	 * @throws RegBaseCheckedException 
 	 */
 	public ResponseDTO getPublicKey(String triggerPoint) throws RegBaseCheckedException;
+
+	/**
+	 *
+	 * @param syncedCertificate
+	 */
+	public void saveSignPublicKey(String syncedCertificate);
 	
 }

@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import io.mosip.registration.repositories.SyncJobDefRepository;
 import org.quartz.CronExpression;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
@@ -78,6 +79,9 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 	 */
 	@Autowired
 	private SyncJobConfigDAO jobConfigDAO;
+
+	@Autowired
+	private SyncJobDefRepository syncJobDefRepository;
 
 	/**
 	 * Scheduler factory bean which will take Job and Trigger details and run jobs
@@ -935,4 +939,8 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 		return CronExpression.isValidExpression(cronExpression);
 	}
 
+	@Override
+	public List<SyncJobDef> getSyncJobs() {
+		return syncJobDefRepository.findAllByIsActiveTrue();
+	}
 }
