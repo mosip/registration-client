@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
@@ -75,6 +76,7 @@ public class CertificateSyncServiceImpl extends BaseService implements Certifica
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
+    @Timed(value = "sync", longTask = true, extraTags = {"type", "cacerts"})
     @Override
     public ResponseDTO getCACertificates(String triggerPoint) {
         ResponseDTO responseDTO = new ResponseDTO();

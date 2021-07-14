@@ -21,7 +21,8 @@
 
 	<appender name="metrics" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>${APP_LOG_ROOT}/metrics.log</file>
-		<encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+		<encoder><pattern>%d | %m%n</pattern></encoder>
+		<!--<encoder class="net.logstash.logback.encoder.LogstashEncoder"/>-->
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<fileNamePattern>${APP_LOG_ROOT}/metrics-archive.%d{yyyy-MM-dd_HH}.log</fileNamePattern>
 		</rollingPolicy>

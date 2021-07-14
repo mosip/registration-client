@@ -1,6 +1,7 @@
 package io.mosip.registration.util.restclient;
 
 
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -296,6 +297,7 @@ public class AuthTokenUtilService {
         return RegistrationConstants.OTP_GENERATION_ERROR_MESSAGE;
     }
 
+    @Timed(value = "auth.token", longTask = true)
     private JSONObject getAuthTokenResponse(Map<String, Object> responseMap) throws RegBaseCheckedException {
         if(responseMap.get(RegistrationConstants.REST_RESPONSE_BODY) != null) {
             Map<String, Object> respBody = (Map<String, Object>) responseMap.get(RegistrationConstants.REST_RESPONSE_BODY);

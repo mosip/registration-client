@@ -121,7 +121,7 @@ public enum RegistrationExceptionConstants {
 	ID_OBJECT_MASTER_DATA_VALIDATOR("REG-IOS-003", "Invalid Master Data Object Pattern"),
 
 	// TPM Public Key Upload
-	TPM_PUBLIC_KEY_UPLOAD("REG-TPK-001", "Exception while uploading the TPM Public Key"),
+	TPM_PUBLIC_KEY_UPLOAD("REG-TPK-001", "Exception verifying TPM Public Keys"),
 	
 	//Invalid User
 	AUTH_ADVICE_USR_ERROR("REG-SER-ATAD","Provided user id not allowed to do this operation"),
