@@ -158,7 +158,7 @@ public class SessionContext {
 		if (isInitialSetUp) {
 			authModes.add(RegistrationConstants.PWORD);
 		} else {
-			authModes = loginService.getModesOfLogin(ProcessNames.LOGIN.getType(), roleList);
+			authModes = loginService.getModesOfLogin(ProcessNames.LOGIN.getType(), roleList, false);
 		}
 
 		if (null == sessionContext) {

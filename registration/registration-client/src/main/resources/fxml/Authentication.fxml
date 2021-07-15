@@ -816,15 +816,6 @@
 						<RowConstraints minHeight="10.0" percentHeight="80.0" prefHeight="30.0" vgrow="SOMETIMES" />
 					</rowConstraints>
 				</GridPane>
-            <Button fx:id="backBtn" mnemonicParsing="false" text="Button" visible="false" GridPane.rowIndex="1">
-            	<graphic>
-                    <ImageView fx:id="backImageView" fitHeight="20.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true">
-                         <image>
-                               <Image url="@../images/arrowLeft.png" />
-                         </image>
-                    </ImageView>
-                </graphic>
-           </Button>
            <GridPane fx:id="progressIndicatorPane" layoutX="10.0" layoutY="10.0" opacity="0.5" visible="false">
                <children>
                   <GridPane GridPane.rowIndex="1">

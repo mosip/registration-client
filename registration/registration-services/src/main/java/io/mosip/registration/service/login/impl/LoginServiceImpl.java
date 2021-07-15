@@ -6,42 +6,58 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.mapper.CustomObjectMapper.MAPPER_FACADE;
 
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import io.micrometer.core.annotation.Timed;
-import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.registration.constants.*;
-import io.mosip.registration.dto.*;
-import io.mosip.registration.enums.Role;
-import io.mosip.registration.service.sync.CertificateSyncService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
-import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import io.micrometer.core.annotation.Timed;
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
+import io.mosip.registration.constants.AuditEvent;
+import io.mosip.registration.constants.AuditReferenceIdTypes;
+import io.mosip.registration.constants.Components;
+import io.mosip.registration.constants.LoggerConstants;
+import io.mosip.registration.constants.LoginMode;
+import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dao.AppAuthenticationDAO;
 import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dao.ScreenAuthorizationDAO;
 import io.mosip.registration.dao.UserDetailDAO;
+import io.mosip.registration.dto.AuthorizationDTO;
+import io.mosip.registration.dto.LoginUserDTO;
+import io.mosip.registration.dto.RegistrationCenterDetailDTO;
+import io.mosip.registration.dto.ResponseDTO;
+import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.dto.UserMachineMappingDTO;
 import io.mosip.registration.entity.UserDetail;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.operator.UserDetailService;
-import io.mosip.registration.service.operator.UserOnboardService;
+import io.mosip.registration.service.sync.CertificateSyncService;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.PublicKeySync;
 import io.mosip.registration.service.sync.TPMPublicKeySyncService;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.restclient.AuthTokenUtilService;
 
 
 /**
@@ -109,9 +125,6 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	private UserDetailService userDetailService;
 
 	@Autowired
-	private UserOnboardService userOnboardService;
-
-	@Autowired
 	private TPMPublicKeySyncService tpmPublicKeySyncService;
 
 	@Autowired
@@ -131,7 +144,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	 * String, java.util.Set)
 	 */
 	@Override
-	public List<String> getModesOfLogin(String authType, Set<String> roleList) {
+	public List<String> getModesOfLogin(String authType, Set<String> roleList, boolean isReviewer) {
 		// Retrieve Login information
 
 		LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "Fetching list of login modes");
@@ -147,7 +160,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 
 			auditFactory.audit(AuditEvent.LOGIN_MODES_FETCH, Components.LOGIN_MODES,
 					RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
-			if (Role.isDefaultUser(roleList)) {
+			if (Role.isDefaultUser(roleList) || isReviewer) {
 				loginModes.clear();
 				loginModes.add(RegistrationConstants.PWORD);
 			}

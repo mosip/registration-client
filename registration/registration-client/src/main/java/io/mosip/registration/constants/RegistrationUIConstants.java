@@ -66,6 +66,8 @@ public class RegistrationUIConstants {
 	public static final String PWORD_LENGTH = "PWORD_LENGTH";
 	public static final String USER_NOT_ONBOARDED = "USER_NOT_ONBOARDED";
 	public static final String USER_NOT_AUTHORIZED = "USER_NOT_AUTHORIZED";
+	public static final String REVIEWER_NOT_AUTHORIZED = "REVIEWER_NOT_AUTHORIZED";
+	public static final String CREDENTIALS_NOT_FOUND = "CREDENTIALS_NOT_FOUND";
 	public static final String INCORRECT_PWORD = "INCORRECT_PWORD";
 	public static final String BLOCKED_USER_ERROR = "BLOCKED_USER_ERROR";
 	public static final String USERNAME_FIELD_ERROR = "USERNAME_FIELD_ERROR";

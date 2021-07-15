@@ -435,6 +435,7 @@ public class RegistrationConstants {
 	// Supervisor Authentication
 	public static final String PWD_MATCH = "Username and Password Match";
 	public static final String PWD_MISMATCH = "Username and Password Not Match";
+	public static final String CREDS_NOT_FOUND = "Credentials Not Found";
 
 	// RSA
 	public static final String LOCALHOST = "localhost";
@@ -1953,4 +1954,6 @@ public class RegistrationConstants {
 	
 	public static final String AUDIT_TIMESTAMP = "mosip.registration.audit_timestamp";
 	public static final String AGE_GROUP_CONFIG = "mosip.regproc.packet.classifier.tagging.agegroup.ranges";
+	
+	public static final String LOGOUT = "Logout";
 }
