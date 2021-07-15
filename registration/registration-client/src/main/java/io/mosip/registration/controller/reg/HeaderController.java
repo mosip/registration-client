@@ -1,33 +1,10 @@
 package io.mosip.registration.controller.reg;
 
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
-
-import java.awt.Desktop;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.TimerTask;
-import java.util.stream.Collectors;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.constants.AuditEvent;
-import io.mosip.registration.constants.AuditReferenceIdTypes;
-import io.mosip.registration.constants.Components;
-import io.mosip.registration.constants.LoggerConstants;
-import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.constants.RegistrationUIConstants;
+import io.mosip.registration.constants.*;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
@@ -37,9 +14,9 @@ import io.mosip.registration.controller.auth.LoginController;
 import io.mosip.registration.controller.device.Streamer;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.schema.SettingsSchema;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.dto.schema.SettingsSchema;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.jobs.BaseJob;
@@ -65,25 +42,33 @@ import javafx.fxml.FXML;
 import javafx.geometry.NodeOrientation;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ContextMenu;
+import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Screen;
+import org.apache.commons.collections.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+
+import java.awt.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.TimerTask;
+import java.util.stream.Collectors;
+
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 /**
  * Class for Registration Officer details
@@ -605,7 +590,7 @@ public class HeaderController extends BaseController {
 
 				ResponseDTO responseDTO = taskService.getValue();
 				if (responseDTO.getErrorResponseDTOs() != null) {
-					generateAlert(RegistrationConstants.SYNC_FAILURE,
+					generateAlert(RegistrationConstants.ERROR,
 							responseDTO.getErrorResponseDTOs().get(0).getMessage());
 				} else {
 					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_SUCCESS));
