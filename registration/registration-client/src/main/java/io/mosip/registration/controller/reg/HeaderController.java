@@ -605,8 +605,7 @@ public class HeaderController extends BaseController {
 
 				ResponseDTO responseDTO = taskService.getValue();
 				if (responseDTO.getErrorResponseDTOs() != null) {
-					generateAlert(RegistrationConstants.SYNC_FAILURE,
-							responseDTO.getErrorResponseDTOs().get(0).getMessage());
+					generateAlert(RegistrationConstants.ERROR, responseDTO.getErrorResponseDTOs().get(0).getMessage()+"#TYPE#ERROR");
 				} else {
 					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_SUCCESS));
 				}
