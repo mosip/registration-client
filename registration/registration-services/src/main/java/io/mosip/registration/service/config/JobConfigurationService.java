@@ -137,6 +137,6 @@ public interface JobConfigurationService {
 
 	public boolean isValidCronExpression(String cronExpression);
 
-	
+	public List<SyncJobDef> getSyncJobs();
 
 }

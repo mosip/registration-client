@@ -9,6 +9,7 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.registration.constants.*;
 import io.mosip.registration.dto.*;
@@ -328,6 +329,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	 * 6. CA cert sync
 	 * user salt sync is removed @Since 1.1.3
 	 */
+	@Timed(value = "sync", longTask = true, extraTags = {"type", "initial"})
 	@Override
 	public List<String> initialSync(String triggerPoint) {
 		long start = System.currentTimeMillis();
@@ -442,7 +444,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	public String validateInvalidLogin(UserDTO userDTO, String errorMessage, int invalidLoginCount,
 			int invalidLoginTime) {
 
-		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "validating invalid login params");
+		LOGGER.info("validating invalid login params");
 
 		try {
 			userDTOValidation(userDTO);

@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import io.mosip.registration.service.sync.MasterSyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -75,9 +76,6 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 	private JobConfigurationService jobConfigurationService;
 
 	@Autowired
-	private MasterSyncServiceImpl masterSyncServiceImpl;
-
-	@Autowired
 	private LocalConfigService localConfigService;
 
 	@Autowired
@@ -109,7 +107,7 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 	private void setContent() {
 		try {
-			List<SyncJobDef> syncJobs = masterSyncServiceImpl.getSyncJobs();
+			List<SyncJobDef> syncJobs = jobConfigurationService.getSyncJobs();
 			GridPane gridPane = createGridPane(syncJobs.size());
 			addContentToGridPane(gridPane, syncJobs);
 			contentPane.setContent(gridPane);

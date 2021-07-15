@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.dto.ResponseDTO;
@@ -56,11 +57,12 @@ public class TPMPublicKeySyncServiceImpl  extends BaseService implements TPMPubl
 	 * @see
 	 * io.mosip.registration.service.sync.TPMPublicKeySyncService#syncTPMPublicKey()
 	 */
+	@Timed(value = "sync", longTask = true, extraTags = {"type", "verify-machine"})
 	@Override
 	@SuppressWarnings("unchecked")
 	public ResponseDTO syncTPMPublicKey() throws RegBaseCheckedException {
 
-		LOGGER.info(LoggerConstants.TPM_PUBLIC_KEY_UPLOAD, APPLICATION_NAME, APPLICATION_ID, "Sync TPM Public Key");
+		LOGGER.info("Verify TPM Public Key mapping in server started");
 
 		try {
 			// Get the Public Key of the TPM Signing Key
@@ -88,7 +90,7 @@ public class TPMPublicKeySyncServiceImpl  extends BaseService implements TPMPubl
 			} else {
 				if (null != publicKeyResponse.get(RegistrationConstants.ERRORS)) {
 					LOGGER.error(LoggerConstants.TPM_PUBLIC_KEY_UPLOAD, APPLICATION_NAME, APPLICATION_ID,
-							"Error while uploading the TPM public key");
+							"Error while verifying the TPM public key mappings");
 
 					((List<Map<String, String>>) publicKeyResponse.get(RegistrationConstants.ERRORS))
 							.forEach(error -> LOGGER.error(LoggerConstants.TPM_PUBLIC_KEY_UPLOAD, APPLICATION_NAME,

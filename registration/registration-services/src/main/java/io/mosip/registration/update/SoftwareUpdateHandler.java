@@ -25,6 +25,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import io.micrometer.core.annotation.Counted;
 import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.registration.context.ApplicationContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,6 +109,7 @@ public class SoftwareUpdateHandler extends BaseService {
 	 * @return Boolean true - If there is any update available. false - If no
 	 *         updates available
 	 */
+	@Counted(value = "sw.update", recordFailuresOnly = false)
 	public boolean hasUpdate() {
 
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Checking for updates from " +
@@ -469,8 +471,8 @@ public class SoftwareUpdateHandler extends BaseService {
 
 	}
 
+	@Counted(value = "sw.update", recordFailuresOnly = true)
 	private boolean hasSpace(int bytes) {
-
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Checking of space in machine");
 		return bytes < new File("/").getFreeSpace();
 	}
@@ -770,35 +772,4 @@ public class SoftwareUpdateHandler extends BaseService {
 				"Upgrade server : " + ApplicationContext.getUpgradeServerURL());
 		return String.format(urlPostFix, ApplicationContext.getUpgradeServerURL());
 	}
-
-	private void addProperties(String version) {
-
-		// LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-		// "Started updating version property in mosip-application.properties");
-		//
-		// try {
-		// Properties properties = new Properties();
-		// properties.load(new FileInputStream(propsFilePath));
-		//
-		// properties.setProperty("mosip.reg.version", version);
-		//
-		// // update mosip-Version in mosip-application.properties file
-		// try (FileOutputStream outputStream = new FileOutputStream(propsFilePath)) {
-		//
-		// properties.store(outputStream, version);
-		// }
-		//
-		// } catch (IOException ioException) {
-		//
-		// LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME,
-		// APPLICATION_ID,
-		// ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
-		//
-		// }
-		//
-		// LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-		// "Completed updating version property in mosip-application.properties");
-
-	}
-
 }

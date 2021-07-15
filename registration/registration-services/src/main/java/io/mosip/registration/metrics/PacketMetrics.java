@@ -7,6 +7,7 @@ import io.micrometer.core.instrument.binder.MeterBinder;
 import io.mosip.registration.dao.RegistrationDAO;
 import org.springframework.context.ApplicationContext;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -37,13 +38,21 @@ public class PacketMetrics implements MeterBinder {
 
         if(result != null) {
             for (Object[] entry : result) {
-                Gauge.builder(String.format("packet.%s.%s", entry[0], entry[1]), entry[2], (count) -> {
-                    return Double.valueOf((String)count);
-                }).strongReference(true).tags(tags).register(registry);
+                List<Tag> tagList = new ArrayList<>();
+                tags.forEach(tag-> { tagList.add(tag); });
+                tagList.add(Tag.of("client-state", entry[0] == null ? "NA" :(String) entry[0]));
+                tagList.add(Tag.of("server-state", entry[1] == null ? "NA" : (String) entry[1]));
+                Gauge.builder("packet.states", (Long)entry[2], Double::valueOf)
+                        .strongReference(true).tags(tagList).register(registry);
             }
         }
-        else
-            Gauge.builder(String.format("packet.%s.%s", "NA", "NA"), 0, Double::valueOf)
-                    .strongReference(true).tags(tags).register(registry);
+        else {
+            List<Tag> tagList = new ArrayList<>();
+            tags.forEach(tag-> { tagList.add(tag); });
+            tagList.add(Tag.of("client-state", "NA"));
+            tagList.add(Tag.of("server-state", "NA"));
+            Gauge.builder("packet.states", 0, Double::valueOf)
+                    .strongReference(true).tags(tagList).register(registry);
+        }
     }
 }
