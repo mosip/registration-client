@@ -1,22 +1,5 @@
 package io.mosip.registration.context;
 
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
-import io.mosip.registration.enums.Role;
-import io.mosip.registration.util.restclient.AuthTokenUtilService;
-import org.springframework.context.ApplicationContext;
-
 import io.mosip.kernel.biometrics.constant.BiometricType;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
@@ -24,19 +7,23 @@ import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.LoginMode;
 import io.mosip.registration.constants.ProcessNames;
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.dto.AuthTokenDTO;
-import io.mosip.registration.dto.AuthenticationValidatorDTO;
-import io.mosip.registration.dto.AuthorizationDTO;
-import io.mosip.registration.dto.RegistrationCenterDetailDTO;
-import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.dto.*;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.security.AuthenticationService;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
-import io.mosip.registration.util.restclient.ServiceDelegateUtil;
+import io.mosip.registration.util.restclient.AuthTokenUtilService;
+import org.springframework.context.ApplicationContext;
+
+import java.io.IOException;
+import java.util.*;
+
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 /**
  * This class will handle the creation of Session context, Security Context and
@@ -495,7 +482,7 @@ public class SessionContext {
 		long refreshedLoginTime = Long.parseLong(String.valueOf(io.mosip.registration.context.ApplicationContext.map()
 				.get(RegistrationConstants.REFRESHED_LOGIN_TIME)));
 		long idealTime = Long.parseLong(String
-				.valueOf(io.mosip.registration.context.ApplicationContext.map().get(RegistrationConstants.IDEAL_TIME)));
+				.valueOf(io.mosip.registration.context.ApplicationContext.map().get(RegistrationConstants.IDLE_TIME)));
 
 		sessionContext.setLoginTime(new Date());
 		sessionContext.setRefreshedLoginTime(refreshedLoginTime);
