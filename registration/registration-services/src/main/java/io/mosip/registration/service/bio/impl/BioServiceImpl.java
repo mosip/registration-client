@@ -182,7 +182,7 @@ public class BioServiceImpl extends BaseService implements BioService {
 		Map<String, Boolean> capturedContext = new HashMap<>();
 		try {
 			Optional<UiSchemaDTO> fieldDto = identitySchemaService.getUISchema(idVersion).stream().filter(field ->
-				RegistrationConstants.BIOMETRICS_TYPE.equals(field.getType()) ).findFirst();
+				RegistrationConstants.BIOMETRICS_TYPE.equals(field.getType()) && field.getId().equals(fieldId) ).findFirst();
 			if(!fieldDto.isPresent())
 				return capturedContext;
 
