@@ -1,5 +1,6 @@
 { "identity" : {
-	"flow":"updateadult",
+	"ageGroup":"ADULT",
+	"process":"Update",
 	"preferredLang":"English",
 	"UIN":"5931539704",
 	"gender" : [ {
@@ -36,7 +37,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  }],
-	  "dateOfBirth" : "2010/01/02",
+	  "dateOfBirth" : "20",
   
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
@@ -154,8 +155,8 @@
 		"leftMiddle"
 		
 	],
-	 "bioExceptionAttributes1": [
-			"leftEye",
+	 "bioAttributes": [
+		 "leftEye",
 			"rightEye",
 			"rightIndex",
 			"rightLittle",
@@ -166,8 +167,8 @@
 			"leftRing",
 			"leftMiddle",
 			"leftThumb",
-			"rightThumb"
-			
+			"rightThumb",
+			"face"
 		],
 	  "proofOfConsent" : [ {
 		    "language" : "eng",

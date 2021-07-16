@@ -37,7 +37,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
-import registrationtest.runapplication.NewRegistrationAdultTest;
+import registrationtest.runapplication.RegistrationMain;
 import org.apache.log4j.BasicConfigurator;  
 import org.apache.log4j.LogManager;  
 import org.apache.log4j.Logger;

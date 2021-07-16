@@ -1,5 +1,6 @@
 { "identity" : {
-	"flow":"adult",
+	"ageGroup":"ADULT",
+	"process":"New",
 	"preferredLang":"English",
   "gender" : [ {
     "language" : "eng",
@@ -35,7 +36,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  }],
-	  "dateOfBirth" : "2010/01/02",
+	  "dateOfBirth" : "20",
   
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
@@ -144,36 +145,21 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  } ],
-  "bioExceptionAttributes2": [
-		"leftEye",
-		
-		
-		"rightLittle",
-		"rightRing",
-		"rightMiddle",
-		
-		"leftLittle",
-		"leftRing",
-		"leftMiddle",
-		
-		"rightThumb"
-		
-	],
-	 "bioExceptionAttributes1": [
-			"leftEye",
-			"rightEye",
-			"rightIndex",
-			"rightLittle",
-			"rightRing",
-			"rightMiddle",
-			"leftIndex",
-			"leftLittle",
-			"leftRing",
-			"leftMiddle",
-			"leftThumb",
-			"rightThumb"
-			
-		],
+	  "bioAttributes": [
+			 "leftEye",
+				"rightEye",
+				"rightIndex",
+				"rightLittle",
+				"rightRing",
+				"rightMiddle",
+				"leftIndex",
+				"leftLittle",
+				"leftRing",
+				"leftMiddle",
+				"leftThumb",
+				"rightThumb",
+				"face"
+			],
 	  "proofOfConsent" : [ {
 		    "language" : "eng",
 		    "value" : "Registration Form"

@@ -17,7 +17,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import registrationtest.controls.Alerts;
-import registrationtest.runapplication.NewRegistrationAdultTest;
+
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;
 

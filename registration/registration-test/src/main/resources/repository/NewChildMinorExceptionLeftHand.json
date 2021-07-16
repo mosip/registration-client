@@ -1,5 +1,6 @@
 { "identity" : {
-	"flow":"child",
+	"ageGroup":"MINOR",
+	"process":"New",
 	"preferredLang":"English",
 	"UIN":"5931539704",
 	"gender" : [ {
@@ -36,7 +37,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  }],
-	  "dateOfBirth" : "2015/01/02",
+	  "dateOfBirth" : "13",
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
     "format" : "cbeff",
@@ -150,8 +151,8 @@
 		"leftRing",
 		"leftMiddle"
 	],
-	 "bioExceptionAttributes1": [
-			"leftEye",
+	 "bioAttributes": [
+		 "leftEye",
 			"rightEye",
 			"rightIndex",
 			"rightLittle",
@@ -162,8 +163,8 @@
 			"leftRing",
 			"leftMiddle",
 			"leftThumb",
-			"rightThumb"
-			
+			"rightThumb",
+			"face"
 		],
 	  "proofOfConsent" : [ {
 		    "language" : "eng",

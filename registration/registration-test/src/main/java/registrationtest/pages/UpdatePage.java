@@ -10,7 +10,7 @@ import org.testfx.api.FxRobot;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-import registrationtest.runapplication.NewRegistrationAdultTest;
+
 import registrationtest.utility.JsonUtil;
 import registrationtest.utility.WaitsUtil;
 

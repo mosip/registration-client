@@ -1,5 +1,6 @@
 { "identity" : {
-	"flow":"lostchild",
+	"ageGroup":"INFANT",
+	"process":"Lost",
 	"preferredLang":"English",
 	"UIN":"5931539704",
 	"gender" : [ {
@@ -36,7 +37,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  }],
-	  "dateOfBirth" : "2021/01/02",
+	  "dateOfBirth" : "2",
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
     "format" : "cbeff",
@@ -144,25 +145,11 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  } ],
-  "bioExceptionAttributes2": [
-		"rightThumb"
-	], 
+  
 		  "bioAuthAttributes":["rightThumb"],
-	 "bioExceptionAttributes1": [
-			"leftEye",
-			"rightEye",
-			"rightIndex",
-			"rightLittle",
-			"rightRing",
-			"rightMiddle",
-			"leftIndex",
-			"leftLittle",
-			"leftRing",
-			"leftMiddle",
-			"leftThumb",
-			"rightThumb"
-			
-		],
+		  "bioAttributes": [
+					"face"
+				],
 	  "proofOfConsent" : [ {
 		    "language" : "eng",
 		    "value" : "Registration Form"

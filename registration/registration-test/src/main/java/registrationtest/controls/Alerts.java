@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import org.testfx.api.FxRobot;
 
 import javafx.scene.control.Button;
-import registrationtest.runapplication.NewRegistrationAdultTest;
+import registrationtest.runapplication.RegistrationMain;
 import registrationtest.utility.WaitsUtil;
 
 public class Alerts {

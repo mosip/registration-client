@@ -1,5 +1,6 @@
 { "identity" : {
-	"flow":"updatechild",
+	"ageGroup":"MINOR",
+	"process":"Update",
 	"preferredLang":"English",
 	"UIN":"5931539704",
 	"gender" : [ {
@@ -36,7 +37,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  }],
-	  "dateOfBirth" : "2015/01/02",
+	  "dateOfBirth" : "13",
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
     "format" : "cbeff",
@@ -147,21 +148,21 @@
 	  "updateUINAttributes":["DateOfBirth","Biometrics"],
 	
 	  "bioAuthAttributes":["leftIndex"],
-   "bioExceptionAttributes1": [
-			"leftEye",
-			"rightEye",
-			"rightIndex",
-			"rightLittle",
-			"rightRing",
-			"rightMiddle",
-			"leftIndex",
-			"leftLittle",
-			"leftRing",
-			"leftMiddle",
-			"leftThumb",
-			"rightThumb"
-			
-		],
+	  "bioAttributes": [
+			 "leftEye",
+				"rightEye",
+				"rightIndex",
+				"rightLittle",
+				"rightRing",
+				"rightMiddle",
+				"leftIndex",
+				"leftLittle",
+				"leftRing",
+				"leftMiddle",
+				"leftThumb",
+				"rightThumb",
+				"face"
+			],
 	  "proofOfConsent" : [ {
 		    "language" : "eng",
 		    "value" : "Registration Form"

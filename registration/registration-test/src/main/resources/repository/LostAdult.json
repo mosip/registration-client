@@ -1,5 +1,6 @@
 { "identity" : {
-	"flow":"lostadult",
+	"ageGroup":"ADULT",
+	"process":"Lost",
 	"preferredLang":"English",
   "gender" : [ {
     "language" : "eng",
@@ -35,7 +36,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  }],
-  "dateOfBirth" : "2010/01/02",
+  "dateOfBirth" : "20",
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
     "format" : "cbeff",
@@ -143,11 +144,8 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  } ],
-  "bioExceptionAttributes2": [
-		"leftEye"
-	],
-	 "bioExceptionAttributes1": [
-			"leftEye",
+ 	 "bioAttributes": [
+		 "leftEye",
 			"rightEye",
 			"rightIndex",
 			"rightLittle",
@@ -158,8 +156,8 @@
 			"leftRing",
 			"leftMiddle",
 			"leftThumb",
-			"rightThumb"
-			
+			"rightThumb",
+			"face"
 		],
 	  "proofOfConsent" : [ {
 		    "language" : "eng",

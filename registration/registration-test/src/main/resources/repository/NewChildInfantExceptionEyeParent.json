@@ -1,5 +1,6 @@
 { "identity" : {
-	"flow":"child",
+	"ageGroup":"INFANT",
+	"process":"New",
 	"preferredLang":"English",
 	"UIN":"5931539704",
 	"gender" : [ {
@@ -36,7 +37,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  }],
-	  "dateOfBirth" : "2021/01/02",
+	  "dateOfBirth" : "2",
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
     "format" : "cbeff",
@@ -149,21 +150,21 @@
 			], 
 				  "bioAuthAttributes":["rightEye"],
 		
-	 "bioExceptionAttributes1": [
-			"leftEye",
-			"rightEye",
-			"rightIndex",
-			"rightLittle",
-			"rightRing",
-			"rightMiddle",
-			"leftIndex",
-			"leftLittle",
-			"leftRing",
-			"leftMiddle",
-			"leftThumb",
-			"rightThumb"
-			
-		],
+				  "bioAttributes": [
+						 "leftEye",
+							"rightEye",
+							"rightIndex",
+							"rightLittle",
+							"rightRing",
+							"rightMiddle",
+							"leftIndex",
+							"leftLittle",
+							"leftRing",
+							"leftMiddle",
+							"leftThumb",
+							"rightThumb",
+							"face"
+						],
 	  "proofOfConsent" : [ {
 		    "language" : "eng",
 		    "value" : "Registration Form"
