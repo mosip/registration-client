@@ -14,6 +14,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.enums.Role;
 import io.mosip.registration.service.config.GlobalParamService;
@@ -158,9 +160,11 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	 * io.mosip.registration.service.packet.PacketHandlerService#handle(io.mosip.
 	 * registration.dto.RegistrationDTO)
 	 */
+	@Counted(value = "registration", extraTags = {"function", "createpacket"})
+	@Timed(value = "registration", extraTags = {"function", "createpacket"})
 	@Override
 	public ResponseDTO handle(RegistrationDTO registrationDTO) {
-		LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Registration Handler had been called");
+		LOGGER.info("Registration Handler had been called");
 		ResponseDTO responseDTO = new ResponseDTO();
 		responseDTO.setErrorResponseDTOs(new ArrayList<>());
 		ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO();
@@ -564,6 +568,8 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		return packets;
 	}
 
+	@Counted(value = "registration", extraTags = {"function", "start"})
+	@Timed(value = "registration", extraTags = {"function", "start"})
 	@Override
 	public RegistrationDTO startRegistration(String id, String registrationCategory) throws RegBaseCheckedException {
 		//Pre-check conditions, throws exception if preconditions are not met

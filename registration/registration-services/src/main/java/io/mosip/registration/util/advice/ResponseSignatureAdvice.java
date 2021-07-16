@@ -86,7 +86,7 @@ public class ResponseSignatureAdvice {
 	private KeymanagerService keymanagerService;
 
 	@Autowired
-	private PublicKeySyncImpl publicKeySync;
+	private PublicKeySync publicKeySync;
 
 	/**
 	 * <p>

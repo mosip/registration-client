@@ -34,6 +34,8 @@ import java.util.Optional;
 public class MetricsConfig {
 
     private static final Logger LOGGER = AppConfig.getLogger(MetricsConfig.class);
+    private static final String TUS_SERVER_URL_CONFIG = "mosip.registration.tus.server.url";
+    private static final String TUS_SERVER_UPLOAD_CHUNKSIZE = "mosip.registration.tus.server.upload.chunksize";
 
     @Bean
     public MeterRegistry getMeterRegistry() {
@@ -133,7 +135,11 @@ public class MetricsConfig {
             TusClient client = new TusClient();
             // Configure tus HTTP endpoint. This URL will be used for creating new uploads
             // using the Creation extension
-            client.setUploadCreationURL(new URL("http://localhost:8080/files"));
+            String url = (String) io.mosip.registration.context.ApplicationContext.map()
+                    .getOrDefault(TUS_SERVER_URL_CONFIG,"http://localhost:8080/files");
+            int chunkSize = (int) io.mosip.registration.context.ApplicationContext.map()
+                    .getOrDefault(TUS_SERVER_UPLOAD_CHUNKSIZE,"1024");
+            client.setUploadCreationURL(new URL(url));
 
             // Enable resumable uploads by storing the upload URL in memory
             client.enableResuming(new TusURLMemoryStore());
@@ -143,7 +149,7 @@ public class MetricsConfig {
             // See the documentation for more information.
             final TusUpload upload = new TusUpload(getFile());
 
-            LOGGER.info("Starting upload...");
+            LOGGER.info("Starting upload...{}", upload.getMetadata());
 
             // We wrap our uploading code in the TusExecutor class which will automatically catch
             // exceptions and issue retries with small delays between them and take fully
@@ -165,7 +171,7 @@ public class MetricsConfig {
                     // TusUploader uploader = client.beginOrResumeUploadFromURL(upload, new URL("https://tus.server.net/files/my_file"));
 
                     // Upload the file in chunks of 1KB sizes.
-                    uploader.setChunkSize(1024);
+                    uploader.setChunkSize(chunkSize);
 
                     // Upload the file as long as data is available. Once the
                     // file has been fully uploaded the method will return -1
@@ -196,7 +202,7 @@ public class MetricsConfig {
 
     private File getFile() throws Exception {
         Optional<Path> result = Files.list(Path.of(System.getProperty("user.dir"), "logs"))
-                    .filter(s -> s.toString().startsWith("metrics-archive"))
+                    .filter(s -> s.toFile().getName().startsWith("metrics-archive"))
                     .sorted()
                     .findFirst();
 

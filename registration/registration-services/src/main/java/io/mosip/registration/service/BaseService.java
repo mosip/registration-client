@@ -30,6 +30,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -422,14 +424,6 @@ public class BaseService {
 
 		return statusDTO;
 	}
-
-	/*
-	 * public static void setBaseGlobalMap(Map<String, Object> map) { applicationMap
-	 * = map; }
-	 * 
-	 * public static Map<String, Object> getBaseGlobalMap() { return applicationMap;
-	 * }
-	 */
 
 	/**
 	 * Registration date conversion.

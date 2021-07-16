@@ -7,6 +7,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import java.net.SocketTimeoutException;
 import java.util.*;
 
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.cryptomanager.util.CryptomanagerUtils;
 import io.mosip.kernel.keymanagerservice.dto.UploadCertificateRequestDto;
 import io.mosip.kernel.keymanagerservice.util.KeymanagerUtil;
@@ -66,6 +67,7 @@ public class PublicKeySyncImpl extends BaseService implements PublicKeySync {
 	 * @return
 	 * @throws RegBaseCheckedException
 	 */
+	@Timed(value = "sync", longTask = true, extraTags = {"type", "publickey"})
 	@Override
 	public ResponseDTO getPublicKey(String triggerPoint) throws RegBaseCheckedException {
 		LOGGER.info("Entering into get public key method.....");
@@ -85,6 +87,7 @@ public class PublicKeySyncImpl extends BaseService implements PublicKeySync {
 				"Sign Key"), null);
 	}
 
+	@Override
 	public void saveSignPublicKey(String syncedCertificate) {
 		KeyPairGenerateResponseDto certificateDto = getKeyFromLocalDB(); //get sign public key from DB
 

@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import io.micrometer.core.annotation.Timed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -92,6 +93,7 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 	 * @see io.mosip.registration.service.config.GlobalParamService#synchConfigData(
 	 * boolean)
 	 */
+	@Timed(value = "sync", longTask = true, extraTags = {"type", "configuration"})
 	@Override
 	public ResponseDTO synchConfigData(boolean isJob) {
 		LOGGER.info(LoggerConstants.GLOBAL_PARAM_SERVICE_LOGGER_TITLE, APPLICATION_NAME, APPLICATION_ID,

@@ -7,6 +7,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import java.io.InputStream;
 import java.util.*;
 
+import io.micrometer.core.annotation.Timed;
 import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.enums.Modality;
 import io.mosip.registration.service.IdentitySchemaService;
@@ -159,6 +160,7 @@ public class BioServiceImpl extends BaseService implements BioService {
 		return Double.parseDouble(qualityScore) <= RegistrationConstants.MAX_BIO_QUALITY_SCORE;
 	}
 
+	@Timed(value = "sdk", extraTags = {"function", "QUALITY_CHECK"})
 	@Override
 	public double getSDKScore(BiometricsDto biometricsDto) throws BiometricException {
 		BiometricType biometricType = BiometricType
