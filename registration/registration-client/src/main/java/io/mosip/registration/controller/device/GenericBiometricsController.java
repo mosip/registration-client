@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.Map.Entry;
 
+import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.mosip.biometrics.util.ConvertRequestDto;
 import io.mosip.biometrics.util.face.FaceDecoder;
@@ -1139,7 +1140,8 @@ public class GenericBiometricsController extends BaseController {
 		return qualityScore;
 	}
 
-	@Timed(value = "sdk", extraTags = {"function", "MATCH"})
+	@Counted(value = "dedupe.match", recordFailuresOnly = true, extraTags = {"type", "registration"})
+	@Timed(value = "sdk", extraTags = {"function", "MATCH", "type", "registration"})
 	private boolean identifyInLocalGallery(List<BiometricsDto> biometrics, String modality) {
 		BiometricType biometricType = BiometricType.fromValue(modality);
 		Map<String, List<BIR>> gallery = new HashMap<>();

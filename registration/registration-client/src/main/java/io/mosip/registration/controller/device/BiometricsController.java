@@ -24,6 +24,8 @@ import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import org.apache.commons.io.IOUtils;
 import org.mvel2.MVEL;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1278,13 +1280,13 @@ public class BiometricsController extends BaseController /* implements Initializ
 						// validate local de-dup check
 						boolean isMatchedWithLocalBiometrics = false;
 
-						if (!isExceptionPhoto(currentModality)) {
-							if (!isUserOnboardFlag) {
+						//if (!isExceptionPhoto(currentModality)) {
+							//if (!isUserOnboardFlag) {
 
 								// TODO Remove dedup enable/disable validation, currently added for testing
 								// purpose
-								if (RegistrationConstants.ENABLE
-										.equalsIgnoreCase(RegistrationConstants.DEDUPLICATION_ENABLE_FLAG)) {
+								/*if (RegistrationConstants.ENABLE
+										.equalsIgnoreCase(RegistrationConstants.DEDUPLICATION_ENABLE_FLAG)) {*/
 									LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 											"Doing local de-dup validation");
 
@@ -1292,9 +1294,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 											Biometric.getSingleTypeByModality(
 													isFace(currentModality) ? "FACE_FULL FACE" : currentModality)
 													.value());
-								}
-							}
-						}
+								//}
+							//}
+						//}
 
 						LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 								"Doing local de-dup validation : " + isMatchedWithLocalBiometrics);
@@ -2294,6 +2296,8 @@ public class BiometricsController extends BaseController /* implements Initializ
 		return new ArrayList<String>(currentMap.keySet());
 	}
 
+	@Counted(value = "dedupe.match", recordFailuresOnly = true, extraTags = {"type", "onboarding"})
+	@Timed(value = "sdk", extraTags = {"function", "MATCH", "type", "onboarding"})
 	private boolean identifyInLocalGallery(List<BiometricsDto> biometrics, String modality) {
 		BiometricType biometricType = BiometricType.fromValue(modality);
 		Map<String, List<BIR>> gallery = new HashMap<>();
@@ -2316,7 +2320,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 			Map<String, Boolean> result = bioAPIFactory.getBioProvider(biometricType, BiometricFunction.MATCH)
 					.identify(sample, gallery, biometricType, null);
 			return result.entrySet().stream().anyMatch(e -> e.getValue() == true);
-		} catch (BiometricException e) {
+		} catch (Exception e) {
 			LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 					"Failed to dedupe >> " + ExceptionUtils.getStackTrace(e));
 		}
