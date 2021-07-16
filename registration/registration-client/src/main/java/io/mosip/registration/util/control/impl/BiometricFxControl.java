@@ -396,6 +396,7 @@ public class BiometricFxControl extends FxControl {
 			expression = selectedCondition.getValidationExpr();
 		}
 
+		LOGGER.debug("Validating {} expr : {} with context : {}", uiSchemaDTO.getId(), expression, capturedDetails);
 		boolean valid = MVEL.evalToBoolean(expression, capturedDetails);
 		valid =  biometricsController.hasApplicantBiometricException() ? valid && biometricsController.isBiometricExceptionProofCollected() : valid;
 		//TODO - display message about exception proof

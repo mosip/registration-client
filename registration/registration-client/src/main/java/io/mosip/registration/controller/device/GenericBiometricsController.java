@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.Map.Entry;
 
+import io.micrometer.core.annotation.Timed;
 import io.mosip.biometrics.util.ConvertRequestDto;
 import io.mosip.biometrics.util.face.FaceDecoder;
 import io.mosip.biometrics.util.finger.FingerDecoder;
@@ -1138,6 +1139,7 @@ public class GenericBiometricsController extends BaseController {
 		return qualityScore;
 	}
 
+	@Timed(value = "sdk", extraTags = {"function", "MATCH"})
 	private boolean identifyInLocalGallery(List<BiometricsDto> biometrics, String modality) {
 		BiometricType biometricType = BiometricType.fromValue(modality);
 		Map<String, List<BIR>> gallery = new HashMap<>();
@@ -1160,7 +1162,7 @@ public class GenericBiometricsController extends BaseController {
 			Map<String, Boolean> result = bioAPIFactory.getBioProvider(biometricType, BiometricFunction.MATCH)
 					.identify(sample, gallery, biometricType, null);
 			return result.entrySet().stream().anyMatch(e -> e.getValue() == true);
-		} catch (BiometricException e) {
+		} catch (Exception e) {
 			LOGGER.error("Failed dedupe check >> ",e);
 		}
 		return false;
