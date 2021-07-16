@@ -1359,7 +1359,7 @@ public class RegistrationConstants {
 	public static final String SYNC_FAILURE = "SYNC_FAILURE";
 
 	// Scheduler
-	public static final String IDEAL_TIME = "mosip.registration.ideal_time";
+	public static final String IDLE_TIME = "mosip.registration.idle_time";
 	public static final String REFRESHED_LOGIN_TIME = "mosip.registration.refreshed_login_time";
 	public static final String SCHEDULER_TITLE_STYLE = "schedulerTitleMsg";
 	public static final String SCHEDULER_CONTENT_STYLE = "schedulerMsg";

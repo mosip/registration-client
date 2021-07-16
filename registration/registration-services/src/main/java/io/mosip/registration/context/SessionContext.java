@@ -494,7 +494,7 @@ public class SessionContext {
 		long refreshedLoginTime = Long.parseLong(String.valueOf(io.mosip.registration.context.ApplicationContext.map()
 				.get(RegistrationConstants.REFRESHED_LOGIN_TIME)));
 		long idealTime = Long.parseLong(String
-				.valueOf(io.mosip.registration.context.ApplicationContext.map().get(RegistrationConstants.IDEAL_TIME)));
+				.valueOf(io.mosip.registration.context.ApplicationContext.map().get(RegistrationConstants.IDLE_TIME)));
 
 		sessionContext.setLoginTime(new Date());
 		sessionContext.setRefreshedLoginTime(refreshedLoginTime);
