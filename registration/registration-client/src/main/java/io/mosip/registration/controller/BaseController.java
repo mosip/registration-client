@@ -1054,7 +1054,6 @@ public class BaseController {
 		if (isPacketsPendingForEODOrReRegister()) {
 			message += RegistrationConstants.NEW_LINE + RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REMAP_EOD_PROCESS_MESSAGE);
 		}
-		message += RegistrationConstants.NEW_LINE + RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REMAP_CLICK_OK);
 		generateAlert(RegistrationConstants.ALERT_INFORMATION, message);
 
 		disableHomePage(true);

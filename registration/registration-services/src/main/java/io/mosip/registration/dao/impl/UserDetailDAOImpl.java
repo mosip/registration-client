@@ -155,8 +155,10 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 			userDetail.getUserRole().removeAll(roles);
 		}
 
-		if(!userStatus) //delete authtoken of inactive users
+		if(!userStatus) {//delete authtoken of inactive users
 			userTokenRepository.deleteByUsrId(userDetailDto.getUserName());
+			userDetail.setUserToken(null);
+		}
 
 		usrPwd.setUsrId(userDetailDto.getUserName());
 		usrPwd.setStatusCode("00");
