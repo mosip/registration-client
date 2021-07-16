@@ -38,7 +38,6 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
-import io.mosip.registration.controller.auth.AuthenticationController;
 import io.mosip.registration.controller.vo.RegistrationApprovalVO;
 import io.mosip.registration.dto.RegistrationApprovalDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -172,7 +171,7 @@ public class RegistrationApprovalController extends BaseController implements In
 
 	/** object for finger print authentication controller. */
 	@Autowired
-	private AuthenticationController authenticationController;
+	private EODAuthenticationController eodAuthenticationController;
 
 	private Stage primaryStage;
 
@@ -534,10 +533,8 @@ public class RegistrationApprovalController extends BaseController implements In
 					authenticateBtn.setDisable(false);
 
 				} else if (tBtn.getId().equals(authenticateBtn.getId())) {
-
 					loadStage(primarystage, RegistrationConstants.USER_AUTHENTICATION);
-					authenticationController.init(this, ProcessNames.EOD.getType());
-
+					eodAuthenticationController.init(this, ProcessNames.EOD.getType());
 				}
 
 			} catch (RegBaseCheckedException checkedException) {

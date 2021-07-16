@@ -80,6 +80,6 @@ public class UserDetail extends RegistrationCommonFields implements Serializable
 	@OneToOne(fetch = FetchType.EAGER, mappedBy = "userDetail", cascade = CascadeType.ALL)
 	private RegCenterUser regCenterUser;
 
-	@OneToOne(fetch = FetchType.EAGER, mappedBy = "userDetail", cascade = CascadeType.ALL)
+	@OneToOne(fetch = FetchType.EAGER, mappedBy = "userDetail", optional = true, cascade = CascadeType.ALL)
 	private UserToken userToken;
 }

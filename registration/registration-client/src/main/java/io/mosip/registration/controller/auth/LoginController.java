@@ -494,7 +494,7 @@ public class LoginController extends BaseController implements Initializable {
 								return;
 							}
 
-							loginList = loginService.getModesOfLogin(ProcessNames.LOGIN.getType(), roles);
+							loginList = loginService.getModesOfLogin(ProcessNames.LOGIN.getType(), roles, false);
 
 							String loginMode = !loginList.isEmpty() ? loginList.get(RegistrationConstants.PARAM_ZERO)
 									: null;

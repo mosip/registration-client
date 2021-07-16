@@ -31,7 +31,7 @@ public interface LoginService {
 	 * 
 	 * @return List of login modes
 	 */
-	List<String> getModesOfLogin(String authType, Set<String> roleList);
+	List<String> getModesOfLogin(String authType, Set<String> roleList, boolean isReviewer);
 
 	/**
 	 * This method will fetch the user details based on the entered userId

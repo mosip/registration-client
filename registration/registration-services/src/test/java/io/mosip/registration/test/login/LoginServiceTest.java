@@ -230,13 +230,13 @@ public class LoginServiceTest {
 
 		Mockito.when(authTokenUtilService.hasAnyValidToken()).thenReturn(false);
 		Mockito.when(appAuthenticationDAO.getModesOfLogin("LOGIN", roleSet)).thenReturn(modes);
-		assertEquals(modes, loginServiceImpl.getModesOfLogin("LOGIN", roleSet));
+		assertEquals(modes, loginServiceImpl.getModesOfLogin("LOGIN", roleSet, false));
 	}
 	
 	@Test
 	public void getModesOfLoginNegativeTest() {
 		Set<String> roleSet = new HashSet<>();		
-		loginServiceImpl.getModesOfLogin("LOGIN", roleSet);		
+		loginServiceImpl.getModesOfLogin("LOGIN", roleSet, false);		
 	}
 	
 	@Test

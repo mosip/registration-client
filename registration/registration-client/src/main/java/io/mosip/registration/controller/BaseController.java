@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
@@ -57,16 +58,21 @@ import io.mosip.registration.controller.reg.Validations;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
+import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RemapException;
+import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.scheduler.SchedulerUtil;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.IdentitySchemaService;
+import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.config.LocalConfigService;
+import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.security.AuthenticationService;
@@ -205,7 +211,13 @@ public class BaseController {
 	
 	@Autowired
 	private LocalConfigService localConfigService;
+	
+	@Autowired
+	private LoginService loginService;
 
+	@Autowired
+	private BioService bioService;
+	
 	protected ApplicationContext applicationContext = ApplicationContext.getInstance();
 
 	public Text getScanningMsg() {
@@ -792,9 +804,11 @@ public class BaseController {
 		authenticationValidatorDTO.setUserId(username);
 		authenticationValidatorDTO.setPassword(password);
 
-		if (authenticationService.validatePassword(authenticationValidatorDTO)
-				.equals(RegistrationConstants.PWD_MATCH)) {
+		String status = authenticationService.validatePassword(authenticationValidatorDTO);
+		if (status.equals(RegistrationConstants.PWD_MATCH)) {
 			return RegistrationConstants.SUCCESS;
+		} else if (status.equals(RegistrationConstants.CREDS_NOT_FOUND)) {
+			return RegistrationConstants.CREDS_NOT_FOUND;
 		}
 		return RegistrationConstants.FAILURE;
 	}
@@ -1040,7 +1054,6 @@ public class BaseController {
 		if (isPacketsPendingForEODOrReRegister()) {
 			message += RegistrationConstants.NEW_LINE + RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REMAP_EOD_PROCESS_MESSAGE);
 		}
-		message += RegistrationConstants.NEW_LINE + RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REMAP_CLICK_OK);
 		generateAlert(RegistrationConstants.ALERT_INFORMATION, message);
 
 		disableHomePage(true);
@@ -1578,5 +1591,113 @@ public class BaseController {
 		}
 		return wr;
 	}
+	
+	/**
+	 * This method will remove the auth method from list
+	 *
+	 * @param authList    authentication list
+	 * @param flag configuration flag
+	 * @param authCode    auth mode
+	 */
+	protected void removeAuthModes(List<String> authList, String flag, String authCode) {
 
+		LOGGER.info(LoggerConstants.LOG_REG_AUTH, APPLICATION_NAME, APPLICATION_ID,
+				"Ignoring FingerPrint, Iris, Face Authentication if the configuration is off");
+
+		authList.removeIf(auth -> authList.size() > 1 && RegistrationConstants.DISABLE.equalsIgnoreCase(flag)
+				&& auth.equalsIgnoreCase(authCode));
+	}
+	
+	protected boolean haveToSaveAuthToken(String userId) {
+		return SessionContext.userId().equals(userId);
+	}
+	
+	/**
+	 * to capture and validate the fingerprint for authentication
+	 *
+	 * @param userId - username entered in the textfield
+	 * @return true/false after validating fingerprint
+	 * @throws IOException
+	 * @throws RegBaseCheckedException
+	 */
+	protected boolean captureAndValidateFP(String userId, boolean isPacketAuth, boolean isChecker)
+			throws RegBaseCheckedException, IOException {
+		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.FINGERPRINT_SLAB_LEFT, null,
+				"Registration",
+				io.mosip.registration.context.ApplicationContext
+						.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
+				io.mosip.registration.context.ApplicationContext
+						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
+				1, io.mosip.registration.context.ApplicationContext.getIntValueFromApplicationMap(
+				RegistrationConstants.FINGERPRINT_AUTHENTICATION_THRESHHOLD));
+		
+		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
+		boolean fpMatchStatus = authenticationService.authValidator(userId, SingleType.FINGER.value(), biometrics);
+		if (fpMatchStatus && isPacketAuth) {
+			addOperatorBiometrics(biometrics, isChecker);
+		}
+		return fpMatchStatus;
+	}
+
+	/**
+	 * to capture and validate the iris for authentication
+	 *
+	 * @param userId - username entered in the textfield
+	 * @return true/false after validating iris
+	 * @throws IOException
+	 */
+	protected boolean captureAndValidateIris(String userId, boolean isPacketAuth, boolean isChecker) throws RegBaseCheckedException, IOException {
+		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.IRIS_DOUBLE, null, "Registration",
+				io.mosip.registration.context.ApplicationContext
+						.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
+				io.mosip.registration.context.ApplicationContext
+						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
+				2, io.mosip.registration.context.ApplicationContext
+				.getIntValueFromApplicationMap(RegistrationConstants.IRIS_THRESHOLD));
+		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
+
+		boolean match = authenticationService.authValidator(userId, SingleType.IRIS.value(), biometrics);
+		if (match && isPacketAuth) {
+			addOperatorBiometrics(biometrics, isChecker);
+		}
+		return match;
+	}
+
+	/**
+	 * to capture and validate the iris for authentication
+	 *
+	 * @param userId - username entered in the textfield
+	 * @return true/false after validating face
+	 * @throws IOException
+	 * @throws RegBaseCheckedException
+	 */
+	protected boolean captureAndValidateFace(String userId, boolean isPacketAuth, boolean isChecker) throws RegBaseCheckedException, IOException {
+		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.FACE_FULLFACE, null, "Registration",
+				io.mosip.registration.context.ApplicationContext
+						.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
+				io.mosip.registration.context.ApplicationContext
+						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
+				1, io.mosip.registration.context.ApplicationContext
+				.getIntValueFromApplicationMap(RegistrationConstants.FACE_THRESHOLD));
+
+		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
+
+		boolean match = authenticationService.authValidator(userId, SingleType.FACE.value(), biometrics);
+		if (match && isPacketAuth) {
+			addOperatorBiometrics(biometrics, isChecker);
+		}
+		return match;
+	}
+	
+	private void addOperatorBiometrics(List<BiometricsDto> biometrics, boolean isChecker) {
+		if (isChecker) {
+			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.getInstance().getMapObject()
+					.get(RegistrationConstants.REGISTRATION_DATA);
+			registrationDTO.addSupervisorBiometrics(biometrics);
+		} else {
+			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.getInstance().getMapObject()
+					.get(RegistrationConstants.REGISTRATION_DATA);
+			registrationDTO.addOfficerBiometrics(biometrics);
+		}
+	}
 }
