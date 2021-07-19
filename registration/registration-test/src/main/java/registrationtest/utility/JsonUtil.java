@@ -39,12 +39,12 @@ public class JsonUtil {
 		try {
 			jsonResult=mapper.writeValueAsString(object);
 		} catch (JsonParseException e) {
-			e.printStackTrace();
+			logger.error("",e);
 		}
 		catch (JsonMappingException e) {
-			e.printStackTrace();
+			logger.error("",e);
 		}catch (IOException e) {
-			e.printStackTrace();
+			logger.error("",e);
 		}
 		return jsonResult;
 	}

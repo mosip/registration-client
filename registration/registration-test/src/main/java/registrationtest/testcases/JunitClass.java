@@ -7,7 +7,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javafx.application.Application;
-import registrationtest.runapplication.NewRegistrationAdultTest;
+import registrationtest.runapplication.RegistrationMain;
 import registrationtest.runapplication.StartApplication;
 import registrationtest.utility.PropertiesUtil;
 
@@ -33,7 +33,7 @@ public void testcase()
 
 			System.setProperty("jdbc.drivers","org.apache.derby.jdbc.EmbeddedDriver");
 
-			NewRegistrationAdultTest.invokeRegClient(PropertiesUtil.getKeyValue("operatorId"), 
+			RegistrationMain.invokeRegClient(PropertiesUtil.getKeyValue("operatorId"), 
 					PropertiesUtil.getKeyValue("operatorPwd"),PropertiesUtil.getKeyValue("mosip.upgradeserver"));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -54,7 +54,7 @@ public void testcase()
 
 	
 		try {
-			NewRegistrationAdultTest.invokeRegClientNewReg(
+			RegistrationMain.invokeRegClient(
 					PropertiesUtil.getKeyValue("operatorId"), 
 					PropertiesUtil.getKeyValue("operatorPwd"),
 					PropertiesUtil.getKeyValue("supervisorUserid"), 

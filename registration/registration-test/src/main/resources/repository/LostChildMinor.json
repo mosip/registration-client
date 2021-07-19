@@ -1,5 +1,7 @@
 { "identity" : {
-	"flow":"lostchild",
+	"ageGroup":"MINOR",
+	"process":"Lost",
+	"preferredLang":"English",
 	"UIN":"5931539704",
 	"gender" : [ {
     "language" : "eng",
@@ -35,7 +37,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  }],
-  "dateOfBirth" : "9";
+	  "dateOfBirth" : "13",
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
     "format" : "cbeff",
@@ -143,24 +145,22 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  } ],
-  "bioExceptionAttributes2": [
-		"leftEye"
-	],
-	 "bioExceptionAttributes1": [
-			"leftEye",
-			"rightEye",
-			"rightIndex",
-			"rightLittle",
-			"rightRing",
-			"rightMiddle",
-			"leftIndex",
-			"leftLittle",
-			"leftRing",
-			"leftMiddle",
-			"leftThumb",
-			"rightThumb"
-			
-		],
+			  "bioAuthAttributes":["rightThumb"],
+			  "bioAttributes": [
+					 "leftEye",
+						"rightEye",
+						"rightIndex",
+						"rightLittle",
+						"rightRing",
+						"rightMiddle",
+						"leftIndex",
+						"leftLittle",
+						"leftRing",
+						"leftMiddle",
+						"leftThumb",
+						"rightThumb",
+						"face"
+					],
 	  "proofOfConsent" : [ {
 		    "language" : "eng",
 		    "value" : "Registration Form"
@@ -198,6 +198,17 @@
 					  {
 						    "language" : "ara",
 						    "value" : "جواز سفر"
-						  } ]
+						  } ],
+						  "proofOfDateOfBirth" : [ {
+							    "language" : "eng",
+							    "value" : "Certificate of Birth"
+							  }, {
+							    "language" : "fra",
+							    "value" : "Certificat de naissance"
+							  },
+							  {
+								    "language" : "ara",
+								    "value" : "شهادة الميلاد"
+								  } ]
 } } 
 

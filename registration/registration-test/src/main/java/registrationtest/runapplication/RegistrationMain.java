@@ -45,25 +45,24 @@ import static org.testfx.api.FxAssert.assertContext;
 import static org.testfx.api.FxAssert.verifyThat;
 import static org.testfx.matcher.base.NodeMatchers.isNull;
 
-public class NewRegistrationAdultTest{
+public class RegistrationMain{
 
-	private static final Logger logger = LogManager.getLogger(NewRegistrationAdultTest.class);  
+	private static final Logger logger = LogManager.getLogger(RegistrationMain.class);  
 	static FxRobot robot;
 	static String[] Strinrid;
 	static RID rid1,rid2,rid3,rid4,rid5,rid6;
-	static String flow;
+	static String process,ageGroup;
 	
-	public static void invokeRegClientNewReg(	
+	public static void invokeRegClient(	
 			String operatorId,String operatorPwd,
 			String supervisorId,
 			String supervisorPwd
 			) 
 	{
-		LoginNewRegLogout loginNewRegLogout=new LoginNewRegLogout();  
-		LostUINLogout lostUINLogout=new LostUINLogout();
-		ChildNewReg childNewReg=new ChildNewReg(); 
-		ChildLostUIN childLostUIN=new ChildLostUIN();
+		NewReg loginNewRegLogout=new NewReg();  
+		LostReg lostUINLogout=new LostReg();
 		UpdateReg updatereg=new UpdateReg();
+		ManualReg manualReg=new ManualReg();
 		WaitsUtil waitsUtil=new WaitsUtil();
 
 		Thread thread = new Thread() { 
@@ -80,77 +79,69 @@ public class NewRegistrationAdultTest{
 					LinkedHashMap<String,String> map=readJsonFileText(readFolderJsonList(PropertiesUtil.getKeyValue("datadir")));
 					System.out.println(map);
 					
+                    
+                    String manualFlag= PropertiesUtil.getKeyValue("manual");
+                    if (manualFlag.equalsIgnoreCase("Y"))
+                    {
+                    manualReg.manualRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
+							StartApplication.primaryStage,StartApplication.applicationContext);
+                    }
+                      
                     Set<String> fileNameSet = map.keySet();
-                   
                     for(String fileName:fileNameSet) {
                     	 String jsonContent=map.get(fileName);
-                    	String flowid= PropertiesUtil.getKeyValue("flow");
-                       flow= JsonUtil.JsonObjParsing(jsonContent,flowid);
+                    	String process= PropertiesUtil.getKeyValue("process");
+                       process= JsonUtil.JsonObjParsing(jsonContent,process);
+                       
+                      
+                       
+                       ageGroup= JsonUtil.JsonObjParsing(jsonContent,"ageGroup");
                	try {
-						switch(flow) {
-						case "adult": 
+						switch(process) {
+						case "New": 
 							rid1=null;
-					rid1=loginNewRegLogout.newRegistrationAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
+					rid1=loginNewRegLogout.newRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonContent,
-							flow,fileName,StartApplication.applicationContext);
+							process,ageGroup,fileName,StartApplication.applicationContext);
 					logger.info("RID RESULTS-"+ rid1.result +"\t"+ rid1.ridDateTime +"\t"+ rid1.rid );
 					ExtentReportUtil.reports.flush();
 					break;
-						case "lostadult":
+						case "Lost":
 							rid2=null;
-					 rid2=lostUINLogout.LostUINAdult(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
+					 rid2=lostUINLogout.lostRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonContent,
-							flow,fileName,StartApplication.applicationContext);
+							process,ageGroup,fileName,StartApplication.applicationContext);
 					logger.info("RID RESULTS-"+ rid2.result +"\t"+ rid2.ridDateTime +"\t"+ rid2.rid);
 					ExtentReportUtil.reports.flush();
 					break;
-						case "child":
-							rid3=null;	
-					 rid3=childNewReg.newRegistrationChild(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
-							StartApplication.primaryStage,jsonContent,
-							flow,fileName,StartApplication.applicationContext);
-					logger.info("RID RESULTS-"+ rid3.result +"\t"+ rid3.ridDateTime +"\t"+ rid3.rid);
-					ExtentReportUtil.reports.flush();
-					break;
-						case "lostchild":
-							rid4=null;
-							 rid4=childLostUIN.newRegistrationChildLost(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
-									StartApplication.primaryStage,jsonContent,
-									flow,fileName,StartApplication.applicationContext);
-							logger.info("RID RESULTS-"+ rid4.result +"\t"+ rid4.ridDateTime +"\t"+ rid4.rid);
-							ExtentReportUtil.reports.flush();
-							break;
-						case "updateadult":
+						case "Update":
 							rid5=null;
 							 rid5=updatereg.updateRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 									StartApplication.primaryStage,jsonContent,
-									flow,fileName,StartApplication.applicationContext);
+									process,ageGroup,fileName,StartApplication.applicationContext);
 							logger.info("RID RESULTS-"+ rid5.result +"\t"+ rid5.ridDateTime +"\t"+ rid5.rid);
 							ExtentReportUtil.reports.flush();
 							break;
-						case "updatechild":
-							rid6=null;
-							 rid6=updatereg.updateRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
-									StartApplication.primaryStage,jsonContent,
-									flow,fileName,StartApplication.applicationContext);
-							logger.info("RID RESULTS-"+ rid6.result +"\t"+ rid6.ridDateTime +"\t"+ rid6.rid);
-							ExtentReportUtil.reports.flush();
-							break;
-						}
-						}
+							
+							default :
+								logger.info("Choose correct process for automation or go with manual flow");
+								
+						}	}
 				catch (Exception e) {
 					
 
-					logger.error(e.getMessage());
+					logger.error("",e);
 					ExtentReportUtil.reports.flush();
 					waitsUtil.capture();
 				}	
 
 					}
-				System.exit(0);	
+				
+                    if(!manualFlag.equalsIgnoreCase("Y"))
+                    	System.exit(0);	
 				} catch (Exception e) {
 
-					logger.error(e.getMessage());
+					logger.error("",e);
 					ExtentReportUtil.reports.flush();
 					waitsUtil.capture();
 				}	
@@ -167,7 +158,7 @@ public class NewRegistrationAdultTest{
 			String operatorId,String operatorPwd,String targetUrl
 			) 
 	{
-		LoginNewRegLogout lg=new LoginNewRegLogout();  
+		NewReg lg=new NewReg();  
 		Thread thread = new Thread() { 
 			@Override
 			public void run() {
@@ -185,7 +176,7 @@ public class NewRegistrationAdultTest{
 						ExtentReportUtil.reports.flush();
 
 					} catch (Exception e) {
-						logger.error(e.getMessage());
+						logger.error("",e);
 					}
 
 			}};
@@ -204,14 +195,14 @@ public class NewRegistrationAdultTest{
 				System.setProperty("jdbc.drivers","org.apache.derby.jdbc.EmbeddedDriver");
 				System.setProperty("mosip.hostname",PropertiesUtil.getKeyValue("mosip.hostname"));
 				
-				invokeRegClientNewReg(
+				invokeRegClient(
 						PropertiesUtil.getKeyValue("operatorId"), 
 						PropertiesUtil.getKeyValue("operatorPwd"),
 						PropertiesUtil.getKeyValue("supervisorUserid"), 
 						PropertiesUtil.getKeyValue("supervisorUserpwd"));
 				}catch(Exception e)
 				{
-					logger.error(e.getMessage());
+					logger.error("",e);
 				}
 				
 			}
@@ -235,7 +226,7 @@ public class NewRegistrationAdultTest{
 				}}
 				catch(Exception e)
 				{
-					logger.error(e.getMessage());
+					logger.error("",e);
 				}
 				return contents;
 			}
@@ -261,7 +252,7 @@ public class NewRegistrationAdultTest{
 				}}}
 				catch(Exception e)
 				{
-					logger.error(e.getMessage());
+					logger.error("",e);
 				}
 				return map;
 			}

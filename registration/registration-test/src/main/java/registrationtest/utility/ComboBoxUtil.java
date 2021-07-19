@@ -28,8 +28,8 @@ public class ComboBoxUtil {
 			taskThread.join();
 			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			logger.error(e.getMessage());
+			
+			logger.error("",e);
 		} 
 
 	}

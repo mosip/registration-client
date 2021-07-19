@@ -32,7 +32,10 @@ public class Schema {
 	public String templateName;
     public Object fieldLayout;
     public Object locationHierarchy;
-    public boolean required;
+    public List<ConditionalBioAttribute> conditionalBioAttributes;
+    
+   
+	public boolean required;
     public List<String> bioAttributes;
     public List<RequiredOn> requiredOn;
     public String subType;
@@ -195,6 +198,11 @@ public class Schema {
 		}
 		
     
-    
+		 public List<ConditionalBioAttribute> getConditionalBioAttributes() {
+				return conditionalBioAttributes;
+			}
+			public void setConditionalBioAttributes(List<ConditionalBioAttribute> conditionalBioAttributes) {
+				this.conditionalBioAttributes = conditionalBioAttributes;
+			}
     
 }

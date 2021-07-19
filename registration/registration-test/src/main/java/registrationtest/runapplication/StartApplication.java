@@ -53,8 +53,9 @@ public class StartApplication extends Application{
 			this.primaryStage=primaryStage;
 			
 			
-		} catch(Throwable e) {
-			e.printStackTrace();
+		} catch(Exception e)
+		{
+			logger.error("",e);
 		}
 	}
 	public static void main(String[] args) {
@@ -71,7 +72,7 @@ public class StartApplication extends Application{
 		}
 		catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 	}
 }
