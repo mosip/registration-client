@@ -79,16 +79,21 @@ public class RegistrationMain{
 					LinkedHashMap<String,String> map=readJsonFileText(readFolderJsonList(PropertiesUtil.getKeyValue("datadir")));
 					System.out.println(map);
 					
+                    
+                    String manualFlag= PropertiesUtil.getKeyValue("manual");
+                    if (manualFlag.equalsIgnoreCase("Y"))
+                    {
+                    manualReg.manualRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
+							StartApplication.primaryStage,StartApplication.applicationContext);
+                    }
+                      
                     Set<String> fileNameSet = map.keySet();
-                   
                     for(String fileName:fileNameSet) {
                     	 String jsonContent=map.get(fileName);
                     	String process= PropertiesUtil.getKeyValue("process");
                        process= JsonUtil.JsonObjParsing(jsonContent,process);
                        
-                      String manualFlag= PropertiesUtil.getKeyValue("manual");
-                      if (manualFlag.equalsIgnoreCase("Y"))
-                      { process="Manual";}
+                      
                        
                        ageGroup= JsonUtil.JsonObjParsing(jsonContent,"ageGroup");
                	try {
@@ -117,11 +122,10 @@ public class RegistrationMain{
 							logger.info("RID RESULTS-"+ rid5.result +"\t"+ rid5.ridDateTime +"\t"+ rid5.rid);
 							ExtentReportUtil.reports.flush();
 							break;
-						case "Manual":
-							manualReg.manualRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
-									StartApplication.primaryStage,jsonContent,
-									process,ageGroup,fileName,StartApplication.applicationContext);
-							break;
+							
+							default :
+								logger.info("Choose correct process for automation or go with manual flow");
+								
 						}	}
 				catch (Exception e) {
 					
@@ -133,7 +137,7 @@ public class RegistrationMain{
 
 					}
 				
-                    if(process!="Manual")
+                    if(!manualFlag.equalsIgnoreCase("Y"))
                     	System.exit(0);	
 				} catch (Exception e) {
 

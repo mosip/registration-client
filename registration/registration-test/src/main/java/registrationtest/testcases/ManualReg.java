@@ -75,17 +75,9 @@ public class ManualReg {
 
 
 	public void manualRegistration(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
-			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonContent,String process,String ageGroup,String fileName
-			,ApplicationContext applicationContext)  {
+			String supervisorUserpwd,Stage applicationPrimaryStage1,ApplicationContext applicationContext)  {
 		
 		try {
-			logger.info("New Adult Registration Scenario : " + process +" FileName : " + fileName);
-			ExtentReportUtil.test1=ExtentReportUtil.reports.createTest("New Registration Scenario : " + process +" FileName : " + fileName);
-			
-			
-			
-			ExtentReportUtil.step1=ExtentReportUtil.test1.createNode("STEP 1-Loading Reg"
-					+ "Client");
 			
 			
 			loginPage=new LoginPage(robot);
@@ -98,8 +90,7 @@ public class ManualReg {
 						//Load Login screen
 			loginPage.loadLoginScene(applicationPrimaryStage1);
 			demographicPage=new DemographicPage(robot);
-			ExtentReportUtil.step2=ExtentReportUtil.test1.createNode("STEP 2-Operator Enter Details ");
-
+			
 			//Enter userid and password
 
 
@@ -110,7 +101,6 @@ public class ManualReg {
 			homePage=loginPage.setPassword(loginPwd);
 			
 			
-			ExtentReportUtil.step2.log(Status.PASS, "Operator logs in");
 			
 			//New Registration
 			homePage.clickHomeImg();
