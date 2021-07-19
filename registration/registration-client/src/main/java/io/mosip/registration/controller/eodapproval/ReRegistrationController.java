@@ -29,7 +29,6 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
-import io.mosip.registration.controller.auth.AuthenticationController;
 import io.mosip.registration.controller.vo.PacketStatusVO;
 import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -135,7 +134,7 @@ public class ReRegistrationController extends BaseController implements Initiali
 	private Map<String, String> reRegisterStatusMap;
 
 	@Autowired
-	private AuthenticationController authenticationController;
+	private EODAuthenticationController eodAuthenticationController;
 
 	private Stage primaryStage;
 
@@ -317,7 +316,7 @@ public class ReRegistrationController extends BaseController implements Initiali
 		Stage primarystage = new Stage();
 		try {
 			showAuthenticatePage(primarystage);
-			authenticationController.init(this, ProcessNames.EOD.getType());
+			eodAuthenticationController.init(this, ProcessNames.EOD.getType());
 
 		} catch (IOException ioException) {
 			LOGGER.error("RE_REGISTRATION_CONTROLLER - AUTHENTICATE_USER_FAILED", APPLICATION_NAME, APPLICATION_ID,

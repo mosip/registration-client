@@ -701,7 +701,7 @@ public class BaseService {
 		String machineId = getStationId();
 		if(RegistrationConstants.OPT_TO_REG_PDS_J00003.equals(jobId) && machineId == null)
 			throw new PreConditionCheckException(PreConditionChecks.MACHINE_INACTIVE.name(),
-					"Sync action forbidden as machine is inactive");
+					"Pre Registration Data Sync action forbidden as machine is inactive");
 
 		//check regcenter table for center status
 		//if center is inactive, sync is not allowed

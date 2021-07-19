@@ -162,6 +162,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 									CryptoUtil.decodeBase64(userDTO.getSalt()))
 							.equals(userDTO.getUserPassword().getPwd())) {
 				return RegistrationConstants.PWD_MATCH;
+			} else if (null != userDTO && null == userDTO.getSalt()) {
+				return RegistrationConstants.CREDS_NOT_FOUND;
 			} else {
 				return RegistrationConstants.PWD_MISMATCH;
 			}
