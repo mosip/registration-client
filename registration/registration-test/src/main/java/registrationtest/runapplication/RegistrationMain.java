@@ -62,6 +62,7 @@ public class RegistrationMain{
 		NewReg loginNewRegLogout=new NewReg();  
 		LostReg lostUINLogout=new LostReg();
 		UpdateReg updatereg=new UpdateReg();
+		ManualReg manualReg=new ManualReg();
 		WaitsUtil waitsUtil=new WaitsUtil();
 
 		Thread thread = new Thread() { 
@@ -84,6 +85,11 @@ public class RegistrationMain{
                     	 String jsonContent=map.get(fileName);
                     	String process= PropertiesUtil.getKeyValue("process");
                        process= JsonUtil.JsonObjParsing(jsonContent,process);
+                       
+                      String manualFlag= PropertiesUtil.getKeyValue("manual");
+                      if (manualFlag.equalsIgnoreCase("Y"))
+                      { process="Manual";}
+                       
                        ageGroup= JsonUtil.JsonObjParsing(jsonContent,"ageGroup");
                	try {
 						switch(process) {
@@ -111,6 +117,11 @@ public class RegistrationMain{
 							logger.info("RID RESULTS-"+ rid5.result +"\t"+ rid5.ridDateTime +"\t"+ rid5.rid);
 							ExtentReportUtil.reports.flush();
 							break;
+						case "Manual":
+							manualReg.manualRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
+									StartApplication.primaryStage,jsonContent,
+									process,ageGroup,fileName,StartApplication.applicationContext);
+							break;
 						}	}
 				catch (Exception e) {
 					
@@ -121,7 +132,9 @@ public class RegistrationMain{
 				}	
 
 					}
-				System.exit(0);	
+				
+                    if(process!="Manual")
+                    	System.exit(0);	
 				} catch (Exception e) {
 
 					logger.error("",e);

@@ -64,14 +64,12 @@ public class UploadPacketPage {
 		logger.info("selectPacket" + rid);
 		filterField=waitsUtil.lookupByIdTextField(filterField1, robot);
 		filterField.setText(rid);
-		
-		waitsUtil.clickNodeAssert( rid);
-		robot.press(KeyCode.TAB).release(KeyCode.TAB);
-		robot.press(KeyCode.TAB).release(KeyCode.TAB);
+		robot.moveTo(rid);
+		//waitsUtil.clickNodeAssert( rid);
+		waitsUtil.clickNodeAssert("APPROVED");
+//		robot.press(KeyCode.TAB).release(KeyCode.TAB);
+//		robot.press(KeyCode.TAB).release(KeyCode.TAB);
 		robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
-		
-		
-		
 	}
 
 	public Boolean verifyPacketUpload(String rid) {
