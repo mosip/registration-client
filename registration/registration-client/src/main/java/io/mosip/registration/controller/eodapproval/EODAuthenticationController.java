@@ -214,7 +214,7 @@ public class EODAuthenticationController extends BaseController implements Initi
 
 		Set<String> roleSet = new HashSet<>(SessionContext.userContext().getRoles());
 
-		userAuthenticationTypeList = loginService.getModesOfLogin(authType, roleSet, false);
+		userAuthenticationTypeList = loginService.getModesOfLogin(authType, roleSet);
 
 		if (userAuthenticationTypeList.isEmpty()) {
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
@@ -256,19 +256,7 @@ public class EODAuthenticationController extends BaseController implements Initi
 				if (authenticationType.equalsIgnoreCase(RegistrationConstants.OTP)) {
 					getOTP.setVisible(true);
 				}
-				if ((RegistrationConstants.DISABLE.equalsIgnoreCase(
-						getValueFromApplicationContext(RegistrationConstants.FINGERPRINT_DISABLE_FLAG))
-						&& authenticationType.equalsIgnoreCase(RegistrationConstants.FINGERPRINT))
-						|| (RegistrationConstants.DISABLE.equalsIgnoreCase(
-								getValueFromApplicationContext(RegistrationConstants.IRIS_DISABLE_FLAG))
-								&& authenticationType.equalsIgnoreCase(RegistrationConstants.IRIS))
-						|| (RegistrationConstants.DISABLE.equalsIgnoreCase(
-								getValueFromApplicationContext(RegistrationConstants.FACE_DISABLE_FLAG))
-								&& authenticationType.equalsIgnoreCase(RegistrationConstants.FACE))) {
-					enableErrorPage();
-				} else {
-					loadAuthenticationScreen(authenticationType);
-				}
+				loadAuthenticationScreen(authenticationType);
 			} else {
 				baseController.updateAuthenticationStatus();
 			}
@@ -312,29 +300,6 @@ public class EODAuthenticationController extends BaseController implements Initi
 		}
 
 		userAuthenticationTypeList.remove(RegistrationConstants.PARAM_ZERO);
-	}
-
-	/**
-	 * to enable the error pane visible and disable rest of modes
-	 */
-	private void enableErrorPage() {
-		LOGGER.info("Enabling error screen when configurations are all turned off");
-
-		pwdBasedLogin.setVisible(false);
-		otpBasedLogin.setVisible(false);
-		fingerprintBasedLogin.setVisible(false);
-		irisBasedLogin.setVisible(false);
-		faceBasedLogin.setVisible(false);
-		errorPane.setVisible(true);
-		errorPane.setDisable(false);
-		errorText1.setText(
-				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_DISABLE_SCREEN_4));
-		errorText1.setVisible(true);
-		errorText2.setText(
-				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_DISABLE_SCREEN_3));
-		errorText1.setVisible(true);
-		errorLabel.setText(
-				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SUPERVISOR_VERIFICATION));
 	}
 
 	/**
@@ -466,7 +431,6 @@ public class EODAuthenticationController extends BaseController implements Initi
 	 * to validate OTP in case of OTP based authentication
 	 */
 	public void validateOTP() {
-
 		auditFactory.audit(AuditEvent.REG_SUPERVISOR_AUTH_SUBMIT_OTP, Components.REG_OS_AUTH,
 				otpUserId.getText().isEmpty() ? RegistrationConstants.AUDIT_DEFAULT_USER : otpUserId.getText(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
@@ -475,57 +439,33 @@ public class EODAuthenticationController extends BaseController implements Initi
 
 		if (validations.validateTextField(authenticaion, otp, otp.getId(), true,
 				ApplicationContext.applicationLanguage())) {
-			if (!otpUserId.getText().isEmpty()) {
-				if (fetchUserRole(otpUserId.getText())) {
-					if (null != authenticationService.authValidator(RegistrationConstants.OTP, otpUserId.getText(),
-							otp.getText(), haveToSaveAuthToken(otpUserId.getText()))) {
-						userNameField = otpUserId.getText();
-						loadNextScreen();
-					} else {
-						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
-								.getMessageLanguageSpecific(RegistrationUIConstants.OTP_VALIDATION_ERROR_MESSAGE));
-					}
+			if (validateInput(otpUserId, null)) {
+				if (null != authenticationService.authValidator(RegistrationConstants.OTP, otpUserId.getText(),
+						otp.getText(), haveToSaveAuthToken(otpUserId.getText()))) {
+					loadNextScreen();
 				} else {
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
-							.getMessageLanguageSpecific(RegistrationUIConstants.USER_NOT_AUTHORIZED));
+							.getMessageLanguageSpecific(RegistrationUIConstants.OTP_VALIDATION_ERROR_MESSAGE));
 				}
-			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
-						.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
 			}
 		}
 	}
 
 	public void validatePwd() {
-
 		auditFactory.audit(AuditEvent.REG_SUPERVISOR_AUTH_PASSWORD,
 				Components.REG_OS_AUTH,
 				username.getText().isEmpty() ? RegistrationConstants.AUDIT_DEFAULT_USER : username.getText(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-		String status = RegistrationConstants.EMPTY;
-		if (!username.getText().isEmpty()) {
-			if (fetchUserRole(username.getText())) {
-				if (password.getText().isEmpty()) {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
-							.getMessageLanguageSpecific(RegistrationUIConstants.PWORD_FIELD_EMPTY));
-				} else {
-					status = validatePwd(username.getText(), password.getText());
-					if (RegistrationConstants.SUCCESS.equals(status)) {
-						userNameField = username.getText();
-						loadNextScreen();
-					} else {
-						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
-								.getMessageLanguageSpecific(RegistrationUIConstants.AUTHENTICATION_FAILURE));
-					}
-				}
+		if (validateInput(username, password)) {
+			String status = RegistrationConstants.EMPTY;
+			status = validatePwd(username.getText(), password.getText());
+			if (RegistrationConstants.SUCCESS.equals(status)) {
+				loadNextScreen();
 			} else {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
-						.getMessageLanguageSpecific(RegistrationUIConstants.USER_NOT_AUTHORIZED));
+						.getMessageLanguageSpecific(RegistrationUIConstants.AUTHENTICATION_FAILURE));
 			}
-		} else {
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
-					.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
 		}
 	}
 
@@ -540,16 +480,8 @@ public class EODAuthenticationController extends BaseController implements Initi
 
 		LOGGER.info("Validating Fingerprint for Fingerprint based Authentication");
 
-		if (!fpUserId.getText().isEmpty()) {
-			if (fetchUserRole(fpUserId.getText())) {
-				executeFPValidationTask(fpUserId.getText(), fingerprintBasedLogin);
-			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
-						.getMessageLanguageSpecific(RegistrationUIConstants.USER_NOT_AUTHORIZED));
-			}
-		} else {
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
-					.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
+		if (validateInput(fpUserId, null)) {
+			executeFPValidationTask(fpUserId.getText(), fingerprintBasedLogin);
 		}
 	}
 
@@ -589,12 +521,10 @@ public class EODAuthenticationController extends BaseController implements Initi
 		taskService.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
 			@Override
 			public void handle(WorkerStateEvent workerStateEvent) {
-
 				pane.setDisable(false);
 				progressIndicatorPane.setVisible(false);
 				progressIndicator.setVisible(false);
 				if (taskService.getValue()) {
-					userNameField = fpUserId.getText();
 					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants
 							.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
 
@@ -620,16 +550,8 @@ public class EODAuthenticationController extends BaseController implements Initi
 
 		LOGGER.info("Validating Iris for Iris based Authentication");
 
-		if (!irisUserId.getText().isEmpty()) {
-			if (fetchUserRole(irisUserId.getText())) {
-				executeIrisValidationTask(irisUserId.getText(), irisBasedLogin);
-			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
-						.getMessageLanguageSpecific(RegistrationUIConstants.USER_NOT_AUTHORIZED));
-			}
-		} else {
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
-					.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
+		if (validateInput(irisUserId, null)) {
+			executeIrisValidationTask(irisUserId.getText(), irisBasedLogin);
 		}
 	}
 
@@ -673,7 +595,6 @@ public class EODAuthenticationController extends BaseController implements Initi
 				progressIndicatorPane.setVisible(false);
 				progressIndicator.setVisible(false);
 				if (taskService.getValue()) {
-					userNameField = irisUserId.getText();
 					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants
 							.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
 					loadNextScreen();
@@ -710,16 +631,8 @@ public class EODAuthenticationController extends BaseController implements Initi
 		
 		LOGGER.info("Validating Face for Face based Authentication");
 
-		if (!faceUserId.getText().isEmpty()) {
-			if (fetchUserRole(faceUserId.getText())) {
-				executeFaceValidationTask(faceUserId.getText(), faceBasedLogin);
-			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
-						.getMessageLanguageSpecific(RegistrationUIConstants.USER_NOT_AUTHORIZED));
-			}
-		} else {
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
-					.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
+		if (validateInput(faceUserId, null)) {
+			executeFaceValidationTask(faceUserId.getText(), faceBasedLogin);
 		}
 	}
 
@@ -759,12 +672,10 @@ public class EODAuthenticationController extends BaseController implements Initi
 		taskService.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
 			@Override
 			public void handle(WorkerStateEvent workerStateEvent) {
-
 				pane.setDisable(false);
 				progressIndicatorPane.setVisible(false);
 				progressIndicator.setVisible(false);
 				if (taskService.getValue()) {
-					userNameField = faceUserId.getText();
 					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants
 							.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
 					loadNextScreen();
@@ -805,5 +716,26 @@ public class EODAuthenticationController extends BaseController implements Initi
 	public void exitWindow(ActionEvent event) {
 		Stage primaryStage = (Stage) ((Node) event.getSource()).getParent().getScene().getWindow();
 		primaryStage.close();
+	}
+	
+	private boolean validateInput(TextField userId, TextField pword) {
+		boolean isValid = false;
+		if (!userId.getText().isEmpty()) {
+			isValid = true;
+			if (!fetchUserRole(userId.getText())) {
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
+						.getMessageLanguageSpecific(RegistrationUIConstants.USER_NOT_AUTHORIZED));
+				return false;
+			} else {
+				userNameField = userId.getText();
+			}
+			if (pword != null && pword.getText().isEmpty()) {
+				isValid = false;
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PWORD_FIELD_EMPTY));
+			}
+		} else {
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
+		}
+		return isValid;
 	}
 }

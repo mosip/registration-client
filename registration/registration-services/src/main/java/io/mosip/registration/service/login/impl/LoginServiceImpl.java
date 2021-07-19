@@ -144,7 +144,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	 * String, java.util.Set)
 	 */
 	@Override
-	public List<String> getModesOfLogin(String authType, Set<String> roleList, boolean isReviewer) {
+	public List<String> getModesOfLogin(String authType, Set<String> roleList) {
 		// Retrieve Login information
 
 		LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "Fetching list of login modes");
@@ -160,34 +160,29 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 
 			auditFactory.audit(AuditEvent.LOGIN_MODES_FETCH, Components.LOGIN_MODES,
 					RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
-			if (Role.isDefaultUser(roleList) || isReviewer) {
-				loginModes.clear();
-				loginModes.add(RegistrationConstants.PWORD);
+			
+			loginModes = appAuthenticationDAO.getModesOfLogin(authType, roleList);
+
+			if(mandatePwdLogin) {
+				Optional<String> pwdMode = loginModes.stream().filter(loginMode ->
+						loginMode.equalsIgnoreCase(LoginMode.OTP.getCode()) ||
+								loginMode.equalsIgnoreCase(LoginMode.PASSWORD.getCode()) ||
+								loginMode.equalsIgnoreCase(RegistrationConstants.PWORD)).findFirst();
+
+				LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "PWD LOGIN mode already present ? " + pwdMode.isPresent());
+				if(!pwdMode.isPresent())
+					loginModes.add(RegistrationConstants.PWORD);
+
+				return loginModes;
 			}
-			else {
-				loginModes = appAuthenticationDAO.getModesOfLogin(authType, roleList);
 
-				if(mandatePwdLogin) {
-					Optional<String> pwdMode = loginModes.stream().filter(loginMode ->
-							loginMode.equalsIgnoreCase(LoginMode.OTP.getCode()) ||
-									loginMode.equalsIgnoreCase(LoginMode.PASSWORD.getCode()) ||
-									loginMode.equalsIgnoreCase(RegistrationConstants.PWORD)).findFirst();
-
-					LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "PWD LOGIN mode already present ? " + pwdMode.isPresent());
-					if(!pwdMode.isPresent())
-						loginModes.add(RegistrationConstants.PWORD);
-
-					return loginModes;
-				}
-
-				if(loginModes != null && loginModes.size() > 1) {
-					if(RegistrationConstants.DISABLE.equalsIgnoreCase(RegistrationConstants.FINGERPRINT_DISABLE_FLAG))
-						loginModes.remove(RegistrationConstants.FINGERPRINT);
-					if(RegistrationConstants.DISABLE.equalsIgnoreCase(RegistrationConstants.IRIS_DISABLE_FLAG))
-						loginModes.remove(RegistrationConstants.IRIS);
-					if(RegistrationConstants.DISABLE.equalsIgnoreCase(RegistrationConstants.FACE_DISABLE_FLAG))
-						loginModes.remove(RegistrationConstants.FACE);
-				}
+			if(loginModes != null && loginModes.size() > 1) {
+				if(RegistrationConstants.DISABLE.equalsIgnoreCase(RegistrationConstants.FINGERPRINT_DISABLE_FLAG))
+					loginModes.remove(RegistrationConstants.FINGERPRINT);
+				if(RegistrationConstants.DISABLE.equalsIgnoreCase(RegistrationConstants.IRIS_DISABLE_FLAG))
+					loginModes.remove(RegistrationConstants.IRIS);
+				if(RegistrationConstants.DISABLE.equalsIgnoreCase(RegistrationConstants.FACE_DISABLE_FLAG))
+					loginModes.remove(RegistrationConstants.FACE);
 			}
 			
 			LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
