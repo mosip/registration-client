@@ -25,6 +25,7 @@ public class UploadPacketPage {
 	String approvalBtn="#approvalBtn";
 	String authenticateBtn="#authenticateBtn";
 	String uploaded="PUSHED";
+	String selectAll="#selectAllCheckBox";
 	RobotActions robotActions;
 	UploadPacketPage(FxRobot robot)
 	{
@@ -64,12 +65,15 @@ public class UploadPacketPage {
 		logger.info("selectPacket" + rid);
 		filterField=waitsUtil.lookupByIdTextField(filterField1, robot);
 		filterField.setText(rid);
-		robot.moveTo(rid);
-		//waitsUtil.clickNodeAssert( rid);
-		waitsUtil.clickNodeAssert("APPROVED");
+		waitsUtil.clickNodeAssert(selectAll);
+//		robot.moveTo(rid);
+//		waitsUtil.clickNodeAssert( rid);
+//		waitsUtil.clickNodeAssert("APPROVED");
 //		robot.press(KeyCode.TAB).release(KeyCode.TAB);
 //		robot.press(KeyCode.TAB).release(KeyCode.TAB);
-		robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
+//		robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
+		
+		
 	}
 
 	public Boolean verifyPacketUpload(String rid) {
