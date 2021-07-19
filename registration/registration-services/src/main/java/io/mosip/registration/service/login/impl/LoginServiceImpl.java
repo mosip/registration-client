@@ -175,15 +175,6 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 
 				return loginModes;
 			}
-
-			if(loginModes != null && loginModes.size() > 1) {
-				if(RegistrationConstants.DISABLE.equalsIgnoreCase(RegistrationConstants.FINGERPRINT_DISABLE_FLAG))
-					loginModes.remove(RegistrationConstants.FINGERPRINT);
-				if(RegistrationConstants.DISABLE.equalsIgnoreCase(RegistrationConstants.IRIS_DISABLE_FLAG))
-					loginModes.remove(RegistrationConstants.IRIS);
-				if(RegistrationConstants.DISABLE.equalsIgnoreCase(RegistrationConstants.FACE_DISABLE_FLAG))
-					loginModes.remove(RegistrationConstants.FACE);
-			}
 			
 			LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
 					"Completed fetching list of login modes");

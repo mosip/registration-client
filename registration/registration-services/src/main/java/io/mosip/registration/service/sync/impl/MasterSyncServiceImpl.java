@@ -6,7 +6,6 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -14,14 +13,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import io.micrometer.core.annotation.Timed;
-import io.mosip.registration.dto.mastersync.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -30,16 +28,19 @@ import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dao.DocumentCategoryDAO;
 import io.mosip.registration.dao.DynamicFieldDAO;
 import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.ResponseDTO;
+import io.mosip.registration.dto.mastersync.BlacklistedWordsDto;
+import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
+import io.mosip.registration.dto.mastersync.DynamicFieldValueDto;
+import io.mosip.registration.dto.mastersync.GenericDto;
+import io.mosip.registration.dto.mastersync.ReasonListDto;
 import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
-import io.mosip.registration.entity.BiometricAttribute;
 import io.mosip.registration.entity.BlacklistedWords;
 import io.mosip.registration.entity.DocumentCategory;
 import io.mosip.registration.entity.DocumentType;
@@ -342,48 +343,6 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 			LOGGER.error("Failed to fetch values for field : " + fieldName, exception);
 		}
 		return Collections.EMPTY_LIST;
-	}
-
-	/**
-	 * Gets the biometric type.
-	 *
-	 * @param langCode the lang code
-	 * @return the biometric type
-	 * @throws RegBaseCheckedException the reg base checked exception
-	 */
-	public List<BiometricAttributeDto> getBiometricType(String langCode) throws RegBaseCheckedException {
-		List<BiometricAttributeDto> listOfbiometricAttributeDTO = new ArrayList<>();
-		if (langCodeNullCheck(langCode)) {
-			List<String> biometricType = new LinkedList<>(
-					Arrays.asList(RegistrationConstants.FNR, RegistrationConstants.IRS));
-
-			if (RegistrationConstants.DISABLE.equalsIgnoreCase(
-					String.valueOf(ApplicationContext.map().get(RegistrationConstants.FINGERPRINT_DISABLE_FLAG)))) {
-				biometricType.remove(RegistrationConstants.FNR);
-			} else if (RegistrationConstants.DISABLE.equalsIgnoreCase(
-					String.valueOf(ApplicationContext.map().get(RegistrationConstants.IRIS_DISABLE_FLAG)))) {
-				biometricType.remove(RegistrationConstants.IRS);
-			}
-
-			List<BiometricAttribute> masterBiometrics = masterSyncDao.getBiometricType(langCode, biometricType);
-
-			masterBiometrics.forEach(biometrics -> {
-				BiometricAttributeDto biometricsDto = new BiometricAttributeDto();
-				biometricsDto.setName(biometrics.getName());
-				biometricsDto.setCode(biometrics.getCode());
-				biometricsDto.setBiometricTypeCode(biometrics.getBiometricTypeCode());
-				biometricsDto.setLangCode(biometrics.getLangCode());
-				listOfbiometricAttributeDTO.add(biometricsDto);
-			});
-		} else {
-			LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID,
-					RegistrationConstants.LANG_CODE_MANDATORY);
-			throw new RegBaseCheckedException(
-					RegistrationExceptionConstants.REG_MASTER_SYNC_SERVICE_IMPL_LANGCODE.getErrorCode(),
-					RegistrationExceptionConstants.REG_MASTER_SYNC_SERVICE_IMPL_LANGCODE.getErrorMessage());
-		}
-		return listOfbiometricAttributeDTO;
-
 	}
 
 	/**

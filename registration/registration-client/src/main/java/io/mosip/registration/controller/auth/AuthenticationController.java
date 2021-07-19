@@ -572,24 +572,8 @@ public class AuthenticationController extends BaseController implements Initiali
 			isReviewer = false;
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHENTICATION_ERROR_MSG));
 		} else {
-			LOGGER.info("Ignoring FingerPrint, Iris, Face Authentication if the configuration is off");
-
-			String fingerprintDisableFlag = getValueFromApplicationContext(
-					RegistrationConstants.FINGERPRINT_DISABLE_FLAG);
-			String irisDisableFlag = getValueFromApplicationContext(RegistrationConstants.IRIS_DISABLE_FLAG);
-			String faceDisableFlag = getValueFromApplicationContext(RegistrationConstants.FACE_DISABLE_FLAG);
-
-			removeAuthModes(userAuthenticationTypeList, fingerprintDisableFlag,
-					RegistrationConstants.FINGERPRINT);
-			removeAuthModes(userAuthenticationTypeList, irisDisableFlag, RegistrationConstants.IRIS);
-			removeAuthModes(userAuthenticationTypeList, faceDisableFlag, RegistrationConstants.FACE);
-			
-			LOGGER.info(LoggerConstants.LOG_REG_AUTH, APPLICATION_NAME, APPLICATION_ID,
-					"Ignoring FingerPrint, Iris, Face for Reviewer Authentication if the configuration is off");
-
 			userAuthenticationTypeListValidation = userAuthenticationTypeList;
 			userAuthenticationTypeListSupervisorValidation = userAuthenticationTypeList;
-
 			loadNextScreen();
 		}
 	}

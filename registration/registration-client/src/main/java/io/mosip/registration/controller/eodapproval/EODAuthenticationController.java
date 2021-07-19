@@ -221,18 +221,6 @@ public class EODAuthenticationController extends BaseController implements Initi
 					.getMessageLanguageSpecific(RegistrationUIConstants.AUTHENTICATION_ERROR_MSG));
 			throw new RegBaseCheckedException();
 		} else {
-			LOGGER.info("Ignoring FingerPrint, Iris, Face Authentication if the configuration is off");
-
-			removeAuthModes(userAuthenticationTypeList,
-					getValueFromApplicationContext(RegistrationConstants.FINGERPRINT_DISABLE_FLAG),
-					RegistrationConstants.FINGERPRINT);
-			removeAuthModes(userAuthenticationTypeList,
-					getValueFromApplicationContext(RegistrationConstants.IRIS_DISABLE_FLAG),
-					RegistrationConstants.IRIS);
-			removeAuthModes(userAuthenticationTypeList,
-					getValueFromApplicationContext(RegistrationConstants.FACE_DISABLE_FLAG),
-					RegistrationConstants.FACE);
-
 			loadNextScreen();
 		}
 	}
