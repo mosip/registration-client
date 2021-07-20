@@ -5,17 +5,12 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.*;
 
-import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
-import io.mosip.registration.dao.IdentitySchemaDao;
+import io.mosip.registration.dao.impl.MasterSyncDaoImpl;
 import io.mosip.registration.repositories.*;
-import io.mosip.registration.test.util.RegistrationHealthCheckerTest;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
-import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -30,7 +25,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,27 +32,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
-import io.mosip.registration.dao.MasterSyncDao;
-import io.mosip.registration.dao.impl.MasterSyncDaoImpl;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.BiometricAttribute;
 import io.mosip.registration.entity.BlacklistedWords;
 import io.mosip.registration.entity.DocumentType;
-import io.mosip.registration.entity.Gender;
-import io.mosip.registration.entity.IndividualType;
 import io.mosip.registration.entity.Location;
 import io.mosip.registration.entity.ReasonCategory;
 import io.mosip.registration.entity.ReasonList;
 import io.mosip.registration.entity.RegistrationCenterType;
 import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.entity.ValidDocument;
-import io.mosip.registration.entity.id.IndividualTypeId;
 import io.mosip.registration.entity.id.ValidDocumentID;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
-import io.mosip.registration.service.sync.impl.MasterSyncServiceImpl;
 import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
-import io.mosip.registration.util.mastersync.MapperUtils;
 import io.mosip.registration.util.mastersync.MetaDataUtils;
 
 /**
@@ -98,10 +85,6 @@ public class MasterSyncDaoImplTest {
 	@Mock
 	private DocumentTypeRepository documentTypeRepository;
 
-	/** Object for Sync Gender Type Repository. */
-	@Mock
-	private GenderRepository genderRepository;
-
 	/** Object for Sync Location Repository. */
 	@Mock
 	private LocationRepository locationRepository;
@@ -121,10 +104,6 @@ public class MasterSyncDaoImplTest {
 	/** Object for Sync language Repository. */
 	@Mock
 	private LanguageRepository languageRepository;
-
-	/** Object for Sync Individual type Repository. */
-	@Mock
-	private IndividualTypeRepository individualTypeRepository;
 
 	/** Object for Sync screen auth Repository. */
 	@Mock
@@ -331,24 +310,6 @@ public class MasterSyncDaoImplTest {
 
 	}
 
-	@Test
-	public void findGenders() throws RegBaseCheckedException {
-
-		List<Gender> genderList = new ArrayList<>();
-		Gender gender = new Gender();
-		gender.setCode("1");
-		gender.setGenderName("male");
-		gender.setLangCode("ENG");
-		gender.setIsActive(true);
-		genderList.add(gender);
-
-		Mockito.when(masterSyncDaoImpl.getGenderDtls(Mockito.anyString())).thenReturn(genderList);
-
-		masterSyncDaoImpl.getGenderDtls("ENG");
-
-		assertTrue(genderList != null);
-
-	}
 
 	@Test
 	public void findValidDoc() {
@@ -369,27 +330,6 @@ public class MasterSyncDaoImplTest {
 
 	}
 
-	@Test
-	public void individualTypes() {
-
-		List<IndividualType> masterIndividualType = new ArrayList<>();
-		IndividualType individualTypeEntity = new IndividualType();
-		IndividualTypeId individualTypeId = new IndividualTypeId();
-		individualTypeId.setCode("NFR");
-		individualTypeId.setLangCode("eng");
-		individualTypeEntity.setIndividualTypeId(individualTypeId);
-		individualTypeEntity.setName("National");
-		individualTypeEntity.setIsActive(true);
-		masterIndividualType.add(individualTypeEntity);
-
-		Mockito.when(masterSyncDaoImpl.getIndividulType(Mockito.anyString(), Mockito.anyString()))
-				.thenReturn(masterIndividualType);
-
-		masterSyncDaoImpl.getIndividulType("NFR", "eng");
-
-		assertTrue(masterIndividualType != null);
-
-	}
 	
 	@Test
 	public void getBiometricType() {

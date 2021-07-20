@@ -25,6 +25,7 @@ public class UploadPacketPage {
 	String approvalBtn="#approvalBtn";
 	String authenticateBtn="#authenticateBtn";
 	String uploaded="PUSHED";
+	String selectAll="#selectAllCheckBox";
 	RobotActions robotActions;
 	UploadPacketPage(FxRobot robot)
 	{
@@ -64,12 +65,13 @@ public class UploadPacketPage {
 		logger.info("selectPacket" + rid);
 		filterField=waitsUtil.lookupByIdTextField(filterField1, robot);
 		filterField.setText(rid);
-		
-		waitsUtil.clickNodeAssert( rid);
-		robot.press(KeyCode.TAB).release(KeyCode.TAB);
-		robot.press(KeyCode.TAB).release(KeyCode.TAB);
-		robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
-		
+		waitsUtil.clickNodeAssert(selectAll);
+//		robot.moveTo(rid);
+//		waitsUtil.clickNodeAssert( rid);
+//		waitsUtil.clickNodeAssert("APPROVED");
+//		robot.press(KeyCode.TAB).release(KeyCode.TAB);
+//		robot.press(KeyCode.TAB).release(KeyCode.TAB);
+//		robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
 		
 		
 	}
@@ -85,10 +87,8 @@ public class UploadPacketPage {
 			result=true;
 			robotActions.closeWindow();
 		} catch (Exception e) {
-			logger.error(e.getMessage());
-			logger.info("Failure Unable to upload");
+			logger.error("Failure Unable to upload",e);
 			result=false;
-			e.printStackTrace();
 		} 
 		
 		

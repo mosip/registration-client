@@ -6,8 +6,9 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import io.mosip.registration.dto.SettingsSchema;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.SettingsSchema;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiScreenDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

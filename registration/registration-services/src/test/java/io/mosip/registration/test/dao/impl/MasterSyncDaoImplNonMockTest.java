@@ -113,7 +113,7 @@ public class MasterSyncDaoImplNonMockTest {
 		
 		assertEquals(RegistrationConstants.SUCCESS, response);
 								
-		MachineMaster machine = machineMasterRepository.findByIsActiveTrueAndNameIgnoreCaseAndRegMachineSpecIdLangCode("b2ml24784", "eng");
+		MachineMaster machine = machineMasterRepository.findByIsActiveTrueAndNameIgnoreCase("b2ml24784");
 		 
 		assertNotNull(machine);
 		

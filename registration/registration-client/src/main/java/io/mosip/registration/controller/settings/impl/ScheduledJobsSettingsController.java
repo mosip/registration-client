@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import io.mosip.registration.service.sync.MasterSyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -75,11 +76,8 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 	private JobConfigurationService jobConfigurationService;
 
 	@Autowired
-	private MasterSyncServiceImpl masterSyncServiceImpl;
-
-	@Autowired
 	private LocalConfigService localConfigService;
-	
+
 	@Autowired
 	private RestartController restartController;
 
@@ -109,7 +107,7 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 	private void setContent() {
 		try {
-			List<SyncJobDef> syncJobs = masterSyncServiceImpl.getSyncJobs();
+			List<SyncJobDef> syncJobs = jobConfigurationService.getSyncJobs();
 			GridPane gridPane = createGridPane(syncJobs.size());
 			addContentToGridPane(gridPane, syncJobs);
 			contentPane.setContent(gridPane);
@@ -218,16 +216,16 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 			submit.setOnAction(event -> {
 				modifyCronExpression(syncJob, cronTextField.getText());
 			});
-			
+
 			cronTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-			    if (newValue) {
-			        Platform.runLater(() -> {
-			            int carretPosition = cronTextField.getCaretPosition();
-			            if (cronTextField.getAnchor() != carretPosition) {
-			            	cronTextField.selectRange(carretPosition, carretPosition);
-			            }
-			        });
-			    }
+				if (newValue) {
+					Platform.runLater(() -> {
+						int carretPosition = cronTextField.getCaretPosition();
+						if (cronTextField.getAnchor() != carretPosition) {
+							cronTextField.selectRange(carretPosition, carretPosition);
+						}
+					});
+				}
 			});
 
 			if (!permittedJobs.contains(syncJob.getId())) {
@@ -242,7 +240,7 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 			subGridPane.add(jobVbox, 1, 0);
 
 			mainGridPane.add(subGridPane, 0, 0);
-			
+
 			changeNodeOrientation(mainGridPane);
 
 			gridPane.add(mainGridPane, columnIndex, rowIndex);
@@ -288,12 +286,16 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 			if (responseDTO.getSuccessResponseDTO() != null) {
 				LOGGER.info("Execution is successful for the job {}", syncJob.getName());
-				
-				generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION,
-						MessageFormat.format(resourceBundle.getString("JOB_EXECUTION_SUCCESS_MSG"), syncJob.getName()));
+
+				generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION, MessageFormat
+						.format(resourceBundle.getString("JOB_EXECUTION_SUCCESS_MSG"), syncJob.getName()));
+				if ((responseDTO.getSuccessResponseDTO().getOtherAttributes() != null && responseDTO
+						.getSuccessResponseDTO().getOtherAttributes().containsKey(RegistrationConstants.RESTART)) && configUpdateAlert("RESTART_MSG")) {
+					restartController.restart();
+				}
 			} else if (responseDTO.getErrorResponseDTOs() != null) {
 				LOGGER.error("Job execution failed with response: " + responseDTO.getErrorResponseDTOs().get(0));
-				
+
 				generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION,
 						MessageFormat.format(resourceBundle.getString("JOB_EXECUTION_FAILURE_MSG"), syncJob.getName()));
 			}
@@ -301,10 +303,10 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 		});
 		taskService.setOnFailed(event -> {
 			LOGGER.error("Failed execution of the task: ", syncJob.getName());
-			
+
 			getStage().getScene().getRoot().setDisable(false);
 			progressIndicatorPane.setVisible(false);
-			
+
 			generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION,
 					MessageFormat.format(resourceBundle.getString("JOB_EXECUTION_FAILURE_MSG"), syncJob.getName()));
 		});
@@ -317,17 +319,18 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 			return;
 		}
 		localConfigService.modifyJob(syncJob.getId(), cronExpression);
-		if (configUpdateAlert()) {
+		if (configUpdateAlert("CRON_EXPRESSION_MODIFIED")) {
 			restartController.restart();
 		}
 	}
-	
-	private boolean configUpdateAlert() {
+
+	private boolean configUpdateAlert(String context) {
 		if (!fXComponents.getScene().getRoot().getId().equals("mainBox") && !SessionContext.map()
 				.get(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ).equals(RegistrationConstants.ENABLE)) {
 
 			Alert alert = createAlert(AlertType.CONFIRMATION, RegistrationUIConstants.INFORMATION,
-					RegistrationUIConstants.getMessageLanguageSpecific("ALERT_NOTE_LABEL"), RegistrationUIConstants.getMessageLanguageSpecific("CRON_EXPRESSION_MODIFIED"),
+					RegistrationUIConstants.getMessageLanguageSpecific("ALERT_NOTE_LABEL"),
+					RegistrationUIConstants.getMessageLanguageSpecific(context),
 					RegistrationConstants.QUIT_NOW, RegistrationConstants.QUIT_LATER);
 
 			alert.show();

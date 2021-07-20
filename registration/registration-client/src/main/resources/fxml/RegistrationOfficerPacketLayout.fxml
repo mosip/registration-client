@@ -17,7 +17,7 @@
     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
   </rowConstraints>
    <children>
-      <GridPane>
+       <GridPane>
         <columnConstraints>
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="190.0" />
             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="2.0" prefWidth="80.0" />
@@ -583,48 +583,25 @@
                      </GridPane.margin>
                   </Label>
                   <Label styleClass="optionHeaderStyle" text="%newsandUpdates" GridPane.rowIndex="1">
-                     <GridPane.margin>
-                        <Insets left="40.0" />
-                     </GridPane.margin>
+                      <GridPane.margin>
+                          <Insets left="40.0" />
+                      </GridPane.margin>
                   </Label>
                </children>
-               <GridPane.margin>
-                  <Insets right="40.0" />
-               </GridPane.margin>
+                <GridPane.margin>
+                    <Insets right="40.0" />
+                </GridPane.margin>
             </GridPane>
-            <HBox prefHeight="56.0" prefWidth="264.0" GridPane.columnIndex="2" GridPane.rowIndex="1">
-               <children>
-                  <HBox prefHeight="56.0" prefWidth="123.0">
+
+
+             <HBox id="footer-section"   GridPane.columnIndex="2" GridPane.rowIndex="1">
                      <children>
-                        <Label prefHeight="30.0" prefWidth="134.0" styleClass="powerdBy" text="%mosip.io" textAlignment="CENTER">
-                           <font>
-                              <Font size="20.0" />
-                           </font>
-                        </Label>
+                         <Label text="%regClientVersion" textAlignment="CENTER" prefHeight="30.0" />
+                         <Label text=" : " />
+                         <Label fx:id="versionValueLabel" textAlignment="CENTER" />
                      </children>
-                  </HBox>
-                  <HBox prefHeight="100.0" prefWidth="200.0">
-                     <children>
-            		   <Label prefHeight="30.0" prefWidth="204.0" styleClass="powerdBy" text="%regClientVersion" textAlignment="CENTER">
-                           <font>
-                              <Font size="20.0" />
-                           </font>
-                        </Label>
-            				<Label prefHeight="27.0" prefWidth="29.0" text=":" />
-                     </children>
-                  </HBox>
-                  <HBox prefHeight="56.0" prefWidth="109.0">
-                     <children>
-                       <Label fx:id="versionValueLabel" prefHeight="30.0" prefWidth="103.0" styleClass="powerdBy" text="  " textAlignment="RIGHT">
-                           <font>
-                              <Font size="20.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </HBox>
-               </children>
-            </HBox>
+             </HBox>
          </children>
-      </GridPane>
+       </GridPane>
    </children>
 </GridPane>

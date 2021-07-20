@@ -32,8 +32,7 @@ private static final Logger logger = LogManager.getLogger(SelectLanguagePage.cla
 	{	try {
 		code=PropertiesUtil.getKeyValue("langcode");
 	} catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
+		logger.error(e.getMessage());
 	}
 		langCodeList=code.split("@@");
 		

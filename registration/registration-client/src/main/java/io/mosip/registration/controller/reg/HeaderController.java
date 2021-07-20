@@ -37,7 +37,7 @@ import io.mosip.registration.controller.auth.LoginController;
 import io.mosip.registration.controller.device.Streamer;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.SettingsSchema;
+import io.mosip.registration.dto.schema.SettingsSchema;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.exception.PreConditionCheckException;
@@ -360,13 +360,6 @@ public class HeaderController extends BaseController {
 				auditFactory.audit(AuditEvent.NAV_SYNC_DATA, Components.NAVIGATION,
 						SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 				executeSyncDataTask();
-				while (restartController.isToBeRestarted()) {
-					/* Clear the completed job map */
-					BaseJob.clearCompletedJobMap();
-					/* Restart the application */
-					restartController.restart();
-				}
-
 			} catch (RuntimeException runtimeException) {
 				LOGGER.error(LoggerConstants.LOG_REG_HEADER, APPLICATION_NAME, APPLICATION_ID,
 						runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
@@ -612,15 +605,18 @@ public class HeaderController extends BaseController {
 
 				ResponseDTO responseDTO = taskService.getValue();
 				if (responseDTO.getErrorResponseDTOs() != null) {
-					gridPane.setDisable(false);
 					generateAlert(RegistrationConstants.SYNC_FAILURE,
 							responseDTO.getErrorResponseDTOs().get(0).getMessage());
 				} else {
-					gridPane.setDisable(false);
 					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_SUCCESS));
-
 				}
-
+				if (restartController.isToBeRestarted()) {
+					/* Clear the completed job map */
+					BaseJob.clearCompletedJobMap();
+					/* Restart the application */
+					restartController.restart();
+				}
+				gridPane.setDisable(false);
 				boolean showAlert = false;
 				if (validUser(showAlert))
 					machineRemapCheck(showAlert);

@@ -14,6 +14,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.micrometer.core.annotation.Timed;
+import io.mosip.registration.dto.mastersync.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,20 +37,12 @@ import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.mastersync.BiometricAttributeDto;
-import io.mosip.registration.dto.mastersync.BlacklistedWordsDto;
-import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
-import io.mosip.registration.dto.mastersync.DynamicFieldValueDto;
-import io.mosip.registration.dto.mastersync.GenericDto;
-import io.mosip.registration.dto.mastersync.ReasonListDto;
 import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.BiometricAttribute;
 import io.mosip.registration.entity.BlacklistedWords;
 import io.mosip.registration.entity.DocumentCategory;
 import io.mosip.registration.entity.DocumentType;
-import io.mosip.registration.entity.Gender;
-import io.mosip.registration.entity.IndividualType;
 import io.mosip.registration.entity.Location;
 import io.mosip.registration.entity.ReasonCategory;
 import io.mosip.registration.entity.ReasonList;
@@ -126,6 +120,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	 * @return success or failure status as Response DTO.
 	 * @throws RegBaseCheckedException
 	 */
+	@Timed(value = "sync", longTask = true, extraTags = {"type", "masterdata"})
 	@Override
 	public ResponseDTO getMasterSync(String masterSyncDtls, String triggerPoint) throws RegBaseCheckedException {
 		LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID, "Initiating the Master Sync");
@@ -277,34 +272,6 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 		return blackWords;
 	}
 
-	/**
-	 * Gets the gender details.
-	 *
-	 * @param langCode the lang code
-	 * @return the gender dtls
-	 * @throws RegBaseCheckedException
-	 */
-	@Override
-	public List<GenericDto> getGenderDtls(String langCode) throws RegBaseCheckedException {
-		List<GenericDto> gendetDtoList = new LinkedList<>();
-		if (langCodeNullCheck(langCode)) {
-			List<Gender> masterDocuments = masterSyncDao.getGenderDtls(langCode);
-			masterDocuments.forEach(gender -> {
-				GenericDto comboBox = new GenericDto();
-				comboBox.setCode(gender.getCode().trim());
-				comboBox.setName(gender.getGenderName().trim());
-				comboBox.setLangCode(gender.getLangCode());
-				gendetDtoList.add(comboBox);
-			});
-		} else {
-			LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID,
-					RegistrationConstants.LANG_CODE_MANDATORY);
-			throw new RegBaseCheckedException(
-					RegistrationExceptionConstants.REG_MASTER_SYNC_SERVICE_IMPL_LANGCODE.getErrorCode(),
-					RegistrationExceptionConstants.REG_MASTER_SYNC_SERVICE_IMPL_LANGCODE.getErrorMessage());
-		}
-		return gendetDtoList;
-	}
 
 	/**
 	 * Gets all the document categories from db that to be displayed in the UI
@@ -343,29 +310,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 		return documentsDTO;
 	}
 
-	
-	/**
-	 * Gets the individual type.
-	 * 
-	 * @param langCode the lang code
-	 * @return the individual type
-	 * @throws RegBaseCheckedException
-	 */
-	@Override
-	public List<GenericDto> getIndividualType(String langCode) throws RegBaseCheckedException {
-		List<GenericDto> listOfIndividualDTO = new LinkedList<>();
 
-		List<IndividualType> masterDocuments = masterSyncDao.getIndividulType(langCode);
-
-		masterDocuments.forEach(individual -> {
-			GenericDto individualDto = new GenericDto();
-			individualDto.setName(individual.getName());
-			individualDto.setCode(individual.getIndividualTypeId().getCode());
-			individualDto.setLangCode(individual.getIndividualTypeId().getLangCode());
-			listOfIndividualDTO.add(individualDto);
-		});
-		return listOfIndividualDTO;
-	}
 
 	@Override
 	public List<GenericDto> getDynamicField(String fieldName, String langCode) throws RegBaseCheckedException {
@@ -711,6 +656,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 		return isMatch;
 	}
 
+	@Override
 	public List<SyncJobDef> getSyncJobs() {
 		return masterSyncDao.getSyncJobs();
 	}

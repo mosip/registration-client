@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import io.mosip.registration.dto.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,6 +102,8 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 	 * @see io.mosip.registration.service.sync.PreRegistrationDataSyncService#
 	 * getPreRegistrationIds(java.lang.String)
 	 */
+	@Counted(value = "pre-registration", extraTags = {"type", "sync"})
+	@Timed(value = "pre-registration", extraTags = {"type", "sync"})
 	@Override
 	public ResponseDTO getPreRegistrationIds(@NonNull String syncJobId) {
 		LOGGER.info("Fetching Pre-Registration Id's started, syncJobId : {}", syncJobId);
@@ -128,7 +132,8 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 			}
 
 			if(mainResponseDTO != null && mainResponseDTO.getErrors() != null &&
-					mainResponseDTO.getErrors().stream().anyMatch(e -> e.getErrorCode() != null && e.getErrorCode().equals("PRG_BOOK_RCI_032"))) {
+					mainResponseDTO.getErrors().stream().anyMatch(e -> e.getErrorCode() != null &&
+							(e.getErrorCode().equals("PRG_BOOK_RCI_032") || e.getErrorCode().equals("PRG_DATA_SYNC_016") ) )) {
 				LOGGER.error("RESPONSE from pre-reg-id sync {}",
 						mainResponseDTO.getErrors().stream().map(PreRegistrationExceptionJSONInfoDTO::getErrorCode).collect(Collectors.toList()));
 				return setSuccessResponse(responseDTO, RegistrationConstants.PRE_REG_SUCCESS_MESSAGE, null);
@@ -154,6 +159,9 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 			try {
 				executorServiceForPreReg.execute(
 						new Runnable() {
+
+							@Counted(value = "pre-registration", extraTags = {"type", "packet-download"})
+							@Timed(value = "pre-registration", extraTags = {"type", "packet-download"})
 							public void run() {
 								//TODO - Need to inform pre-reg team to correct date format
 								preRegDetail.setValue(preRegDetail.getValue().endsWith("Z") ? preRegDetail.getValue() : preRegDetail.getValue() + "Z");
@@ -243,7 +251,9 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 
 			// save in Pre-Reg List
 			PreRegistrationList preRegistrationList = preparePreRegistration(syncTransaction, preRegistrationDTO);
-			preRegistrationList.setAppointmentDate(DateUtils.parseUTCToDate(mainResponseDTO.getResponse().getAppointmentDate(),
+
+			if(mainResponseDTO.getResponse().getAppointmentDate() != null)
+				preRegistrationList.setAppointmentDate(DateUtils.parseUTCToDate(mainResponseDTO.getResponse().getAppointmentDate(),
 					"yyyy-MM-dd"));
 
 			preRegistrationList.setLastUpdatedPreRegTimeStamp(lastUpdatedTimeStamp == null ?

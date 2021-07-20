@@ -18,11 +18,9 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.entity.MachineMaster;
-import io.mosip.registration.entity.RegDeviceMaster;
 import io.mosip.registration.entity.UserMachineMapping;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
-import io.mosip.registration.repositories.DeviceMasterRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.repositories.UserMachineMappingRepository;
 
@@ -54,11 +52,6 @@ public class MachineMappingDAOImpl implements MachineMappingDAO {
 	@Autowired
 	private UserMachineMappingRepository machineMappingRepository;
 
-	/**
-	 * deviceMasterRepository instance creation using autowired annotation
-	 */
-	@Autowired
-	private DeviceMasterRepository deviceMasterRepository;
 
 	/*
 	 * (non-Javadoc) Getting station id based on machineName
@@ -74,11 +67,10 @@ public class MachineMappingDAOImpl implements MachineMappingDAO {
 
 		try {
 			MachineMaster machineMaster = machineMasterRepository
-					.findByIsActiveTrueAndNameIgnoreCaseAndRegMachineSpecIdLangCode(machineName.toLowerCase(),
-							ApplicationContext.applicationLanguage());
+					.findByIsActiveTrueAndNameIgnoreCase(machineName.toLowerCase());
 
-			if (machineMaster != null && machineMaster.getRegMachineSpecId().getId() != null) {
-				return machineMaster.getRegMachineSpecId().getId();
+			if (machineMaster != null && machineMaster.getId() != null) {
+				return machineMaster.getId();
 			} else {
 				return null;
 			}
@@ -88,22 +80,6 @@ public class MachineMappingDAOImpl implements MachineMappingDAO {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * io.mosip.registration.dao.MachineMappingDAO#isValidDevice(java.lang.String,
-	 * java.lang.String, java.sql.Timestamp)
-	 */
-	@Override
-	public boolean isValidDevice(DeviceTypes deviceType, String serialNo) {
-
-		LOGGER.info("REGISTRATION - COMMON REPOSITORY ", APPLICATION_NAME, APPLICATION_ID,
-				" isValidDevice DAO Method called");
-
-		return deviceMasterRepository.countBySerialNumAndNameAndIsActiveTrueAndValidityEndDtimesGreaterThan(serialNo,
-				deviceType.getDeviceType(), Timestamp.valueOf(DateUtils.getUTCCurrentDateTime())) > 0 ? true : false;
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -117,20 +93,6 @@ public class MachineMappingDAOImpl implements MachineMappingDAO {
 		return machineMappingRepository.findByIsActiveTrueAndUserMachineMappingIdMachineId(machineId);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * io.mosip.registration.dao.MachineMappingDAO#getDevicesMappedToRegCenter(java.
-	 * lang.String)
-	 */
-	@Override
-	public List<RegDeviceMaster> getDevicesMappedToRegCenter(String langCode) {
-		LOGGER.info(MACHINE_MAPPING_LOGGER_TITLE, APPLICATION_NAME, APPLICATION_ID,
-				"Fetch all the devices mapped to the registration center");
-
-		return deviceMasterRepository.findByRegMachineSpecIdLangCode(langCode);
-	}
 
 	@Override
 	public boolean isExists(String userId) {
@@ -152,20 +114,11 @@ public class MachineMappingDAOImpl implements MachineMappingDAO {
 				"Fetching Key Index of Machine based on Machine name");
 
 		MachineMaster machineMaster = machineMasterRepository
-				.findByIsActiveTrueAndNameIgnoreCaseAndRegMachineSpecIdLangCode(machineName.toLowerCase(),
-						ApplicationContext.applicationLanguage());
+				.findByIsActiveTrueAndNameIgnoreCase(machineName.toLowerCase());
 
 		LOGGER.info(MACHINE_MAPPING_LOGGER_TITLE, APPLICATION_NAME, APPLICATION_ID,
 				"Completed fetching Key Index of Machine based on Machine name");
 		return machineMaster == null ? null : machineMaster.getKeyIndex();
-	}
-
-	@Override
-	public List<RegDeviceMaster> getRegisteredDevicesBySerialNumber(String serialNumber) {
-		LOGGER.info(MACHINE_MAPPING_LOGGER_TITLE, APPLICATION_NAME, APPLICATION_ID,
-				"fetching the device with serial number : " + serialNumber);
-
-		return deviceMasterRepository.findAllByIsActiveTrueAndSerialNum(serialNumber);
 	}
 
 }

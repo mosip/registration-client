@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.micrometer.core.annotation.Counted;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RemapException;
 import io.mosip.registration.service.remap.RemapStatus;
@@ -98,6 +99,7 @@ public class CenterMachineReMapServiceImpl implements CenterMachineReMapService 
 	 * @see io.mosip.registration.service.remap.CenterMachineReMapService#
 	 * handleReMapProcess()
 	 */
+	@Counted(value = "center.remap")
 	@Override
 	public void handleReMapProcess(int step) throws RemapException {
 

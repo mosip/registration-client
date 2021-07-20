@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ValueRange;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,7 +28,11 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dto.biometric.BiometricDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
+import io.mosip.registration.dto.schema.ConditionalBioAttributes;
+import io.mosip.registration.enums.Modality;
 import lombok.Data;
+import lombok.NonNull;
+import org.json.JSONObject;
 
 /**
  * This DTO class contains the Registration details.
@@ -47,23 +52,19 @@ public class RegistrationDTO {
 	private String preRegistrationId;
 	private String appId;
 	private String registrationCategory;
-	private int age;
-	private boolean isChild;
-	private boolean isBiometricMarkedForUpdate;
-
 	private RegistrationMetaDataDTO registrationMetaDataDTO;
 	private OSIDataDTO osiDataDTO;
+	private List<String> selectedLanguagesByApplicant = new ArrayList<>();
 
+	private boolean isBiometricMarkedForUpdate;
 	private HashMap<String, Object> selectionListDTO;
 	private List<String> updatableFields;
 	private List<String> updatableFieldGroups;
 	private boolean isUpdateUINNonBiometric;
 	private boolean isNameNotUpdated;
-	private boolean isUpdateUINChild;
-	private boolean isAgeCalculatedByDOB;
 	private List<String> defaultUpdatableFields;
 	private List<String> defaultUpdatableFieldGroups;
-	private BiometricDTO biometricDTO = new BiometricDTO();
+
 	private Map<String, Object> demographics = new HashMap<>();
 	private Map<String, Object> defaultDemographics = new LinkedHashMap<>();
 	private Map<String, DocumentDto> documents = new HashMap<>();
@@ -78,15 +79,11 @@ public class RegistrationDTO {
 	private Timestamp auditLogStartTime;
 	private Timestamp auditLogEndTime;
 
-	/** The acknowledge receipt. */
-	private byte[] acknowledgeReceipt;
+	public Map<String, byte[]> BIO_CAPTURES = new HashMap<>();
+	public Map<String, Double> BIO_SCORES = new HashMap<>();
+	public Map<String, Object> AGE_GROUPS = new HashMap<>();
+	public Map<String, Integer> ATTEMPTS = new HashMap<>();
 
-	/** The acknowledge receipt name. */
-	private String acknowledgeReceiptName;
-
-	public Map<String, byte[]> streamImages = new HashMap<>();
-	
-	private List<String> selectedLanguagesByApplicant = new ArrayList<>();
 
 	public void addDemographicField(String fieldId, String value) {
 		this.demographics.put(fieldId, (value != null && !value.isEmpty()) ? value : null);
@@ -115,42 +112,44 @@ public class RegistrationDTO {
 		this.demographics.remove(fieldId);
 	}
 
-	public void setDateField(String fieldId, String day, String month, String year) {
+	public void setDateField(@NonNull String fieldId, String day, String month, String year, boolean computeAgeGroup) {
 		if (isValidValue(day) && isValidValue(month) && isValidValue(year)) {
 			LocalDate date = LocalDate.of(Integer.valueOf(year), Integer.valueOf(month), Integer.valueOf(day));
-			if (fieldId != null) {
-				this.demographics.put(fieldId,
-						date.format(DateTimeFormatter.ofPattern(ApplicationContext.getDateFormat())));
-			}
 
-			this.age = Period.between(date, LocalDate.now(ZoneId.of("UTC"))).getYears();
+			this.demographics.put(fieldId,
+					date.format(DateTimeFormatter.ofPattern(ApplicationContext.getDateFormat())));
 
-			int minAge = Integer
-					.parseInt((String) applicationContext.getApplicationMap().get(RegistrationConstants.MIN_AGE));
-			this.isChild = this.age < minAge;
-			if (isChild) {
-				osiDataDTO.setIntroducerType(IntroducerType.PARENT.getCode());
-			}
+			JSONObject ageGroupConfig = new JSONObject((String) ApplicationContext.map().get(RegistrationConstants.AGE_GROUP_CONFIG));
+			ageGroupConfig.keySet().forEach( group -> {
+				String[] range = ageGroupConfig.getString(group).split("-");
+				int ageInYears = Period.between(date, LocalDate.now(ZoneId.of("UTC"))).getYears();
+				if(ValueRange.of(Long.valueOf(range[0]), Long.valueOf(range[1])).isValidIntValue(ageInYears)) {
+					AGE_GROUPS.put(String.format("%s_%s", fieldId, "ageGroup"), group);
+					AGE_GROUPS.put(String.format("%s_%s", fieldId, "age"), ageInYears);
+
+					if(computeAgeGroup) {
+						AGE_GROUPS.put("ageGroup", group);
+						AGE_GROUPS.put("age", ageInYears);
+					}
+				}
+			});
 		}
 	}
 
-	public void setDateField(String fieldId, String dateString) {
+	public String getAgeGroup() {
+		return (String)AGE_GROUPS.getOrDefault("ageGroup", null);
+	}
+	public int getAge() {
+		return (int) AGE_GROUPS.getOrDefault("age", null);
+	}
+
+	public void setDateField(String fieldId, String dateString, boolean computeAgeGroup) {
 		if (isValidValue(dateString)) {
 			LocalDate date = LocalDate.parse(dateString,
 					DateTimeFormatter.ofPattern(ApplicationContext.getDateFormat()));
 			setDateField(fieldId, String.valueOf(date.getDayOfMonth()), String.valueOf(date.getMonthValue()),
-					String.valueOf(date.getYear()));
+					String.valueOf(date.getYear()), computeAgeGroup);
 		}
-	}
-
-	public String[] getDateField(String fieldId) {
-		if (this.demographics.containsKey(fieldId)) {
-			String value = (String) this.demographics.get(fieldId);
-			LocalDate date = LocalDate.parse(value, DateTimeFormatter.ofPattern(ApplicationContext.getDateFormat()));
-			return new String[] { String.valueOf(date.getDayOfMonth()), String.valueOf(date.getMonthValue()),
-					String.valueOf(date.getYear()) };
-		}
-		return null;
 	}
 
 	public void addDocument(String fieldId, DocumentDto value) {
@@ -177,11 +176,7 @@ public class RegistrationDTO {
 
 	public BiometricsDto addBiometric(String subType, String bioAttribute, BiometricsDto value) {
 		String key = String.format("%s_%s", subType, bioAttribute);
-		int currentCount = 0;
-		if (this.biometrics.get(key) != null) {
-			currentCount = this.biometrics.get(key).getNumOfRetries();
-		}
-		value.setNumOfRetries(currentCount + 1);
+		value.setNumOfRetries(value.getNumOfRetries());
 		value.setSubType(subType);
 		this.biometrics.put(key, value);
 		this.biometricExceptions.remove(key);
@@ -201,8 +196,10 @@ public class RegistrationDTO {
 		return biometricExceptions.containsKey(String.format("%s_%s", subType, bioAttribute));
 	}
 
-	public void removeBiometricException(String subType, String bioAttribute) {
-		this.biometricExceptions.remove(String.format("%s_%s", subType, bioAttribute));
+	public List<String> getBiometricExceptions(String subType) {
+		return biometricExceptions.keySet().stream()
+				.filter(k -> k.startsWith(String.format("%s_", subType)))
+				.collect(Collectors.toList());
 	}
 
 	public BiometricsDto getBiometric(String subType, String bioAttribute) {
@@ -210,9 +207,24 @@ public class RegistrationDTO {
 		return this.biometrics.get(key);
 	}
 
-	public BiometricsDto removeBiometric(String subType, String bioAttribute) {
-		String key = String.format("%s_%s", subType, bioAttribute);
-		return this.biometrics.remove(key);
+	public void clearBIOCache(String subType, String bioAttribute) {
+		Modality modality = Modality.getModality(bioAttribute);
+		List<String> keys = new ArrayList<>();
+		keys.addAll(this.BIO_CAPTURES.keySet());
+		keys.addAll(this.biometrics.keySet());
+		keys.addAll(this.biometricExceptions.keySet());
+
+		for(String attr : modality.getAttributes()) {
+			keys.stream()
+					.filter( k -> k.startsWith(String.format("%s_%s", subType, attr)))
+					.forEach( k -> {
+						this.BIO_SCORES.remove(k);
+						this.BIO_CAPTURES.remove(k);
+						this.biometrics.remove(k);
+						this.biometricExceptions.remove(k);
+					});
+		}
+		this.ATTEMPTS.remove(String.format("%s_%s", subType, modality.name()));
 	}
 
 	public void addSupervisorBiometrics(List<BiometricsDto> biometrics) {
@@ -223,36 +235,12 @@ public class RegistrationDTO {
 		this.officerBiometrics.addAll(biometrics);
 	}
 
-	/*
-	 * public Map<String, Object> getIdentity() { Map<String, Object>
-	 * allIdentityDetails = new LinkedHashMap<String, Object>();
-	 * allIdentityDetails.put("IDSchemaVersion", idSchemaVersion);
-	 * if(registrationMetaDataDTO.getUin() != null) allIdentityDetails.put("UIN",
-	 * registrationMetaDataDTO.getUin());
-	 * 
-	 * allIdentityDetails.putAll(this.demographics);
-	 * allIdentityDetails.putAll(this.documents);
-	 * 
-	 * if(biometricDTO.getApplicantBiometrics() != null)
-	 * allIdentityDetails.put("applicantBiometrics",
-	 * biometricDTO.getApplicantBiometrics());
-	 * if(biometricDTO.getIntroducerBiometrics() != null)
-	 * allIdentityDetails.put("introducerBiometrics",
-	 * biometricDTO.getIntroducerBiometrics());
-	 * 
-	 * Map<String, Object> identity = new LinkedHashMap<String, Object>();
-	 * identity.put("identity", allIdentityDetails); return identity; }
-	 */
-
 	public Map<String, Object> getMVELDataContext() {
 		Map<String, Object> allIdentityDetails = new LinkedHashMap<String, Object>();
 		allIdentityDetails.put("IDSchemaVersion", idSchemaVersion);
 		allIdentityDetails.put("isNew", RegistrationConstants.PACKET_TYPE_NEW.equals(this.registrationCategory));
 		allIdentityDetails.put("isUpdate", RegistrationConstants.PACKET_TYPE_UPDATE.equals(this.registrationCategory));
 		allIdentityDetails.put("isLost", RegistrationConstants.PACKET_TYPE_LOST.equals(this.registrationCategory));
-		allIdentityDetails.put("age", this.age);
-		allIdentityDetails.put("isChild", this.isChild);
-
 		allIdentityDetails.put("updatableFields",
 				this.updatableFields == null ? Collections.EMPTY_LIST : this.updatableFields);
 		allIdentityDetails.put("updatableFieldGroups",
@@ -260,6 +248,7 @@ public class RegistrationDTO {
 		allIdentityDetails.putAll(this.demographics);
 		allIdentityDetails.putAll(this.documents);
 		allIdentityDetails.putAll(this.biometrics);
+		allIdentityDetails.putAll(this.AGE_GROUPS);
 		return allIdentityDetails;
 	}
 
@@ -267,15 +256,12 @@ public class RegistrationDTO {
 		return value != null && !value.isEmpty();
 	}
 
-	public List<BiometricsDto> addAllBiometrics(String subType, Map<String, BiometricsDto> biometricsDTOMap,
+	public List<BiometricsDto> addAllBiometrics(String subType, Modality currentModality, Map<String, BiometricsDto> biometricsDTOMap,
 			double thresholdScore, int maxRetryAttempt) {
-
-		List<BiometricsDto> savedBiometrics = null;
+			List<BiometricsDto> savedBiometrics = null;
 		if (subType != null && biometricsDTOMap != null && !biometricsDTOMap.isEmpty()) {
-
 			savedBiometrics = new LinkedList<>();
-
-			boolean isForceCaptured = false;
+			boolean isQualityCheckPassed = false, isForceCaptured = false;
 
 			if (!biometricsDTOMap.isEmpty()) {
 				thresholdScore = thresholdScore * biometricsDTOMap.size();
@@ -292,41 +278,29 @@ public class RegistrationDTO {
 					BiometricsDto biometricsDto = getBiometric(subType, Biometric
 							.getBiometricByAttribute(biometricsList.get(0).getBioAttribute()).getAttributeName());
 
-					if (biometricsDto != null && biometricsDto.getNumOfRetries() + 1 >= maxRetryAttempt) {
+					if (biometricsDto == null && biometricsList.get(0).getNumOfRetries() >= maxRetryAttempt) {
 						isForceCaptured = true;
 					}
 				}
 			}
+			else
+				isQualityCheckPassed = true;
 
 			/** Modify the Biometrics DTO and save */
 			for (Entry<String, BiometricsDto> entry : biometricsDTOMap.entrySet()) {
-
 				BiometricsDto savedRegistrationBiometric = getBiometric(subType, entry.getKey());
-
 				BiometricsDto value = entry.getValue();
-
-				if (savedRegistrationBiometric != null
-						&& savedRegistrationBiometric.getQualityScore() > value.getQualityScore()) {
-					value = savedRegistrationBiometric;
-				}
 				value.setForceCaptured(isForceCaptured);
-
 				value.setSubType(subType);
-				savedBiometrics.add(addBiometric(subType, entry.getKey(), value));
-
+				if( (savedRegistrationBiometric == null && (isQualityCheckPassed || isForceCaptured)) ||
+						(savedRegistrationBiometric != null &&
+								value.getQualityScore() >= savedRegistrationBiometric.getQualityScore())) {
+					savedBiometrics.add(addBiometric(subType, entry.getKey(), value));
+				}
 			}
 		}
-
 		return savedBiometrics;
 	}
-
-	/*
-	 * private String getRegistrationDTOBioAttribute(String attribute) {
-	 * 
-	 * String bioAttributeByMap = RegistrationConstants.regBioMap.get(attribute);
-	 * 
-	 * return bioAttributeByMap != null ? bioAttributeByMap : attribute; }
-	 */
 
 	private double getQualityScore(List<BiometricsDto> biometrics) {
 		double qualityScore = 0.0;

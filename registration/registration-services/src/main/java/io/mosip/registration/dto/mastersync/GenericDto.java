@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GenericDto {
 
-	private String code;
-	private String name;
-	private String langCode;
+    private String code;
+    private String name;
+    private String langCode;
 }

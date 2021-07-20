@@ -192,10 +192,7 @@ public class LoginServiceTest {
 		Mockito.when(RegistrationSystemPropertiesChecker.getMachineId()).thenReturn("11002");
 
 		MachineMaster machine = new MachineMaster();
-		RegMachineSpecId regMachineSpecId = new RegMachineSpecId();
-		regMachineSpecId.setId("11002");
-		regMachineSpecId.setLangCode("eng");
-		machine.setRegMachineSpecId(regMachineSpecId);
+		machine.setId("11002");
 		machine.setIsActive(true);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
 
@@ -233,13 +230,13 @@ public class LoginServiceTest {
 
 		Mockito.when(authTokenUtilService.hasAnyValidToken()).thenReturn(false);
 		Mockito.when(appAuthenticationDAO.getModesOfLogin("LOGIN", roleSet)).thenReturn(modes);
-		assertEquals(modes, loginServiceImpl.getModesOfLogin("LOGIN", roleSet));
+		assertEquals(modes, loginServiceImpl.getModesOfLogin("LOGIN", roleSet, false));
 	}
 	
 	@Test
 	public void getModesOfLoginNegativeTest() {
 		Set<String> roleSet = new HashSet<>();		
-		loginServiceImpl.getModesOfLogin("LOGIN", roleSet);		
+		loginServiceImpl.getModesOfLogin("LOGIN", roleSet, false);		
 	}
 	
 	@Test

@@ -12,6 +12,8 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.AuthTokenDTO;
+import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 
 /**
@@ -100,10 +102,11 @@ public class ApplicationContext {
 	 * </p>
 	 *
 	 * @return
+	 * @throws RegBaseCheckedException 
 	 *
 	 *
 	 */
-	public void loadResourceBundle() {
+	public void loadResourceBundle() throws RegBaseCheckedException {
 		try {
 			if (applicationLanguge == null) {
 				List<String> langList = Stream.concat(mandatoryLanguages.stream(), optionalLanguages.stream())
@@ -117,12 +120,22 @@ public class ApplicationContext {
 						if (!langCode.isBlank()) {
 							String labelLangCodeKey = String.format("%s_%s", langCode, RegistrationConstants.LABELS);
 							Locale locale = new Locale(langCode != null ? langCode.substring(0, 2) : "");
-							resourceBundleMap.put(labelLangCodeKey,
-									ResourceBundle.getBundle(RegistrationConstants.LABELS, locale));
+							ResourceBundle labelsBundle = ResourceBundle.getBundle(RegistrationConstants.LABELS, locale);
+							if (labelsBundle.getLocale().equals(locale)) {
+								resourceBundleMap.put(labelLangCodeKey, labelsBundle);
+							} else if (langList.size() == 1) {
+								throw new RegBaseCheckedException(RegistrationExceptionConstants.INVALID_LANGUAGE_CONFIGURED.getErrorCode(),
+										RegistrationExceptionConstants.INVALID_LANGUAGE_CONFIGURED.getErrorMessage());
+							}
+							
 							String messageLangCodeKey = String.format("%s_%s", langCode,
 									RegistrationConstants.MESSAGES);
-							resourceBundleMap.put(messageLangCodeKey,
-									ResourceBundle.getBundle(RegistrationConstants.MESSAGES, locale));
+							ResourceBundle messagesBundle = ResourceBundle.getBundle(RegistrationConstants.MESSAGES, locale);
+							if (messagesBundle.getLocale().equals(locale)) {
+								resourceBundleMap.put(messageLangCodeKey, messagesBundle);
+							} else {
+								LOGGER.error("ResourceBundle not found for configured langcode ", langCode);
+							}
 						}
 					}
 				}
@@ -185,8 +198,9 @@ public class ApplicationContext {
 
 	/**
 	 * Load resources.
+	 * @throws RegBaseCheckedException 
 	 */
-	public static void loadResources() {
+	public static void loadResources() throws RegBaseCheckedException {
 		applicationContext.loadResourceBundle();
 	}
 

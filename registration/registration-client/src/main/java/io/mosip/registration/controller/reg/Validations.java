@@ -28,8 +28,8 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
-import io.mosip.registration.dto.Validator;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.Validator;
 import io.mosip.registration.dto.mastersync.BlacklistedWordsDto;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.sync.MasterSyncService;
@@ -254,7 +254,7 @@ public class Validations extends BaseController {
 
 		boolean isNonBlacklisted = validateBlackListedWords(parentPane, node, node.getId(), blackListedWords, showAlert,
 				String.format("%s %s %s", messageBundle.getString(RegistrationConstants.BLACKLISTED_1),
-						getFromLabelMap(fieldId), messageBundle.getString(RegistrationConstants.BLACKLISTED_2)),
+						getFromLabelMap(fieldId + langCode), messageBundle.getString(RegistrationConstants.BLACKLISTED_2)),
 				messageBundle.getString(RegistrationConstants.BLACKLISTED_ARE),
 				messageBundle.getString(RegistrationConstants.BLACKLISTED_IS));
 

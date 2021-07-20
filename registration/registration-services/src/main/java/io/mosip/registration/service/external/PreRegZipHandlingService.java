@@ -19,7 +19,7 @@ public interface PreRegZipHandlingService {
 	 * converts to {@link RegistrationDTO}
 	 * 
 	 * <p>
-	 * The Pre-Registration packet contains the Identity JSON and documents
+	 * The Pre-Registration packet contains the ID JSON and documents
 	 * </p>
 	 * 
 	 * <p>

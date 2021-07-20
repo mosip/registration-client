@@ -115,17 +115,15 @@ public class RestClientAuthAdvice {
 					RequestHTTPDTO requestHTTPDto = (RequestHTTPDTO) joinPoint.getArgs()[0];
 					getAuthZToken(requestHTTPDto);
 					return joinPoint.proceed(joinPoint.getArgs());
-				} catch (RegBaseCheckedException regBaseCheckedException) {
-					throw regBaseCheckedException;
 				} catch (Throwable throwableError) {
 					LOGGER.error("UNKNOWN ERROR", throwableError);
 					throw new RegBaseCheckedException("UNKNOWN_ERROR", throwableError.getMessage());
 				}
-
 			}
-			throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(),
-					RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorMessage(),
-					httpClientErrorException);
+
+			LOGGER.error("Failed in the auth advice", httpClientErrorException);
+			throw new RegBaseCheckedException(httpClientErrorException.getRawStatusCode()+"", httpClientErrorException.getMessage());
+
 		} catch (ConnectionException | RegBaseCheckedException regBaseCheckedException) {
 			throw regBaseCheckedException;
 		} catch (Throwable throwable) {
@@ -135,92 +133,12 @@ public class RestClientAuthAdvice {
 	}
 
 
-	/*private void getNewAuthZToken(RequestHTTPDTO requestHTTPDTO) throws RegBaseCheckedException {
-		LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-				"Entering into the new auth token generation ");
-		String authZToken = RegistrationConstants.EMPTY;
-		boolean haveToAuthZByClientId = false;
-		LoginUserDTO loginUserDTO = (LoginUserDTO) ApplicationContext.map().get(RegistrationConstants.USER_DTO);
-
-		if (RegistrationConstants.JOB_TRIGGER_POINT_USER.equals(requestHTTPDTO.getTriggerPoint())) {
-			if (loginUserDTO == null || loginUserDTO.getPassword() == null
-					|| isLoginModeOTP(loginUserDTO) || !SessionContext.isSessionContextAvailable()) {
-				haveToAuthZByClientId = true;
-				LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-						"Application context or Session Context with OTP ");
-			} else {
-				serviceDelegateUtil.getAuthToken(LoginMode.PASSWORD, HAVE_TO_SAVE_AUTH_TOKEN);
-				authZToken = SessionContext.authTokenDTO().getCookie();
-				LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-						"Session Context with password auth token generated " + authZToken);
-			}
-		}
-
-		// Get the AuthZ Token By Client ID and Secret Key if
-		if ((haveToAuthZByClientId
-				|| RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM.equals(requestHTTPDTO.getTriggerPoint()))) {
-			serviceDelegateUtil.getAuthToken(LoginMode.CLIENTID, HAVE_TO_SAVE_AUTH_TOKEN);
-			authZToken = ApplicationContext.authTokenDTO().getCookie();
-			SessionContext.authTokenDTO().setCookie(authZToken);
-			
-			LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-					"Application context or Session Context with OTP generated " + authZToken);
-		}
-
-		setAuthHeaders(requestHTTPDTO.getHttpHeaders(), requestHTTPDTO.getAuthZHeader(), authZToken);
-		LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-				"Completed the new auth token generation ");
-	}*/
-
 	private String getAuthZToken(RequestHTTPDTO requestHTTPDTO)
 			throws RegBaseCheckedException {
 		AuthTokenDTO authZToken = authTokenUtilService.fetchAuthToken(requestHTTPDTO.getTriggerPoint());
 		return authZToken.getCookie();
 	}
 
-	/*private String getAuthZToken(RequestHTTPDTO requestHTTPDTO, boolean haveToAuthZByClientId)
-			throws RegBaseCheckedException {
-		LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME, "Getting authZ token");
-		String authZToken = null;
-
-		// Get the AuthZ Token from AuthZ Web-Service only if Job is triggered by User
-		// and existing AuthZ Token had expired
-		if (RegistrationConstants.JOB_TRIGGER_POINT_USER.equals(requestHTTPDTO.getTriggerPoint())) {
-			if (SessionContext.isSessionContextAvailable() && null != SessionContext.authTokenDTO()
-					&& cookieAvailable()) {
-				authZToken = SessionContext.authTokenDTO().getCookie();
-				LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-						"Session Context Auth token " + authZToken);
-			} else {
-				LoginUserDTO loginUserDTO = (LoginUserDTO) ApplicationContext.map().get(RegistrationConstants.USER_DTO);
-				if (loginUserDTO == null || loginUserDTO.getPassword() == null || !SessionContext.isSessionContextAvailable()) {
-					haveToAuthZByClientId = true;
-					LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-							"Session Context null and user id and password are from applicaiton context ");
-				} else {
-					SessionContext.setAuthTokenDTO(serviceDelegateUtil.getAuthToken(LoginMode.PASSWORD, HAVE_TO_SAVE_AUTH_TOKEN));
-					authZToken = SessionContext.authTokenDTO().getCookie();
-					LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-							"Session Context with password Auth token " + authZToken);
-				}
-			}
-		}
-
-		// Get the AuthZ Token By Client ID and Secret Key if
-		if ((haveToAuthZByClientId
-				|| RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM.equals(requestHTTPDTO.getTriggerPoint()))) {
-			if (null == ApplicationContext.authTokenDTO() || null == ApplicationContext.authTokenDTO().getCookie()) {
-				ApplicationContext.setAuthTokenDTO(serviceDelegateUtil.getAuthToken(LoginMode.CLIENTID, HAVE_TO_SAVE_AUTH_TOKEN));
-			}
-			authZToken = ApplicationContext.authTokenDTO().getCookie();
-			LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-					"Application Context with Auth token " + authZToken);
-		}
-
-		LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME, "Getting of authZ token completed");
-
-		return authZToken;
-	}*/
 
 	/**
 	 * Setup of Auth Headers.
@@ -268,9 +186,8 @@ public class RestClientAuthAdvice {
 		try {
 			httpHeaders.add("request-signature", String.format("Authorization:%s", CryptoUtil
 					.encodeBase64(clientCryptoFacade.getClientSecurity().signData(JsonUtils.javaObjectToJsonString(requestBody).getBytes()))));
-			httpHeaders.add(RegistrationConstants.KEY_INDEX, CryptoUtil.encodeBase64String(String
-					.valueOf(machineMappingDAO.getKeyIndexByMachineName(RegistrationSystemPropertiesChecker.getMachineId()))
-					.getBytes()));
+			httpHeaders.add(RegistrationConstants.KEY_INDEX, CryptoUtil.computeFingerPrint(
+					clientCryptoFacade.getClientSecurity().getEncryptionPublicPart(), null));
 		} catch (JsonProcessingException jsonProcessingException) {
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTHZ_ADDING_REQUEST_SIGN.getErrorCode(),
 					RegistrationExceptionConstants.AUTHZ_ADDING_REQUEST_SIGN.getErrorMessage(),
@@ -306,9 +223,5 @@ public class RestClientAuthAdvice {
 						loginUserDTO != null && loginUserDTO.getOtp() != null));
 		return SessionContext.isSessionContextAvailable() && loginUserDTO != null && loginUserDTO.getOtp() != null;
 	}
-	
-	/*private boolean cookieAvailable() {
-		return null != SessionContext.authTokenDTO().getCookie() && 
-				SessionContext.authTokenDTO().getCookie().trim().length() > 10;
-	}*/
+
 }

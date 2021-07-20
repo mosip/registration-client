@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -78,6 +80,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	 * authValidator(java.lang.String,
 	 * io.mosip.registration.dto.AuthenticationValidatorDTO)
 	 */
+	@Counted(value = "invalid", recordFailuresOnly = true, extraTags = {"type" , "biometric-login"})
 	public Boolean authValidator(String userId, String modality, List<BiometricsDto> biometrics) {
 		LOGGER.info("OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
 				modality + " >> authValidator invoked.");
@@ -99,17 +102,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				sample.add(bioService.buildBir(biometricDto));
 			});
 
-			iBioProviderApi bioProvider = bioAPIFactory.getBioProvider(biometricType, BiometricFunction.MATCH);
-			if (Objects.nonNull(bioProvider)) {
-				LOGGER.info("OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
-						modality + " >> Bioprovider instance found : " + bioProvider);
-				return bioProvider.verify(sample, record, biometricType, null);
-			}
+			return verifyBiometrics(biometricType, modality, sample, record);
+
 		} catch (BiometricException | RuntimeException e) {
 			LOGGER.error("REGISTRATION - OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(e));
 		}
 		return false;
+	}
+
+	@Timed(value = "sdk", extraTags = {"function", "MATCH"})
+	private boolean verifyBiometrics(BiometricType biometricType, String modality,
+									 List<BIR> sample, List<BIR> record) throws BiometricException {
+		iBioProviderApi bioProvider = bioAPIFactory.getBioProvider(biometricType, BiometricFunction.MATCH);
+		if (Objects.isNull(bioProvider))
+			return false;
+
+		LOGGER.info("OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
+				modality + " >> Bioprovider instance found : " + bioProvider);
+		return bioProvider.verify(sample, record, biometricType, null);
 	}
 
 	
@@ -151,6 +162,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 									CryptoUtil.decodeBase64(userDTO.getSalt()))
 							.equals(userDTO.getUserPassword().getPwd())) {
 				return RegistrationConstants.PWD_MATCH;
+			} else if (null != userDTO && null == userDTO.getSalt()) {
+				return RegistrationConstants.CREDS_NOT_FOUND;
 			} else {
 				return RegistrationConstants.PWD_MISMATCH;
 			}

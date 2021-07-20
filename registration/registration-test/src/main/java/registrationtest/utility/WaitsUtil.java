@@ -27,13 +27,17 @@ import org.testfx.api.FxRobot;
 import org.testfx.service.support.Capture;
 import org.testfx.util.DebugUtils;
 
+import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
+import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
-import registrationtest.runapplication.NewRegistrationAdultTest;
+import registrationtest.runapplication.RegistrationMain;
 import org.apache.log4j.BasicConfigurator;  
 import org.apache.log4j.LogManager;  
 import org.apache.log4j.Logger;
@@ -59,7 +63,7 @@ public class WaitsUtil {
 	}
 
 	public WaitsUtil() {
-		// TODO Auto-generated constructor stub
+	
 	}
 
 	public <T extends Node> T lookupById(final String controlId) {
@@ -79,7 +83,7 @@ public class WaitsUtil {
 				});
 		} catch (TimeoutException e) {
 		
-			logger.error(e.getMessage());
+			logger.error("",e);
 			capture();
 		}
 			return robot.lookup(controlId).query();
@@ -93,12 +97,92 @@ public class WaitsUtil {
 		node=lookupById(id);
 		
 		 assertThat(robot.lookup(id).tryQuery()).isNotNull();
+		 robot.moveTo(node);
 		 robot.clickOn(node);
 				
 
 	}
+	public void scrollclickNodeAssert(String id)
+	{	
+		node=lookupById(id);
+		
+		 assertThat(robot.lookup(id).tryQuery()).isNotNull();
+		// scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("proofscroll")));
+		 scrollVerticalDirectioncount(10);
+			
+		 robot.moveTo(node);		
+		 robot.clickOn(node);
+				
 
+	}
+	public void scrollclickNodeAssert1(String id)
+	{	
+		node=lookupById(id);
+		
+		 assertThat(robot.lookup(id).tryQuery()).isNotNull();
+		 
+	//	 Platform.runLater(() -> {
+		 ScrollPane scrollPane = lookupById("#scrollPane");
+		 scrollPane.setVvalue(scrollPane.getVmax());
+		 
+		 double h = scrollPane.getContent().getBoundsInLocal().getHeight();
+		    double y = (node.getBoundsInParent().getMaxY() + 
+		                node.getBoundsInParent().getMinY()) / 2.0;
+		    double v = scrollPane.getViewportBounds().getHeight();
+		  scrollPane.setVvalue(scrollPane.getVmax() * ((y - 0.5 * v) / (h - v)));
+		    scrollPane.layout();
+		    scrollPane.setVvalue(0.5);
+		    scrollPane.requestFocus();
+	//	 });
+			 robot.moveTo(node);
+				
+		    robot.clickOn(node);
+				
 
+	}
+
+	public void scrollclickNodeAssert2(String id)
+	
+	{
+		node=lookupById(id);
+		
+		 assertThat(robot.lookup(id).tryQuery()).isNotNull();
+		 ScrollPane pane = lookupById("#scrollPane");
+		 
+		Bounds viewport = pane.getViewportBounds();
+	    double contentHeight = pane.getContent().getBoundsInLocal().getHeight();
+	    double contentWidth = pane.getContent().getBoundsInLocal().getWidth();
+	    double nodeMinY = node.getBoundsInParent().getMinY();
+	    double nodeMaxY = node.getBoundsInParent().getMaxY();
+	    double nodeMinX = node.getBoundsInParent().getMinX();
+	    double nodeMaxX = node.getBoundsInParent().getMaxX();
+	    double viewportMinY = (contentHeight - viewport.getHeight()) * pane.getVvalue();
+	    double viewportMaxY = viewportMinY + viewport.getHeight();
+	    double viewportMinX = (contentWidth - viewport.getWidth()) * pane.getHvalue();
+	    double viewportMaxX = viewportMinX + viewport.getWidth();
+	    if (nodeMinY < viewportMinY) {
+	        pane.setVvalue(nodeMinY / (contentHeight - viewport.getHeight()));
+	    } else if (nodeMaxY > viewportMaxY) {
+	        pane.setVvalue((nodeMaxY - viewport.getHeight()) / (contentHeight - viewport.getHeight()));
+	    }
+	    if (nodeMinX < viewportMinX) {
+	        pane.setHvalue(nodeMinX / (contentWidth - viewport.getWidth()));
+	    } else if (nodeMaxX > viewportMaxX) {
+	        pane.setHvalue((nodeMaxX - viewport.getWidth()) / (contentWidth - viewport.getWidth()));
+	    }
+
+	}
+	
+	private void scrollVerticalDirectioncount(int scrollcount )  {
+
+		try {
+			robot.scroll(scrollcount, VerticalDirection.DOWN);
+
+		} catch (Exception e) {
+			logger.error("",e);
+		}
+
+	}
 
 	public <T extends Node> TextField lookupByIdTextField( String controlId,FxRobot robot) {
 				try {
@@ -110,7 +194,7 @@ public class WaitsUtil {
 			.until(() -> (robot.lookup(controlId).queryAs(TextField.class))!= null);
 		}catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 			capture();
 
 
@@ -129,7 +213,7 @@ public class WaitsUtil {
 			.until(() -> (robot.lookup(controlId).queryAs(Button.class))!= null);
 		}catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		capture();
 
 		}
@@ -150,7 +234,7 @@ public void capture()
 	String fileName="Out"+datetim+".jpg";
 	ImageIO.write(image, "jpg",new File(fileName));
 	} catch (Exception e) {
-		logger.error(e.getMessage());
+		logger.error("",e);
 		
 	}
 	

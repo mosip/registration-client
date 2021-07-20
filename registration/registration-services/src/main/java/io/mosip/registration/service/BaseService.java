@@ -4,6 +4,9 @@ import static io.mosip.registration.constants.LoggerConstants.BIO_SERVICE;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -27,6 +30,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -86,6 +91,8 @@ import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import lombok.NonNull;
+
+import javax.imageio.ImageIO;
 
 /**
  * This is a base class for service package. The common functionality across the
@@ -311,8 +318,8 @@ public class BaseService {
 		String machineName = RegistrationSystemPropertiesChecker.getMachineId();
 		MachineMaster machineMaster = machineMasterRepository.findByNameIgnoreCase(machineName.toLowerCase());
 
-		if(machineMaster != null && machineMaster.getRegMachineSpecId().getId() != null && machineMaster.getIsActive())
-			return machineMaster.getRegMachineSpecId().getId();
+		if(machineMaster != null && machineMaster.getId() != null && machineMaster.getIsActive())
+			return machineMaster.getId();
 		return null;
 	}
 
@@ -417,14 +424,6 @@ public class BaseService {
 
 		return statusDTO;
 	}
-
-	/*
-	 * public static void setBaseGlobalMap(Map<String, Object> map) { applicationMap
-	 * = map; }
-	 * 
-	 * public static Map<String, Object> getBaseGlobalMap() { return applicationMap;
-	 * }
-	 */
 
 	/**
 	 * Registration date conversion.
@@ -702,7 +701,7 @@ public class BaseService {
 		String machineId = getStationId();
 		if(RegistrationConstants.OPT_TO_REG_PDS_J00003.equals(jobId) && machineId == null)
 			throw new PreConditionCheckException(PreConditionChecks.MACHINE_INACTIVE.name(),
-					"Sync action forbidden as machine is inactive");
+					"Pre Registration Data Sync action forbidden as machine is inactive");
 
 		//check regcenter table for center status
 		//if center is inactive, sync is not allowed
@@ -807,6 +806,68 @@ public class BaseService {
 	 */
 	public boolean isInitialSync() {
 		return RegistrationConstants.ENABLE.equalsIgnoreCase(getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP));
+	}
+
+	public BufferedImage concatImages(byte[] image1, byte[] image2, byte[] image3, byte[] image4, String imagePath) {
+		try {
+			BufferedImage img1 = ImageIO.read((image1 == null || image1.length == 0) ?
+					this.getClass().getResourceAsStream(imagePath) :
+					new ByteArrayInputStream(image1));
+			BufferedImage img2 = ImageIO.read((image2 == null || image2.length == 0) ?
+					this.getClass().getResourceAsStream(imagePath) :
+					new ByteArrayInputStream(image2));
+			BufferedImage img3 = ImageIO.read((image3 == null || image3.length == 0) ?
+					this.getClass().getResourceAsStream(imagePath) :
+					new ByteArrayInputStream(image3));
+			BufferedImage img4 = ImageIO.read((image4 == null || image4.length == 0) ?
+					this.getClass().getResourceAsStream(imagePath) :
+					new ByteArrayInputStream(image4));
+			int offset = 2;
+			int width = img1.getWidth() + img2.getWidth() + img3.getWidth() + img4.getWidth() + offset;
+			int height = Math.max (Math.max(img1.getHeight(), img2.getHeight()), Math.max(img3.getHeight(), img4.getHeight()) )+ offset;
+			BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+			Graphics2D g2 = newImage.createGraphics();
+			Color oldColor = g2.getColor();
+			g2.setPaint(Color.WHITE);
+			g2.fillRect(0, 0, width, height);
+			g2.setColor(oldColor);
+			g2.drawImage(img1, null, 0, 0);
+			g2.drawImage(img2, null, img1.getWidth() + offset, 0);
+			g2.drawImage(img3, null, img1.getWidth() + img2.getWidth() + offset, 0);
+			g2.drawImage(img4, null, img1.getWidth() + img2.getWidth() + img3.getWidth() + offset, 0);
+			g2.dispose();
+			return newImage;
+		} catch (IOException e) {
+			LOGGER.error("Error while concat images", e);
+		}
+		return null;
+	}
+
+	public BufferedImage concatImages(byte[] image1, byte[] image2, String imagePath) {
+		try {
+			BufferedImage img1 = ImageIO.read((image1 == null || image1.length == 0) ?
+					this.getClass().getResourceAsStream(imagePath) :
+					new ByteArrayInputStream(image1));
+			BufferedImage img2 = ImageIO.read((image2 == null || image2.length == 0) ?
+					this.getClass().getResourceAsStream(imagePath) :
+					new ByteArrayInputStream(image2));
+			int offset = 2;
+			int width = img1.getWidth() + img2.getWidth() + offset;
+			int height = Math.max(img1.getHeight(), img2.getHeight()) + offset;
+			BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+			Graphics2D g2 = newImage.createGraphics();
+			Color oldColor = g2.getColor();
+			g2.setPaint(Color.WHITE);
+			g2.fillRect(0, 0, width, height);
+			g2.setColor(oldColor);
+			g2.drawImage(img1, null, 0, 0);
+			g2.drawImage(img2, null, img1.getWidth() + offset, 0);
+			g2.dispose();
+			return newImage;
+		} catch (IOException e) {
+			LOGGER.error("Error while concat images", e);
+		}
+		return null;
 	}
 
 }

@@ -23,9 +23,6 @@ public class MasterDataResponseDto {
 	private List<MachineDto> machineDetails;
 	private List<MachineSpecificationDto> machineSpecification;
 	private List<MachineTypeDto> machineType;
-	private List<DeviceDto> devices;
-	private List<DeviceTypeDto> deviceTypes;
-	private List<DeviceSpecificationDto> deviceSpecifications;
 	private List<HolidayDto> holidays;
 	private List<DocumentCategoryDto> documentCategories;
 	private List<DocumentTypeDto> documentTypes;
@@ -40,11 +37,8 @@ public class MasterDataResponseDto {
 	private List<BiometricTypeDto> biometricTypes;
 	private List<ApplicationDto> applications;
 	private List<IdTypeDto> idTypes;
-	private List<TitleDto> titles;
-	private List<GenderDto> genders;
 	private List<LanguageDto> languages;
 	private List<RegistrationCenterMachineDto> registrationCenterMachines;
-	private List<RegistrationCenterDeviceDto> registrationCenterDevices;
 	private List<RegistrationCenterMachineDeviceDto> registrationCenterMachineDevices;
 	private List<RegistrationCenterUserMachineMappingDto> registrationCenterUserMachines;
 	private List<RegistrationCenterUserDto> registrationCenterUsers;
@@ -52,16 +46,9 @@ public class MasterDataResponseDto {
 	private List<IndividualTypeDto> individualTypes;
 	private List<ValidDocumentDto> validDocumentMapping;
 	private List<AppAuthenticationMethodDto> appAuthenticationMethods;
-	private List<AppDetailDto> appDetails;
 	private List<AppRolePriorityDto> appRolePriorities;
 	private List<ScreenAuthorizationDto> screenAuthorizations;
 	private List<ProcessListDto> processList;
 	private List<SyncJobDefDto> syncJobDefinitions;
 	private List<ScreenDetailDto> screenDetails;
-	private List<RegisteredDeviceMasterDto> registeredDevices;
-	private List<RegisteredDeviceTypeDto> registeredDeviceTypes;
-	private List<RegisteredSubDeviceTypeDto> deviceSubTypeDPMs;
-	private List<MosipDeviceServiceDto> deviceServices;
-	private List<FoundationalTrustProviderDto> functionalTrustProviders;
-	private List<DeviceProviderDto> deviceProviders;
 }

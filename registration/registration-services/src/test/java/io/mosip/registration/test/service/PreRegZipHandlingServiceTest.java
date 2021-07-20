@@ -22,7 +22,6 @@ import javax.crypto.spec.SecretKeySpec;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.crypto.spi.CryptoCoreSpec;
 import io.mosip.kernel.keygenerator.bouncycastle.util.KeyGeneratorUtils;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -37,7 +36,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import io.mosip.kernel.core.exception.IOException;
 import io.mosip.kernel.core.security.constants.MosipSecurityMethod;
@@ -51,7 +49,7 @@ import io.mosip.registration.dto.OSIDataDTO;
 import io.mosip.registration.dto.PreRegistrationDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.biometric.BiometricDTO;
 import io.mosip.registration.dto.biometric.BiometricInfoDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -100,16 +98,19 @@ public class PreRegZipHandlingServiceTest {
 		UiSchemaDTO field1 = new UiSchemaDTO();
 		field1.setId("fullName");
 		field1.setType("simpleType");
+		field1.setControlType("textbox");
 		schemaFields.add(field1);
 		
 		UiSchemaDTO field2 = new UiSchemaDTO();
 		field2.setId("gender");
 		field2.setType("simpleType");
+		field2.setControlType("textbox");
 		schemaFields.add(field2);		
 		
 		UiSchemaDTO field3 = new UiSchemaDTO();
 		field3.setId("postalCode");
 		field3.setType("string");
+		field3.setControlType("dropdown");
 		schemaFields.add(field3);
 	}
 	
@@ -246,7 +247,7 @@ public class PreRegZipHandlingServiceTest {
 
 		// Create objects for Biometric DTOS
 		BiometricDTO biometricDTO = new BiometricDTO();		
-		registrationDTO.setBiometricDTO(biometricDTO);		
+		//registrationDTO.setBiometricDTO(biometricDTO);
 
 		// Create object for OSIData DTO
 		registrationDTO.setOsiDataDTO(new OSIDataDTO());

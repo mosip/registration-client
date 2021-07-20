@@ -2,16 +2,7 @@ package io.mosip.registration.entity;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-
-import io.mosip.registration.entity.id.RegMachineSpecId;
+import javax.persistence.*;
 
 /**
  * The Entity Class for Reg Machine Spec.
@@ -28,8 +19,9 @@ public class RegMachineSpec extends RegistrationCommonFields implements Serializ
 	*/
 	private static final long serialVersionUID = 1L;
 
-	@EmbeddedId
-	private RegMachineSpecId regMachineSpecId;
+	@Id
+	@Column(name = "id")
+	private String id;
 
 	@Column(name = "name")
 	private String name;
@@ -50,8 +42,7 @@ public class RegMachineSpec extends RegistrationCommonFields implements Serializ
 	private String description;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumns({ @JoinColumn(name = "mtyp_code", referencedColumnName = "code", insertable = false, updatable = false),
-			@JoinColumn(name = "lang_code", referencedColumnName = "lang_code", insertable = false, updatable = false) })
+	@JoinColumns({ @JoinColumn(name = "mtyp_code", referencedColumnName = "code", insertable = false, updatable = false)})
 	private MachineType machineType;
 
 	/**

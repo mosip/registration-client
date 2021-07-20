@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import io.mosip.registration.context.SessionContext;
 import lombok.NonNull;
 import org.json.JSONObject;
@@ -70,6 +72,7 @@ public class UserDetailServiceImpl extends BaseService implements UserDetailServ
 	 * 
 	 * @see io.mosip.registration.service.UserDetailService#save()
 	 */
+	@Timed(value = "sync", longTask = true, extraTags = {"type", "userdetails"})
 	public synchronized ResponseDTO save(String triggerPoint) throws RegBaseCheckedException {
 		ResponseDTO responseDTO = new ResponseDTO();
 
@@ -194,6 +197,7 @@ public class UserDetailServiceImpl extends BaseService implements UserDetailServ
 		return userRoleIdList.stream().map(UserRoleId::getRoleCode).collect(Collectors.toList());	
 	}
 
+	@Counted(value = "invalid", recordFailuresOnly = true, extraTags = {"type", "username"})
 	@Override
 	public boolean isValidUser(@NonNull String userId) {
 		return (null == userDetailDAO.getUserDetail(userId)) ? false : true;

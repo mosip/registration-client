@@ -6,8 +6,6 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.exception.RegistrationExceptionConstants.REG_PACKET_CREATION_ERROR_CODE;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -16,6 +14,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.enums.Role;
 import io.mosip.registration.service.config.GlobalParamService;
@@ -27,18 +27,15 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.mosip.commons.packet.constants.Biometric;
 import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.commons.packet.dto.Document;
 import io.mosip.commons.packet.dto.packet.BiometricsException;
 import io.mosip.commons.packet.dto.packet.DeviceMetaInfo;
 import io.mosip.commons.packet.dto.packet.DigitalId;
-import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.commons.packet.facade.PacketWriter;
 import io.mosip.kernel.auditmanager.entity.Audit;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biometrics.entities.BiometricRecord;
-import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.idgenerator.spi.PridGenerator;
 import io.mosip.kernel.core.idgenerator.spi.RidGenerator;
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -63,7 +60,7 @@ import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.dto.packetmanager.metadata.BiometricsMetaInfoDto;
@@ -163,9 +160,11 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	 * io.mosip.registration.service.packet.PacketHandlerService#handle(io.mosip.
 	 * registration.dto.RegistrationDTO)
 	 */
+	@Counted(value = "registration", extraTags = {"function", "createpacket"})
+	@Timed(value = "registration", extraTags = {"function", "createpacket"})
 	@Override
 	public ResponseDTO handle(RegistrationDTO registrationDTO) {
-		LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Registration Handler had been called");
+		LOGGER.info("Registration Handler had been called");
 		ResponseDTO responseDTO = new ResponseDTO();
 		responseDTO.setErrorResponseDTOs(new ArrayList<>());
 		ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO();
@@ -569,6 +568,8 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		return packets;
 	}
 
+	@Counted(value = "registration", extraTags = {"function", "start"})
+	@Timed(value = "registration", extraTags = {"function", "start"})
 	@Override
 	public RegistrationDTO startRegistration(String id, String registrationCategory) throws RegBaseCheckedException {
 		//Pre-check conditions, throws exception if preconditions are not met
@@ -596,8 +597,8 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		String registrationID = ridGeneratorImpl.generateId(
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_CENTER_ID),
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_STATION_ID));
-		registrationDTO.setRegistrationId(registrationID);
 		registrationDTO.setAppId(pridGenerator.generateId());
+		registrationDTO.setRegistrationId(registrationID);
 
 		LOGGER.info(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID,

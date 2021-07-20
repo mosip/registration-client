@@ -35,7 +35,7 @@ public class TemplateDaoImpl implements TemplateDao{
 	}
 	
 	public List<TemplateType> getAllTemplateTypes(String code,String langCode){
-		return typeRepository.findByIsActiveTrueAndPkTmpltCodeCodeAndPkTmpltCodeLangCode( code, langCode);
+		return typeRepository.findByIsActiveTrueAndCode(code);
 	}
 	
 	public List<TemplateFileFormat> getAllTemplateFileFormats(){

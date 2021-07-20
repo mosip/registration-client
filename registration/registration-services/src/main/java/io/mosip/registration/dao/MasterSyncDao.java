@@ -28,7 +28,7 @@ public interface MasterSyncDao {
 	/**
 	 * Find location by lang code.
 	 *
-	 * @param hierarchyCode the hierarchy code
+	 * @param hierarchyLevel the hierarchy code
 	 * @param langCode      the lang code
 	 * @return the list
 	 */
@@ -78,31 +78,12 @@ public interface MasterSyncDao {
 	List<DocumentType> getDocumentTypes(List<String> docCode, String langCode);
 
 	/**
-	 * Gets the gender dtls.
-	 *
-	 * @param langCode the lang code
-	 * @return the gender dtls
-	 */
-	List<Gender> getGenderDtls(String langCode);
-
-	/**
 	 * Gets the valid documets.
 	 *
 	 * @param docCategoryCode the doc category code
 	 * @return the valid documets
 	 */
 	List<ValidDocument> getValidDocumets(String docCategoryCode);
-
-	/**
-	 * Gets the individul type.
-	 *
-	 * @param code     the code
-	 * @param langCode the lang code
-	 * @return the individul type
-	 */
-	List<IndividualType> getIndividulType(String code, String langCode);
-
-	List<IndividualType> getIndividulType(String langCode);
 
 	/**
 	 * Get All the Active Sync JOBS
@@ -127,12 +108,6 @@ public interface MasterSyncDao {
 	 */
 	List<Language> getActiveLanguages();
 
-	/**
-	 * Get all the active genders
-	 * 
-	 * @return list of active {@link Gender}
-	 */
-	List<Gender> getGenders();
 
 	/**
 	 * Get all the active document category from the DB

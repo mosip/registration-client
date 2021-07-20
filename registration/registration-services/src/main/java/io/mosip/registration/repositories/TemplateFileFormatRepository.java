@@ -11,7 +11,7 @@ import io.mosip.registration.entity.TemplateFileFormat;
  *
  * @author Himaja Dhanyamraju
  */
-public interface TemplateFileFormatRepository<P> extends BaseRepository<TemplateFileFormat, TemplateEmbeddedKeyCommonFields> {
+public interface TemplateFileFormatRepository<P> extends BaseRepository<TemplateFileFormat, String> {
 	
 	/**
 	 * This method returns the list of {@link TemplateFileFormat} which are active

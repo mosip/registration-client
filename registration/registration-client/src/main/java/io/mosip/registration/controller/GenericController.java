@@ -44,9 +44,9 @@ import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.response.SchemaDto;
-import io.mosip.registration.dto.response.UiScreenDTO;
+import io.mosip.registration.dto.schema.UiScreenDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.sync.MasterSyncService;
@@ -340,7 +340,7 @@ public class GenericController extends BaseController {
 
 				for (UiSchemaDTO uiSchemaDTO : schemaDTOs) {
 					List<String> configBioAttributes = requiredFieldValidator
-							.isRequiredBiometricField(uiSchemaDTO.getSubType(), getRegistrationDTOFromSession());
+							.getRequiredBioAttributes(uiSchemaDTO, getRegistrationDTOFromSession());
 
 					if (configBioAttributes != null && !configBioAttributes.isEmpty()) {
 						defaultUpdateFields.add(uiSchemaDTO.getId());
@@ -543,6 +543,7 @@ public class GenericController extends BaseController {
 					String label = getFxControl(fieldId).getUiSchemaDTO().getLabel().getOrDefault(ApplicationContext.applicationLanguage(), fieldId);
 					notification.setText(applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
 							.getString("SCREEN_VALIDATION_ERROR") + " [ " + label + " ]");
+					notification.setVisible(true);
 					isValid = false;
 					break;
 				}
@@ -550,6 +551,7 @@ public class GenericController extends BaseController {
 		}
 		if (isValid) {
 			notification.setText(EMPTY);
+			notification.setVisible(false);
 			auditFactory.audit(AuditEvent.REG_NAVIGATION, Components.REGISTRATION_CONTROLLER,
 					SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 		}
@@ -646,6 +648,7 @@ public class GenericController extends BaseController {
 			screenGridPane.add(gridPane, 1, 1);
 			final ScrollPane scrollPane = new ScrollPane(screenGridPane);
 			scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+			scrollPane.setId("scrollPane");
 			screenTab.setContent(scrollPane);
 			tabPane.getTabs().add(screenTab);
 		}

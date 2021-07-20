@@ -74,7 +74,7 @@ public class BiometricUploadPage {
 			if(flag==false)
 			clickScanBtn(subType);
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 	}
 
@@ -107,7 +107,7 @@ public class BiometricUploadPage {
 			if(flag==false)
 			clickScanBtn(subType);
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 	}
 	
@@ -151,13 +151,42 @@ public class BiometricUploadPage {
 			if(flag==false)
 			clickScanBtn(subType);
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 	}
 
 	
-	
-public List<String> exceptionList(String identity)
+	public List<String> bioAuthAttributeList(String identity)
+	{
+		List<String> bioAuthAttList=new LinkedList<String>();
+		String bioAuthAttributes=null;
+		try {
+			 bioAuthAttributes=PropertiesUtil.getKeyValue("bioAuthAttributes");
+		
+		
+		bioAuthAttList=JsonUtil.JsonObjArrayListParsing(identity, bioAuthAttributes);
+		} catch (Exception e) {
+			logger.error("",e);
+		}
+		
+		return bioAuthAttList;
+	}
+
+	public List<String> bioAttributeList(String identity)
+	{
+		List<String> bioAttList=new LinkedList<String>();
+		String bioAttributes=null;
+		try {
+			bioAttributes=PropertiesUtil.getKeyValue("bioAttributes");
+		bioAttList=JsonUtil.JsonObjArrayListParsing(identity, bioAttributes);
+		} catch (Exception e) {
+			logger.error("",e);
+		}
+		
+		return bioAttList;
+	}
+
+	public List<String> exceptionList(String identity)
 {
 	List<String> listException=new LinkedList<String>();
 	String bioExceptionAttributes=null;
@@ -167,7 +196,7 @@ public List<String> exceptionList(String identity)
 	
 	listException=JsonUtil.JsonObjArrayListParsing(identity, bioExceptionAttributes);
 	} catch (Exception e) {
-		logger.error(e.getMessage());
+		logger.error("",e);
 	}
 	
 	return listException;
@@ -214,7 +243,7 @@ public List<String> exceptionList(String identity)
 			if(flag==false)
 			clickScanBtn(subType);
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 	}
 
@@ -240,12 +269,13 @@ public List<String> exceptionList(String identity)
 		try {
 			logger.info("bioScan");
 			waitsUtil.clickNodeAssert(id);
+			//waitsUtil.scrollclickNodeAssert1(id);
 			Thread.sleep(400);
 			clickScanBtn(subtype);
 		}
 		catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 
 
@@ -262,14 +292,14 @@ public List<String> exceptionList(String identity)
 		try
 
 		{
-			logger.info("  Bio attributes upload with List");
+			logger.info("Bio attributes upload with List");
 
 			List<String> listException = null;
 			try {
 				listException = exceptionList(identity);
 			}catch(Exception e)
 			{
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 			if(listException.isEmpty()){
 				if(list.contains(PropertiesUtil.getKeyValue("leftEye"))||list.contains(PropertiesUtil.getKeyValue("rightEye")))
@@ -317,12 +347,15 @@ public List<String> exceptionList(String identity)
 
 				if(list.contains(PropertiesUtil.getKeyValue("face")))
 					bioScan(subtype,id+FACE,identity);
+				
+				if(subtype.equals("applicant"))		
+				bioScan(subtype,id+EXCEPTION_PHOTO,identity);
 
 			}
 		}
 		catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 
 
@@ -335,7 +368,7 @@ public List<String> exceptionList(String identity)
 			if(biostring.contains(PropertiesUtil.getKeyValue("face")))
 				bioScan(subtype,id+FACE,identity);
 		} catch (IOException e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 
 	}

@@ -3,6 +3,7 @@ package io.mosip.registration.service.sync.impl;
 import java.io.File;
 import java.util.*;
 
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.cryptomanager.util.CryptomanagerUtils;
 import io.mosip.kernel.keymanagerservice.util.KeymanagerUtil;
 import io.mosip.registration.context.ApplicationContext;
@@ -82,6 +83,7 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 	 *
 	 * @see io.mosip.registration.service.PolicySyncService#fetchPolicy(centerId)
 	 */
+	@Timed(value = "sync", longTask = true, extraTags = {"type", "policy"})
 	@Override
 	public ResponseDTO fetchPolicy() throws RegBaseCheckedException {
 		LOGGER.debug("fetchPolicy invoked");

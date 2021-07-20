@@ -3,11 +3,11 @@ package io.mosip.registration.controller;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.AbstractMap.SimpleEntry;
@@ -25,16 +25,19 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import io.mosip.registration.dto.mastersync.GenericDto;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+import javafx.stage.Modality;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import io.mosip.commons.packet.constants.PacketManagerConstants;
+import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
-import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
@@ -55,21 +58,21 @@ import io.mosip.registration.controller.reg.Validations;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
-import io.mosip.registration.dto.biometric.BiometricExceptionDTO;
-import io.mosip.registration.dto.biometric.BiometricInfoDTO;
-import io.mosip.registration.dto.biometric.FaceDetailsDTO;
-import io.mosip.registration.dto.mastersync.GenericDto;
+import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RemapException;
+import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.scheduler.SchedulerUtil;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.IdentitySchemaService;
+import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.config.LocalConfigService;
+import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.security.AuthenticationService;
@@ -110,11 +113,11 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
-import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
+
 
 /**
  * Base class for all controllers.
@@ -208,7 +211,13 @@ public class BaseController {
 	
 	@Autowired
 	private LocalConfigService localConfigService;
+	
+	@Autowired
+	private LoginService loginService;
 
+	@Autowired
+	private BioService bioService;
+	
 	protected ApplicationContext applicationContext = ApplicationContext.getInstance();
 
 	public Text getScanningMsg() {
@@ -226,8 +235,6 @@ public class BaseController {
 	private Stage alertStage;
 
 	private static boolean isAckOpened = false;
-
-	private static Map<String, UiSchemaDTO> validationMap;
 
 	private static TreeMap<String, String> mapOfbiometricSubtypes = new TreeMap<>();
 
@@ -261,19 +268,6 @@ public class BaseController {
 		ALL_BIO_ATTRIBUTES.addAll(RegistrationConstants.eyesUiAttributes);
 		ALL_BIO_ATTRIBUTES.add(RegistrationConstants.FACE_EXCEPTION);
 	}
-
-	/**
-	 * Set Validations map
-	 *
-	 * @param validations is a map id's and regex validations
-	 */
-	/*public void setValidations(Map<String, UiSchemaDTO> validations) {
-		validationMap = validations;
-	}
-
-	public Map<String, UiSchemaDTO> getValidationMap() {
-		return validationMap;
-	}*/
 
 	/**
 	 * @return the alertStage
@@ -605,14 +599,6 @@ public class BaseController {
 		ApplicationContext.setApplicationMap(globalProps);
 	}
 
-	/**
-	 * Get the details form Global Param Map is the values existed or not.
-	 *
-	 * @return Response DTO
-	 */
-	protected ResponseDTO getSyncConfigData() {
-		return globalParamService.synchConfigData(false);
-	}
 
 	/**
 	 * Opens the home page screen.
@@ -705,8 +691,7 @@ public class BaseController {
 		SessionContext.map().remove(RegistrationConstants.OLD_BIOMETRIC_EXCEPTION);
 		SessionContext.map().remove(RegistrationConstants.NEW_BIOMETRIC_EXCEPTION);
 
-		clearAllValues();
-
+		//guardianBiometricsController.clearCapturedBioData();
 		guardianBiometricsController.clearBioCaptureInfo();
 
 		SessionContext.userMap().remove(RegistrationConstants.TOGGLE_BIO_METRIC_EXCEPTION);
@@ -758,41 +743,6 @@ public class BaseController {
 	public void scan(Stage popupStage) {
 
 	}
-
-	/**
-	 * This method used to clear the images that are captured using webcam.
-	 *
-	 * @param imageType Type of image that is to be cleared
-	 */
-	public void clearPhoto(String imageType) {
-		// will be implemented in the derived class.
-	}
-
-	/**
-	 * it will wait for the mentioned time to get the capture image from Bio Device.
-	 *
-	 * @param count             the count
-	 * @param waitTimeInSec     the wait time in sec
-	 * @param fingerprintFacade the fingerprint facade
-	 */
-//	protected void waitToCaptureBioImage(int count, int waitTimeInSec, FingerprintFacade fingerprintFacade) {
-//		int counter = 0;
-//		while (counter < 5) {
-//			if (!RegistrationConstants.EMPTY.equals(fingerprintFacade.getMinutia())
-//					|| !RegistrationConstants.EMPTY.equals(fingerprintFacade.getErrorMessage())) {
-//				break;
-//			} else {
-//				try {
-//					Thread.sleep(2000);
-//				} catch (InterruptedException interruptedException) {
-//					LOGGER.error("FINGERPRINT_AUTHENTICATION_CONTROLLER - ERROR_SCANNING_FINGER", APPLICATION_NAME,
-//							APPLICATION_ID,
-//							interruptedException.getMessage() + ExceptionUtils.getStackTrace(interruptedException));
-//				}
-//			}
-//			counter++;
-//		}
-//	}
 
 	/**
 	 * Convert bytes to image.
@@ -854,9 +804,11 @@ public class BaseController {
 		authenticationValidatorDTO.setUserId(username);
 		authenticationValidatorDTO.setPassword(password);
 
-		if (authenticationService.validatePassword(authenticationValidatorDTO)
-				.equals(RegistrationConstants.PWD_MATCH)) {
+		String status = authenticationService.validatePassword(authenticationValidatorDTO);
+		if (status.equals(RegistrationConstants.PWD_MATCH)) {
 			return RegistrationConstants.SUCCESS;
+		} else if (status.equals(RegistrationConstants.CREDS_NOT_FOUND)) {
+			return RegistrationConstants.CREDS_NOT_FOUND;
 		}
 		return RegistrationConstants.FAILURE;
 	}
@@ -865,72 +817,8 @@ public class BaseController {
 	 * Clear all values.
 	 */
 	protected void clearAllValues() {
-		if ((boolean) SessionContext.map().get(RegistrationConstants.ONBOARD_USER)) {
-			// ((BiometricDTO)
-			// SessionContext.map().get(RegistrationConstants.USER_ONBOARD_DATA))
-			// .setOperatorBiometricDTO(createBiometricInfoDTO());
-			// biometricExceptionController.clearSession();
-			// fingerPrintCaptureController.clearFingerPrintDTO();
-			// irisCaptureController.clearIrisData();
-			// faceCaptureController.clearPhoto(RegistrationConstants.APPLICANT_IMAGE);
-			guardianBiometricsController.clearCapturedBioData();
-		} else {
-			if (SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA) != null) {
-				((RegistrationDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA)).getBiometricDTO()
-						.setApplicantBiometricDTO(createBiometricInfoDTO());
-				((RegistrationDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA)).getBiometricDTO()
-						.setIntroducerBiometricDTO(createBiometricInfoDTO());
-
-				// faceCaptureController.clearPhoto(RegistrationConstants.APPLICANT_IMAGE);
-				// faceCaptureController.clearPhoto(RegistrationConstants.EXCEPTION_IMAGE);
-				guardianBiometricsController.clearCapturedBioData();
-			}
-		}
+		guardianBiometricsController.clearCapturedBioData();
 	}
-
-	/**
-	 * Creates the biometric info DTO.
-	 *
-	 * @return the biometric info DTO
-	 */
-	protected BiometricInfoDTO createBiometricInfoDTO() {
-		BiometricInfoDTO biometricInfoDTO = new BiometricInfoDTO();
-		biometricInfoDTO.setBiometricExceptionDTO(new ArrayList<>());
-		biometricInfoDTO.setFingerprintDetailsDTO(new ArrayList<>());
-		biometricInfoDTO.setIrisDetailsDTO(new ArrayList<>());
-		biometricInfoDTO.setFace(new FaceDetailsDTO());
-		biometricInfoDTO.setExceptionFace(new FaceDetailsDTO());
-		return biometricInfoDTO;
-	}
-
-	/**
-	 * Gets the notification template.
-	 *
-	 * @param templateCode the template code
-	 * @return the notification template
-	 */
-	/*
-	 * protected Writer getNotificationTemplate(String templateCode) {
-	 * RegistrationDTO registrationDTO = getRegistrationDTOFromSession(); Writer
-	 * writeNotificationTemplate = new StringWriter(); try { // get the data for
-	 * notification template String platformLanguageCode =
-	 * ApplicationContext.applicationLanguage(); String notificationTemplate =
-	 * templateService.getHtmlTemplate(templateCode, platformLanguageCode); if
-	 * (notificationTemplate != null && !notificationTemplate.isEmpty()) { //
-	 * generate the notification template writeNotificationTemplate =
-	 * templateGenerator.generateNotificationTemplate(notificationTemplate,
-	 * registrationDTO, templateManagerBuilder); }
-	 *
-	 * } catch (RegBaseUncheckedException regBaseUncheckedException) {
-	 * LOGGER.error("REGISTRATION - UI - GENERATE_NOTIFICATION", APPLICATION_NAME,
-	 * APPLICATION_ID, regBaseUncheckedException.getMessage() +
-	 * ExceptionUtils.getStackTrace(regBaseUncheckedException)); } catch
-	 * (RegBaseCheckedException regBaseCheckedException) {
-	 * LOGGER.error("REGISTRATION - UI- GENERATE_NOTIFICATION", APPLICATION_NAME,
-	 * APPLICATION_ID, regBaseCheckedException.getMessage() +
-	 * ExceptionUtils.getStackTrace(regBaseCheckedException)); } return
-	 * writeNotificationTemplate; }
-	 */
 
 	/**
 	 * Gets the registration DTO from session.
@@ -1166,7 +1054,6 @@ public class BaseController {
 		if (isPacketsPendingForEODOrReRegister()) {
 			message += RegistrationConstants.NEW_LINE + RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REMAP_EOD_PROCESS_MESSAGE);
 		}
-		message += RegistrationConstants.NEW_LINE + RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REMAP_CLICK_OK);
 		generateAlert(RegistrationConstants.ALERT_INFORMATION, message);
 
 		disableHomePage(true);
@@ -1315,73 +1202,6 @@ public class BaseController {
 	}
 
 	/**
-	 * Update UIN method flow.
-	 */
-	protected void updateUINMethodFlow() {
-		/*
-		 * if ((Boolean) SessionContext.userContext().getUserMap()
-		 * .get(RegistrationConstants.TOGGLE_BIO_METRIC_EXCEPTION)) {
-		 * SessionContext.map().put(RegistrationConstants.UIN_UPDATE_BIOMETRICEXCEPTION,
-		 * true); return; } if
-		 * (getRegistrationDTOFromSession().isUpdateUINNonBiometric()) {
-		 * SessionContext.map().put(RegistrationConstants.
-		 * UIN_UPDATE_PARENTGUARDIAN_DETAILS, true); // // Label guardianBiometricsLabel
-		 * = // guardianBiometricsController.getGuardianBiometricsLabel(); //
-		 * guardianBiometricsLabel.setText("Biometrics"); // //
-		 * guardianBiometricsController.setGuardianBiometricsLabel(
-		 * guardianBiometricsLabel);
-		 *
-		 * } else if (updateUINNextPage(RegistrationConstants.FINGERPRINT_DISABLE_FLAG)
-		 * && !isChild()) {
-		 * SessionContext.map().put(RegistrationConstants.UIN_UPDATE_FINGERPRINTCAPTURE,
-		 * true); } else if (updateUINNextPage(RegistrationConstants.IRIS_DISABLE_FLAG)
-		 * && !isChild()) {
-		 * SessionContext.map().put(RegistrationConstants.UIN_UPDATE_IRISCAPTURE, true);
-		 * } else if (isChild()) { SessionContext.map().put(RegistrationConstants.
-		 * UIN_UPDATE_PARENTGUARDIAN_DETAILS, true); } else if
-		 * (RegistrationConstants.ENABLE
-		 * .equalsIgnoreCase(getValueFromApplicationContext(RegistrationConstants.
-		 * FACE_DISABLE_FLAG))) {
-		 * SessionContext.map().put(RegistrationConstants.UIN_UPDATE_FACECAPTURE, true);
-		 * } else {
-		 */
-		SessionContext.map().put(RegistrationConstants.UIN_UPDATE_REGISTRATIONPREVIEW, true);
-		registrationPreviewController.setUpPreviewContent();
-		// }
-	}
-
-	/**
-	 * Update UIN next page.
-	 *
-	 * @param pageFlag the page flag
-	 * @return true, if successful
-	 */
-	protected boolean updateUINNextPage(String pageFlag) {
-		return RegistrationConstants.ENABLE.equalsIgnoreCase(getValueFromApplicationContext(pageFlag))
-				&& !(Boolean) SessionContext.userMap().get(RegistrationConstants.TOGGLE_BIO_METRIC_EXCEPTION);
-	}
-
-	/**
-	 * Update UIN next page.
-	 *
-	 * @return true, if successful
-	 */
-	protected boolean isChild() {
-		return getRegistrationDTOFromSession().isUpdateUINChild();
-	}
-
-	/**
-	 * Biomertic exception count.
-	 *
-	 * @param biometric the biometric
-	 * @return the long
-	 */
-	protected long biomerticExceptionCount(String biometric) {
-		return getRegistrationDTOFromSession().getBiometricDTO().getApplicantBiometricDTO().getBiometricExceptionDTO()
-				.stream().filter(bio -> bio.getBiometricType().equalsIgnoreCase(biometric)).count();
-	}
-
-	/**
 	 * Gets the value from application context.
 	 *
 	 * @param key the key
@@ -1400,15 +1220,11 @@ public class BaseController {
 	/**
 	 * Gets the quality score.
 	 *
-	 * @param qulaityScore the qulaity score
+	 * @param qualityScore the quality score
 	 * @return the quality score
 	 */
-	protected String getQualityScore(Double qulaityScore) {
-
-		LOGGER.info(LoggerConstants.LOG_REG_BASE, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Fetching Quality score while capturing Biometrics");
-
-		return String.valueOf(Math.round(qulaityScore)).concat(RegistrationConstants.PERCENTAGE);
+	protected String getQualityScoreText(Double qualityScore) {
+		return String.valueOf(Math.round(qualityScore)).concat(RegistrationConstants.PERCENTAGE);
 	}
 
 	/**
@@ -1421,11 +1237,6 @@ public class BaseController {
 
 		LOGGER.info(LoggerConstants.LOG_REG_BASE, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Updating page flow to navigate next or previous");
-
-		// ((Map<String, Map<String, Boolean>>)
-		// ApplicationContext.map().get(RegistrationConstants.REGISTRATION_MAP))
-		// .get(pageId).put(RegistrationConstants.VISIBILITY, val);
-
 		pageFlow.updateRegMap(pageId, RegistrationConstants.VISIBILITY, val);
 	}
 
@@ -1434,45 +1245,6 @@ public class BaseController {
 		generateAlert(RegistrationConstants.SUCCESS.toUpperCase(), RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.RESTART_APPLICATION));
 		restartController.restart();
 
-	}
-
-	protected List<BiometricExceptionDTO> getIrisExceptions() {
-		if ((boolean) SessionContext.map().get(RegistrationConstants.ONBOARD_USER)) {
-			return null;// return
-			// getBiometricDTOFromSession().getOperatorBiometricDTO().getBiometricExceptionDTO();
-		} else if (getRegistrationDTOFromSession().isUpdateUINNonBiometric()
-				|| (SessionContext.map().get(RegistrationConstants.IS_Child) != null
-				&& (boolean) SessionContext.map().get(RegistrationConstants.IS_Child))) {
-			return getRegistrationDTOFromSession().getBiometricDTO().getIntroducerBiometricDTO()
-					.getBiometricExceptionDTO();
-		} else {
-			return getRegistrationDTOFromSession().getBiometricDTO().getApplicantBiometricDTO()
-					.getBiometricExceptionDTO();
-		}
-	}
-
-	/**
-	 * Any iris exception.
-	 *
-	 * @param iris the iris
-	 * @return true, if successful
-	 */
-	protected boolean anyIrisException(String iris) {
-		return getIrisExceptions().stream().anyMatch(exceptionIris -> exceptionIris.isMarkedAsException() && StringUtils
-				.containsIgnoreCase(exceptionIris.getMissingBiometric(), (iris).concat(RegistrationConstants.EYE)));
-	}
-
-	public void getExceptionIdentifier(List<String> exception, String exceptionType) {
-		exception.add(RegistrationConstants.userOnBoardMap.get(exceptionType));
-	}
-
-	/**
-	 * To get the current timestamp
-	 *
-	 * @return Timestamp returns the current timestamp
-	 */
-	protected Timestamp getCurrentTimestamp() {
-		return Timestamp.from(Instant.now());
 	}
 
 	/**
@@ -1500,14 +1272,6 @@ public class BaseController {
 		}
 	}
 
-	public void closeAlertStage() {
-
-		if (alertStage != null && alertStage.isShowing()) {
-			alertStage.close();
-		}
-	}
-
-
 	public interface ToRun<T> {
 		public T toRun();
 	}
@@ -1528,35 +1292,6 @@ public class BaseController {
 		BaseController.isAckOpened = isAckOpened;
 	}
 
-	/*public void loadUIElementsFromSchema() {
-
-		try {
-			List<UiSchemaDTO> schemaFields = identitySchemaService.getLatestEffectiveUISchema();
-			Map<String, UiSchemaDTO> validationsMap = new LinkedHashMap<>();
-			for (UiSchemaDTO schemaField : schemaFields) {
-				validationsMap.put(schemaField.getId(), schemaField);
-				if (schemaField.getType().equals(PacketManagerConstants.BIOMETRICS_DATATYPE)) {
-					mapOfbiometricSubtypes.put(schemaField.getSubType(), schemaField.getLabel().get("primary"));
-					// if (!listOfBiometricSubTypes.contains(schemaField.getSubType()))
-					// listOfBiometricSubTypes.add(schemaField.getSubType());
-				}
-			}
-			validations.setValidations(validationsMap); // Set Validations Map
-
-			// THIS IS NOT REQUIRED
-			*//*
-			 * ApplicationContext.map().put(RegistrationConstants.indBiometrics,
-			 * getBioAttributesBySubType(RegistrationConstants.indBiometrics));
-			 * ApplicationContext.map().put("parentOrGuardianBiometrics",
-			 * getBioAttributesBySubType("parentOrGuardianBiometrics"));
-			 *//*
-
-		} catch (RegBaseCheckedException e) {
-			LOGGER.error(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
-					ExceptionUtils.getStackTrace(e));
-		}
-	}*/
-
 	public SchemaDto getLatestSchema() {
 		try {
 			return identitySchemaService.getIdentitySchema(identitySchemaService.getLatestEffectiveSchemaVersion());
@@ -1572,202 +1307,6 @@ public class BaseController {
 		return entry;
 	}
 
-	/*protected Map<Entry<String, String>, Map<String, List<List<String>>>> getconfigureAndNonConfiguredBioAttributes(
-			List<Entry<String, List<String>>> entryListConstantAttributes) {
-
-		Map<Entry<String, String>, Map<String, List<List<String>>>> mapToProcess = new HashMap<>();
-
-		for (Entry<String, String> uiSchemaSubType : getMapOfbiometricSubtypes().entrySet()) {
-
-			try {
-				// List<String> uiAttributes =
-				// getBioAttributesBySubType(uiSchemaSubType.getKey());
-
-				List<String> uiAttributes = requiredFieldValidator.isRequiredBiometricField(uiSchemaSubType.getKey(),
-						getRegistrationDTOFromSession());
-
-				if (uiAttributes != null && !uiAttributes.isEmpty()) {
-					HashMap<String, List<List<String>>> subMap = new HashMap<>();
-					for (Entry<String, List<String>> constantAttributes : entryListConstantAttributes) {
-						List<String> nonConfigBiometrics = new LinkedList<>();
-						List<String> configBiometrics = new LinkedList<>();
-						String slabType = constantAttributes.getKey();
-						for (String attribute : constantAttributes.getValue()) {
-							if (!uiAttributes.contains(attribute)) {
-								nonConfigBiometrics.add(attribute);
-							} else {
-								configBiometrics.add(attribute);
-							}
-						}
-						subMap.put(slabType, Arrays.asList(configBiometrics, nonConfigBiometrics));
-					}
-					mapToProcess.put(uiSchemaSubType, subMap);
-				}
-			} catch (RegBaseCheckedException exception) {
-				LOGGER.error("REGISTRATION - ALERT - BASE_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
-						ExceptionUtils.getStackTrace(exception));
-			}
-
-		}
-
-		return mapToProcess;
-	}*/
-
-	/*
-	 * protected void disablePaneOnBioAttributes(Node pane, List<String>
-	 * constantBioAttributes) { return;
-	 *//** Put pane disable by default */
-	/*
-	 *
-	 * pane.setDisable(true);
-	 *
-	 *//** Get UI schema individual Biometrics Bio Attributes */
-	/*
-	 *
-	 * List<String> uiSchemaBioAttributes =
-	 * getBioAttributesBySubType(RegistrationConstants.indBiometrics);
-	 *
-	 *//** If bio Attribute not mentioned for bio attribute then disable */
-	/*
-	 *
-	 * if (uiSchemaBioAttributes == null || uiSchemaBioAttributes.isEmpty()) {
-	 * pane.setDisable(true); } else {
-	 *
-	 * for (String attribute : constantBioAttributes) {
-	 *
-	 *//** If bio attribute configured in UI Schema, then enable the pane */
-
-	/*
-	 *
-	 * if (uiSchemaBioAttributes.contains(attribute)) { pane.setDisable(false);
-	 *
-	 *//** Stop the iteration as we got the attribute *//*
-	 * break; } } }
-	 *
-	 * }
-	 */
-
-	// protected void addExceptionDTOs() {
-	// List<String> bioAttributesFromSchema =
-	// getSchemaFieldBioAttributes(RegistrationConstants.indBiometrics);
-	// List<String> bioList = new ArrayList<String>();
-	//
-	// /** If bio Attribute not mentioned for bio attribute then disable */
-	// bioList.addAll(ALL_BIO_ATTRIBUTES);
-	//
-	// /** If bio attribute configured in UI Schema, then enable the pane */
-	// if (bioAttributesFromSchema != null && !bioAttributesFromSchema.isEmpty())
-	// bioList.removeAll(bioAttributesFromSchema);
-	//
-	// List<BiometricExceptionDTO> biometricExceptionDTOs =
-	// biometricExceptionController
-	// .getBiometricsExceptionList(bioList);
-	//
-	// biometricExceptionController.addExceptionToRegistration(biometricExceptionDTOs);
-	//
-	// }
-
-	/*public List<String> getBioAttributesBySubType(String subType) {
-		List<String> bioAttributes = new ArrayList<String>();
-		if (subType != null) {
-			bioAttributes = getAttributesByTypeAndSubType(RegistrationConstants.BIOMETRICS_TYPE, subType);
-		}
-		return bioAttributes;
-	}
-
-	private List<String> getAttributesByTypeAndSubType(String type, String subType) {
-		List<String> bioAttributes = new LinkedList<>();
-		if (type != null && subType != null) {
-			for (Map.Entry<String, UiSchemaDTO> entry : validations.getValidationMap().entrySet()) {
-				if (type.equalsIgnoreCase(entry.getValue().getType())
-						&& subType.equalsIgnoreCase(entry.getValue().getSubType())
-						&& entry.getValue().getBioAttributes() != null) {
-					bioAttributes.addAll(entry.getValue().getBioAttributes());
-				}
-			}
-		}
-		return bioAttributes;
-	}*/
-
-	/*
-	 * protected boolean isAvailableInBioAttributes(List<String> constantAttributes)
-	 * { boolean isAvailable = false; List<String> uiSchemaBioAttributes =
-	 * getBioAttributesBySubType(RegistrationConstants.indBiometrics); // If bio
-	 * Attribute not mentioned for bio attribute then disable if
-	 * (uiSchemaBioAttributes == null || uiSchemaBioAttributes.isEmpty()) {
-	 * isAvailable = false; } else {
-	 *
-	 * for (String attribute : constantAttributes) {
-	 *
-	 * // If bio attribute configured in UI Schema, then enable the pane if
-	 * (uiSchemaBioAttributes.contains(attribute)) {
-	 *
-	 * isAvailable = true; } }
-	 *
-	 * }
-	 *
-	 * return isAvailable; }
-	 */
-
-	/*protected List<String> getNonConfigBioAttributes(String uiSchemaSubType, List<String> constantAttributes) {
-
-		if ((boolean) SessionContext.map().get(RegistrationConstants.ONBOARD_USER))
-			return constantAttributes;
-
-		List<String> nonConfigBiometrics = new LinkedList<>();
-
-		// Get Bio Attributes
-		List<String> uiAttributes = getBioAttributesBySubType(uiSchemaSubType);
-
-		for (String attribute : constantAttributes) {
-			if (!uiAttributes.contains(attribute)) {
-				nonConfigBiometrics.add(attribute);
-			}
-		}
-		return nonConfigBiometrics;
-	}*/
-
-	protected boolean isDemographicField(UiSchemaDTO schemaField) {
-		return (schemaField.isInputRequired()
-				&& !(PacketManagerConstants.BIOMETRICS_DATATYPE.equals(schemaField.getType())
-				|| PacketManagerConstants.DOCUMENTS_DATATYPE.equals(schemaField.getType())));
-	}
-
-	/*
-	 * protected List<String> getConstantConfigBioAttributes(String bioType) {
-<<<<<<< HEAD
-	 *
-	 * return bioType.equalsIgnoreCase(RegistrationUIConstants.RIGHT_SLAP) ?
-=======
-	 * 
-	 * return bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific("RIGHT_SLAP) ?
->>>>>>> f605a2ee04... Worked on alert screens which displays primary language for the alert screen messages and after modification in above files able to see language specific messages getting deisplayed
-	 * RegistrationConstants.rightHandUiAttributes :
-	 * bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific("LEFT_SLAP) ?
-	 * RegistrationConstants.leftHandUiAttributes :
-	 * bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific("THUMBS) ?
-	 * RegistrationConstants.twoThumbsUiAttributes :
-	 * bioType.equalsIgnoreCase(RegistrationConstants.IRIS) ?
-	 * RegistrationConstants.eyesUiAttributes :
-	 * bioType.equalsIgnoreCase(RegistrationConstants.FACE) ?
-	 * Arrays.asList(RegistrationConstants.FACE) : null; }
-	 */
-
-	/*
-	 * protected List<String> getConfigBioAttributes(List<String>
-	 * constantAttributes) {
-	 *
-	 * // Get Bio Attributes List<String> uiAttributes =
-	 * getSchemaFieldBioAttributes(RegistrationConstants.indBiometrics);
-	 *
-	 * return
-	 * constantAttributes.stream().filter(uiAttributes::contains).collect(Collectors
-	 * .toList());
-	 *
-	 *
-	 * }
-	 */
-
 	protected List<String> getContainsAllElements(List<String> source, List<String> target) {
 		if (target != null) {
 			return source.stream().filter(target::contains).collect(Collectors.toList());
@@ -1775,46 +1314,10 @@ public class BaseController {
 		return new ArrayList<String>();
 	}
 
-//	protected void helperMethodForComboBox(ComboBox<?> field, String fieldName, UiSchemaDTO schema, Label label,
-//			Label validationMessage, VBox vbox, String languageType) {
-//
-//		String mandatoryAstrik = demographicDetailController.getMandatorySuffix(schema);
-//		if (languageType.equals(RegistrationConstants.LOCAL_LANGUAGE)) {
-//			label.setText(schema.getLabel().get(RegistrationConstants.SECONDARY) + mandatoryAstrik);
-//			field.setPromptText(label.getText());
-//			field.setDisable(true);
-//			putIntoLabelMap(fieldName + languageType, schema.getLabel().get(RegistrationConstants.SECONDARY));
-//		} else {
-//			label.setText(schema.getLabel().get(RegistrationConstants.PRIMARY) + mandatoryAstrik);
-//			field.setPromptText(label.getText());
-//			putIntoLabelMap(fieldName + languageType, schema.getLabel().get(RegistrationConstants.PRIMARY));
-//		}
-//		// vbox.setStyle("-fx-background-color:BLUE");
-//		vbox.setPrefWidth(500);
-//		vbox.setId(fieldName + RegistrationConstants.Parent);
-//		label.setId(fieldName + languageType + RegistrationConstants.LABEL);
-//		label.setVisible(false);
-//		label.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL);
-//		field.getStyleClass().add("demographicCombobox");
-//		validationMessage.setId(fieldName + languageType + RegistrationConstants.MESSAGE);
-//		validationMessage.getStyleClass().add(RegistrationConstants.DemoGraphicFieldMessageLabel);
-//		label.setPrefWidth(vbox.getPrefWidth());
-//		validationMessage.setPrefWidth(vbox.getPrefWidth());
-//		validationMessage.setVisible(false);
-//		vbox.setSpacing(5);
-//
-//		vbox.getChildren().addAll(label, field, validationMessage);
-//
-////		if (applicationContext.getApplicationLanguage().equals(applicationContext.getLocalLanguage())
-////				&& languageType.equals(RegistrationConstants.LOCAL_LANGUAGE)) {
-////			vbox.setDisable(true);
-////		}
-//	}
-
 	protected void updateByAttempt(double qualityScore, Image streamImage, double thresholdScore,
 								   ImageView streamImagePane, Label qualityText, ProgressBar progressBar, Label progressQualityScore) {
 
-		String qualityScoreLabelVal = getQualityScore(qualityScore);
+		String qualityScoreLabelVal = getQualityScoreText(qualityScore);
 
 		if (qualityScoreLabelVal != null) {
 			// Set Stream image
@@ -1848,35 +1351,28 @@ public class BaseController {
 		Object value = ApplicationContext.map().get(RegistrationConstants.OPERATOR_ONBOARDING_BIO_ATTRIBUTES);
 		List<String> attributes = (value != null) ? Arrays.asList(((String) value).split(","))
 				: new ArrayList<String>();
-		// subMap.put(slabType, Arrays.asList(configBiometrics, nonConfigBiometrics));
 		HashMap<String, List<List<String>>> subMap = new HashMap<String, List<List<String>>>();
-		subMap.put(RegistrationConstants.FINGERPRINT_SLAB_LEFT,
-				Arrays.asList(ListUtils.intersection(RegistrationConstants.leftHandUiAttributes, attributes),
-						ListUtils.subtract(RegistrationConstants.leftHandUiAttributes, attributes)));
-		subMap.put(RegistrationConstants.FINGERPRINT_SLAB_RIGHT,
-				Arrays.asList(ListUtils.intersection(RegistrationConstants.rightHandUiAttributes, attributes),
-						ListUtils.subtract(RegistrationConstants.rightHandUiAttributes, attributes)));
-		subMap.put(RegistrationConstants.FINGERPRINT_SLAB_THUMBS,
-				Arrays.asList(ListUtils.intersection(RegistrationConstants.twoThumbsUiAttributes, attributes),
-						ListUtils.subtract(RegistrationConstants.twoThumbsUiAttributes, attributes)));
-		subMap.put(RegistrationConstants.IRIS_DOUBLE,
-				Arrays.asList(ListUtils.intersection(RegistrationConstants.eyesUiAttributes, attributes),
-						ListUtils.subtract(RegistrationConstants.eyesUiAttributes, attributes)));
-		subMap.put(RegistrationConstants.FACE,
-				Arrays.asList(ListUtils.intersection(RegistrationConstants.faceUiAttributes, attributes),
-						ListUtils.subtract(RegistrationConstants.faceUiAttributes, attributes)));
+		subMap.put(io.mosip.registration.enums.Modality.FINGERPRINT_SLAB_LEFT.name(),
+				Arrays.asList(ListUtils.intersection(io.mosip.registration.enums.Modality.FINGERPRINT_SLAB_LEFT.getAttributes(), attributes),
+						ListUtils.subtract(io.mosip.registration.enums.Modality.FINGERPRINT_SLAB_LEFT.getAttributes(), attributes)));
+		subMap.put(io.mosip.registration.enums.Modality.FINGERPRINT_SLAB_RIGHT.name(),
+				Arrays.asList(ListUtils.intersection(io.mosip.registration.enums.Modality.FINGERPRINT_SLAB_RIGHT.getAttributes(), attributes),
+						ListUtils.subtract(io.mosip.registration.enums.Modality.FINGERPRINT_SLAB_RIGHT.getAttributes(), attributes)));
+		subMap.put(io.mosip.registration.enums.Modality.FINGERPRINT_SLAB_THUMBS.name(),
+				Arrays.asList(ListUtils.intersection(io.mosip.registration.enums.Modality.FINGERPRINT_SLAB_THUMBS.getAttributes(), attributes),
+						ListUtils.subtract(io.mosip.registration.enums.Modality.FINGERPRINT_SLAB_THUMBS.getAttributes(), attributes)));
+		subMap.put(io.mosip.registration.enums.Modality.IRIS_DOUBLE.name(),
+				Arrays.asList(ListUtils.intersection(io.mosip.registration.enums.Modality.IRIS_DOUBLE.getAttributes(), attributes),
+						ListUtils.subtract(io.mosip.registration.enums.Modality.IRIS_DOUBLE.getAttributes(), attributes)));
+		subMap.put(io.mosip.registration.enums.Modality.FACE.name(),
+				Arrays.asList(ListUtils.intersection(io.mosip.registration.enums.Modality.FACE.getAttributes(), attributes),
+						ListUtils.subtract(io.mosip.registration.enums.Modality.FACE.getAttributes(), attributes)));
 
 		for (Entry<String, String> entry : labels.entrySet()) {
 			mapToProcess.put(entry, subMap);
 		}
 		return mapToProcess;
 	}
-
-	/*protected List<UiSchemaDTO> fetchByGroup(String group) {
-		return validation.getValidationMap().values().stream()
-				.filter(schemaDto -> schemaDto.getGroup() != null && schemaDto.getGroup().equalsIgnoreCase(group))
-				.collect(Collectors.toList());
-	}*/
 
 	public String getCssName() {
 		return cssTheme == null || cssTheme.isBlank() ? "application.css" : String.format("application-%s.css", cssTheme);
@@ -1972,10 +1468,20 @@ public class BaseController {
 
 	protected List<GenericDto> getConfiguredLanguages() {
 		List<GenericDto> languages = new ArrayList<>();
-		for(String langCode : getConfiguredLangCodes()) {
-			languages.add(new GenericDto(langCode,
-					applicationContext.getBundle(langCode, RegistrationConstants.LABELS).getString("language"),
-					langCode));
+		for (String langCode : getConfiguredLangCodes()) {
+			ResourceBundle bundle = applicationContext.getBundle(langCode, RegistrationConstants.LABELS);
+			languages.add(new GenericDto(langCode, bundle != null ? bundle.getString("language") : langCode, langCode));
+		}
+		return languages;
+	}
+	
+	protected List<GenericDto> getConfiguredLanguagesForLogin() {
+		List<GenericDto> languages = new ArrayList<>();
+		for (String langCode : getConfiguredLangCodes()) {
+			ResourceBundle bundle = applicationContext.getBundle(langCode, RegistrationConstants.LABELS);
+			if (bundle != null) {
+				languages.add(new GenericDto(langCode, bundle.getString("language"), langCode));
+			}
 		}
 		return languages;
 	}
@@ -2059,9 +1565,139 @@ public class BaseController {
 		return String.format(TEMPLATE, configFolder, String.join("/", names));
 	}
 	
+	public String getImagePath(String imageName, boolean canDefault) throws RegBaseCheckedException {
+		if (imageName == null || imageName.isEmpty()) {
+			throw new RegBaseCheckedException();
+		}
+		return getImageFilePath(getConfiguredFolder(),imageName);
+	}
+	
 	public void changeNodeOrientation(Node node) {
 		if (node != null && applicationContext.isPrimaryLanguageRightToLeft()) {
 			node.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+		}
+	}
+
+	public Image getImage(BufferedImage bufferedImage) {
+		WritableImage wr = null;
+		if (bufferedImage != null) {
+			wr = new WritableImage(bufferedImage.getWidth(), bufferedImage.getHeight());
+			PixelWriter pw = wr.getPixelWriter();
+			for (int x = 0; x < bufferedImage.getWidth(); x++) {
+				for (int y = 0; y < bufferedImage.getHeight(); y++) {
+					pw.setArgb(x, y, bufferedImage.getRGB(x, y));
+				}
+			}
+		}
+		return wr;
+	}
+	
+	/**
+	 * This method will remove the auth method from list
+	 *
+	 * @param authList    authentication list
+	 * @param flag configuration flag
+	 * @param authCode    auth mode
+	 */
+	protected void removeAuthModes(List<String> authList, String flag, String authCode) {
+
+		LOGGER.info(LoggerConstants.LOG_REG_AUTH, APPLICATION_NAME, APPLICATION_ID,
+				"Ignoring FingerPrint, Iris, Face Authentication if the configuration is off");
+
+		authList.removeIf(auth -> authList.size() > 1 && RegistrationConstants.DISABLE.equalsIgnoreCase(flag)
+				&& auth.equalsIgnoreCase(authCode));
+	}
+	
+	protected boolean haveToSaveAuthToken(String userId) {
+		return SessionContext.userId().equals(userId);
+	}
+	
+	/**
+	 * to capture and validate the fingerprint for authentication
+	 *
+	 * @param userId - username entered in the textfield
+	 * @return true/false after validating fingerprint
+	 * @throws IOException
+	 * @throws RegBaseCheckedException
+	 */
+	protected boolean captureAndValidateFP(String userId, boolean isPacketAuth, boolean isChecker)
+			throws RegBaseCheckedException, IOException {
+		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.FINGERPRINT_SLAB_LEFT, null,
+				"Registration",
+				io.mosip.registration.context.ApplicationContext
+						.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
+				io.mosip.registration.context.ApplicationContext
+						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
+				1, io.mosip.registration.context.ApplicationContext.getIntValueFromApplicationMap(
+				RegistrationConstants.FINGERPRINT_AUTHENTICATION_THRESHHOLD));
+		
+		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
+		boolean fpMatchStatus = authenticationService.authValidator(userId, SingleType.FINGER.value(), biometrics);
+		if (fpMatchStatus && isPacketAuth) {
+			addOperatorBiometrics(biometrics, isChecker);
+		}
+		return fpMatchStatus;
+	}
+
+	/**
+	 * to capture and validate the iris for authentication
+	 *
+	 * @param userId - username entered in the textfield
+	 * @return true/false after validating iris
+	 * @throws IOException
+	 */
+	protected boolean captureAndValidateIris(String userId, boolean isPacketAuth, boolean isChecker) throws RegBaseCheckedException, IOException {
+		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.IRIS_DOUBLE, null, "Registration",
+				io.mosip.registration.context.ApplicationContext
+						.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
+				io.mosip.registration.context.ApplicationContext
+						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
+				2, io.mosip.registration.context.ApplicationContext
+				.getIntValueFromApplicationMap(RegistrationConstants.IRIS_THRESHOLD));
+		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
+
+		boolean match = authenticationService.authValidator(userId, SingleType.IRIS.value(), biometrics);
+		if (match && isPacketAuth) {
+			addOperatorBiometrics(biometrics, isChecker);
+		}
+		return match;
+	}
+
+	/**
+	 * to capture and validate the iris for authentication
+	 *
+	 * @param userId - username entered in the textfield
+	 * @return true/false after validating face
+	 * @throws IOException
+	 * @throws RegBaseCheckedException
+	 */
+	protected boolean captureAndValidateFace(String userId, boolean isPacketAuth, boolean isChecker) throws RegBaseCheckedException, IOException {
+		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.FACE_FULLFACE, null, "Registration",
+				io.mosip.registration.context.ApplicationContext
+						.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
+				io.mosip.registration.context.ApplicationContext
+						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
+				1, io.mosip.registration.context.ApplicationContext
+				.getIntValueFromApplicationMap(RegistrationConstants.FACE_THRESHOLD));
+
+		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
+
+		boolean match = authenticationService.authValidator(userId, SingleType.FACE.value(), biometrics);
+		if (match && isPacketAuth) {
+			addOperatorBiometrics(biometrics, isChecker);
+		}
+		return match;
+	}
+	
+	private void addOperatorBiometrics(List<BiometricsDto> biometrics, boolean isChecker) {
+		if (isChecker) {
+			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.getInstance().getMapObject()
+					.get(RegistrationConstants.REGISTRATION_DATA);
+			registrationDTO.addSupervisorBiometrics(biometrics);
+		} else {
+			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.getInstance().getMapObject()
+					.get(RegistrationConstants.REGISTRATION_DATA);
+			registrationDTO.addOfficerBiometrics(biometrics);
 		}
 	}
 }

@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import io.mosip.registration.repositories.SyncJobDefRepository;
 import org.quartz.CronExpression;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
@@ -78,6 +79,9 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 	 */
 	@Autowired
 	private SyncJobConfigDAO jobConfigDAO;
+
+	@Autowired
+	private SyncJobDefRepository syncJobDefRepository;
 
 	/**
 	 * Scheduler factory bean which will take Job and Trigger details and run jobs
@@ -790,7 +794,7 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 
 		/* Child Job's check */
 		BaseJob.getCompletedJobMap().forEach((jobId, status) -> {
-			if (!status.equalsIgnoreCase(RegistrationConstants.JOB_EXECUTION_SUCCESS)) {
+			if (!status.toLowerCase().contains(RegistrationConstants.JOB_EXECUTION_SUCCESS.toLowerCase())) {
 				failureJobs.add(syncActiveJobMap.get(jobId).getName());
 			}
 		});
@@ -824,7 +828,7 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 		for (String jobId : restartableJobList) {
 
 			/* Check the job completed with success/failure */
-			if (RegistrationConstants.JOB_EXECUTION_SUCCESS.equals(completedSyncJobMap.get(jobId))) {
+			if (completedSyncJobMap.get(jobId) != null && completedSyncJobMap.get(jobId).contains(RegistrationConstants.RESTART)) {
 
 				/* Store job info in attributes of response */
 				Map<String, Object> successJobAttribute = new WeakHashMap<>();
@@ -935,4 +939,8 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 		return CronExpression.isValidExpression(cronExpression);
 	}
 
+	@Override
+	public List<SyncJobDef> getSyncJobs() {
+		return syncJobDefRepository.findAllByIsActiveTrue();
+	}
 }

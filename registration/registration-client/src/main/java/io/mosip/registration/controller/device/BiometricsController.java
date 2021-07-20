@@ -69,7 +69,7 @@ import io.mosip.registration.mdm.dto.MdmBioDevice;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.operator.UserOnboardService;
-import io.mosip.registration.util.common.Modality;
+import io.mosip.registration.enums.Modality;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -1068,11 +1068,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 				};
 			}
 		};
-		if (!bioService.isMdmEnabled()) {
-			rCaptureTaskService();
-		} else {
-			deviceSearchTask.start();
-		}
+		deviceSearchTask.start();
 		// mdmBioDevice = null;
 
 		deviceSearchTask.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
@@ -1090,7 +1086,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 						return;
 
 					}
-					if (bioService.isMdmEnabled()) {
 
 						// Disable Auto-Logout
 						SessionContext.setAutoLogout(false);
@@ -1127,9 +1122,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 						streamer.startStream(urlStream, scanPopUpViewController.getScanImage(), biometricImage);
 
-					} else {
-						rCaptureTaskService();
-					}
 				} catch (RegBaseCheckedException | IOException exception) {
 
 					LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
@@ -1287,7 +1279,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 						boolean isMatchedWithLocalBiometrics = false;
 
 						if (!isExceptionPhoto(currentModality)) {
-							if (bioService.isMdmEnabled() && !isUserOnboardFlag) {
+							if (!isUserOnboardFlag) {
 
 								// TODO Remove dedup enable/disable validation, currently added for testing
 								// purpose
@@ -1369,26 +1361,24 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 								try {
 
-									byte[] byteimage = (bioService.isMdmEnabled()) ? streamer.getStreamImageBytes()
-											: null;
-									if (isFace(currentModality) && bioService.isMdmEnabled()) {
+									byte[] byteimage = streamer.getStreamImageBytes();
+									if (isFace(currentModality)) {
 										byteimage = extractFaceImageData(
 												registrationDTOBiometricsList.get(0).getAttributeISO());
 									}
 									addBioStreamImage(currentSubType, currentModality,
 											registrationDTOBiometricsList.get(0).getNumOfRetries(), byteimage);
 
-									if (currentModality.equalsIgnoreCase(RegistrationConstants.IRIS_DOUBLE)
-											&& bioService.isMdmEnabled()) {
+									if (currentModality.equalsIgnoreCase(RegistrationConstants.IRIS_DOUBLE)) {
 
 										for (BiometricsDto biometricsDto : registrationDTOBiometricsList) {
 											byteimage = extractIrisImageData(biometricsDto.getAttributeISO());
 
 											if (byteimage != null) {
-												addRegistrationStreamImage(currentSubType,
+												/*addRegistrationStreamImage(currentSubType,
 														biometricsDto.getBioAttribute(),
 														registrationDTOBiometricsList.get(0).getNumOfRetries(),
-														byteimage);
+														byteimage);*/
 											}
 										}
 									}
@@ -1518,7 +1508,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	}
 
-	public String getThresholdKeyByBioType(io.mosip.registration.util.common.Modality modality) {
+	public String getThresholdKeyByBioType(Modality modality) {
 		if(modality == null)
 			return RegistrationConstants.EMPTY;
 
@@ -1592,7 +1582,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 				biometricsMap.put(biometricsDto.getBioAttribute(), biometricsDto);
 			}
 
-			return getRegistrationDTOFromSession().addAllBiometrics(subType, biometricsMap,
+			return getRegistrationDTOFromSession().addAllBiometrics(subType, Modality.valueOf(currentModality), biometricsMap,
 					getThresholdScoreInDouble(getThresholdKeyByBioType(Modality.valueOf(currentModality))),
 					getMaxRetryByModality(currentModality));
 		}
@@ -1721,7 +1711,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 		double qualityScore = threshold == null || threshold.isEmpty() ? 0 : Double.parseDouble(threshold);
 
-		thresholdScoreLabel.setText(getQualityScore(qualityScore));
+		thresholdScoreLabel.setText(getQualityScoreText(qualityScore));
 		createQualityBox(retryCount, biometricThreshold);
 
 		clearBioLabels();
@@ -1777,15 +1767,15 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 		biometricPane.getStyleClass().clear();
 		biometricPane.getStyleClass().add(RegistrationConstants.FINGERPRINT_PANES_SELECTED);
-		qualityScore.setText(getQualityScore(qltyScore));
+		qualityScore.setText(getQualityScoreText(qltyScore));
 		attemptSlap.setText(String.valueOf(retry));
 
 		bioProgress.setProgress(
-				Double.valueOf(getQualityScore(qltyScore).split(RegistrationConstants.PERCENTAGE)[0]) / 100);
-		qualityText.setText(getQualityScore(qltyScore));
+				Double.valueOf(getQualityScoreText(qltyScore).split(RegistrationConstants.PERCENTAGE)[0]) / 100);
+		qualityText.setText(getQualityScoreText(qltyScore));
 
 		retry = retry == 0 ? 1 : retry;
-		if (Double.valueOf(getQualityScore(qltyScore).split(RegistrationConstants.PERCENTAGE)[0]) >= thresholdValue) {
+		if (Double.valueOf(getQualityScoreText(qltyScore).split(RegistrationConstants.PERCENTAGE)[0]) >= thresholdValue) {
 			clearAttemptsBox(RegistrationConstants.QUALITY_LABEL_GREEN, retry);
 			bioProgress.getStyleClass().removeAll(RegistrationConstants.PROGRESS_BAR_RED);
 			bioProgress.getStyleClass().add(RegistrationConstants.PROGRESS_BAR_GREEN);
@@ -1990,7 +1980,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 		// clearAllBiometrics();
 
-		if (getRegistrationDTOFromSession() != null && (getRegistrationDTOFromSession().isUpdateUINChild()
+		/*if (getRegistrationDTOFromSession() != null && (getRegistrationDTOFromSession().isUpdateUINChild()
 				|| (SessionContext.map().get(RegistrationConstants.IS_Child) != null
 						&& (Boolean) SessionContext.map().get(RegistrationConstants.IS_Child)))) {
 			getRegistrationDTOFromSession().getBiometricDTO().getIntroducerBiometricDTO()
@@ -1998,7 +1988,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 			getRegistrationDTOFromSession().getBiometricDTO().getIntroducerBiometricDTO()
 					.setIrisDetailsDTO(new ArrayList<>());
-		}
+		}*/
 		// duplicateCheckLbl.setText(RegistrationConstants.EMPTY);
 		clearCaptureData();
 		biometricBox.setVisible(false);
@@ -2011,31 +2001,31 @@ public class BiometricsController extends BaseController /* implements Initializ
 	}
 
 	public void addBioStreamImage(String subType, String modality, int attempt, byte[] streamImage) throws IOException {
-		if (streamImage == null && !bioService.isMdmEnabled()) {
+		if (streamImage == null) {
 			String imagePath = getStubStreamImagePath(modality);
 			STREAM_IMAGES.put(String.format("%s_%s_%s", subType, modality, attempt),
 					new Image(this.getClass().getResourceAsStream(imagePath)));
 
-			addRegistrationStreamImage(subType, isFace(modality) ? RegistrationConstants.FACE_FULLFACE : modality,
+			/*addRegistrationStreamImage(subType, isFace(modality) ? RegistrationConstants.FACE_FULLFACE : modality,
 					attempt, IOUtils.toByteArray(this.getClass().getResourceAsStream(imagePath)));
-
+*/
 		} else {
 			STREAM_IMAGES.put(String.format("%s_%s_%s", subType, modality, attempt),
 					new Image(new ByteArrayInputStream(streamImage)));
 
-			addRegistrationStreamImage(subType, isFace(modality) ? RegistrationConstants.FACE_FULLFACE : modality,
-					attempt, streamImage);
+			/*addRegistrationStreamImage(subType, isFace(modality) ? RegistrationConstants.FACE_FULLFACE : modality,
+					attempt, streamImage);*/
 
 		}
 	}
 
-	private void addRegistrationStreamImage(String subType, String modality, int attempt, byte[] streamImage) {
+	/*private void addRegistrationStreamImage(String subType, String modality, int attempt, byte[] streamImage) {
 		if (getRegistrationDTOFromSession() != null) {
 			getRegistrationDTOFromSession().streamImages.put(String.format("%s_%s_%s", subType, modality, attempt),
 					streamImage);
 		}
 
-	}
+	}*/
 
 	public Image getBioStreamImage(String subType, String modality, int attempt) {
 
@@ -2537,9 +2527,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 			clickedImageView.setOpacity(0);
 			if (isUserOnboardFlag)
 				userOnboardService.removeOperatorBiometricException(currentSubType, clickedImageView.getId());
-			else
+			/*else
 				getRegistrationDTOFromSession().removeBiometricException(currentSubType, clickedImageView.getId());
-
+*/
 		}
 
 		if (hasApplicantBiometricException()) {
@@ -2561,9 +2551,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 			if (isUserOnboardFlag)
 				userOnboardService.removeOperatorBiometrics(currentSubType, exceptionImageView.getId());
-			else
+			/*else
 				getRegistrationDTOFromSession().removeBiometric(currentSubType, exceptionImageView.getId());
-
+*/
 			if (isAllMarked) {
 
 				isAllMarked = isAllMarked && exceptionImageView.getOpacity() == 1 ? true : false;
@@ -2939,9 +2929,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 		ImageView topImageView = getImageView(null, RegistrationConstants.THUMB_IMG, 144, 171, 18, 22, true, true,
 				false);
 
-		ImageView left = getImageView("leftThumb", RegistrationConstants.LEFTTHUMB_IMG, 92, 30, 55, 37, true, true,
+		ImageView left = getImageView("leftThumb", RegistrationConstants.LEFTTHUMB_IMG, 92, 30, 60, 46, true, true,
 				true);
-		ImageView right = getImageView("rightThumb", RegistrationConstants.LEFTTHUMB_IMG, 99, 30, 123, 38, true,
+		ImageView right = getImageView("rightThumb", RegistrationConstants.LEFTTHUMB_IMG, 99, 30, 118, 46, true,
 				true, true);
 
 		pane.getChildren().add(topImageView);
