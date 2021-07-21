@@ -123,6 +123,7 @@ public class NewReg {
 			authenticationPage=new AuthenticationPage(robot);	
 			robotActions=new RobotActions(robot);
 			webViewDocument=new WebViewDocument(robot);
+			biometricUploadPage=new BiometricUploadPage(robot);
 			alerts=new Alerts(robot);
 			rid1=new RID();
 			rid2=new RID();
@@ -233,10 +234,30 @@ public class NewReg {
 		 */
 		authenticationPage.enterUserName(loginUserid);
 		authenticationPage.enterPassword(loginPwd);
-
+		
 		buttons.clickAuthenticateBtn();
 
 
+try {
+	
+	List<String> exceptionFlag=JsonUtil.JsonObjArrayListParsing(jsonContent,"bioExceptionAttributes");	
+	if(exceptionFlag!=null)
+			 {
+				 /**
+					 * Reviewer enter password
+					 * Click Continue 
+					 */
+					authenticationPage.enterUserName(PropertiesUtil.getKeyValue("reviewerUserid"));
+					authenticationPage.enterPassword(PropertiesUtil.getKeyValue("reviewerpwd"));
+					buttons.clickAuthenticateBtn();
+
+			 }
+		
+}catch(Exception e)
+{
+	logger.error("",e);
+}
+		
 		/**
 		 * Click Home, eodapprove, approval Button, authenticate button
 		 * Enter user details
