@@ -146,7 +146,7 @@
 	    "value" : "Kénitra"
 	  } ],
   "bioExceptionAttributes": [
-	  "leftIndex",
+	  
 		"leftLittle",
 		"leftRing",
 		"leftMiddle"
@@ -166,6 +166,7 @@
 			"rightThumb",
 			"face"
 		],
+		"bioAuthAttributes":["leftIndex"],
 	  "proofOfConsent" : [ {
 		    "language" : "eng",
 		    "value" : "Registration Form"
