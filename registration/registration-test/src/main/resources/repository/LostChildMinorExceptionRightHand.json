@@ -146,11 +146,11 @@
 	    "value" : "Kénitra"
 	  } ],
   "bioExceptionAttributes": [
-	  "rightIndex",
+	  
 		"rightLittle",
 		"rightRing"
 	],
-		  "bioAuthAttributes":["rightThumb"],
+		  "bioAuthAttributes":["rightIndex"],
 		  "bioAttributes": [
 				 "leftEye",
 					"rightEye",

@@ -34,7 +34,7 @@ public class BiometricUploadPage {
 	Buttons buttons;
 	
 	
-	BiometricUploadPage(FxRobot robot)
+	public BiometricUploadPage(FxRobot robot)
 	{logger.info("BiometricUploadPage Constructor");
 
 	this.robot=robot;

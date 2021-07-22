@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -106,16 +107,16 @@ public class LostReg {
 	
 	Alerts alerts;
 	public RID lostRegistration(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
-			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonIdentity,String flow,String ageGroup,String fileName,ApplicationContext applicationContext
+			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonContent,String flow,String ageGroup,String fileName,ApplicationContext applicationContext
 			)  {
 
 		try {
 			logger.info("Lost UIN Scenario : " + flow +" FileName : " + fileName);
-		ExtentReportUtil.test2=ExtentReportUtil.reports.createTest("Lost UIN Scenario : " + flow +" FileName : " + fileName);
+		ExtentReportUtil.test1=ExtentReportUtil.reports.createTest("Lost UIN Scenario : " + flow +" FileName : " + fileName);
 		
 		
 		
-		ExtentReportUtil.step1=ExtentReportUtil.test2.createNode("STEP 1-Loading RegClient" );
+		ExtentReportUtil.step1=ExtentReportUtil.test1.createNode("STEP 1-Loading RegClient" );
 		
 		loginPage=new LoginPage(robot);
 		buttons=new Buttons(robot);
@@ -131,7 +132,7 @@ public class LostReg {
 		loginPage.loadLoginScene(applicationPrimaryStage1);
 		
 		
-		ExtentReportUtil.step2=ExtentReportUtil.test2.createNode("STEP 2-Operator Enter Details ");
+		ExtentReportUtil.step2=ExtentReportUtil.test1.createNode("STEP 2-Operator Enter Details ");
 		
 		//Enter userid and password
 		
@@ -154,14 +155,14 @@ public class LostReg {
 		buttons.clicksubmitBtn();
 		}
 		
-		ExtentReportUtil.step3=ExtentReportUtil.test2.createNode("STEP 3-Demographic, Biometric upload ");
+		ExtentReportUtil.step3=ExtentReportUtil.test1.createNode("STEP 3-Demographic, Biometric upload ");
 		
-		webViewDocument=demographicPage.screensFlow(jsonIdentity,flow,ageGroup);
+		webViewDocument=demographicPage.screensFlow(jsonContent,flow,ageGroup);
 		
 
 		ExtentReportUtil.step3.log(Status.PASS, "Demographic, Biometric upload done");
 
-		ExtentReportUtil.step4=ExtentReportUtil.test2.createNode("STEP 4-Accept Preview ");
+		ExtentReportUtil.step4=ExtentReportUtil.test1.createNode("STEP 4-Accept Preview ");
 		
 		buttons.clicknextBtn();
 		
@@ -185,6 +186,26 @@ public class LostReg {
 		buttons.clickAuthenticateBtn();
 
 
+try {
+	
+	List<String> exceptionFlag=JsonUtil.JsonObjArrayListParsing(jsonContent,"bioExceptionAttributes");	
+	if(exceptionFlag!=null)
+			 {
+				 /**
+					 * Reviewer enter password
+					 * Click Continue 
+					 */
+					authenticationPage.enterUserName(PropertiesUtil.getKeyValue("reviewerUserid"));
+					authenticationPage.enterPassword(PropertiesUtil.getKeyValue("reviewerpwd"));
+					buttons.clickAuthenticateBtn();
+
+			 }
+		
+}catch(Exception e)
+{
+	logger.error("",e);
+}
+
 		/**
 		 * Click Home, eodapprove, approval Button, authenticate button
 		 * Enter user details
@@ -195,7 +216,7 @@ public class LostReg {
 		
 		
 		
-		ExtentReportUtil.step5=ExtentReportUtil.test2.createNode("STEP 5-Approve Packet ");
+		ExtentReportUtil.step5=ExtentReportUtil.test1.createNode("STEP 5-Approve Packet ");
 		
 		
 
@@ -227,7 +248,7 @@ if(PropertiesUtil.getKeyValue("upload").equals("Y"))
 			{
 		
 		
-		ExtentReportUtil.step6=ExtentReportUtil.test2.createNode("STEP 6-Upload Packet ");
+		ExtentReportUtil.step6=ExtentReportUtil.test1.createNode("STEP 6-Upload Packet ");
 		
 
 		uploadPacketPage=homePage.clickuploadPacketImageView( applicationPrimaryStage, scene);
@@ -274,9 +295,9 @@ if(PropertiesUtil.getKeyValue("upload").equals("Y"))
 	
 		if(result==true)
 		{
-			ExtentReportUtil.test2.log(Status.PASS, "TESTCASE PASS\n" +"[Appid="+ rid1.rid +"] [RID="+ rid1.appidrid +"] [DATE TIME="+ rid1.ridDateTime +"] [ENVIRONMENT=" +System.getProperty("mosip.hostname")+"]");
+			ExtentReportUtil.test1.log(Status.PASS, "TESTCASE PASS\n" +"[Appid="+ rid1.rid +"] [RID="+ rid1.appidrid +"] [DATE TIME="+ rid1.ridDateTime +"] [ENVIRONMENT=" +System.getProperty("mosip.hostname")+"]");
 		}		else 
-			ExtentReportUtil.test2.log(Status.FAIL, "TESTCASE FAIL");
+			ExtentReportUtil.test1.log(Status.FAIL, "TESTCASE FAIL");
 		
 		ExtentReportUtil.reports.flush();
 		return rid1;
