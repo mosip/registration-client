@@ -582,10 +582,8 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 		// Create object for OSIData DTO
 		registrationDTO.setOsiDataDTO(new OSIDataDTO());
-		if(Role.hasSupervisorRole(SessionContext.userContext().getRoles()))
-			registrationDTO.getOsiDataDTO().setSupervisorID(SessionContext.userId());
-		else
-			registrationDTO.getOsiDataDTO().setOperatorID(SessionContext.userId());
+		//by default setting the maker ID
+		registrationDTO.getOsiDataDTO().setOperatorID(SessionContext.userId());
 
 		// Create RegistrationMetaData DTO & set default values in it
 		RegistrationMetaDataDTO registrationMetaDataDTO = new RegistrationMetaDataDTO();

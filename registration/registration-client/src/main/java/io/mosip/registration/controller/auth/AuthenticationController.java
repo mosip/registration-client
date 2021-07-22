@@ -307,7 +307,7 @@ public class AuthenticationController extends BaseController implements Initiali
 			status = validatePwd(username.getText(), password.getText());
 			if (RegistrationConstants.SUCCESS.equals(status)) {
 				userAuthenticationTypeListValidation.remove(0);
-				addOSIData(userNameField, RegistrationConstants.PWORD);
+				addOSIData(username.getText(), RegistrationConstants.PWORD);
 				loadNextScreen();
 			} else if (RegistrationConstants.FAILURE.equals(status)) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHENTICATION_FAILURE));
