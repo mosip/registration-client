@@ -56,10 +56,11 @@ public class DropDownFxControl extends FxControl {
 		this.control = this;
 		this.node = create(uiSchemaDTO, getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
 
-		//As subType in UI Spec is defined in english we consider using eng to fill initial dropdown
-		if(GenericController.hierarchyLevels.get("eng").containsValue(uiSchemaDTO.getSubType())) {
+		//As subType in UI Spec is defined in any lang we find the langCode to fill initial dropdown
+		String subTypeLangCode = getSubTypeLangCode(uiSchemaDTO.getSubType());
+		if(subTypeLangCode != null) {
 			TreeMap<Integer, String> groupFields = GenericController.currentHierarchyMap.getOrDefault(uiSchemaDTO.getGroup(), new TreeMap<>());
-			for (Entry<Integer, String> entry : GenericController.hierarchyLevels.get("eng").entrySet()) {
+			for (Entry<Integer, String> entry : GenericController.hierarchyLevels.get(subTypeLangCode).entrySet()) {
 				if (entry.getValue().equals(uiSchemaDTO.getSubType())) {
 					this.hierarchyLevel = entry.getKey();
 					groupFields.put(entry.getKey(), uiSchemaDTO.getId());
@@ -76,6 +77,14 @@ public class DropDownFxControl extends FxControl {
 		//clears & refills items
 		fillData(data);
 		return this.control;
+	}
+
+	private String getSubTypeLangCode(String subType) {
+		for( String langCode : GenericController.hierarchyLevels.keySet()) {
+			if(GenericController.hierarchyLevels.get(langCode).containsValue(subType))
+				return langCode;
+		}
+		return null;
 	}
 
 	private VBox create(UiSchemaDTO uiSchemaDTO, String langCode) {
