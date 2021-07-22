@@ -796,7 +796,7 @@ public class RegistrationConstants {
 	public static final String DEFAULT_HOST_NAME = "mosip.registration.audit_default_host_name";
 	public static final String APP_NAME = "mosip.registration.audit_application_name";
 	public static final String APP_ID = "mosip.registration.audit_application_id";
-	public static final String SUPERVISOR_AUTH_CONFIG = "mosip.registration.supervisor_authentication_configuration";
+	public static final String REVIEWER_AUTH_CONFIG = "mosip.registration.reviewer_authentication_configuration";
 	public static final String QUALITY_SCORE = "mosip.registration.quality_score";
 	public static final String FINGERPRINT_AUTHENTICATION_THRESHHOLD = "mosip.fingerprint_authentication.quality_score";
 	public static final String IRIS_AUTHENTICATION_THRESHHOLD = "mosip.iris_authentication.quality_score";
@@ -1890,7 +1890,6 @@ public class RegistrationConstants {
 	
 	/** Moved To Here from UiConstants file */
 	public static final String REGEX_TYPE = "REGEX";
-	public static final String SUPERVISOR_AUTHENTICATION_CONFIGURATION = "mosip.registration.supervisor_authentication_configuration";
 
 	/** BIR Meta info constants */
 	public static final String RETRIES = "RETRIES";

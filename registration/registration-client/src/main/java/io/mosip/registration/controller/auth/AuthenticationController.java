@@ -609,7 +609,7 @@ public class AuthenticationController extends BaseController implements Initiali
 					 */
 					if (!getRegistrationDTOFromSession().getBiometricExceptions().isEmpty()
 							&& RegistrationConstants.ENABLE.equalsIgnoreCase(
-							getValueFromApplicationContext(RegistrationConstants.SUPERVISOR_AUTH_CONFIG))) {
+							getValueFromApplicationContext(RegistrationConstants.REVIEWER_AUTH_CONFIG))) {
 						authCount = 0;
 						isReviewer = true;
 						getAuthenticationModes(ProcessNames.EXCEPTION.getType());
