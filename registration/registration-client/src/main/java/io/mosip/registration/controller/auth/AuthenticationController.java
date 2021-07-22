@@ -5,10 +5,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.Set;
+import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -558,7 +555,7 @@ public class AuthenticationController extends BaseController implements Initiali
 	 * @throws RegBaseCheckedException
 	 */
 	private void getAuthenticationModes(String authType) throws RegBaseCheckedException {
-		LOGGER.info("Loading configured modes of authentication");
+		LOGGER.info("Loading configured modes of authentication {}", authType);
 
 		fingerPrintAuthCount = 0;
 		irisAuthCount = 0;
@@ -571,11 +568,18 @@ public class AuthenticationController extends BaseController implements Initiali
 		if (userAuthenticationTypeList.isEmpty()) {
 			isReviewer = false;
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHENTICATION_ERROR_MSG));
-		} else {
+			return;
+		}/* else {
 			userAuthenticationTypeListValidation = userAuthenticationTypeList;
 			userAuthenticationTypeListSupervisorValidation = userAuthenticationTypeList;
 			loadNextScreen();
-		}
+		}*/
+
+		userAuthenticationTypeListValidation = new ArrayList<>();
+		userAuthenticationTypeListValidation.addAll(userAuthenticationTypeList);
+		userAuthenticationTypeListSupervisorValidation = new ArrayList<>();
+		userAuthenticationTypeListSupervisorValidation.addAll(userAuthenticationTypeList);
+		loadNextScreen();
 	}
 
 	/**

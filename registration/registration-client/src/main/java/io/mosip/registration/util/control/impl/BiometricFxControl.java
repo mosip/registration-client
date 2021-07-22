@@ -386,6 +386,11 @@ public class BiometricFxControl extends FxControl {
 
 	@Override
 	public boolean canContinue() {
+		if(requiredFieldValidator.getRequiredBioAttributes(uiSchemaDTO,
+				getRegistrationDTo()).isEmpty()) {
+			return true;
+		}
+
 		Map<String, Boolean> capturedDetails = bioService.getCapturedBiometrics(uiSchemaDTO.getId(),
 				getRegistrationDTo().getIdSchemaVersion(), getRegistrationDTo());
 
