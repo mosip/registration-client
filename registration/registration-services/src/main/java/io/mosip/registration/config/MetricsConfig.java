@@ -137,8 +137,8 @@ public class MetricsConfig {
             // using the Creation extension
             String url = (String) io.mosip.registration.context.ApplicationContext.map()
                     .getOrDefault(TUS_SERVER_URL_CONFIG,"http://localhost:8080/files");
-            int chunkSize = (int) io.mosip.registration.context.ApplicationContext.map()
-                    .getOrDefault(TUS_SERVER_UPLOAD_CHUNKSIZE,"1024");
+            int chunkSize = Integer.valueOf((String)io.mosip.registration.context.ApplicationContext.map()
+                    .getOrDefault(TUS_SERVER_UPLOAD_CHUNKSIZE,"1024"));
             client.setUploadCreationURL(new URL(url));
 
             // Enable resumable uploads by storing the upload URL in memory
