@@ -557,7 +557,6 @@ public class DemographicPage {
 	{
 		logger.info("Schema Control Type textbox");
 		mapValue=null;
-		//if((schema.isInputRequired()) || (schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))) 
 		if(schema.isInputRequired())
 		{	if(schema.getType().contains("simpleType"))
 		{
@@ -603,7 +602,6 @@ public class DemographicPage {
 	{
 		logger.info("Schema Control Type textbox");
 		mapValue=null;
-		//	if(schema.isInputRequired()  && (schema.isRequired() || (schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))))
 		if(schema.isInputRequired()){	if(schema.getType().contains("simpleType"))
 		{
 			try {
@@ -664,59 +662,6 @@ public class DemographicPage {
 			logger.error("",e);
 		}
 	}
-/*
-	public void biometricsupdate(Schema schema,String scenario,String id,String identity)
-	{		try {
-		RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
-		int age=registrationDTO.getAge();
-		String group=registrationDTO.getAgeGroup();
-
-
-		if(schema.isInputRequired() && schema.subType.equalsIgnoreCase("applicant"))
-		{
-			if(group.equals("INFANT"))
-			{	
-				scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
-				List<ConditionalBioAttribute> listBio= schema.getConditionalBioAttributes();
-				for(int index = 0;index<listBio.size();index++)
-				{
-					if(schema.getConditionalBioAttributes().get(index).getAgeGroup().equals("INFANT")
-							&&
-							schema.getConditionalBioAttributes().get(index).getProcess().equals("ALL")
-							)
-						biometricUploadPage.newRegbioUpload(schema.getSubType(),schema.getConditionalBioAttributes().get(index).getBioAttributes(),id,identity);
-				}
-
-			}
-			else {
-
-				scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
-
-				Thread.sleep(400);
-				biometricUploadPage.newRegbioUpload(schema.getSubType(),schema.getBioAttributes(),id,identity);
-			}
-		}
-		else if(
-				schema.subType.equalsIgnoreCase("introducer") && (group.equals("INFANT")||group.equals("MINOR")))
-		{
-
-			if(group.equals("INFANT")) {
-				scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
-				scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
-			}
-			else
-				scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
-
-			Thread.sleep(400);
-			biometricUploadPage.newRegbioUpload(schema.getSubType(),biometricUploadPage.bioAuthAttributeList(identity),id,identity);
-
-		}
-
-	}catch(Exception e)
-	{
-		logger.error("",e);
-	}}
-*/
 	public List<String> fetchbioAttr(Schema schema,String agegroup,String process)
 	{
 		List<String> bioattributes=null;
@@ -745,13 +690,6 @@ public class DemographicPage {
 	{
 		try {
 			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
-			//			
-			//			UiSchemaDTO uiSchemaDTO=//(UiSchemaDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
-			//			
-			//			RequiredFieldValidator requiredFieldValidator = Initialization.getApplicationContext().getBean(RequiredFieldValidator.class);
-			//			ConditionalBioAttributes result=requiredFieldValidator.getConditionalBioAttributes(uiSchemaDTO, registrationDTO);
-			//	
-			//String group=registrationDTO.getAgeGroup();
 			
 //			int age=registrationDTO.getAge();
 			String ageGroup= JsonUtil.JsonObjParsing(identity,"ageGroup");
@@ -811,8 +749,6 @@ public class DemographicPage {
 				try {
 					if(schema.isInputRequired() && (schema.getRequiredOn()).get(0).getExpr().contains("identity.isUpdate"))
 						documentUploadPage.documentDropDownScan(schema, id, JsonIdentity, key);
-					else if(schema.getRequiredOn().get(0).getExpr().contains("identity.isChild")&&(schema.getRequiredOn().get(0).getExpr().contains("identity.isUpdate")))
-						documentUploadPage.documentDropDownScan(schema, id, JsonIdentity, key);
 					else if(schema.getRequiredOn().get(0).getExpr().contains("identity.isUpdate") &&
 							(schema.getRequiredOn().get(0).getExpr().contains("identity.updatableFieldGroups contains '"+uinlist+"'")||
 									schema.getRequiredOn().get(0).getExpr().contains("identity.updatableFields contains '"+schema.getId()+"'")	)
@@ -835,7 +771,6 @@ public class DemographicPage {
 				documentUploadPage.documentDropDownScan(schema, id, JsonIdentity, key);
 			else if(
 					(ageGroup.equalsIgnoreCase("MINOR")||ageGroup.equalsIgnoreCase("INFANT"))
-					&&(schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))
 					&&(schema.getRequiredOn().get(0).getExpr().contains("identity.isNew"))
 					)
 				documentUploadPage.documentDropDownScan(schema, id, JsonIdentity, key);
@@ -952,10 +887,12 @@ public class DemographicPage {
 				logger.info("Read Consent");
 				break;
 			case "textbox":
-				if(ageGroup.equalsIgnoreCase("MINOR")||ageGroup.equalsIgnoreCase("INFANT"))
-					getTextboxKeyValueChild(id,JsonIdentity,key,schema.isTransliterate(),scenario);
-				else
-					getTextboxKeyValue(id,JsonIdentity,key,schema.isTransliterate(),scenario);
+//				if(ageGroup.equalsIgnoreCase("MINOR")||ageGroup.equalsIgnoreCase("INFANT"))
+//					getTextboxKeyValueChild(id,JsonIdentity,key,schema.isTransliterate(),scenario);
+//				else
+//					getTextboxKeyValue(id,JsonIdentity,key,schema.isTransliterate(),scenario);
+				
+				getTextboxKeyValue(id,JsonIdentity,key,schema.isTransliterate(),scenario);
 				break;
 			case "ageDate":
 				//setdob(id,JsonIdentity,key);
@@ -1050,7 +987,7 @@ public class DemographicPage {
 			String scenario) {
 		logger.info("Schema Control Type textbox");
 		mapValue=null;
-		if(schema.isRequired() && schema.isInputRequired())
+		if(schema.isInputRequired())
 		{	if(schema.getType().contains("simpleType"))
 		{
 			try {

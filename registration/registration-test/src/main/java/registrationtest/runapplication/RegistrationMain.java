@@ -22,6 +22,7 @@ import org.testfx.util.WaitForAsyncUtils;
 
 import com.aventstack.extentreports.ExtentReporter;
 import com.aventstack.extentreports.ExtentReports;
+import com.aventstack.extentreports.Status;
 import com.aventstack.extentreports.reporter.ExtentHtmlReporter;
 
 import registrationtest.pages.UpdatePage;
@@ -131,6 +132,8 @@ public class RegistrationMain{
 					
 
 					logger.error("",e);
+					
+					ExtentReportUtil.test1.log(Status.FAIL, "TESTCASE FAIL");
 					ExtentReportUtil.reports.flush();
 					waitsUtil.capture();
 				}	
@@ -143,6 +146,7 @@ public class RegistrationMain{
 
 					logger.error("",e);
 					ExtentReportUtil.reports.flush();
+
 					waitsUtil.capture();
 				}	
 			}
