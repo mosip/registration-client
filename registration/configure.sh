@@ -38,7 +38,7 @@ if wget "${artifactory_url}/artifactory/libs-release-local/reg-client/resources.
 then
   echo "Successfully downloaded reg-client resources, Adding it to reg-client jar"
   /usr/bin/unzip ./resources.zip
-  cd ./resources
+  cd "${work_dir}"/resources
   jar uvf "${work_dir}"/registration-client/target/registration-client-${client_version_env}.jar .
 else
   echo "No separate resources found !!"
