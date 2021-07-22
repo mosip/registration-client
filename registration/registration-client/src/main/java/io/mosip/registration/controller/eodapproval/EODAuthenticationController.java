@@ -685,8 +685,8 @@ public class EODAuthenticationController extends BaseController implements Initi
 	 * @return boolean variable "true", if the person is authenticated as supervisor
 	 *         or "false", if not
 	 */
-	protected boolean fetchUserRole(String userId) {
-		LOGGER.info("Fetching the user role in case of Supervisor Authentication");
+	protected boolean isValidSupervisor(String userId) {
+		LOGGER.info("Validating the user role in case of Supervisor Authentication");
 
 		UserDTO userDTO = loginService.getUserDetail(userId);
 		if (userDTO != null) {
@@ -707,23 +707,20 @@ public class EODAuthenticationController extends BaseController implements Initi
 	}
 	
 	private boolean validateInput(TextField userId, TextField pword) {
-		boolean isValid = false;
-		if (!userId.getText().isEmpty()) {
-			isValid = true;
-			if (!fetchUserRole(userId.getText())) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
-						.getMessageLanguageSpecific(RegistrationUIConstants.USER_NOT_AUTHORIZED));
-				return false;
-			} else {
-				userNameField = userId.getText();
-			}
-			if (pword != null && pword.getText().isEmpty()) {
-				isValid = false;
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PWORD_FIELD_EMPTY));
-			}
-		} else {
+		if (userId.getText().isEmpty()) {
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
+			return false;
 		}
-		return isValid;
+		if (pword != null && pword.getText().isEmpty()) {
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PWORD_FIELD_EMPTY));
+			return false;
+		}
+		if (!isValidSupervisor(userId.getText())) {
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants
+					.getMessageLanguageSpecific(RegistrationUIConstants.USER_NOT_AUTHORIZED));
+			return false;
+		} 
+		userNameField = userId.getText();
+		return true;
 	}
 }

@@ -906,8 +906,8 @@ public class AuthenticationController extends BaseController implements Initiali
 	 * @return boolean variable "true", if the person is authenticated as reviewer
 	 *         or "false", if not
 	 */
-	private boolean fetchUserRole(String userId) {
-		LOGGER.info("Fetching the user role in case of Reviewer Authentication");
+	private boolean isValidReviewer(String userId) {
+		LOGGER.info("Validating the user role in case of Reviewer Authentication");
 
 		UserDTO userDTO = loginService.getUserDetail(userId);
 		if (userDTO != null && !SessionContext.userId().equals(userId)) {
@@ -917,42 +917,33 @@ public class AuthenticationController extends BaseController implements Initiali
 	}
 	
 	private boolean validateInput(TextField userId, TextField pword) {
-		boolean isValid = false;
-		if (!userId.getText().isEmpty()) {
-			isValid = true;
-			if (isReviewer) {
-				if (!fetchUserRole(userId.getText())) {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REVIEWER_NOT_AUTHORIZED));
-					return false;
-				} else {
-					userNameField = userId.getText();
-				}
-			}
-			if (pword != null && pword.getText().isEmpty()) {
-				isValid = false;
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PWORD_FIELD_EMPTY));
-			}
-		} else {
+		if (userId.getText().isEmpty()) {
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
+			return false;
 		}
-		return isValid;
+		if (pword != null && pword.getText().isEmpty()) {
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PWORD_FIELD_EMPTY));
+			return false;
+		}
+		if (isReviewer) {
+			if (!isValidReviewer(userId.getText())) {
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REVIEWER_NOT_AUTHORIZED));
+				return false;
+			}
+			userNameField = userId.getText();
+		}
+		return true;
 	}
 	
 	private void addOSIData(String userName, String authMode) {
 		if (isReviewer) {
 			getOSIData().setSupervisorID(userName);
-			if (RegistrationConstants.PWORD.equalsIgnoreCase(authMode)) {
-				getOSIData().setSuperviorAuthenticatedByPassword(true);
-			} else if (RegistrationConstants.OTP.equalsIgnoreCase(authMode)) {
-				getOSIData().setSuperviorAuthenticatedByPIN(true);
-			}
+			getOSIData().setSuperviorAuthenticatedByPassword(RegistrationConstants.PWORD.equalsIgnoreCase(authMode));
+			getOSIData().setSuperviorAuthenticatedByPIN(RegistrationConstants.OTP.equalsIgnoreCase(authMode));
 		} else {
 			getOSIData().setOperatorID(userName);
-			if (RegistrationConstants.PWORD.equalsIgnoreCase(authMode)) {
-				getOSIData().setOperatorAuthenticatedByPassword(true);
-			} else if (RegistrationConstants.OTP.equalsIgnoreCase(authMode)) {
-				getOSIData().setSuperviorAuthenticatedByPIN(true);
-			}
+			getOSIData().setOperatorAuthenticatedByPassword(RegistrationConstants.PWORD.equalsIgnoreCase(authMode));
+			getOSIData().setSuperviorAuthenticatedByPIN(RegistrationConstants.OTP.equalsIgnoreCase(authMode));
 		}		
 	}
 
