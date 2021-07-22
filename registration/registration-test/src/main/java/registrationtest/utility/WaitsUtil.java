@@ -37,7 +37,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
-import registrationtest.runapplication.NewRegistrationAdultTest;
+import registrationtest.runapplication.RegistrationMain;
 import org.apache.log4j.BasicConfigurator;  
 import org.apache.log4j.LogManager;  
 import org.apache.log4j.Logger;
@@ -63,7 +63,7 @@ public class WaitsUtil {
 	}
 
 	public WaitsUtil() {
-		// TODO Auto-generated constructor stub
+	
 	}
 
 	public <T extends Node> T lookupById(final String controlId) {
@@ -83,7 +83,7 @@ public class WaitsUtil {
 				});
 		} catch (TimeoutException e) {
 		
-			logger.error(e.getMessage());
+			logger.error("",e);
 			capture();
 		}
 			return robot.lookup(controlId).query();
@@ -123,12 +123,13 @@ public class WaitsUtil {
 		 
 	//	 Platform.runLater(() -> {
 		 ScrollPane scrollPane = lookupById("#scrollPane");
-		
+		 scrollPane.setVvalue(scrollPane.getVmax());
+		 
 		 double h = scrollPane.getContent().getBoundsInLocal().getHeight();
 		    double y = (node.getBoundsInParent().getMaxY() + 
 		                node.getBoundsInParent().getMinY()) / 2.0;
 		    double v = scrollPane.getViewportBounds().getHeight();
-		  // scrollPane.setVvalue(scrollPane.getVmax() * ((y - 0.5 * v) / (h - v)));
+		  scrollPane.setVvalue(scrollPane.getVmax() * ((y - 0.5 * v) / (h - v)));
 		    scrollPane.layout();
 		    scrollPane.setVvalue(0.5);
 		    scrollPane.requestFocus();
@@ -178,7 +179,7 @@ public class WaitsUtil {
 			robot.scroll(scrollcount, VerticalDirection.DOWN);
 
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 
 	}
@@ -193,7 +194,7 @@ public class WaitsUtil {
 			.until(() -> (robot.lookup(controlId).queryAs(TextField.class))!= null);
 		}catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 			capture();
 
 
@@ -212,7 +213,7 @@ public class WaitsUtil {
 			.until(() -> (robot.lookup(controlId).queryAs(Button.class))!= null);
 		}catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		capture();
 
 		}
@@ -233,7 +234,7 @@ public void capture()
 	String fileName="Out"+datetim+".jpg";
 	ImageIO.write(image, "jpg",new File(fileName));
 	} catch (Exception e) {
-		logger.error(e.getMessage());
+		logger.error("",e);
 		
 	}
 	

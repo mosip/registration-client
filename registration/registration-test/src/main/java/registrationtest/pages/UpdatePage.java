@@ -10,7 +10,7 @@ import org.testfx.api.FxRobot;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-import registrationtest.runapplication.NewRegistrationAdultTest;
+
 import registrationtest.utility.JsonUtil;
 import registrationtest.utility.WaitsUtil;
 
@@ -53,8 +53,7 @@ public class UpdatePage {
 		try {
 			updateUINAttributes=JsonUtil.JsonObjArrayListParsing(JsonIdentity, "updateUINAttributes");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("",e);
 		}
 		for(String attr:updateUINAttributes)
 		waitsUtil.clickNodeAssert("#"+attr);

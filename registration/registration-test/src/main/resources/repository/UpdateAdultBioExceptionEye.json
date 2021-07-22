@@ -1,5 +1,7 @@
 { "identity" : {
-	"flow":"updateadult",
+	"ageGroup":"ADULT",
+	"process":"Update",
+	"preferredLang":"English",
 	"UIN":"5931539704",
 	"gender" : [ {
     "language" : "eng",
@@ -35,7 +37,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  }],
-  "dateOfBirth" : "20",
+	  "dateOfBirth" : "20",
   
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
@@ -145,16 +147,16 @@
 	    "value" : "Kénitra"
 	  } ],
 	  
-	  "updateUINAttributes":["Biometrics"],	
-		  "bioAuthAttributes":["leftEye"],
+	  "updateUINAttributes":["DateOfBirth","Biometrics"],	
+		  "bioAuthAttributes":["leftIndex"],
   "bioExceptionAttributes": [
 	  "leftEye","leftLittle",
 		"leftRing",
 		"leftMiddle"
 		
 	],
-	 "bioExceptionAttributes1": [
-			"leftEye",
+	 "bioAttributes": [
+		 "leftEye",
 			"rightEye",
 			"rightIndex",
 			"rightLittle",
@@ -165,8 +167,8 @@
 			"leftRing",
 			"leftMiddle",
 			"leftThumb",
-			"rightThumb"
-			
+			"rightThumb",
+			"face"
 		],
 	  "proofOfConsent" : [ {
 		    "language" : "eng",
@@ -205,6 +207,17 @@
 					  {
 						    "language" : "ara",
 						    "value" : "جواز سفر"
-						  } ]
+						  } ],
+						  "proofOfDateOfBirth" : [ {
+							    "language" : "eng",
+							    "value" : "Certificate of Birth"
+							  }, {
+							    "language" : "fra",
+							    "value" : "Certificat de naissance"
+							  },
+							  {
+								    "language" : "ara",
+								    "value" : "شهادة الميلاد"
+								  } ]
 } } 
 

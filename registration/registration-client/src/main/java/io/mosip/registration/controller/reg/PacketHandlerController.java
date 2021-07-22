@@ -670,39 +670,30 @@ public class PacketHandlerController extends BaseController implements Initializ
 			auditFactory.audit(AuditEvent.NAV_UIN_UPDATE, Components.NAVIGATION,
 					SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-			if (RegistrationConstants.DISABLE
-					.equalsIgnoreCase(getValueFromApplicationContext(RegistrationConstants.FINGERPRINT_DISABLE_FLAG))
-					&& RegistrationConstants.DISABLE.equalsIgnoreCase(
-							getValueFromApplicationContext(RegistrationConstants.IRIS_DISABLE_FLAG))) {
+			Parent root = BaseController.load(getClass().getResource(RegistrationConstants.UIN_UPDATE), 
+					applicationContext.getBundle(registrationController.getSelectedLangList().get(0), RegistrationConstants.LABELS));
 
-				generateAlert(RegistrationConstants.ERROR,
-						RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_UIN_NO_BIOMETRIC_CONFIG_ALERT));
+			LOGGER.info("REGISTRATION - update UIN - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
+					APPLICATION_ID, "updating UIN");
+
+			if (!validateScreenAuthorization(root.getId())) {
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHORIZATION_ERROR));
 			} else {
-				Parent root = BaseController.load(getClass().getResource(RegistrationConstants.UIN_UPDATE), 
-						applicationContext.getBundle(registrationController.getSelectedLangList().get(0), RegistrationConstants.LABELS));
 
-				LOGGER.info("REGISTRATION - update UIN - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
-						APPLICATION_ID, "updating UIN");
-
-				if (!validateScreenAuthorization(root.getId())) {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHORIZATION_ERROR));
-				} else {
-
-					StringBuilder errorMessage = new StringBuilder();
-					ResponseDTO responseDTO;
-					responseDTO = validateSyncStatus();
-					List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
-					if (errorResponseDTOs != null && !errorResponseDTOs.isEmpty()) {
-						for (ErrorResponseDTO errorResponseDTO : errorResponseDTOs) {
-							errorMessage.append(
-									RegistrationUIConstants.getMessageLanguageSpecific(errorResponseDTO.getMessage())
-											+ "\n\n");
-						}
-						generateAlert(RegistrationConstants.ERROR, errorMessage.toString().trim());
-
-					} else {
-						getScene(root);
+				StringBuilder errorMessage = new StringBuilder();
+				ResponseDTO responseDTO;
+				responseDTO = validateSyncStatus();
+				List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
+				if (errorResponseDTOs != null && !errorResponseDTOs.isEmpty()) {
+					for (ErrorResponseDTO errorResponseDTO : errorResponseDTOs) {
+						errorMessage.append(
+								RegistrationUIConstants.getMessageLanguageSpecific(errorResponseDTO.getMessage())
+										+ "\n\n");
 					}
+					generateAlert(RegistrationConstants.ERROR, errorMessage.toString().trim());
+
+				} else {
+					getScene(root);
 				}
 			}
 		} catch (IOException ioException) {

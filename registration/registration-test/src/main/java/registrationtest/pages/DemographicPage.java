@@ -12,10 +12,19 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
+import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.controller.Initialization;
+import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.mastersync.GenericDto;
+import io.mosip.registration.dto.schema.ConditionalBioAttributes;
+import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.validator.RequiredFieldValidator;
+
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.testfx.api.FxRobot;
@@ -27,9 +36,11 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import registrationtest.controls.Buttons;
+import registrationtest.pojo.schema.ConditionalBioAttribute;
 import registrationtest.pojo.schema.Root;
 import registrationtest.pojo.schema.Schema;
 import registrationtest.pojo.schema.Screens;
+import registrationtest.utility.DateUtil;
 import  registrationtest.utility.JsonUtil;
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;
@@ -66,8 +77,8 @@ public class DemographicPage {
 	Boolean flagproofOf=true;
 	Boolean flagBiometrics=true;
 	LinkedHashMap<String, Integer> allignmentgroupMap;
-	static int age=0;
-	String age1=null;
+
+	Boolean flag=false;
 	public DemographicPage(FxRobot robot) {
 		logger.info(" DemographicPage Constructor  ");
 
@@ -81,34 +92,9 @@ public class DemographicPage {
 		allignmentgroupMap=new LinkedHashMap<String, Integer>();
 	}
 
-	public String getTextFields(String id1) {
-
-		Platform.runLater(new Runnable() {
-			@Override
-			public void run() {
-
-				try {
-					demoTextField2= waitsUtil.lookupById(id1);
-					assertNotNull(demoTextField2, id1+" not present");
-
-					if(demoTextField2.getText().trim().isEmpty())
-						age1=demoTextField2.getText();
-
-				}
-				catch(Exception e)
-				{
-					logger.error(e.getMessage());
-				}
-
-			}
-		});	
-
-		return age1;
-
-	}
 
 	public void setTextFields(String id,String idSchema) {
-
+		flag=false;
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
@@ -121,13 +107,33 @@ public class DemographicPage {
 					demoTextField= waitsUtil.lookupById(id);
 					assertNotNull(demoTextField, id+" not present");
 
-					if(demoTextField.isEditable() && demoTextField.isVisible() )
-						demoTextField.setText(idSchema);
+					try {
+						if(demoTextField.isEditable() && demoTextField.isVisible() )
+						{
+							String makeUniqueEntry[]=PropertiesUtil.getKeyValue("makeUniqueEntry").split("@@");
+							for(String uniqueid:makeUniqueEntry)
+							{
+								if(id.contains(uniqueid))
+								{	demoTextField.setText(idSchema+DateUtil.getDateTime());
+								flag=true;
 
+								}
+							}
+						}
+					}catch(Exception e)
+					{
+						logger.error("Invalid makeUniqueEntry or empty", e);
+
+					}
+					if(flag==false)
+					{
+						demoTextField.setText(idSchema);
+					}
 				}
+
 				catch(Exception e)
 				{
-					logger.error(e.getMessage());
+					logger.error("",e);
 				}
 
 			}
@@ -136,6 +142,7 @@ public class DemographicPage {
 
 	public void setTextFieldsChild(String id,String idSchema) {
 		logger.info(" setTextFields in " + id +" " + idSchema );
+		flag=false;
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
@@ -144,13 +151,30 @@ public class DemographicPage {
 					demoTextField= waitsUtil.lookupById(id);
 					assertNotNull(demoTextField, id+" not present");
 
-					if(demoTextField.isEditable() && demoTextField.isVisible())
-					{	
+					try {
+						String makeUniqueEntry[]=PropertiesUtil.getKeyValue("makeUniqueEntry").split("@@");
+
+						for(String uniqueid:makeUniqueEntry)
+						{
+							if(id.contains(uniqueid))
+							{	demoTextField.setText(idSchema+DateUtil.getDateTime());
+							flag=true;
+
+							}
+						}
+					}catch(Exception e)
+					{
+						logger.error("",e);
+					}
+
+					if(flag==false)
+					{
 						demoTextField.setText(idSchema);
-					}	}
+					}
+				}
 				catch(Exception e)
 				{
-					logger.error(e.getMessage());
+					logger.error("",e);
 				}
 			}
 		});	
@@ -167,7 +191,7 @@ public class DemographicPage {
 	 * @param documentUpload
 	 * @return
 	 */
-	public WebViewDocument scemaDemoDocUploadAdult(String JsonIdentity,String scenario)  {
+	public WebViewDocument screensFlow(String JsonIdentity,String flow,String ageGroup)  {
 
 		/**
 		 *  convert jsonFromSchema intoJava
@@ -178,7 +202,7 @@ public class DemographicPage {
 			rootSchema = JsonUtil.convertJsonintoJava(jsonFromSchema, Root.class);
 			logger.info(rootSchema.getIdVersion()); logger.info("Automaiton Script - Printing Input file Json" + JsonIdentity);
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 
 
@@ -222,9 +246,9 @@ public class DemographicPage {
 						try {
 							if(schema.getGroup().equals(PropertiesUtil.getKeyValue("Documents"))&&schema.isInputRequired())
 							{	if(flagproofOf) 
-								{	scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("proofscroll")));
-									flagproofOf=false;
-								}
+							{	scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("proofscroll")));
+							flagproofOf=false;
+							}
 							}else if(schema.getGroup().equals(PropertiesUtil.getKeyValue("Biometrics"))) 
 							{	if(flagBiometrics) { 
 							}
@@ -242,22 +266,22 @@ public class DemographicPage {
 							//								scrollVerticalDirection(i,schema);
 							//							}
 						}catch(Exception e)
-						{logger.error(e.getMessage());
+						{logger.error("",e);
 						}
 						logger.info("Automaiton Script - id="+i + "=" +schema.getId() + "\tSchemaControlType=" + schema.getControlType());
-						if(scenario.contains("update"))
+						if(flow.equalsIgnoreCase("Update"))
 						{
-							contolTypeUpdate(schema,JsonIdentity,scenario);
+							contolTypeUpdate(schema,JsonIdentity,flow,ageGroup);
 						}
 						else
 						{
-							contolType(schema,JsonIdentity,scenario);
+							contolType(schema,JsonIdentity,flow,ageGroup);
 						}
 					}
 				}
 				catch(Exception e)
 				{
-					logger.error(e.getMessage());
+					logger.error("",e);
 				}
 			}
 		}
@@ -272,9 +296,9 @@ public class DemographicPage {
 			robot.scroll(Integer.parseInt(PropertiesUtil.getKeyValue("scrollVerticalDirection2")), VerticalDirection.DOWN);
 
 		} catch (NumberFormatException e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		} catch (IOException e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 
 	}
@@ -284,7 +308,7 @@ public class DemographicPage {
 			robot.scroll(scrollcount, VerticalDirection.DOWN);
 
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 
 	}
@@ -295,19 +319,19 @@ public class DemographicPage {
 			robot.scroll(scrollcount, VerticalDirection.DOWN);
 
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 
 	}
-	
-	
-	
+
+
+
 	private void  scrollVerticalDirection(int i,Schema schema)  {
 		String[] lang=null;
 		try {
 			lang = PropertiesUtil.getKeyValue("langcode").split("@@");
 		} catch (IOException e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 
 		if(schema.getAlignmentGroup()==null)
@@ -322,7 +346,7 @@ public class DemographicPage {
 					robot.scroll(Integer.parseInt(PropertiesUtil.getKeyValue("scrollVerticalDirection2")), VerticalDirection.DOWN);
 
 			}  catch (Exception e) {
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 		}
 		else
@@ -369,7 +393,7 @@ public class DemographicPage {
 
 
 			} catch (Exception e) {
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 		}
 	}
@@ -401,7 +425,7 @@ public class DemographicPage {
 			taskThread.join();
 			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
 		} catch (NumberFormatException | InterruptedException | IOException e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		} 
 
 	}
@@ -418,7 +442,7 @@ public class DemographicPage {
 			jsonFromSchema = Files.readString(Paths.get(schemaJsonFilePath));
 			logger.info("Automaiton Script - Printing jsonFromSchema" + jsonFromSchema);
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 		return jsonFromSchema;
 	}
@@ -469,7 +493,7 @@ public class DemographicPage {
 	try {
 		listLang = PropertiesUtil.getKeyValue("langcode").split("@@");
 	} catch (IOException e) {
-		logger.error(e.getMessage());
+		logger.error("",e);
 	}
 
 	try
@@ -497,7 +521,7 @@ public class DemographicPage {
 	}
 	catch(Exception e)
 	{
-		logger.error(e.getMessage());
+		logger.error("",e);
 
 	}
 	return screenList;
@@ -509,17 +533,17 @@ public class DemographicPage {
 		try {
 			updateUINAttributes=JsonUtil.JsonObjArrayListParsing(JsonIdentity, "updateUINAttributes");
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 		return updateUINAttributes;
 	}
 
-	public void getTextboxKeyValueUpdate(String id,String JsonIdentity,String key,Schema schema,Boolean trans,String scenario)
+	public void getTextboxKeyValueUpdate(String id,String JsonIdentity,String key,Schema schema,Boolean trans,String scenario,String ageGroup)
 	{	
 		for(String uinlist:getupdateUINAttributes(JsonIdentity)) {
 			if(schema.getGroup().equals(uinlist))
 			{
-				if(scenario.contains("child"))
+				if(ageGroup.equalsIgnoreCase("INFANT")||ageGroup.equalsIgnoreCase("MINOR"))
 					getTextboxKeyValueChild1(id,JsonIdentity,key,schema.isTransliterate(),scenario);
 				else 
 					getTextboxKeyValue1(id,JsonIdentity,key,schema.isTransliterate(),scenario);
@@ -533,7 +557,6 @@ public class DemographicPage {
 	{
 		logger.info("Schema Control Type textbox");
 		mapValue=null;
-		//if((schema.isInputRequired()) || (schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))) 
 		if(schema.isInputRequired())
 		{	if(schema.getType().contains("simpleType"))
 		{
@@ -558,7 +581,7 @@ public class DemographicPage {
 			try {
 				value = JsonUtil.JsonObjParsing(JsonIdentity,key);
 			} catch (Exception e) {
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 			try {
 				String[] listLang=PropertiesUtil.getKeyValue("langcode").split("@@");
@@ -566,7 +589,7 @@ public class DemographicPage {
 				setTextFields(id+listLang[0],value);
 			} catch (IOException e) {
 
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 		}
 		}
@@ -579,7 +602,6 @@ public class DemographicPage {
 	{
 		logger.info("Schema Control Type textbox");
 		mapValue=null;
-	//	if(schema.isInputRequired()  && (schema.isRequired() || (schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))))
 		if(schema.isInputRequired()){	if(schema.getType().contains("simpleType"))
 		{
 			try {
@@ -603,7 +625,7 @@ public class DemographicPage {
 			try {
 				value = JsonUtil.JsonObjParsing(JsonIdentity,key);
 			} catch (Exception e) {
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 			try {
 				String[] listLang=PropertiesUtil.getKeyValue("langcode").split("@@");
@@ -611,7 +633,7 @@ public class DemographicPage {
 				setTextFields(id+listLang[0],value);
 			} catch (IOException e) {
 
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 		}
 		}
@@ -623,7 +645,7 @@ public class DemographicPage {
 	{
 		try {
 			if(
-					scenario.contains("update") &&schema.subType.equalsIgnoreCase("applicant-auth"))
+					scenario.equalsIgnoreCase("Update") &&schema.subType.equalsIgnoreCase("applicant-auth"))
 
 			{
 				scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
@@ -637,131 +659,86 @@ public class DemographicPage {
 
 		}catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 	}
-
-	public void biometricsupdate(Schema schema,String scenario,String id,String identity,int age)
+	public List<String> fetchbioAttr(Schema schema,String agegroup,String process)
 	{
-		
+		List<String> bioattributes=null;
 		try {
-		int infantmaxage=Integer.parseInt(PropertiesUtil.getKeyValue("infantmaxage"));
-
-		int minormaxage=Integer.parseInt(PropertiesUtil.getKeyValue("minormaxage"));
-
-			if(schema.isInputRequired() && schema.subType.equalsIgnoreCase("applicant"))
-			{
-				if(
-						//scenario.contains("updatechild")&&
-						schema.getBioAttributes().contains("face") && age<infantmaxage)
-//					
-//				if(scenario.contains("updatechild")&&schema.getBioAttributes().contains("face")
-//						|| (getupdateUINAttributes(identity).contains(PropertiesUtil.getKeyValue("GuardianDetails"))&&schema.getBioAttributes().contains("face")))
-//				
-				{	scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
-
-				biometricUploadPage.newRegbioUpload(schema.getSubType(),"face",id,identity);
-				}
-				else {
-
-					scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
-
-					Thread.sleep(400);
-					biometricUploadPage.newRegbioUpload(schema.getSubType(),schema.getBioAttributes(),id,identity);
-				}
-			}
-			else if(
-					schema.subType.equalsIgnoreCase("introducer")&&
-					//scenario.contains("child")&&
-					age<minormaxage 
-//					&&
-//						(
-//							((schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))&&
-//									(schema.getRequiredOn().get(0).getExpr().contains("identity.isNew")))||
-//							(schema.getRequiredOn().get(0).getExpr().contains("identity.isUpdate") && (getupdateUINAttributes(identity).contains(PropertiesUtil.getKeyValue("GuardianDetails"))))
-//							)
-					)
-
-			{
-
-				if(age<infantmaxage) {
-					scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
-					scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
-				}
-				else
-				scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
-
-				Thread.sleep(400);
-				biometricUploadPage.newRegbioUpload(schema.getSubType(),schema.getBioAttributes(),id,identity);
-
-			}
-
-		}catch(Exception e)
+		for(int index = 0;index<schema.getConditionalBioAttributes().size();index++)
 		{
-			logger.error(e.getMessage());
+			if(schema.getConditionalBioAttributes().get(index).getAgeGroup().equalsIgnoreCase(agegroup)
+					&&
+					(schema.getConditionalBioAttributes().get(index).getProcess().equalsIgnoreCase("ALL")||
+							schema.getConditionalBioAttributes().get(index).getProcess().equalsIgnoreCase(process)
+							))
+				bioattributes=schema.getConditionalBioAttributes().get(index).getBioAttributes();
 		}}
+		catch(Exception e)
+		{
+			logger.error("",e);
+		}
 
+		if(bioattributes==null)
+			bioattributes=schema.getBioAttributes();
 
+		return bioattributes;
+	}
 
-	public void biometrics(Schema schema,String scenario,String id,String identity,int age)
+	public void biometrics(Schema schema,String scenario,String id,String identity)
 	{
 		try {
-			int infantmaxage=Integer.parseInt(PropertiesUtil.getKeyValue("infantmaxage"));
-
-			int minormaxage=Integer.parseInt(PropertiesUtil.getKeyValue("minormaxage"));
+			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
 			
+//			int age=registrationDTO.getAge();
+			String ageGroup= JsonUtil.JsonObjParsing(identity,"ageGroup");
+			String process= JsonUtil.JsonObjParsing(identity,"process");
+			List<String> bioattributes=null;
+
 			if(schema.isInputRequired() && schema.subType.equalsIgnoreCase("applicant"))
 			{
-				if(
-						//scenario.contains("child")&&
-						schema.getBioAttributes().contains("face") && age<=infantmaxage)
+				if(ageGroup.equalsIgnoreCase("INFANT"))
 				{	
 					scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
-					
-					biometricUploadPage.newRegbioUpload(schema.getSubType(),"face",id,identity);
+					//bioattributes=fetchbioAttr(schema,ageGroup,process);
+					biometricUploadPage.newRegbioUpload(schema.getSubType(),biometricUploadPage.bioAttributeList(identity),id,identity);
 				}
 				else {
-					
-					if(age>infantmaxage && age <= minormaxage)
-						scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
-					else
-					scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
-
-					Thread.sleep(400);
-					biometricUploadPage.newRegbioUpload(schema.getSubType(),schema.getBioAttributes(),id,identity);
-				}
+					if(ageGroup.equalsIgnoreCase("MINOR"))
+					{
+					scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
+					//bioattributes=fetchbioAttr(schema,ageGroup,process);
+					biometricUploadPage.newRegbioUpload(schema.getSubType(),biometricUploadPage.bioAttributeList(identity),id,identity);
+					}
+					else if(ageGroup.equalsIgnoreCase("ADULT"))
+					{
+						scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+						Thread.sleep(400);
+					//	bioattributes=fetchbioAttr(schema,ageGroup,process);
+						
+						biometricUploadPage.newRegbioUpload(schema.getSubType(),biometricUploadPage.bioAttributeList(identity),id,identity); 
+					}}
 			}
 			else if(
-					schema.subType.equalsIgnoreCase("introducer")
-					&&
-					age<minormaxage)
-				//	&& (!scenario.contains("lost")) 
-//					&&
-//					scenario.contains("child")&&
-//					(
-//							((schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))&&
-//									(schema.getRequiredOn().get(0).getExpr().contains("identity.isNew")))||
-//							(schema.getRequiredOn().get(0).getExpr().contains("identity.isUpdate") && 
-//									(getupdateUINAttributes(identity).contains(PropertiesUtil.getKeyValue("GuardianDetails"))))
-//							))
-
+					schema.subType.equalsIgnoreCase("introducer") && (ageGroup.equals("INFANT")||ageGroup.equals("MINOR")))
 			{
-				if(age<infantmaxage) {
+
+				if(ageGroup.equalsIgnoreCase("INFANT")) {
 					scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
 					scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
 				}
 				else
-				scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+					scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
 
 				Thread.sleep(400);
-				biometricUploadPage.newRegbioUpload(schema.getSubType(),schema.getBioAttributes(),id,identity);
-
+				biometricUploadPage.newRegbioUpload(schema.getSubType(),biometricUploadPage.bioAuthAttributeList(identity),id,identity);
 
 			}
 
 		}catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}}
 
 	public void fileuploadUpdate(Schema schema,String JsonIdentity,String key,String id,String scenario)
@@ -772,8 +749,6 @@ public class DemographicPage {
 				try {
 					if(schema.isInputRequired() && (schema.getRequiredOn()).get(0).getExpr().contains("identity.isUpdate"))
 						documentUploadPage.documentDropDownScan(schema, id, JsonIdentity, key);
-					else if(schema.getRequiredOn().get(0).getExpr().contains("identity.isChild")&&(schema.getRequiredOn().get(0).getExpr().contains("identity.isUpdate")))
-						documentUploadPage.documentDropDownScan(schema, id, JsonIdentity, key);
 					else if(schema.getRequiredOn().get(0).getExpr().contains("identity.isUpdate") &&
 							(schema.getRequiredOn().get(0).getExpr().contains("identity.updatableFieldGroups contains '"+uinlist+"'")||
 									schema.getRequiredOn().get(0).getExpr().contains("identity.updatableFields contains '"+schema.getId()+"'")	)
@@ -781,7 +756,7 @@ public class DemographicPage {
 						documentUploadPage.documentDropDownScan(schema, id, JsonIdentity, key);
 				}catch(Exception e)
 				{
-					logger.error(e.getMessage());
+					logger.error("",e);
 
 				}
 			}}
@@ -789,17 +764,20 @@ public class DemographicPage {
 
 	}
 
-	public void fileupload(Schema schema,String JsonIdentity,String key,String id,String scenario)
+	public void fileupload(Schema schema,String JsonIdentity,String key,String id,String scenario,String ageGroup)
 	{
 		try {
 			if(schema.isInputRequired() && ( schema.isRequired() || (schema.getRequiredOn()).get(0).getExpr().contains("identity.isNew")))
 				documentUploadPage.documentDropDownScan(schema, id, JsonIdentity, key);
-			else if(scenario.contains("child")&&(schema.getRequiredOn().get(0).getExpr().contains("identity.isChild"))&&(schema.getRequiredOn().get(0).getExpr().contains("identity.isNew")))
+			else if(
+					(ageGroup.equalsIgnoreCase("MINOR")||ageGroup.equalsIgnoreCase("INFANT"))
+					&&(schema.getRequiredOn().get(0).getExpr().contains("identity.isNew"))
+					)
 				documentUploadPage.documentDropDownScan(schema, id, JsonIdentity, key);
 
 		}catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 
 		}
 
@@ -844,7 +822,7 @@ public class DemographicPage {
 
 			}}catch(Exception e)
 		{
-				logger.error(e.getMessage());
+				logger.error("",e);
 		}
 	}
 
@@ -855,11 +833,10 @@ public class DemographicPage {
 			dateofbirth = JsonUtil.JsonObjParsing(JsonIdentity,key);
 		} catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 		setTextFields(id+"ageFieldTextField",dateofbirth);
-		age = Integer.parseInt(dateofbirth);
-		System.out.println(age);
+
 	}
 
 	public void setdob(String id,String JsonIdentity,String key)
@@ -867,17 +844,15 @@ public class DemographicPage {
 		String dateofbirth[] = null;
 		try {
 			dateofbirth = JsonUtil.JsonObjParsing(JsonIdentity,key).split("/");
+			System.out.println(dateofbirth);
 		} catch(Exception e)
 		{
-			logger.error(e.getMessage());}
+			logger.error("",e);}
 		setTextFields(id+"ddTextField",dateofbirth[2]);
 		setTextFields(id+"mmTextField",dateofbirth[1]);
 		setTextFields(id+"yyyyTextField",dateofbirth[0]);
 
-		String age1=getTextFields(id+"ageFieldTextField");
 
-		age = Integer.parseInt(age1);
-		System.out.println(age);
 	}
 
 	public void checkSelection(String id,String JsonIdentity,String key)
@@ -887,7 +862,7 @@ public class DemographicPage {
 			flag = JsonUtil.JsonObjParsing(JsonIdentity,key);
 		} catch(Exception e)
 		{
-			logger.error(e.getMessage());		}
+			logger.error("",e);		}
 		if(flag.equalsIgnoreCase("Y"))
 		{
 
@@ -899,9 +874,9 @@ public class DemographicPage {
 	{
 		for(String uinlist:getupdateUINAttributes(JsonIdentity)) {
 			if(schema.getGroup().equals(uinlist))
-			{				setageDate(id,JsonIdentity,key);
+			{				setageDate(id, JsonIdentity, key);
 			}}}
-	public void contolType(Schema schema,String JsonIdentity,String scenario)
+	public void contolType(Schema schema,String JsonIdentity,String scenario,String ageGroup)
 	{
 		String id="#"+schema.getId(); 
 		String key=schema.getId(); 
@@ -912,12 +887,15 @@ public class DemographicPage {
 				logger.info("Read Consent");
 				break;
 			case "textbox":
-				if(scenario.contains("child"))
-					getTextboxKeyValueChild(id,JsonIdentity,key,schema.isTransliterate(),scenario);
-				else
-					getTextboxKeyValue(id,JsonIdentity,key,schema.isTransliterate(),scenario);
+//				if(ageGroup.equalsIgnoreCase("MINOR")||ageGroup.equalsIgnoreCase("INFANT"))
+//					getTextboxKeyValueChild(id,JsonIdentity,key,schema.isTransliterate(),scenario);
+//				else
+//					getTextboxKeyValue(id,JsonIdentity,key,schema.isTransliterate(),scenario);
+				
+				getTextboxKeyValue(id,JsonIdentity,key,schema.isTransliterate(),scenario);
 				break;
 			case "ageDate":
+				//setdob(id,JsonIdentity,key);
 				setageDate(id,JsonIdentity,key);
 				break;
 
@@ -928,10 +906,10 @@ public class DemographicPage {
 				checkSelection(id,JsonIdentity,key);
 				break;
 			case "fileupload":
-				fileupload(schema,JsonIdentity,key,id,scenario);
+				fileupload(schema,JsonIdentity,key,id,scenario,ageGroup);
 				break;
 			case "biometrics":
-				biometrics(schema,scenario,id,JsonIdentity,age);
+				biometrics(schema,scenario,id,JsonIdentity);
 				break;
 
 			}
@@ -939,12 +917,12 @@ public class DemographicPage {
 		}
 		catch(Exception e )
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 	}
 
 
-	public void contolTypeUpdate(Schema schema,String JsonIdentity,String scenario)
+	public void contolTypeUpdate(Schema schema,String JsonIdentity,String scenario,String ageGroup)
 	{
 		String id="#"+schema.getId(); 
 		String key=schema.getId(); 
@@ -955,7 +933,7 @@ public class DemographicPage {
 				logger.info("Read Consent");
 				break;
 			case "textbox":
-				getTextboxKeyValueUpdate(id,JsonIdentity,key,schema,schema.isTransliterate(),scenario);
+				getTextboxKeyValueUpdate(id,JsonIdentity,key,schema,schema.isTransliterate(),scenario,ageGroup);
 				break;
 			case "ageDate":
 				setageDateUpdate(id,JsonIdentity,key,scenario);
@@ -974,7 +952,8 @@ public class DemographicPage {
 			case "biometrics":
 				if(getupdateUINAttributes(JsonIdentity).contains(schema.getGroup()))
 				{  // All Bio-- IRIS(U) <--- Remaining() based on age
-					biometricsupdate(schema,scenario,id,JsonIdentity,age);
+					//biometricsupdate(schema,scenario,id,JsonIdentity);
+					biometrics(schema,scenario,id,JsonIdentity);
 				}else if( !getupdateUINAttributes(JsonIdentity).contains(schema.getGroup()) 
 						&& 
 						!getupdateUINAttributes(JsonIdentity).contains(PropertiesUtil.getKeyValue("GuardianDetails"))
@@ -987,7 +966,8 @@ public class DemographicPage {
 						&& 
 						getupdateUINAttributes(JsonIdentity).contains(PropertiesUtil.getKeyValue("GuardianDetails")))
 				{//Only Introducer
-					biometricsupdate(schema,scenario,id,JsonIdentity,age);
+					//biometricsupdate(schema,scenario,id,JsonIdentity);
+					biometrics(schema,scenario,id,JsonIdentity);
 
 				}
 				break;
@@ -997,7 +977,7 @@ public class DemographicPage {
 		}
 		catch(Exception e )
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 	}
 
@@ -1007,14 +987,14 @@ public class DemographicPage {
 			String scenario) {
 		logger.info("Schema Control Type textbox");
 		mapValue=null;
-		if(schema.isRequired() && schema.isInputRequired())
+		if(schema.isInputRequired())
 		{	if(schema.getType().contains("simpleType"))
 		{
 			try {
 				mapValue=JsonUtil.JsonObjSimpleParsing(JsonIdentity,key);
 			} catch(Exception e)
 			{
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 			Set<String> keys = mapValue.keySet();
 			for(String ky:keys)
@@ -1033,7 +1013,7 @@ public class DemographicPage {
 				value = JsonUtil.JsonObjParsing(JsonIdentity,key);
 			}catch(Exception e)
 			{
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 			try {
 				String[] listLang=PropertiesUtil.getKeyValue("langcode").split("@@");
@@ -1041,13 +1021,13 @@ public class DemographicPage {
 				setTextFields(id+listLang[0],value);
 			} catch (IOException e) {
 
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 		}
 		}
 
 	}
-	
+
 	private void getTextboxKeyValue1(String id, String JsonIdentity, String key, boolean transliterate,
 			String scenario) {
 		logger.info("Schema Control Type textbox");
@@ -1059,7 +1039,7 @@ public class DemographicPage {
 				mapValue=JsonUtil.JsonObjSimpleParsing(JsonIdentity,key);
 			} catch(Exception e)
 			{
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 			Set<String> keys = mapValue.keySet();
 			for(String ky:keys)
@@ -1078,7 +1058,7 @@ public class DemographicPage {
 				value = JsonUtil.JsonObjParsing(JsonIdentity,key);
 			}catch(Exception e)
 			{
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 			try {
 				String[] listLang=PropertiesUtil.getKeyValue("langcode").split("@@");
@@ -1086,7 +1066,7 @@ public class DemographicPage {
 				setTextFields(id+listLang[0],value);
 			} catch (IOException e) {
 
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 		}
 		}

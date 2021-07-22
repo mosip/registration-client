@@ -34,10 +34,12 @@ cd "${work_dir}"/registration-libs/target
 jar uf registration-libs-${client_version_env}.jar props/mosip-application.properties
 cd "${work_dir}"
 
+
 if wget "${artifactory_url}/artifactory/libs-release-local/reg-client/resources.zip"
 then
   echo "Successfully downloaded reg-client resources, Adding it to reg-client jar"
-  /usr/bin/unzip ./resources.zip
+  mkdir resources
+  /usr/bin/unzip ./resources.zip -d ./resources/
   cd ./resources
   jar uvf "${work_dir}"/registration-client/target/registration-client-${client_version_env}.jar .
 else

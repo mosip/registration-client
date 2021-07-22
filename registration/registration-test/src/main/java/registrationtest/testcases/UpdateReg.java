@@ -61,7 +61,7 @@ import registrationtest.pages.WebViewDocument;
 import registrationtest.pojo.output.*;
 import registrationtest.pojo.schema.Root;
 import registrationtest.pojo.schema.Schema;
-import registrationtest.runapplication.NewRegistrationAdultTest;
+import registrationtest.runapplication.RegistrationMain;
 import  registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.JsonUtil;
 import  registrationtest.utility.PropertiesUtil;
@@ -118,11 +118,11 @@ public class UpdateReg {
 
 
 	public RID updateRegistration(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
-			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonContent,String flow,String fileName
+			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonContent,String process,String ageGroup,String fileName
 			,ApplicationContext applicationContext)  {
 		try {
-			logger.info("New Adult Registration Scenario : " + flow +" FileName : " + fileName);
-			ExtentReportUtil.test1=ExtentReportUtil.reports.createTest("New Adult Registration Scenario : " + flow +" FileName : " + fileName);
+			logger.info("New Adult Registration Scenario : " + process +" FileName : " + fileName);
+			ExtentReportUtil.test1=ExtentReportUtil.reports.createTest("Update Scenario : " + process +" FileName : " + fileName);
 			ExtentReportUtil.step1=ExtentReportUtil.test1.createNode("STEP 1-Loading Reg"
 					+ "Client");
 
@@ -169,7 +169,7 @@ public class UpdateReg {
 
 			ExtentReportUtil.step3=ExtentReportUtil.test1.createNode("STEP 3-Demographic, Biometric upload ");
 
-			webViewDocument=demographicPage.scemaDemoDocUploadAdult(jsonContent,flow);
+			webViewDocument=demographicPage.screensFlow(jsonContent,process,ageGroup);
 
 			ExtentReportUtil.step3.log(Status.PASS, "Demographic, Biometric upload done");
 
@@ -178,7 +178,7 @@ public class UpdateReg {
 			ExtentReportUtil.step4=ExtentReportUtil.test1.createNode("STEP 4-Accept Preview ");
 
 
-			rid1=webViewDocument.acceptPreview(flow);
+			rid1=webViewDocument.acceptPreview(process);
 
 			buttons.clicknextBtn();
 
@@ -198,11 +198,31 @@ public class UpdateReg {
 			buttons.clickAuthenticateBtn();
 
 
+try {
+	
+	List<String> exceptionFlag=JsonUtil.JsonObjArrayListParsing(jsonContent,"bioExceptionAttributes");	
+	if(exceptionFlag!=null)
+			 {
+				 /**
+					 * Reviewer enter password
+					 * Click Continue 
+					 */
+					authenticationPage.enterUserName(PropertiesUtil.getKeyValue("reviewerUserid"));
+					authenticationPage.enterPassword(PropertiesUtil.getKeyValue("reviewerpwd"));
+					buttons.clickAuthenticateBtn();
+
+			 }
+		
+}catch(Exception e)
+{
+	logger.error("",e);
+}
+
 			/**
 			 * Click Home, eodapprove, approval Button, authenticate button
 			 * Enter user details
 			 */
-			rid2=webViewDocument.getacknowledgement(flow);
+			rid2=webViewDocument.getacknowledgement(process);
 
 			homePage.clickHomeImg();
 
@@ -261,13 +281,8 @@ public class UpdateReg {
 		}catch(Exception e)
 		{
 
-			logger.error(e.getMessage());
-			try {
-				Thread.sleep(5000);
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			logger.error("",e);
+			
 		}
 		try
 		{
@@ -276,7 +291,7 @@ public class UpdateReg {
 		}
 			catch(Exception e)
 			{
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 			try {
 				loginPage.logout();
@@ -285,7 +300,7 @@ public class UpdateReg {
 			}
 			catch(Exception e)
 			{
-				logger.error(e.getMessage());
+				logger.error("",e);
 			}
 
 

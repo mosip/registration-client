@@ -1,5 +1,7 @@
 { "identity" : {
-	"flow":"lostadult",
+	"ageGroup":"ADULT",
+	"process":"Lost",
+	"preferredLang":"English",
   "gender" : [ {
     "language" : "eng",
     "value" : "Female"
@@ -34,7 +36,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  }],
-  "dateOfBirth" : "20",
+	  "dateOfBirth" : "20",
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
     "format" : "cbeff",
@@ -129,9 +131,9 @@
 	  } ],
   "email" : "abc@abc.co.in",
   "consent":"Y",
-  "introducerRID" : "10002100870000320210420134337",
-  "introducerUIN" : "5931539704",
-   "introducerName" : [ {
+  "introducerRID1" : "10002100870000320210420134337",
+  "introducerUIN1" : "5931539704",
+   "introducerName1" : [ {
     "language" : "eng",
     "value" : "Upgrade1.1.4"
   }, {
@@ -148,8 +150,8 @@
 		"rightRing",
 		"rightMiddle"
 	],
-	 "bioExceptionAttributes1": [
-			"leftEye",
+	 "bioAttributes": [
+		 "leftEye",
 			"rightEye",
 			"rightIndex",
 			"rightLittle",
@@ -160,8 +162,8 @@
 			"leftRing",
 			"leftMiddle",
 			"leftThumb",
-			"rightThumb"
-			
+			"rightThumb",
+			"face"
 		],
 	  "proofOfConsent" : [ {
 		    "language" : "eng",
@@ -200,6 +202,17 @@
 					  {
 						    "language" : "ara",
 						    "value" : "جواز سفر"
-						  } ]
+						  } ],
+						  "proofOfDateOfBirth" : [ {
+							    "language" : "eng",
+							    "value" : "Certificate of Birth"
+							  }, {
+							    "language" : "fra",
+							    "value" : "Certificat de naissance"
+							  },
+							  {
+								    "language" : "ara",
+								    "value" : "شهادة الميلاد"
+								  } ]
 } } 
 

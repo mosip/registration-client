@@ -34,28 +34,4 @@ public static void main(String[] args) throws IOException {
 	System.out.println(value);
 }
 
-/**
- * The method get env config details
- * 
- * @return properties
-
-private static Properties getRunConfigData() {
-	Properties prop = new Properties();
-	InputStream input = null;
-	try {
-		RunConfigUtil.objRunConfig.setUserDirectory();
-		input = new FileInputStream(new File(RunConfigUtil.getResourcePath()+"admin/TestData/RunConfig/envRunConfig.properties").getAbsolutePath());
-		prop.load(input);
-		input.close();
-		return prop;
-	} catch (Exception e) {
-		adminLogger.error("Exception: " + e.getMessage());
-		return prop;
-	}
-}
-
-//Property p=getRunConfigData();
-//p.getProperty(lastname); Parse long
-//
- */
 }

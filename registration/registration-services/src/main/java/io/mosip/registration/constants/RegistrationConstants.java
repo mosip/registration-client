@@ -796,7 +796,7 @@ public class RegistrationConstants {
 	public static final String DEFAULT_HOST_NAME = "mosip.registration.audit_default_host_name";
 	public static final String APP_NAME = "mosip.registration.audit_application_name";
 	public static final String APP_ID = "mosip.registration.audit_application_id";
-	public static final String SUPERVISOR_AUTH_CONFIG = "mosip.registration.supervisor_authentication_configuration";
+	public static final String REVIEWER_AUTH_CONFIG = "mosip.registration.reviewer_authentication_configuration";
 	public static final String QUALITY_SCORE = "mosip.registration.quality_score";
 	public static final String FINGERPRINT_AUTHENTICATION_THRESHHOLD = "mosip.fingerprint_authentication.quality_score";
 	public static final String IRIS_AUTHENTICATION_THRESHHOLD = "mosip.iris_authentication.quality_score";
@@ -815,9 +815,6 @@ public class RegistrationConstants {
 	public static final String MODE_OF_COMM = "mosip.registration.mode_of_communication";
 	public static final String PWORD_LENGTH = "mosip.registration.username_pwd_length";
 	public static final String DOC_DISABLE_FLAG = "mosip.registration.document_enable_flag";
-	public static final String FINGERPRINT_DISABLE_FLAG = "mosip.registration.fingerprint_enable_flag";
-	public static final String IRIS_DISABLE_FLAG = "mosip.registration.iris_enable_flag";
-	public static final String FACE_DISABLE_FLAG = "mosip.registration.face_enable_flag";
 	public static final String GPS_SERIAL_PORT_WINDOWS = "mosip.registration.gps_serial_port_windows";
 	public static final String GPS_PORT_TIMEOUT = "mosip.registration.gps_port_timeout";
 	public static final String GPS_PORT_LINUX = "mosip.registration.gps_serial_port_linux";
@@ -1893,7 +1890,6 @@ public class RegistrationConstants {
 	
 	/** Moved To Here from UiConstants file */
 	public static final String REGEX_TYPE = "REGEX";
-	public static final String SUPERVISOR_AUTHENTICATION_CONFIGURATION = "mosip.registration.supervisor_authentication_configuration";
 
 	/** BIR Meta info constants */
 	public static final String RETRIES = "RETRIES";

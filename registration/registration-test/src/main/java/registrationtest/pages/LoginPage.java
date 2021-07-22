@@ -93,7 +93,7 @@ public class LoginPage {
 			});
 		} catch (Exception e) {
 
-			e.printStackTrace();
+			logger.error("",e);
 		}
 	}
 
@@ -129,7 +129,7 @@ public class LoginPage {
 
 		}catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 
 	}
@@ -155,7 +155,7 @@ public class LoginPage {
 						
 		}catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 		return new HomePage(robot);
 
@@ -190,7 +190,7 @@ public class LoginPage {
 		}
 		catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 		return flag;
 
@@ -219,7 +219,7 @@ public class LoginPage {
 
 		}catch(Exception e)
 		{
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 
 

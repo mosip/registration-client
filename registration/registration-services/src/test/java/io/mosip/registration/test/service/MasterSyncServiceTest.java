@@ -1,7 +1,5 @@
 package io.mosip.registration.test.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
@@ -10,28 +8,12 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
-import io.mosip.kernel.core.util.CryptoUtil;
-import io.mosip.registration.dao.*;
-import io.mosip.registration.dao.impl.RegistrationCenterDAOImpl;
-import io.mosip.registration.entity.*;
-import io.mosip.registration.entity.id.CenterMachineId;
-import io.mosip.registration.entity.id.RegMachineSpecId;
-import io.mosip.registration.exception.ConnectionException;
-import io.mosip.registration.repositories.CenterMachineRepository;
-import io.mosip.registration.repositories.MachineMasterRepository;
-import io.mosip.registration.service.BaseService;
-import io.mosip.registration.service.config.LocalConfigService;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,9 +32,13 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.audit.AuditManagerSerivceImpl;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.Components;
@@ -60,21 +46,42 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
+import io.mosip.registration.dao.DocumentCategoryDAO;
+import io.mosip.registration.dao.IdentitySchemaDao;
+import io.mosip.registration.dao.MachineMappingDAO;
+import io.mosip.registration.dao.MasterSyncDao;
+import io.mosip.registration.dao.UserOnboardDAO;
+import io.mosip.registration.dao.impl.RegistrationCenterDAOImpl;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
-import io.mosip.registration.dto.mastersync.BiometricAttributeDto;
 import io.mosip.registration.dto.mastersync.MasterDataResponseDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
+import io.mosip.registration.entity.BlacklistedWords;
+import io.mosip.registration.entity.CenterMachine;
+import io.mosip.registration.entity.DocumentType;
+import io.mosip.registration.entity.Location;
+import io.mosip.registration.entity.MachineMaster;
+import io.mosip.registration.entity.ReasonCategory;
+import io.mosip.registration.entity.ReasonList;
+import io.mosip.registration.entity.SyncControl;
+import io.mosip.registration.entity.SyncTransaction;
+import io.mosip.registration.entity.id.CenterMachineId;
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.SyncManager;
+import io.mosip.registration.repositories.CenterMachineRepository;
+import io.mosip.registration.repositories.MachineMasterRepository;
+import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
+import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.impl.MasterSyncServiceImpl;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 /**
@@ -212,30 +219,6 @@ public class MasterSyncServiceTest {
 		MasterDataResponseDto masterSyncDto = new MasterDataResponseDto();
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
 		ResponseDTO responseDTO = new ResponseDTO();
-
-		BiometricAttributeDto biometricattributes = new BiometricAttributeDto();
-
-		BiometricAttributeDto biometricAttributeResponseDto = new BiometricAttributeDto();
-
-		biometricattributes.setBiometricTypeCode("1");
-		biometricattributes.setCode("1");
-		biometricattributes.setDescription("finerprints");
-		biometricattributes.setLangCode("eng");
-		biometricattributes.setName("littile finger");
-
-		List<BiometricAttributeDto> biometricattribute = new ArrayList<>();
-		biometricattribute.add(biometricattributes);
-
-		biometricAttributeResponseDto.setBiometricTypeCode("1");
-		biometricAttributeResponseDto.setCode("1");
-		biometricAttributeResponseDto.setDescription("finerprints");
-		biometricAttributeResponseDto.setLangCode("eng");
-		biometricAttributeResponseDto.setName("littile finger");
-
-		List<BiometricAttributeDto> biometrictypes = new ArrayList<>();
-		biometrictypes.add(biometricAttributeResponseDto);
-
-		masterSyncDto.setBiometricattributes(biometrictypes);
 
 		SyncControl masterSyncDetails = new SyncControl();
 
@@ -565,30 +548,6 @@ public class MasterSyncServiceTest {
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
 		ResponseDTO responseDTO = new ResponseDTO();
 
-		BiometricAttributeDto biometricattributes = new BiometricAttributeDto();
-
-		BiometricAttributeDto biometricAttributeResponseDto = new BiometricAttributeDto();
-
-		biometricattributes.setBiometricTypeCode("1");
-		biometricattributes.setCode("1");
-		biometricattributes.setDescription("finerprints");
-		biometricattributes.setLangCode("eng");
-		biometricattributes.setName("littile finger");
-
-		List<BiometricAttributeDto> biometricattribute = new ArrayList<>();
-		biometricattribute.add(biometricattributes);
-
-		biometricAttributeResponseDto.setBiometricTypeCode("1");
-		biometricAttributeResponseDto.setCode("1");
-		biometricAttributeResponseDto.setDescription("finerprints");
-		biometricAttributeResponseDto.setLangCode("eng");
-		biometricAttributeResponseDto.setName("littile finger");
-
-		List<BiometricAttributeDto> biometrictypes = new ArrayList<>();
-		biometrictypes.add(biometricAttributeResponseDto);
-
-		masterSyncDto.setBiometricattributes(biometrictypes);
-
 		SyncControl masterSyncDetails = new SyncControl();
 
 		masterSyncDetails.setSyncJobId("MDS_J00001");
@@ -653,30 +612,6 @@ public class MasterSyncServiceTest {
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
 		ResponseDTO responseDTO = new ResponseDTO();
 
-		BiometricAttributeDto biometricattributes = new BiometricAttributeDto();
-
-		BiometricAttributeDto biometricAttributeResponseDto = new BiometricAttributeDto();
-
-		biometricattributes.setBiometricTypeCode("1");
-		biometricattributes.setCode("1");
-		biometricattributes.setDescription("finerprints");
-		biometricattributes.setLangCode("eng");
-		biometricattributes.setName("littile finger");
-
-		List<BiometricAttributeDto> biometricattribute = new ArrayList<>();
-		biometricattribute.add(biometricattributes);
-
-		biometricAttributeResponseDto.setBiometricTypeCode("1");
-		biometricAttributeResponseDto.setCode("1");
-		biometricAttributeResponseDto.setDescription("finerprints");
-		biometricAttributeResponseDto.setLangCode("eng");
-		biometricAttributeResponseDto.setName("littile finger");
-
-		List<BiometricAttributeDto> biometrictypes = new ArrayList<>();
-		biometrictypes.add(biometricAttributeResponseDto);
-
-		masterSyncDto.setBiometricattributes(biometrictypes);
-
 		SyncControl masterSyncDetails = new SyncControl();
 
 		masterSyncDetails.setSyncJobId("MDS_J00001");
@@ -725,30 +660,6 @@ public class MasterSyncServiceTest {
 		MasterDataResponseDto masterSyncDt = new MasterDataResponseDto();
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
 		ResponseDTO responseDTO = new ResponseDTO();
-
-		BiometricAttributeDto biometricattributes = new BiometricAttributeDto();
-
-		BiometricAttributeDto biometricAttributeResponseDto = new BiometricAttributeDto();
-
-		biometricattributes.setBiometricTypeCode("1");
-		biometricattributes.setCode("1");
-		biometricattributes.setDescription("finerprints");
-		biometricattributes.setLangCode("eng");
-		biometricattributes.setName("littile finger");
-
-		List<BiometricAttributeDto> biometricattribute = new ArrayList<>();
-		biometricattribute.add(biometricattributes);
-
-		biometricAttributeResponseDto.setBiometricTypeCode("1");
-		biometricAttributeResponseDto.setCode("1");
-		biometricAttributeResponseDto.setDescription("finerprints");
-		biometricAttributeResponseDto.setLangCode("eng");
-		biometricAttributeResponseDto.setName("littile finger");
-
-		List<BiometricAttributeDto> biometrictypes = new ArrayList<>();
-		biometrictypes.add(biometricAttributeResponseDto);
-
-		masterSyncDto.setBiometricattributes(biometrictypes);
 
 		SyncControl masterSyncDetails = new SyncControl();
 
@@ -899,30 +810,6 @@ public class MasterSyncServiceTest {
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
 		ResponseDTO responseDTO = new ResponseDTO();
 
-		BiometricAttributeDto biometricattributes = new BiometricAttributeDto();
-
-		BiometricAttributeDto biometricAttributeResponseDto = new BiometricAttributeDto();
-
-		biometricattributes.setBiometricTypeCode("1");
-		biometricattributes.setCode("1");
-		biometricattributes.setDescription("finerprints");
-		biometricattributes.setLangCode("eng");
-		biometricattributes.setName("littile finger");
-
-		List<BiometricAttributeDto> biometricattribute = new ArrayList<>();
-		biometricattribute.add(biometricattributes);
-
-		biometricAttributeResponseDto.setBiometricTypeCode("1");
-		biometricAttributeResponseDto.setCode("1");
-		biometricAttributeResponseDto.setDescription("finerprints");
-		biometricAttributeResponseDto.setLangCode("eng");
-		biometricAttributeResponseDto.setName("littile finger");
-
-		List<BiometricAttributeDto> biometrictypes = new ArrayList<>();
-		biometrictypes.add(biometricAttributeResponseDto);
-
-		masterSyncDto.setBiometricattributes(biometrictypes);
-
 		SyncControl masterSyncDetails = new SyncControl();
 
 		masterSyncDetails.setSyncJobId("MDS_J00001");
@@ -982,30 +869,6 @@ public class MasterSyncServiceTest {
 		MasterDataResponseDto masterSyncDto = new MasterDataResponseDto();
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
 		ResponseDTO responseDTO = new ResponseDTO();
-
-		BiometricAttributeDto biometricattributes = new BiometricAttributeDto();
-
-		BiometricAttributeDto biometricAttributeResponseDto = new BiometricAttributeDto();
-
-		biometricattributes.setBiometricTypeCode("1");
-		biometricattributes.setCode("1");
-		biometricattributes.setDescription("finerprints");
-		biometricattributes.setLangCode("eng");
-		biometricattributes.setName("littile finger");
-
-		List<BiometricAttributeDto> biometricattribute = new ArrayList<>();
-		biometricattribute.add(biometricattributes);
-
-		biometricAttributeResponseDto.setBiometricTypeCode("1");
-		biometricAttributeResponseDto.setCode("1");
-		biometricAttributeResponseDto.setDescription("finerprints");
-		biometricAttributeResponseDto.setLangCode("eng");
-		biometricAttributeResponseDto.setName("littile finger");
-
-		List<BiometricAttributeDto> biometrictypes = new ArrayList<>();
-		biometrictypes.add(biometricAttributeResponseDto);
-
-		masterSyncDto.setBiometricattributes(biometrictypes);
 
 		SyncControl masterSyncDetails = new SyncControl();
 
@@ -1098,97 +961,6 @@ public class MasterSyncServiceTest {
 
 		ResponseDTO responseDto = masterSyncServiceImpl.getMasterSync("MDS_J00001", "System");
 	}
-	
-	@SuppressWarnings("static-access")
-	@Test
-	public void getBiometricTypeWithFingerprintEnable() throws RegBaseCheckedException {
-		List<String> biometricType = new LinkedList<>(Arrays.asList(RegistrationConstants.FNR, RegistrationConstants.IRS));
-		Map<String, Object> appMap = new HashMap<>();
-		appMap.put(RegistrationConstants.FINGERPRINT_DISABLE_FLAG, "Y");
-		when(context.map()).thenReturn(appMap);
-		
-		List<BiometricAttribute> biometricAttributes = new ArrayList<>();
-		BiometricAttribute biometricAttribute = new BiometricAttribute();
-		biometricAttribute.setCode("RS");
-		biometricAttribute.setBiometricTypeCode("FNR");
-		biometricAttribute.setName("Right Slap");
-		biometricAttribute.setLangCode("eng");
-		biometricAttributes.add(biometricAttribute);
-		
-		Mockito.when(masterSyncDao.getBiometricType("eng", biometricType)).thenReturn(biometricAttributes);	
-		List<BiometricAttributeDto> biometricAttributeDtos = masterSyncServiceImpl.getBiometricType("eng");
-		assertNotNull(biometricAttributeDtos);
-		
-	}
-	
-	@SuppressWarnings("static-access")
-	@Test
-	public void getBiometricTypeWithIrisEnable() throws RegBaseCheckedException {
-		List<String> biometricType = new LinkedList<>(Arrays.asList(RegistrationConstants.FNR, RegistrationConstants.IRS));
-		Map<String, Object> appMap = new HashMap<>();
-		appMap.put(RegistrationConstants.IRIS_DISABLE_FLAG, "Y");
-		when(context.map()).thenReturn(appMap);
-		
-		List<BiometricAttribute> biometricAttributes = new ArrayList<>();
-		BiometricAttribute biometricAttribute = new BiometricAttribute();
-		biometricAttribute.setCode("RS");
-		biometricAttribute.setBiometricTypeCode("FNR");
-		biometricAttribute.setName("Right Slap");
-		biometricAttribute.setLangCode("eng");
-		biometricAttributes.add(biometricAttribute);
-		
-		Mockito.when(masterSyncDao.getBiometricType("eng", biometricType)).thenReturn(biometricAttributes);		
-		List<BiometricAttributeDto> biometricAttributeDtos = masterSyncServiceImpl.getBiometricType("eng");
-		assertNotNull(biometricAttributeDtos);
-		
-	}
-
-	@SuppressWarnings("static-access")
-	@Test
-	public void getBiometricTypeWithFingerprintDisble() throws RegBaseCheckedException {
-		List<String> biometricType = new LinkedList<>(Arrays.asList(RegistrationConstants.FNR, RegistrationConstants.IRS));
-		Map<String, Object> appMap = new HashMap<>();
-		appMap.put(RegistrationConstants.FINGERPRINT_DISABLE_FLAG, "N");
-		when(context.map()).thenReturn(appMap);
-		biometricType.remove(RegistrationConstants.FNR);
-		
-		List<BiometricAttribute> biometricAttributes = new ArrayList<>();
-		BiometricAttribute biometricAttribute = new BiometricAttribute();
-		biometricAttribute.setCode("RS");
-		biometricAttribute.setBiometricTypeCode("FNR");
-		biometricAttribute.setName("Right Slap");
-		biometricAttribute.setLangCode("eng");
-		biometricAttributes.add(biometricAttribute);
-		
-		Mockito.when(masterSyncDao.getBiometricType("eng", biometricType)).thenReturn(biometricAttributes);	
-		List<BiometricAttributeDto> biometricAttributeDtos = masterSyncServiceImpl.getBiometricType("eng");
-		assertNotNull(biometricAttributeDtos);
-		
-	}
-	
-	@SuppressWarnings("static-access")
-	@Test
-	public void getBiometricTypeWithIrisDisble() throws RegBaseCheckedException {
-		List<String> biometricType = new LinkedList<>(Arrays.asList(RegistrationConstants.FNR, RegistrationConstants.IRS));
-		Map<String, Object> appMap = new HashMap<>();
-		appMap.put(RegistrationConstants.IRIS_DISABLE_FLAG, "N");
-		when(context.map()).thenReturn(appMap);
-		biometricType.remove(RegistrationConstants.IRS);
-		
-		List<BiometricAttribute> biometricAttributes = new ArrayList<>();
-		BiometricAttribute biometricAttribute = new BiometricAttribute();
-		biometricAttribute.setCode("RS");
-		biometricAttribute.setBiometricTypeCode("FNR");
-		biometricAttribute.setName("Right Slap");
-		biometricAttribute.setLangCode("eng");
-		biometricAttributes.add(biometricAttribute);
-		
-		Mockito.when(masterSyncDao.getBiometricType("eng", biometricType)).thenReturn(biometricAttributes);		
-		List<BiometricAttributeDto> biometricAttributeDtos = masterSyncServiceImpl.getBiometricType("eng");
-		assertNotNull(biometricAttributeDtos);
-		
-	}
-
 
 	@Test
 	public void getMasterSyncWithKeyIndexExceptionTest() throws Exception {
@@ -1215,30 +987,6 @@ public class MasterSyncServiceTest {
 		MasterDataResponseDto masterSyncDt = new MasterDataResponseDto();
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
 		ResponseDTO responseDTO = new ResponseDTO();
-
-		BiometricAttributeDto biometricattributes = new BiometricAttributeDto();
-
-		BiometricAttributeDto biometricAttributeResponseDto = new BiometricAttributeDto();
-
-		biometricattributes.setBiometricTypeCode("1");
-		biometricattributes.setCode("1");
-		biometricattributes.setDescription("finerprints");
-		biometricattributes.setLangCode("eng");
-		biometricattributes.setName("littile finger");
-
-		List<BiometricAttributeDto> biometricattribute = new ArrayList<>();
-		biometricattribute.add(biometricattributes);
-
-		biometricAttributeResponseDto.setBiometricTypeCode("1");
-		biometricAttributeResponseDto.setCode("1");
-		biometricAttributeResponseDto.setDescription("finerprints");
-		biometricAttributeResponseDto.setLangCode("eng");
-		biometricAttributeResponseDto.setName("littile finger");
-
-		List<BiometricAttributeDto> biometrictypes = new ArrayList<>();
-		biometrictypes.add(biometricAttributeResponseDto);
-
-		masterSyncDto.setBiometricattributes(biometrictypes);
 
 		SyncControl masterSyncDetails = new SyncControl();
 
@@ -1327,11 +1075,6 @@ public class MasterSyncServiceTest {
 	@Test(expected=RegBaseCheckedException.class)
 	public void getAllBlackListedWords() throws RegBaseCheckedException {
 		masterSyncServiceImpl.getAllBlackListedWords(null);
-	}
-	
-	@Test(expected=RegBaseCheckedException.class)
-	public void getBiometricType() throws RegBaseCheckedException {
-		masterSyncServiceImpl.getBiometricType(null);
 	}
 
 }

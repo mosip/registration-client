@@ -99,15 +99,6 @@ public interface MasterSyncService {
 	DocumentType getDocumentType(String docCode, String langCode);
 
 	/**
-	 * Gets the biometric type.
-	 *
-	 * @param langCode the lang code
-	 * @return the biometric type
-	 * @throws RegBaseCheckedException
-	 */
-	List<BiometricAttributeDto> getBiometricType(String langCode) throws RegBaseCheckedException;
-
-	/**
 	 *
 	 * @param fieldName
 	 * @param langCode

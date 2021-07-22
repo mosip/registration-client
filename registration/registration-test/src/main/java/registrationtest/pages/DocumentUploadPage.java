@@ -60,7 +60,7 @@ public class DocumentUploadPage {
 		//robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
 	}catch(Exception e)
 	{
-		logger.error(e.getMessage());
+		logger.error("",e);
 	}
 
 	}
@@ -84,7 +84,7 @@ public class DocumentUploadPage {
 
 		} catch (InterruptedException | NumberFormatException | IOException e) {
 			// TODO Auto-generated catch block
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 		logger.info( comboBoxId +  dto +"CHOOSEN" );
 	}
@@ -120,7 +120,7 @@ public class DocumentUploadPage {
 			}	}
 		catch (Exception e) {
 			// TODO Auto-generated catch block
-			logger.error(e.getMessage());
+			logger.error("",e);
 		}
 	}
 

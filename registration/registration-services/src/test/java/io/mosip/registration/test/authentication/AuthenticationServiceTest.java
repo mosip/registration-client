@@ -115,7 +115,7 @@ public class AuthenticationServiceTest {
 		authenticationValidatorDTO.setPassword("mosip");
 	
 		Mockito.when(loginService.getUserDetail("mosip")).thenReturn(userDTO);			
-		assertEquals("Username and Password Not Match", authenticationServiceImpl.validatePassword(authenticationValidatorDTO));
+		assertEquals("Credentials Not Found", authenticationServiceImpl.validatePassword(authenticationValidatorDTO));
 		
 	}
 	

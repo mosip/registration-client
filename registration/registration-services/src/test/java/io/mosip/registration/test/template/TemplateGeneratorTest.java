@@ -74,9 +74,6 @@ public class TemplateGeneratorTest {
 					fingerPrintDTO.setSegmentedFingerprints(segmentedFingerprints);
 				});*/
 		appMap.put(RegistrationConstants.DOC_DISABLE_FLAG, "Y");
-		appMap.put(RegistrationConstants.FINGERPRINT_DISABLE_FLAG, "Y");
-		appMap.put(RegistrationConstants.IRIS_DISABLE_FLAG, "Y");
-		appMap.put(RegistrationConstants.FACE_DISABLE_FLAG, "Y");
 		appMap.put(RegistrationConstants.PRIMARY_LANGUAGE, "ara");
 		appMap.put(RegistrationConstants.SECONDARY_LANGUAGE, "fra");
 		//applicationContext.setApplicationMap(appMap);

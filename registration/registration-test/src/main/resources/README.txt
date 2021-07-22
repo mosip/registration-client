@@ -1,5 +1,5 @@
 Using JAR
-jre\bin\java -Dpath.config=\\config.properties -Dfile.encoding=UTF-8 -Djdbc.drivers=org.apache.derby.jdbc.EmbeddedDriver --add-modules=javafx.controls,javafx.fxml,javafx.base,javafx.web,javafx.swing --add-exports javafx.graphics/com.sun.javafx.sg.prism=ALL-UNNAMED -cp "registration-test.jar;lib\*" registrationtest.runapplication.NewRegistrationAdultTest
+jre\bin\java -Dpath.config=\\config.properties -Dfile.encoding=UTF-8 -Djdbc.drivers=org.apache.derby.jdbc.EmbeddedDriver --add-modules=javafx.controls,javafx.fxml,javafx.base,javafx.web,javafx.swing --add-exports javafx.graphics/com.sun.javafx.sg.prism=ALL-UNNAMED -cp "registration-test.jar;lib\*" registrationtest.runapplication.RegistrationMain
 And Add mock sdk jar in lib folder as run time dependency.
 
 USING IDE
