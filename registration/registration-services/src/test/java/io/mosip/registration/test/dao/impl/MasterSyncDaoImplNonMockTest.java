@@ -62,9 +62,6 @@ public class MasterSyncDaoImplNonMockTest {
 		
 	  Map<String, Object> appMap = new HashMap<String,Object>();
 	  appMap.put(RegistrationConstants.DOC_DISABLE_FLAG, "Y");
-	  appMap.put(RegistrationConstants.FINGERPRINT_DISABLE_FLAG, "Y");
-	  appMap.put(RegistrationConstants.IRIS_DISABLE_FLAG, "Y");
-	  appMap.put(RegistrationConstants.FACE_DISABLE_FLAG, "Y");
 	  appMap.put(RegistrationConstants.PRIMARY_LANGUAGE, "eng");
 	  appMap.put(RegistrationConstants.SECONDARY_LANGUAGE, "fra");
 	   ApplicationContext.getInstance().setApplicationMap(appMap);

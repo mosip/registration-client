@@ -1620,7 +1620,7 @@ public class BaseController {
 	 * @throws IOException
 	 * @throws RegBaseCheckedException
 	 */
-	protected boolean captureAndValidateFP(String userId, boolean isPacketAuth, boolean isChecker)
+	protected boolean captureAndValidateFP(String userId, boolean isPacketAuth, boolean isReviewer)
 			throws RegBaseCheckedException, IOException {
 		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.FINGERPRINT_SLAB_LEFT, null,
 				"Registration",
@@ -1634,7 +1634,7 @@ public class BaseController {
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 		boolean fpMatchStatus = authenticationService.authValidator(userId, SingleType.FINGER.value(), biometrics);
 		if (fpMatchStatus && isPacketAuth) {
-			addOperatorBiometrics(biometrics, isChecker);
+			addOperatorBiometrics(biometrics, isReviewer);
 		}
 		return fpMatchStatus;
 	}
@@ -1646,7 +1646,7 @@ public class BaseController {
 	 * @return true/false after validating iris
 	 * @throws IOException
 	 */
-	protected boolean captureAndValidateIris(String userId, boolean isPacketAuth, boolean isChecker) throws RegBaseCheckedException, IOException {
+	protected boolean captureAndValidateIris(String userId, boolean isPacketAuth, boolean isReviewer) throws RegBaseCheckedException, IOException {
 		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.IRIS_DOUBLE, null, "Registration",
 				io.mosip.registration.context.ApplicationContext
 						.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
@@ -1658,7 +1658,7 @@ public class BaseController {
 
 		boolean match = authenticationService.authValidator(userId, SingleType.IRIS.value(), biometrics);
 		if (match && isPacketAuth) {
-			addOperatorBiometrics(biometrics, isChecker);
+			addOperatorBiometrics(biometrics, isReviewer);
 		}
 		return match;
 	}
@@ -1671,7 +1671,7 @@ public class BaseController {
 	 * @throws IOException
 	 * @throws RegBaseCheckedException
 	 */
-	protected boolean captureAndValidateFace(String userId, boolean isPacketAuth, boolean isChecker) throws RegBaseCheckedException, IOException {
+	protected boolean captureAndValidateFace(String userId, boolean isPacketAuth, boolean isReviewer) throws RegBaseCheckedException, IOException {
 		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.FACE_FULLFACE, null, "Registration",
 				io.mosip.registration.context.ApplicationContext
 						.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
@@ -1684,13 +1684,13 @@ public class BaseController {
 
 		boolean match = authenticationService.authValidator(userId, SingleType.FACE.value(), biometrics);
 		if (match && isPacketAuth) {
-			addOperatorBiometrics(biometrics, isChecker);
+			addOperatorBiometrics(biometrics, isReviewer);
 		}
 		return match;
 	}
 	
-	private void addOperatorBiometrics(List<BiometricsDto> biometrics, boolean isChecker) {
-		if (isChecker) {
+	private void addOperatorBiometrics(List<BiometricsDto> biometrics, boolean isReviewer) {
+		if (isReviewer) {
 			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.getInstance().getMapObject()
 					.get(RegistrationConstants.REGISTRATION_DATA);
 			registrationDTO.addSupervisorBiometrics(biometrics);

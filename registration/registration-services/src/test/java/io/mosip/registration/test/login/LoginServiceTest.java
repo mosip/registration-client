@@ -5,8 +5,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -19,21 +17,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
-import io.mosip.kernel.core.util.HMACUtils2;
-import io.mosip.registration.context.SessionContext;
-import io.mosip.registration.dto.*;
-import io.mosip.registration.entity.*;
-import io.mosip.registration.entity.id.*;
-import io.mosip.registration.repositories.*;
-import io.mosip.registration.service.BaseService;
-import io.mosip.registration.service.config.LocalConfigService;
-import io.mosip.registration.service.remap.CenterMachineReMapService;
-import io.mosip.registration.service.sync.CertificateSyncService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
-import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -49,27 +32,61 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
 import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.registration.audit.AuditManagerSerivceImpl;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.AppAuthenticationDAO;
 import io.mosip.registration.dao.AppAuthenticationDetails;
 import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dao.ScreenAuthorizationDAO;
 import io.mosip.registration.dao.ScreenAuthorizationDetails;
 import io.mosip.registration.dao.UserDetailDAO;
+import io.mosip.registration.dto.AuthorizationDTO;
+import io.mosip.registration.dto.ErrorResponseDTO;
+import io.mosip.registration.dto.LoginUserDTO;
+import io.mosip.registration.dto.RegistrationCenterDetailDTO;
+import io.mosip.registration.dto.ResponseDTO;
+import io.mosip.registration.dto.SuccessResponseDTO;
+import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.entity.CenterMachine;
+import io.mosip.registration.entity.MachineMaster;
+import io.mosip.registration.entity.RegCenterUser;
+import io.mosip.registration.entity.RegistrationCenter;
+import io.mosip.registration.entity.UserDetail;
+import io.mosip.registration.entity.UserMachineMapping;
+import io.mosip.registration.entity.UserRole;
+import io.mosip.registration.entity.id.CenterMachineId;
+import io.mosip.registration.entity.id.RegCenterUserId;
+import io.mosip.registration.entity.id.UserMachineMappingID;
+import io.mosip.registration.entity.id.UserRoleId;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.repositories.AppAuthenticationRepository;
+import io.mosip.registration.repositories.CenterMachineRepository;
+import io.mosip.registration.repositories.MachineMasterRepository;
+import io.mosip.registration.repositories.RegistrationCenterRepository;
+import io.mosip.registration.repositories.ScreenAuthorizationRepository;
+import io.mosip.registration.repositories.UserDetailRepository;
+import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
+import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.login.impl.LoginServiceImpl;
 import io.mosip.registration.service.operator.UserDetailService;
 import io.mosip.registration.service.operator.UserOnboardService;
+import io.mosip.registration.service.remap.CenterMachineReMapService;
+import io.mosip.registration.service.sync.CertificateSyncService;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.PublicKeySync;
 import io.mosip.registration.service.sync.TPMPublicKeySyncService;
-import org.springframework.web.context.support.SpringBeanAutowiringSupport;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
+import io.mosip.registration.util.restclient.AuthTokenUtilService;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
@@ -230,13 +247,13 @@ public class LoginServiceTest {
 
 		Mockito.when(authTokenUtilService.hasAnyValidToken()).thenReturn(false);
 		Mockito.when(appAuthenticationDAO.getModesOfLogin("LOGIN", roleSet)).thenReturn(modes);
-		assertEquals(modes, loginServiceImpl.getModesOfLogin("LOGIN", roleSet, false));
+		assertEquals(modes, loginServiceImpl.getModesOfLogin("LOGIN", roleSet));
 	}
 	
 	@Test
 	public void getModesOfLoginNegativeTest() {
 		Set<String> roleSet = new HashSet<>();		
-		loginServiceImpl.getModesOfLogin("LOGIN", roleSet, false);		
+		loginServiceImpl.getModesOfLogin("LOGIN", roleSet);		
 	}
 	
 	@Test
@@ -397,7 +414,6 @@ public class LoginServiceTest {
 		Assert.assertTrue(loginServiceImpl.initialSync(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM).contains(RegistrationConstants.FAILURE));
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Test
 	public void initialSyncFailureExceptionTest() throws RegBaseCheckedException {
 		Map<String, Object> applicationMap = new HashMap<>();

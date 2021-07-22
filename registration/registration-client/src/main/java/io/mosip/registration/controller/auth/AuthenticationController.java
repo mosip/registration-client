@@ -203,8 +203,8 @@ public class AuthenticationController extends BaseController implements Initiali
 	private BioService bioService;
 
 	private int fingerPrintAuthCount;
-	private int irisPrintAuthCount;
-	private int facePrintAuthCount;
+	private int irisAuthCount;
+	private int faceAuthCount;
 
 	@Autowired
 	private Streamer streamer;
@@ -284,34 +284,15 @@ public class AuthenticationController extends BaseController implements Initiali
 		LOGGER.info("Validating OTP for OTP based Authentication");
 
 		if (validations.validateTextField(operatorAuthenticationPane, otp, otp.getId(), true,ApplicationContext.applicationLanguage())) {
-			if (isReviewer) {
-				if (!otpUserId.getText().isEmpty()) {
-					if (fetchUserRole(otpUserId.getText())) {
-						if (null != authenticationService.authValidator(RegistrationConstants.OTP, otpUserId.getText(),
-								otp.getText(), haveToSaveAuthToken(otpUserId.getText()))) {
-							userAuthenticationTypeListValidation.remove(0);
-							userNameField = otpUserId.getText();
-							getOSIData().setSupervisorID(userNameField);
-							getOSIData().setSuperviorAuthenticatedByPIN(true);
-							loadNextScreen();
-						} else {
-							generateAlert(RegistrationConstants.ERROR,
-									RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.OTP_VALIDATION_ERROR_MESSAGE));
-						}
-					} else {
-						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REVIEWER_NOT_AUTHORIZED));
-					}
-				} else {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
-				}
-			} else {
+			if (validateInput(otpUserId, null)) {
 				if (null != authenticationService.authValidator(RegistrationConstants.OTP, otpUserId.getText(),
 						otp.getText(), haveToSaveAuthToken(otpUserId.getText()))) {
-					getOSIData().setOperatorAuthenticatedByPIN(true);
 					userAuthenticationTypeListValidation.remove(0);
+					addOSIData(userNameField, RegistrationConstants.OTP);
 					loadNextScreen();
 				} else {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.OTP_VALIDATION_ERROR_MESSAGE));
+					generateAlert(RegistrationConstants.ERROR,
+							RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.OTP_VALIDATION_ERROR_MESSAGE));
 				}
 			}
 		}
@@ -324,50 +305,17 @@ public class AuthenticationController extends BaseController implements Initiali
 				username.getText().isEmpty() ? RegistrationConstants.AUDIT_DEFAULT_USER : username.getText(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-		String status = RegistrationConstants.EMPTY;
-		if (isReviewer) {
-			if (!username.getText().isEmpty()) {
-				if (fetchUserRole(username.getText())) {
-					if (password.getText().isEmpty()) {
-						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PWORD_FIELD_EMPTY));
-					} else {
-						status = validatePwd(username.getText(), password.getText());
-						if (RegistrationConstants.SUCCESS.equals(status)) {
-							userAuthenticationTypeListValidation.remove(0);
-							userNameField = username.getText();
-							getOSIData().setSupervisorID(userNameField);
-							getOSIData().setSuperviorAuthenticatedByPassword(true);
-							loadNextScreen();
-						} else if (RegistrationConstants.FAILURE.equals(status)) {
-							generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHENTICATION_FAILURE));
-						} else if(RegistrationConstants.CREDS_NOT_FOUND.equals(status)) {
-							generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.CREDENTIALS_NOT_FOUND));
-						}
-					}
-				} else {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REVIEWER_NOT_AUTHORIZED));
-				}
-			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
-			}
-		} else {
-			if (!username.getText().isEmpty()) {
-				if (password.getText().isEmpty()) {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PWORD_FIELD_EMPTY));
-				} else {
-					status = validatePwd(username.getText(), password.getText());
-					if (RegistrationConstants.SUCCESS.equals(status)) {
-						userAuthenticationTypeListValidation.remove(0);
-						userNameField = username.getText();
-						getOSIData().setOperatorID(userNameField);
-						getOSIData().setOperatorAuthenticatedByPassword(true);
-						loadNextScreen();
-					} else if (RegistrationConstants.FAILURE.equals(status)) {
-						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHENTICATION_FAILURE));
-					}
-				}
-			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
+		if (validateInput(username, password)) {
+			String status = RegistrationConstants.EMPTY;
+			status = validatePwd(username.getText(), password.getText());
+			if (RegistrationConstants.SUCCESS.equals(status)) {
+				userAuthenticationTypeListValidation.remove(0);
+				addOSIData(userNameField, RegistrationConstants.PWORD);
+				loadNextScreen();
+			} else if (RegistrationConstants.FAILURE.equals(status)) {
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHENTICATION_FAILURE));
+			} else if(RegistrationConstants.CREDS_NOT_FOUND.equals(status)) {
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.CREDENTIALS_NOT_FOUND));
 			}
 		}
 	}
@@ -382,23 +330,12 @@ public class AuthenticationController extends BaseController implements Initiali
 				fpUserId.getText().isEmpty() ? RegistrationConstants.AUDIT_DEFAULT_USER : fpUserId.getText(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-		authCounter = new Label();
-
 		LOGGER.info("Validating Fingerprint for Fingerprint based Authentication");
-
-		if (isReviewer) {
-			if (!fpUserId.getText().isEmpty()) {
-				if (fetchUserRole(fpUserId.getText())) {
-					executeFPValidationTask(fpUserId.getText(), operatorAuthenticationPane);
-				} else {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REVIEWER_NOT_AUTHORIZED));
-				}
-			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
-			}
-		} else {
+		
+		if (validateInput(fpUserId, null)) {
 			executeFPValidationTask(fpUserId.getText(), operatorAuthenticationPane);
 		}
+
 		authCounter.setText(++fingerPrintAuthCount + "");
 	}
 
@@ -438,38 +375,23 @@ public class AuthenticationController extends BaseController implements Initiali
 		taskService.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
 			@Override
 			public void handle(WorkerStateEvent workerStateEvent) {
-
 				pane.setDisable(false);
 				progressIndicatorPane.setVisible(false);
 				progressIndicator.setVisible(false);
 				if (taskService.getValue()) {
 					userAuthenticationTypeListValidation.remove(0);
-					if (isReviewer) {
-						userNameField = fpUserId.getText();
-						getOSIData().setSupervisorID(userNameField);
-					}
-
-					if (operatorAuthContinue != null) {
-						// TODO Enable continue button
-						operatorAuthContinue.setDisable(false);
-					}
-					if (fingerPrintScanButton != null) {
-						fingerPrintScanButton.setDisable(true);
-					}
+					addOSIData(userNameField, null);
+					operatorAuthContinue.setDisable(false);
+					fingerPrintScanButton.setDisable(true);
 					generateAlert(RegistrationConstants.ALERT_INFORMATION,
 							RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
-
 					loadNextScreen();
 				} else {
-					if (operatorAuthContinue != null) {
-						operatorAuthContinue.setDisable(true);
-					}
+					operatorAuthContinue.setDisable(true);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.FINGER_PRINT_MATCH));
 				}
-
 			}
 		});
-
 	}
 
 	/**
@@ -481,24 +403,13 @@ public class AuthenticationController extends BaseController implements Initiali
 				irisUserId.getText().isEmpty() ? RegistrationConstants.AUDIT_DEFAULT_USER : irisUserId.getText(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-		authCounter = new Label();
-
 		LOGGER.info("Validating Iris for Iris based Authentication");
 
-		if (isReviewer) {
-			if (!irisUserId.getText().isEmpty()) {
-				if (fetchUserRole(irisUserId.getText())) {
-					executeIrisValidationTask(irisUserId.getText(), operatorAuthenticationPane);
-				} else {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REVIEWER_NOT_AUTHORIZED));
-				}
-			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
-			}
-		} else {
+		if (validateInput(irisUserId, null)) {
 			executeIrisValidationTask(irisUserId.getText(), operatorAuthenticationPane);
 		}
-		authCounter.setText(++irisPrintAuthCount + "");
+		
+		authCounter.setText(++irisAuthCount + "");
 	}
 
 	private void executeIrisValidationTask(String userId, GridPane pane) {
@@ -536,32 +447,21 @@ public class AuthenticationController extends BaseController implements Initiali
 		taskService.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
 			@Override
 			public void handle(WorkerStateEvent workerStateEvent) {
-
 				pane.setDisable(false);
 				progressIndicatorPane.setVisible(false);
 				progressIndicator.setVisible(false);
 				if (taskService.getValue()) {
 					userAuthenticationTypeListValidation.remove(0);
-					if (isReviewer) {
-						userNameField = irisUserId.getText();
-						getOSIData().setSupervisorID(userNameField);
-					}
-					if (operatorAuthContinue != null) {
-						operatorAuthContinue.setDisable(false);
-					}
-					if (irisScanButton != null) {
-						irisScanButton.setDisable(true);
-					}
+					addOSIData(userNameField, null);
+					operatorAuthContinue.setDisable(false);
+					irisScanButton.setDisable(true);
 					generateAlert(RegistrationConstants.ALERT_INFORMATION,
 							RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
 					loadNextScreen();
 				} else {
-					if (operatorAuthContinue != null) {
-						operatorAuthContinue.setDisable(true);
-					}
+					operatorAuthContinue.setDisable(true);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.IRIS_MATCH));
 				}
-
 			}
 		});
 	}
@@ -569,7 +469,6 @@ public class AuthenticationController extends BaseController implements Initiali
 	@FXML
 	private void startStream() {
 		faceImage.setImage(null);
-
 		try {
 			streamer.startStream(bioService.getStream(RegistrationConstants.FACE_FULLFACE), faceImage, null);
 		} catch (RegBaseCheckedException regBaseCheckedException) {
@@ -590,25 +489,13 @@ public class AuthenticationController extends BaseController implements Initiali
 				faceUserId.getText().isEmpty() ? RegistrationConstants.AUDIT_DEFAULT_USER : faceUserId.getText(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-		authCounter = new Label();
-
 		LOGGER.info("Validating Face for Face based Authentication");
 
-		if (isReviewer) {
-			if (!faceUserId.getText().isEmpty()) {
-				if (fetchUserRole(faceUserId.getText())) {
-					executeFaceValidationTask(faceUserId.getText(), operatorAuthenticationPane);
-				} else {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REVIEWER_NOT_AUTHORIZED));
-				}
-			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
-			}
-		} else {
+		if (validateInput(faceUserId, null)) {
 			executeFaceValidationTask(faceUserId.getText(), operatorAuthenticationPane);
 		}
 
-		authCounter.setText(++facePrintAuthCount + "");
+		authCounter.setText(++faceAuthCount + "");
 	}
 
 	private void executeFaceValidationTask(String userId, GridPane pane) {
@@ -646,34 +533,21 @@ public class AuthenticationController extends BaseController implements Initiali
 		taskService.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
 			@Override
 			public void handle(WorkerStateEvent workerStateEvent) {
-
 				pane.setDisable(false);
 				progressIndicatorPane.setVisible(false);
 				progressIndicator.setVisible(false);
 				if (taskService.getValue()) {
 					userAuthenticationTypeListValidation.remove(0);
-					if (isReviewer) {
-						userNameField = faceUserId.getText();
-						getOSIData().setSupervisorID(userNameField);
-					}
-
-					if (operatorAuthContinue != null) {
-						operatorAuthContinue.setDisable(false);
-					}
-					if (faceScanButton != null) {
-						faceScanButton.setDisable(true);
-					}
+					addOSIData(userNameField, null);
+					operatorAuthContinue.setDisable(false);
+					faceScanButton.setDisable(true);
 					generateAlert(RegistrationConstants.ALERT_INFORMATION,
 							RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
 					loadNextScreen();
-
 				} else {
-					if (operatorAuthContinue != null) {
-						operatorAuthContinue.setDisable(true);
-					}
+					operatorAuthContinue.setDisable(true);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.FACE_MATCH));
 				}
-
 			}
 		});
 	}
@@ -686,43 +560,20 @@ public class AuthenticationController extends BaseController implements Initiali
 	private void getAuthenticationModes(String authType) throws RegBaseCheckedException {
 		LOGGER.info("Loading configured modes of authentication");
 
+		fingerPrintAuthCount = 0;
+		irisAuthCount = 0;
+		faceAuthCount = 0;
+		
 		Set<String> roleSet = new HashSet<>(SessionContext.userContext().getRoles());
 		
-		userAuthenticationTypeList = loginService.getModesOfLogin(authType, roleSet, isReviewer);
-		userAuthenticationTypeListValidation = loginService.getModesOfLogin(authType, roleSet, isReviewer);
-		userAuthenticationTypeListSupervisorValidation = loginService.getModesOfLogin(authType, roleSet, isReviewer);
+		userAuthenticationTypeList = loginService.getModesOfLogin(authType, roleSet);
 
 		if (userAuthenticationTypeList.isEmpty()) {
 			isReviewer = false;
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHENTICATION_ERROR_MSG));
 		} else {
-			LOGGER.info("Ignoring FingerPrint, Iris, Face Authentication if the configuration is off");
-
-			String fingerprintDisableFlag = getValueFromApplicationContext(
-					RegistrationConstants.FINGERPRINT_DISABLE_FLAG);
-			String irisDisableFlag = getValueFromApplicationContext(RegistrationConstants.IRIS_DISABLE_FLAG);
-			String faceDisableFlag = getValueFromApplicationContext(RegistrationConstants.FACE_DISABLE_FLAG);
-
-			removeAuthModes(userAuthenticationTypeList, fingerprintDisableFlag,
-					RegistrationConstants.FINGERPRINT);
-			removeAuthModes(userAuthenticationTypeList, irisDisableFlag, RegistrationConstants.IRIS);
-			removeAuthModes(userAuthenticationTypeList, faceDisableFlag, RegistrationConstants.FACE);
-
-			LOGGER.info(LoggerConstants.LOG_REG_AUTH, APPLICATION_NAME, APPLICATION_ID,
-					"Ignoring FingerPrint, Iris, Face Supervisror Authentication if the configuration is off");
-
-			removeAuthModes(userAuthenticationTypeListValidation, fingerprintDisableFlag,
-					RegistrationConstants.FINGERPRINT);
-			removeAuthModes(userAuthenticationTypeListValidation, irisDisableFlag, RegistrationConstants.IRIS);
-			removeAuthModes(userAuthenticationTypeListValidation, faceDisableFlag, RegistrationConstants.FACE);
-
-			removeAuthModes(userAuthenticationTypeListSupervisorValidation, fingerprintDisableFlag,
-					RegistrationConstants.FINGERPRINT);
-			removeAuthModes(userAuthenticationTypeListSupervisorValidation, irisDisableFlag,
-					RegistrationConstants.IRIS);
-			removeAuthModes(userAuthenticationTypeListSupervisorValidation, faceDisableFlag,
-					RegistrationConstants.FACE);
-
+			userAuthenticationTypeListValidation = userAuthenticationTypeList;
+			userAuthenticationTypeListSupervisorValidation = userAuthenticationTypeList;
 			loadNextScreen();
 		}
 	}
@@ -748,22 +599,8 @@ public class AuthenticationController extends BaseController implements Initiali
 				if (authenticationType.equalsIgnoreCase(RegistrationConstants.OTP)) {
 					getOTP.setVisible(true);
 				}
-				if ((RegistrationConstants.DISABLE.equalsIgnoreCase(
-						getValueFromApplicationContext(RegistrationConstants.FINGERPRINT_DISABLE_FLAG))
-						&& authenticationType.equalsIgnoreCase(RegistrationConstants.FINGERPRINT))
-						|| (RegistrationConstants.DISABLE.equalsIgnoreCase(
-						getValueFromApplicationContext(RegistrationConstants.IRIS_DISABLE_FLAG))
-						&& authenticationType.equalsIgnoreCase(RegistrationConstants.IRIS))
-						|| (RegistrationConstants.DISABLE.equalsIgnoreCase(
-						getValueFromApplicationContext(RegistrationConstants.FACE_DISABLE_FLAG))
-						&& authenticationType.equalsIgnoreCase(RegistrationConstants.FACE))) {
-
-					enableErrorPage();
-					operatorAuthContinue.setDisable(true);
-				} else {
-					operatorAuthContinue.setDisable(false);
-					loadAuthenticationScreen(authenticationType);
-				}
+				operatorAuthContinue.setDisable(false);
+				loadAuthenticationScreen(authenticationType);
 			} else {
 				if (!isReviewer) {
 					/*
@@ -837,29 +674,6 @@ public class AuthenticationController extends BaseController implements Initiali
 	/**
 	 * to enable the OTP based authentication mode and disable rest of modes
 	 */
-	private void enableErrorPage() {
-		LOGGER.info("Enabling OTP based Authentication Screen in UI");
-
-		pwdBasedLogin.setVisible(false);
-		otpBasedLogin.setVisible(false);
-		fingerprintBasedLogin.setVisible(false);
-		irisBasedLogin.setVisible(false);
-		faceBasedLogin.setVisible(false);
-		errorPane.setVisible(true);
-		errorPane.setDisable(false);
-		errorText1.setText(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_DISABLE_SCREEN_4));
-		errorText1.setVisible(true);
-		errorText2.setText(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_DISABLE_SCREEN_3));
-		errorText1.setVisible(true);
-
-		if (isReviewer) {
-			errorLabel.setText(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SUPERVISOR_VERIFICATION));
-		}
-	}
-
-	/**
-	 * to enable the OTP based authentication mode and disable rest of modes
-	 */
 	private void enableOTP() {
 		LOGGER.info("Enabling OTP based Authentication Screen in UI");
 
@@ -912,7 +726,7 @@ public class AuthenticationController extends BaseController implements Initiali
 	 */
 	private void enableFingerPrint() {
 		LOGGER.info("Enabling Fingerprint based Authentication Screen in UI");
-
+		
 		fpLabel.setText(ApplicationContext.getInstance().getApplicationLanguageLabelBundle().getString("fpAuthentication"));
 		fingerprintBasedLogin.setVisible(true);
 		fpUserId.clear();
@@ -1092,14 +906,45 @@ public class AuthenticationController extends BaseController implements Initiali
 	 * @return boolean variable "true", if the person is authenticated as reviewer
 	 *         or "false", if not
 	 */
-	private boolean fetchUserRole(String userId) {
-		LOGGER.info("Fetching the user role in case of Reviewer Authentication");
+	private boolean isValidReviewer(String userId) {
+		LOGGER.info("Validating the user role in case of Reviewer Authentication");
 
 		UserDTO userDTO = loginService.getUserDetail(userId);
 		if (userDTO != null && !SessionContext.userId().equals(userId)) {
 			return true;
 		}
 		return false;
+	}
+	
+	private boolean validateInput(TextField userId, TextField pword) {
+		if (userId.getText().isEmpty()) {
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USERNAME_FIELD_EMPTY));
+			return false;
+		}
+		if (pword != null && pword.getText().isEmpty()) {
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PWORD_FIELD_EMPTY));
+			return false;
+		}
+		if (isReviewer) {
+			if (!isValidReviewer(userId.getText())) {
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REVIEWER_NOT_AUTHORIZED));
+				return false;
+			}
+			userNameField = userId.getText();
+		}
+		return true;
+	}
+	
+	private void addOSIData(String userName, String authMode) {
+		if (isReviewer) {
+			getOSIData().setSupervisorID(userName);
+			getOSIData().setSuperviorAuthenticatedByPassword(RegistrationConstants.PWORD.equalsIgnoreCase(authMode));
+			getOSIData().setSuperviorAuthenticatedByPIN(RegistrationConstants.OTP.equalsIgnoreCase(authMode));
+		} else {
+			getOSIData().setOperatorID(userName);
+			getOSIData().setOperatorAuthenticatedByPassword(RegistrationConstants.PWORD.equalsIgnoreCase(authMode));
+			getOSIData().setSuperviorAuthenticatedByPIN(RegistrationConstants.OTP.equalsIgnoreCase(authMode));
+		}		
 	}
 
 }

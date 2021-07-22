@@ -13,8 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import io.mosip.registration.enums.Role;
-import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.kernel.biometrics.constant.BiometricType;
@@ -30,13 +28,14 @@ import io.mosip.registration.dto.AuthorizationDTO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.security.AuthenticationService;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
-import io.mosip.registration.util.restclient.ServiceDelegateUtil;
+import io.mosip.registration.util.restclient.AuthTokenUtilService;
 
 /**
  * This class will handle the creation of Session context, Security Context and
@@ -158,7 +157,7 @@ public class SessionContext {
 		if (isInitialSetUp) {
 			authModes.add(RegistrationConstants.PWORD);
 		} else {
-			authModes = loginService.getModesOfLogin(ProcessNames.LOGIN.getType(), roleList, false);
+			authModes = loginService.getModesOfLogin(ProcessNames.LOGIN.getType(), roleList);
 		}
 
 		if (null == sessionContext) {

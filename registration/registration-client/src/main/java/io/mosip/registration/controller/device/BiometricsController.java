@@ -24,7 +24,6 @@ import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.io.IOUtils;
 import org.mvel2.MVEL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -57,10 +56,10 @@ import io.mosip.registration.controller.reg.DocumentScanController;
 import io.mosip.registration.controller.reg.RegistrationController;
 import io.mosip.registration.controller.reg.UserOnboardParentController;
 import io.mosip.registration.dao.UserDetailDAO;
-import io.mosip.registration.dto.mastersync.BiometricAttributeDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.entity.UserBiometric;
+import io.mosip.registration.enums.Modality;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.dto.Biometric;
@@ -69,7 +68,6 @@ import io.mosip.registration.mdm.dto.MdmBioDevice;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.operator.UserOnboardService;
-import io.mosip.registration.enums.Modality;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -80,7 +78,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Tooltip;
@@ -114,9 +111,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	@FXML
 	private GridPane retryBox;
-
-	@FXML
-	private ComboBox<BiometricAttributeDto> biometricTypecombo;
 
 	@FXML
 	private Label biometricType;
