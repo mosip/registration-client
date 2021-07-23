@@ -146,8 +146,8 @@
 	    "value" : "Kénitra"
 	  } ],
 	  "updateUINAttributes":["DateOfBirth","FullName","IntroducerDetails"],
-	  "bioAuthAttributes":["rightThumb"],
-	  "bioExceptionAttributes": ["rightIndex"],
+	  "bioAuthAttributes":["rightIndex"],
+	  "bioExceptionAttributes": ["rightLittle"],
 	  "bioAttributes": [
 			
 				"face"
