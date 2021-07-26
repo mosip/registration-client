@@ -28,6 +28,9 @@ import io.mosip.registration.validator.RequiredFieldValidator;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.testfx.api.FxRobot;
+
+import com.itextpdf.text.log.SysoCounter;
+
 import javafx.application.Platform;
 import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
@@ -114,7 +117,8 @@ public class DemographicPage {
 							for(String uniqueid:makeUniqueEntry)
 							{
 								if(id.contains(uniqueid))
-								{	demoTextField.setText(idSchema+DateUtil.getDateTime());
+								{	
+									demoTextField.setText(idSchema+DateUtil.getDateTime());
 								flag=true;
 
 								}
@@ -402,19 +406,41 @@ public class DemographicPage {
 		Thread taskThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
-
-
 				Platform.runLater(new Runnable() {
 					@Override
 					public void run() {
-
-
-
 						ComboBox comboBox= waitsUtil.lookupById(comboBoxId);
 
 						comboBox.getSelectionModel().select(dto); 
+						
+					}}); 
+			}});
 
 
+
+		taskThread.start();
+		try {
+			taskThread.join();
+			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
+		} catch (NumberFormatException | InterruptedException | IOException e) {
+			logger.error("",e);
+		} 
+
+	}
+	
+	public void user_selects_combo_item1(String comboBoxId, String dto)  {
+		Thread taskThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				Platform.runLater(new Runnable() {
+					@Override
+					public void run() {
+						ComboBox comboBox= waitsUtil.lookupById(comboBoxId);
+
+						robot.clickOn(comboBox);
+						robot.clickOn(dto);
+						//comboBox.getSelectionModel().select(dto); 
+						
 					}}); 
 			}});
 
@@ -798,7 +824,8 @@ public class DemographicPage {
 				checkSelection(id,JsonIdentity,key);
 			}}
 	}
-	public void dropdown(String id,String JsonIdentity,String key) {
+	
+	public void dropdown1(String id,String JsonIdentity,String key) {
 		GenericDto dto=new GenericDto();
 		try {
 			mapDropValue=null;
@@ -821,6 +848,71 @@ public class DemographicPage {
 				user_selects_combo_item(id,dto);
 
 			}}catch(Exception e)
+		{
+				logger.error("",e);
+		}
+	}
+	
+//	public void dropdown(String id,String JsonIdentity,String key) {
+//		GenericDto dto=new GenericDto();
+//		try {
+//			mapDropValue=null;
+//			if(schema.getType().contains("simpleType"))
+//			{
+//				mapDropValue=JsonUtil.JsonObjSimpleParsing(JsonIdentity,key);
+//				Set<String> dropkeys = mapDropValue.keySet();
+//				for(String ky:dropkeys)
+//				{	//dto.setCode(ky);
+//				//dto.setLangCode(ky);
+//				dto.setName(mapDropValue.get(ky));
+//				user_selects_combo_item(id,dto);
+//				//user_selects_combo_item1(id,mapDropValue.get(ky));
+//				break;
+//				}
+//			}
+//			else
+//			{
+//				String val=JsonUtil.JsonObjParsing(JsonIdentity, key);
+//				dto.setName(val);
+//				user_selects_combo_item(id,dto);
+//				//user_selects_combo_item1(id,val);
+//			}}catch(Exception e)
+//		{
+//				logger.error("",e);
+//		}
+//	}
+//	
+	//With Code
+	public void dropdown(String id,String JsonIdentity,String key) {
+		GenericDto dto=new GenericDto();
+		try {
+			mapDropValue=null;
+			//if(schema.getType().contains("simpleType"))
+			{
+				mapDropValue=JsonUtil.JsonObjSimpleParsingWithCode(JsonIdentity,key);
+				Set<String> dropkeys = mapDropValue.keySet();
+				for(String ky:dropkeys)
+				{	
+					
+
+					String valcode=mapDropValue.get(ky);
+					String valcodeArr[]=valcode.split("@@");
+					dto.setLangCode(ky);
+					dto.setName(valcodeArr[0]);
+					dto.setCode(valcodeArr[1]);
+					user_selects_combo_item(id,dto);
+				break;
+				}
+			}
+//			else
+//			{
+//				String val=JsonUtil.JsonObjParsing(JsonIdentity, key);
+//				dto.setName(val);
+//				dto.setCode("ara");
+//				user_selects_combo_item(id,dto);
+//
+//			}
+			}catch(Exception e)
 		{
 				logger.error("",e);
 		}
