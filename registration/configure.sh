@@ -41,7 +41,8 @@ then
   mkdir resources
   /usr/bin/unzip ./resources.zip -d ./resources/
   cd ./resources
-  jar uvf "${work_dir}"/registration-client/target/registration-client-${client_version_env}.jar .
+  jar uvf "${work_dir}"/registration-client/target/registration-client-${client_version_env}.jar . 
+  jar uvf "${work_dir}"/registration-test/target/registration-test-*-dependencies.jar .
 else
   echo "No separate resources found !!"
 fi
