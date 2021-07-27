@@ -83,14 +83,14 @@ public class DocumentUploadPage {
 			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait"))); 
 
 		} catch (InterruptedException | NumberFormatException | IOException e) {
-			// TODO Auto-generated catch block
+			
 			logger.error("",e);
 		}
 		logger.info( comboBoxId +  dto +"CHOOSEN" );
 	}
 
 
-	public void documentDropDownScan(Schema schema,String id,String JsonIdentity,String key) {
+	public void documentDropDownScan1(Schema schema,String id,String JsonIdentity,String key) {
 		LinkedHashMap<String,String> mapDropValue;
 	
 		try {
@@ -118,8 +118,45 @@ public class DocumentUploadPage {
 					break;
 				}
 			}	}
+catch (Exception e) {
+			
+			logger.error("",e);
+		}
+	}
+	public void documentDropDownScan(Schema schema,String id,String JsonIdentity,String key) {
+		LinkedHashMap<String,String> mapDropValue;
+	
+		try {
+			mapDropValue=null;
+			if(schema.getType().contains("documentType"))
+			{
+				mapDropValue=JsonUtil.JsonObjSimpleParsingWithCode(JsonIdentity,key);
+				Set<String> dropkeys = mapDropValue.keySet();
+				for(String ky:dropkeys)
+				{
+
+					String valcode=mapDropValue.get(ky);
+					String valcodeArr[]=valcode.split("@@");
+					
+					documentCategoryDto.setName(valcodeArr[0]);
+					documentCategoryDto.setCode(valcodeArr[1]);
+					documentCategoryDto.setLangCode(ky);
+			
+					user_selects_combo_item(robot,id,documentCategoryDto);
+					String scanBtn=id+"button";
+
+					Button scanButton = waitsUtil.lookupByIdButton(scanBtn,robot);
+
+					//waitsUtil.lookupById(docPreviewImgViewPane);
+					
+					robot.moveTo(scanButton);
+					robot.clickOn(scanButton);
+					selectDocumentScan();
+					break;
+				}
+			}	}
 		catch (Exception e) {
-			// TODO Auto-generated catch block
+			
 			logger.error("",e);
 		}
 	}

@@ -104,6 +104,45 @@ public class JsonUtil {
 		}
 
 	  	
+		public static LinkedHashMap<String,String> JsonObjSimpleParsingWithCode(String jsonIdentity,String idfield) throws Exception {
+			LinkedHashMap<String,String> mapLang= new LinkedHashMap<String, String>();
+			LinkedHashMap<String,String> mapLangorder= new LinkedHashMap<String, String>();
+			JSONObject json = new JSONObject(jsonIdentity); 
+			
+			JSONObject identity = json.getJSONObject(PropertiesUtil.getKeyValue("jsonObjName"));
+
+
+			JSONArray identityitems = identity.getJSONArray(idfield);
+			
+			 for (int i = 0, size = identityitems.length(); i < size; i++)
+			    {
+				 JSONObject idItem = identityitems.getJSONObject(i);
+				 String lang = idItem.getString("language");
+				 String val = idItem.getString("value");
+				  String code=idItem.getString("code");
+				  String valcode=val+"@@"+code;
+				  mapLang.put(lang,valcode);
+			    }
+				String[] listLang=PropertiesUtil.getKeyValue("langcode").split("@@");
+				Set<String> keys = mapLang.keySet();
+				
+					
+				for(String list:listLang)
+				{
+					for(String ky:keys) {
+					if(list.equals(ky))
+					{	
+						mapLangorder.put(list, mapLang.get(ky));
+					}
+				}
+			
+
+			}
+
+			return mapLangorder; 
+		}
+	  	
+	  	
 	  	public static LinkedHashMap<String,String> JsonObjSimpleParsingnoTranslate(String jsonIdentity,String idfield) throws Exception {
 	  		LinkedHashMap<String,String> mapLang= new LinkedHashMap<String, String>();
 			JSONObject json = new JSONObject(jsonIdentity); 
