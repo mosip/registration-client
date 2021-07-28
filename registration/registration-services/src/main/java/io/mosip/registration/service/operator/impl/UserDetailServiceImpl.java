@@ -8,6 +8,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -114,18 +115,38 @@ public class UserDetailServiceImpl extends BaseService implements UserDetailServ
 				}
 			}
 
-			userDtls.forEach(user -> userDetailDAO.save(user));
+			Map<String, Object> attributes = null;
+			
+			for (UserDetailDto user : userDtls) {
+				userDetailDAO.save(user);
+				if (user.getUserName().equalsIgnoreCase(SessionContext.userId())) {
+					attributes = checkUserRoles(user);
+				}
+			}
 
-			responseDTO = setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, null);
+			responseDTO = setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, attributes);
+			
 			LOGGER.info(LOG_REG_USER_DETAIL, APPLICATION_NAME, APPLICATION_ID,
 					"User Detail Sync Success......");
-
 		} catch (RegBaseCheckedException | IOException exception) {
 			LOGGER.error(LOG_REG_USER_DETAIL, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(exception));
 			setErrorResponse(responseDTO, exception.getMessage(), null);
 		}
 		return responseDTO;
+	}
+
+
+	private Map<String, Object> checkUserRoles(UserDetailDto user) {
+		Map<String, Object> attributes = new HashMap<>();
+		
+		List<String> newRoles = user.getRoles();
+		List<String> oldRoles = SessionContext.userContext().getRoles();
+		if (oldRoles.size() == newRoles.size() && oldRoles.containsAll(newRoles)) {
+			return null;
+		}
+		attributes.put(RegistrationConstants.ROLES_MODIFIED, RegistrationConstants.ENABLE);
+		return attributes;
 	}
 
 

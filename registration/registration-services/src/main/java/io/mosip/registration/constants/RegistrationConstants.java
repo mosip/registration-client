@@ -1952,4 +1952,5 @@ public class RegistrationConstants {
 	public static final String AGE_GROUP_CONFIG = "mosip.regproc.packet.classifier.tagging.agegroup.ranges";
 	
 	public static final String LOGOUT = "Logout";
+	public static final String ROLES_MODIFIED = "Roles Modified";
 }

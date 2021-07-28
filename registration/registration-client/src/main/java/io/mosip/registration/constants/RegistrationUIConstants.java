@@ -333,6 +333,7 @@ public class RegistrationUIConstants {
 	public static final String CENTER_MACHINE_INACTIVE = "CENTER_MACHINE_INACTIVE";
 
 	public static final String RESTART_APPLICATION = "RESTART_APPLICATION";
+	public static final String LOGOUT_ALERT = "LOGOUT_ALERT";
 
 	public static final String PRE_REG_TO_GET_ID_ERROR = "PRE_REG_TO_GET_ID_ERROR";
 	public static final String PRE_REG_TO_GET_PACKET_ERROR = "PRE_REG_TO_GET_PACKET_ERROR";

@@ -4,7 +4,6 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.ResourceBundle;
 
-import io.mosip.registration.service.sync.MasterSyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -24,7 +23,6 @@ import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.config.JobConfigurationService;
 import io.mosip.registration.service.config.LocalConfigService;
-import io.mosip.registration.service.sync.impl.MasterSyncServiceImpl;
 import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -289,9 +287,13 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 				generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION, MessageFormat
 						.format(resourceBundle.getString("JOB_EXECUTION_SUCCESS_MSG"), syncJob.getName()));
-				if ((responseDTO.getSuccessResponseDTO().getOtherAttributes() != null && responseDTO
-						.getSuccessResponseDTO().getOtherAttributes().containsKey(RegistrationConstants.RESTART)) && configUpdateAlert("RESTART_MSG")) {
-					restartController.restart();
+				if (responseDTO.getSuccessResponseDTO().getOtherAttributes() != null) {
+					if (responseDTO.getSuccessResponseDTO().getOtherAttributes().containsKey(RegistrationConstants.RESTART) && configUpdateAlert("RESTART_MSG")) {
+						restartController.restart();
+					}
+					if (responseDTO.getSuccessResponseDTO().getOtherAttributes().containsKey(RegistrationConstants.ROLES_MODIFIED)) {
+						showAlertAndLogout();
+					}
 				}
 			} else if (responseDTO.getErrorResponseDTOs() != null) {
 				LOGGER.error("Job execution failed with response: " + responseDTO.getErrorResponseDTOs().get(0));
