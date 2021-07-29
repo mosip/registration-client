@@ -738,10 +738,12 @@ public class RegistrationConstants {
 	public static final String SYNC_PROGRESS_BAR_VALUE = "syncProgressVlaue";
 	public static final String PACKET_STATUS_SYNC_RESPONSE_ENTITY = "registrations";
 	public static final String PACKET_STATUS_SYNC_SERVICE_NAME = "packet_status";
+	public static final String PACKET_EXTERNAL_STATUS_SYNC_SERVICE_NAME = "packet_external_status";
 	public static final String PACKET_STATUS_READER_URL_PARAMETER = "request";
 	public static final String RESPONSE = "response";
-	public static final String PACKET_STATUS_READER_REGISTRATION_ID = "registrationId";
-	public static final String PACKET_STATUS_READER_STATUS_CODE = "statusCode";
+	public static final String REGISTRATION_ID = "registrationId";
+	public static final String PACKET_ID = "packetId";
+	public static final String STATUS_CODE = "statusCode";
 	public static final String PACKET_STATUS_CODE_PROCESSED = "PROCESSED";
 	public static final String PACKET_STATUS_CODE_PROCESSING = "PROCESSING";
 	public static final String PACKET_STATUS_CODE_REREGISTER = "REREGISTER";
@@ -903,9 +905,13 @@ public class RegistrationConstants {
 
 	public static final List<String> PACKET_STATUS = Arrays.asList("APPROVED", "REJECTED", "RE_REGISTER_APPROVED");
 
-	public static final List<String> PACKET_STATUS_UPLOAD = Arrays.asList("APPROVED", "REJECTED", "SYNCED", "EXPORTED");
+	public static final List<String> PACKET_STATUS_UPLOAD = Arrays.asList("APPROVED", "SYNCED", "EXPORTED");
 
 	public static final List<String> PACKET_EXPORT_STATUS = Arrays.asList("APPROVED", "EXPORTED", "SYNCED");
+	
+	public static final List<String> PACKET_PROCESSED_STATUS = Arrays.asList("PROCESSED", "ACCEPTED");
+	
+	public static final List<String> PACKET_REJECTED_STATUS = Arrays.asList("REREGISTER", "REJECTED");
 
 	// Pre Registration
 	public static final String PRE_REGISTRATION_ID = "pre_registration_id";
@@ -1254,6 +1260,7 @@ public class RegistrationConstants {
 
 	// Packet Sync
 	public static final String PACKET_SYNC = "packet_sync";
+	public static final String PACKET_SYNC_V2 = "packet_sync_v2";
 
 	// Validations to ignore
 

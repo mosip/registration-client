@@ -38,8 +38,6 @@ public class ReRegistrationServiceTest {
 
 	@Test
 	public void testGetAllReRegistrationPackets() {
-		String[] packetStatus = { RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode(),
-				RegistrationConstants.RE_REGISTRATION_STATUS };
 		Timestamp time = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
 
 		List<Registration> reRegisterList = new ArrayList<>();
@@ -49,7 +47,7 @@ public class ReRegistrationServiceTest {
 		reg.setAckFilename("path");
 		reg.setCrDtime(time);
 		reRegisterList.add(reg);
-		Mockito.when(registrationDAO.getAllReRegistrationPackets(packetStatus)).thenReturn(reRegisterList);
+		Mockito.when(registrationDAO.getAllReRegistrationPackets(RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode(), RegistrationConstants.PACKET_REJECTED_STATUS)).thenReturn(reRegisterList);
 		assertEquals("11111", reRegistrationServiceImpl.getAllReRegistrationPackets().get(0).getFileName());
 	}
 	

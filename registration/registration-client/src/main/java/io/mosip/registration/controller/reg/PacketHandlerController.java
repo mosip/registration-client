@@ -791,7 +791,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 				// Receipt
 				String separator = "/";
 				String filePath = baseLocation.concat(separator).concat(packetsLocation).concat(separator)
-						.concat(registrationDTO.getRegistrationId());
+						.concat(registrationDTO.getPacketId());
 
 				// Storing the Registration Acknowledge Receipt Image
 				FileUtils.copyToFile(new ByteArrayInputStream(ackInBytes),

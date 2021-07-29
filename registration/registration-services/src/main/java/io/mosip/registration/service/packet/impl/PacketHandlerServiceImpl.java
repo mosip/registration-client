@@ -20,6 +20,8 @@ import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.enums.Role;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -29,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.commons.packet.dto.Document;
+import io.mosip.commons.packet.dto.PacketInfo;
 import io.mosip.commons.packet.dto.packet.BiometricsException;
 import io.mosip.commons.packet.dto.packet.DeviceMetaInfo;
 import io.mosip.commons.packet.dto.packet.DigitalId;
@@ -195,14 +198,25 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			packetWriter.addMetaInfo(registrationDTO.getRegistrationId(), metaInfoMap, source.toUpperCase(),
 					registrationDTO.getRegistrationCategory().toUpperCase());
 
+			String refId = String.valueOf(ApplicationContext.map().get(RegistrationConstants.USER_CENTER_ID))
+					.concat(RegistrationConstants.UNDER_SCORE)
+					.concat(String.valueOf(ApplicationContext.map().get(RegistrationConstants.USER_STATION_ID)));
+			
 			LOGGER.debug("Requesting packet manager to persist packet");
-			packetWriter.persistPacket(registrationDTO.getRegistrationId(),
+			List<PacketInfo> packetInfo = packetWriter.persistPacket(registrationDTO.getRegistrationId(),
 					String.valueOf(registrationDTO.getIdSchemaVersion()), schema.getSchemaJson(), source.toUpperCase(),
-					registrationDTO.getRegistrationCategory().toUpperCase(), true);
+					registrationDTO.getRegistrationCategory().toUpperCase(),
+					registrationDTO.getAdditionalInfoReqId() != null ? registrationDTO.getAdditionalInfoReqId()
+							: registrationDTO.getAppId(),
+					refId, true);
+			
+			if (!CollectionUtils.isEmpty(packetInfo)) {
+				registrationDTO.setPacketId(packetInfo.get(0).getId());
+			}
 
 			LOGGER.info("Saving registration info in DB and on disk.");
-			registrationDAO.save(baseLocation + SLASH + packetManagerAccount + SLASH + registrationDTO.getRegistrationId(), registrationDTO);
-
+			registrationDAO.save(baseLocation + SLASH + packetManagerAccount + SLASH + registrationDTO.getPacketId(), registrationDTO);
+			
 			auditFactory.audit(AuditEvent.PACKET_CREATION_SUCCESS, Components.PACKET_HANDLER,
 					registrationDTO.getRegistrationId(), AuditReferenceIdTypes.REGISTRATION_ID.getReferenceTypeId());
 
@@ -595,8 +609,12 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		String registrationID = ridGeneratorImpl.generateId(
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_CENTER_ID),
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_STATION_ID));
-		registrationDTO.setAppId(pridGenerator.generateId());
 		registrationDTO.setRegistrationId(registrationID);
+		
+		String applicationId = pridGenerator.generateId();
+		registrationDTO.setAppId(applicationId);
+		//TODO - Handle correction process to set AdditionalInfoReqId
+		//registrationDTO.setAdditionalInfoReqId(additionalInfoReqId);
 
 		LOGGER.info(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID,
