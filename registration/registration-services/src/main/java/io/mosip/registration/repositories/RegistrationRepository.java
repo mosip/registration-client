@@ -72,7 +72,7 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	 */
 	List<Registration> findByClientStatusCodeInOrderByUpdDtimesDesc(List<String> statusCodes);
 	
-	List<Registration> findByClientStatusCodeInOrderByCrDtimeAsc(List<String> statusCodes, Pageable pageable);
+	List<Registration> findByClientStatusCodeOrderByCrDtimeAsc(String statusCode, Pageable pageable);
 	
 	/**
 	 * To fetch the records for Packet Upload.
@@ -94,7 +94,7 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	 * 				the server status
 	 * @return List of registration packets
 	 */
-	List<Registration> findByClientStatusCodeAndServerStatusCode(String clientStatus, String serverStatus);
+	List<Registration> findByClientStatusCodeAndServerStatusCodeIn(String clientStatus, List<String> serverStatus);
 	
 	/**
 	 * Find by CrDtimes and client status code.
@@ -130,11 +130,11 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	 *
 	 * @param crDtimes 
 	 * 				the date upto packets to be deleted
-	 * @param clientStatus 
+	 * @param serverStatus 
 	 * 				status of resgistrationPacket
 	 * @return list of registrations
 	 */
-	List<Registration> findByCrDtimeBeforeAndServerStatusCode(Timestamp crDtimes, String clientStatus);
+	List<Registration> findByClientStatusCodeAndCrDtimeBeforeAndServerStatusCodeIn(String clientStatusCode, Timestamp crDtimes, List<String> statusCodes);
 	
 	/**
 	 * fetches all the Registration records which is having the given server status

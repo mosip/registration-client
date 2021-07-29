@@ -95,6 +95,8 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			registration.setApproverUsrId(SessionContext.userContext().getUserId());
 			registration.setPreRegId(registrationDTO.getPreRegistrationId());
 			registration.setAppId(registrationDTO.getAppId());
+			registration.setPacketId(registrationDTO.getPacketId());
+			registration.setAdditionalInfoReqId(registrationDTO.getAdditionalInfoReqId());
 			
 			RegistrationDataDto registrationDataDto = new RegistrationDataDto();
 			
@@ -255,8 +257,8 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 		return registrationRepository.findByClientStatusCodeInOrderByUpdDtimesDesc(statusCodes);
 	}
 	
-	public List<Registration> getPacketsToBeSynched(List<String> statusCodes, int limit) {
-		return registrationRepository.findByClientStatusCodeInOrderByCrDtimeAsc(statusCodes, PageRequest.of(0, limit));
+	public List<Registration> getPacketsToBeSynched(String statusCode, int limit) {
+		return registrationRepository.findByClientStatusCodeOrderByCrDtimeAsc(statusCode, PageRequest.of(0, limit));
 	}
 
 	/*
@@ -336,8 +338,8 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	 * io.mosip.registration.dao.RegistrationDAO#getAllReRegistrationPackets(java.
 	 * lang.String[])
 	 */
-	public List<Registration> getAllReRegistrationPackets(String[] status) {
-		return registrationRepository.findByClientStatusCodeAndServerStatusCode(status[0], status[1]);
+	public List<Registration> getAllReRegistrationPackets(String clientStatus, List<String> serverStatus) {
+		return registrationRepository.findByClientStatusCodeAndServerStatusCodeIn(clientStatus, serverStatus);
 	}
 
 	/*
@@ -373,12 +375,11 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	 * java.lang.String)
 	 */
 	@Override
-	public List<Registration> get(Timestamp crDtimes, String serverStatusCode) {
+	public List<Registration> get(String clientStatusCode, Timestamp crDtimes, List<String> serverStatusCodes) {
 
-		LOGGER.debug("REGISTRATION - BY_STATUS - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
-				"Retrieving Registrations based on crDtime and status");
+		LOGGER.debug("Retrieving Registrations based on crDtime and status codes");
 
-		return registrationRepository.findByCrDtimeBeforeAndServerStatusCode(crDtimes, serverStatusCode);
+		return registrationRepository.findByClientStatusCodeAndCrDtimeBeforeAndServerStatusCodeIn(clientStatusCode, crDtimes, serverStatusCodes);
 
 	}
 
