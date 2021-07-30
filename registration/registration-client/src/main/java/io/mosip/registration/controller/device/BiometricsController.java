@@ -596,7 +596,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		}
 	}
 
-	private void clearScoresAndStreamImages(String modality, String subType) {
+	private void clearScoresAndStreamImages(String modality, String subType, String attribute) {
 		List<String> keys = BIO_SCORES.keySet().stream().filter(k -> k.startsWith(String.format("%s_%s_", subType, modality))).collect(Collectors.toList());
 		ATTEMPTS.remove(String.format("%s_%s", subType, modality));
 		for(String key : keys) {
@@ -615,37 +615,8 @@ public class BiometricsController extends BaseController /* implements Initializ
 				getRegistrationDTOFromSession().streamImages.remove(key);
 			}
 
-			switch (modality) {
-				case "FINGERPRINT_SLAB_LEFT":
-					leftHandUiAttributes.forEach(attr -> {
-						getRegistrationDTOFromSession().removeBiometric(subType, attr);
-						getRegistrationDTOFromSession().removeBiometricException(subType, attr);
-					});
-					break;
-				case "FINGERPRINT_SLAB_RIGHT":
-					rightHandUiAttributes.forEach(attr -> {
-						getRegistrationDTOFromSession().removeBiometric(subType, attr);
-						getRegistrationDTOFromSession().removeBiometricException(subType, attr);
-					});
-					break;
-				case "FINGERPRINT_SLAB_THUMBS":
-					twoThumbsUiAttributes.forEach(attr -> {
-						getRegistrationDTOFromSession().removeBiometric(subType, attr);
-						getRegistrationDTOFromSession().removeBiometricException(subType, attr);
-					});
-					break;
-				case "IRIS_DOUBLE":
-					eyesUiAttributes.forEach(attr -> {
-						getRegistrationDTOFromSession().removeBiometric(subType, attr);
-						getRegistrationDTOFromSession().removeBiometricException(subType, attr);
-					});
-					break;
-
-				case "FACE_FULL FACE":
-				case "FACE":
-					getRegistrationDTOFromSession().removeBiometric(subType, "face");
-					getRegistrationDTOFromSession().removeBiometricException(subType, "face");
-			}
+			getRegistrationDTOFromSession().removeBiometric(subType, attribute);
+			getRegistrationDTOFromSession().removeBiometricException(subType, attribute);
 		}
 	}
 
@@ -3088,7 +3059,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 				"All exception images for same modality" + paneExceptionBioAttributes);
 
-		clearScoresAndStreamImages(this.currentModality, this.currentSubType);
+		clearScoresAndStreamImages(this.currentModality, this.currentSubType, exceptionImage.getId());
 		updateBiometricData(exceptionImage, paneExceptionBioAttributes);
 
 		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Add or remove exception completed");
