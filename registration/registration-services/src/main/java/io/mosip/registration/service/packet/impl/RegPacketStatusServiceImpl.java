@@ -281,7 +281,7 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 			LOGGER.info("PacketIds for sync with server have been retrieved : {}", ids.size());
 			
 			PacketStatusReaderDTO packetStatusReaderDTO = new PacketStatusReaderDTO();
-			packetStatusReaderDTO.setId(RegistrationConstants.PACKET_STATUS_READER_ID);
+			packetStatusReaderDTO.setId(packetIdExists ? RegistrationConstants.PACKET_EXTERNAL_STATUS_READER_ID : RegistrationConstants.PACKET_STATUS_READER_ID);
 			packetStatusReaderDTO.setVersion(RegistrationConstants.PACKET_SYNC_VERSION);
 			packetStatusReaderDTO.setRequesttime(DateUtils.formatToISOString(DateUtils.getUTCCurrentDateTime()));
 			

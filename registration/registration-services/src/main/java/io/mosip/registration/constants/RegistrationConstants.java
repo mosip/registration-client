@@ -754,6 +754,7 @@ public class RegistrationConstants {
 	public static final String MACHINE_CENTER_REMAP_FLAG = "mosip.registration.machinecenterchanged";
 	public static final String MACHINE_CENTER_REMAP_MSG = "Machine Center Remap process started";
 	public static final String PACKET_STATUS_READER_ID = "mosip.registration.status";
+	public static final String PACKET_EXTERNAL_STATUS_READER_ID = "mosip.registration.packet.external.status";
 	public static final String PACKET_SYNC_STATUS_ID = "mosip.registration.sync";
 	public static final String PACKET_SYNC_VERSION = "1.0";
 
