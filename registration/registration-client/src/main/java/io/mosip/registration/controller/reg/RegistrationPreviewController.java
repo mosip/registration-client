@@ -154,14 +154,14 @@ public class RegistrationPreviewController extends BaseController implements Ini
 		auditFactory.audit(AuditEvent.REG_PREVIEW_SUBMIT, Components.REG_PREVIEW, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 		if (getRegistrationDTOFromSession().getRegistrationMetaDataDTO().getConsentOfApplicant() != null) {
-			if (getRegistrationDTOFromSession().getSelectionListDTO() != null) {
+			/*if (getRegistrationDTOFromSession().getSelectionListDTO() != null) {
 				SessionContext.map().put(RegistrationConstants.UIN_UPDATE_REGISTRATIONPREVIEW, false);
 				SessionContext.map().put(RegistrationConstants.UIN_UPDATE_OPERATORAUTHENTICATIONPANE, true);
 				registrationController.showUINUpdateCurrentPage();
-			} else {
+			} else {*/
 				registrationController.showCurrentPage(RegistrationConstants.REGISTRATION_PREVIEW,
 						getPageByAction(RegistrationConstants.REGISTRATION_PREVIEW, RegistrationConstants.NEXT));
-			}
+			//}
 			registrationController.goToAuthenticationPage();
 		} else {
 			nextButton.setDisable(false);

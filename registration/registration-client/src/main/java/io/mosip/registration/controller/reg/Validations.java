@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.mosip.registration.controller.GenericController;
+import io.mosip.registration.enums.FlowType;
 import javafx.scene.control.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -28,7 +29,7 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.schema.Validator;
 import io.mosip.registration.dto.mastersync.BlacklistedWordsDto;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -105,18 +106,14 @@ public class Validations extends BaseController {
 		// RegistrationConstants.LABELS);
 	}
 
-	/**
-	 * To mark as lost UIN for demographic fields validation.
-	 *
-	 * @param isLostUIN the flag indicating whether work flow is for Lost UIN
-	 */
-	public void updateAsLostUIN(boolean isLostUIN) {
+
+	/*public void updateAsLostUIN(boolean isLostUIN) {
 		this.isLostUIN = isLostUIN;
 	}
 
 	public boolean isLostUIN() {
 		return this.isLostUIN;
-	}
+	}*/
 
 	private List<String> getBlackListedWords(String langCode) {
 		try {
@@ -203,11 +200,11 @@ public class Validations extends BaseController {
 
 			boolean showAlert = (noAlert.contains(node.getId()) && id.contains(RegistrationConstants.ON_TYPE));
 
-			UiSchemaDTO uiSchemaDTO = GenericController.getFxControlMap().get(id).getUiSchemaDTO();
+			UiFieldDTO uiFieldDTO = GenericController.getFxControlMap().get(id).getUiSchemaDTO();
 
-			if (uiSchemaDTO != null) {
-				if (requiredFieldValidator.isRequiredField(uiSchemaDTO, getRegistrationDTOFromSession())
-						&& !isMandatoryFieldFilled(parentPane, uiSchemaDTO, node, node.getText())) {
+			if (uiFieldDTO != null) {
+				if (requiredFieldValidator.isRequiredField(uiFieldDTO, getRegistrationDTOFromSession())
+						&& !isMandatoryFieldFilled(parentPane, uiFieldDTO, node, node.getText())) {
 					generateInvalidValueAlert(parentPane, id,
 							getFromLabelMap(id + langCode).concat(RegistrationConstants.SPACE)
 									.concat(messageBundle.getString(RegistrationConstants.REG_LGN_001)),
@@ -227,7 +224,7 @@ public class Validations extends BaseController {
 
 				if (node.isVisible() && (node.getText() != null && !node.getText().isEmpty())) {
 					isInputValid = checkForValidValue(parentPane, node, id, node.getText(), messageBundle, showAlert,
-							isPreviousValid, blackListedWords, uiSchemaDTO, langCode);
+							isPreviousValid, blackListedWords, uiFieldDTO, langCode);
 				}
 			}
 
@@ -239,15 +236,15 @@ public class Validations extends BaseController {
 	}
 
 	private boolean checkForValidValue(Pane parentPane, TextField node, String fieldId, String value,
-			ResourceBundle messageBundle, boolean showAlert, boolean isPreviousValid, List<String> blackListedWords,
-			UiSchemaDTO uiSchemaDTO, String langCode) {
+                                       ResourceBundle messageBundle, boolean showAlert, boolean isPreviousValid, List<String> blackListedWords,
+                                       UiFieldDTO uiFieldDTO, String langCode) {
 
 		boolean isLocalLanguageField = node.getId().contains(RegistrationConstants.LOCAL_LANGUAGE);
 
-		if (RegistrationConstants.AGE_DATE.equals(uiSchemaDTO.getControlType())) {
-			boolean isValid = dateValidation.validateDate(parentPane, uiSchemaDTO.getId());
+		if (RegistrationConstants.AGE_DATE.equals(uiFieldDTO.getControlType())) {
+			boolean isValid = dateValidation.validateDate(parentPane, uiFieldDTO.getId());
 			LOGGER.debug(RegistrationConstants.VALIDATION_LOGGER, APPLICATION_NAME, APPLICATION_ID,
-					"Date validation FAILED :: " + uiSchemaDTO.getId());
+					"Date validation FAILED :: " + uiFieldDTO.getId());
 			if (!isValid)
 				return false;
 		}
@@ -273,9 +270,9 @@ public class Validations extends BaseController {
 			return false;
 		}
 
-		if (!isLocalLanguageField && uiSchemaDTO != null
-				&& Arrays.asList("UIN", "RID","VID").contains(uiSchemaDTO.getSubType())
-				&& !validateUinOrRidField(value, getRegistrationDTOFromSession(), uiSchemaDTO)) {
+		if (!isLocalLanguageField && uiFieldDTO != null
+				&& Arrays.asList("UIN", "RID","VID").contains(uiFieldDTO.getSubType())
+				&& !validateUinOrRidField(value, getRegistrationDTOFromSession(), uiFieldDTO)) {
 			generateInvalidValueAlert(parentPane, node.getId(),
 					getFromLabelMap(fieldId).concat(RegistrationConstants.SPACE)
 							.concat(messageBundle.getString(RegistrationConstants.REG_DDC_004)),
@@ -290,27 +287,27 @@ public class Validations extends BaseController {
 		return true;
 	}
 
-	private boolean isMandatoryFieldFilled(Pane parentPane, UiSchemaDTO uiSchemaDTO, TextField node, String value) {
+	private boolean isMandatoryFieldFilled(Pane parentPane, UiFieldDTO uiFieldDTO, TextField node, String value) {
 		boolean fieldFilled = false;
 
 		if (!node.isVisible()) {
-			generateAlert(parentPane, "Mandatory field is hidden : " + uiSchemaDTO.getId(),
+			generateAlert(parentPane, "Mandatory field is hidden : " + uiFieldDTO.getId(),
 					RegistrationConstants.ERROR);
 			return fieldFilled;
 		}
 
 		RegistrationDTO registrationDTO = getRegistrationDTOFromSession();
-		switch (registrationDTO.getRegistrationCategory()) {
-		case RegistrationConstants.PACKET_TYPE_UPDATE:
-			if (node.isDisabled()) {
-				return true;
-			}
-			fieldFilled = doMandatoryCheckOnUpdateUIN(parentPane, value, node.getId(), uiSchemaDTO, true, node,
-					registrationDTO);
-			break;
-		case RegistrationConstants.PACKET_TYPE_NEW:
-			fieldFilled = doMandatoryCheckOnNewReg(value, uiSchemaDTO, true);
-			break;
+		switch (registrationDTO.getFlowType()) {
+			case UPDATE:
+				if (node.isDisabled()) {
+					return true;
+				}
+				fieldFilled = doMandatoryCheckOnUpdateUIN(parentPane, value, node.getId(), uiFieldDTO, true, node,
+						registrationDTO);
+				break;
+			case NEW:
+				fieldFilled = doMandatoryCheckOnNewReg(value, uiFieldDTO, true);
+				break;
 		}
 		return fieldFilled;
 	}
@@ -359,7 +356,7 @@ public class Validations extends BaseController {
 		}
 	}
 
-	private boolean doMandatoryCheckOnNewReg(String inputText, UiSchemaDTO schemaField, boolean isMandatory) {
+	private boolean doMandatoryCheckOnNewReg(String inputText, UiFieldDTO schemaField, boolean isMandatory) {
 		if (schemaField != null) {
 
 			if (isMandatory && (inputText == null || inputText.isEmpty())) {
@@ -369,7 +366,7 @@ public class Validations extends BaseController {
 		return true;
 	}
 
-	private boolean doMandatoryCheckOnUpdateUIN(Pane parentPane, String inputText, String id, UiSchemaDTO schemaField,
+	private boolean doMandatoryCheckOnUpdateUIN(Pane parentPane, String inputText, String id, UiFieldDTO schemaField,
 			boolean isMandatory, Node node, RegistrationDTO registrationDto) {
 
 		if (schemaField != null && !node.isDisabled()) {
@@ -501,14 +498,13 @@ public class Validations extends BaseController {
 		}
 	}*/
 
-	private boolean validateUinOrRidField(String inputText, RegistrationDTO registrationDto, UiSchemaDTO schemaField) {
+	private boolean validateUinOrRidField(String inputText, RegistrationDTO registrationDto, UiFieldDTO schemaField) {
 		boolean isValid = true;
 		try {
 			
 			switch (schemaField.getSubType()) {
 				case "UIN":
-					String updateUIN = RegistrationConstants.PACKET_TYPE_UPDATE
-						.equals(registrationDto.getRegistrationCategory())
+					String updateUIN = FlowType.UPDATE == registrationDto.getFlowType()
 								? (String) registrationDto.getDemographics().get("UIN")
 								: null;
 
@@ -565,14 +561,14 @@ public class Validations extends BaseController {
 	}
 
 	private String getRegex(String fieldId, String regexType, String langCode) {
-		UiSchemaDTO uiSchemaDTO = GenericController.getFxControlMap().get(fieldId).getUiSchemaDTO();
-		if (uiSchemaDTO != null && uiSchemaDTO.getValidators() != null) {
+		UiFieldDTO uiFieldDTO = GenericController.getFxControlMap().get(fieldId).getUiSchemaDTO();
+		if (uiFieldDTO != null && uiFieldDTO.getValidators() != null) {
 
-			Optional<Validator> validator = (langCode != null) ?uiSchemaDTO.getValidators().stream()
+			Optional<Validator> validator = (langCode != null) ? uiFieldDTO.getValidators().stream()
 					.filter(v -> v.getType().equalsIgnoreCase(regexType)
 							&& (v.getLangCode() != null ? langCode.equalsIgnoreCase(v.getLangCode()) : true))
 					.findFirst() :
-					uiSchemaDTO.getValidators().stream()
+					uiFieldDTO.getValidators().stream()
 							.filter(v -> v.getType().equalsIgnoreCase(regexType)
 									&& v.getLangCode() == null).findFirst() ;
 			if (validator.isPresent()) {

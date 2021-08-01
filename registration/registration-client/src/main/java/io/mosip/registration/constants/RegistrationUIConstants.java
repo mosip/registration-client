@@ -433,4 +433,6 @@ public class RegistrationUIConstants {
 	
 	public static final String CRON_EXPRESSION_MODIFIED = "CRON_EXPRESSION_MODIFIED";
 
+	public static final String INVALID_FLOW_TYPE = "INVALID_FLOW_TYPE";
+	public static final String ADDITIONAL_INFO_REQ_ID_MISSING = "ADDITIONAL_INFO_REQ_ID_MISSING";
 }

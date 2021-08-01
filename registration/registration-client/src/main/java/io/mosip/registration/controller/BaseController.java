@@ -25,6 +25,12 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import io.mosip.registration.dto.mastersync.GenericDto;
+import io.mosip.registration.dto.schema.ProcessSpecDto;
+import io.mosip.registration.dto.schema.UiFieldDTO;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+import javafx.stage.Modality;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,9 +60,9 @@ import io.mosip.registration.controller.reg.Validations;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.mastersync.GenericDto;
+import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
-import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RemapException;
@@ -104,13 +110,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.PixelWriter;
-import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
-import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -1293,6 +1296,26 @@ public class BaseController {
 	public SchemaDto getLatestSchema() {
 		try {
 			return identitySchemaService.getIdentitySchema(identitySchemaService.getLatestEffectiveSchemaVersion());
+		} catch (RegBaseCheckedException exception) {
+			LOGGER.error(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
+					ExceptionUtils.getStackTrace(exception));
+		}
+		return null;
+	}
+
+	public ProcessSpecDto getProcessSpec(String processId, double idVersion) {
+		try {
+			return identitySchemaService.getProcessSpecDto(processId, idVersion);
+		} catch (RegBaseCheckedException exception) {
+			LOGGER.error(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
+					ExceptionUtils.getStackTrace(exception));
+		}
+		return null;
+	}
+
+	public List<UiFieldDTO> getAllFields(String processId, double idVersion) {
+		try {
+			return identitySchemaService.getAllFieldSpec(processId, idVersion);
 		} catch (RegBaseCheckedException exception) {
 			LOGGER.error(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(exception));

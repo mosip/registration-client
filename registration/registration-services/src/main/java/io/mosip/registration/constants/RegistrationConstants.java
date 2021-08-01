@@ -286,7 +286,7 @@ public class RegistrationConstants {
 
 	public static final String APPLICATION_LANGUAGE = "application_language";
 	public static final String REGISTRATION_LOCAL_LANGUAGE = "local_language";
-	public static final String PACKET_TYPE_NEW = "New";
+	//public static final String PACKET_TYPE_NEW = "New";
 	public static final String REGISTRATION_DTO = "registrationDto";
 	public static final String UIN_LENGTH = "mosip.kernel.uin.length";
 
@@ -304,14 +304,14 @@ public class RegistrationConstants {
 	public static final String TEMPORARY_EXCEPTION = "Temporary";
 
 	// Lost UIN
-	public static final String PACKET_TYPE_LOST = "Lost";
-	public static final String LOST_UIN_CONFIG_FLAG = "mosip.registration.lost_uin_disable_flag";
+	//public static final String PACKET_TYPE_LOST = "Lost";
+	//public static final String LOST_UIN_CONFIG_FLAG = "mosip.registration.lost_uin_disable_flag";
 
 	// update UIN
 	public static final String UIN_LABEL = "UIN";
 	public static final String FIRST_TOGGLE_LABEL = "toggleLabel1";
 	public static final String SECOND_TOGGLE_LABEL = "toggleLabel2";
-	public static final String PACKET_TYPE_UPDATE = "Update";
+	//public static final String PACKET_TYPE_UPDATE = "Update";
 	public static final String DOB_TOGGLE = "toggleAgeOrDob";
 	public static final String UIN_UPDATE_CONFIG_FLAG = "mosip.registration.uin_update_config_flag";
 	public static final String UIN_UPDATE_CONFIG_FIELDS_FROM_DB = "mosip.registration.uin.update.configured.fields";

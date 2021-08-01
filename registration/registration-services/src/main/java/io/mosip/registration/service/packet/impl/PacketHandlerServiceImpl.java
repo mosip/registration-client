@@ -17,11 +17,12 @@ import java.util.stream.Collectors;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.registration.dto.schema.ProcessSpecDto;
+import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.enums.Role;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
-
-import org.apache.commons.collections.CollectionUtils;
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -31,7 +32,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.commons.packet.dto.Document;
-import io.mosip.commons.packet.dto.PacketInfo;
 import io.mosip.commons.packet.dto.packet.BiometricsException;
 import io.mosip.commons.packet.dto.packet.DeviceMetaInfo;
 import io.mosip.commons.packet.dto.packet.DigitalId;
@@ -68,7 +68,7 @@ import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.dto.packetmanager.metadata.BiometricsMetaInfoDto;
 import io.mosip.registration.dto.packetmanager.metadata.DocumentMetaInfoDTO;
-import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
@@ -184,11 +184,11 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			SchemaDto schema = identitySchemaService.getIdentitySchema(registrationDTO.getIdSchemaVersion());
 			setDemographics(registrationDTO);
 			setDocuments(registrationDTO, metaInfoMap);
-			setBiometrics(registrationDTO, schema, metaInfoMap);
+			setBiometrics(registrationDTO, metaInfoMap);
 
-			setOperatorBiometrics(registrationDTO.getRegistrationId(), registrationDTO.getRegistrationCategory(),
+			setOperatorBiometrics(registrationDTO.getRegistrationId(), registrationDTO.getProcessId(),
 					registrationDTO.getOfficerBiometrics(), officerBiometricsFileName);
-			setOperatorBiometrics(registrationDTO.getRegistrationId(), registrationDTO.getRegistrationCategory(),
+			setOperatorBiometrics(registrationDTO.getRegistrationId(), registrationDTO.getProcessId(),
 					registrationDTO.getSupervisorBiometrics(), supervisorBiometricsFileName);
 
 			setAudits(registrationDTO);
@@ -196,7 +196,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			setMetaInfo(registrationDTO, metaInfoMap);
 			LOGGER.debug("Adding Meta info to packet manager");
 			packetWriter.addMetaInfo(registrationDTO.getRegistrationId(), metaInfoMap, source.toUpperCase(),
-					registrationDTO.getRegistrationCategory().toUpperCase());
+					registrationDTO.getProcessId());
 
 			String refId = String.valueOf(ApplicationContext.map().get(RegistrationConstants.USER_CENTER_ID))
 					.concat(RegistrationConstants.UNDER_SCORE)
@@ -372,18 +372,19 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 		for (String fieldName : demographics.keySet()) {
 			LOGGER.info("Adding demographics for field : {}", fieldName);
-			switch (registrationDTO.getRegistrationCategory()) {
-				case RegistrationConstants.PACKET_TYPE_UPDATE:
+			switch (registrationDTO.getFlowType()) {
+				case UPDATE:
 					if (demographics.get(fieldName) != null && (registrationDTO.getUpdatableFields().contains(fieldName) ||
 							fieldName.equals("UIN")))
 						setField(registrationDTO.getRegistrationId(), fieldName, demographics.get(fieldName),
-								registrationDTO.getRegistrationCategory(), source);
+								registrationDTO.getProcessId(), source);
 					break;
-				case RegistrationConstants.PACKET_TYPE_LOST:
-				case RegistrationConstants.PACKET_TYPE_NEW:
+				case CORRECTION:
+				case LOST:
+				case NEW:
 					if (demographics.get(fieldName) != null)
 						setField(registrationDTO.getRegistrationId(), fieldName, demographics.get(fieldName),
-								registrationDTO.getRegistrationCategory(), source);
+								registrationDTO.getProcessId(), source);
 					break;
 				}
 		}
@@ -391,7 +392,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 	private void setDocuments(RegistrationDTO registrationDTO, Map<String, String> metaInfoMap)
 			throws RegBaseCheckedException {
-		LOGGER.debug(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Adding Documents to packet manager");
+		LOGGER.debug("Adding Documents to packet manager");
 
 		List<DocumentMetaInfoDTO> documentMetaInfoDTOs = new LinkedList<>();
 		for (String fieldName : registrationDTO.getDocuments().keySet()) {
@@ -406,69 +407,51 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			documentMetaInfoDTOs.add(documentMetaInfoDTO);
 
 			packetWriter.setDocument(registrationDTO.getRegistrationId(), fieldName, getDocument(document),
-					source.toUpperCase(), registrationDTO.getRegistrationCategory().toUpperCase());
+					source.toUpperCase(), registrationDTO.getProcessId());
 		}
 
 		metaInfoMap.put("documents", getJsonString(documentMetaInfoDTOs));
 	}
 
-	private void setBiometrics(RegistrationDTO registrationDTO, SchemaDto schema, Map<String, String> metaInfoMap)
-			throws RegBaseCheckedException {
-		LOGGER.debug(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Adding Biometrics to packet manager");
-		List<UiSchemaDTO> biometricFields = schema.getSchema().stream()
-				.filter(field -> PacketManagerConstants.BIOMETRICS_DATATYPE.equals(field.getType())
-						&& field.getSubType() != null && field.getBioAttributes() != null)
-				.collect(Collectors.toList());
+	private void setBiometrics(RegistrationDTO registrationDTO, Map<String, String> metaInfoMap) throws RegBaseCheckedException {
+		LOGGER.debug("Adding Biometrics to packet manager started..");
+		Map<String, List<BIR>> capturedBiometrics = new HashMap<>();
+		Map<String, Map<String, Object>> capturedMetaInfo = new LinkedHashMap<>();
+		Map<String, Map<String, Object>> exceptionMetaInfo = new LinkedHashMap<>();
 
-		Map<String, BiometricsDto> biometrics = registrationDTO.getBiometrics();
-		Map<String, BiometricsException> exceptions = registrationDTO.getBiometricExceptions();
-		Map<String, Map<String, Object>> subTypeMap = new LinkedHashMap<>();
-		Map<String, Map<String, Object>> exceptionSubTypeMap = new LinkedHashMap<>();
-
-		for (UiSchemaDTO biometricField : biometricFields) {
-
-			List<BIR> list = new ArrayList<>();
-			Map<String, Object> attributesMap = new LinkedHashMap<>();
-			Map<String, Object> exceptionAttributesMap = new LinkedHashMap<>();
-
-			for (String attribute : biometricField.getBioAttributes()) {
-				String key = String.format("%s_%s", biometricField.getSubType(), attribute);
-
-				if (biometrics.containsKey(key)) {
-					BIR bir = birBuilder.buildBIR(biometrics.get(key));
-					BiometricsDto biometricsDto = biometrics.get(key);
-
-					BiometricsMetaInfoDto biometricsMetaInfoDto = new BiometricsMetaInfoDto(
-							biometricsDto.getNumOfRetries(), biometricsDto.isForceCaptured(),
-							bir.getBdbInfo().getIndex());
-					attributesMap.put(biometricsDto.getBioAttribute(), biometricsMetaInfoDto);
-					list.add(bir);
-					continue;
-				}
-
-				if (exceptions.containsKey(key)) {
-					BiometricsException biometricsException = exceptions.get(key);
-					list.add(birBuilder.buildBIR(new BiometricsDto(attribute, null, 0)));
-					exceptionAttributesMap.put(biometricsException.getMissingBiometric(), biometricsException);
-				}
-			}
-
-			subTypeMap.put(biometricField.getSubType(), attributesMap);
-			exceptionSubTypeMap.put(biometricField.getSubType(), exceptionAttributesMap);
-
-			BiometricRecord biometricRecord = new BiometricRecord();
-			biometricRecord.setOthers(new HashMap<>());
-			biometricRecord.getOthers().put(OtherKey.CONFIGURED, String.join(",", biometricField.getBioAttributes()));
-			biometricRecord.setSegments(list);
-
-			LOGGER.debug("Adding biometric to packet manager for field : {}", biometricField.getId());
-			packetWriter.setBiometric(registrationDTO.getRegistrationId(), biometricField.getId(), biometricRecord,
-					source.toUpperCase(), registrationDTO.getRegistrationCategory().toUpperCase());
-
+		for(String key : registrationDTO.getBiometrics().keySet()) {
+			String fieldId = key.split("_")[0];
+			String bioAttribute = key.split("_")[1];
+			BIR bir = birBuilder.buildBIR(registrationDTO.getBiometrics().get(key));
+			capturedBiometrics.getOrDefault(fieldId, new ArrayList<>()).add(bir);
+			capturedMetaInfo.getOrDefault(fieldId, new HashMap<>()).put(bioAttribute, new BiometricsMetaInfoDto(
+					registrationDTO.getBiometrics().get(key).getNumOfRetries(),
+					registrationDTO.getBiometrics().get(key).isForceCaptured(),
+					bir.getBdbInfo().getIndex()));
 		}
 
-		metaInfoMap.put("biometrics", getJsonString(subTypeMap));
-		metaInfoMap.put("exceptionBiometrics", getJsonString(exceptionSubTypeMap));
+		for(String key : registrationDTO.getBiometricExceptions().keySet()) {
+			String fieldId = key.split("_")[0];
+			String bioAttribute = key.split("_")[1];
+			BIR bir = birBuilder.buildBIR(new BiometricsDto(bioAttribute, null, 0));
+			capturedBiometrics.getOrDefault(fieldId, new ArrayList<>()).add(bir);
+			exceptionMetaInfo.getOrDefault(fieldId, new HashMap<>()).put(bioAttribute,
+					registrationDTO.getBiometricExceptions().get(key));
+		}
+
+		capturedBiometrics.keySet().forEach(fieldId -> {
+			BiometricRecord biometricRecord = new BiometricRecord();
+			biometricRecord.setOthers(new HashMap<>());
+			biometricRecord.getOthers().put(OtherKey.CONFIGURED, String.join(",",
+					registrationDTO.CONFIGURED_BIOATTRIBUTES.getOrDefault(fieldId, Collections.EMPTY_LIST)));
+			biometricRecord.setSegments(capturedBiometrics.get(fieldId));
+			LOGGER.debug("Adding biometric to packet manager for field : {}", fieldId);
+			packetWriter.setBiometric(registrationDTO.getRegistrationId(), fieldId, biometricRecord,
+					source.toUpperCase(), registrationDTO.getProcessId());
+		});
+
+		metaInfoMap.put("biometrics", getJsonString(capturedMetaInfo));
+		metaInfoMap.put("exceptionBiometrics", getJsonString(exceptionMetaInfo));
 	}
 
 	private void setAudits(RegistrationDTO registrationDTO) {
@@ -501,7 +484,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		}
 		Assert.notEmpty(auditList, "Audit list is empty for the current registration");
 		packetWriter.addAudits(registrationDTO.getRegistrationId(), auditList, source.toUpperCase(),
-				registrationDTO.getRegistrationCategory().toUpperCase());
+				registrationDTO.getProcessId());
 	}
 
 	private void addRegisteredDevices(Map<String, String> metaInfoMap) throws RegBaseCheckedException {
@@ -585,7 +568,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	@Counted(value = "registration", extraTags = {"function", "start"})
 	@Timed(value = "registration", extraTags = {"function", "start"})
 	@Override
-	public RegistrationDTO startRegistration(String id, String registrationCategory) throws RegBaseCheckedException {
+	public RegistrationDTO startRegistration(String id, @NonNull String processId) throws RegBaseCheckedException {
 		//Pre-check conditions, throws exception if preconditions are not met
 		proceedWithRegistration();
 
@@ -593,6 +576,9 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 		// set id-schema version to be followed for this registration
 		registrationDTO.setIdSchemaVersion(identitySchemaService.getLatestEffectiveSchemaVersion());
+		ProcessSpecDto processSpecDto = identitySchemaService.getProcessSpecDto(processId, registrationDTO.getIdSchemaVersion());
+		registrationDTO.setProcessId(processSpecDto.getId());
+		registrationDTO.setFlowType(FlowType.valueOf(processSpecDto.getFlow()));
 
 		// Create object for OSIData DTO
 		registrationDTO.setOsiDataDTO(new OSIDataDTO());
@@ -601,36 +587,23 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 		// Create RegistrationMetaData DTO & set default values in it
 		RegistrationMetaDataDTO registrationMetaDataDTO = new RegistrationMetaDataDTO();
-		registrationMetaDataDTO.setRegistrationCategory(registrationCategory); // TODO - remove its usage
+		registrationMetaDataDTO.setRegistrationCategory(registrationDTO.getFlowType().getCategory());
 		registrationDTO.setRegistrationMetaDataDTO(registrationMetaDataDTO);
-		registrationDTO.setRegistrationCategory(registrationCategory);
 
 		// Set RID
 		String registrationID = ridGeneratorImpl.generateId(
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_CENTER_ID),
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_STATION_ID));
+		registrationDTO.setAppId(pridGenerator.generateId());
 		registrationDTO.setRegistrationId(registrationID);
-		
-		String applicationId = pridGenerator.generateId();
-		registrationDTO.setAppId(applicationId);
-		//TODO - Handle correction process to set AdditionalInfoReqId
-		//registrationDTO.setAdditionalInfoReqId(additionalInfoReqId);
 
-		LOGGER.info(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID,
-				"Registration Started for ApplicationId  : [ " + registrationDTO.getAppId() + " ] ");
+		LOGGER.info("Registration Started for ApplicationId  : {}", registrationDTO.getAppId());
 
-		List<String> defaultFieldGroups = new ArrayList<String>() {};
-		defaultFieldGroups.add(RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME);
-		List<String> defaultFields = identitySchemaService.getUISchema(registrationDTO.getIdSchemaVersion()).stream()
-				.filter(schemaDto -> schemaDto.getGroup() != null && schemaDto.getGroup().equalsIgnoreCase(
-						RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME
-				)).map(UiSchemaDTO::getId).collect(Collectors.toList());
+		List<String> defaultFieldGroups = new ArrayList<>();
+		if(processSpecDto.getAutoSelectedGroups() != null)
+				defaultFieldGroups.addAll(processSpecDto.getAutoSelectedGroups());
 
-		// Used to update printing name as default
 		registrationDTO.setDefaultUpdatableFieldGroups(defaultFieldGroups);
-		registrationDTO.setDefaultUpdatableFields(defaultFields);
-
 		return registrationDTO;
 	}
 }

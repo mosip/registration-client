@@ -848,14 +848,14 @@ public class AuthenticationController extends BaseController implements Initiali
 	public void goToPreviousPage() {
 		auditFactory.audit(AuditEvent.REG_PREVIEW_BACK, Components.REG_PREVIEW, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
-		if (getRegistrationDTOFromSession().getSelectionListDTO() != null) {
+		/*if (getRegistrationDTOFromSession().getSelectionListDTO() != null) {
 			SessionContext.map().put(RegistrationConstants.UIN_UPDATE_OPERATORAUTHENTICATIONPANE, false);
 			SessionContext.map().put(RegistrationConstants.UIN_UPDATE_REGISTRATIONPREVIEW, true);
 			registrationController.showUINUpdateCurrentPage();
-		} else {
+		} else {*/
 			registrationController.showCurrentPage(RegistrationConstants.OPERATOR_AUTHENTICATION,
 					getPageByAction(RegistrationConstants.OPERATOR_AUTHENTICATION, RegistrationConstants.PREVIOUS));
-		}
+		//}
 	}
 
 	public void goToNextPage() {

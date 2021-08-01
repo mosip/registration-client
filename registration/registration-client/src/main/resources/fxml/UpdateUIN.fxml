@@ -115,53 +115,13 @@
                   <fx:include fx:id="headerParentBorder" prefHeight="${header.height}" prefWidth="${header.width}" source="Header.fxml" />
                </children>
             </GridPane>
-            <GridPane fx:id="uinUpdateHeader" GridPane.rowIndex="1">
-               <columnConstraints>
-                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="395.0" minWidth="10.0" prefWidth="203.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="612.0" minWidth="10.0" prefWidth="597.0" />
-               </columnConstraints>
-               <rowConstraints>
-                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-               </rowConstraints>
-               <children>
-                  <Label prefHeight="27.0" prefWidth="329.0" styleClass="mainHeader" text="%uinupdate" GridPane.columnIndex="1" GridPane.halignment="CENTER" />
-                  <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0">
-                     <children>
-                        <Button mnemonicParsing="false" onAction="#goToHomePageFromRegistration" styleClass="homeButton" text="%home" />
-                        <Label prefHeight="27.0" prefWidth="182.0" styleClass="headerLabel" text="%/uinupdate" />
-                     </children>
-                     <GridPane.margin>
-                        <Insets left="20.0" />
-                     </GridPane.margin>
-                  </HBox>
-               </children>
-            </GridPane>
             <GridPane styleClass="headerFooter" GridPane.rowIndex="3">
                <children>
                   <GridPane GridPane.columnIndex="1">
                      <children>
-                        <GridPane fx:id="backButton" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
-                           <children>
-                              <Button fx:id="backBtn" minWidth="${backButton.width/2}" mnemonicParsing="false" onAction="#goToHomePageFromRegistration" styleClass="backButton" text="%back" GridPane.valignment="TOP">
-                                 <graphic>
-                                    <ImageView fx:id="backImageView" fitHeight="20.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true">
-                                       <image>
-                                          <Image url="@../images/arrowLeft.png" />
-                                       </image>
-                                    </ImageView>
-                                 </graphic>
-                              </Button>
-                           </children>
-                           <columnConstraints>
-                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                           </columnConstraints>
-                           <rowConstraints>
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                           </rowConstraints>
-                        </GridPane>
                         <GridPane GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
                            <children>
-                              <Button fx:id="continueBtn" minWidth="${backButton.width/2}" mnemonicParsing="false" onAction="#submitUINUpdate" styleClass="contiuneButton" text="%continue" GridPane.halignment="RIGHT" GridPane.valignment="TOP">
+                              <Button fx:id="continueBtn" mnemonicParsing="false" onAction="#submitUINUpdate" styleClass="contiuneButton" text="%continue" GridPane.halignment="RIGHT" GridPane.valignment="TOP">
                                  <graphic>
                                     <ImageView fx:id="continueImageView" fitHeight="20.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true">
                                        <image>

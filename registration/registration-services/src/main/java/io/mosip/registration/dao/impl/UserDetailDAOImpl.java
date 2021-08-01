@@ -219,6 +219,13 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 	}
 
 	@Override
+	public List<UserBiometric> findAllActiveUsersExceptCurrentUser(String bioType, String userId) {
+		LOGGER.info(LOG_REG_USER_DETAIL, APPLICATION_NAME, APPLICATION_ID,
+				"Fetching all local users except login userid for bioType >>> {}", bioType);
+		return userBiometricRepository.findByUserBiometricIdUsrIdNotAndUserBiometricIdBioTypeCodeAndIsActiveTrue(userId, bioType);
+	}
+
+	@Override
 	public void updateAuthTokens(String userId, String authToken, String refreshToken, long tokenExpiry,
 			long refreshTokenExpiry) {
 		UserDetail userDetail = userDetailRepository.findByIdIgnoreCaseAndIsActiveTrue(userId);
