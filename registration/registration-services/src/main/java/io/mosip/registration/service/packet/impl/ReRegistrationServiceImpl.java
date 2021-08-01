@@ -49,9 +49,9 @@ public class ReRegistrationServiceImpl extends BaseService implements ReRegistra
 	public List<PacketStatusDTO> getAllReRegistrationPackets() {
 		LOGGER.info(LoggerConstants.LOG_GET_RE_REGISTER_PKT, APPLICATION_NAME, APPLICATION_ID,
 				"Getting all the re-registration packets from the table");
-		String[] packetStatus = { RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode(),
-				RegistrationConstants.RE_REGISTRATION_STATUS };
-		List<Registration> reRegisterPackets = registrationDAO.getAllReRegistrationPackets(packetStatus);
+		
+		List<Registration> reRegisterPackets = registrationDAO.getAllReRegistrationPackets(RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode(), 
+				RegistrationConstants.PACKET_REJECTED_STATUS);
 		List<PacketStatusDTO> uiPacketDto = new ArrayList<>();
 		for (Registration reRegisterPacket : reRegisterPackets) {
 			PacketStatusDTO packetStatusDTO = new PacketStatusDTO();

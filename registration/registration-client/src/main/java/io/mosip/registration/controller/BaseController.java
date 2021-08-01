@@ -25,10 +25,6 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import io.mosip.registration.dto.mastersync.GenericDto;
-import javafx.scene.image.PixelWriter;
-import javafx.scene.image.WritableImage;
-import javafx.stage.Modality;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,10 +54,9 @@ import io.mosip.registration.controller.reg.Validations;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.response.SchemaDto;
-import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RemapException;
@@ -109,10 +104,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -1698,6 +1696,28 @@ public class BaseController {
 			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.getInstance().getMapObject()
 					.get(RegistrationConstants.REGISTRATION_DATA);
 			registrationDTO.addOfficerBiometrics(biometrics);
+		}
+	}
+	
+	protected void showAlertAndLogout() {
+		/* Generate alert */
+		Alert logoutAlert = createAlert(AlertType.INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_SUCCESS),RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.ALERT_NOTE_LABEL),
+				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.LOGOUT_ALERT),
+				RegistrationConstants.OK_MSG, null);
+
+		logoutAlert.show();
+		Rectangle2D screenSize = Screen.getPrimary().getVisualBounds();		
+		Double xValue = screenSize.getWidth()/2 - logoutAlert.getWidth() + 250;
+		Double yValue = screenSize.getHeight()/2 - logoutAlert.getHeight();
+		logoutAlert.hide();
+		logoutAlert.setX(xValue);
+		logoutAlert.setY(yValue);
+		logoutAlert.showAndWait();
+
+		/* Get Option from user */
+		ButtonType result = logoutAlert.getResult();
+		if (result == ButtonType.OK) {
+			headerController.logout();
 		}
 	}
 }

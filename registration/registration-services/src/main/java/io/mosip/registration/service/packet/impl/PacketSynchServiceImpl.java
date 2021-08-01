@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -214,37 +215,53 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 		proceedWithPacketSync();
 
 		List<Registration> registrations = (RIDs != null) ? registrationDAO.get(RIDs) :
-				registrationDAO.getPacketsToBeSynched(RegistrationConstants.PACKET_STATUS, batchCount);
+				registrationDAO.getPacketsToBeSynched(RegistrationConstants.CLIENT_STATUS_APPROVED, batchCount);
 
 		List<SyncRegistrationDTO> syncDtoList = getPacketSyncDtoList(registrations);
+		
+		List<SyncRegistrationDTO> syncDtoWithPacketId = syncDtoList.stream().filter(dto -> dto.getPacketId() != null).collect(Collectors.toList());
+		List<SyncRegistrationDTO> syncDtoWithoutPacketId = syncDtoList.stream().filter(dto -> dto.getPacketId() == null).collect(Collectors.toList());
+		
 		if(syncDtoList == null || syncDtoList.isEmpty())
 			return;
+		
+		syncRID(syncDtoWithoutPacketId, triggerPoint, false);
+		syncRID(syncDtoWithPacketId, triggerPoint, true);
+		
+		LOGGER.debug("Sync the packets to the server ending");
+	}
 
-		RegistrationPacketSyncDTO registrationPacketSyncDTO = new RegistrationPacketSyncDTO();
-		registrationPacketSyncDTO
-				.setRequesttime(DateUtils.formatToISOString(DateUtils.getUTCCurrentDateTime()));
-		registrationPacketSyncDTO.setSyncRegistrationDTOs(syncDtoList);
-		registrationPacketSyncDTO.setId(RegistrationConstants.PACKET_SYNC_STATUS_ID);
-		registrationPacketSyncDTO.setVersion(RegistrationConstants.PACKET_SYNC_VERSION);
-		String regId = registrationPacketSyncDTO.getSyncRegistrationDTOs().get(0).getRegistrationId();
-		ResponseDTO response = syncPacketsToServer(CryptoUtil.encodeBase64(offlinePacketCryptoServiceImpl
-				.encrypt(regId, javaObjectToJsonString(registrationPacketSyncDTO).getBytes())), triggerPoint);
 
-		if (response != null && response.getSuccessResponseDTO() != null) {
-			for (SyncRegistrationDTO dto : syncDtoList) {
-				String status = (String) response.getSuccessResponseDTO().getOtherAttributes()
-						.get(dto.getRegistrationId());
+	private void syncRID(List<SyncRegistrationDTO> syncDtoList, String triggerPoint, boolean packetIdExists) throws RegBaseCheckedException, ConnectionException, JsonProcessingException {
+		if (!syncDtoList.isEmpty()) {
+			RegistrationPacketSyncDTO registrationPacketSyncDTO = new RegistrationPacketSyncDTO();
+			registrationPacketSyncDTO
+					.setRequesttime(DateUtils.formatToISOString(DateUtils.getUTCCurrentDateTime()));
+			registrationPacketSyncDTO.setSyncRegistrationDTOs(syncDtoList);
+			registrationPacketSyncDTO.setId(RegistrationConstants.PACKET_SYNC_STATUS_ID);
+			registrationPacketSyncDTO.setVersion(RegistrationConstants.PACKET_SYNC_VERSION);
+			
+			String refId = String.valueOf(ApplicationContext.map().get(RegistrationConstants.USER_CENTER_ID))
+					.concat(RegistrationConstants.UNDER_SCORE)
+					.concat(String.valueOf(ApplicationContext.map().get(RegistrationConstants.USER_STATION_ID)));
+			
+			ResponseDTO response = syncPacketsToServer(CryptoUtil.encodeBase64(offlinePacketCryptoServiceImpl
+					.encrypt(refId, javaObjectToJsonString(registrationPacketSyncDTO).getBytes())), triggerPoint, packetIdExists);
 
-				if (status != null && status.equalsIgnoreCase(RegistrationConstants.SUCCESS)) {
-					PacketStatusDTO packetStatusDTO = new PacketStatusDTO();
-					packetStatusDTO.setFileName(dto.getRegistrationId());
-					packetStatusDTO.setPacketClientStatus(RegistrationClientStatusCode.META_INFO_SYN_SERVER.getCode());
-					// TODO - check on re-register status logic
-					syncRegistrationDAO.updatePacketSyncStatus(packetStatusDTO);
+			if (response != null && response.getSuccessResponseDTO() != null) {
+				for (SyncRegistrationDTO dto : syncDtoList) {
+					String status = (String) response.getSuccessResponseDTO().getOtherAttributes().get(dto.getRegistrationId());
+
+					if (status != null && status.equalsIgnoreCase(RegistrationConstants.SUCCESS)) {
+						PacketStatusDTO packetStatusDTO = new PacketStatusDTO();
+						packetStatusDTO.setFileName(dto.getRegistrationId());
+						packetStatusDTO.setPacketClientStatus(RegistrationClientStatusCode.META_INFO_SYN_SERVER.getCode());
+						// TODO - check on re-register status logic
+						syncRegistrationDAO.updatePacketSyncStatus(packetStatusDTO);
+					}
 				}
 			}
 		}
-		LOGGER.debug("Sync the packets to the server ending");
 	}
 
 
@@ -257,6 +274,8 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 			SyncRegistrationDTO syncDto = new SyncRegistrationDTO();
 			syncDto.setRegistrationId(registration.getId());
 			syncDto.setRegistrationType(registration.getStatusCode().toUpperCase());
+			syncDto.setPacketId(registration.getPacketId());
+			syncDto.setAdditionalInfoReqId(registration.getAdditionalInfoReqId());
 
 			try {
 				if (registration.getAdditionalInfo() != null) {
@@ -305,6 +324,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 	 *            the sync dto list
 	 * @param triggerPoint
 	 *            the trigger point
+	 * @param packetIdExists 
 	 * @return the response DTO
 	 * @throws RegBaseCheckedException
 	 *             the reg base checked exception
@@ -312,20 +332,20 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 	 *             the ConnectionException
 	 */
 	@VisibleForTesting
-	private ResponseDTO syncPacketsToServer(@NonNull String encodedString, @NonNull String triggerPoint)
+	private ResponseDTO syncPacketsToServer(@NonNull String encodedString, @NonNull String triggerPoint, boolean packetIdExists)
 			throws RegBaseCheckedException, ConnectionException {
 		LOGGER.info("Sync the packets to the server");
 		ResponseDTO responseDTO = new ResponseDTO();
 
 		try {
 			LinkedHashMap<String, Object> response = (LinkedHashMap<String, Object>) serviceDelegateUtil
-					.post(RegistrationConstants.PACKET_SYNC, javaObjectToJsonString(encodedString), triggerPoint);
+					.post(packetIdExists ? RegistrationConstants.PACKET_SYNC_V2 : RegistrationConstants.PACKET_SYNC, javaObjectToJsonString(encodedString), triggerPoint);
 			if (response.get("response") != null) {
 				SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
 				Map<String, Object> statusMap = new WeakHashMap<>();
 				for (LinkedHashMap<String, Object> responseMap : (List<LinkedHashMap<String, Object>>) response
 						.get("response")) {
-					statusMap.put((String) responseMap.get("registrationId"), responseMap.get("status"));
+					statusMap.put((String) (responseMap.containsKey("packetId") ? responseMap.get("packetId") : responseMap.get("registrationId")), responseMap.get("status"));
 				}
 				successResponseDTO.setOtherAttributes(statusMap);
 				responseDTO.setSuccessResponseDTO(successResponseDTO);

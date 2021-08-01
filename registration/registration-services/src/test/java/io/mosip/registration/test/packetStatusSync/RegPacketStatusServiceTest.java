@@ -1,14 +1,9 @@
 package io.mosip.registration.test.packetStatusSync;
 
-import static io.mosip.kernel.core.util.JsonUtils.javaObjectToJsonString;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.when;
 
-import java.net.SocketTimeoutException;
-import java.net.URISyntaxException;
-import java.security.NoSuchAlgorithmException;
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -16,19 +11,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import io.mosip.kernel.core.util.HMACUtils2;
-import io.mosip.registration.dao.RegistrationCenterDAO;
-import io.mosip.registration.entity.CenterMachine;
-import io.mosip.registration.entity.MachineMaster;
-import io.mosip.registration.entity.id.CenterMachineId;
-import io.mosip.registration.entity.id.RegMachineSpecId;
-import io.mosip.registration.exception.ConnectionException;
-import io.mosip.registration.repositories.CenterMachineRepository;
-import io.mosip.registration.repositories.MachineMasterRepository;
-import io.mosip.registration.service.BaseService;
-import io.mosip.registration.service.remap.CenterMachineReMapService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -45,23 +27,32 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.ResourceAccessException;
 
-import io.mosip.kernel.core.util.exception.JsonProcessingException;
+import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.dao.RegPacketStatusDAO;
+import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dao.RegistrationDAO;
-import io.mosip.registration.dto.RegistrationPacketSyncDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
+import io.mosip.registration.entity.CenterMachine;
+import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.Registration;
+import io.mosip.registration.entity.id.CenterMachineId;
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.repositories.CenterMachineRepository;
+import io.mosip.registration.repositories.MachineMasterRepository;
+import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.packet.impl.RegPacketStatusServiceImpl;
+import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.PacketSynchService;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 @RunWith(PowerMockRunner.class)
@@ -285,7 +276,7 @@ public class RegPacketStatusServiceTest {
 		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
 		successResponseDTO.setMessage(RegistrationConstants.REGISTRATION_DELETION_BATCH_JOBS_SUCCESS);
 
-		when(registrationDAO.get(Mockito.any(), Mockito.anyString())).thenReturn(list);
+		when(registrationDAO.get(Mockito.anyString(), Mockito.any(), Mockito.any())).thenReturn(list);
 
 		Mockito.doNothing().when(packetStatusDao).delete(Mockito.any());
 
@@ -309,9 +300,7 @@ public class RegPacketStatusServiceTest {
 
 	@Test
 	public void deleteReRegistrationPacketsFailureTest() {
-		List<Registration> list = prepareSamplePackets();
-
-		when(registrationDAO.get(Mockito.any(), Mockito.anyString())).thenThrow(RuntimeException.class);
+		when(registrationDAO.get(Mockito.anyString(), Mockito.any(), Mockito.any())).thenThrow(RuntimeException.class);
 
 		assertSame(RegistrationConstants.REGISTRATION_DELETION_BATCH_JOBS_FAILURE,
 				packetStatusService.deleteRegistrationPackets().getErrorResponseDTOs().get(0).getMessage());
