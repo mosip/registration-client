@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 import io.mosip.kernel.core.idvalidator.exception.InvalidIDException;
 import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.entity.LocationHierarchy;
-import io.mosip.registration.enums.FlowType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -269,12 +268,9 @@ public class GenericController extends BaseController {
 		textField.getStyleClass().add(TEXTFIELD_CLASS);
 		hBox.getChildren().add(textField);
 
-		textField.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent event) {
-				getRegistrationDTOFromSession().setAdditionalInfoReqId(textField.getText());
-				getRegistrationDTOFromSession().setAppId(textField.getText());
-			}
+		textField.textProperty().addListener((observable, oldValue, newValue) -> {
+			getRegistrationDTOFromSession().setAdditionalInfoReqId(newValue);
+			getRegistrationDTOFromSession().setAppId(newValue);
 		});
 		return hBox;
 	}
@@ -283,7 +279,6 @@ public class GenericController extends BaseController {
 		if(screenDTO.isAdditionalInfoRequestIdRequired()) {
 			TextField textField = (TextField) anchorPane.lookup("#additionalInfoRequestId");
 			if(textField.getText() == null || textField.getText().isBlank()) {
-				generateAlertLanguageSpecific(RegistrationConstants.ERROR, RegistrationUIConstants.ADDITIONAL_INFO_REQ_ID_MISSING);
 				return false;
 			}
 		}
@@ -532,27 +527,34 @@ public class GenericController extends BaseController {
 
 		boolean isValid = true;
 		if(result.isPresent()) {
-			if(!isAdditionalInfoRequestIdProvided(result.get())) { return false; }
+
+			if(!isAdditionalInfoRequestIdProvided(result.get())) {
+				showHideErrorNotification(applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
+						.getString(RegistrationUIConstants.ADDITIONAL_INFO_REQ_ID_MISSING));
+				return false;
+			}
 
 			for(UiFieldDTO field : result.get().getFields()) {
 				if(getFxControl(field.getId()) != null && !getFxControl(field.getId()).canContinue()) {
 					LOGGER.error("Screen validation , fieldId : {} has invalid value", field.getId());
 					String label = getFxControl(field.getId()).getUiSchemaDTO().getLabel().getOrDefault(ApplicationContext.applicationLanguage(), field.getId());
-					notification.setText(applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
-							.getString("SCREEN_VALIDATION_ERROR") + " [ " + label + " ]");
-					notification.setVisible(true);
+					showHideErrorNotification(label);
 					isValid = false;
 					break;
 				}
 			}
 		}
 		if (isValid) {
-			notification.setText(EMPTY);
-			//notification.setVisible(false);
+			showHideErrorNotification(null);
 			auditFactory.audit(AuditEvent.REG_NAVIGATION, Components.REGISTRATION_CONTROLLER,
 					SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 		}
 		return isValid;
+	}
+
+	private void showHideErrorNotification(String fieldName) {
+		notification.setText((fieldName == null) ? EMPTY : applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
+				.getString("SCREEN_VALIDATION_ERROR") + " [ " + fieldName + " ]");
 	}
 
 	private String getInvalidScreenName(TabPane tabPane) {

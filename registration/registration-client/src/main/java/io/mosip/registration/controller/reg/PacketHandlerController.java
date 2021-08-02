@@ -309,8 +309,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 					.getEnrollmentByStatus(RegistrationClientStatusCode.CREATED.getCode());
 
 			List<PacketStatusDTO> reRegisterRegistrations = reRegistrationService.getAllReRegistrationPackets();
-			List<String> configuredFieldsfromDB = Arrays.asList(
-					getValueFromApplicationContext(RegistrationConstants.UIN_UPDATE_CONFIG_FIELDS_FROM_DB).split(","));
 
 			if (!pendingApprovalRegistrations.isEmpty()) {
 				pendingApprovalCountLbl
@@ -320,17 +318,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 				reRegistrationCountLbl
 						.setText(reRegisterRegistrations.size() + " " + RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.APPLICATIONS));
 			}
-			/*if (!(getValueFromApplicationContext(RegistrationConstants.UIN_UPDATE_CONFIG_FLAG))
-					.equalsIgnoreCase(RegistrationConstants.ENABLE)
-					|| configuredFieldsfromDB.get(RegistrationConstants.PARAM_ZERO).isEmpty()) {
-				vHolder.getChildren().forEach(btnNode -> {
-					if (btnNode instanceof GridPane && btnNode.getId() != null
-							&& btnNode.getId().equals(uinUpdateGridPane.getId())) {
-						btnNode.setVisible(false);
-						btnNode.setManaged(false);
-					}
-				});
-			}*/
+
 			Timestamp ts = userOnboardService.getLastUpdatedTime(SessionContext.userId());
 			if (ts != null) {
 				lastBiometricTime
@@ -653,11 +641,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 				FileUtils.copyToFile(new ByteArrayInputStream(ackInBytes),
 						new File(filePath.concat("_Ack.").concat(RegistrationConstants.ACKNOWLEDGEMENT_FORMAT)));
 
-				// TODO - Client should not send notification, save contact details
-				// TODO - so that it can be sent out during RID sync.
-//				sendNotification((String) registrationDTO.getDemographics().get("email"),
-//						(String) registrationDTO.getDemographics().get("phone"), registrationDTO.getRegistrationId());
-
 				// Sync and Uploads Packet when EOD Process Configuration is set to OFF
 				String supervisorApproval = getValueFromApplicationContext(RegistrationConstants.SUPERVISOR_APPROVAL_CONFIG_FLAG);
 				if (supervisorApproval != null && !getValueFromApplicationContext(RegistrationConstants.SUPERVISOR_APPROVAL_CONFIG_FLAG)
@@ -863,12 +846,13 @@ public class PacketHandlerController extends BaseController implements Initializ
 			selectLanguage(event);
 		});
 		VBox vBox = new VBox();
-		vBox.setAlignment(Pos.BASELINE_CENTER);
+		vBox.setAlignment(Pos.CENTER);
 		vBox.setPrefHeight(200);
 		vBox.setPrefWidth(100);
 		ImageView imageView = new ImageView();
 		imageView.setId(processSpecDto.getId()+"_img");
 		imageView.setPreserveRatio(true);
+		imageView.setPickOnBounds(true);
 		imageView.setFitHeight(30);
 		imageView.setFitWidth(30);
 		try {
@@ -882,7 +866,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 		Label label = new Label();
 		label.setText(processSpecDto.getLabel().get(ApplicationContext.applicationLanguage()));
 		label.setWrapText(true);
-		label.getStyleClass().add("uinUpdateBtnStyle");
+		label.getStyleClass().add("operationalTitle");
 		gridPane.addColumn(1, label);
 		changeNodeOrientation(gridPane);
 		return gridPane;
