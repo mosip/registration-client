@@ -22,10 +22,11 @@ import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.FXUtils;
 import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.controller.reg.DocumentScanController;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.entity.DocumentType;
+import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.util.common.ComboBoxAutoComplete;
 import io.mosip.registration.util.control.FxControl;
@@ -71,24 +72,24 @@ public class DocumentFxControl extends FxControl {
 	}
 
 	@Override
-	public FxControl build(UiSchemaDTO uiSchemaDTO) {
-		this.uiSchemaDTO = uiSchemaDTO;
+	public FxControl build(UiFieldDTO uiFieldDTO) {
+		this.uiFieldDTO = uiFieldDTO;
 		this.control = this;
 
 		HBox hBox = new HBox();
 		hBox.setSpacing(20);
 
 		// DROP-DOWN
-		hBox.getChildren().add(create(uiSchemaDTO));
+		hBox.getChildren().add(create(uiFieldDTO));
 
 		// REF-FIELD
-		hBox.getChildren().add(createDocRef(uiSchemaDTO.getId()));
+		hBox.getChildren().add(createDocRef(uiFieldDTO.getId()));
 
 		// CLEAR IMAGE
 		GridPane tickMarkGridPane = getImageGridPane(PREVIEW_ICON, RegistrationConstants.DOC_PREVIEW_ICON);
 		tickMarkGridPane.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
 
-			scanDocument((ComboBox<DocumentCategoryDto>) getField(uiSchemaDTO.getId()), uiSchemaDTO.getSubType(), true);
+			scanDocument((ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId()), uiFieldDTO.getSubType(), true);
 
 		});
 		// TICK-MARK
@@ -98,22 +99,22 @@ public class DocumentFxControl extends FxControl {
 		GridPane clearGridPane = getImageGridPane(CLEAR_ID, RegistrationConstants.CLOSE_IMAGE_PATH);
 		clearGridPane.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
 			ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(
-					uiSchemaDTO.getId());
+					uiFieldDTO.getId());
 			comboBox.getSelectionModel().clearSelection();
 			clearCapturedDocuments();
 		});
 		hBox.getChildren().add(clearGridPane);
 
 		// SCAN-BUTTON
-		hBox.getChildren().add(createScanButton(uiSchemaDTO));
+		hBox.getChildren().add(createScanButton(uiFieldDTO));
 
 		this.node = hBox;
 
-		setListener(getField(uiSchemaDTO.getId() + RegistrationConstants.BUTTON));
+		setListener(getField(uiFieldDTO.getId() + RegistrationConstants.BUTTON));
 
 		changeNodeOrientation(hBox, getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
 
-		fillData(masterSyncService.getDocumentCategories(uiSchemaDTO.getSubType(),
+		fillData(masterSyncService.getDocumentCategories(uiFieldDTO.getSubType(),
 				getRegistrationDTo().getSelectedLanguagesByApplicant().get(0)));
 
 		return this.control;
@@ -122,30 +123,30 @@ public class DocumentFxControl extends FxControl {
 	private void clearCapturedDocuments() {
 		AuditEvent auditEvent = null;
 		try {
-			auditEvent = AuditEvent.valueOf(String.format("REG_DOC_%S_DELETE", uiSchemaDTO.getSubType()));
+			auditEvent = AuditEvent.valueOf(String.format("REG_DOC_%S_DELETE", uiFieldDTO.getSubType()));
 		} catch (Exception exception) {
-			LOGGER.error("Unable to find audit event for button : " + uiSchemaDTO.getSubType());
+			LOGGER.error("Unable to find audit event for button : " + uiFieldDTO.getSubType());
 
 			auditEvent = AuditEvent.REG_DOC_DELETE;
 		}
 		auditFactory.audit(auditEvent, Components.REG_DOCUMENTS, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 		
-		getRegistrationDTo().getDocuments().remove(this.uiSchemaDTO.getId());
+		getRegistrationDTo().getDocuments().remove(this.uiFieldDTO.getId());
 		
 		TextField textField = (TextField) getField(
-				uiSchemaDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
+				uiFieldDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
 		textField.setText(RegistrationConstants.EMPTY);
 		
-		getField(uiSchemaDTO.getId() + PREVIEW_ICON).setVisible(false);
-		getField(uiSchemaDTO.getId() + CLEAR_ID).setVisible(false);
-		getField(uiSchemaDTO.getId() + PREVIEW_ICON).setManaged(true);
-		getField(uiSchemaDTO.getId() + CLEAR_ID).setManaged(true);
+		getField(uiFieldDTO.getId() + PREVIEW_ICON).setVisible(false);
+		getField(uiFieldDTO.getId() + CLEAR_ID).setVisible(false);
+		getField(uiFieldDTO.getId() + PREVIEW_ICON).setManaged(true);
+		getField(uiFieldDTO.getId() + CLEAR_ID).setManaged(true);
 	}
 
 	private GridPane getImageGridPane(String id, String imagePath) {
 		VBox imageVBox = new VBox();
-		imageVBox.setId(uiSchemaDTO.getId() + id);
+		imageVBox.setId(uiFieldDTO.getId() + id);
 		ImageView imageView = new ImageView(
 				(new Image(this.getClass().getResourceAsStream(imagePath), 25, 25, true, true)));
 
@@ -166,13 +167,13 @@ public class DocumentFxControl extends FxControl {
 		return gridPane;
 	}
 
-	private GridPane createScanButton(UiSchemaDTO uiSchemaDTO) {
+	private GridPane createScanButton(UiFieldDTO uiFieldDTO) {
 
 		Button scanButton = new Button();
 		scanButton.setText(ApplicationContext.getInstance()
 				.getBundle(getRegistrationDTo().getSelectedLanguagesByApplicant().get(0), RegistrationConstants.LABELS)
 				.getString(RegistrationConstants.SCAN_BUTTON));
-		scanButton.setId(uiSchemaDTO.getId() + RegistrationConstants.BUTTON);
+		scanButton.setId(uiFieldDTO.getId() + RegistrationConstants.BUTTON);
 		scanButton.getStyleClass().add(RegistrationConstants.DOCUMENT_CONTENT_BUTTON);
 		scanButton.setGraphic(new ImageView(
 				new Image(this.getClass().getResourceAsStream(RegistrationConstants.SCAN), 12, 12, true, true)));
@@ -193,11 +194,11 @@ public class DocumentFxControl extends FxControl {
 
 		if (isValid()) {
 			documentScanController.setFxControl(this);
-			documentScanController.scanDocument(uiSchemaDTO.getId(), comboBox.getValue().getCode(),	isPreviewOnly);
+			documentScanController.scanDocument(uiFieldDTO.getId(), comboBox.getValue().getCode(),	isPreviewOnly);
 
 		} else {
 			documentScanController.generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PLEASE_SELECT)
-					+ RegistrationConstants.SPACE + uiSchemaDTO.getSubType() + " " + RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.DOCUMENT));
+					+ RegistrationConstants.SPACE + uiFieldDTO.getSubType() + " " + RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.DOCUMENT));
 		}
 
 	}
@@ -235,7 +236,7 @@ public class DocumentFxControl extends FxControl {
 		textField.textProperty().addListener((observable, oldValue, newValue) -> {
 
 			Label label = (Label) getField(
-					uiSchemaDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD + RegistrationConstants.LABEL);
+					uiFieldDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD + RegistrationConstants.LABEL);
 			if (textField.getText().isEmpty()) {
 				label.setVisible(false);
 			} else {
@@ -248,9 +249,9 @@ public class DocumentFxControl extends FxControl {
 		return simpleTypeVBox;
 	}
 
-	private VBox create(UiSchemaDTO uiSchemaDTO) {
+	private VBox create(UiFieldDTO uiFieldDTO) {
 
-		String fieldName = uiSchemaDTO.getId();
+		String fieldName = uiFieldDTO.getId();
 
 		/** Container holds title, fields and validation message elements */
 		VBox simpleTypeVBox = new VBox();
@@ -261,9 +262,9 @@ public class DocumentFxControl extends FxControl {
 
 		List<String> labels = new ArrayList<>();
 		getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(lCode -> {
-			labels.add(this.uiSchemaDTO.getLabel().get(lCode));
+			labels.add(this.uiFieldDTO.getLabel().get(lCode));
 		});
-		String titleText = String.join(RegistrationConstants.SLASH, labels) + getMandatorySuffix(uiSchemaDTO);
+		String titleText = String.join(RegistrationConstants.SLASH, labels) + getMandatorySuffix(uiFieldDTO);
 
 		/** Title label */
 		Label fieldTitle = getLabel(fieldName + RegistrationConstants.LABEL, titleText,
@@ -286,11 +287,11 @@ public class DocumentFxControl extends FxControl {
 						toolTipTextList.add(documentType.getName());
 					}
 				}
-				Label messageLabel = (Label) getField(uiSchemaDTO.getId() + RegistrationConstants.MESSAGE);
+				Label messageLabel = (Label) getField(uiFieldDTO.getId() + RegistrationConstants.MESSAGE);
 				messageLabel.setText(String.join(RegistrationConstants.SLASH, toolTipTextList));
 				fieldTitle.setVisible(true);
 			} else {
-				Label messageLabel = (Label) getField(uiSchemaDTO.getId() + RegistrationConstants.MESSAGE);
+				Label messageLabel = (Label) getField(uiFieldDTO.getId() + RegistrationConstants.MESSAGE);
 				messageLabel.setText(RegistrationConstants.EMPTY);
 			}
 		});
@@ -300,20 +301,20 @@ public class DocumentFxControl extends FxControl {
 				comboBox.getTooltip().hide();
 			}
 
-			Label messageLabel = (Label) getField(uiSchemaDTO.getId() + RegistrationConstants.MESSAGE);
+			Label messageLabel = (Label) getField(uiFieldDTO.getId() + RegistrationConstants.MESSAGE);
 			messageLabel.setVisible(false);
 			messageLabel.setManaged(false);
 		});
 
 		comboBox.setOnMouseEntered((event -> {
-			Label messageLabel = (Label) getField(uiSchemaDTO.getId() + RegistrationConstants.MESSAGE);
+			Label messageLabel = (Label) getField(uiFieldDTO.getId() + RegistrationConstants.MESSAGE);
 			if (messageLabel.getText()!=null && !messageLabel.getText().isEmpty()) {
 				messageLabel.setVisible(true);
 				messageLabel.setManaged(true);
 			}
 		}));
 
-		Label messageLabel = getLabel(uiSchemaDTO.getId() + RegistrationConstants.MESSAGE, null,
+		Label messageLabel = getLabel(uiFieldDTO.getId() + RegistrationConstants.MESSAGE, null,
 				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, false, simpleTypeVBox.getPrefWidth());
 		messageLabel.setWrapText(true);
 		messageLabel.setPrefWidth(prefWidth);
@@ -329,8 +330,8 @@ public class DocumentFxControl extends FxControl {
 		try {
 
 			if (data == null) {
-				getField(uiSchemaDTO.getId() + PREVIEW_ICON).setVisible(false);
-				getField(uiSchemaDTO.getId() + CLEAR_ID).setVisible(false);
+				getField(uiFieldDTO.getId() + PREVIEW_ICON).setVisible(false);
+				getField(uiFieldDTO.getId() + CLEAR_ID).setVisible(false);
 			} else {
 				List<BufferedImage> bufferedImages = (List<BufferedImage>) data;
 				if (bufferedImages == null || bufferedImages.isEmpty()) {
@@ -358,39 +359,39 @@ public class DocumentFxControl extends FxControl {
 					return;
 				}
 
-				ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiSchemaDTO.getId());
-				DocumentDto documentDto = getRegistrationDTo().getDocuments().get(uiSchemaDTO.getId());
+				ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
+				DocumentDto documentDto = getRegistrationDTo().getDocuments().get(uiFieldDTO.getId());
 				if (documentDto == null) {
 					documentDto = new DocumentDto();
 					documentDto.setFormat(configuredDocType);
-					documentDto.setCategory(uiSchemaDTO.getSubType());
+					documentDto.setCategory(uiFieldDTO.getSubType());
 					documentDto.setOwner(RegistrationConstants.APPLICANT);
 				}
 
 				documentDto.setType(comboBox.getValue().getCode());
-				documentDto.setValue(uiSchemaDTO.getSubType().concat(RegistrationConstants.UNDER_SCORE)
+				documentDto.setValue(uiFieldDTO.getSubType().concat(RegistrationConstants.UNDER_SCORE)
 						.concat(comboBox.getValue().getCode()));
 
 				documentDto.setDocument(byteArray);
 				TextField textField = (TextField) getField(
-						uiSchemaDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
+						uiFieldDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
 				documentDto.setRefNumber(textField.getText());
-				getRegistrationDTo().addDocument(uiSchemaDTO.getId(), documentDto);
+				getRegistrationDTo().addDocument(uiFieldDTO.getId(), documentDto);
 
-				getField(uiSchemaDTO.getId() + PREVIEW_ICON).setVisible(true);
-				getField(uiSchemaDTO.getId() + CLEAR_ID).setVisible(true);
+				getField(uiFieldDTO.getId() + PREVIEW_ICON).setVisible(true);
+				getField(uiFieldDTO.getId() + CLEAR_ID).setVisible(true);
 
-				getField(uiSchemaDTO.getId() + PREVIEW_ICON).setManaged(true);
-				getField(uiSchemaDTO.getId() + CLEAR_ID).setManaged(true);
+				getField(uiFieldDTO.getId() + PREVIEW_ICON).setManaged(true);
+				getField(uiFieldDTO.getId() + CLEAR_ID).setManaged(true);
 
-				Label label = (Label) getField(uiSchemaDTO.getId()+RegistrationConstants.LABEL);
+				Label label = (Label) getField(uiFieldDTO.getId()+RegistrationConstants.LABEL);
 				label.getStyleClass().clear();
 				label.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL);
 			}
 		} catch (IOException exception) {
 			LOGGER.error("Unable to parse the buffered images to byte array ", exception);
-			getField(uiSchemaDTO.getId() + PREVIEW_ICON).setVisible(false);
-			getField(uiSchemaDTO.getId() + CLEAR_ID).setVisible(false);
+			getField(uiFieldDTO.getId() + PREVIEW_ICON).setVisible(false);
+			getField(uiFieldDTO.getId() + CLEAR_ID).setVisible(false);
 			documentScanController.generateAlert(RegistrationConstants.ERROR,
 					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_REG_PAGE));
 		}
@@ -399,7 +400,7 @@ public class DocumentFxControl extends FxControl {
 
 	@Override
 	public Object getData() {
-		return documentScanController.getRegistrationDTOFromSession().getDocuments().get(uiSchemaDTO.getId());
+		return documentScanController.getRegistrationDTOFromSession().getDocuments().get(uiFieldDTO.getId());
 	}
 
 	@Override
@@ -407,7 +408,7 @@ public class DocumentFxControl extends FxControl {
 		String poeDocValue = documentScanController
 				.getValueFromApplicationContext(RegistrationConstants.POE_DOCUMENT_VALUE);
 
-		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiSchemaDTO.getId());
+		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
 		if (comboBox.getValue() == null) {
 			comboBox.requestFocus();
 			return false;
@@ -420,7 +421,7 @@ public class DocumentFxControl extends FxControl {
 
 	@Override
 	public boolean isEmpty() {
-		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiSchemaDTO.getId());
+		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
 		return (comboBox.getValue() == null);
 	}
 
@@ -440,7 +441,7 @@ public class DocumentFxControl extends FxControl {
 				AuditEvent auditEvent = null;
 				try {
 					auditEvent = AuditEvent
-							.valueOf(String.format("REG_DOC_%S_SCAN", uiSchemaDTO.getSubType()));
+							.valueOf(String.format("REG_DOC_%S_SCAN", uiFieldDTO.getSubType()));
 				} catch (Exception exception) {
 					auditEvent = AuditEvent.REG_DOC_SCAN;
 				}
@@ -451,7 +452,7 @@ public class DocumentFxControl extends FxControl {
 				clickedBtn.getId();
 				// TODO Check the scan option
 
-				scanDocument((ComboBox<DocumentCategoryDto>) getField(uiSchemaDTO.getId()), uiSchemaDTO.getSubType(),
+				scanDocument((ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId()), uiFieldDTO.getSubType(),
 						false);
 			}
 		});
@@ -478,7 +479,7 @@ public class DocumentFxControl extends FxControl {
 		field.setConverter((StringConverter<DocumentCategoryDto>) uiRenderForComboBox);
 		field.getStyleClass().add(styleClass);
 		field.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> {
-			getField(uiSchemaDTO.getId() + RegistrationConstants.LABEL).setVisible(true);
+			getField(uiFieldDTO.getId() + RegistrationConstants.LABEL).setVisible(true);
 		});
 
 		changeNodeOrientation(field, getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
@@ -503,7 +504,7 @@ public class DocumentFxControl extends FxControl {
 	@Override
 	public void fillData(Object data) {
 
-		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiSchemaDTO.getId());
+		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
 
 		if (data != null) {
 
@@ -515,7 +516,7 @@ public class DocumentFxControl extends FxControl {
 	}
 
 	public boolean canContinue() {
-		if (getRegistrationDTo().getRegistrationCategory().equalsIgnoreCase(RegistrationConstants.PACKET_TYPE_LOST)) {
+		if (getRegistrationDTo().getFlowType() == FlowType.LOST) {
 			return true;
 		}
 
@@ -523,10 +524,10 @@ public class DocumentFxControl extends FxControl {
 			requiredFieldValidator = Initialization.getApplicationContext().getBean(RequiredFieldValidator.class);
 		}
 
-		boolean isRequired = requiredFieldValidator.isRequiredField(this.uiSchemaDTO, getRegistrationDTo());
-		if (isRequired && getRegistrationDTo().getDocuments().get(this.uiSchemaDTO.getId()) == null) {
+		boolean isRequired = requiredFieldValidator.isRequiredField(this.uiFieldDTO, getRegistrationDTo());
+		if (isRequired && getRegistrationDTo().getDocuments().get(this.uiFieldDTO.getId()) == null) {
 			
-			Label label = (Label) getField(uiSchemaDTO.getId() + RegistrationConstants.LABEL);
+			Label label = (Label) getField(uiFieldDTO.getId() + RegistrationConstants.LABEL);
 			label.getStyleClass().clear();
 			label.getStyleClass().add(RegistrationConstants.DemoGraphicFieldMessageLabel);
 			label.setVisible(true);
@@ -539,21 +540,21 @@ public class DocumentFxControl extends FxControl {
 	@Override
 	public void selectAndSet(Object data) {
 
-		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiSchemaDTO.getId());
+		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
 
 		if (comboBox != null) {
 			comboBox.getSelectionModel().selectFirst();
 
 			DocumentDto documentDto = (DocumentDto) data;
 
-			getRegistrationDTo().addDocument(this.uiSchemaDTO.getId(), documentDto);
+			getRegistrationDTo().addDocument(this.uiFieldDTO.getId(), documentDto);
 
-			TextField textField = (TextField) getField(uiSchemaDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
+			TextField textField = (TextField) getField(uiFieldDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
 
 			textField.setText(documentDto.getRefNumber());
 
-			getField(uiSchemaDTO.getId() + PREVIEW_ICON).setVisible(true);
-			getField(uiSchemaDTO.getId() + CLEAR_ID).setVisible(true);
+			getField(uiFieldDTO.getId() + PREVIEW_ICON).setVisible(true);
+			getField(uiFieldDTO.getId() + CLEAR_ID).setVisible(true);
 		}
 	}
 }

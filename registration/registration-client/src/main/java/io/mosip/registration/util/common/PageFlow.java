@@ -14,7 +14,7 @@ import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.controller.reg.Validations;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 
 /**
  * This class will give the Page Flow
@@ -71,7 +71,7 @@ public class PageFlow {
 		registrationMap.put(RegistrationConstants.DEMOGRAPHIC_DETAIL, demographicMap);
 
 		String docType = "documentType";
-		List<UiSchemaDTO> docList = null;
+		List<UiFieldDTO> docList = null;
 		/*if(validations != null && validations.getValidationMap() != null && !validations.getValidationMap().isEmpty()) {
 			docList = validations.getValidationMap().values().stream()
 					.filter(schemaDto -> schemaDto.getType() != null && schemaDto.getType().equalsIgnoreCase(docType))

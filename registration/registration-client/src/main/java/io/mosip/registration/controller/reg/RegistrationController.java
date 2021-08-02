@@ -4,11 +4,8 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import io.mosip.registration.service.packet.PacketHandlerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,10 +20,7 @@ import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.auth.AuthenticationController;
-import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
@@ -53,18 +47,16 @@ public class RegistrationController extends BaseController {
 	 */
 	private static final Logger LOGGER = AppConfig.getLogger(RegistrationController.class);
 
-	@Autowired
-	private DocumentScanController documentScanController;
+	/*@Autowired
+	private DocumentScanController documentScanController;*/
 	@FXML
 	private GridPane documentScan;
 	@FXML
 	private GridPane registrationId;
 	@Autowired
 	private Validations validation;
-	@Autowired
-	private MasterSyncService masterSync;
-//	@Autowired
-//	private DemographicDetailController demographicDetailController;
+	/*@Autowired
+	private MasterSyncService masterSync;*/
 	@FXML
 	private GridPane demographicDetail;
 
@@ -108,7 +100,7 @@ public class RegistrationController extends BaseController {
 
 	private List<String> selectedLangList = new LinkedList<>();
 
-	public void init(String UIN, HashMap<String, Object> selectionListDTO, Map<String, UiSchemaDTO> selectedFields,
+	/*public void init(String UIN, HashMap<String, Object> selectionListDTO, Map<String, UiSchemaDTO> selectedFields,
 			List<String> selectedFieldGroups) {
 		validation.updateAsLostUIN(false);
 		createRegistrationDTOObject(RegistrationConstants.PACKET_TYPE_UPDATE);
@@ -120,7 +112,7 @@ public class RegistrationController extends BaseController {
 		registrationDTO.setUpdatableFieldGroups(selectedFieldGroups);
 		registrationDTO.setBiometricMarkedForUpdate(
 				selectedFieldGroups.contains(RegistrationConstants.BIOMETRICS_GROUP) ? true : false);
-	}
+	}*/
 
 	/*protected void initializeLostUIN() {
 		validation.updateAsLostUIN(true);
@@ -153,11 +145,11 @@ public class RegistrationController extends BaseController {
 	/**
 	 * This method will create registration DTO object
 	 */
-	public boolean createRegistrationDTOObject(String registrationCategory) {
+	public boolean createRegistrationDTOObject(String processId) {
 		try {
 			// Put the RegistrationDTO object to SessionContext Map
 			SessionContext.map().put(RegistrationConstants.REGISTRATION_DATA,
-					packetHandlerService.startRegistration(null, registrationCategory));
+					packetHandlerService.startRegistration(null, processId));
 			getRegistrationDTOFromSession().setSelectedLanguagesByApplicant(selectedLangList);
 			return true;
 		} catch (RegBaseCheckedException ex) {

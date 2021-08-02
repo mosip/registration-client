@@ -33,7 +33,7 @@ import io.mosip.registration.dao.RegistrationDAO;
 import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationDataDto;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
@@ -101,7 +101,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			RegistrationDataDto registrationDataDto = new RegistrationDataDto();
 			
 			List<String> fullName = new ArrayList<>();
-			String fullNameKey = getKey(RegistrationConstants.UI_SCHEMA_SUBTYPE_FULL_NAME);
+			String fullNameKey = getKey(registrationDTO, RegistrationConstants.UI_SCHEMA_SUBTYPE_FULL_NAME);
 			if(fullNameKey != null) {
 				List<String> fullNameKeys = Arrays.asList(fullNameKey.split(RegistrationConstants.COMMA));
 				for (String key : fullNameKeys) {
@@ -110,8 +110,8 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 				}
 			}
 
-			Object emailObj = registrationDTO.getDemographics().get(getKey(RegistrationConstants.UI_SCHEMA_SUBTYPE_EMAIL));
-			Object phoneObj = registrationDTO.getDemographics().get(getKey(RegistrationConstants.UI_SCHEMA_SUBTYPE_PHONE));
+			Object emailObj = registrationDTO.getDemographics().get(getKey(registrationDTO, RegistrationConstants.UI_SCHEMA_SUBTYPE_EMAIL));
+			Object phoneObj = registrationDTO.getDemographics().get(getKey(registrationDTO, RegistrationConstants.UI_SCHEMA_SUBTYPE_PHONE));
 			
 			fullName.removeIf(Objects::isNull);
 			registrationDataDto.setName(String.join(RegistrationConstants.SPACE, fullName));
@@ -133,21 +133,20 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 		}
 	}
 	
-	private String getKey(String subType) throws RegBaseCheckedException {
-		String key = null;
-		List<UiSchemaDTO> schemaFields = identitySchemaService.getLatestEffectiveUISchema();
-		for (UiSchemaDTO schemaField : schemaFields) {
+	private String getKey(RegistrationDTO registrationDTO, String subType) throws RegBaseCheckedException {
+		List<String> key = new ArrayList<>();
+		List<UiFieldDTO> schemaFields = identitySchemaService.getAllFieldSpec(registrationDTO.getProcessId(), registrationDTO.getIdSchemaVersion());
+		for (UiFieldDTO schemaField : schemaFields) {
 			if (schemaField.getSubType() != null && schemaField.getSubType().equalsIgnoreCase(subType)) {
-
 				if (subType.equalsIgnoreCase(RegistrationConstants.UI_SCHEMA_SUBTYPE_FULL_NAME)) {
-					key = key == null ? schemaField.getId() : key.concat(RegistrationConstants.COMMA).concat(schemaField.getId());
+					key.add(schemaField.getId());
 				} else {
-					key = schemaField.getId();
-					return key;
+					key.add(schemaField.getId());
+					break;
 				}
 			}
 		}
-		return key;
+		return String.join(RegistrationConstants.COMMA, key);
 	}
 
 	private String getAdditionalInfo(Object fieldValue) {

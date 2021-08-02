@@ -114,7 +114,7 @@ public class TemplateGeneratorTest {
 		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
 		Mockito.when(applicationContext.getBundle(Mockito.anyString(), Mockito.anyString())).thenReturn(dummyResourceBundle);
 
-		Mockito.when(identitySchemaServiceImpl.getUISchema(Mockito.anyDouble())).thenReturn(Collections.EMPTY_LIST);
+		Mockito.when(identitySchemaServiceImpl.getAllFieldSpec(Mockito.anyString(),Mockito.anyDouble())).thenReturn(Collections.EMPTY_LIST);
 	}
 	
 	ResourceBundle dummyResourceBundle = new ResourceBundle() {
@@ -138,7 +138,7 @@ public class TemplateGeneratorTest {
 	
 	@Test
 	public void generateTemplateWithDemographicFieldsTest() throws  RegBaseCheckedException {
-		Mockito.when(identitySchemaServiceImpl.getUISchema(Mockito.anyDouble())).thenReturn(DataProvider.getFields());
+		Mockito.when(identitySchemaServiceImpl.getAllFieldSpec(Mockito.anyString(),Mockito.anyDouble())).thenReturn(DataProvider.getFields());
 		ResponseDTO response = templateGenerator.generateTemplate("sample text", registrationDTO, template, RegistrationConstants.TEMPLATE_PREVIEW, "");
 		assertNotNull(response.getSuccessResponseDTO());
 	}

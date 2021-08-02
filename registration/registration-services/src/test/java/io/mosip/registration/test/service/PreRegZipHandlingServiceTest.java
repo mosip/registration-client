@@ -49,7 +49,7 @@ import io.mosip.registration.dto.OSIDataDTO;
 import io.mosip.registration.dto.PreRegistrationDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.biometric.BiometricDTO;
 import io.mosip.registration.dto.biometric.BiometricInfoDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -89,25 +89,25 @@ public class PreRegZipHandlingServiceTest {
 	@Mock
 	private CryptoCoreSpec<byte[], byte[], SecretKey, PublicKey, PrivateKey, String> cryptoCore;
 	
-	List<UiSchemaDTO> schemaFields = new ArrayList<UiSchemaDTO>();
+	List<UiFieldDTO> schemaFields = new ArrayList<UiFieldDTO>();
 
 	@Before
 	public void init() throws Exception {
 		createRegistrationDTOObject();
 		
-		UiSchemaDTO field1 = new UiSchemaDTO();
+		UiFieldDTO field1 = new UiFieldDTO();
 		field1.setId("fullName");
 		field1.setType("simpleType");
 		field1.setControlType("textbox");
 		schemaFields.add(field1);
 		
-		UiSchemaDTO field2 = new UiSchemaDTO();
+		UiFieldDTO field2 = new UiFieldDTO();
 		field2.setId("gender");
 		field2.setType("simpleType");
 		field2.setControlType("textbox");
 		schemaFields.add(field2);		
 		
-		UiSchemaDTO field3 = new UiSchemaDTO();
+		UiFieldDTO field3 = new UiFieldDTO();
 		field3.setId("postalCode");
 		field3.setType("string");
 		field3.setControlType("dropdown");
@@ -135,7 +135,6 @@ public class PreRegZipHandlingServiceTest {
 			return "Success";
 		}).when(idObjectValidator).validateIdObject(Mockito.any(), Mockito.any());*/
 		Mockito.when(documentTypeDAO.getDocTypeByName(Mockito.anyString())).thenReturn(new ArrayList<>());
-		Mockito.when(identitySchemaService.getLatestEffectiveUISchema()).thenReturn(schemaFields);
 		
 		RegistrationDTO registrationDTO = preRegZipHandlingServiceImpl.extractPreRegZipFile(preRegPacket);
 
@@ -158,7 +157,7 @@ public class PreRegZipHandlingServiceTest {
 				return "Success";
 			}).when(idObjectValidator).validateIdObject(Mockito.any(), Mockito.any());*/
 			Mockito.when(documentTypeDAO.getDocTypeByName(Mockito.anyString())).thenReturn(new ArrayList<>());
-			Mockito.when(identitySchemaService.getLatestEffectiveUISchema()).thenReturn(schemaFields);
+			//Mockito.when(identitySchemaService.getAllFieldSpec(Mockito.anyString(), Mockito.any())).thenReturn(schemaFields);
 			preRegZipHandlingServiceImpl.extractPreRegZipFile(byteArrayOutputStream.toByteArray());
 		}
 	}

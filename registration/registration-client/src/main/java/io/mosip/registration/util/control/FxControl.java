@@ -8,7 +8,6 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 
 import java.util.List;
 
-import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
@@ -19,7 +18,8 @@ import io.mosip.registration.controller.GenericController;
 import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.mastersync.GenericDto;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
+import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.validator.RequiredFieldValidator;
 import javafx.geometry.NodeOrientation;
 import javafx.scene.Node;
@@ -42,7 +42,7 @@ public abstract class FxControl  {
 	protected static final Logger LOGGER = AppConfig.getLogger(FxControl.class);
 	private static final String loggerClassName = "FxControl";
 
-	protected UiSchemaDTO uiSchemaDTO;
+	protected UiFieldDTO uiFieldDTO;
 	protected FxControl control;
 	public Node node;
 
@@ -53,9 +53,9 @@ public abstract class FxControl  {
 	/**
 	 * Build Error code, title and fx Element Set Listeners Set Actione events
 	 * 
-	 * @param uiSchemaDTO field information
+	 * @param uiFieldDTO field information
 	 */
-	public abstract FxControl build(UiSchemaDTO uiSchemaDTO);
+	public abstract FxControl build(UiFieldDTO uiFieldDTO);
 
 	/**
 	 *
@@ -134,25 +134,25 @@ public abstract class FxControl  {
 	 * Refresh the field
 	 */
 	public void refresh() {
-		boolean isFieldVisible =  isFieldVisible(uiSchemaDTO);
+		boolean isFieldVisible =  isFieldVisible(uiFieldDTO);
 		if(!isFieldVisible) {
-			switch (uiSchemaDTO.getType()) {
+			switch (uiFieldDTO.getType()) {
 				case "documentType":
-					getRegistrationDTo().removeDocument(uiSchemaDTO.getId());
+					getRegistrationDTo().removeDocument(uiFieldDTO.getId());
 					break;
 				case "biometricsType":
-					List<String> requiredAttributes = requiredFieldValidator.getRequiredBioAttributes(uiSchemaDTO, getRegistrationDTo());
-					for(String bioAttribute : uiSchemaDTO.getBioAttributes()) {
+					List<String> requiredAttributes = requiredFieldValidator.getRequiredBioAttributes(uiFieldDTO, getRegistrationDTo());
+					for(String bioAttribute : uiFieldDTO.getBioAttributes()) {
 						if(!requiredAttributes.contains(bioAttribute))
-							getRegistrationDTo().clearBIOCache(uiSchemaDTO.getSubType(), bioAttribute);
+							getRegistrationDTo().clearBIOCache(uiFieldDTO.getId(), bioAttribute);
 					}
 					break;
 				default:
-					getRegistrationDTo().removeDemographicField(uiSchemaDTO.getId());
+					getRegistrationDTo().removeDemographicField(uiFieldDTO.getId());
 					break;
 			}
 		}
-		visible(this.node, isFieldVisible(uiSchemaDTO));
+		visible(this.node, isFieldVisible(uiFieldDTO));
 	}
 
 	/**
@@ -178,7 +178,7 @@ public abstract class FxControl  {
 	 */
 	public boolean canContinue() {
 		//field is not visible, ignoring valid value and isRequired check
-		if(!isFieldVisible(this.uiSchemaDTO)) {
+		if(!isFieldVisible(this.uiFieldDTO)) {
 			return true;
 		}
 
@@ -188,26 +188,27 @@ public abstract class FxControl  {
 
 		try {
 			boolean isValid = isValid();
-			LOGGER.debug("canContinue check on field  : {}, status {} : " ,uiSchemaDTO.getId(), isValid);
+			LOGGER.debug("canContinue check on field  : {}, status {} : " , uiFieldDTO.getId(), isValid);
 
 			if(isValid) //empty values should be ignored, its fxControl's responsibility
 				return true;
 
-			if(isEmpty() && getRegistrationDTo().getRegistrationCategory().equals(RegistrationConstants.PACKET_TYPE_LOST))
-				return true;
-
 			//required and with valid value
-			if(isValid && requiredFieldValidator.isRequiredField(this.uiSchemaDTO, getRegistrationDTo()))
+			boolean isRequiredField = requiredFieldValidator.isRequiredField(this.uiFieldDTO, getRegistrationDTo());
+			if(isValid && isRequiredField)
 				return true;
 
-			if(getRegistrationDTo().getRegistrationCategory().equals(RegistrationConstants.PACKET_TYPE_UPDATE)
-				&& !getRegistrationDTo().getUpdatableFields().contains(this.uiSchemaDTO.getId()) && !isValid) {
-				LOGGER.error("canContinue check on, {} is non-updatable ignoring", uiSchemaDTO.getId());
+			if(getRegistrationDTo().getFlowType() == FlowType.UPDATE
+				&& !getRegistrationDTo().getUpdatableFields().contains(this.uiFieldDTO.getId()) && !isValid) {
+				LOGGER.error("canContinue check on, {} is non-updatable ignoring", uiFieldDTO.getId());
 				return true;
 			}
 
+			if(isEmpty() && !isRequiredField)
+				return true;
+
 		} catch (Exception exception) {
-			LOGGER.error("Error checking RequiredOn for field : " + uiSchemaDTO.getId(), exception);
+			LOGGER.error("Error checking RequiredOn for field : " + uiFieldDTO.getId(), exception);
 		}
 		return false;
 	}
@@ -217,20 +218,19 @@ public abstract class FxControl  {
 	 * @param schema
 	 * @return
 	 */
-	protected String getMandatorySuffix(UiSchemaDTO schema) {
+	protected String getMandatorySuffix(UiFieldDTO schema) {
 		String mandatorySuffix = RegistrationConstants.EMPTY;
-		RegistrationDTO registrationDTO = getRegistrationDTo();
-		String categeory = registrationDTO.getRegistrationCategory();
-		switch (categeory) {
-		case RegistrationConstants.PACKET_TYPE_UPDATE:
-			if (registrationDTO.getUpdatableFields().contains(schema.getId())) {
-				mandatorySuffix = schema.isRequired() ? RegistrationConstants.ASTRIK : RegistrationConstants.EMPTY;
-			}
-			break;
+		switch (getRegistrationDTo().getFlowType()) {
+			case UPDATE:
+				if (getRegistrationDTo().getUpdatableFields().contains(schema.getId())) {
+					mandatorySuffix = schema.isRequired() ? RegistrationConstants.ASTRIK : RegistrationConstants.EMPTY;
+				}
+				break;
 
-		case RegistrationConstants.PACKET_TYPE_NEW:
-			mandatorySuffix = schema.isRequired() ? RegistrationConstants.ASTRIK : RegistrationConstants.EMPTY;
-			break;
+			case CORRECTION:
+			case NEW:
+				mandatorySuffix = schema.isRequired() ? RegistrationConstants.ASTRIK : RegistrationConstants.EMPTY;
+				break;
 		}
 		return mandatorySuffix;
 	}
@@ -264,22 +264,23 @@ public abstract class FxControl  {
 		return registrationDTO;
 	}
 
-	protected boolean isFieldVisible(UiSchemaDTO schemaDTO) {
+	protected boolean isFieldVisible(UiFieldDTO schemaDTO) {
 		if (requiredFieldValidator == null) {
 			requiredFieldValidator = Initialization.getApplicationContext().getBean(RequiredFieldValidator.class);
 		}
 		try {
 			boolean isVisibleAccordingToSpec = requiredFieldValidator.isFieldVisible(schemaDTO, getRegistrationDTo());
 
-			switch (getRegistrationDTo().getRegistrationCategory()) {
-				case RegistrationConstants.PACKET_TYPE_UPDATE:
+			switch (getRegistrationDTo().getFlowType()) {
+				case UPDATE:
 					return (getRegistrationDTo().getUpdatableFields().contains(schemaDTO.getId())) ? isVisibleAccordingToSpec : false;
-				case RegistrationConstants.PACKET_TYPE_NEW: return isVisibleAccordingToSpec;
-				case RegistrationConstants.PACKET_TYPE_LOST: return isVisibleAccordingToSpec;
+				case CORRECTION:
+				case NEW:
+				case LOST:
+					return isVisibleAccordingToSpec;
 			}
 		} catch (Exception exception) {
-			LOGGER.error(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					ExceptionUtils.getStackTrace(exception));
+			LOGGER.error("Failed to check field visibility", exception);
 		}
 		return true;
 	}
@@ -312,8 +313,8 @@ public abstract class FxControl  {
 		return GenericController.getFxControlMap().get(fieldId);
 	}
 
-	public UiSchemaDTO getUiSchemaDTO() {
-		return uiSchemaDTO;
+	public UiFieldDTO getUiSchemaDTO() {
+		return uiFieldDTO;
 	}
 
 	public Node getNode() {

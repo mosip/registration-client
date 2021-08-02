@@ -40,6 +40,6 @@ public class IdentitySchema implements Serializable {
 
 	/** The effective from. */
 	@Column(name = "effective_from")
-	private Timestamp effectiveFrom;	
+	private Timestamp effectiveFrom;
 
 }

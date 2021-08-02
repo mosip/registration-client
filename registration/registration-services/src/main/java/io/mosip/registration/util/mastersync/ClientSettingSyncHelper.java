@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+import io.mosip.registration.dto.schema.ProcessSpecDto;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,7 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dto.mastersync.DynamicFieldDto;
-import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.dto.response.SyncDataBaseDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.DynamicField;
@@ -554,6 +555,7 @@ public class ClientSettingSyncHelper {
 						new TypeReference<SchemaDto>() {});
 
 				identitySchemaDao.createIdentitySchema(schemaDto);
+				saveProcessSpec(schemaDto, jsonString);
 				return CompletableFuture.completedFuture(true);
 			}
 
@@ -561,6 +563,22 @@ public class ClientSettingSyncHelper {
 			LOGGER.error("Schema sync failed", e);
 		}
 		throw new SyncFailedException("Schema sync failed");
+	}
+
+	//saves processes and subprocess as separate schema
+	private void saveProcessSpec(SchemaDto schemaDto, String jsonString) {
+		JSONObject jsonObject = new JSONObject(jsonString);
+		jsonObject.keySet().forEach( key -> {
+			if(key.toLowerCase().endsWith("process")) {
+				try {
+					ProcessSpecDto processSpecDto = MapperUtils.convertJSONStringToDto(jsonObject.get(key).toString(),
+							new TypeReference<ProcessSpecDto>() {});
+					identitySchemaDao.createProcessSpec(key, schemaDto.getIdVersion(), processSpecDto);
+				} catch (IOException e) {
+					LOGGER.error(e.getMessage(), e);
+				}
+			}
+		});
 	}
 	
 	@Async

@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.exception.PreConditionCheckException;
+import lombok.NonNull;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -63,8 +64,6 @@ public class LanguageSelectionController extends BaseController implements Initi
 
 	private Stage popupStage;
 
-	private String action;
-
 	private List<String> selectedLanguages = new ArrayList<>();
 
 	@Autowired
@@ -83,6 +82,16 @@ public class LanguageSelectionController extends BaseController implements Initi
 	public Stage getPopupStage() {
 		return popupStage;
 	}
+
+	public String getProcessId() {
+		return processId;
+	}
+
+	public void setProcessId(String processId) {
+		this.processId = processId;
+	}
+
+	private String processId;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -147,12 +156,12 @@ public class LanguageSelectionController extends BaseController implements Initi
 		}
 	}
 
-	public void init(String action) {
+	public void init() {
 		try {
 			LOGGER.info(LOG_SELECT_LANGUAGE, APPLICATION_NAME, APPLICATION_ID,
 					"Opening pop-up screen to select language for user registration");
 
-			this.action = action;
+			//this.action = action;
 			selectedLanguages.clear();
 
 			popupStage = new Stage();
@@ -169,8 +178,6 @@ public class LanguageSelectionController extends BaseController implements Initi
 			popupStage.initOwner(fXComponents.getStage());
 			popupStage.show();
 
-			LOGGER.info(LOG_SELECT_LANGUAGE, APPLICATION_NAME, APPLICATION_ID, "Select Language screen launched");
-
 			LOGGER.info(LOG_SELECT_LANGUAGE, APPLICATION_NAME, APPLICATION_ID,
 					"Opening pop-up screen to select language for user registration");
 
@@ -182,7 +189,6 @@ public class LanguageSelectionController extends BaseController implements Initi
 
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_SCAN_POPUP));
 		}
-
 	}
 
 	public void submitLanguages() {
@@ -192,17 +198,7 @@ public class LanguageSelectionController extends BaseController implements Initi
 	}
 
 	private void goToNextPage() {
-		switch (action) {
-		case RegistrationConstants.NEW_REGISTRATION_FLOW:
-			packetHandlerController.createPacket();
-			break;
-		case RegistrationConstants.UIN_UPDATE_FLOW:
-			packetHandlerController.updateUIN();
-			break;
-		case RegistrationConstants.LOST_UIN_FLOW:
-			packetHandlerController.lostUIN();
-			break;
-		}
+		packetHandlerController.startRegistration(getProcessId());
 	}
 
 	public void exitWindow() {
@@ -219,8 +215,8 @@ public class LanguageSelectionController extends BaseController implements Initi
 		return (CheckBox) checkBoxesPane.lookup(RegistrationConstants.HASH + id);
 	}
 
-	public void submitLanguagesAndProceed(String action, List<String> langCodes) {
-		this.action = action;
+	public void submitLanguagesAndProceed(List<String> langCodes) {
+		//this.action = action;
 		registrationController.setSelectedLangList(langCodes);
 		goToNextPage();
 	}

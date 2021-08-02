@@ -2,27 +2,23 @@ package io.mosip.registration.test.util.datastub;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.*;
 
 import io.mosip.commons.packet.dto.packet.AuditDto;
 import io.mosip.commons.packet.dto.packet.SimpleDto;
-import io.mosip.registration.builder.Builder;
 import io.mosip.registration.constants.IntroducerType;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.OSIDataDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.biometric.BiometricDTO;
 import io.mosip.registration.dto.biometric.BiometricExceptionDTO;
 import io.mosip.registration.dto.biometric.BiometricInfoDTO;
 import io.mosip.registration.dto.biometric.FaceDetailsDTO;
 import io.mosip.registration.dto.biometric.FingerprintDetailsDTO;
 import io.mosip.registration.dto.biometric.IrisDetailsDTO;
-import io.mosip.registration.dto.schema.ValuesDTO;
-import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.exception.RegBaseCheckedException;
 
 public class DataProvider {
@@ -63,7 +59,7 @@ public class DataProvider {
 		registrationDTO.setDemographics(new HashMap<String, Object>());
 		//registrationDTO.setBiometricDTO(DataProvider.getBiometricDTO());
 		HashMap<String, Object> selectionListDTO=new HashMap<>();
-		registrationDTO.setSelectionListDTO(selectionListDTO);
+		//registrationDTO.setSelectionListDTO(selectionListDTO);
 		registrationDTO.setSelectedLanguagesByApplicant(Arrays.asList("eng", "ara", "fra"));
 		return registrationDTO;
 
@@ -80,7 +76,7 @@ public class DataProvider {
 		registrationDTO.setDemographics(getDemographicData(selectedLanguages));
 //		registrationDTO.setBiometricDTO(DataProvider.getBiometricDTO());
 		HashMap<String, Object> selectionListDTO=new HashMap<>();
-		registrationDTO.setSelectionListDTO(selectionListDTO);
+		//registrationDTO.setSelectionListDTO(selectionListDTO);
 		registrationDTO.setSelectedLanguagesByApplicant(selectedLanguages);
 		return registrationDTO;
 
@@ -507,14 +503,14 @@ public class DataProvider {
 		auditDTOList.add(audit);
 	}
 
-	public static List<UiSchemaDTO> getFields() {
-		List<UiSchemaDTO> fields = new ArrayList<>();
-		UiSchemaDTO fullname = new UiSchemaDTO();
+	public static List<UiFieldDTO> getFields() {
+		List<UiFieldDTO> fields = new ArrayList<>();
+		UiFieldDTO fullname = new UiFieldDTO();
 		fullname.setId("fullName");
 		fullname.setType("simpleType");
 		fields.add(fullname);
 
-		UiSchemaDTO region = new UiSchemaDTO();
+		UiFieldDTO region = new UiFieldDTO();
 		region.setId("region");
 		region.setType("simpleType");
 		fields.add(region);

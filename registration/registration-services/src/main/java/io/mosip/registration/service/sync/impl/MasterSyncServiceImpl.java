@@ -5,14 +5,10 @@ import static io.mosip.registration.constants.LoggerConstants.LOG_REG_SCHEMA_SYN
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
 
+import io.mosip.registration.dto.schema.ProcessSpecDto;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,7 +35,7 @@ import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import io.mosip.registration.dto.mastersync.DynamicFieldValueDto;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.mastersync.ReasonListDto;
-import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.BlacklistedWords;
 import io.mosip.registration.entity.DocumentCategory;
@@ -551,42 +547,6 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 			setErrorResponse(responseDTO, RegistrationConstants.MASTER_SYNC_ERROR_MESSAGE, null);
 	}
 
-	public ResponseDTO syncSchema(String triggerPoint) throws RegBaseCheckedException {
-		LOGGER.info(LOG_REG_SCHEMA_SYNC, APPLICATION_NAME, APPLICATION_ID, "ID Schema sync started .....");
-
-		ResponseDTO responseDTO = new ResponseDTO();
-		LinkedHashMap<String, Object> syncResponse = null;
-
-		if (RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
-			try {
-				syncResponse = (LinkedHashMap<String, Object>) serviceDelegateUtil.get(
-						RegistrationConstants.ID_SCHEMA_SYNC_SERVICE, new HashMap<String, String>(), true,
-						triggerPoint);
-
-				if (null != syncResponse.get(RegistrationConstants.RESPONSE)) {
-					LOGGER.info(LOG_REG_SCHEMA_SYNC, APPLICATION_NAME, APPLICATION_ID,
-							"ID Schema sync fetched from server.");
-
-					String jsonString = MapperUtils
-							.convertObjectToJsonString(syncResponse.get(RegistrationConstants.RESPONSE));
-					SchemaDto schemaDto = MapperUtils.convertJSONStringToDto(jsonString,
-							new TypeReference<SchemaDto>() {
-							});
-
-					identitySchemaDao.createIdentitySchema(schemaDto);
-					setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, null);
-				} else
-					setErrorResponse(responseDTO, errorMsg(syncResponse), null);
-
-			} catch (Exception e) {
-				LOGGER.error(e.getMessage(), e);
-				setErrorResponse(responseDTO, ExceptionUtils.getStackTrace(e), null);
-			}
-		} else
-			setErrorResponse(responseDTO, RegistrationConstants.NO_INTERNET, null);
-
-		return responseDTO;
-	}
 
 	@SuppressWarnings("unchecked")
 	private List<Map<String, Object>> getErrorList(LinkedHashMap<String, Object> syncReponse) {

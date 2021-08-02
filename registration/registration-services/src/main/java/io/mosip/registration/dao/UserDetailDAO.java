@@ -117,4 +117,6 @@ public interface UserDetailDAO {
 
 	List<UserRole> getUserRoleByUserId(String userId);
 
+	List<UserBiometric> findAllActiveUsersExceptCurrentUser(String bioType, String userId);
+
 }

@@ -10,9 +10,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
 
 import io.mosip.registration.controller.GenericController;
+import io.mosip.registration.dto.schema.ProcessSpecDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -26,8 +26,7 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.FXUtils;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
-import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -84,7 +83,8 @@ public class UpdateUINController extends BaseController implements Initializable
 
 	private HashMap<String, Object> checkBoxKeeper;
 
-	private Map<String, List<UiSchemaDTO>> groupedMap;
+	private Map<String, List<UiFieldDTO>> groupedMap;
+	private Map<String, Map<String, String>> groupLabels;
 
 	private FXUtils fxUtils;
 
@@ -97,24 +97,31 @@ public class UpdateUINController extends BaseController implements Initializable
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 
-//		backImageView	images/arrowLeft.png
-//		continueImageView	images/arrowRight.png
-
 		setImage(backImageView, RegistrationConstants.ARROW_LEFT_IMG);
 		setImage(continueImageView, RegistrationConstants.ARROW_RIGHT_IMG);
 		
 		fxUtils = FXUtils.getInstance();
 		checkBoxKeeper = new HashMap<>();
 
-		SchemaDto schema = getLatestSchema();
-
-		groupedMap = schema.getSchema().stream().filter(field -> field.getGroup() != null && field.isInputRequired())
-				.collect(Collectors.groupingBy(UiSchemaDTO::getGroup));
+		groupedMap = new HashMap<>();
+		groupLabels = new HashMap<>();
+		ProcessSpecDto processSpecDto = getProcessSpec(getRegistrationDTOFromSession().getProcessId(), getRegistrationDTOFromSession().getIdSchemaVersion());
+		processSpecDto.getScreens().forEach(screen -> {
+			screen.getFields().forEach(field -> {
+				if(field.getGroup() != null) {
+					List<UiFieldDTO> fields = groupedMap.getOrDefault(field.getGroup(), new ArrayList<>());
+					fields.add(field);
+					groupedMap.put(field.getGroup(), fields);
+					if(field.getGroupLabel() != null) {
+						groupLabels.put(field.getGroup(), field.getGroupLabel());
+					}
+				}
+			});
+		});
 
 		parentFlow = parentFlowPane.getChildren();
 		groupedMap.forEach((groupName, list) -> {
-			UiSchemaDTO groupField = schema.getSchema().stream().filter(field -> field.getGroup() != null && field.getGroup().equalsIgnoreCase(groupName)).findFirst().get();
-			GridPane checkBox = addCheckBox(groupName, groupField);
+			GridPane checkBox = addCheckBox(groupName);
 			if (checkBox != null) {
 				parentFlow.add(checkBox);
 			}
@@ -135,8 +142,8 @@ public class UpdateUINController extends BaseController implements Initializable
 		}
 	}
 
-	private GridPane addCheckBox(String groupName, UiSchemaDTO field) {
-		String groupLabel = getLabelsForGroup(groupName, field);
+	private GridPane addCheckBox(String groupName) {
+		String groupLabel = getLabelsForGroup(groupName, groupLabels.get(groupName));
 		CheckBox checkBox = new CheckBox(groupLabel);
 		checkBox.setId(groupName);
 		checkBox.setTooltip(new Tooltip(groupLabel));
@@ -171,16 +178,16 @@ public class UpdateUINController extends BaseController implements Initializable
 		return gridPane;
 	}
 
-	private String getLabelsForGroup(String groupName, UiSchemaDTO field) {
-		String groupLabel = RegistrationConstants.EMPTY;
-		if (field.getGroupLabel() != null && !field.getGroupLabel().isEmpty()) {
-			for (String langCode : registrationController.getSelectedLangList()) {
-				if (field.getGroupLabel().containsKey(langCode)) {
-					groupLabel = groupLabel.isBlank() ? field.getGroupLabel().get(langCode) : groupLabel.concat(RegistrationConstants.SLASH).concat(field.getGroupLabel().get(langCode));
+	private String getLabelsForGroup(String groupName, Map<String, String> labels) {
+		List<String> groupLabel = new ArrayList<>();
+		if (labels != null && !labels.isEmpty()) {
+			registrationController.getSelectedLangList().forEach(lang -> {
+				if (labels.containsKey(lang)) {
+					groupLabel.add(labels.get(lang));
 				}
-			}
+			});
 		}
-		return groupLabel.isBlank() ? groupName : groupLabel;
+		return groupLabel.isEmpty() ? groupName : String.join(RegistrationConstants.SLASH, groupLabel);
 	}
 
 	/**
@@ -194,35 +201,34 @@ public class UpdateUINController extends BaseController implements Initializable
 		try {
 			if (StringUtils.isEmpty(uinId.getText())) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_UIN_ENTER_UIN_ALERT));
-			} else {
-				Map<String, UiSchemaDTO> selectedFields = new HashMap<String, UiSchemaDTO>();
-				List<String> selectedFieldGroups = new ArrayList<String>();
-				for (String key : checkBoxKeeper.keySet()) {
-					if (((CheckBox) checkBoxKeeper.get(key)).isSelected()) {
-						selectedFieldGroups.add(key);
-						for (UiSchemaDTO field : groupedMap.get(key)) {
-							selectedFields.put(field.getId(), field);
-						}
-					}
+				return;
+			}
+
+			List<String> selectedFieldGroups = new ArrayList<String>();
+			for (String key : checkBoxKeeper.keySet()) {
+				if (((CheckBox) checkBoxKeeper.get(key)).isSelected()) {
+					selectedFieldGroups.add(key);
 				}
+			}
 
-				LOGGER.debug("selectedFieldGroups : {} , selectedFields : {}",selectedFieldGroups, selectedFields);
+			if(selectedFieldGroups.isEmpty()) {
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_UIN_SELECTION_ALERT));
+				return;
+			}
 
-				if(selectedFields.isEmpty()) {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_UIN_SELECTION_ALERT));
-					return;
-				}
+			if (uinValidatorImpl.validateId(uinId.getText()) && !selectedFieldGroups.isEmpty()) {
+				getRegistrationDTOFromSession().addDemographicField("UIN", uinId.getText());
+				getRegistrationDTOFromSession().setUpdatableFieldGroups(selectedFieldGroups);
+				getRegistrationDTOFromSession().setUpdatableFields(new ArrayList<>());
+				getRegistrationDTOFromSession().setBiometricMarkedForUpdate(selectedFieldGroups.contains(RegistrationConstants.BIOMETRICS_GROUP) ? true : false);
 
-				if (uinValidatorImpl.validateId(uinId.getText()) && !selectedFields.isEmpty()) {
-					registrationController.init(uinId.getText(), checkBoxKeeper, selectedFields, selectedFieldGroups);
-					Parent createRoot = BaseController.load(
-							getClass().getResource(RegistrationConstants.CREATE_PACKET_PAGE),
-							applicationContext.getBundle(getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0), RegistrationConstants.LABELS));
+				Parent createRoot = BaseController.load(
+						getClass().getResource(RegistrationConstants.CREATE_PACKET_PAGE),
+						applicationContext.getBundle(getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0), RegistrationConstants.LABELS));
 
-					getScene(createRoot).setRoot(createRoot);
-					genericController.populateScreens();
-					return;
-				}
+				getScene(createRoot).setRoot(createRoot);
+				genericController.populateScreens();
+				return;
 			}
 		} catch (InvalidIDException invalidIdException) {
 			LOGGER.error(invalidIdException.getMessage(), invalidIdException);

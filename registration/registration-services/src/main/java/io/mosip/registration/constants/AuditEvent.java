@@ -34,6 +34,7 @@ public enum AuditEvent {
 	NAV_UPLOAD_PACKETS("REG-EVT-005", USER_EVENT.getCode(), "NAV_UPLOAD_PACKETS", "Navigation link: Upload Packets"),
 	NAV_RE_REGISTRATION("REG-EVT-006", SYSTEM_EVENT.getCode(), "NAV_RE_REGISTRATION",
 			"Navigation link: Re-Registration"),
+	NAV_CORRECTION("REG-EVT-007", USER_EVENT.getCode(), "NAV_CORRECTION", "Navigation link: CORRECTION"),
 	NAV_SYNC_PACKETS("REG-NAV-001", USER_EVENT.getCode(), "NAV_SYNC_PACKETS", "Navigation link: Sync Packet IDs"),
 	NAV_VIRUS_SCAN("REG-NAV-002", USER_EVENT.getCode(), "NAV_VIRUS_SCAN", "Navigation link: Virus Scan"),
 	NAV_SYNC_DATA("REG-NAV-003", USER_EVENT.getCode(), "NAV_SYNC_DATA", "Navigation link: Sync Data"),
