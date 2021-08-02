@@ -85,7 +85,7 @@ public class RegistrationDAOTest {
 		registrationDTO.getDemographics().put("fullName", fullNames);
 		
 		registrationDTO.setRegistrationMetaDataDTO(registrationMetaDataDTO);
-		registrationDTO.getRegistrationMetaDataDTO().setRegistrationCategory("New");
+		//registrationDTO.getRegistrationMetaDataDTO().setRegistrationCategory("New");
 		when(registrationRepository.create(Mockito.any(Registration.class))).thenReturn(new Registration());
 
 		registrationDAOImpl.save("../PacketStore/28-Sep-2018/111111", registrationDTO);

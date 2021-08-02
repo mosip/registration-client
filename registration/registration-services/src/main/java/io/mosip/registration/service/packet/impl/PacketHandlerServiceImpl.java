@@ -290,7 +290,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 				.ofPattern(RidGeneratorPropertyConstant.TIMESTAMP_FORMAT.getProperty())));
 		metaData.put(PacketManagerConstants.META_CLIENT_VERSION, softwareUpdateHandler.getCurrentVersion());
 		metaData.put(PacketManagerConstants.META_REGISTRATION_TYPE,
-				registrationDTO.getRegistrationMetaDataDTO().getRegistrationCategory());
+				registrationDTO.getFlowType().getCategory().toUpperCase());
 		metaData.put(PacketManagerConstants.META_PRE_REGISTRATION_ID, registrationDTO.getPreRegistrationId());
 		metaData.put(PacketManagerConstants.META_MACHINE_ID,
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_STATION_ID));

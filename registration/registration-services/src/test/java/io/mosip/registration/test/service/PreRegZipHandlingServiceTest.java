@@ -253,7 +253,7 @@ public class PreRegZipHandlingServiceTest {
 
 		// Create object for RegistrationMetaData DTO
 		RegistrationMetaDataDTO registrationMetaDataDTO = new RegistrationMetaDataDTO();
-		registrationMetaDataDTO.setRegistrationCategory("New");
+		//registrationMetaDataDTO.setRegistrationCategory("New");
 		registrationDTO.setRegistrationMetaDataDTO(registrationMetaDataDTO);
 
 		// Put the RegistrationDTO object to SessionContext Map
