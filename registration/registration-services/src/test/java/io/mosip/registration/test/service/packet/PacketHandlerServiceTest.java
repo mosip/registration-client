@@ -4,6 +4,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.*;
 
+import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.enums.Role;
 import io.mosip.registration.service.config.LocalConfigService;
@@ -119,13 +120,19 @@ public class PacketHandlerServiceTest {
 		UiFieldDTO uiFieldDTO = new UiFieldDTO();
 		uiFieldDTO.setGroup(RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME);
 		defaultFields.add(uiFieldDTO);
+
+		ProcessSpecDto processSpecDto = new ProcessSpecDto();
+		processSpecDto.setId("test");
+		processSpecDto.setFlow("NEW");
+
 		Mockito.when(ridGeneratorImpl.generateId(Mockito.anyString(), Mockito.anyString())).thenReturn("12345678901");
 		Mockito.when(identitySchemaService.getLatestEffectiveSchemaVersion()).thenReturn(2.0);
 		Mockito.when(pridGenerator.generateId()).thenReturn("0987654321");
 		PowerMockito.when(SessionContext.isSessionContextAvailable()).thenReturn(true);
 		PowerMockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
 		
-		Mockito.when(identitySchemaService.getAllFieldSpec(Mockito.anyString(),2.0)).thenReturn(defaultFields);
+		Mockito.when(identitySchemaService.getAllFieldSpec(Mockito.anyString(),Mockito.anyDouble())).thenReturn(defaultFields);
+		Mockito.when(identitySchemaService.getProcessSpecDto(Mockito.anyString(),Mockito.anyDouble())).thenReturn(processSpecDto);
 
 		PowerMockito.when(SessionContext.userId()).thenReturn("12345");
 		Mockito.when(userDetailService.isValidUser("12345")).thenReturn(true);

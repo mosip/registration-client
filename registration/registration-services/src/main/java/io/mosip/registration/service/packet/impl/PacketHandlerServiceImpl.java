@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
+import io.mosip.commons.packet.dto.PacketInfo;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.enums.FlowType;
@@ -63,7 +64,6 @@ import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.dto.packetmanager.metadata.BiometricsMetaInfoDto;
@@ -81,6 +81,7 @@ import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.common.BIRBuilder;
 import io.mosip.kernel.biometrics.constant.OtherKey;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 
 /**
  * The implementation class of {@link PacketHandlerService} to handle the
@@ -186,9 +187,9 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			setDocuments(registrationDTO, metaInfoMap);
 			setBiometrics(registrationDTO, metaInfoMap);
 
-			setOperatorBiometrics(registrationDTO.getRegistrationId(), registrationDTO.getProcessId(),
+			setOperatorBiometrics(registrationDTO.getRegistrationId(), registrationDTO.getProcessId().toUpperCase(),
 					registrationDTO.getOfficerBiometrics(), officerBiometricsFileName);
-			setOperatorBiometrics(registrationDTO.getRegistrationId(), registrationDTO.getProcessId(),
+			setOperatorBiometrics(registrationDTO.getRegistrationId(), registrationDTO.getProcessId().toUpperCase(),
 					registrationDTO.getSupervisorBiometrics(), supervisorBiometricsFileName);
 
 			setAudits(registrationDTO);
@@ -196,7 +197,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			setMetaInfo(registrationDTO, metaInfoMap);
 			LOGGER.debug("Adding Meta info to packet manager");
 			packetWriter.addMetaInfo(registrationDTO.getRegistrationId(), metaInfoMap, source.toUpperCase(),
-					registrationDTO.getProcessId());
+					registrationDTO.getProcessId().toUpperCase());
 
 			String refId = String.valueOf(ApplicationContext.map().get(RegistrationConstants.USER_CENTER_ID))
 					.concat(RegistrationConstants.UNDER_SCORE)
@@ -205,9 +206,8 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			LOGGER.debug("Requesting packet manager to persist packet");
 			List<PacketInfo> packetInfo = packetWriter.persistPacket(registrationDTO.getRegistrationId(),
 					String.valueOf(registrationDTO.getIdSchemaVersion()), schema.getSchemaJson(), source.toUpperCase(),
-					registrationDTO.getRegistrationCategory().toUpperCase(),
-					registrationDTO.getAdditionalInfoReqId() != null ? registrationDTO.getAdditionalInfoReqId()
-							: registrationDTO.getAppId(),
+					registrationDTO.getProcessId().toUpperCase(),
+					registrationDTO.getAppId(),
 					refId, true);
 			
 			if (!CollectionUtils.isEmpty(packetInfo)) {
@@ -377,14 +377,14 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 					if (demographics.get(fieldName) != null && (registrationDTO.getUpdatableFields().contains(fieldName) ||
 							fieldName.equals("UIN")))
 						setField(registrationDTO.getRegistrationId(), fieldName, demographics.get(fieldName),
-								registrationDTO.getProcessId(), source);
+								registrationDTO.getProcessId().toUpperCase(), source);
 					break;
 				case CORRECTION:
 				case LOST:
 				case NEW:
 					if (demographics.get(fieldName) != null)
 						setField(registrationDTO.getRegistrationId(), fieldName, demographics.get(fieldName),
-								registrationDTO.getProcessId(), source);
+								registrationDTO.getProcessId().toUpperCase(), source);
 					break;
 				}
 		}
@@ -407,7 +407,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			documentMetaInfoDTOs.add(documentMetaInfoDTO);
 
 			packetWriter.setDocument(registrationDTO.getRegistrationId(), fieldName, getDocument(document),
-					source.toUpperCase(), registrationDTO.getProcessId());
+					source.toUpperCase(), registrationDTO.getProcessId().toUpperCase());
 		}
 
 		metaInfoMap.put("documents", getJsonString(documentMetaInfoDTOs));
@@ -447,7 +447,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			biometricRecord.setSegments(capturedBiometrics.get(fieldId));
 			LOGGER.debug("Adding biometric to packet manager for field : {}", fieldId);
 			packetWriter.setBiometric(registrationDTO.getRegistrationId(), fieldId, biometricRecord,
-					source.toUpperCase(), registrationDTO.getProcessId());
+					source.toUpperCase(), registrationDTO.getProcessId().toUpperCase());
 		});
 
 		metaInfoMap.put("biometrics", getJsonString(capturedMetaInfo));
@@ -573,7 +573,6 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		proceedWithRegistration();
 
 		RegistrationDTO registrationDTO = new RegistrationDTO();
-
 		// set id-schema version to be followed for this registration
 		registrationDTO.setIdSchemaVersion(identitySchemaService.getLatestEffectiveSchemaVersion());
 		ProcessSpecDto processSpecDto = identitySchemaService.getProcessSpecDto(processId, registrationDTO.getIdSchemaVersion());
@@ -587,7 +586,6 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 		// Create RegistrationMetaData DTO & set default values in it
 		RegistrationMetaDataDTO registrationMetaDataDTO = new RegistrationMetaDataDTO();
-		registrationMetaDataDTO.setRegistrationCategory(registrationDTO.getFlowType().getCategory());
 		registrationDTO.setRegistrationMetaDataDTO(registrationMetaDataDTO);
 
 		// Set RID

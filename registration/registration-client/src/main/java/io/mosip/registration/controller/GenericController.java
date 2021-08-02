@@ -272,7 +272,8 @@ public class GenericController extends BaseController {
 		textField.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				getRegistrationDTOFromSession().setAdditionalRequestId(textField.getText());
+				getRegistrationDTOFromSession().setAdditionalInfoReqId(textField.getText());
+				getRegistrationDTOFromSession().setAppId(textField.getText());
 			}
 		});
 		return hBox;

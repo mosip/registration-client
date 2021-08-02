@@ -135,7 +135,6 @@ public class PreRegZipHandlingServiceTest {
 			return "Success";
 		}).when(idObjectValidator).validateIdObject(Mockito.any(), Mockito.any());*/
 		Mockito.when(documentTypeDAO.getDocTypeByName(Mockito.anyString())).thenReturn(new ArrayList<>());
-		Mockito.when(identitySchemaService.getAllFieldSpec(Mockito.anyString(), Mockito.any())).thenReturn(schemaFields);
 		
 		RegistrationDTO registrationDTO = preRegZipHandlingServiceImpl.extractPreRegZipFile(preRegPacket);
 
@@ -158,7 +157,7 @@ public class PreRegZipHandlingServiceTest {
 				return "Success";
 			}).when(idObjectValidator).validateIdObject(Mockito.any(), Mockito.any());*/
 			Mockito.when(documentTypeDAO.getDocTypeByName(Mockito.anyString())).thenReturn(new ArrayList<>());
-			Mockito.when(identitySchemaService.getAllFieldSpec(Mockito.anyString(), Mockito.any())).thenReturn(schemaFields);
+			//Mockito.when(identitySchemaService.getAllFieldSpec(Mockito.anyString(), Mockito.any())).thenReturn(schemaFields);
 			preRegZipHandlingServiceImpl.extractPreRegZipFile(byteArrayOutputStream.toByteArray());
 		}
 	}
