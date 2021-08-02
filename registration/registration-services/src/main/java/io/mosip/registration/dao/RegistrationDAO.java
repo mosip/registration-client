@@ -138,7 +138,7 @@ public interface RegistrationDAO {
 	 */
 	List<Registration> getPacketsToBeSynched(List<String> statusCodes);
 	
-	List<Registration> getPacketsToBeSynched(List<String> statusCodes, int count);
+	List<Registration> getPacketsToBeSynched(String statusCode, int count);
 
 	/**
 	 * This method is used to update the Packet sync status in the database.
@@ -154,7 +154,7 @@ public interface RegistrationDAO {
 	 * @param status the status
 	 * @return the all re registration packets
 	 */
-	List<Registration> getAllReRegistrationPackets(String[] status);
+	List<Registration> getAllReRegistrationPackets(String clientStatus, List<String> serverStatus);
 
 	/**
 	 * This method is used to get the registration by id.
@@ -180,7 +180,7 @@ public interface RegistrationDAO {
 	 * @param serverStatusCode status of resgistrationPacket
 	 * @return list of registrations
 	 */
-	List<Registration> get(Timestamp crDtimes, String serverStatusCode);
+	List<Registration> get(String clientStatusCode, Timestamp crDtimes, List<String> serverStatusCodes);
 
 	/**
 	 * This method is used to find list of registrations by server status code in.

@@ -333,6 +333,7 @@ public class RegistrationUIConstants {
 	public static final String CENTER_MACHINE_INACTIVE = "CENTER_MACHINE_INACTIVE";
 
 	public static final String RESTART_APPLICATION = "RESTART_APPLICATION";
+	public static final String LOGOUT_ALERT = "LOGOUT_ALERT";
 
 	public static final String PRE_REG_TO_GET_ID_ERROR = "PRE_REG_TO_GET_ID_ERROR";
 	public static final String PRE_REG_TO_GET_PACKET_ERROR = "PRE_REG_TO_GET_PACKET_ERROR";
@@ -432,4 +433,6 @@ public class RegistrationUIConstants {
 	
 	public static final String CRON_EXPRESSION_MODIFIED = "CRON_EXPRESSION_MODIFIED";
 
+	public static final String INVALID_FLOW_TYPE = "INVALID_FLOW_TYPE";
+	public static final String ADDITIONAL_INFO_REQ_ID_MISSING = "ADDITIONAL_INFO_REQ_ID_MISSING";
 }

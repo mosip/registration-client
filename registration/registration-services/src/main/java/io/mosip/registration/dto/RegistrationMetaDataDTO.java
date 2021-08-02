@@ -19,8 +19,6 @@ public class RegistrationMetaDataDTO extends BaseDTO {
 
 	private double geoLatitudeLoc;
 	private double geoLongitudeLoc;
-	// Document Based or Introducer Based
-	private String registrationCategory;
 	private String machineId;
 	private String centerId;
 	private String previousRID;

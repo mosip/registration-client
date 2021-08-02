@@ -33,7 +33,7 @@ import io.mosip.registration.dao.RegistrationDAO;
 import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationDataDto;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
@@ -79,8 +79,8 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 
 			Registration registration = new Registration();
 			registration.setId(registrationDTO.getRegistrationId());
-			registration.setRegType(RegistrationType.NEW.getCode());
-			registration.setStatusCode(registrationDTO.getRegistrationMetaDataDTO().getRegistrationCategory());
+			registration.setRegType(registrationDTO.getFlowType().getRegistrationTypeCode());
+			registration.setStatusCode(registrationDTO.getFlowType().getCategory().toUpperCase());
 			registration.setLangCode(RegistrationConstants.ENGLISH_LANG_CODE);
 			registration.setStatusTimestamp(time);
 			registration.setAckFilename(zipFileName + "_Ack." + RegistrationConstants.ACKNOWLEDGEMENT_FORMAT);
@@ -95,11 +95,13 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			registration.setApproverUsrId(SessionContext.userContext().getUserId());
 			registration.setPreRegId(registrationDTO.getPreRegistrationId());
 			registration.setAppId(registrationDTO.getAppId());
+			registration.setPacketId(registrationDTO.getPacketId());
+			registration.setAdditionalInfoReqId(registrationDTO.getAdditionalInfoReqId());
 			
 			RegistrationDataDto registrationDataDto = new RegistrationDataDto();
 			
 			List<String> fullName = new ArrayList<>();
-			String fullNameKey = getKey(RegistrationConstants.UI_SCHEMA_SUBTYPE_FULL_NAME);
+			String fullNameKey = getKey(registrationDTO, RegistrationConstants.UI_SCHEMA_SUBTYPE_FULL_NAME);
 			if(fullNameKey != null) {
 				List<String> fullNameKeys = Arrays.asList(fullNameKey.split(RegistrationConstants.COMMA));
 				for (String key : fullNameKeys) {
@@ -108,8 +110,8 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 				}
 			}
 
-			Object emailObj = registrationDTO.getDemographics().get(getKey(RegistrationConstants.UI_SCHEMA_SUBTYPE_EMAIL));
-			Object phoneObj = registrationDTO.getDemographics().get(getKey(RegistrationConstants.UI_SCHEMA_SUBTYPE_PHONE));
+			Object emailObj = registrationDTO.getDemographics().get(getKey(registrationDTO, RegistrationConstants.UI_SCHEMA_SUBTYPE_EMAIL));
+			Object phoneObj = registrationDTO.getDemographics().get(getKey(registrationDTO, RegistrationConstants.UI_SCHEMA_SUBTYPE_PHONE));
 			
 			fullName.removeIf(Objects::isNull);
 			registrationDataDto.setName(String.join(RegistrationConstants.SPACE, fullName));
@@ -131,21 +133,20 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 		}
 	}
 	
-	private String getKey(String subType) throws RegBaseCheckedException {
-		String key = null;
-		List<UiSchemaDTO> schemaFields = identitySchemaService.getLatestEffectiveUISchema();
-		for (UiSchemaDTO schemaField : schemaFields) {
+	private String getKey(RegistrationDTO registrationDTO, String subType) throws RegBaseCheckedException {
+		List<String> key = new ArrayList<>();
+		List<UiFieldDTO> schemaFields = identitySchemaService.getAllFieldSpec(registrationDTO.getProcessId(), registrationDTO.getIdSchemaVersion());
+		for (UiFieldDTO schemaField : schemaFields) {
 			if (schemaField.getSubType() != null && schemaField.getSubType().equalsIgnoreCase(subType)) {
-
 				if (subType.equalsIgnoreCase(RegistrationConstants.UI_SCHEMA_SUBTYPE_FULL_NAME)) {
-					key = key == null ? schemaField.getId() : key.concat(RegistrationConstants.COMMA).concat(schemaField.getId());
+					key.add(schemaField.getId());
 				} else {
-					key = schemaField.getId();
-					return key;
+					key.add(schemaField.getId());
+					break;
 				}
 			}
 		}
-		return key;
+		return String.join(RegistrationConstants.COMMA, key);
 	}
 
 	private String getAdditionalInfo(Object fieldValue) {
@@ -255,8 +256,8 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 		return registrationRepository.findByClientStatusCodeInOrderByUpdDtimesDesc(statusCodes);
 	}
 	
-	public List<Registration> getPacketsToBeSynched(List<String> statusCodes, int limit) {
-		return registrationRepository.findByClientStatusCodeInOrderByCrDtimeAsc(statusCodes, PageRequest.of(0, limit));
+	public List<Registration> getPacketsToBeSynched(String statusCode, int limit) {
+		return registrationRepository.findByClientStatusCodeOrderByCrDtimeAsc(statusCode, PageRequest.of(0, limit));
 	}
 
 	/*
@@ -336,8 +337,8 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	 * io.mosip.registration.dao.RegistrationDAO#getAllReRegistrationPackets(java.
 	 * lang.String[])
 	 */
-	public List<Registration> getAllReRegistrationPackets(String[] status) {
-		return registrationRepository.findByClientStatusCodeAndServerStatusCode(status[0], status[1]);
+	public List<Registration> getAllReRegistrationPackets(String clientStatus, List<String> serverStatus) {
+		return registrationRepository.findByClientStatusCodeAndServerStatusCodeIn(clientStatus, serverStatus);
 	}
 
 	/*
@@ -373,12 +374,11 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	 * java.lang.String)
 	 */
 	@Override
-	public List<Registration> get(Timestamp crDtimes, String serverStatusCode) {
+	public List<Registration> get(String clientStatusCode, Timestamp crDtimes, List<String> serverStatusCodes) {
 
-		LOGGER.debug("REGISTRATION - BY_STATUS - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
-				"Retrieving Registrations based on crDtime and status");
+		LOGGER.debug("Retrieving Registrations based on crDtime and status codes");
 
-		return registrationRepository.findByCrDtimeBeforeAndServerStatusCode(crDtimes, serverStatusCode);
+		return registrationRepository.findByClientStatusCodeAndCrDtimeBeforeAndServerStatusCodeIn(clientStatusCode, crDtimes, serverStatusCodes);
 
 	}
 

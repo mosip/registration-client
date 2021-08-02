@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UiSchemaDTO {
+public class UiFieldDTO {
 
 	private String id;
 	private boolean inputRequired;

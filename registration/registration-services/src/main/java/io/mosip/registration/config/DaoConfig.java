@@ -557,7 +557,7 @@ public class DaoConfig extends HibernateDaoConfig {
 				ClientCryptoManagerConstant.DB_PWD_FILE);
 		if(source.toFile().exists()) {
 			try {
-				FileUtils.copyFile(source.toFile(), target.toFile());
+				FileUtils.moveFile(source.toFile(), target.toFile());
 			} catch (IOException e) {
 				LOGGER.error("Failed to preform backward compatible fix. Failed to copy {} to {} due to {}",
 						source, target, e);

@@ -51,11 +51,11 @@ public interface PacketHandlerService {
 	/**
 	 *
 	 * @param id
-	 * @param category
+	 * @param processId
 	 * @return
 	 * @throws RegBaseCheckedException
 	 */
-	public RegistrationDTO startRegistration(String id, String category) throws RegBaseCheckedException;
+	public RegistrationDTO startRegistration(String id, String processId) throws RegBaseCheckedException;
 
 	public List<PacketStatusDTO> getAllPackets();
 }

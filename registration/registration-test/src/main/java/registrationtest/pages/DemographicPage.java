@@ -12,18 +12,13 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.SessionContext;
-import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.mastersync.GenericDto;
-import io.mosip.registration.dto.schema.ConditionalBioAttributes;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
-import io.mosip.registration.validator.RequiredFieldValidator;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -39,7 +34,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import registrationtest.controls.Buttons;
-import registrationtest.pojo.schema.ConditionalBioAttribute;
 import registrationtest.pojo.schema.Root;
 import registrationtest.pojo.schema.Schema;
 import registrationtest.pojo.schema.Screens;

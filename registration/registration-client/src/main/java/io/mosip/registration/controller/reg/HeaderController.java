@@ -10,6 +10,7 @@ import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
@@ -274,6 +275,19 @@ public class HeaderController extends BaseController {
 				offline.setVisible(!flag);
 			}
 		}, 0, 15 * 60 * 1000);
+	}
+	
+	public void logout() {
+		streamer.stop();
+		auditFactory.audit(AuditEvent.LOGOUT_USER, Components.NAVIGATION, SessionContext.userContext().getUserId(),
+				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
+
+		LOGGER.info(LoggerConstants.LOG_REG_HEADER, APPLICATION_NAME, APPLICATION_ID,
+				"Clearing Session context" + SessionContext.authTokenDTO());
+
+		closeAlreadyExistedAlert();
+
+		logoutCleanUp();
 	}
 
 	/**
@@ -604,10 +618,18 @@ public class HeaderController extends BaseController {
 				packetHandlerController.setLastUpdateTime();
 
 				ResponseDTO responseDTO = taskService.getValue();
+				boolean isLogoutRequired = false;
+				
 				if (responseDTO.getErrorResponseDTOs() != null) {
 					generateAlert(RegistrationConstants.ERROR, responseDTO.getErrorResponseDTOs().get(0).getMessage()+"#TYPE#ERROR");
+					isLogoutRequired = !responseDTO.getErrorResponseDTOs().isEmpty() && Objects.nonNull(responseDTO.getErrorResponseDTOs().get(0).getOtherAttributes());
 				} else {
 					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_SUCCESS));
+					isLogoutRequired = Objects.nonNull(responseDTO.getSuccessResponseDTO().getOtherAttributes()) && 
+							responseDTO.getSuccessResponseDTO().getOtherAttributes().containsKey(RegistrationConstants.ROLES_MODIFIED);
+				}
+				if (isLogoutRequired) {
+					showAlertAndLogout();
 				}
 				if (restartController.isToBeRestarted()) {
 					/* Clear the completed job map */

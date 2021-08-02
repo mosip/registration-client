@@ -116,7 +116,7 @@ public class MosipDeviceSpecificationHelper {
 
 	public void validateJWTResponse(final String signedData, final String domain) throws DeviceException {
 		JWTSignatureVerifyRequestDto jwtSignatureVerifyRequestDto = new JWTSignatureVerifyRequestDto();
-		jwtSignatureVerifyRequestDto.setValidateTrust(true);
+		jwtSignatureVerifyRequestDto.setValidateTrust(false);
 		jwtSignatureVerifyRequestDto.setDomain(domain);
 		jwtSignatureVerifyRequestDto.setJwtSignatureData(signedData);
 		
