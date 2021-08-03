@@ -188,23 +188,20 @@ public abstract class FxControl  {
 
 		try {
 			boolean isValid = isValid();
-			LOGGER.debug("canContinue check on field  : {}, status {} : " ,uiSchemaDTO.getId(), isValid);
-
 			if(isValid) //empty values should be ignored, its fxControl's responsibility
 				return true;
 
-			if(isEmpty() && getRegistrationDTo().getRegistrationCategory().equals(RegistrationConstants.PACKET_TYPE_LOST))
-				return true;
-
-			//required and with valid value
-			if(isValid && requiredFieldValidator.isRequiredField(this.uiSchemaDTO, getRegistrationDTo()))
-				return true;
-
-			if(getRegistrationDTo().getRegistrationCategory().equals(RegistrationConstants.PACKET_TYPE_UPDATE)
-				&& !getRegistrationDTo().getUpdatableFields().contains(this.uiSchemaDTO.getId()) && !isValid) {
-				LOGGER.error("canContinue check on, {} is non-updatable ignoring", uiSchemaDTO.getId());
-				return true;
+			boolean isRequiredField = requiredFieldValidator.isRequiredField(this.uiSchemaDTO, getRegistrationDTo());
+			switch (getRegistrationDTo().getRegistrationCategory()) {
+				case RegistrationConstants.PACKET_TYPE_LOST: isRequiredField = false;
+					break;
+				case RegistrationConstants.PACKET_TYPE_UPDATE:
+					isRequiredField = getRegistrationDTo().getUpdatableFields().contains(this.uiSchemaDTO.getId());
+					break;
 			}
+
+			if(isEmpty() && !isRequiredField)
+				return true;
 
 		} catch (Exception exception) {
 			LOGGER.error("Error checking RequiredOn for field : " + uiSchemaDTO.getId(), exception);
@@ -252,7 +249,6 @@ public abstract class FxControl  {
 		label.getStyleClass().add(styleClass);
 		label.setVisible(isVisible);
 		label.setWrapText(true);
-		// label.setPrefWidth(prefWidth);
 		return label;
 	}
 
@@ -323,5 +319,4 @@ public abstract class FxControl  {
 	public void setNode(Node node) {
 		this.node = node;
 	}
-
 }
