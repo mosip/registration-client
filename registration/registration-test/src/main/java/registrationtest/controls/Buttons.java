@@ -80,9 +80,14 @@ public class Buttons {
 	 */
 	public void clickcancelBtn()
 	{
+		try {
 		logger.info("clickcancelBtn");
 		waitsUtil.clickNodeAssert( cancel);
-	}
+	}catch(Exception e)
+		{
+		logger.error("clickcancelBtn not present",e);
+		}
+		}
 	
 	/**
 	 *  Submit Click

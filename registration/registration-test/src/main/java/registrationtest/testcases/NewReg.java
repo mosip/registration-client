@@ -65,6 +65,8 @@ import  registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.JsonUtil;
 import  registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.RobotActions;
+import registrationtest.utility.WaitsUtil;
+
 import org.apache.log4j.LogManager; 
 
 import org.apache.log4j.Logger;
@@ -185,6 +187,7 @@ public class NewReg {
 		
 		//Enter userid and password
 		
+		buttons.clickcancelBtn();
 		
 		loginPage.selectAppLang();
 		
@@ -321,6 +324,7 @@ try {
 		{
 
 			logger.error("",e);
+			WaitsUtil.capture();
 			
 		}
 		try
