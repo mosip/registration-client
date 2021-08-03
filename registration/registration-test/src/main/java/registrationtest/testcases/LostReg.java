@@ -59,6 +59,8 @@ import  registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.JsonUtil;
 import  registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.RobotActions;
+import registrationtest.utility.WaitsUtil;
+
 import org.apache.log4j.LogManager; 
 
 import org.apache.log4j.Logger;
@@ -135,7 +137,7 @@ public class LostReg {
 		ExtentReportUtil.step2=ExtentReportUtil.test1.createNode("STEP 2-Operator Enter Details ");
 		
 		//Enter userid and password
-		
+		buttons.clickcancelBtn();
 		loginPage.selectAppLang();
 		loginPage.setUserId(loginUserid);
 		homePage=loginPage.setPassword(loginPwd);
@@ -272,7 +274,7 @@ if(PropertiesUtil.getKeyValue("upload").equals("Y"))
 		{
 
 			logger.error("",e);
-			
+			WaitsUtil.capture();
 		}
 		try
 		{

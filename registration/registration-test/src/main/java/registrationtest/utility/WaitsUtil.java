@@ -222,7 +222,7 @@ public class WaitsUtil {
 
 	}
 
-public void capture()
+public static void capture()
 {	try {
 	Robot rb=new Robot();
 	Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -231,8 +231,11 @@ public void capture()
 	BufferedImage image=rb.createScreenCapture(rec);
 	Image myImage=SwingFXUtils.toFXImage(image, null);
 	String datetim=DateUtil.getDateTime();
-	String fileName="Out"+datetim+".jpg";
-	ImageIO.write(image, "jpg",new File(fileName));
+	//String fileName="Out"+datetim+".jpg";
+	  
+	String SNAPSHOTPATH=System.getProperty("user.dir") +"\\snapshot\\snapshot"+DateUtil.getDateTime()+".jpg";
+		 
+	ImageIO.write(image, "jpg",new File(SNAPSHOTPATH));
 	} catch (Exception e) {
 		logger.error("",e);
 		

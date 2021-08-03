@@ -145,7 +145,7 @@ public class UpdateReg {
 
 			//Enter userid and password
 
-
+			buttons.clickcancelBtn();
 			loginPage.selectAppLang();
 
 			loginPage.setUserId(loginUserid);
@@ -282,7 +282,7 @@ try {
 		{
 
 			logger.error("",e);
-			
+			WaitsUtil.capture();
 		}
 		try
 		{
