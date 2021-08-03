@@ -92,8 +92,8 @@ public class DropDownFxControl extends FxControl {
 
 		/** Container holds title, fields and validation message elements */
 		VBox simpleTypeVBox = new VBox();
-		simpleTypeVBox.setPrefWidth(200);
-		simpleTypeVBox.setPrefHeight(95);
+		//simpleTypeVBox.setPrefWidth(200);
+		//simpleTypeVBox.setPrefHeight(95);
 		simpleTypeVBox.setSpacing(5);
 		simpleTypeVBox.setId(fieldName + RegistrationConstants.VBOX);
 
@@ -128,8 +128,10 @@ public class DropDownFxControl extends FxControl {
 
 		fieldTitle.setText(titleText);
 		comboBox.setPromptText(fieldTitle.getText());
-		simpleTypeVBox.getChildren().add(getLabel(uiSchemaDTO.getId() + RegistrationConstants.MESSAGE, null,
-				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, false, simpleTypeVBox.getPrefWidth()));
+		Label messageLabel = getLabel(uiSchemaDTO.getId() + RegistrationConstants.MESSAGE, null,
+				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, false, simpleTypeVBox.getPrefWidth());
+		messageLabel.setMaxWidth(200);
+		simpleTypeVBox.getChildren().add(messageLabel);
 
 		changeNodeOrientation(simpleTypeVBox, langCode);
 
@@ -213,7 +215,6 @@ public class DropDownFxControl extends FxControl {
 
 	@Override
 	public boolean isValid() {
-		//TODO check if its lostUIN, then no validation required
 		ComboBox<GenericDto> appComboBox = (ComboBox<GenericDto>) getField(uiSchemaDTO.getId());
 		boolean isValid = appComboBox != null && appComboBox.getSelectionModel().getSelectedItem() != null;
 		appComboBox.getStyleClass().removeIf((s) -> {

@@ -38,6 +38,7 @@ import javafx.scene.layout.Pane;
 public class DateValidation extends BaseController {
 
 	private static final Logger LOGGER = AppConfig.getLogger(DateValidation.class);
+
 	@Autowired
 	private Validations validation;
 
@@ -312,18 +313,12 @@ public class DateValidation extends BaseController {
 					&& yyyy.getText().matches(RegistrationConstants.NUMBER_REGEX)
 					&& yyyy.getText().matches(RegistrationConstants.FOUR_NUMBER_REGEX)) {
 
-				isValid = isValidDate(parentPane, dd.getText(), mm.getText(), yyyy.getText(), fieldId);
-				if (isValid) {
-					LocalDate localDate = LocalDate.of(Integer.valueOf(yyyy.getText()),
-							Integer.valueOf(mm.getText()), Integer.valueOf(dd.getText()));
+				LocalDate localDate = LocalDate.of(Integer.valueOf(yyyy.getText()),
+						Integer.valueOf(mm.getText()), Integer.valueOf(dd.getText()));
 
-					LocalDate afterMaxDays = LocalDate.now();
-					afterMaxDays.plusDays(maxDays);
-
-					LocalDate beforeMinDays = LocalDate.now();
-					afterMaxDays.plusDays(minDays);
-					return (localDate.isAfter(beforeMinDays) && localDate.isBefore(afterMaxDays));
-				}
+				LocalDate afterMaxDays = LocalDate.now().plusDays(maxDays);
+				LocalDate beforeMinDays = LocalDate.now().plusDays(minDays);
+				isValid = (localDate.isAfter(beforeMinDays) && localDate.isBefore(afterMaxDays));
 			}
 			resetFieldStyleClass(parentPane, fieldId, !isValid);
 			return isValid;
