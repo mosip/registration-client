@@ -1,25 +1,12 @@
-{
-  "identity": {
-	  "BELOW_ARE_STATIC_KEYWORDS":"",
-    "ageGroup": "ADULT",
-    "process": "New",
-    "bioAttributes": [
-      "leftEye",
-      "rightEye",
-      "rightIndex",
-      "rightLittle",
-      "rightRing",
-      "rightMiddle",
-      "leftIndex",
-      "leftLittle",
-      "leftRing",
-      "leftMiddle",
-      "leftThumb",
-      "rightThumb",
-      "face"
-    ],
-    "BELOW_ARE_THE_SCHEMA_LEVEL_ID's_DATA":"",
-    "dateOfBirth": "20",
+{ "identity" : {
+	"BELOW_ARE_STATIC_KEYWORDS":"",
+"ageGroup":"ADULT",
+	"process":"Update",		  
+  	  "updateUINAttributes":["DateOfBirth", "Phone", "Email"],
+		  "bioAuthAttributes":["rightThumb"],
+		  "BELOW_ARE_THE_SCHEMA_LEVEL_ID's_DATA":"",
+		  "dateOfBirth" : "20",
+		  	"UIN":"3023619078", 
     "preferredLang": [
         {
             "language": "hin",
