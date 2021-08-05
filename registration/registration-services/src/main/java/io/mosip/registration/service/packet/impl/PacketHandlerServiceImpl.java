@@ -423,8 +423,14 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			String fieldId = key.split("_")[0];
 			String bioAttribute = key.split("_")[1];
 			BIR bir = birBuilder.buildBIR(registrationDTO.getBiometrics().get(key));
-			capturedBiometrics.getOrDefault(fieldId, new ArrayList<>()).add(bir);
-			capturedMetaInfo.getOrDefault(fieldId, new HashMap<>()).put(bioAttribute, new BiometricsMetaInfoDto(
+			if (!capturedBiometrics.containsKey(fieldId)) {
+				capturedBiometrics.put(fieldId, new ArrayList<>());
+			}
+			capturedBiometrics.get(fieldId).add(bir);
+			if (!capturedMetaInfo.containsKey(fieldId)) {
+				capturedMetaInfo.put(fieldId, new HashMap<>());
+			}
+			capturedMetaInfo.get(fieldId).put(bioAttribute, new BiometricsMetaInfoDto(
 					registrationDTO.getBiometrics().get(key).getNumOfRetries(),
 					registrationDTO.getBiometrics().get(key).isForceCaptured(),
 					bir.getBdbInfo().getIndex()));
