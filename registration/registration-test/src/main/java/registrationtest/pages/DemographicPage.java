@@ -962,6 +962,15 @@ public class DemographicPage {
 			if(schema.getGroup().equals(uinlist))
 			{				setageDate(id, JsonIdentity, key);
 			}}}
+	
+	
+	public void setdobUpdate(String id,String JsonIdentity,String key)
+	{
+		for(String uinlist:getupdateUINAttributes(JsonIdentity)) {
+			if(schema.getGroup().equals(uinlist))
+			{				setdob(id, JsonIdentity, key);
+			}}}
+	
 	public void contolType(Schema schema,String JsonIdentity,String scenario,String ageGroup)
 	{
 		String id="#"+schema.getId(); 
@@ -984,7 +993,10 @@ public class DemographicPage {
 				//setdob(id,JsonIdentity,key);
 				setageDate(id,JsonIdentity,key);
 				break;
-
+			case "date":
+				setdob(id,JsonIdentity,key);
+				
+				break;
 			case "dropdown": 
 				dropdown(id,JsonIdentity,key);
 				break;
@@ -1024,7 +1036,10 @@ public class DemographicPage {
 			case "ageDate":
 				setageDateUpdate(id,JsonIdentity,key,scenario);
 				break;
-
+			case "date":
+				setdobUpdate(id,JsonIdentity,key);
+				
+				break;
 			case "dropdown": 
 				dropdownUpdate(id,JsonIdentity,key);
 				break;
