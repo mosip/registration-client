@@ -947,7 +947,7 @@ public class AuthenticationController extends BaseController implements Initiali
 		} else {
 			getOSIData().setOperatorID(userName);
 			getOSIData().setOperatorAuthenticatedByPassword(RegistrationConstants.PWORD.equalsIgnoreCase(authMode));
-			getOSIData().setSuperviorAuthenticatedByPIN(RegistrationConstants.OTP.equalsIgnoreCase(authMode));
+			getOSIData().setOperatorAuthenticatedByPIN(RegistrationConstants.OTP.equalsIgnoreCase(authMode));
 		}		
 	}
 

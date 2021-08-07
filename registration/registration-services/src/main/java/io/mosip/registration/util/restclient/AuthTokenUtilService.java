@@ -279,6 +279,7 @@ public class AuthTokenUtilService {
             setTimeout(requestHTTPDTO);
             setURI(requestHTTPDTO, new HashMap<>(), getEnvironmentProperty("auth_by_otp", RegistrationConstants.SERVICE_URL));
             Map<String, Object> responseMap = restClientUtil.invokeForToken(requestHTTPDTO);
+            responseMap = (Map<String, Object>) responseMap.get(RegistrationConstants.REST_RESPONSE_BODY);
 
             if (responseMap.get(RegistrationConstants.RESPONSE) != null) {
                 LinkedHashMap<String, String> otpMessage = (LinkedHashMap<String, String>) responseMap
@@ -294,7 +295,7 @@ public class AuthTokenUtilService {
         } catch (RestClientException ex) {
             throw new ConnectionException("REG_SEND_OTP", ex.getMessage(), ex);
         }
-        return RegistrationConstants.OTP_GENERATION_ERROR_MESSAGE;
+        return null;
     }
 
     @Timed(value = "auth.token", longTask = true)

@@ -82,7 +82,8 @@ public class OTPManager extends BaseService {
 			}
 
 			String message = authTokenUtilService.sendOtpWithRetryWrapper(userId);
-			return setSuccessResponse(response, message, null);
+			if(message != null)
+				return setSuccessResponse(response, message, null);
 
 		} catch (Throwable e) {
 			LOGGER.error("Failed to send OTP", e);
