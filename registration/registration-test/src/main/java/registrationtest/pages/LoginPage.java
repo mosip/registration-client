@@ -219,7 +219,7 @@ public class LoginPage {
 			}
 			assertNotNull(node,"Login Page is not shown");
 
-			ExtentReportUtil.step1.log(Status.PASS, "Successfully Screen Loaded");
+			ExtentReportUtil.test1.info( "Successfully Screen Loaded");
 
 		}catch(Exception e)
 		{

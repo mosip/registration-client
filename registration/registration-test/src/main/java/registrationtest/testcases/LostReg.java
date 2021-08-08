@@ -232,7 +232,7 @@ try {
 		buttons.clickConfirmBtn();
 		if(!rid2.rid.trim().isEmpty())
 		{
-			ExtentReportUtil.test1.info("Approve Packet done" + rid2.getWebViewAck());
+			ExtentReportUtil.test1.info("Approve Packet done");
 		assertEquals(rid1.getRid(), rid2.getRid());
 		}else
 		{	ExtentReportUtil.step5.log(Status.FAIL,"Approve Packet valid");	
@@ -297,12 +297,15 @@ if(PropertiesUtil.getKeyValue("upload").equals("Y"))
 		if(result==true)
 		{
 			ExtentReportUtil.test1.log(Status.PASS, "TESTCASE PASS\n" +"[Appid="+ rid1.rid +"] [RID="+ rid1.appidrid +"] [DATE TIME="+ rid1.ridDateTime +"] [ENVIRONMENT=" +System.getProperty("mosip.hostname")+"]");
-			
+			ExtentReportUtil.test1.info("Approve Packet Details Below" + rid2.getWebViewAck());
 		}		else
 		{
 			ExtentReportUtil.test1.log(Status.FAIL, "TESTCASE FAIL");
 		
 		}
+		
+
+		ExtentReportUtil.test1.info("Test Data Below" + jsonContent);
 		ExtentReportUtil.reports.flush();
 		
 		
