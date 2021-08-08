@@ -25,6 +25,7 @@ import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.Status;
 import com.aventstack.extentreports.reporter.ExtentHtmlReporter;
 
+import registrationtest.controls.Buttons;
 import registrationtest.pages.UpdatePage;
 import registrationtest.pojo.output.RID;
 import registrationtest.testcases.*;
@@ -65,11 +66,12 @@ public class RegistrationMain{
 		UpdateReg updatereg=new UpdateReg();
 		ManualReg manualReg=new ManualReg();
 		WaitsUtil waitsUtil=new WaitsUtil();
-
+		
 		Thread thread = new Thread() { 
 			@Override
 			public void run() {
 				try {
+					
 					Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait"))); 
 					
 					logger.info("thread inside calling testcase"); 
