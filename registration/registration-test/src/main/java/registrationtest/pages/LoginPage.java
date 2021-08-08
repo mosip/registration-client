@@ -202,7 +202,11 @@ public class LoginPage {
 		logger.info("In Login test Loaded");
 
 		try {
-			alerts.clickAlertCancel();
+			//alerts.clickAlertCancel();
+			
+			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("Loginwait"))); 
+			
+			
 			waitsUtil.clickNodeAssert(loginScreen);
 
 

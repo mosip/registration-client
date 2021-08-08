@@ -224,21 +224,27 @@ public class WaitsUtil {
 
 	}
 
-public static void capture()
-{	try {
+public static String capture()
+{	String snapshotpath=null;
+	try {
 	Robot rb=new Robot();
 	Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 	
 	Rectangle rec=new Rectangle(0, 0, screenSize.width, screenSize.height);
 	BufferedImage image=rb.createScreenCapture(rec);
-	Image myImage=SwingFXUtils.toFXImage(image, null);
-	String datetim=DateUtil.getDateTime();
+	//Image myImage=SwingFXUtils.toFXImage(image, null);
+	
 	Path SNAPSHOTPATH	= Paths.get(System.getProperty("user.dir"), "snapshot","snapshot"+DateUtil.getDateTime()+".jpg");
-	ImageIO.write(image, "jpg",new File(SNAPSHOTPATH.toString()));
+	snapshotpath=SNAPSHOTPATH.toString();
+	ImageIO.write(image, "jpg",new File(snapshotpath));
+	
 	} catch (Exception e) {
 		logger.error("",e);
 		
 	}
+return snapshotpath;
 	
 }
+
+
 }
