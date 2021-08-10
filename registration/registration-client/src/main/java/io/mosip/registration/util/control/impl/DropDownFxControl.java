@@ -99,7 +99,7 @@ public class DropDownFxControl extends FxControl {
 
 		/** Title label */
 		Label fieldTitle = getLabel(uiFieldDTO.getId() + RegistrationConstants.LABEL, "",
-				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, false, simpleTypeVBox.getWidth());
+				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, true, simpleTypeVBox.getWidth());
 		simpleTypeVBox.getChildren().add(fieldTitle);
 
 		List<String> labels = new ArrayList<>();
@@ -127,7 +127,6 @@ public class DropDownFxControl extends FxControl {
 		setListener(comboBox);
 
 		fieldTitle.setText(titleText);
-		comboBox.setPromptText(fieldTitle.getText());
 		simpleTypeVBox.getChildren().add(getLabel(uiFieldDTO.getId() + RegistrationConstants.MESSAGE, null,
 				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, false, simpleTypeVBox.getPrefWidth()));
 
@@ -170,7 +169,8 @@ public class DropDownFxControl extends FxControl {
 		StringConverter<T> uiRenderForComboBox = FXUtils.getInstance().getStringConverterForComboBox();
 		field.setId(id);
 		// field.setPrefWidth(prefWidth);
-		field.setPromptText(titleText);
+
+		//field.setPromptText(titleText);
 		field.setDisable(isDisable);
 		field.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_COMBOBOX);
 		field.setConverter((StringConverter<GenericDto>) uiRenderForComboBox);
