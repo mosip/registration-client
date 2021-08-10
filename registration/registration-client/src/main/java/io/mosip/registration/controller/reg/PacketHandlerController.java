@@ -1,7 +1,9 @@
 package io.mosip.registration.controller.reg;
 
 import static io.mosip.registration.constants.LoggerConstants.PACKET_HANDLER;
-import static io.mosip.registration.constants.RegistrationConstants.*;
+import static io.mosip.registration.constants.RegistrationConstants.ACKNOWLEDGEMENT_TEMPLATE_CODE;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -9,17 +11,13 @@ import java.io.IOException;
 import java.io.Writer;
 import java.net.URL;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import io.mosip.registration.dao.IdentitySchemaDao;
-import io.mosip.registration.dto.schema.ProcessSpecDto;
-import io.mosip.registration.entity.ProcessSpec;
-import io.mosip.registration.enums.FlowType;
-import io.mosip.registration.enums.Role;
-import javafx.geometry.Pos;
-import javafx.scene.layout.*;
-import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -40,14 +38,19 @@ import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.GenericController;
 import io.mosip.registration.controller.Initialization;
+import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationApprovalDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SyncDataProcessDTO;
+import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.entity.PreRegistrationList;
+import io.mosip.registration.entity.ProcessSpec;
 import io.mosip.registration.entity.SyncControl;
+import io.mosip.registration.enums.FlowType;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
@@ -56,19 +59,25 @@ import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.packet.PacketHandlerService;
 import io.mosip.registration.service.packet.ReRegistrationService;
 import io.mosip.registration.service.packet.RegistrationApprovalService;
-import io.mosip.registration.service.sync.PolicySyncService;
 import io.mosip.registration.service.sync.PreRegistrationDataSyncService;
 import io.mosip.registration.service.template.TemplateService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.acktemplate.TemplateGenerator;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.VBox;
+import lombok.NonNull;
 
 /**
  * Class for Registration Packet operations
@@ -202,9 +211,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 	private UserOnboardParentController userOnboardParentController;
 
 	@Autowired
-	private PolicySyncService policySyncService;
-
-	@Autowired
 	private RegistrationController registrationController;
 
 	@Autowired
@@ -230,10 +236,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 	@Autowired
 	private GenericController genericController;
-
-	@Autowired
-	private Validations validation;
-
+	
 	@Autowired
 	private LanguageSelectionController languageSelectionController;
 
@@ -530,10 +533,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 	 * Validating screen authorization and Uploading packets to FTP server
 	 */
 	public void uploadPacket() {
-		if (!proceedOnAction("PS")) {
-			return;
-		}
-
 		LOGGER.info("Loading Packet Upload screen started.");
 		try {
 			auditFactory.audit(AuditEvent.NAV_UPLOAD_PACKETS, Components.NAVIGATION,
