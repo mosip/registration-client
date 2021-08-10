@@ -8,6 +8,8 @@ import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -222,21 +224,27 @@ public class WaitsUtil {
 
 	}
 
-public void capture()
-{	try {
+public static String capture()
+{	String snapshotpath=null;
+	try {
 	Robot rb=new Robot();
 	Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 	
 	Rectangle rec=new Rectangle(0, 0, screenSize.width, screenSize.height);
 	BufferedImage image=rb.createScreenCapture(rec);
-	Image myImage=SwingFXUtils.toFXImage(image, null);
-	String datetim=DateUtil.getDateTime();
-	String fileName="Out"+datetim+".jpg";
-	ImageIO.write(image, "jpg",new File(fileName));
+	//Image myImage=SwingFXUtils.toFXImage(image, null);
+	
+	Path SNAPSHOTPATH	= Paths.get(System.getProperty("user.dir"), "snapshot","snapshot"+DateUtil.getDateTime()+".jpg");
+	snapshotpath=SNAPSHOTPATH.toString();
+	ImageIO.write(image, "jpg",new File(snapshotpath));
+	
 	} catch (Exception e) {
 		logger.error("",e);
 		
 	}
+return snapshotpath;
 	
 }
+
+
 }

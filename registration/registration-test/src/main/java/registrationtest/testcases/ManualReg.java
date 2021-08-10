@@ -94,16 +94,16 @@ public class ManualReg {
 			//Enter userid and password
 
 
-			loginPage.selectAppLang();
-
-			loginPage.setUserId(loginUserid);
-
-			homePage=loginPage.setPassword(loginPwd);
+//			loginPage.selectAppLang();
+//
+//			loginPage.setUserId(loginUserid);
+//
+//			homePage=loginPage.setPassword(loginPwd);
 			
 			
 			
 			//New Registration
-			homePage.clickHomeImg();
+//			homePage.clickHomeImg();
 			
 		}catch(Exception e)
 		{

@@ -4,6 +4,7 @@ package  registrationtest.testcases;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -65,6 +66,8 @@ import  registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.JsonUtil;
 import  registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.RobotActions;
+import registrationtest.utility.WaitsUtil;
+
 import org.apache.log4j.LogManager; 
 
 import org.apache.log4j.Logger;
@@ -166,24 +169,22 @@ public class NewReg {
 		logger.info("New Adult Registration Scenario : " + process +" FileName : " + fileName);
 		ExtentReportUtil.test1=ExtentReportUtil.reports.createTest("New Registration Scenario : " + process +" FileName : " + fileName);
 		
-		
-		
-		ExtentReportUtil.step1=ExtentReportUtil.test1.createNode("STEP 1-Loading Reg"
-				+ "Client");
-		
-		loginPage=new LoginPage(robot);
+			loginPage=new LoginPage(robot);
 		buttons=new Buttons(robot);
 		authenticationPage=new AuthenticationPage(robot);	
 		robotActions=new RobotActions(robot);
 		selectLanguagePage=new SelectLanguagePage(robot);
 		
+		rid1=null;
+		rid2=null;
+result=false;
 		//Load Login screen
+		buttons.clickcancelBtn();
 		loginPage.loadLoginScene(applicationPrimaryStage1);
 		
 		
-		ExtentReportUtil.step2=ExtentReportUtil.test1.createNode("STEP 2-Operator Enter Details ");
-		
 		//Enter userid and password
+		
 		
 		
 		loginPage.selectAppLang();
@@ -192,11 +193,9 @@ public class NewReg {
 		
 		homePage=loginPage.setPassword(loginPwd);
 		
-		
-		ExtentReportUtil.step2.log(Status.PASS, "Operator logs in");
-		
 		//New Registration
 		homePage.clickHomeImg();
+		ExtentReportUtil.test1.info("Operator Logs in");
 		if(PropertiesUtil.getKeyValue("sync").equals("Y"))
 		homePage.clickSynchronizeData();
 		
@@ -207,26 +206,24 @@ public class NewReg {
 		selectLanguagePage.selectLang();
 		buttons.clicksubmitBtn();
 		}	
-		ExtentReportUtil.step3=ExtentReportUtil.test1.createNode("STEP 3-Demographic, Biometric upload ");
+		
 		
 		webViewDocument=demographicPage.screensFlow(jsonContent,process,ageGroup);
 
-		ExtentReportUtil.step3.log(Status.PASS, "Demographic, Biometric upload done");
-
+		
 		buttons.clicknextBtn();
 
-		ExtentReportUtil.step4=ExtentReportUtil.test1.createNode("STEP 4-Accept Preview ");
-		
 		
 		rid1=webViewDocument.acceptPreview(process);
 
 		buttons.clicknextBtn();
 
 		if(!rid1.rid.trim().isEmpty())
-			ExtentReportUtil.step4.log(Status.PASS, "Accept Preview done" + rid1.getWebviewPreview());
-			else
-			{	ExtentReportUtil.step4.log(Status.FAIL,"Preview not valid");	
-			return rid1;
+		{
+			ExtentReportUtil.test1.info("Demo, Doc, Bio - Done");
+			ExtentReportUtil.test1.info("Preview done");
+		}	else
+			{	ExtentReportUtil.test1.info("Preview not valid");	
 			}
 		/**
 		 * Authentication enter password
@@ -267,11 +264,6 @@ try {
 		homePage.clickHomeImg();
 		
 		
-		
-		ExtentReportUtil.step5=ExtentReportUtil.test1.createNode("STEP 5-Approve Packet ");
-		
-		
-
 		eodApprovalPage=homePage.clickeodApprovalImageView( applicationPrimaryStage, scene);
 		eodApprovalPage.clickOnfilterField();
 		eodApprovalPage.enterFilterDetails(rid1.getRid());
@@ -285,11 +277,11 @@ try {
 		buttons.clickConfirmBtn();
 		if(!rid2.rid.trim().isEmpty())
 		{
-		ExtentReportUtil.step5.log(Status.PASS, "Approve Packet done" + rid2.getWebViewAck());
+			ExtentReportUtil.test1.info("Approve Packet done");
 		assertEquals(rid1.getRid(), rid2.getRid());
 		}else
-		{	ExtentReportUtil.step5.log(Status.FAIL,"Approve Packet valid");	
-		return rid1;
+		{	ExtentReportUtil.test1.info("Approve Packet invalid");	
+		
 		}
 		
 		/**
@@ -297,9 +289,7 @@ try {
 		 */
 		if(PropertiesUtil.getKeyValue("upload").equals("Y"))
 			{
-		
-		ExtentReportUtil.step6=ExtentReportUtil.test1.createNode("STEP 6-Upload Packet ");
-		
+			
 
 		uploadPacketPage=homePage.clickuploadPacketImageView( applicationPrimaryStage, scene);
 		uploadPacketPage.selectPacket(rid1.getRid());
@@ -308,8 +298,7 @@ try {
 		 * Verify Success Upload
 		 */
 		result=uploadPacketPage.verifyPacketUpload(rid1.getRid());
-		ExtentReportUtil.step6.log(Status.PASS, "Upload Packet done");
-
+		ExtentReportUtil.test1.info( "Upload Packet done");
 		}
 		else if(PropertiesUtil.getKeyValue("upload").equals("N")){
 			result=true;
@@ -321,6 +310,13 @@ try {
 		{
 
 			logger.error("",e);
+			
+			try {
+				ExtentReportUtil.test1.addScreenCaptureFromPath(WaitsUtil.capture());
+			} catch (IOException e1) {
+				
+				e1.printStackTrace();
+			}
 			
 		}
 		try
@@ -346,9 +342,18 @@ try {
 		if(result==true)
 		{
 			ExtentReportUtil.test1.log(Status.PASS, "TESTCASE PASS\n" +"[Appid="+ rid1.rid +"] [RID="+ rid1.appidrid +"] [DATE TIME="+ rid1.ridDateTime +"] [ENVIRONMENT=" +System.getProperty("mosip.hostname")+"]");
+			ExtentReportUtil.test1.info("Approve Packet Details Below" + rid2.getWebViewAck());
 		}		else
+		{
 			ExtentReportUtil.test1.log(Status.FAIL, "TESTCASE FAIL");
+		
+		}
+		
+		
+
+		ExtentReportUtil.test1.info("Test Data Below" + jsonContent);
 		ExtentReportUtil.reports.flush();
+		
 		
 				
 return rid1;

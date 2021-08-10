@@ -4,6 +4,7 @@ package  registrationtest.testcases;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -123,9 +124,7 @@ public class UpdateReg {
 		try {
 			logger.info("New Adult Registration Scenario : " + process +" FileName : " + fileName);
 			ExtentReportUtil.test1=ExtentReportUtil.reports.createTest("Update Scenario : " + process +" FileName : " + fileName);
-			ExtentReportUtil.step1=ExtentReportUtil.test1.createNode("STEP 1-Loading Reg"
-					+ "Client");
-
+		
 			loginPage=new LoginPage(robot);
 			buttons=new Buttons(robot);
 			authenticationPage=new AuthenticationPage(robot);	
@@ -133,19 +132,19 @@ public class UpdateReg {
 			selectLanguagePage=new SelectLanguagePage(robot);
 			updatePage=new UpdatePage(robot);
 
-			rid1=new RID();
-			rid2=new RID();
+		rid1=null;
+		rid2=null;
 			result=false;
 
 
 			//Load Login screen
+			buttons.clickcancelBtn();
 			loginPage.loadLoginScene(applicationPrimaryStage1);
 			demographicPage=new DemographicPage(robot);
-			ExtentReportUtil.step2=ExtentReportUtil.test1.createNode("STEP 2-Operator Enter Details ");
-
+		
 			//Enter userid and password
 
-
+			
 			loginPage.selectAppLang();
 
 			loginPage.setUserId(loginUserid);
@@ -153,7 +152,7 @@ public class UpdateReg {
 			homePage=loginPage.setPassword(loginPwd);
 
 
-			ExtentReportUtil.step2.log(Status.PASS, "Operator logs in");
+	ExtentReportUtil.test1.info("Operator Logs in");
 
 			homePage.clickuinUpdateImage();
 
@@ -167,35 +166,32 @@ public class UpdateReg {
 			buttons.clickContinueBtn();
 
 
-			ExtentReportUtil.step3=ExtentReportUtil.test1.createNode("STEP 3-Demographic, Biometric upload ");
-
 			webViewDocument=demographicPage.screensFlow(jsonContent,process,ageGroup);
 
-			ExtentReportUtil.step3.log(Status.PASS, "Demographic, Biometric upload done");
-
+		
 			buttons.clicknextBtn();
 
-			ExtentReportUtil.step4=ExtentReportUtil.test1.createNode("STEP 4-Accept Preview ");
-
+		
 
 			rid1=webViewDocument.acceptPreview(process);
 
 			buttons.clicknextBtn();
 
-			if(!rid1.rid.trim().isEmpty())
-				ExtentReportUtil.step4.log(Status.PASS, "Accept Preview done" + rid1.getWebviewPreview());
-			else
-			{	ExtentReportUtil.step4.log(Status.FAIL,"Preview not valid");	
-			return rid1;
+		if(!rid1.rid.trim().isEmpty())
+		{
+			ExtentReportUtil.test1.info("Demo, Doc, Bio - Done");
+			ExtentReportUtil.test1.info("Preview done");
+		}	else
+			{	ExtentReportUtil.test1.info("Preview not valid");	
 			}
-			/**
-			 * Authentication enter password
-			 * Click Continue 
-			 */
-			authenticationPage.enterUserName(loginUserid);
-			authenticationPage.enterPassword(loginPwd);
-
-			buttons.clickAuthenticateBtn();
+		/**
+		 * Authentication enter password
+		 * Click Continue 
+		 */
+		authenticationPage.enterUserName(loginUserid);
+		authenticationPage.enterPassword(loginPwd);
+		
+		buttons.clickAuthenticateBtn();
 
 
 try {
@@ -217,71 +213,70 @@ try {
 {
 	logger.error("",e);
 }
-
-			/**
-			 * Click Home, eodapprove, approval Button, authenticate button
-			 * Enter user details
-			 */
-			rid2=webViewDocument.getacknowledgement(process);
-
-			homePage.clickHomeImg();
-
-
-
-			ExtentReportUtil.step5=ExtentReportUtil.test1.createNode("STEP 5-Approve Packet ");
-
-
-
-			eodApprovalPage=homePage.clickeodApprovalImageView( applicationPrimaryStage, scene);
-			eodApprovalPage.clickOnfilterField();
-			eodApprovalPage.enterFilterDetails(rid1.getRid());
-			eodApprovalPage.clickOnApprovalBtn();
-			authenticationPage=eodApprovalPage.clickOnAuthenticateBtn();
-			authenticationPage.enterUserName(supervisorUserid);
-			authenticationPage.enterPassword(supervisorUserpwd);
-			authenticationPage.clicksubmitBtn();
-			robotActions.clickWindow();
-			homePage.clickHomeImg();	
-			buttons.clickConfirmBtn();
-
-			if(!rid2.rid.trim().isEmpty())
+		
+		/**
+		 * Click Home, eodapprove, approval Button, authenticate button
+		 * Enter user details
+		 */
+		rid2=webViewDocument.getacknowledgement(process);
+		
+		homePage.clickHomeImg();
+		
+		
+		eodApprovalPage=homePage.clickeodApprovalImageView( applicationPrimaryStage, scene);
+		eodApprovalPage.clickOnfilterField();
+		eodApprovalPage.enterFilterDetails(rid1.getRid());
+		eodApprovalPage.clickOnApprovalBtn();
+		authenticationPage=eodApprovalPage.clickOnAuthenticateBtn();
+		authenticationPage.enterUserName(supervisorUserid);
+		authenticationPage.enterPassword(supervisorUserpwd);
+		authenticationPage.clicksubmitBtn();
+		robotActions.clickWindow();
+		homePage.clickHomeImg();	
+		buttons.clickConfirmBtn();
+		if(!rid2.rid.trim().isEmpty())
+		{
+			ExtentReportUtil.test1.info("Approve Packet done");
+		assertEquals(rid1.getRid(), rid2.getRid());
+		}else
+		{	ExtentReportUtil.test1.info("Approve Packet invalid");	
+		
+		}
+		
+		/**
+		 * Upload the packet
+		 */
+		if(PropertiesUtil.getKeyValue("upload").equals("Y"))
 			{
-				ExtentReportUtil.step5.log(Status.PASS, "Approve Packet done" + rid2.getWebViewAck());
-				assertEquals(rid1.getRid(), rid2.getRid());
-			}else
-			{	ExtentReportUtil.step5.log(Status.FAIL,"Approve Packet valid");	
-			return rid1;
-			}
+			
 
-			/**
-			 * Upload the packet
-			 */
-			if(PropertiesUtil.getKeyValue("upload").equals("Y"))
-			{
-
-				ExtentReportUtil.step6=ExtentReportUtil.test1.createNode("STEP 6-Upload Packet ");
-
-
-				uploadPacketPage=homePage.clickuploadPacketImageView( applicationPrimaryStage, scene);
-				uploadPacketPage.selectPacket(rid1.getRid());
-				buttons.clickuploadBtn();
-				/**
-				 * Verify Success Upload
-				 */
-				result=uploadPacketPage.verifyPacketUpload(rid1.getRid());
-				ExtentReportUtil.step6.log(Status.PASS, "Upload Packet done");
-
-			}
-			else if(PropertiesUtil.getKeyValue("upload").equals("N")){
-				result=true;
-			}
-			//Logout Regclient
-			rid1.appidrid=rid1.getAppidrid(applicationContext, rid1.rid);
-			rid1.setResult(result);
+		uploadPacketPage=homePage.clickuploadPacketImageView( applicationPrimaryStage, scene);
+		uploadPacketPage.selectPacket(rid1.getRid());
+		buttons.clickuploadBtn();
+		/**
+		 * Verify Success Upload
+		 */
+		result=uploadPacketPage.verifyPacketUpload(rid1.getRid());
+		ExtentReportUtil.test1.info( "Upload Packet done");
+		}
+		else if(PropertiesUtil.getKeyValue("upload").equals("N")){
+			result=true;
+		}
+		//Logout Regclient
+		rid1.appidrid=rid1.getAppidrid(applicationContext, rid1.rid);
+		rid1.setResult(result);
 		}catch(Exception e)
 		{
 
+
 			logger.error("",e);
+			
+			try {
+				ExtentReportUtil.test1.addScreenCaptureFromPath(WaitsUtil.capture());
+			} catch (IOException e1) {
+				
+				e1.printStackTrace();
+			}
 			
 		}
 		try
@@ -303,17 +298,24 @@ try {
 				logger.error("",e);
 			}
 
-
-			if(result==true)
-			{
-				ExtentReportUtil.test1.log(Status.PASS, "TESTCASE PASS\n" +"[Appid="+ rid1.rid +"] [RID="+ rid1.appidrid +"] [DATE TIME="+ rid1.ridDateTime +"] [ENVIRONMENT=" +System.getProperty("mosip.hostname")+"]");
-			}		else
-				ExtentReportUtil.test1.log(Status.FAIL, "TESTCASE FAIL");
-			ExtentReportUtil.reports.flush();
-
-
-			return rid1;
+		
+		if(result==true)
+		{
+			ExtentReportUtil.test1.log(Status.PASS, "TESTCASE PASS\n" +"[Appid="+ rid1.rid +"] [RID="+ rid1.appidrid +"] [DATE TIME="+ rid1.ridDateTime +"] [ENVIRONMENT=" +System.getProperty("mosip.hostname")+"]");
+			ExtentReportUtil.test1.info("Approve Packet Details Below" + rid2.getWebViewAck());
+		}		else
+		{
+			ExtentReportUtil.test1.log(Status.FAIL, "TESTCASE FAIL");
+		
 		}
+		
+
+		ExtentReportUtil.test1.info("Test Data Below" + jsonContent);
+		ExtentReportUtil.reports.flush();
+		
+				
+return rid1;
+	}
 
 	}
 
