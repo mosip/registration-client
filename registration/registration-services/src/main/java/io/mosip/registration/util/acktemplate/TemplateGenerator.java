@@ -155,7 +155,7 @@ public class TemplateGenerator extends BaseService {
 						break;
 
 					case "biometricsType":
-						Map<String, Object> bio_data = getBiometericData(registration, field, isPrevTemplate, templateValues, crossImagePath);
+						Map<String, Object> bio_data = getBiometericData(registration, field, isPrevTemplate, templateValues, crossImagePath, firstLanguageProperties);
 						if(bio_data != null) { biometricsData.put(field.getId(), bio_data); }
 						break;
 
@@ -190,8 +190,13 @@ public class TemplateGenerator extends BaseService {
 	}
 
 	private Map<String, Object> getBiometericData(RegistrationDTO registration, UiFieldDTO field, boolean isPrevTemplate,
-												  Map<String, Object> templateValues, String crossImagePath)
+												  Map<String, Object> templateValues, String crossImagePath, ResourceBundle firstLanguageProperties)
 			throws RegBaseCheckedException {
+		
+		templateValues.put("Fingers", firstLanguageProperties.getString("FingersLabel"));
+		templateValues.put("Iris", firstLanguageProperties.getString("IrisLabel"));
+		templateValues.put("Face", firstLanguageProperties.getString("FaceLabel"));
+		
 		List<BiometricsDto> capturedList = new ArrayList<>();
 		for (String attribute : field.getBioAttributes()) {
 			String key = String.format("%s_%s", field.getId(), attribute);
@@ -590,12 +595,13 @@ public class TemplateGenerator extends BaseService {
 			LOGGER.info(LOG_TEMPLATE_GENERATOR, RegistrationConstants.APPLICATION_NAME,
 					RegistrationConstants.APPLICATION_ID,
 					"generateTemplate had been called for preparing Dashboard Template.");
-
+			
 			Map<String, Object> templateValues = new WeakHashMap<>();
 			ResourceBundle applicationLanguageProperties = ApplicationContext.getInstance().getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS);
 			InputStream is = new ByteArrayInputStream(templateText.getBytes(StandardCharsets.UTF_8));
 
 			templateValues.put(RegistrationConstants.DASHBOARD_TITLE, applicationLanguageProperties.getString("dashBoard"));
+			templateValues.put(RegistrationConstants.DASHBOARD_USERS, applicationLanguageProperties.getString("Users"));
 			templateValues.put(RegistrationConstants.TOTAL_PACKETS_LABEL, applicationLanguageProperties.getString("totalPacketsLabel"));
 			templateValues.put(RegistrationConstants.PENDING_EOD_LABEL, applicationLanguageProperties.getString("pendingEODLabel"));
 			templateValues.put(RegistrationConstants.PENDING_UPLOAD_LABEL, applicationLanguageProperties.getString("pendingUploadLabel"));

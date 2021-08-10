@@ -361,11 +361,11 @@ public class GenericController extends BaseController {
 		GridPane gridPane = new GridPane();
 		gridPane.setId(screenName);
 		RowConstraints topRowConstraints = new RowConstraints();
-		topRowConstraints.setPercentHeight(2);
+		topRowConstraints.setPercentHeight(0.2);
 		RowConstraints midRowConstraints = new RowConstraints();
-		midRowConstraints.setPercentHeight(93);
+		midRowConstraints.setPercentHeight(99.6);
 		RowConstraints bottomRowConstraints = new RowConstraints();
-		bottomRowConstraints.setPercentHeight(5);
+		bottomRowConstraints.setPercentHeight(0.2);
 		gridPane.getRowConstraints().addAll(topRowConstraints,midRowConstraints, bottomRowConstraints);
 
 		ColumnConstraints columnConstraint1 = new ColumnConstraints();
