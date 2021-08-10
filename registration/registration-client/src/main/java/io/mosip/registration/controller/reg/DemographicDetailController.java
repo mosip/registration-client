@@ -538,7 +538,20 @@ public class DemographicDetailController extends BaseController {
 
 		VBox finalVbox = new VBox();
 		finalVbox.setId(schema.getId());
-		finalVbox.getChildren().addAll(dateHbox, dobMessage);
+		
+		Label header = new Label();
+		header.setId(schema.getId() + languageType + RegistrationConstants.LABEL);
+		if (languageType.equals(RegistrationConstants.LOCAL_LANGUAGE)) {
+			header.setText(schema.getLabel().get(RegistrationConstants.SECONDARY) + mandatorySuffix);
+			putIntoLabelMap(schema.getId() + languageType, schema.getLabel().get(RegistrationConstants.SECONDARY));
+		} else {
+			header.setText(schema.getLabel().get(RegistrationConstants.PRIMARY) + mandatorySuffix);
+			putIntoLabelMap(schema.getId() + languageType, schema.getLabel().get(RegistrationConstants.PRIMARY));
+		}
+		header.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL);
+		header.setWrapText(true);
+		
+		finalVbox.getChildren().addAll(header, dateHbox, dobMessage);
 		//NOTE: by default local/secondary language DOB fields are disabled
 		finalVbox.setDisable(languageType.equals(RegistrationConstants.LOCAL_LANGUAGE));
 		return finalVbox;
@@ -585,10 +598,23 @@ public class DemographicDetailController extends BaseController {
 		HBox dateAgeHbox = new HBox();
 		dateAgeHbox.setSpacing(10);
 		dateAgeHbox.getChildren().addAll(dateHbox, orVbox, vboxAgeField);
-
+		
 		VBox finalVbox = new VBox();
 		finalVbox.setId(schema.getId());
-		finalVbox.getChildren().addAll(dateAgeHbox, dobMessage);
+		
+		Label header = new Label();
+		header.setId(schema.getId() + languageType + RegistrationConstants.LABEL);
+		if (languageType.equals(RegistrationConstants.LOCAL_LANGUAGE)) {
+			header.setText(schema.getLabel().get(RegistrationConstants.SECONDARY) + mandatorySuffix);
+			putIntoLabelMap(schema.getId() + languageType, schema.getLabel().get(RegistrationConstants.SECONDARY));
+		} else {
+			header.setText(schema.getLabel().get(RegistrationConstants.PRIMARY) + mandatorySuffix);
+			putIntoLabelMap(schema.getId() + languageType, schema.getLabel().get(RegistrationConstants.PRIMARY));
+		}
+		header.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL);
+		header.setWrapText(true);
+		
+		finalVbox.getChildren().addAll(header, dateAgeHbox, dobMessage);
 		//NOTE: by default local/secondary language DOB fields are disabled
 		finalVbox.setDisable(languageType.equals(RegistrationConstants.LOCAL_LANGUAGE));
 		return finalVbox;
