@@ -85,6 +85,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			registration.setStatusTimestamp(time);
 			registration.setAckFilename(zipFileName + "_Ack." + RegistrationConstants.ACKNOWLEDGEMENT_FORMAT);
 			registration.setClientStatusCode(RegistrationClientStatusCode.CREATED.getCode());
+			registration.setServerStatusCode(null);
 			registration.setUploadCount((short) 0);
 			registration.setRegCntrId(
 					SessionContext.userContext().getRegistrationCenterDetailDTO().getRegistrationCenterId());
@@ -123,7 +124,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			String additionalInfo = JsonUtils.javaObjectToJsonString(registrationDataDto);
 			registration.setAdditionalInfo(additionalInfo.getBytes());
 
-			registrationRepository.create(registration);
+			registrationRepository.save(registration);
 
 			LOGGER.info(LOG_SAVE_PKT, APPLICATION_NAME, APPLICATION_ID, "Save Registration has been ended");
 		} catch (RuntimeException | JsonProcessingException runtimeException) {

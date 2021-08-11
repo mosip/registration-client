@@ -180,6 +180,12 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			return responseDTO;
 		}
 
+		if (registrationDTO.getAdditionalInfoReqId() != null) {
+			registrationDTO.setAppId(registrationDTO.getAdditionalInfoReqId().split("-")[0]);
+		}
+		
+		registrationDTO.setRegistrationId(registrationDTO.getAppId());
+		
 		Map<String, String> metaInfoMap = new LinkedHashMap<>();
 		try {
 			SchemaDto schema = identitySchemaService.getIdentitySchema(registrationDTO.getIdSchemaVersion());
@@ -599,7 +605,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_CENTER_ID),
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_STATION_ID));
 		registrationDTO.setAppId(pridGenerator.generateId());
-		registrationDTO.setRegistrationId(registrationID);
+		registrationDTO.setRegistrationId(registrationDTO.getAppId());
 
 		LOGGER.info("Registration Started for ApplicationId  : {}", registrationDTO.getAppId());
 
