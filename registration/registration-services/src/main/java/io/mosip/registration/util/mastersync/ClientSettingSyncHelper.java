@@ -6,6 +6,8 @@ import static io.mosip.registration.constants.LoggerConstants.LOG_REG_SCHEMA_SYN
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.SyncFailedException;
 import java.util.ArrayList;
@@ -16,10 +18,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.stream.Collectors;
 
+import io.mosip.kernel.logger.logback.factory.Logfactory;
 import io.mosip.registration.dto.schema.ProcessSpecDto;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -27,7 +34,6 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
@@ -76,10 +82,11 @@ import lombok.NonNull;
 @Component
 public class ClientSettingSyncHelper {
 	
-	private static final Logger LOGGER = AppConfig.getLogger(ClientSettingSyncHelper.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ClientSettingSyncHelper.class);
 	
 	private static final String ENTITY_PACKAGE_NAME = "io.mosip.registration.entity.";	
 	private static final String FIELD_TYPE_DYNAMIC = "dynamic";
+	private static final String FIELD_TYPE_SCRIPT = "script";
 		
 	/** Object for Sync Biometric Attribute Repository. */
 	@Autowired
@@ -255,6 +262,7 @@ public class ClientSettingSyncHelper {
 			futures.add(handleDynamicFieldSync(syncDataResponseDto));
 			futures.add(handlePermittedConfigSync(syncDataResponseDto));
 			futures.add(syncSchema("System"));
+			futures.add(handleScripts(syncDataResponseDto));
 
 			CompletableFuture array [] = new CompletableFuture[futures.size()];
 			CompletableFuture<Void> future = CompletableFuture.allOf(futures.toArray(array));
@@ -265,8 +273,8 @@ public class ClientSettingSyncHelper {
 				throw e.getCause();
 			}
 
-			LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID,
-					"Complete master sync completed in (ms) : " + (System.currentTimeMillis() - start));
+			LOGGER.info("======================== Complete master sync completed in {} ms ========================",
+					(System.currentTimeMillis() - start));
 			return RegistrationConstants.SUCCESS;
 		} catch (Throwable e) {
 			LOGGER.error("saveClientSettings failed", e);
@@ -287,11 +295,10 @@ public class ClientSettingSyncHelper {
 			if(syncDataBaseDto == null || syncDataBaseDto.getData() == null || syncDataBaseDto.getData().isEmpty())
 				return entities;
 
-			LOGGER.debug(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID, "Building entity of type : " +
-					syncDataBaseDto.getEntityName());
+			LOGGER.info("Building entity of type : {}", syncDataBaseDto.getEntityName());
 
 			byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(syncDataBaseDto.getData()));
-			JSONArray jsonArray = new JSONArray(new String(data));
+			JSONArray jsonArray = getDataList(new String(data));
 
 			for(int i =0; i < jsonArray.length(); i++) {
 				JSONObject jsonObject = new JSONObject(jsonArray.getString(i));
@@ -304,6 +311,17 @@ public class ClientSettingSyncHelper {
 			LOGGER.error("Building entities is failed", e);
 			throw new SyncFailedException("Building entities is failed..." + e.getMessage());
 		}
+	}
+
+	private JSONArray getDataList(String jsonString) {
+		JSONArray jsonArray = null;
+		try {
+			jsonArray = new JSONArray(jsonString);
+		} catch (org.json.JSONException ex) {
+			JSONObject jsonObject = new JSONObject(jsonString);
+			//get content-type for request
+		}
+		return jsonArray;
 	}
 	
 	private SyncDataBaseDto getSyncDataBaseDto(SyncDataResponseDto syncDataResponseDto, String entityName) {
@@ -522,19 +540,10 @@ public class ClientSettingSyncHelper {
 		return CompletableFuture.completedFuture(true);
 	}
 
-	private void checkForDuplicates(List<DynamicField> fields, List<DynamicField> existingFields) {
-		for (DynamicField tobeUpdatedField : fields) {
-			for (DynamicField existingField : existingFields) {
-				if(tobeUpdatedField.getName().equalsIgnoreCase(existingField.getName())) {
-					dynamicFieldRepository.delete(existingField);
-				}
-			}
-		}
-	}
 
 	@Async
 	public CompletableFuture syncSchema(String triggerPoint) throws SyncFailedException {
-		LOGGER.info(LOG_REG_SCHEMA_SYNC, APPLICATION_NAME, APPLICATION_ID, "ID Schema sync started .....");
+		LOGGER.info("ID Schema sync started .....");
 
 		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
 			throw new SyncFailedException(RegistrationConstants.NO_INTERNET);
@@ -546,8 +555,7 @@ public class ClientSettingSyncHelper {
 					triggerPoint);
 
 			if (null != syncResponse.get(RegistrationConstants.RESPONSE)) {
-				LOGGER.info(LOG_REG_SCHEMA_SYNC, APPLICATION_NAME, APPLICATION_ID,
-						"ID Schema sync fetched from server.");
+				LOGGER.info("ID Schema sync fetched from server.");
 
 				String jsonString = MapperUtils
 						.convertObjectToJsonString(syncResponse.get(RegistrationConstants.RESPONSE));
@@ -589,6 +597,36 @@ public class ClientSettingSyncHelper {
 			LOGGER.error("Permitted Config sync failed", e);
 			throw new SyncFailedException("Permitted Config sync failed due to " +  e.getMessage());
 		}
+		return CompletableFuture.completedFuture(true);
+	}
+
+	@Async
+	private CompletableFuture handleScripts(@NonNull SyncDataResponseDto syncDataResponseDto) throws SyncFailedException{
+		try {
+			List<SyncDataBaseDto> scriptToDownload = syncDataResponseDto.getDataToSync().stream()
+					.filter(obj -> obj.getEntityType().equalsIgnoreCase(FIELD_TYPE_SCRIPT))
+					.collect(Collectors.toList());
+
+			Map<String, String> requestParamMap = new HashMap<String, String>();
+			requestParamMap.put(RegistrationConstants.KEY_INDEX.toLowerCase(),
+					CryptoUtil.computeFingerPrint(clientCryptoFacade.getClientSecurity().getEncryptionPublicPart(), null));
+
+			for (SyncDataBaseDto syncDataBaseDto : scriptToDownload) {
+				byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(syncDataBaseDto.getData()));
+				JSONObject jsonObject = new JSONObject(new String(data));
+				String response = (String) serviceDelegateUtil.get(jsonObject.getString("url"), requestParamMap,
+						jsonObject.getString("headers"), jsonObject.getBoolean("auth-required"),
+						jsonObject.getString("auth-token"), "System");
+				try (FileWriter writer = new FileWriter(System.getProperty("user.dir") + File.separator +
+						syncDataBaseDto.getEntityName())) {
+					writer.write(response);
+				}
+			}
+
+			} catch (Exception e) {
+				LOGGER.error("Scripts sync failed", e);
+				throw new SyncFailedException("Scripts sync failed due to " +  e.getMessage());
+			}
 		return CompletableFuture.completedFuture(true);
 	}
 }

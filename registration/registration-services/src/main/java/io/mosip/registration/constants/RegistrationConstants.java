@@ -57,6 +57,7 @@ public class RegistrationConstants {
 	public static final String REG_AUTH_PAGE = "/fxml/OperatorAuthentication.fxml";
 	public static final String SETTINGS_PAGE = "/fxml/Settings.fxml";
 	public static final String FXML_PATH = "/fxml/";
+	public static final String BIOMETRICS_SCAN_PAGE = "/fxml/BiometricScanPopUp.fxml";
 
 	// FXML Id
 	public static final String DEMOGRAPHIC_DETAIL = "demographicDetail";
@@ -1788,7 +1789,7 @@ public class RegistrationConstants {
 	public static final String Resident_Information = "Resident_Information";
 	public static final String previewHeader = "previewHeader";
 	public static final String authentication = "authentication";
-	public static final String SLASH = "/";
+	public static final String SLASH = " / ";
 
 	public static final String NEW_REGISTRATION_FLOW = "New Registration";
 	public static final String UIN_UPDATE_FLOW = "UIN Update";

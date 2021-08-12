@@ -141,15 +141,6 @@ public interface MasterSyncDao {
 	List<Location> getLocationDetails(String hierarchyName, String langCode);
 
 	/**
-	 * This new method is replacement to save method. enhanced to handle dynamic
-	 * entity data sync along with client settings from syncdata-service
-	 * 
-	 * @param syncDataResponseDto
-	 * @return
-	 */
-	public String saveSyncData(SyncDataResponseDto syncDataResponseDto);
-
-	/**
 	 * @param code     location code
 	 * @param langCode language code
 	 * @return Location
@@ -164,6 +155,4 @@ public interface MasterSyncDao {
 	 * @return DocuementType
 	 */
 	DocumentType getDocumentType(String docCode, String langCode);
-	
-	
 }
