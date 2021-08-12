@@ -317,11 +317,8 @@ public class DateValidation extends BaseController {
 					LocalDate localDate = LocalDate.of(Integer.valueOf(yyyy.getText()),
 							Integer.valueOf(mm.getText()), Integer.valueOf(dd.getText()));
 
-					LocalDate afterMaxDays = LocalDate.now();
-					afterMaxDays.plusDays(maxDays);
-
-					LocalDate beforeMinDays = LocalDate.now();
-					afterMaxDays.plusDays(minDays);
+					LocalDate afterMaxDays = LocalDate.now().plusDays(maxDays);
+					LocalDate beforeMinDays = LocalDate.now().plusDays(minDays);
 					return (localDate.isAfter(beforeMinDays) && localDate.isBefore(afterMaxDays));
 				}
 			}
