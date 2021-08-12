@@ -77,7 +77,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	@FXML
 	private Text scanningMsg;
 
-	private boolean isDocumentScan;
+	//private boolean isDocumentScan;
 
 	@Autowired
 	private Streamer streamer;
@@ -233,9 +233,6 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	 */
 	public void init(BaseController parentControllerObj, String title) {
 		try {
-			LOGGER.info(LOG_REG_IRIS_CAPTURE_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-					"Opening pop-up screen to scan for user registration");
-
 			streamerValue = new TextField();
 			baseController = parentControllerObj;
 			popupStage = new Stage();
@@ -253,30 +250,20 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 			cropButton.setDisable(true);
 			cancelBtn.setDisable(true);
 			previewOption.setVisible(false);
-			Scene scene = null;
 
-			if (!isDocumentScan) {
-				scene = new Scene(scanPopup);
-				captureBtn.setVisible(false);
-				saveBtn.setVisible(false);
-				cancelBtn.setVisible(false);
-				cropButton.setVisible(false);
-				previewBtn.setVisible(false);
-				streamBtn.setVisible(false);
+			LOGGER.info("Setting doc screen width :{}, height: {}", width, height);
+
+			Scene scene = new Scene(scanPopup, width, height);
+
+			if (documentScanController.getScannedPages() != null
+					&& !documentScanController.getScannedPages().isEmpty()) {
+				initializeDocPages(1, documentScanController.getScannedPages().size());
+				previewBtn.setDisable(false);
 			} else {
-				LOGGER.info("Setting doc screen width : {}, height : {}", width, height);
-				scene = new Scene(scanPopup, width, height);
-
-				if (documentScanController.getScannedPages() != null
-						&& !documentScanController.getScannedPages().isEmpty()) {
-					initializeDocPages(1, documentScanController.getScannedPages().size());
-					previewBtn.setDisable(false);
-				}/* else {
-					saveBtn.setDisable(true);
-					cropButton.setDisable(true);
-					cancelBtn.setDisable(true);
-					previewBtn.setDisable(true);
-				}*/
+				saveBtn.setDisable(true);
+				cropButton.setDisable(true);
+				cancelBtn.setDisable(true);
+				previewBtn.setDisable(true);
 			}
 			scene.getStylesheets().add(ClassLoader.getSystemClassLoader().getResource(getCssName()).toExternalForm());
 			popupStage.setScene(scene);
@@ -284,16 +271,16 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 			popupStage.initOwner(fXComponents.getStage());
 			popupStage.show();
 
-			LOGGER.info(LOG_REG_IRIS_CAPTURE_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "scan screen launched");
+			LOGGER.debug("scan screen launched");
 
 			scanningMsg.textProperty().addListener((observable, oldValue, newValue) -> {
 
 				Platform.runLater(() -> {
-					if (RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND).contains(newValue)) {
+					if (RegistrationUIConstants.NO_DEVICE_FOUND.contains(newValue)) {
 
 						// captureBtn.setDisable(false);
 
-						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
+						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.NO_DEVICE_FOUND);
 						popupStage.close();
 
 					}
@@ -301,17 +288,15 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 			});
 
+			rectangleSelection = null;
 			clearSelection();
-			stopStreaming();
 
-			LOGGER.debug(LOG_REG_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-					"Opening pop-up screen to scan for user registration");
+			LOGGER.info("Opening pop-up screen to scan for user registration");
 
 		} catch (IOException exception) {
 			LOGGER.error(RegistrationConstants.USER_REG_SCAN_EXP, exception);
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_SCAN_POPUP));
 		}
-
 	}
 
 
@@ -321,11 +306,12 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		clearSelection();
 		stopStreaming();
 		showPreview(true);
-		getImageGroup().getChildren().clear();
-		getImageGroup().getChildren().add(new ImageView(DocScannerUtil.getImage(documentScanController.getScannedImage(
-				documentScanController.getScannedPages().size() - 1))));
-		//setupImageView();
-		showPagination();
+
+		if(documentScanController.getScannedPages() != null && !documentScanController.getScannedPages().isEmpty()) {
+			initializeDocPages(1, documentScanController.getScannedPages().size());
+			getImageGroup().getChildren().clear();
+			getImageGroup().getChildren().add(new ImageView(getImage(documentScanController.getScannedPages().get(0))));
+		}
 	}
 
 
@@ -349,60 +335,50 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	 */
 	@FXML
 	public void scan() throws MalformedURLException, IOException {
-		stopStreaming();
 		scanningMsg.setVisible(true);
-
-		if(!isDocumentScan) {
-			baseController.scan(popupStage);
-			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.DOC_CAPTURE_SUCCESS);
-			return;
-		}
-
+		LOGGER.info("Invoke scan method for the passed controller");
 		String docNumber = docCurrentPageNumber.getText();
 		int currentPage = (docNumber == null || docNumber.isEmpty() || docNumber.equals("0")) ? 1 : Integer.valueOf(docNumber);
-
-		if (currentPage <= 1) {
-			docCurrentPageNumber.setText("1");
-			docPreviewPrev.setDisable(true);
-			docPreviewNext.setDisable(true);
-		} else {
-			docCurrentPageNumber.setText(String.valueOf(documentScanController.getScannedPages().size()));
-			docPreviewPrev.setDisable(false);
-			docPreviewNext.setDisable(true);
-		}
-
-		LOGGER.info("Invoke scan method for the passed controller");
 
 		if(rectangleSelection != null) {
 			save(rectangleSelection.getBounds(), documentScanController.getScannedPages().get(currentPage - 1));
 		}
 		else {
-			documentScanController.scan(popupStage);
-			docCurrentPageNumber.setText(String.valueOf(documentScanController.getScannedPages().size()));
+			baseController.scan(popupStage);
+			currentPage = documentScanController.getScannedPages().size();
 		}
-		totalScannedPages.setText(String.valueOf(documentScanController.getScannedPages() == null ? 0 : documentScanController.getScannedPages().size()));
-		clearSelection();
+
+		showPreview(true);
+		if(documentScanController.getScannedPages() != null && !documentScanController.getScannedPages().isEmpty()) {
+			int totalCount = documentScanController.getScannedPages().size();
+			initializeDocPages(currentPage, totalCount);
+			getImageGroup().getChildren().clear();
+			getImageGroup().getChildren().add(new ImageView(getImage(documentScanController.getScannedPages().get(currentPage-1))));
+		}
+		saveBtn.setDisable(false);
 	}
 
 	@FXML
 	private void save() {
-		clearSelection();
 		stopStreaming();
-		//setDefaultImageGridPaneVisibility();
 		// Enable Auto-Logout
 		SessionContext.setAutoLogout(true);
-		if (baseController instanceof DocumentScanController) {
-			DocumentScanController documentScanController = (DocumentScanController) baseController;
-			try {
+		DocumentScanController documentScanController = (DocumentScanController) baseController;
+		try {
 
-				documentScanController.getFxControl().setData(documentScanController.getScannedPages());
-				documentScanController.getScannedPages().clear();
-				popupStage.close();
-
-			} catch (RuntimeException exception) {
-				LOGGER.error("Failed to set data in documentDTO", exception);
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOCUMENT_ERROR));
+			if(rectangleSelection != null) {
+				String docNumber = docCurrentPageNumber.getText();
+				int currentPage = (docNumber == null || docNumber.isEmpty() || docNumber.equals("0")) ? 1 : Integer.valueOf(docNumber);
+				save(rectangleSelection.getBounds(), documentScanController.getScannedPages().get(currentPage - 1));
 			}
+
+			documentScanController.getFxControl().setData(documentScanController.getScannedPages());
+			documentScanController.getScannedPages().clear();
+			popupStage.close();
+
+		} catch (RuntimeException exception) {
+			LOGGER.error("Failed to set data in documentDTO", exception);
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOCUMENT_ERROR));
 		}
 		showPagination();
 	}
@@ -502,9 +478,6 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 
 	private void showPagination() {
-		if(!isDocumentScan)
-			return;
-
 		String docNumber = docCurrentPageNumber.getText();
 		totalScannedPages.setText(String.valueOf(documentScanController.getScannedPages().size()));
 		if (docNumber.isEmpty() || docNumber.equals("0")) {
@@ -546,23 +519,6 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 	}
 
-	public void enableCloseButton() {
-		if (null != closeButton)
-			closeButton.setDisable(false);
-	}
-
-	public void disableCloseButton() {
-		if (null != closeButton)
-			closeButton.setDisable(true);
-	}
-
-	public boolean isDocumentScan() {
-		return isDocumentScan;
-	}
-
-	public void setDocumentScan(boolean isDocumentScan) {
-		this.isDocumentScan = isDocumentScan;
-	}
 
 	public Text getScanningMsg() {
 		return scanningMsg;
@@ -672,17 +628,15 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 
 	public void save(Bounds bounds, BufferedImage bufferedImage) {
+		clearSelection();
 
-		LOGGER.debug("REGISTRATION - DOCUMENT_SCAN_CONTROLLER", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-				"Saving cropped image");
+		LOGGER.debug("Saving cropped image");
 
 		if (bounds.getHeight() == 1.0 || bounds.getWidth() == 1.0)
 			return;
 
 		bufferedImage = bufferedImage.getSubimage((int)bounds.getMinX(), (int)bounds.getMinY(), (int) bounds.getWidth(),
 				(int) bounds.getHeight());
-
-		clearSelection();
 
 		int pageNumber = Integer
 				.valueOf(docCurrentPageNumber.getText().isEmpty() ? "1" : docCurrentPageNumber.getText());
@@ -694,8 +648,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		getImageGroup().getChildren().add(new ImageView(DocScannerUtil.getImage(bufferedImage)));
 		getScanningMsg().setVisible(false);
 		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.CROP_DOC_SUCCESS));
-		LOGGER.debug("REGISTRATION - DOCUMENT_SCAN_CONTROLLER", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-				"Saving cropped image completed");
+		LOGGER.debug("Saving cropped image completed");
 	}
 
 

@@ -2,19 +2,16 @@ package io.mosip.registration.controller.reg;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
 import javax.imageio.ImageIO;
 
-import io.mosip.registration.api.docscanner.DeviceType;
 import io.mosip.registration.api.docscanner.DocScannerFacade;
 import io.mosip.registration.api.docscanner.DocScannerUtil;
 import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import io.mosip.registration.util.control.FxControl;
-import javafx.geometry.Rectangle2D;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -27,7 +24,6 @@ import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.device.ScanPopUpViewController;
 import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -122,7 +118,7 @@ public class DocumentScanController extends BaseController {
 
 	private FxControl fxControl;
 
-	public boolean cropScan(int x, int y, int width, int height, int pageNumber) {
+	/*public boolean cropScan(int x, int y, int width, int height, int pageNumber) {
 		try {
 			scanPopUpViewController.getScanningMsg().setVisible(true);
 
@@ -152,7 +148,7 @@ public class DocumentScanController extends BaseController {
 			LOGGER.error("Exception while scanning documents for registration", exception);
 		}
 		return false;
-	}
+	}*/
 
 
 	public void scan(Stage popupStage) {
@@ -230,7 +226,6 @@ public class DocumentScanController extends BaseController {
 			return;
 		}
 
-		scanPopUpViewController.setDocumentScan(true);
 		scanPopUpViewController.init(this, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOC_TITLE));
 
 		if(isPreviewOnly)
@@ -251,22 +246,28 @@ public class DocumentScanController extends BaseController {
 		return scannedPages.get(docPageNumber <= 0 ? 0 : docPageNumber);
 	}
 
+	public boolean loadDataIntoScannedPages(String fieldId) throws IOException {
+		DocumentDto documentDto = getRegistrationDTOFromSession().getDocuments().get(fieldId);
+		if (documentDto != null) {
+			if(RegistrationConstants.PDF.equalsIgnoreCase(documentDto.getFormat())) {
+				setScannedPages(DocScannerUtil.pdfToImages(documentDto.getDocument()));
+				return true;
+			} else {
+				InputStream is = new ByteArrayInputStream(documentDto.getDocument());
+				BufferedImage newBi = ImageIO.read(is);
+				List<BufferedImage> list = new LinkedList<>();
+				list.add(newBi);
+				setScannedPages(list);
+				return true;
+			}
+		}
+		return false;
+	}
+
 
 	public void scanDocument(String fieldId, String docCode, boolean isPreviewOnly) {
-		DocumentDto documentDto = getRegistrationDTOFromSession().getDocuments().get(fieldId);
-
 		try {
-			if (documentDto != null) {
-				if(RegistrationConstants.PDF.equalsIgnoreCase(documentDto.getFormat())) {
-					setScannedPages(DocScannerUtil.pdfToImages(documentDto.getDocument()));
-				} else {
-					 InputStream is = new ByteArrayInputStream(documentDto.getDocument());
-					   BufferedImage newBi = ImageIO.read(is);
-					   List<BufferedImage> list = new LinkedList<>();
-					   list.add(newBi);
-					   setScannedPages(list);
-				}
-			}
+			loadDataIntoScannedPages(fieldId);
 
 			initializeAndShowScanPopup(isPreviewOnly);
 

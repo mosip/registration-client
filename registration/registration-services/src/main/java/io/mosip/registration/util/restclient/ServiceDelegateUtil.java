@@ -13,9 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -115,6 +117,50 @@ public class ServiceDelegateUtil {
 		}
 		LOGGER.debug("Get method has been ended - {}", serviceName);
 
+		return responseBody;
+	}
+
+
+	public Object get(String url, Map<String, String> requestParams, String headers, boolean authRequired,
+					  String authHeader, String triggerPoint)
+			throws RegBaseCheckedException, ConnectionException {
+		LOGGER.debug("Get method has been called - {}", url);
+
+		Map<String, Object> responseMap;
+		Object responseBody = null;
+		RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
+
+		try {
+			requestHTTPDTO.setHttpMethod(HttpMethod.GET);
+			requestHTTPDTO.setHttpHeaders(new HttpHeaders());
+			setTimeout(requestHTTPDTO);// set timeout
+			setHeaders(requestHTTPDTO.getHttpHeaders(), headers);// Headers
+			requestHTTPDTO.setAuthRequired(authRequired);
+			requestHTTPDTO.setAuthZHeader(authHeader);
+			requestHTTPDTO.setTriggerPoint(triggerPoint);
+			requestHTTPDTO.setIsSignRequired(false);
+
+			url = RegistrationAppHealthCheckUtil.prepareURLByHostName(url);
+			Map<String, String> queryParams = new HashMap<>();
+			for (String key : requestParams.keySet()) {
+				if (!url.contains("{" + key + "}")) {
+					queryParams.put(key, requestParams.get(key));
+				}
+			}
+			setURI(requestHTTPDTO, queryParams, url);
+			requestHTTPDTO.getHttpHeaders().add(HttpHeaders.ACCEPT, "text/plain;charset=UTF-8");
+			requestHTTPDTO.setClazz(String.class);
+			responseMap = restClientUtil.invokeURL(requestHTTPDTO);
+		}  catch (RestClientException e) {
+			LOGGER.error(e.getMessage(), e);
+			throw new ConnectionException(RegistrationExceptionConstants.ACCESS_ERROR.getErrorCode(),
+					RegistrationExceptionConstants.ACCESS_ERROR.getErrorMessage(), e);
+		}
+
+		if (isResponseValid(responseMap, RegistrationConstants.REST_RESPONSE_BODY)) {
+			responseBody = responseMap.get(RegistrationConstants.REST_RESPONSE_BODY);
+		}
+		LOGGER.debug("Get method has been ended - {}", url);
 		return responseBody;
 	}
 

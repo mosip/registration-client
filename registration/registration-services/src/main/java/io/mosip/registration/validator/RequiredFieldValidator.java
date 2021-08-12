@@ -1,5 +1,6 @@
 package io.mosip.registration.validator;
 
+import java.nio.file.Paths;
 import java.util.*;
 
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -24,17 +25,6 @@ public class RequiredFieldValidator {
 	@Autowired
 	private IdentitySchemaService identitySchemaService;
 
-	/*public boolean isRequiredField(String fieldId, RegistrationDTO registrationDTO) throws RegBaseCheckedException {
-		SchemaDto schema = identitySchemaService.getIdentitySchema(registrationDTO.getIdSchemaVersion());
-		Optional<UiSchemaDTO> schemaField = schema.getSchema().stream().filter(field -> field.getId().equals(fieldId))
-				.findFirst();
-		if (!schemaField.isPresent())
-			return false;
-
-		return isRequiredField(schemaField.get(), registrationDTO);
-	}*/
-
-	//TODO - add validations for updateUIN flow as well
 	public boolean isRequiredField(UiFieldDTO schemaField, RegistrationDTO registrationDTO) {
 		boolean required = schemaField != null ? schemaField.isRequired() : false;
 		if (schemaField != null && schemaField.getRequiredOn() != null && !schemaField.getRequiredOn().isEmpty()) {
@@ -102,6 +92,26 @@ public class RequiredFieldValidator {
 			LOGGER.error("Failed to evaluate mvel expr", t);
 		}
 		return false;
+	}
+
+	public Object evaluateMvelScript(String scriptName, RegistrationDTO registrationDTO) {
+		try {
+
+			Map<String, String>  ageGroups = new HashMap<String, String>();
+			ageGroups.put("INFANT", "0-5");
+			ageGroups.put("MINOR", "6-17");
+			ageGroups.put("ADULT", "18-200");
+
+			Map context = new HashMap();
+			MVEL.evalFile(Paths.get(System.getProperty("user.dir"), scriptName).toFile(), context);
+			context.put("identity", registrationDTO.getMVELDataContext());
+			context.put("ageGroups", ageGroups);
+			return MVEL.eval("return getApplicantType();", context, String.class);
+
+		} catch (Throwable t) {
+			LOGGER.error("Failed to evaluate mvel script", t);
+		}
+		return null;
 	}
 
 }
