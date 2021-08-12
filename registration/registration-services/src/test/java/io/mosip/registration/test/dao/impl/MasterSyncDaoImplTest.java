@@ -348,7 +348,7 @@ public class MasterSyncDaoImplTest {
 		
 	}
 
-	@Test()
+	/*@Test()
 	public void testSingleEntity() {
 		String response=null;
 		SyncDataResponseDto syncDataResponseDto = getSyncDataResponseDto("biometricJson.json");
@@ -382,7 +382,7 @@ public class MasterSyncDaoImplTest {
 		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class)))
 		.thenThrow(RegBaseUncheckedException.class);
 		masterSyncDaoImpl.saveSyncData(syncDataResponseDto);			
-	}
+	}*/
 	
 	
 	private SyncDataResponseDto getSyncDataResponseDto(String fileName) {
