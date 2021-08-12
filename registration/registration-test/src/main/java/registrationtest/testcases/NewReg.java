@@ -118,8 +118,7 @@ public class NewReg {
 		boolean flag = false;
 		try {
 			ExtentReportUtil.ExtentSetting();
-			ExtentReportUtil.test1=ExtentReportUtil.reports.createTest("Verify Initial Application start");
-			ExtentReportUtil.step1=ExtentReportUtil.test1.createNode("STEP 1-Loading RegClient");
+			ExtentReportUtil.test1=ExtentReportUtil.reports.createTest("Operator Onboard with Dafault Role");
 			
 			loginPage=new LoginPage(robot);
 			buttons=new Buttons(robot);
@@ -134,23 +133,24 @@ public class NewReg {
 
 			//Load Login screen
 			loginPage.loadLoginScene(applicationPrimaryStage1);
-			ExtentReportUtil.step1.log(Status.PASS, "RegclientScreen Loaded");
+			ExtentReportUtil.test1.info( "RegclientScreen Loaded");
 			
-			ExtentReportUtil.step2=ExtentReportUtil.test1.createNode("STEP 2-Operator Enter Details ");
+			ExtentReportUtil.test1.info("Operator Enter Details ");
 			
 			//Enter userid and password
 			loginPage.setUserId(loginUserid);
 			 flag=loginPage.verifyAuthentication(loginPwd, applicationPrimaryStage1);
-			ExtentReportUtil.step2.log(Status.PASS, "Operator logs in");
+			 ExtentReportUtil.test1.info( "Operator logs in");
 			
 			if(flag==true)
 			{
-				ExtentReportUtil.test1.log(Status.PASS, "SUCCESS Restart Application");
+				ExtentReportUtil.test1.log(Status.PASS, "SUCCESS Operator Onboards");
 			}
 			else
 			{
-				ExtentReportUtil.test1.log(Status.FAIL, "FAIL");
+				ExtentReportUtil.test1.log(Status.FAIL, "FAIL Operator Onboards");
 			}
+			
 			
 		}
 		catch(Exception e)

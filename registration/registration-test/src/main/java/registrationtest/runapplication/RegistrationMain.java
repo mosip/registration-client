@@ -66,7 +66,7 @@ public class RegistrationMain{
 		UpdateReg updatereg=new UpdateReg();
 		ManualReg manualReg=new ManualReg();
 		WaitsUtil waitsUtil=new WaitsUtil();
-		
+		Boolean flag;
 		Thread thread = new Thread() { 
 			@Override
 			public void run() {
@@ -98,11 +98,12 @@ public class RegistrationMain{
                        
                       
                        
-                       ageGroup= JsonUtil.JsonObjParsing(jsonContent,"ageGroup");
+                       
                	try {
 						switch(process) {
 						case "New": 
 							rid1=null;
+							ageGroup= JsonUtil.JsonObjParsing(jsonContent,"ageGroup");
 					rid1=loginNewRegLogout.newRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonContent,
 							process,ageGroup,fileName,StartApplication.applicationContext);
@@ -111,6 +112,7 @@ public class RegistrationMain{
 					break;
 						case "Lost":
 							rid2=null;
+							ageGroup= JsonUtil.JsonObjParsing(jsonContent,"ageGroup");
 					 rid2=lostUINLogout.lostRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 							StartApplication.primaryStage,jsonContent,
 							process,ageGroup,fileName,StartApplication.applicationContext);
@@ -119,14 +121,26 @@ public class RegistrationMain{
 					break;
 						case "Update":
 							rid5=null;
+							ageGroup= JsonUtil.JsonObjParsing(jsonContent,"ageGroup");
 							 rid5=updatereg.updateRegistration(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
 									StartApplication.primaryStage,jsonContent,
 									process,ageGroup,fileName,StartApplication.applicationContext);
 							logger.info("RID RESULTS-"+ rid5.result +"\t"+ rid5.ridDateTime +"\t"+ rid5.rid);
 							ExtentReportUtil.reports.flush();
 							break;
-							
-							default :
+						case "DefaultOnboard": 
+							Boolean flag=false;
+							flag=loginNewRegLogout.initialRegclientSet(robot, operatorId, operatorPwd, StartApplication.primaryStage);
+					logger.info("Operator Onboarding status="+ flag );
+					ExtentReportUtil.reports.flush();
+					break;
+						case "OnboardBio": 
+							Boolean onboardBioflag=false;
+							onboardBioflag=loginNewRegLogout.initialRegclientSet(robot, operatorId, operatorPwd, StartApplication.primaryStage);
+					logger.info("Operator Onboarding status="+ onboardBioflag );
+					ExtentReportUtil.reports.flush();
+					break;	
+						default :
 								logger.info("Choose correct process for automation or go with manual flow");
 								
 						}	}

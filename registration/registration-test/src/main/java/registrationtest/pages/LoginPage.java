@@ -22,6 +22,10 @@ import registrationtest.controls.Alerts;
 import registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.PropertiesUtil;
 import  registrationtest.utility.WaitsUtil;
+import javafx.scene.layout.Pane;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 
 public class LoginPage {
 	private static final Logger logger = LogManager.getLogger(LoginPage.class); 
@@ -81,14 +85,17 @@ public class LoginPage {
 					dto.setCode(listLang[0]);
 					dto.setLangCode(listLang[1]);
 					dto.setName(listLang[2]);
+					String str=listLang[2];
+
 					try {
 						Platform.runLater(new Runnable() {
 							public void run() {
 
 					ComboBox comboBox= waitsUtil.lookupById(appLanguage);
 
-					comboBox.getSelectionModel().select(dto); 
-					
+					//comboBox.getSelectionModel().select(dto); 
+					Optional<GenericDto> op=comboBox.getItems().stream().filter(i->((GenericDto)i).getName().equalsIgnoreCase(str)).findFirst();
+					comboBox.getSelectionModel().select(op.get());
 				}
 			});
 		} catch (Exception e) {
@@ -175,16 +182,13 @@ public class LoginPage {
 
 		assertNotNull(passwordTextField, "passwordTextField Not Present");
 
-		robot.clickOn(passwordTextField);
-
 		passwordTextField.setText(pwd);
 
-		waitsUtil.clickNodeAssert(submit);
-
+		waitsUtil.clickNodeAssert("#sub2");
 
 		Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
 		waitsUtil.clickNodeAssert(success);
-		waitsUtil.clickNodeAssert(exit);
+		
 
 		flag=true;
 		}
