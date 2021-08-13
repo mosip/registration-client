@@ -128,13 +128,13 @@ public class RegistrationMain{
 							logger.info("RID RESULTS-"+ rid5.result +"\t"+ rid5.ridDateTime +"\t"+ rid5.rid);
 							ExtentReportUtil.reports.flush();
 							break;
-						case "DefaultOnboard": 
+						case "InitialLaunch":
 							Boolean flag=false;
 							flag=loginNewRegLogout.initialRegclientSet(robot, operatorId, operatorPwd, StartApplication.primaryStage);
 					logger.info("Operator Onboarding status="+ flag );
 					ExtentReportUtil.reports.flush();
 					break;
-						case "OnboardBio": 
+						case "OperatorOnboard":
 							Boolean onboardBioflag=false;
 							onboardBioflag=loginNewRegLogout.initialRegclientSet(robot, operatorId, operatorPwd, StartApplication.primaryStage);
 					logger.info("Operator Onboarding status="+ onboardBioflag );

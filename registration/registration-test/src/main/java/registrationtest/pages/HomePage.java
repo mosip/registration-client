@@ -48,9 +48,10 @@ public class HomePage {
 
 
 	//registrationTasks
-	String newRegImage="#newRegImage",
-			uinUpdateImage="#uinUpdateImage",
-			lostUINImage="#lostUINImage";
+	String newRegImage="#NEW",
+			uinUpdateImage="#UPDATE",
+			lostUINImage="#LOST",
+	biocorrectionImage="#BIOMETRIC_CORRECTION";
 
 
 	//eodProcesses
