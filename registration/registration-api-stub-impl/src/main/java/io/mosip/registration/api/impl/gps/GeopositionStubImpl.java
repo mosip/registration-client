@@ -1,4 +1,4 @@
-package io.mosip.api.impl.gps;
+package io.mosip.registration.api.impl.gps;
 
 import io.mosip.registration.api.geoposition.GeoPositionService;
 import io.mosip.registration.api.geoposition.dto.GeoPosition;
