@@ -123,5 +123,5 @@
         </developers>
 		<name>Registration-api-stub-impl</name>
 		<description>Registration-api-stub-impl implementation</description>
-        <url>https://github.com/mosip/commons</url>
+        <url>https://github.com/mosip/registration-client</url>
 </project>
