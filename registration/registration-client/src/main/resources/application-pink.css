@@ -2638,3 +2638,8 @@ Working on new Css by taleev
 	-fx-text-fill: #FF0000;
     -fx-font-size: 15.0px;
 }
+
+.additionaInfoReqIdLabel {
+	-fx-text-fill: #008080;
+    -fx-font-size: 15px;
+}

@@ -78,6 +78,10 @@ public class Registration extends RegistrationCommonFields {
 	private byte[] additionalInfo;
 	@Column(name = "APP_ID")
 	private String appId;
+	@Column(name = "PACKET_ID")
+	private String packetId;
+	@Column(name = "ADDITIONAL_INFO_REQ_ID")
+	private String additionalInfoReqId;
 	
 	@ManyToOne
 	@JoinColumn(name = "CR_BY", referencedColumnName = "id", insertable = false, updatable = false)
@@ -327,6 +331,22 @@ public class Registration extends RegistrationCommonFields {
 
 	public void setAppId(String appId) {
 		this.appId = appId;
+	}
+
+	public String getPacketId() {
+		return packetId;
+	}
+
+	public void setPacketId(String packetId) {
+		this.packetId = packetId;
+	}
+
+	public String getAdditionalInfoReqId() {
+		return additionalInfoReqId;
+	}
+
+	public void setAdditionalInfoReqId(String additionalInfoReqId) {
+		this.additionalInfoReqId = additionalInfoReqId;
 	}
 
 }

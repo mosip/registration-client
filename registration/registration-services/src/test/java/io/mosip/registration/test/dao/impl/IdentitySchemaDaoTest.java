@@ -21,7 +21,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.dao.IdentitySchemaDao;
-import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.repositories.IdentitySchemaRepository;
 import io.mosip.registration.test.config.TestDaoConfig;
 

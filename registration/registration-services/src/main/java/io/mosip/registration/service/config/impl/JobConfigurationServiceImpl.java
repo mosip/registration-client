@@ -774,6 +774,7 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 		BaseJob.successJob.clear();
 		BaseJob.clearCompletedJobMap();
 		List<String> failureJobs = new LinkedList<>();
+		Map<String, Object> attributes = null;
 
 		for (Entry<String, SyncJobDef> syncJob : syncActiveJobMapExecutable.entrySet()) {
 			LOGGER.info(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
@@ -787,8 +788,11 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 						? RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM
 						: RegistrationConstants.JOB_TRIGGER_POINT_USER;
 
-				executeJob(syncJob.getKey(), triggerPoint);
-
+				ResponseDTO response = executeJob(syncJob.getKey(), triggerPoint);
+				if (response != null && response.getSuccessResponseDTO() != null && response.getSuccessResponseDTO().getOtherAttributes() != null 
+						&& response.getSuccessResponseDTO().getOtherAttributes().containsKey(RegistrationConstants.ROLES_MODIFIED)) {
+					attributes = response.getSuccessResponseDTO().getOtherAttributes();
+				}
 			}
 		}
 
@@ -800,7 +804,9 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 		});
 
 		if (!isEmpty(failureJobs)) {
-			setErrorResponse(responseDTO, failureJobs.toString().replace("[", "").replace("]", ""), null);
+			setErrorResponse(responseDTO, failureJobs.toString().replace("[", "").replace("]", ""), attributes);
+		} else {
+			setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, attributes);
 		}
 		LOGGER.info(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "completed execute all jobs");

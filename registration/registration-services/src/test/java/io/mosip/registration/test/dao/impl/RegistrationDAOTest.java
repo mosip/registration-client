@@ -26,6 +26,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.dao.impl.RegistrationDAOImpl;
@@ -84,7 +85,7 @@ public class RegistrationDAOTest {
 		registrationDTO.getDemographics().put("fullName", fullNames);
 		
 		registrationDTO.setRegistrationMetaDataDTO(registrationMetaDataDTO);
-		registrationDTO.getRegistrationMetaDataDTO().setRegistrationCategory("New");
+		//registrationDTO.getRegistrationMetaDataDTO().setRegistrationCategory("New");
 		when(registrationRepository.create(Mockito.any(Registration.class))).thenReturn(new Registration());
 
 		registrationDAOImpl.save("../PacketStore/28-Sep-2018/111111", registrationDTO);
@@ -193,10 +194,10 @@ public class RegistrationDAOTest {
 	@Test
 	public void getAllReRegistrationPacketsTest() {
 		List<Registration> registrations = new LinkedList<>();
-		String[] status = { "Approved", "Rejected" };
-		when(registrationRepository.findByClientStatusCodeAndServerStatusCode(Mockito.anyString(), Mockito.anyString()))
+		List<String> status = Arrays.asList("REREGISTER", "REJECTED");
+		when(registrationRepository.findByClientStatusCodeAndServerStatusCodeIn(Mockito.anyString(), Mockito.any()))
 				.thenReturn(registrations);
-		assertEquals(registrationDAOImpl.getAllReRegistrationPackets(status), registrations);
+		assertEquals(registrationDAOImpl.getAllReRegistrationPackets("Approved", status), registrations);
 	}
 
 	@Test
@@ -283,9 +284,11 @@ public class RegistrationDAOTest {
 		registration2.setId("23456");
 		registration2.setClientStatusCode("Approved");
 		registrations.add(registration2);
+		
+		List<String> status = Arrays.asList("PROCESSED", "ACCEPTED");
 
-		Mockito.when(registrationRepository.findByCrDtimeBeforeAndServerStatusCode(timestamp,"Approved")).thenReturn(registrations);
-		assertSame("Approved",registrationDAOImpl.get(timestamp, "Approved").get(0).getClientStatusCode());
+		Mockito.when(registrationRepository.findByClientStatusCodeAndCrDtimeBeforeAndServerStatusCodeIn(Mockito.anyString(), Mockito.any(), Mockito.any())).thenReturn(registrations);
+		assertSame("Approved",registrationDAOImpl.get(RegistrationClientStatusCode.RE_REGISTER.getCode(), timestamp, status).get(0).getClientStatusCode());
 	}
 	
 	@Test

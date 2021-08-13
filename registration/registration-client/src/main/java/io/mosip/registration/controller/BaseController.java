@@ -26,6 +26,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import io.mosip.registration.dto.mastersync.GenericDto;
+import io.mosip.registration.dto.schema.ProcessSpecDto;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.stage.Modality;
@@ -60,8 +62,7 @@ import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
-import io.mosip.registration.dto.response.SchemaDto;
-import io.mosip.registration.enums.Role;
+import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RemapException;
@@ -1302,6 +1303,26 @@ public class BaseController {
 		return null;
 	}
 
+	public ProcessSpecDto getProcessSpec(String processId, double idVersion) {
+		try {
+			return identitySchemaService.getProcessSpecDto(processId, idVersion);
+		} catch (RegBaseCheckedException exception) {
+			LOGGER.error(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
+					ExceptionUtils.getStackTrace(exception));
+		}
+		return null;
+	}
+
+	public List<UiFieldDTO> getAllFields(String processId, double idVersion) {
+		try {
+			return identitySchemaService.getAllFieldSpec(processId, idVersion);
+		} catch (RegBaseCheckedException exception) {
+			LOGGER.error(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
+					ExceptionUtils.getStackTrace(exception));
+		}
+		return null;
+	}
+
 	public SimpleEntry<String, List<String>> getValue(String bio, List<String> attributes) {
 		SimpleEntry<String, List<String>> entry = new SimpleEntry<String, List<String>>(bio, attributes);
 		return entry;
@@ -1698,6 +1719,28 @@ public class BaseController {
 			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.getInstance().getMapObject()
 					.get(RegistrationConstants.REGISTRATION_DATA);
 			registrationDTO.addOfficerBiometrics(biometrics);
+		}
+	}
+	
+	protected void showAlertAndLogout() {
+		/* Generate alert */
+		Alert logoutAlert = createAlert(AlertType.INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_SUCCESS),RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.ALERT_NOTE_LABEL),
+				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.LOGOUT_ALERT),
+				RegistrationConstants.OK_MSG, null);
+
+		logoutAlert.show();
+		Rectangle2D screenSize = Screen.getPrimary().getVisualBounds();		
+		Double xValue = screenSize.getWidth()/2 - logoutAlert.getWidth() + 250;
+		Double yValue = screenSize.getHeight()/2 - logoutAlert.getHeight();
+		logoutAlert.hide();
+		logoutAlert.setX(xValue);
+		logoutAlert.setY(yValue);
+		logoutAlert.showAndWait();
+
+		/* Get Option from user */
+		ButtonType result = logoutAlert.getResult();
+		if (result == ButtonType.OK) {
+			headerController.logout();
 		}
 	}
 }

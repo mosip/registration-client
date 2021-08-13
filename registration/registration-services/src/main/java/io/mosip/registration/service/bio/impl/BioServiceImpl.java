@@ -8,7 +8,7 @@ import java.io.InputStream;
 import java.util.*;
 
 import io.micrometer.core.annotation.Timed;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.enums.Modality;
 import io.mosip.registration.service.IdentitySchemaService;
 import lombok.NonNull;
@@ -177,25 +177,20 @@ public class BioServiceImpl extends BaseService implements BioService {
 	}
 
 	@Override
-	public Map<String, Boolean> getCapturedBiometrics(String fieldId, double idVersion,
-													  @NonNull RegistrationDTO registrationDTO) {
+	public Map<String, Boolean> getCapturedBiometrics(@NonNull UiFieldDTO fieldDto, double idVersion,
+                                                      @NonNull RegistrationDTO registrationDTO) {
 		Map<String, Boolean> capturedContext = new HashMap<>();
-		try {
-			Optional<UiSchemaDTO> fieldDto = identitySchemaService.getUISchema(idVersion).stream().filter(field ->
-				RegistrationConstants.BIOMETRICS_TYPE.equals(field.getType()) && field.getId().equals(fieldId) ).findFirst();
-			if(!fieldDto.isPresent())
-				return capturedContext;
-
-			Map<Modality, List<String>> groupedAttributes = getGroupedAttributes(fieldDto.get().getBioAttributes());
+//		try {
+			Map<Modality, List<String>> groupedAttributes = getGroupedAttributes(fieldDto.getBioAttributes());
 			for(Modality modality : groupedAttributes.keySet()) {
 				double quality = 0;
 				List<String> capturedAttributes = new ArrayList<>();
 				//iterating through configured bio-attributes
 				for(String attribute : groupedAttributes.get(modality)) {
-					BiometricsDto biometricsDto = registrationDTO.getBiometric(fieldDto.get().getSubType(), attribute);
+					BiometricsDto biometricsDto = registrationDTO.getBiometric(fieldDto.getId(), attribute);
 					//its null, then check exception list
 					if(biometricsDto == null) {
-						capturedContext.put(attribute, registrationDTO.isBiometricExceptionAvailable(fieldDto.get().getSubType(), attribute));
+						capturedContext.put(attribute, registrationDTO.isBiometricExceptionAvailable(fieldDto.getId(), attribute));
 						continue;
 					}
 					//its force captured, not required to validate threshold
@@ -211,10 +206,10 @@ public class BioServiceImpl extends BaseService implements BioService {
 					capturedContext.put(attr, (quality / capturedAttributes.size()) >= getMDMQualityThreshold(modality));
 				}
 			}
-		} catch (RegBaseCheckedException e) {
+		/*} catch (RegBaseCheckedException e) {
 			LOGGER.error("Failed to fetch Id schema with version {} due to {}", idVersion, e);
-		}
-		LOGGER.info("Biometric field {} biometrics-captured-context >> {}", fieldId, capturedContext);
+		}*/
+		LOGGER.info("Biometric field {} biometrics-captured-context >> {}", fieldDto.getId(), capturedContext);
 		return capturedContext;
 	}
 

@@ -13,7 +13,7 @@ import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
 import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dao.impl.MasterSyncDaoImpl;
-import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.repositories.*;
@@ -202,7 +202,7 @@ public class ClientSettingsHelperTest {
 		Map<String, Object> map = new LinkedHashMap<>();
 		SchemaDto schemaDto = new SchemaDto();
 		schemaDto.setSchemaJson("");
-		schemaDto.setSchema(new ArrayList<>());
+		//schemaDto.setSchema(new ArrayList<>());
 		map.put("response", schemaDto);
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(),Mockito.anyMap(), Mockito.anyBoolean(),
 				Mockito.anyString())).thenReturn(map);

@@ -4,6 +4,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.*;
 
+import io.mosip.registration.dto.schema.ProcessSpecDto;
+import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.enums.Role;
 import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.sync.PolicySyncService;
@@ -30,9 +32,8 @@ import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.entity.MachineMaster;
-import io.mosip.registration.entity.id.RegMachineSpecId;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.repositories.MachineMasterRepository;
@@ -114,18 +115,24 @@ public class PacketHandlerServiceTest {
 	@Test
 	public void startRegistration() throws RegBaseCheckedException {
 
-		List<UiSchemaDTO> defaultFields = new LinkedList<>();
+		List<UiFieldDTO> defaultFields = new LinkedList<>();
 
-		UiSchemaDTO uiSchemaDTO = new UiSchemaDTO();
-		uiSchemaDTO.setGroup(RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME);
-		defaultFields.add(uiSchemaDTO);
+		UiFieldDTO uiFieldDTO = new UiFieldDTO();
+		uiFieldDTO.setGroup(RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME);
+		defaultFields.add(uiFieldDTO);
+
+		ProcessSpecDto processSpecDto = new ProcessSpecDto();
+		processSpecDto.setId("test");
+		processSpecDto.setFlow("NEW");
+
 		Mockito.when(ridGeneratorImpl.generateId(Mockito.anyString(), Mockito.anyString())).thenReturn("12345678901");
 		Mockito.when(identitySchemaService.getLatestEffectiveSchemaVersion()).thenReturn(2.0);
 		Mockito.when(pridGenerator.generateId()).thenReturn("0987654321");
 		PowerMockito.when(SessionContext.isSessionContextAvailable()).thenReturn(true);
 		PowerMockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
 		
-		Mockito.when(identitySchemaService.getUISchema(2.0)).thenReturn(defaultFields);
+		Mockito.when(identitySchemaService.getAllFieldSpec(Mockito.anyString(),Mockito.anyDouble())).thenReturn(defaultFields);
+		Mockito.when(identitySchemaService.getProcessSpecDto(Mockito.anyString(),Mockito.anyDouble())).thenReturn(processSpecDto);
 
 		PowerMockito.when(SessionContext.userId()).thenReturn("12345");
 		Mockito.when(userDetailService.isValidUser("12345")).thenReturn(true);
@@ -152,7 +159,7 @@ public class PacketHandlerServiceTest {
 		responseDTO.setSuccessResponseDTO(successResponseDTO);
 		when(policySyncService.checkKeyValidation()).thenReturn(responseDTO);
 		
-		packetHandlerServiceImpl.startRegistration(null, RegistrationConstants.PACKET_TYPE_NEW);
+		packetHandlerServiceImpl.startRegistration(null, FlowType.NEW.getCategory());
 	}
 
 	@Test

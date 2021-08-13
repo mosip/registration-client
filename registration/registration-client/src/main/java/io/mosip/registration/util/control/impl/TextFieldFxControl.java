@@ -27,7 +27,7 @@ import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.controller.VirtualKeyboard;
 import io.mosip.registration.controller.reg.Validations;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.util.common.DemographicChangeActionHandler;
 import io.mosip.registration.util.control.FxControl;
 import javafx.collections.ObservableList;
@@ -91,10 +91,10 @@ public class TextFieldFxControl extends FxControl {
 	}
 
 	@Override
-	public FxControl build(UiSchemaDTO uiSchemaDTO) {
-		this.uiSchemaDTO = uiSchemaDTO;
+	public FxControl build(UiFieldDTO uiFieldDTO) {
+		this.uiFieldDTO = uiFieldDTO;
 		this.control = this;
-		create(uiSchemaDTO);
+		create(uiFieldDTO);
 		return this.control;
 	}
 
@@ -103,25 +103,25 @@ public class TextFieldFxControl extends FxControl {
 
 		RegistrationDTO registrationDTO = getRegistrationDTo();
 
-		if (this.uiSchemaDTO.getType().equalsIgnoreCase(RegistrationConstants.SIMPLE_TYPE)) {
+		if (this.uiFieldDTO.getType().equalsIgnoreCase(RegistrationConstants.SIMPLE_TYPE)) {
 			List<SimpleDto> values = new ArrayList<SimpleDto>();
 
 			for (String langCode : registrationDTO.getSelectedLanguagesByApplicant()) {
 
-				TextField textField = (TextField) getField(uiSchemaDTO.getId() + langCode);
+				TextField textField = (TextField) getField(uiFieldDTO.getId() + langCode);
 
 				SimpleDto simpleDto = new SimpleDto(langCode, textField.getText());
 				values.add(simpleDto);
 
 			}
 
-			registrationDTO.addDemographicField(uiSchemaDTO.getId(), values);
+			registrationDTO.addDemographicField(uiFieldDTO.getId(), values);
 
 		} else {
 			registrationDTO
-					.addDemographicField(uiSchemaDTO.getId(),
+					.addDemographicField(uiFieldDTO.getId(),
 							((TextField) getField(
-									uiSchemaDTO.getId() + registrationDTO.getSelectedLanguagesByApplicant().get(0)))
+									uiFieldDTO.getId() + registrationDTO.getSelectedLanguagesByApplicant().get(0)))
 											.getText());
 
 		}
@@ -134,7 +134,7 @@ public class TextFieldFxControl extends FxControl {
 		TextField textField = (TextField) node;
 
 		textField.textProperty().addListener((observable, oldValue, newValue) -> {
-			if (uiSchemaDTO.isTransliterate()) {
+			if (uiFieldDTO.isTransliterate()) {
 				transliterate(textField, textField.getId().substring(textField.getId().length() - RegistrationConstants.LANGCODE_LENGTH, textField.getId().length()));
 			}
 			if (isValid()) {				
@@ -142,17 +142,18 @@ public class TextFieldFxControl extends FxControl {
 
 				// handling other handlers
 				demographicChangeActionHandler.actionHandle((Pane) getNode(), node.getId(),
-						uiSchemaDTO.getChangeAction());
+						uiFieldDTO.getChangeAction());
 			} else {
-				getRegistrationDTo().getDemographics().remove(this.uiSchemaDTO.getId());
+				getRegistrationDTo().getDemographics().remove(this.uiFieldDTO.getId());
 			}
+			LOGGER.info("invoked from Listener {}",uiFieldDTO.getId());
 			// Group level visibility listeners
 			refreshFields();
 		});
 	}
 
-	private VBox create(UiSchemaDTO uiSchemaDTO) {
-		String fieldName = uiSchemaDTO.getId();
+	private VBox create(UiFieldDTO uiFieldDTO) {
+		String fieldName = uiFieldDTO.getId();
 
 		/** Container holds title, fields and validation message elements */
 		VBox simpleTypeVBox = new VBox();
@@ -162,7 +163,7 @@ public class TextFieldFxControl extends FxControl {
 		simpleTypeVBox.setSpacing(5);
 
 		/** Title label */
-		Label fieldTitle = getLabel(uiSchemaDTO.getId() + RegistrationConstants.LABEL, "",
+		Label fieldTitle = getLabel(uiFieldDTO.getId() + RegistrationConstants.LABEL, "",
 				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, true, simpleTypeVBox.getWidth());
 		changeNodeOrientation(fieldTitle, getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
 
@@ -170,33 +171,33 @@ public class TextFieldFxControl extends FxControl {
 
 		VBox vBox = new VBox();
 		List<String> labels = new ArrayList<>();
-		switch (this.uiSchemaDTO.getType()) {
+		switch (this.uiFieldDTO.getType()) {
 			case RegistrationConstants.SIMPLE_TYPE :
 				getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(langCode -> {
-					labels.add(this.uiSchemaDTO.getLabel().get(langCode));
+					labels.add(this.uiFieldDTO.getLabel().get(langCode));
 					vBox.getChildren().add(createTextBox(langCode,true));
-					vBox.getChildren().add(getLabel(uiSchemaDTO.getId() + langCode + RegistrationConstants.MESSAGE, null,
+					vBox.getChildren().add(getLabel(uiFieldDTO.getId() + langCode + RegistrationConstants.MESSAGE, null,
 							RegistrationConstants.DemoGraphicFieldMessageLabel, false, simpleTypeVBox.getPrefWidth()));
 				});
 				break;
 			default:
 				getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(langCode -> {
-							labels.add(this.uiSchemaDTO.getLabel().get(langCode));});
+							labels.add(this.uiFieldDTO.getLabel().get(langCode));});
 				vBox.getChildren().add(createTextBox(getRegistrationDTo().getSelectedLanguagesByApplicant().get(0),false));
-				vBox.getChildren().add(getLabel(uiSchemaDTO.getId() +
+				vBox.getChildren().add(getLabel(uiFieldDTO.getId() +
 								getRegistrationDTo().getSelectedLanguagesByApplicant().get(0) + RegistrationConstants.MESSAGE, null,
 						RegistrationConstants.DemoGraphicFieldMessageLabel, false, simpleTypeVBox.getPrefWidth()));
 				break;
 		}
 
-		fieldTitle.setText(String.join(RegistrationConstants.SLASH, labels)	+ getMandatorySuffix(uiSchemaDTO));
+		fieldTitle.setText(String.join(RegistrationConstants.SLASH, labels)	+ getMandatorySuffix(uiFieldDTO));
 		simpleTypeVBox.getChildren().add(vBox);
 		return simpleTypeVBox;
 	}
 
 	private HBox createTextBox(String langCode, boolean isSimpleType) {
 		HBox textFieldHBox = new HBox();
-		TextField textField = getTextField(langCode, uiSchemaDTO.getId() + langCode, false);
+		TextField textField = getTextField(langCode, uiFieldDTO.getId() + langCode, false);
 		textField.setMinWidth(400);
 		textFieldHBox.getChildren().add(textField);
 
@@ -224,7 +225,7 @@ public class TextFieldFxControl extends FxControl {
 
 		setListener(textField);
 		changeNodeOrientation(textFieldHBox, langCode);
-		Validations.putIntoLabelMap(uiSchemaDTO.getId() + langCode, uiSchemaDTO.getLabel().get(langCode));
+		Validations.putIntoLabelMap(uiFieldDTO.getId() + langCode, uiFieldDTO.getLabel().get(langCode));
 		return textFieldHBox;
 	}
 
@@ -246,7 +247,7 @@ public class TextFieldFxControl extends FxControl {
 		ImageView imageView = null;
 
 		imageView = new ImageView(new Image(getClass().getResourceAsStream("/images/keyboard.png")));
-		imageView.setId(uiSchemaDTO.getId() + "KeyBoard");
+		imageView.setId(uiFieldDTO.getId() + "KeyBoard");
 		imageView.setFitHeight(20.00);
 		imageView.setFitWidth(22.00);
 
@@ -256,7 +257,7 @@ public class TextFieldFxControl extends FxControl {
 	@Override
 	public Object getData() {
 
-		return getRegistrationDTo().getDemographics().get(uiSchemaDTO.getId());
+		return getRegistrationDTo().getDemographics().get(uiFieldDTO.getId());
 	}
 
 
@@ -265,21 +266,21 @@ public class TextFieldFxControl extends FxControl {
 		boolean isValid = true;
 
 		for (String langCode : getRegistrationDTo().getSelectedLanguagesByApplicant()) {
-			TextField textField = (TextField) getField(uiSchemaDTO.getId() + langCode);
+			TextField textField = (TextField) getField(uiFieldDTO.getId() + langCode);
 			if (textField == null)  {
 				isValid = false;
 				break;
 			}
 
-			if (validation.validateTextField((Pane) getNode(), textField, uiSchemaDTO.getId(), true, langCode)) {
-				FXUtils.getInstance().setTextValidLabel((Pane) getNode(), textField, uiSchemaDTO.getId());
+			if (validation.validateTextField((Pane) getNode(), textField, uiFieldDTO.getId(), true, langCode)) {
+				FXUtils.getInstance().setTextValidLabel((Pane) getNode(), textField, uiFieldDTO.getId());
 			} else {
 				FXUtils.getInstance().showErrorLabel(textField, (Pane) getNode());
 				isValid = false;
 				break;
 			}
 
-			if(!this.uiSchemaDTO.getType().equalsIgnoreCase(RegistrationConstants.SIMPLE_TYPE)) {
+			if(!this.uiFieldDTO.getType().equalsIgnoreCase(RegistrationConstants.SIMPLE_TYPE)) {
 				break; //not required to iterate further
 			}
 		}
@@ -290,14 +291,14 @@ public class TextFieldFxControl extends FxControl {
 	public boolean isEmpty() {
 		
 		List<String> langCodes = new LinkedList<String>();
-		if(!this.uiSchemaDTO.getType().equalsIgnoreCase(RegistrationConstants.SIMPLE_TYPE)) {
+		if(!this.uiFieldDTO.getType().equalsIgnoreCase(RegistrationConstants.SIMPLE_TYPE)) {
 			langCodes.add(getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
 		} else {
 			langCodes.addAll(getRegistrationDTo().getSelectedLanguagesByApplicant());
 		}
 		
 		return langCodes.stream().allMatch(langCode -> {
-			TextField textField = (TextField) getField(uiSchemaDTO.getId() + langCode);
+			TextField textField = (TextField) getField(uiFieldDTO.getId() + langCode);
 			return textField.getText().isEmpty();
 		});
 	}
@@ -305,7 +306,7 @@ public class TextFieldFxControl extends FxControl {
 	private void transliterate(TextField textField, String langCode) {
 		for (String langCodeToBeTransliterated : getRegistrationDTo().getSelectedLanguagesByApplicant()) {
 			if (!langCodeToBeTransliterated.equalsIgnoreCase(langCode)) {
-				TextField textFieldToBeTransliterated = (TextField) getField(uiSchemaDTO.getId() + langCodeToBeTransliterated);
+				TextField textFieldToBeTransliterated = (TextField) getField(uiFieldDTO.getId() + langCodeToBeTransliterated);
 				if (textFieldToBeTransliterated != null)  {
 					try {
 						textFieldToBeTransliterated.setText(transliteration.transliterate(langCode,
@@ -338,7 +339,7 @@ public class TextFieldFxControl extends FxControl {
 			if (data instanceof String) {
 
 				TextField textField = (TextField) getField(
-						uiSchemaDTO.getId() + getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
+						uiFieldDTO.getId() + getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
 
 				textField.setText((String) data);
 			} else if (data instanceof List) {
@@ -347,7 +348,7 @@ public class TextFieldFxControl extends FxControl {
 
 				for (SimpleDto simpleDto : list) {
 
-					TextField textField = (TextField) getField(uiSchemaDTO.getId() + simpleDto.getLanguage());
+					TextField textField = (TextField) getField(uiFieldDTO.getId() + simpleDto.getLanguage());
 
 					if (textField != null) {
 						textField.setText(simpleDto.getValue());

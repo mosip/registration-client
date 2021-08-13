@@ -2,9 +2,6 @@ package io.mosip.registration.controller;
 
 import static io.mosip.registration.constants.RegistrationConstants.EMPTY;
 import static io.mosip.registration.constants.RegistrationConstants.HASH;
-import static io.mosip.registration.constants.RegistrationConstants.PACKET_TYPE_LOST;
-import static io.mosip.registration.constants.RegistrationConstants.PACKET_TYPE_NEW;
-import static io.mosip.registration.constants.RegistrationConstants.PACKET_TYPE_UPDATE;
 import static io.mosip.registration.constants.RegistrationConstants.REG_AUTH_PAGE;
 
 import java.util.ArrayList;
@@ -19,12 +16,11 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import io.mosip.kernel.core.idvalidator.exception.InvalidIDException;
+import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.entity.LocationHierarchy;
-import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.kernel.core.idvalidator.spi.PridValidator;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
@@ -44,8 +40,7 @@ import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
-import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.schema.UiScreenDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
@@ -101,6 +96,8 @@ public class GenericController extends BaseController {
 
 	protected static final Logger LOGGER = AppConfig.getLogger(GenericController.class);
 
+	private static final String LABEL_CLASS = "additionaInfoReqIdLabel";
+	private static final String TEXTFIELD_CLASS = "preregFetchBtnStyle";
 	private static final String CONTROLTYPE_TEXTFIELD = "textbox";
 	private static final String CONTROLTYPE_BIOMETRICS = "biometrics";
 	private static final String CONTROLTYPE_DOCUMENTS = "fileupload";
@@ -169,12 +166,13 @@ public class GenericController extends BaseController {
 
 	public static Map<String, TreeMap<Integer, String>> hierarchyLevels = new HashMap<String, TreeMap<Integer, String>>();
 	public static Map<String, TreeMap<Integer, String>> currentHierarchyMap = new HashMap<String, TreeMap<Integer, String>>();
+	public static List<UiFieldDTO> fields = new ArrayList<>();
 
 	public static Map<String, FxControl> getFxControlMap() {
 		return fxControlMap;
 	}
 
-	private void initialize() {
+	private void initialize(RegistrationDTO registrationDTO) {
 		orderedScreens.clear();
 		fxControlMap.clear();
 		hierarchyLevels.clear();
@@ -182,16 +180,12 @@ public class GenericController extends BaseController {
 		fillHierarchicalLevelsByLanguage();
 		anchorPane.prefWidthProperty().bind(genericScreen.widthProperty());
 		anchorPane.prefHeightProperty().bind(genericScreen.heightProperty());
+		fields = getAllFields(registrationDTO.getProcessId(), registrationDTO.getIdSchemaVersion());
 	}
 
 
 	private void fillHierarchicalLevelsByLanguage() {
-		List<String> languages = new ArrayList<>();
-		languages.addAll(getRegistrationDTOFromSession().getSelectedLanguagesByApplicant());
-		if(!languages.contains("eng")) {
-			languages.add("eng"); // as subtype in UI spec is in english, we need loc_hierarchy_list data to be in english
-		}
-		for(String langCode : languages) {
+		for(String langCode : getConfiguredLangCodes()) {
 			TreeMap<Integer, String> hierarchicalData = new TreeMap<>();
 			List<LocationHierarchy> hierarchies = masterSyncDao.getAllLocationHierarchy(langCode);
 			hierarchies.forEach( hierarchy -> {
@@ -211,13 +205,14 @@ public class GenericController extends BaseController {
 		hBox.setPrefWidth(200);
 
 		Label label = new Label();
+		label.getStyleClass().add(LABEL_CLASS);
 		label.setId("preRegistrationLabel");
 		label.setText(applicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("search_for_Pre_registration_id"));
 		hBox.getChildren().add(label);
 		TextField textField = new TextField();
 		textField.setId("preRegistrationId");
-		textField.getStyleClass().add("preregFetchBtnStyle");
+		textField.getStyleClass().add(TEXTFIELD_CLASS);
 		hBox.getChildren().add(textField);
 		Button button = new Button();
 		button.setId("fetchBtn");
@@ -255,6 +250,41 @@ public class GenericController extends BaseController {
 		return hBox;
 	}
 
+	private HBox getAdditionalInfoRequestIdComponent() {
+		String langCode = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0);
+		HBox hBox = new HBox();
+		hBox.setAlignment(Pos.CENTER_LEFT);
+		hBox.setSpacing(20);
+		hBox.setPrefHeight(100);
+		hBox.setPrefWidth(200);
+		Label label = new Label();
+		label.getStyleClass().add(LABEL_CLASS);
+		label.setId("additionalInfoRequestIdLabel");
+		label.setText(applicationContext.getBundle(langCode, RegistrationConstants.LABELS)
+				.getString("additionalInfoRequestId"));
+		hBox.getChildren().add(label);
+		TextField textField = new TextField();
+		textField.setId("additionalInfoRequestId");
+		textField.getStyleClass().add(TEXTFIELD_CLASS);
+		hBox.getChildren().add(textField);
+
+		textField.textProperty().addListener((observable, oldValue, newValue) -> {
+			getRegistrationDTOFromSession().setAdditionalInfoReqId(newValue);
+			getRegistrationDTOFromSession().setAppId(newValue);
+		});
+		return hBox;
+	}
+
+	private boolean isAdditionalInfoRequestIdProvided(UiScreenDTO screenDTO) {
+		if(screenDTO.isAdditionalInfoRequestIdRequired()) {
+			TextField textField = (TextField) anchorPane.lookup("#additionalInfoRequestId");
+			if(textField.getText() == null || textField.getText().isBlank()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	private void loadPreRegSync(ResponseDTO responseDTO) throws RegBaseCheckedException{
 		auditFactory.audit(AuditEvent.REG_DEMO_PRE_REG_DATA_FETCH, Components.REG_DEMO_DETAILS, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
@@ -274,18 +304,18 @@ public class GenericController extends BaseController {
 				.get(RegistrationConstants.REGISTRATION_DTO);
 
 		for (UiScreenDTO screenDTO : orderedScreens.values()) {
-			for (String field : screenDTO.getFields()) {
+			for (UiFieldDTO field : screenDTO.getFields()) {
 
-				FxControl fxControl = getFxControl(field);
+				FxControl fxControl = getFxControl(field.getId());
 
 				if (fxControl != null) {
 
-					if (preRegistrationDTO.getDemographics().containsKey(field)) {
-						fxControl.selectAndSet(preRegistrationDTO.getDemographics().get(field));
+					if (preRegistrationDTO.getDemographics().containsKey(field.getId())) {
+						fxControl.selectAndSet(preRegistrationDTO.getDemographics().get(field.getId()));
 					}
 
-					else if (preRegistrationDTO.getDocuments().containsKey(field)) {
-						fxControl.selectAndSet(preRegistrationDTO.getDocuments().get(field));
+					else if (preRegistrationDTO.getDocuments().containsKey(field.getId())) {
+						fxControl.selectAndSet(preRegistrationDTO.getDocuments().get(field.getId()));
 					}
 				}
 			}
@@ -293,74 +323,36 @@ public class GenericController extends BaseController {
 	}
 
 
-	private void getScreens(SchemaDto schema) {
-		List<UiScreenDTO> screenDTOS = schema.getScreens();
-
-		//screen spec missing, creating default screen
-		if(schema.getScreens() == null || schema.getScreens().isEmpty()) {
-			UiScreenDTO screen = new UiScreenDTO();
-			screen.setName(RegistrationConstants.Resident_Information);
-
-			HashMap<String, String> label = new HashMap<>();
-			getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().forEach( langCode -> {
-				label.put(langCode, applicationContext
-						.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS)
-						.getString("defaultHeader"));
-			});
-			screen.setFields(new ArrayList<>());
-			schema.getSchema().forEach(field -> {
-				if(field.isInputRequired())
-					screen.getFields().add(field.getId());
-			});
-			screen.setLabel(label);
-			screen.setOrder(1);
-			screenDTOS = List.of(screen);
-		}
-
+	private void getScreens(List<UiScreenDTO> screenDTOS) {
 		screenDTOS.forEach( dto -> {
 			orderedScreens.put(dto.getOrder(), dto);
 		});
 	}
 
-	private Map<String, List<UiSchemaDTO>> getFieldsBasedOnAlignmentGroup(List<String> screenFields,
-																		  SchemaDto schemaDto) throws RegBaseCheckedException {
-		Map<String, List<UiSchemaDTO>> groupedScreenFields = new LinkedHashMap<>();
-
+	private Map<String, List<UiFieldDTO>> getFieldsBasedOnAlignmentGroup(List<UiFieldDTO> screenFields) {
+		Map<String, List<UiFieldDTO>> groupedScreenFields = new LinkedHashMap<>();
 		if(screenFields == null || screenFields.isEmpty())
 			return groupedScreenFields;
 
-		if(getRegistrationDTOFromSession().getRegistrationCategory().equals(RegistrationConstants.PACKET_TYPE_UPDATE)) {
-			List<String> defaultUpdateFields = new ArrayList<>(); //TODO
-			defaultUpdateFields.addAll(getRegistrationDTOFromSession().getUpdatableFields());
-			if (!getRegistrationDTOFromSession().isBiometricMarkedForUpdate()) {
-				List<UiSchemaDTO> schemaDTOs = schemaDto.getSchema().stream()
-						.filter(schemaDTO -> schemaDTO.getType()
-								.equalsIgnoreCase(PacketManagerConstants.BIOMETRICS_DATATYPE))
-						.collect(Collectors.toList());
-
-				for (UiSchemaDTO uiSchemaDTO : schemaDTOs) {
-					List<String> configBioAttributes = requiredFieldValidator
-							.getRequiredBioAttributes(uiSchemaDTO, getRegistrationDTOFromSession());
-
-					if (configBioAttributes != null && !configBioAttributes.isEmpty()) {
-						defaultUpdateFields.add(uiSchemaDTO.getId());
-					}
-				}
-			}
-			screenFields = ListUtils.intersection(screenFields, defaultUpdateFields);
+		//Applies only during Update flow
+		if(getRegistrationDTOFromSession().getUpdatableFieldGroups() != null) {
+			screenFields = screenFields.stream()
+					.filter(f -> f.getGroup() != null && (getRegistrationDTOFromSession().getUpdatableFieldGroups().contains(f.getGroup()) ||
+							getRegistrationDTOFromSession().getDefaultUpdatableFieldGroups().contains(f.getGroup())) )
+					.collect(Collectors.toList());
+			screenFields.forEach(f -> { getRegistrationDTOFromSession().getUpdatableFields().add(f.getId()); });
 		}
 
-		screenFields.forEach( fieldId -> {
-			Optional<UiSchemaDTO> currentField = schemaDto.getSchema().stream().filter(field -> field.getId().equals(fieldId)).findFirst();
-			if(currentField.isPresent()) {
-				String alignmentGroup = currentField.get().getAlignmentGroup() == null ? fieldId+"TemplateGroup"
-						: currentField.get().getAlignmentGroup();
+		screenFields.forEach( field -> {
+				String alignmentGroup = field.getAlignmentGroup() == null ? field.getId()+"TemplateGroup"
+						: field.getAlignmentGroup();
 
-				if(!groupedScreenFields.containsKey(alignmentGroup))
-					groupedScreenFields.put(alignmentGroup, new LinkedList<UiSchemaDTO>());
+				if(field.isInputRequired()) {
+					if(!groupedScreenFields.containsKey(alignmentGroup))
+						groupedScreenFields.put(alignmentGroup, new LinkedList<UiFieldDTO>());
 
-				groupedScreenFields.get(alignmentGroup).add(currentField.get());
-			}
+					groupedScreenFields.get(alignmentGroup).add(field);
+				}
 		});
 		return groupedScreenFields;
 	}
@@ -369,11 +361,11 @@ public class GenericController extends BaseController {
 		GridPane gridPane = new GridPane();
 		gridPane.setId(screenName);
 		RowConstraints topRowConstraints = new RowConstraints();
-		topRowConstraints.setPercentHeight(2);
+		topRowConstraints.setPercentHeight(0.2);
 		RowConstraints midRowConstraints = new RowConstraints();
-		midRowConstraints.setPercentHeight(93);
+		midRowConstraints.setPercentHeight(99.6);
 		RowConstraints bottomRowConstraints = new RowConstraints();
-		bottomRowConstraints.setPercentHeight(5);
+		bottomRowConstraints.setPercentHeight(0.2);
 		gridPane.getRowConstraints().addAll(topRowConstraints,midRowConstraints, bottomRowConstraints);
 
 		ColumnConstraints columnConstraint1 = new ColumnConstraints();
@@ -402,20 +394,13 @@ public class GenericController extends BaseController {
 		return groupGridPane;
 	}
 
-	private void addNavigationButtons() {
+	private void addNavigationButtons(ProcessSpecDto processSpecDto) {
 
 		Label navigationLabel = new Label();
-		switch (getRegistrationDTOFromSession().getRegistrationCategory()) {
-			case PACKET_TYPE_NEW:
-				navigationLabel.setText(applicationContext.getApplicationLanguageLabelBundle().getString("/newregistration"));
-				break;
-			case PACKET_TYPE_UPDATE:
-				navigationLabel.setText(applicationContext.getApplicationLanguageLabelBundle().getString("/uinupdate"));
-				break;
-			case PACKET_TYPE_LOST:
-				navigationLabel.setText(applicationContext.getApplicationLanguageLabelBundle().getString("/lostuin"));
-				break;
-		}
+		navigationLabel.getStyleClass().add(LABEL_CLASS);
+		navigationLabel.setText(RegistrationConstants.SLASH + RegistrationConstants.SPACE +
+				processSpecDto.getLabel().get(ApplicationContext.applicationLanguage()));
+
 		navigationAnchorPane.getChildren().add(navigationLabel);
 		AnchorPane.setTopAnchor(navigationLabel, 5.0);
 		AnchorPane.setLeftAnchor(navigationLabel, 10.0);
@@ -437,8 +422,8 @@ public class GenericController extends BaseController {
 
 		if(screenDTO.isPresent()) {
 			LOGGER.info("Refreshing Screen: {}", screenName);
-			screenDTO.get().getFields().forEach( fieldId -> {
-				FxControl fxControl = getFxControl(fieldId);
+			screenDTO.get().getFields().forEach( field -> {
+				FxControl fxControl = getFxControl(field.getId());
 				if(fxControl != null)
 					fxControl.refresh();
 			});
@@ -446,7 +431,7 @@ public class GenericController extends BaseController {
 			atLeastOneVisible = screenDTO.get()
 					.getFields()
 					.stream()
-					.anyMatch( fieldId -> getFxControl(fieldId) != null && getFxControl(fieldId).getNode().isVisible() );
+					.anyMatch( field -> getFxControl(field.getId()) != null && getFxControl(field.getId()).getNode().isVisible() );
 		}
 		LOGGER.info("Screen refreshed, Screen: {} visible : {}", screenName, atLeastOneVisible);
 		return atLeastOneVisible;
@@ -504,10 +489,10 @@ public class GenericController extends BaseController {
 				//Hide continue button in preview page
 				next.setVisible(newScreenName.equals("AUTH") ? false : true);
 				authenticate.setVisible(newScreenName.equals("AUTH") ? true : false);
-				notification.setText(EMPTY);
 
 				//request to load Preview / Auth page, allowed only when no errors are found in visible screens
 				if((newScreenName.equals("AUTH") || newScreenName.equals("PREVIEW")) && getInvalidScreenName(tabPane).equals(EMPTY)) {
+					notification.setVisible(false);
 					loadPreviewOrAuthScreen(tabPane, tabPane.getTabs().get(newValue.intValue()));
 					return;
 				}
@@ -516,8 +501,13 @@ public class GenericController extends BaseController {
 				tabPane.getTabs().get(newSelection).setDisable(!refreshScreenVisibility(newScreenName));
 				boolean isSelectedDisabledTab = tabPane.getTabs().get(newSelection).isDisabled();
 
-				if(oldValue.intValue() <0 || isSelectedDisabledTab) {
-					tabPane.getSelectionModel().select(oldValue.intValue() < 0 ? 0 : oldValue.intValue());
+				if(oldValue.intValue() <0 && !isSelectedDisabledTab) {
+					tabPane.getSelectionModel().selectFirst();
+					return;
+				}
+
+				if(isSelectedDisabledTab) {
+					tabPane.getSelectionModel().selectNext();
 					return;
 				}
 
@@ -537,35 +527,51 @@ public class GenericController extends BaseController {
 
 		boolean isValid = true;
 		if(result.isPresent()) {
-			for(String fieldId : result.get().getFields()) {
-				if(getFxControl(fieldId) != null && !getFxControl(fieldId).canContinue()) {
-					LOGGER.error("Screen validation , fieldId : {} has invalid value", fieldId);
-					String label = getFxControl(fieldId).getUiSchemaDTO().getLabel().getOrDefault(ApplicationContext.applicationLanguage(), fieldId);
-					notification.setText(applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
-							.getString("SCREEN_VALIDATION_ERROR") + " [ " + label + " ]");
-					notification.setVisible(true);
+
+			if(!isAdditionalInfoRequestIdProvided(result.get())) {
+				showHideErrorNotification(applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
+						.getString(RegistrationUIConstants.ADDITIONAL_INFO_REQ_ID_MISSING));
+				return false;
+			}
+
+			for(UiFieldDTO field : result.get().getFields()) {
+				if(getFxControl(field.getId()) != null && !getFxControl(field.getId()).canContinue()) {
+					LOGGER.error("Screen validation , fieldId : {} has invalid value", field.getId());
+					String label = getFxControl(field.getId()).getUiSchemaDTO().getLabel().getOrDefault(ApplicationContext.applicationLanguage(), field.getId());
+					showHideErrorNotification(label);
 					isValid = false;
 					break;
 				}
 			}
 		}
 		if (isValid) {
-			notification.setText(EMPTY);
-			notification.setVisible(false);
+			showHideErrorNotification(null);
 			auditFactory.audit(AuditEvent.REG_NAVIGATION, Components.REGISTRATION_CONTROLLER,
 					SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 		}
 		return isValid;
 	}
 
+	private void showHideErrorNotification(String fieldName) {
+		notification.setText((fieldName == null) ? EMPTY : applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
+				.getString("SCREEN_VALIDATION_ERROR") + " [ " + fieldName + " ]");
+	}
+
 	private String getInvalidScreenName(TabPane tabPane) {
 		String errorScreen = EMPTY;
 		for(UiScreenDTO screen : orderedScreens.values()) {
 			LOGGER.error("Started to validate screen : {} ", screen.getName());
+
+			if(!isAdditionalInfoRequestIdProvided(screen)) {
+				LOGGER.error("Screen validation failed {}, Additional Info request Id is required", screen.getName());
+				errorScreen = screen.getName();
+				break;
+			}
+
 			boolean anyInvalidField = screen.getFields()
 					.stream()
-					.anyMatch( fieldId -> getFxControl(fieldId) != null &&
-							getFxControl(fieldId).canContinue() == false );
+					.anyMatch( field -> getFxControl(field.getId()) != null &&
+							getFxControl(field.getId()).canContinue() == false );
 
 			if(anyInvalidField) {
 				LOGGER.error("Screen validation failed {}", screen.getName());
@@ -576,7 +582,7 @@ public class GenericController extends BaseController {
 		return errorScreen;
 	}
 
-	private TabPane createTabPane() {
+	private TabPane createTabPane(ProcessSpecDto processSpecDto) {
 		TabPane tabPane = new TabPane();
 		tabPane.setId(getRegistrationDTOFromSession().getRegistrationId());
 		tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
@@ -585,20 +591,20 @@ public class GenericController extends BaseController {
 
 		setTabSelectionChangeEventHandler(tabPane);
 		anchorPane.getChildren().add(tabPane);
-		addNavigationButtons();
+		addNavigationButtons(processSpecDto);
 		return tabPane;
 	}
 
 	public void populateScreens() throws Exception {
-		LOGGER.debug("Populating Dynamic screens");
-
-		initialize();
-		TabPane tabPane = createTabPane();
-		SchemaDto schema = getLatestSchema();
-		getScreens(schema);
+		RegistrationDTO registrationDTO = getRegistrationDTOFromSession();
+		LOGGER.debug("Populating Dynamic screens for process : {}", registrationDTO.getProcessId());
+		initialize(registrationDTO);
+		ProcessSpecDto processSpecDto = getProcessSpec(registrationDTO.getProcessId(), registrationDTO.getIdSchemaVersion());
+		getScreens(processSpecDto.getScreens());
+		TabPane tabPane = createTabPane(processSpecDto);
 
 		for(UiScreenDTO screenDTO : orderedScreens.values()) {
-			Map<String, List<UiSchemaDTO>> screenFieldGroups = getFieldsBasedOnAlignmentGroup(screenDTO.getFields(), schema);
+			Map<String, List<UiFieldDTO>> screenFieldGroups = getFieldsBasedOnAlignmentGroup(screenDTO.getFields());
 
 			List<String> labels = new ArrayList<>();
 			getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().forEach(langCode -> {
@@ -620,19 +626,22 @@ public class GenericController extends BaseController {
 			int rowIndex = 0;
 			GridPane gridPane = getScreenGroupGridPane(screenGridPane.getId()+"_col_1", screenGridPane);
 
-			if(screenDTO.isPreRegFetchRequired() && getRegistrationDTOFromSession().getRegistrationCategory().equals(PACKET_TYPE_NEW)) {
+			if(screenDTO.isPreRegFetchRequired()) {
 				gridPane.add(getPreRegistrationFetchComponent(), 0, rowIndex++);
 			}
+			if(screenDTO.isAdditionalInfoRequestIdRequired()) {
+				gridPane.add(getAdditionalInfoRequestIdComponent(), 0, rowIndex++);
+			}
 
-			for(Entry<String, List<UiSchemaDTO>> groupEntry : screenFieldGroups.entrySet()) {
+			for(Entry<String, List<UiFieldDTO>> groupEntry : screenFieldGroups.entrySet()) {
 				FlowPane groupFlowPane = new FlowPane();
 				groupFlowPane.prefWidthProperty().bind(gridPane.widthProperty());
 				groupFlowPane.setHgap(20);
 				groupFlowPane.setVgap(20);
 
-				for(UiSchemaDTO fieldDTO : groupEntry.getValue()) {
+				for(UiFieldDTO fieldDTO : groupEntry.getValue()) {
 					try {
-						FxControl fxControl = buildFxElement(fieldDTO, schema);
+						FxControl fxControl = buildFxElement(fieldDTO);
 						if(fxControl.getNode() instanceof GridPane) {
 							((GridPane)fxControl.getNode()).prefWidthProperty().bind(groupFlowPane.widthProperty());
 						}
@@ -745,45 +754,45 @@ public class GenericController extends BaseController {
 	}
 
 
-	private FxControl buildFxElement(UiSchemaDTO uiSchemaDTO, SchemaDto schema) throws Exception {
-		LOGGER.info("Building fxControl for field : {}", uiSchemaDTO.getId());
+	private FxControl buildFxElement(UiFieldDTO uiFieldDTO) throws Exception {
+		LOGGER.info("Building fxControl for field : {}", uiFieldDTO.getId());
 
 		FxControl fxControl = null;
-		if (uiSchemaDTO.getControlType() != null) {
-			switch (uiSchemaDTO.getControlType()) {
+		if (uiFieldDTO.getControlType() != null) {
+			switch (uiFieldDTO.getControlType()) {
 				case CONTROLTYPE_TEXTFIELD:
-					fxControl = new TextFieldFxControl().build(uiSchemaDTO);
+					fxControl = new TextFieldFxControl().build(uiFieldDTO);
 					break;
 
 				case CONTROLTYPE_BIOMETRICS:
-					fxControl = new BiometricFxControl(getProofOfExceptionFields(schema)).build(uiSchemaDTO);
+					fxControl = new BiometricFxControl(getProofOfExceptionFields()).build(uiFieldDTO);
 					break;
 
 				case CONTROLTYPE_BUTTON:
-					fxControl =  new ButtonFxControl().build(uiSchemaDTO);
+					fxControl =  new ButtonFxControl().build(uiFieldDTO);
 					break;
 
 				case CONTROLTYPE_CHECKBOX:
-					fxControl = new CheckBoxFxControl().build(uiSchemaDTO);
+					fxControl = new CheckBoxFxControl().build(uiFieldDTO);
 					break;
 
 				case CONTROLTYPE_DOB:
-					fxControl =  new DOBFxControl().build(uiSchemaDTO);
+					fxControl =  new DOBFxControl().build(uiFieldDTO);
 					break;
 
 				case CONTROLTYPE_DOB_AGE:
-					fxControl =  new DOBAgeFxControl().build(uiSchemaDTO);
+					fxControl =  new DOBAgeFxControl().build(uiFieldDTO);
 					break;
 
 				case CONTROLTYPE_DOCUMENTS:
-					fxControl =  new DocumentFxControl().build(uiSchemaDTO);
+					fxControl =  new DocumentFxControl().build(uiFieldDTO);
 					break;
 
 				case CONTROLTYPE_DROPDOWN:
-					fxControl = new DropDownFxControl().build(uiSchemaDTO);
+					fxControl = new DropDownFxControl().build(uiFieldDTO);
 					break;
 				case CONTROLTYPE_HTML:
-					fxControl = new HtmlFxControl().build(uiSchemaDTO);
+					fxControl = new HtmlFxControl().build(uiFieldDTO);
 					break;
 			}
 		}
@@ -791,7 +800,7 @@ public class GenericController extends BaseController {
 		if(fxControl == null)
 			throw  new Exception("Failed to build fxControl");
 
-		fxControlMap.put(uiSchemaDTO.getId(), fxControl);
+		fxControlMap.put(uiFieldDTO.getId(), fxControl);
 		return fxControl;
 	}
 
@@ -799,8 +808,8 @@ public class GenericController extends BaseController {
 		orderedScreens.values().forEach(screen -> { refreshScreenVisibility(screen.getName()); });
 	}
 
-	public List<UiSchemaDTO> getProofOfExceptionFields(SchemaDto schema) {
-		return schema.getSchema().stream().filter(field ->
+	public List<UiFieldDTO> getProofOfExceptionFields() {
+		return fields.stream().filter(field ->
 				field.getSubType().contains(RegistrationConstants.POE_DOCUMENT)).collect(Collectors.toList());
 	}
 

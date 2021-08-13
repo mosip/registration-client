@@ -15,10 +15,11 @@ public class UiScreenDTO {
 	private String name;
 	private HashMap<String, String> label;
 	private HashMap<String, String> caption;
-	//TODO - need to change to List<UiSchemaDto>, values of attributes mentioned here takes priority over the general attribute values
-	private List<String> fields;
+	//values of attributes mentioned here takes priority over the general attribute values
+	private List<UiFieldDTO> fields;
 	private String layoutTemplate;
 	private boolean isActive;
 	private boolean preRegFetchRequired;
+	private boolean additionalInfoRequestIdRequired;
 	
 }

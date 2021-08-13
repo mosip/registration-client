@@ -49,7 +49,6 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.packet.PacketHandlerService;
 import io.mosip.registration.service.packet.PacketUploadService;
 import io.mosip.registration.service.sync.PacketSynchService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.value.ObservableValue;
@@ -125,6 +124,9 @@ public class PacketUploadController extends BaseController implements Initializa
 
 	@FXML
 	private TableColumn<PacketStatusDTO, String> fileColumn;
+	
+	@FXML
+	private TableColumn<PacketStatusDTO, String> regType;
 
 	@FXML
 	private TableColumn<PacketStatusDTO, String> statusColumn;
@@ -193,20 +195,17 @@ public class PacketUploadController extends BaseController implements Initializa
 		LOGGER.info("REGISTRATION - SYNC_PACKETS_AND_PUSH_TO_SERVER - PACKET_UPLOAD_CONTROLLER", APPLICATION_NAME,
 				APPLICATION_ID, "Sync the packets and push it to the server");
 		
+		if (!proceedOnAction("PS")) {
+			loadInitialPage();
+			return;
+		}
+		
 		packetUploadPane.setDisable(true);
 		progressIndicatorPane.setVisible(true);
 		
 		observableList.clear();
 		table.refresh();
 		service.reset();
-
-		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
-			packetUploadPane.setDisable(false);
-			progressIndicatorPane.setVisible(false);
-			loadInitialPage();
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NETWORK_ERROR));
-			return;
-		}
 
 		if (selectedPackets.isEmpty()) {
 			packetUploadPane.setDisable(false);
@@ -267,7 +266,6 @@ public class PacketUploadController extends BaseController implements Initializa
 
 					LOGGER.info("REGISTRATION - HANDLE_PACKET_UPLOAD_START - PACKET_UPLOAD_CONTROLLER",
 							APPLICATION_NAME, APPLICATION_ID, "Handling all the packet upload activities");
-					List<PacketStatusVO> packetUploadList = new ArrayList<>();
 					String status = "";
 
 					Map<String, String> tableMap = new HashMap<>();
@@ -380,6 +378,7 @@ public class PacketUploadController extends BaseController implements Initializa
 		
 		checkBoxColumn.setCellValueFactory(cellData -> cellData.getValue().selectedProperty());
 		fileNameColumn.setCellValueFactory(new PropertyValueFactory<>(RegistrationConstants.PACKET_UPLOAD_FILE));
+		regType.setCellValueFactory(new PropertyValueFactory<>("packetStatus"));
 		regDate.setCellValueFactory(new PropertyValueFactory<>(RegistrationConstants.PACKET_UPLOAD_DATE));
 		slno.setCellValueFactory(new PropertyValueFactory<>(RegistrationConstants.PACKET_UPLOAD_SNO));
 		clientStatus.setCellValueFactory(new PropertyValueFactory<>(RegistrationConstants.PACKET_CLIENT_STATUS));
