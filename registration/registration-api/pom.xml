@@ -128,7 +128,7 @@
                   <organizationUrl>https://github.com/mosip/registration-client</organizationUrl>
                 </developer>
         </developers>
-		<name>Registration-api-stub-impl</name>
-		<description>Registration-api-stub-impl implementation</description>
+		<name>Registration-api</name>
+		<description>Registration-api implementation</description>
         <url>https://github.com/mosip/registration-client</url>
 </project>
