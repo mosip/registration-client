@@ -39,7 +39,7 @@
         </dependency>
 
         <dependency>
-             <groupId>io.mosip.registration.api</groupId>
+             <groupId>io.mosip.registration</groupId>
             <artifactId>registration-api</artifactId>
             <version>${mosip.registration.api.version}</version>
              <scope>compile</scope>
