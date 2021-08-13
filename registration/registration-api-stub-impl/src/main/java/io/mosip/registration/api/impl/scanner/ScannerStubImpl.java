@@ -1,4 +1,4 @@
-package io.mosip.api.impl.scanner;
+package io.mosip.registration.api.impl.scanner;
 
 import io.mosip.registration.api.docscanner.DeviceType;
 import io.mosip.registration.api.docscanner.DocScannerService;

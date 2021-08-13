@@ -166,7 +166,7 @@
 
 	<modules>
 		<module>registration-api</module>
-		<module>registration-api-default-impl</module>
+		<module>registration-api-stub-impl</module>
 		<module>registration-services</module>
 		<module>registration-client</module>
 		<module>registration-libs</module>
