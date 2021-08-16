@@ -30,23 +30,7 @@
 		 "BELOW_ARE_THE_SCHEMA_LEVEL_ID's_DATA":"",
 			 "dateOfBirth" : "13",
 			 	"UIN":"2357126316",
-				 "preferredLang": [
-        {
-            "language": "hin",
-            "value": "हिंदी",
-            "code": "hin"
-          },
-   {
-            "language": "tam",
-            "value": "தமிழ்",
-            "code": "tam"
-          },
-          {
-            "language": "kan",
-            "value": "ಕನ್ನಡ",
-            "code": "kan"
-          }
-        ],
+			    "preferredLang":  "हिंदी",
     "gender": [
       {
         "language": "kan",

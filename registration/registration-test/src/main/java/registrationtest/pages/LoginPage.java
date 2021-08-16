@@ -19,6 +19,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import registrationtest.controls.Alerts;
+import registrationtest.utility.ComboBoxUtil;
 import registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.PropertiesUtil;
 import  registrationtest.utility.WaitsUtil;
@@ -80,28 +81,35 @@ public class LoginPage {
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
-					GenericDto dto=new GenericDto();
 					
-					dto.setCode(listLang[0]);
-					dto.setLangCode(listLang[1]);
-					dto.setName(listLang[2]);
 					String str=listLang[2];
-
-					try {
-						Platform.runLater(new Runnable() {
-							public void run() {
-
-					ComboBox comboBox= waitsUtil.lookupById(appLanguage);
-
-					//comboBox.getSelectionModel().select(dto); 
-					Optional<GenericDto> op=comboBox.getItems().stream().filter(i->((GenericDto)i).getName().equalsIgnoreCase(str)).findFirst();
-					comboBox.getSelectionModel().select(op.get());
-				}
-			});
-		} catch (Exception e) {
-
-			logger.error("",e);
-		}
+					ComboBoxUtil.user_selects_combo_item(appLanguage,str);
+					
+//					GenericDto dto=new GenericDto();
+//					
+//					dto.setCode(listLang[0]);
+//					dto.setLangCode(listLang[1]);
+//					dto.setName(listLang[2]);
+//					
+//
+//					try {
+//						Platform.runLater(new Runnable() {
+//							public void run() {
+//
+//					ComboBox comboBox= waitsUtil.lookupById(appLanguage);
+//
+//					//comboBox.getSelectionModel().select(dto); 
+//					Optional<GenericDto> op=comboBox.getItems().stream().filter(i->((GenericDto)i).getName().equalsIgnoreCase(str)).findFirst();
+//					if(op.isEmpty())
+//						comboBox.getSelectionModel().selectFirst();
+//					else 
+//						comboBox.getSelectionModel().select(op.get());
+//				}
+//			});
+//		} catch (Exception e) {
+//
+//			logger.error("",e);
+//		}
 	}
 
 	public String getUserId() {

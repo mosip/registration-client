@@ -149,6 +149,25 @@ public class NewReg {
 			else
 			{
 				ExtentReportUtil.test1.log(Status.FAIL, "FAIL Operator Onboards");
+				
+				try
+				{
+					homePage.clickHomeImg();	
+					buttons.clickConfirmBtn();
+				}
+					catch(Exception e)
+					{
+						logger.error("",e);
+					}
+					try {
+						loginPage.logout();
+						buttons.clickConfirmBtn();
+
+					}
+					catch(Exception e)
+					{
+						logger.error("",e);
+					}
 			}
 			
 			

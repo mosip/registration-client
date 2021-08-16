@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -37,6 +38,7 @@ import registrationtest.controls.Buttons;
 import registrationtest.pojo.schema.Root;
 import registrationtest.pojo.schema.Schema;
 import registrationtest.pojo.schema.Screens;
+import registrationtest.utility.ComboBoxUtil;
 import registrationtest.utility.DateUtil;
 import  registrationtest.utility.JsonUtil;
 import registrationtest.utility.PropertiesUtil;
@@ -396,59 +398,66 @@ public class DemographicPage {
 		}
 	}
 
-	public void user_selects_combo_item(String comboBoxId, GenericDto dto)  {
-		Thread taskThread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				Platform.runLater(new Runnable() {
-					@Override
-					public void run() {
-						ComboBox comboBox= waitsUtil.lookupById(comboBoxId);
-
-						comboBox.getSelectionModel().select(dto); 
-						
-					}}); 
-			}});
-
-
-
-		taskThread.start();
-		try {
-			taskThread.join();
-			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
-		} catch (NumberFormatException | InterruptedException | IOException e) {
-			logger.error("",e);
-		} 
-
-	}
-	
-	public void user_selects_combo_item1(String comboBoxId, String dto)  {
-		Thread taskThread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				Platform.runLater(new Runnable() {
-					@Override
-					public void run() {
-						ComboBox comboBox= waitsUtil.lookupById(comboBoxId);
-
-						robot.clickOn(comboBox);
-						robot.clickOn(dto);
-						//comboBox.getSelectionModel().select(dto); 
-						
-					}}); 
-			}});
-
-
-
-		taskThread.start();
-		try {
-			taskThread.join();
-			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
-		} catch (NumberFormatException | InterruptedException | IOException e) {
-			logger.error("",e);
-		} 
-
-	}
+//	public void user_selects_combo_item(String comboBoxId, String str)  {
+//		Thread taskThread = new Thread(new Runnable() {
+//			@Override
+//			public void run() {
+//				Platform.runLater(new Runnable() {
+//					@Override
+//					public void run() {
+//						ComboBox comboBox= waitsUtil.lookupById(comboBoxId);
+//
+//						//comboBox.getSelectionModel().select(dto); 
+//						
+//						Optional<GenericDto> op=comboBox.getItems().stream().filter(i->((GenericDto)i).getName().equalsIgnoreCase(str)).findFirst();
+//						
+//						if(op.isEmpty())
+//							comboBox.getSelectionModel().selectFirst();
+//						else 
+//							comboBox.getSelectionModel().select(op.get());
+//						
+//					}}); 
+//			}});
+//
+//
+//
+//		taskThread.start();
+//		try {
+//			taskThread.join();
+//			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
+//		} catch (NumberFormatException | InterruptedException | IOException e) {
+//			logger.error("",e);
+//		} 
+//
+//	}
+//	
+//	public void user_selects_combo_item1(String comboBoxId, String dto)  {
+//		Thread taskThread = new Thread(new Runnable() {
+//			@Override
+//			public void run() {
+//				Platform.runLater(new Runnable() {
+//					@Override
+//					public void run() {
+//						ComboBox comboBox= waitsUtil.lookupById(comboBoxId);
+//
+//						robot.clickOn(comboBox);
+//						robot.clickOn(dto);
+//						//comboBox.getSelectionModel().select(dto); 
+//						
+//					}}); 
+//			}});
+//
+//
+//
+//		taskThread.start();
+//		try {
+//			taskThread.join();
+//			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
+//		} catch (NumberFormatException | InterruptedException | IOException e) {
+//			logger.error("",e);
+//		} 
+//
+//	}
 
 
 	public String getSchemaJsonTxt(String JsonIdentity)
@@ -709,7 +718,7 @@ public class DemographicPage {
 	public void biometrics(Schema schema,String scenario,String id,String identity)
 	{
 		try {
-			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
+			//RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
 			
 //			int age=registrationDTO.getAge();
 			String ageGroup= JsonUtil.JsonObjParsing(identity,"ageGroup");
@@ -819,33 +828,7 @@ public class DemographicPage {
 			}}
 	}
 	
-	public void dropdown1(String id,String JsonIdentity,String key) {
-		GenericDto dto=new GenericDto();
-		try {
-			mapDropValue=null;
-			if(schema.getType().contains("simpleType"))
-			{
-				mapDropValue=JsonUtil.JsonObjSimpleParsing(JsonIdentity,key);
-				Set<String> dropkeys = mapDropValue.keySet();
-				for(String ky:dropkeys)
-				{	dto.setCode(ky);
-				dto.setLangCode(ky);
-				dto.setName(mapDropValue.get(ky));
-				user_selects_combo_item(id,dto);
-				break;
-				}
-			}
-			else
-			{
-				String val=JsonUtil.JsonObjParsing(JsonIdentity, key);
-				dto.setName(val);
-				user_selects_combo_item(id,dto);
-
-			}}catch(Exception e)
-		{
-				logger.error("",e);
-		}
-	}
+	
 	
 //	public void dropdown(String id,String JsonIdentity,String key) {
 //		GenericDto dto=new GenericDto();
@@ -881,31 +864,31 @@ public class DemographicPage {
 		GenericDto dto=new GenericDto();
 		try {
 			mapDropValue=null;
-			//if(schema.getType().contains("simpleType"))
+			if(schema.getType().contains("simpleType"))
 			{
-				mapDropValue=JsonUtil.JsonObjSimpleParsingWithCode(JsonIdentity,key);
+				mapDropValue=JsonUtil.JsonObjSimpleParsing(JsonIdentity,key);
 				Set<String> dropkeys = mapDropValue.keySet();
 				for(String ky:dropkeys)
 				{	
 					
 
 					String valcode=mapDropValue.get(ky);
-					String valcodeArr[]=valcode.split("@@");
-					dto.setLangCode(ky);
-					dto.setName(valcodeArr[0]);
-					dto.setCode(valcodeArr[1]);
-					user_selects_combo_item(id,dto);
+//					String valcodeArr[]=valcode.split("@@");
+//					dto.setLangCode(ky);
+//					dto.setName(valcodeArr[0]);
+//					dto.setCode(valcodeArr[1]);
+					ComboBoxUtil.user_selects_combo_item(id,valcode);
 				break;
 				}
 			}
-//			else
-//			{
-//				String val=JsonUtil.JsonObjParsing(JsonIdentity, key);
+			else
+			{
+				String val=JsonUtil.JsonObjParsing(JsonIdentity, key);
 //				dto.setName(val);
 //				dto.setCode("ara");
-//				user_selects_combo_item(id,dto);
-//
-//			}
+				ComboBoxUtil.user_selects_combo_item(id,val);
+
+			}
 			}catch(Exception e)
 		{
 				logger.error("",e);

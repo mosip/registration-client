@@ -1,6 +1,9 @@
 package registrationtest.utility;
 
 import io.mosip.registration.dto.mastersync.GenericDto;
+
+import java.util.Optional;
+
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -11,7 +14,7 @@ public class ComboBoxUtil {
 	private static final Logger logger = LogManager.getLogger(ComboBoxUtil.class); 
 	static WaitsUtil waitsUtil=new WaitsUtil();
 		
-	public static void user_selects_combo_item(String comboBoxId, GenericDto dto)  {
+	public static void user_selects_combo_item(String comboBoxId, String val)  {
 		Thread taskThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -20,7 +23,11 @@ public class ComboBoxUtil {
 					public void run() {
 						ComboBox comboBox= waitsUtil.lookupById(comboBoxId);
 
-						comboBox.getSelectionModel().select(dto); 
+						Optional<GenericDto> op=comboBox.getItems().stream().filter(i->((GenericDto)i).getName().equalsIgnoreCase(val)).findFirst();
+						if(op.isEmpty())
+							comboBox.getSelectionModel().selectFirst();
+						else 
+							comboBox.getSelectionModel().select(op.get());
 					}}); 
 			}});
 		taskThread.start();
