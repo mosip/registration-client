@@ -24,6 +24,7 @@ import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 
+import io.mosip.registration.context.ApplicationContext;
 import org.mvel2.MVEL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -42,7 +43,6 @@ import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.api.docscanner.DocScannerFacade;
-import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
@@ -57,7 +57,6 @@ import io.mosip.registration.controller.reg.RegistrationController;
 import io.mosip.registration.controller.reg.UserOnboardParentController;
 import io.mosip.registration.dao.UserDetailDAO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
-import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.entity.UserBiometric;
 import io.mosip.registration.enums.Modality;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -154,12 +153,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 	@FXML
 	private Button continueBtn;
 
-	// @FXML
-	// private Label duplicateCheckLbl;
-
-	@FXML
-	private Label guardianBiometricsLabel;
-
 	@FXML
 	private ImageView backImageView;
 	
@@ -169,14 +162,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 	@FXML
 	private ImageView rightArrowImgView;
 	
-	public Label getGuardianBiometricsLabel() {
-		return guardianBiometricsLabel;
-	}
-
-	public void setGuardianBiometricsLabel(Label guardianBiometricsLabel) {
-		this.guardianBiometricsLabel = guardianBiometricsLabel;
-	}
-
 	@FXML
 	private GridPane thresholdBox;
 
@@ -192,21 +177,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 	@FXML
 	private Label captureTimeValue;
 
-	/** The scan popup controller. */
-	@Autowired
-	private ScanPopUpViewController scanPopUpViewController;
-
 	/** The registration controller. */
 	@Autowired
 	private RegistrationController registrationController;
-
-	/** The face capture controller. */
-	// @Autowired
-	// private FaceCaptureController faceCaptureController;
-
-	/** The finger print capture service impl. */
-	// @Autowired
-	// private AuthenticationService authenticationService;
 
 	/** The iris facade. */
 	@Autowired
@@ -219,10 +192,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 	private static Map<String, Image> STREAM_IMAGES = new HashMap<String, Image>();
 
 	private static Map<String, Double> BIO_SCORES = new HashMap<String, Double>();
-
-	/** The face capture controller. */
-	// @Autowired
-	// private IrisCaptureController irisCaptureController;
 
 	public ImageView getBiometricImage() {
 		return biometricImage;
@@ -258,10 +227,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 	private int previousPosition = -1;
 
 	private int sizeOfLeftGridPaneImageList = -1;
-
-	// private HashMap<String, VBox> comboBoxMap;
-	//
-	// private HashMap<String, HashMap<String, VBox>> checkBoxMap;
 
 	private HashMap<String, HashMap<String, VBox>> exceptionMap;
 
@@ -363,19 +328,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 		applicationLabelBundle = applicationContext.getBundle(applicationContext.getApplicationLanguage(),
 				RegistrationConstants.LABELS);
 
-		/*if (getRegistrationDTOFromSession() != null && getRegistrationDTOFromSession().getSelectionListDTO() != null) {
-
-			registrationNavlabel
-					.setText(applicationLabelBundle.getString(RegistrationConstants.UIN_UPDATE_UINUPDATENAVLBL));
-
-		} else if (getRegistrationDTOFromSession() != null
-				&& getRegistrationDTOFromSession().getRegistrationMetaDataDTO().getRegistrationCategory() != null
-				&& getRegistrationDTOFromSession().getRegistrationMetaDataDTO().getRegistrationCategory()
-						.equals(RegistrationConstants.PACKET_TYPE_LOST)) {
-
-			registrationNavlabel.setText(applicationLabelBundle.getString(RegistrationConstants.LOSTUINLBL));
-
-		}*/
 	}
 
 	public void populateBiometricPage(boolean isUserOnboard, boolean isGoingBack) {
@@ -383,17 +335,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 				"populateBiometricPage invoked, isUserOnboard : " + isUserOnboard);
 
 		isUserOnboardFlag = isUserOnboard;
-		/*Map<Entry<String, String>, Map<String, List<List<String>>>> mapToProcess = isUserOnboardFlag
-				? getOnboardUserMap()
-				: getconfigureAndNonConfiguredBioAttributes(Arrays.asList(
-						getValue(RegistrationConstants.FINGERPRINT_SLAB_LEFT,
-								RegistrationConstants.leftHandUiAttributes),
-						getValue(RegistrationConstants.FINGERPRINT_SLAB_RIGHT,
-								RegistrationConstants.rightHandUiAttributes),
-						getValue(RegistrationConstants.FINGERPRINT_SLAB_THUMBS,
-								RegistrationConstants.twoThumbsUiAttributes),
-						getValue(RegistrationConstants.IRIS_DOUBLE, RegistrationConstants.eyesUiAttributes),
-						getValue(RegistrationConstants.FACE, RegistrationConstants.faceUiAttributes)));*/
+
 		Map<Entry<String, String>, Map<String, List<List<String>>>> mapToProcess = getOnboardUserMap();
 
 		if (mapToProcess.isEmpty()) {
@@ -403,7 +345,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 			return;
 		}
 
-		removeInapplicableCapturedData(mapToProcess);
+		//removeInapplicableCapturedData(mapToProcess);
 
 		if (isUserOnboard) {
 			registrationNavlabel.setVisible(false);
@@ -677,34 +619,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 		}
 	}
 
-	private void removeInapplicableCapturedData(
-			Map<Entry<String, String>, Map<String, List<List<String>>>> mapToProcess) {
-
-		// Nothing to remove on user-onboard
-		if (isUserOnboardFlag)
-			return;
-
-		/*if (!getRegistrationDTOFromSession().getBiometrics().isEmpty()
-				|| !getRegistrationDTOFromSession().getBiometricExceptions().isEmpty()) {
-
-			List<String> applicableSubTypes = new ArrayList<String>();
-			for (Entry<String, String> subType : mapToProcess.keySet()) {
-				applicableSubTypes.add(String.format("%s_.*", subType.getKey()));
-			}
-			String pattern = String.join("|", applicableSubTypes);
-
-			List<String> keys = new ArrayList<String>();
-			keys.addAll(getRegistrationDTOFromSession().getBiometrics().keySet());
-			keys.addAll(getRegistrationDTOFromSession().getBiometricExceptions().keySet());
-
-			for (String key : keys) {
-				if (!key.matches(pattern)) {
-					getRegistrationDTOFromSession().getBiometrics().remove(key);
-					getRegistrationDTOFromSession().getBiometricExceptions().remove(key);
-				}
-			}
-		}*/
-	}
 
 	private void setScanButtonVisibility(boolean isAllExceptions, Button scanBtn2) {
 		scanBtn.setDisable(isAllExceptions);
@@ -980,7 +894,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 				generateAlert(RegistrationConstants.ALERT_INFORMATION,
 						RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
 
-				scanPopUpViewController.getPopupStage().close();
+				//scanPopUpViewController.getPopupStage().close();
 
 			} catch (Exception exception) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
@@ -993,26 +907,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 		}
 	}
 
-	/*private void saveProofOfExceptionDocument(byte[] byteArray) {
-		DocumentDto documentDto = new DocumentDto();
-		documentDto.setDocument(byteArray);
-		documentDto.setType("EOP");
-
-		String docType = getValueFromApplicationContext(RegistrationConstants.DOC_TYPE);
-
-		docType = RegistrationConstants.SCANNER_IMG_TYPE;
-
-		documentDto.setFormat(docType);
-		documentDto.setCategory("POE");
-		documentDto.setOwner("Applicant");
-		documentDto.setValue("POE".concat(RegistrationConstants.UNDER_SCORE).concat("EOP"));
-
-		getRegistrationDTOFromSession().addDocument("proofOfException", documentDto);
-
-		displayExceptionBiometric(currentModality);
-
-		refreshContinueButton();
-	}*/
 
 	/**
 	 * Scan the biometrics
@@ -1028,8 +922,8 @@ public class BiometricsController extends BaseController /* implements Initializ
 		auditFactory.audit(getAuditEventForScan(currentModality), Components.REG_BIOMETRICS, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-		scanPopUpViewController.setDocumentScan(false);
-		scanPopUpViewController.init(this, "Biometrics");
+		//scanPopUpViewController.setDocumentScan(false);
+		//scanPopUpViewController.init(this, "Biometrics");
 
 		deviceSearchTask = new Service<MdmBioDevice>() {
 			@Override
@@ -1073,25 +967,25 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 				try {
 
-					if (isExceptionPhoto(currentModality) && (mdmBioDevice == null || mdmBioDevice.getSpecVersion()
+					/*if (isExceptionPhoto(currentModality) && (mdmBioDevice == null || mdmBioDevice.getSpecVersion()
 							.equalsIgnoreCase(RegistrationConstants.SPEC_VERSION_092))) {
 
 						streamLocalCamera();
 						return;
 
-					}
+					}*/
 
 						// Disable Auto-Logout
 						SessionContext.setAutoLogout(false);
 
 						if (mdmBioDevice == null) {
-							setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
+							generateAlert(RegistrationConstants.ERROR,  RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
 
 							return;
 						}
 
 						// Start Stream
-						setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_PREP_MESSAGE));
+						//setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_PREP_MESSAGE));
 
 						InputStream urlStream = bioService.getStream(mdmBioDevice,
 								isFace(currentModality) ? RegistrationConstants.FACE_FULLFACE : currentModality);
@@ -1105,16 +999,16 @@ public class BiometricsController extends BaseController /* implements Initializ
 							deviceSpecificationFactory.init();
 
 							generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
-							scanPopUpViewController.getPopupStage().close();
+							//scanPopUpViewController.getPopupStage().close();
 
 							return;
 						}
 
-						setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_INIT_MESSAGE));
+						//setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_INIT_MESSAGE));
 
 						rCaptureTaskService();
 
-						streamer.startStream(urlStream, scanPopUpViewController.getScanImage(), biometricImage);
+						streamer.startStream(urlStream, biometricImage, biometricImage);
 
 				} catch (RegBaseCheckedException | IOException exception) {
 
@@ -1124,15 +1018,15 @@ public class BiometricsController extends BaseController /* implements Initializ
 					LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 							"Checking if exception photo");
 
-					if (isExceptionPhoto(currentModality)) {
+					/*if (isExceptionPhoto(currentModality)) {
 
 						streamLocalCamera();
 
 						return;
 
-					}
+					}*/
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
-					scanPopUpViewController.getPopupStage().close();
+					//scanPopUpViewController.getPopupStage().close();
 
 					// Enable Auto-Logout
 					SessionContext.setAutoLogout(true);
@@ -1150,13 +1044,13 @@ public class BiometricsController extends BaseController /* implements Initializ
 				LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 						"Exception while finding bio device");
 
-				if (isExceptionPhoto(currentModality)) {
+				/*if (isExceptionPhoto(currentModality)) {
 
 					streamLocalCamera();
 					return;
 
-				}
-				setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
+				}*/
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
 
 			}
 		});
@@ -1239,7 +1133,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
 
 				LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "closing popup stage");
-				scanPopUpViewController.getPopupStage().close();
+				//scanPopUpViewController.getPopupStage().close();
 
 				LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Enabling LogOut");
 				// Enable Auto-Logout
@@ -1423,7 +1317,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
 				}
 
-				scanPopUpViewController.getPopupStage().close();
+				//scanPopUpViewController.getPopupStage().close();
 				// Enable Auto-Logout
 				SessionContext.setAutoLogout(true);
 
@@ -2123,42 +2017,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 		return hasApplicantBiometricException;
 	}
 
-	/**
-	 * Is UserOnboarding, should capture all biometrics as configured During
-	 * registration, by default for NEW applicant, all bioattributes are mandatory
-	 * (exceptions are considered as capture) On updateUIN, and if update biometrics
-	 * is opted then all bioattributes are mandatory (exceptions are considered as
-	 * capture) else any biometrics can be provided for authentication (exceptions
-	 * are NOT considered as capture) On LostUIN, this is based on configuration. BY
-	 * default all bioAttributes are mandatory
-	 *
-	 * @return
-	 */
-	/*private String getBooleanOperator() {
-		if (isUserOnboardFlag)
-			return AND_OPERATOR;
-
-		String operator = AND_OPERATOR;
-		switch (getRegistrationDTOFromSession().getRegistrationCategory()) {
-		case RegistrationConstants.PACKET_TYPE_NEW:
-
-			operator = RegistrationConstants.APPLICANT.equalsIgnoreCase(currentSubType) ? AND_OPERATOR : OR_OPERATOR;
-
-			break;
-		case RegistrationConstants.PACKET_TYPE_UPDATE:
-			operator = getRegistrationDTOFromSession().isBiometricMarkedForUpdate()
-
-					? (RegistrationConstants.APPLICANT.equalsIgnoreCase(currentSubType) ? AND_OPERATOR : OR_OPERATOR)
-
-					: OR_OPERATOR;
-			break;
-		case RegistrationConstants.PACKET_TYPE_LOST:
-			operator = getValueFromApplicationContext(RegistrationConstants.LOST_REGISTRATION_BIO_MVEL_OPERATOR);
-			operator = operator == null ? AND_OPERATOR : operator;
-			break;
-		}
-		return operator;
-	}*/
 
 	private Map<String, Boolean> setCapturedDetailsMap(Map<String, Boolean> capturedDetails, List<String> bioAttributes,
 			boolean isBiometricsCaptured) {
@@ -2287,6 +2145,12 @@ public class BiometricsController extends BaseController /* implements Initializ
 	}
 
 	private boolean identifyInLocalGallery(List<BiometricsDto> biometrics, String modality) {
+		if(RegistrationConstants.DISABLE.equalsIgnoreCase((String) ApplicationContext.map()
+				.getOrDefault(RegistrationConstants.DEDUPLICATION_ENABLE_FLAG, RegistrationConstants.DISABLE))) {
+			LOGGER.info("DEDUPLICATION_ENABLE_FLAG disabled, hence returning false by default");
+			return false;
+		}
+
 		BiometricType biometricType = BiometricType.fromValue(modality);
 		Map<String, List<BIR>> gallery = new HashMap<>();
 		List<UserBiometric> userBiometrics = userDetailDAO.findAllActiveUsersExceptCurrentUser(biometricType.value(),
@@ -2310,8 +2174,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 					.identify(sample, gallery, biometricType, null);
 			return result.entrySet().stream().anyMatch(e -> e.getValue() == true);
 		} catch (BiometricException e) {
-			LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-					"Failed to dedupe >> " + ExceptionUtils.getStackTrace(e));
+			LOGGER.error("Failed to dedupe check >> ", e);
 		}
 		return false;
 	}
@@ -2614,13 +2477,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	}
 
-	private void setPopViewControllerMessage(boolean enableCloseButton, String message) {
-		if (enableCloseButton) {
-			scanPopUpViewController.enableCloseButton();
-		}
-		scanPopUpViewController.setScanningMsg(message);
 
-	}
 
 	public byte[] extractFaceImageData(byte[] decodedBioValue) {
 
@@ -3026,25 +2883,5 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	}
 
-	private void streamLocalCamera() {
-
-		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Streaming Using Local Camera");
-
-		if (scanPopUpViewController.getPopupStage() != null) {
-			scanPopUpViewController.getPopupStage().close();
-		}
-
-		LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Capturing with local camera");
-
-		List<DocScanDevice> devices = docScannerFacade.getConnectedCameraDevices();
-		LOGGER.info("Connected devices : {}", devices);
-		if(devices.isEmpty()) {
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.WEBCAM_ALERT_CONTEXT));
-			return;
-		}
-		LOGGER.info("Connecting to local camera device : {}", devices.get(0).getId());
-		scanPopUpViewController.docScanDevice = devices.get(0);
-		scanPopUpViewController.startStream();
-	}
 
 }

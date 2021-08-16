@@ -188,25 +188,18 @@ public abstract class FxControl  {
 
 		try {
 			boolean isValid = isValid();
-			LOGGER.debug("canContinue check on field  : {}, status {} : " , uiFieldDTO.getId(), isValid);
-
-			if(isValid) //empty values should be ignored, its fxControl's responsibility
+			if(isValid)
 				return true;
 
-			//required and with valid value
 			boolean isRequiredField = requiredFieldValidator.isRequiredField(this.uiFieldDTO, getRegistrationDTo());
-			if(isValid && isRequiredField)
-				return true;
-
-			if(getRegistrationDTo().getFlowType() == FlowType.UPDATE
-				&& !getRegistrationDTo().getUpdatableFields().contains(this.uiFieldDTO.getId()) && !isValid) {
-				LOGGER.error("canContinue check on, {} is non-updatable ignoring", uiFieldDTO.getId());
-				return true;
-			}
-
 			if(isEmpty() && !isRequiredField)
 				return true;
 
+			if(getRegistrationDTo().getFlowType() == FlowType.UPDATE
+				&& !getRegistrationDTo().getUpdatableFields().contains(this.uiFieldDTO.getId())) {
+				LOGGER.error("canContinue check on, {} is non-updatable ignoring", uiFieldDTO.getId());
+				return true;
+			}
 		} catch (Exception exception) {
 			LOGGER.error("Error checking RequiredOn for field : " + uiFieldDTO.getId(), exception);
 		}

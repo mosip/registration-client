@@ -2,19 +2,16 @@ package io.mosip.registration.controller.reg;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
 import javax.imageio.ImageIO;
 
-import io.mosip.registration.api.docscanner.DeviceType;
 import io.mosip.registration.api.docscanner.DocScannerFacade;
 import io.mosip.registration.api.docscanner.DocScannerUtil;
 import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import io.mosip.registration.util.control.FxControl;
-import javafx.geometry.Rectangle2D;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -27,7 +24,6 @@ import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.device.ScanPopUpViewController;
 import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -122,39 +118,6 @@ public class DocumentScanController extends BaseController {
 
 	private FxControl fxControl;
 
-	public boolean cropScan(int x, int y, int width, int height, int pageNumber) {
-		try {
-			scanPopUpViewController.getScanningMsg().setVisible(true);
-
-			Optional<DocScanDevice> result = docScannerFacade.getConnectedDevices().stream().filter(d -> d.getId().equals(selectedScanDeviceName)).findFirst();
-			DocScanDevice docScanDevice = result.get();
-			docScanDevice.setFrame(new int[]{x, y, width, height});
-			docScanDevice.setWidth(width);
-			docScanDevice.setHeight(height);
-			BufferedImage bufferedImage = docScannerFacade.scanDocument(result.get());
-
-			if (bufferedImage == null) {
-				LOGGER.error("Crop captured buffered image was null");
-				return false;
-			}
-
-			getScannedPages().add(pageNumber - 1,	bufferedImage);
-			scanPopUpViewController.getImageGroup().getChildren().clear();
-			scanPopUpViewController.getImageGroup().getChildren().add(new ImageView(DocScannerUtil.getImage(bufferedImage)));
-			//scanPopUpViewController.getScanImage().setImage(DocScannerUtil.getImage(bufferedImage));
-			//scanPopUpViewController.getGroupStackPane().setMinWidth((int)scanPopUpViewController.getScanImage().getImage().getWidth()*6);
-			//scanPopUpViewController.getScanImage().setCache(false);
-			scanPopUpViewController.getScanningMsg().setVisible(false);
-			scanPopUpViewController.showPreview(true);
-			return true;
-
-		} catch (RuntimeException exception) {
-			LOGGER.error("Exception while scanning documents for registration", exception);
-		}
-		return false;
-	}
-
-
 	public void scan(Stage popupStage) {
 		try {
 			scanPopUpViewController.getScanningMsg().setVisible(true);
@@ -177,8 +140,6 @@ public class DocumentScanController extends BaseController {
 			scannedPages.add(bufferedImage);
 			scanPopUpViewController.getImageGroup().getChildren().clear();
 			scanPopUpViewController.getImageGroup().getChildren().add(new ImageView(DocScannerUtil.getImage(bufferedImage)));
-			//scanPopUpViewController.getScanImage().setImage(DocScannerUtil.getImage(bufferedImage));
-			//scanPopUpViewController.getGroupStackPane().setMinWidth((int)scanPopUpViewController.getScanImage().getImage().getWidth()*6);
 			scanPopUpViewController.getScanImage().setVisible(true);
 			scanPopUpViewController.getScanningMsg().setVisible(false);
 			scanPopUpViewController.showPreview(true);
@@ -198,7 +159,6 @@ public class DocumentScanController extends BaseController {
 			BufferedImage bufferedImage = docScannerFacade.scanDocument(devices.get(0));
 			if (bufferedImage != null) {
 				byteArray = DocScannerUtil.getImageBytesFromBufferedImage(bufferedImage);
-				scanPopUpViewController.setDefaultImageGridPaneVisibility();
 			}
 			// Enable Auto-Logout
 			SessionContext.setAutoLogout(true);
@@ -230,8 +190,8 @@ public class DocumentScanController extends BaseController {
 			return;
 		}
 
-		scanPopUpViewController.setDocumentScan(true);
-		scanPopUpViewController.init(this, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOC_TITLE));
+		scanPopUpViewController.init(this,
+				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOC_TITLE));
 
 		if(isPreviewOnly)
 			scanPopUpViewController.setUpPreview();
@@ -251,22 +211,30 @@ public class DocumentScanController extends BaseController {
 		return scannedPages.get(docPageNumber <= 0 ? 0 : docPageNumber);
 	}
 
-
-	public void scanDocument(String fieldId, String docCode, boolean isPreviewOnly) {
+	public boolean loadDataIntoScannedPages(String fieldId) throws IOException {
 		DocumentDto documentDto = getRegistrationDTOFromSession().getDocuments().get(fieldId);
-
-		try {
-			if (documentDto != null) {
-				if(RegistrationConstants.PDF.equalsIgnoreCase(documentDto.getFormat())) {
-					setScannedPages(DocScannerUtil.pdfToImages(documentDto.getDocument()));
-				} else {
-					 InputStream is = new ByteArrayInputStream(documentDto.getDocument());
-					   BufferedImage newBi = ImageIO.read(is);
-					   List<BufferedImage> list = new LinkedList<>();
-					   list.add(newBi);
-					   setScannedPages(list);
-				}
+		if (documentDto != null) {
+			if(RegistrationConstants.PDF.equalsIgnoreCase(documentDto.getFormat())) {
+				setScannedPages(DocScannerUtil.pdfToImages(documentDto.getDocument()));
+				return true;
+			} else {
+				InputStream is = new ByteArrayInputStream(documentDto.getDocument());
+				BufferedImage newBi = ImageIO.read(is);
+				List<BufferedImage> list = new LinkedList<>();
+				list.add(newBi);
+				setScannedPages(list);
+				return true;
 			}
+		}
+		return false;
+	}
+
+
+	public void scanDocument(String fieldId, FxControl fxControl, boolean isPreviewOnly) {
+		try {
+			this.fxControl = fxControl;
+
+			loadDataIntoScannedPages(fieldId);
 
 			initializeAndShowScanPopup(isPreviewOnly);
 

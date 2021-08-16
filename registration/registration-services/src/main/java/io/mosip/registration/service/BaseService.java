@@ -106,7 +106,7 @@ public class BaseService {
 	/**
 	 * Instance of LOGGER
 	 */
-	private static final Logger LOGGER = AppConfig.getLogger(NotificationServiceImpl.class);
+	private static final Logger LOGGER = AppConfig.getLogger(BaseService.class);
 
 	private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
@@ -582,8 +582,7 @@ public class BaseService {
 	}
 
 	public BIR buildBir(BiometricsDto biometricsDto) {
-		LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-				"Building BIR for captured biometrics to pass them for quality check with SDK");
+		LOGGER.info("Building BIR for captured biometrics to pass them for quality check with SDK");
 
 		BiometricType biometricType = Biometric.getSingleTypeByAttribute(biometricsDto.getBioAttribute());
 
@@ -635,6 +634,7 @@ public class BaseService {
 		default:
 			break;
 		}
+		LOGGER.info("Building BIR with subtypes : {}", subtypes);
 		return subtypes;
 	}
 

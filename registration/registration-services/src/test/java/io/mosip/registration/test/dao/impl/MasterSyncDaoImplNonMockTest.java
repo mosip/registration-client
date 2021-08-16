@@ -89,7 +89,7 @@ public class MasterSyncDaoImplNonMockTest {
 		userDetailRepository.saveAll(users);
 	}
 	
-	@Ignore
+	/*@Ignore
 	@Test
 	public void testSuccessBiometricSave() {
 		SyncDataResponseDto syncDataResponseDto = getSyncDataResponseDto("biometricJson.json");	
@@ -116,7 +116,7 @@ public class MasterSyncDaoImplNonMockTest {
 		
 		String keyIndexBasedOnMachineName = machineMappingDAO.getKeyIndexByMachineName("b2ml24784");
 		assertNotNull(keyIndexBasedOnMachineName);
-	}
+	}*/
 	
 	
 	private SyncDataResponseDto getSyncDataResponseDto(String fileName) {

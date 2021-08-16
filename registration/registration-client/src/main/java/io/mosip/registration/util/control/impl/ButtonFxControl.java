@@ -113,12 +113,14 @@ public class ButtonFxControl extends FxControl {
 			}
 			selectedButton.setTooltip(new Tooltip(String.join(RegistrationConstants.SLASH, toolTipText)));
 			getRegistrationDTo().addDemographicField(uiFieldDTO.getId(), values);
+			getRegistrationDTo().SELECTED_CODES.put(uiFieldDTO.getId()+"Code", code);
 			break;
 		default:
 			Optional<GenericDto> result = masterSyncService.getFieldValues(uiFieldDTO.getId(), getRegistrationDTo().getSelectedLanguagesByApplicant().get(0), false).stream()
 					.filter(b -> b.getCode().equalsIgnoreCase(code)).findFirst();
 			if (result.isPresent()) {
 				getRegistrationDTo().addDemographicField(uiFieldDTO.getId(), result.get().getName());
+				getRegistrationDTo().SELECTED_CODES.put(uiFieldDTO.getId()+"Code", code);
 			}
 	}
 	}
@@ -214,36 +216,29 @@ public class ButtonFxControl extends FxControl {
 
 	@Override
 	public void selectAndSet(Object data) {
-		if (data != null) {
+		if (data == null)
+			return;
 
-			Object val = null;
+		HBox hbox = (HBox) getField(uiFieldDTO.getId() + RegistrationConstants.HBOX);
+		Optional<Node> selectedNode = null;
 
-			if (val instanceof List) {
+		if (data instanceof List) {
+			List<SimpleDto> list = (List<SimpleDto>) data;
+			Optional<SimpleDto> value = list.stream()
+					.filter( dto -> dto.getLanguage().equalsIgnoreCase(getRegistrationDTo().getSelectedLanguagesByApplicant().get(0)))
+					.findFirst();
+			selectedNode = hbox.getChildren().stream()
+					.filter(node1 -> node1.getId().equals(uiFieldDTO.getId()+(value.isPresent()?value.get().getValue() : null)))
+					.findFirst();
+		}
+		else {
+			selectedNode = hbox.getChildren().stream()
+					.filter(node1 -> node1.getId().equals(uiFieldDTO.getId()+(String)data))
+					.findFirst();
+		}
 
-				List<SimpleDto> list = (List<SimpleDto>) val;
-
-				for (SimpleDto simpleDto : list) {
-
-					if (getRegistrationDTo().getSelectedLanguagesByApplicant().get(0)
-							.equalsIgnoreCase(simpleDto.getLanguage())) {
-
-						HBox appHBox = (HBox) getField(uiFieldDTO.getId() + RegistrationConstants.HBOX);
-
-						for (Node node : appHBox.getChildren()) {
-
-							if (node instanceof Button
-									&& ((Button) node).getText().equalsIgnoreCase(simpleDto.getValue())) {
-
-								((Button) node).fire();
-							}
-						}
-
-						break;
-					}
-
-				}
-
-			}
+		if(selectedNode.isPresent()) {
+			selectedNode.get().getStyleClass().add(selectedResidence);
 		}
 	}
 

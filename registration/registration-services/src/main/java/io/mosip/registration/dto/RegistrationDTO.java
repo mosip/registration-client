@@ -86,12 +86,14 @@ public class RegistrationDTO {
 	private Timestamp auditLogStartTime;
 	private Timestamp auditLogEndTime;
 
+	// Caches
 	public Map<String, byte[]> BIO_CAPTURES = new HashMap<>();
 	public Map<String, Double> BIO_SCORES = new HashMap<>();
 	public Map<String, Object> AGE_GROUPS = new HashMap<>();
 	public Map<String, Integer> ATTEMPTS = new HashMap<>();
 	public Map<String, List<String>> CONFIGURED_BIOATTRIBUTES = new HashMap<>();
-
+	public Map<String, String> SELECTED_CODES = new HashMap<>();
+	public Map<String, BlocklistedConsentDto> BLOCKLISTED_CHECK = new HashMap<>();
 
 	public void addDemographicField(String fieldId, String value) {
 		this.demographics.put(fieldId, (value != null && !value.isEmpty()) ? value : null);
@@ -259,6 +261,8 @@ public class RegistrationDTO {
 		allIdentityDetails.putAll(this.documents);
 		allIdentityDetails.putAll(this.biometrics);
 		allIdentityDetails.putAll(this.AGE_GROUPS);
+		allIdentityDetails.putAll(this.SELECTED_CODES);
+		allIdentityDetails.put("isBioException", this.biometricExceptions.size() > 0);
 		return allIdentityDetails;
 	}
 

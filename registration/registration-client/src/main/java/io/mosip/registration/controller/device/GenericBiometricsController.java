@@ -1098,7 +1098,14 @@ public class GenericBiometricsController extends BaseController {
 		return qualityScore;
 	}
 
+
 	private boolean identifyInLocalGallery(List<BiometricsDto> biometrics, String modality) {
+		if(RegistrationConstants.DISABLE.equalsIgnoreCase((String) ApplicationContext.map()
+				.getOrDefault(RegistrationConstants.DEDUPLICATION_ENABLE_FLAG, RegistrationConstants.DISABLE))) {
+			LOGGER.info("DEDUPLICATION_ENABLE_FLAG disabled, hence returning false by default");
+			return false;
+		}
+
 		BiometricType biometricType = BiometricType.fromValue(modality);
 		Map<String, List<BIR>> gallery = new HashMap<>();
 		List<UserBiometric> userBiometrics = userDetailDAO.findAllActiveUsers(biometricType.value());

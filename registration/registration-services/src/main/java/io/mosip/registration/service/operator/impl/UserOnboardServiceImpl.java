@@ -413,7 +413,6 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 		return responseDTO;
 	}
 
-	@Timed(value = "sdk", extraTags = {"function", "EXTRACT"})
 	private List<BIR> getExtractedTemplates(List<BiometricsDto> biometrics) throws BiometricException {
 		List<BIR> templates = new ArrayList<>();
 		if (biometrics != null && !biometrics.isEmpty()) {

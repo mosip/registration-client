@@ -78,10 +78,11 @@ public class CheckBoxFxControl extends FxControl {
 			boolean isDisable) {
 		CheckBox checkBox = new CheckBox(titleText);
 		checkBox.setId(id);
-		// checkBox.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_TEXTFIELD);
-		checkBox.setPrefWidth(prefWidth);
+		//checkBox.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_TEXTFIELD);
+		//checkBox.setPrefWidth(prefWidth);
 		checkBox.setDisable(isDisable);
-
+		checkBox.setWrapText(true);
+		checkBox.setPrefWidth(800);
 		return checkBox;
 	}
 
