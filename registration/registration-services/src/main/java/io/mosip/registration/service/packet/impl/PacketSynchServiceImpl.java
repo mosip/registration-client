@@ -250,7 +250,8 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 
 			if (response != null && response.getSuccessResponseDTO() != null) {
 				for (SyncRegistrationDTO dto : syncDtoList) {
-					String status = (String) response.getSuccessResponseDTO().getOtherAttributes().get(dto.getRegistrationId());
+					String status = (String) response.getSuccessResponseDTO().getOtherAttributes().get(packetIdExists ?
+							dto.getPacketId() : dto.getRegistrationId());
 
 					if (status != null && status.equalsIgnoreCase(RegistrationConstants.SUCCESS)) {
 						PacketStatusDTO packetStatusDTO = new PacketStatusDTO();
