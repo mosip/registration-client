@@ -78,9 +78,6 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	private SyncJobDefRepository syncJobDefRepository;
 
 	@Autowired
-	private ClientSettingSyncHelper clientSettingSyncHelper;
-
-	@Autowired
 	private LocationHierarchyRepository locationHierarchyRepository;
 
 	/**
@@ -196,8 +193,6 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 		return documentTypeRepository.findByIsActiveTrueAndLangCodeAndCode(langCode, docCode);
 	}
 
-
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -239,29 +234,6 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 
 	public List<Location> getLocationDetails(String langCode) {
 		return locationRepository.findByIsActiveTrueAndLangCode(langCode);
-	}
-
-	/**
-	 * All the master data such as Location, gender,Registration center, Document
-	 * types,category etc., will be saved in the DB(These details will be getting
-	 * from the MasterSync service)
-	 *
-	 * @param syncDataResponseDto All the master details will be available in the
-	 *                            {@link MasterDataResponseDto}
-	 * @return the string - Returns the Success or Error response
-	 */
-
-	@Override
-	public String saveSyncData(SyncDataResponseDto syncDataResponseDto) {
-		String syncStatusMessage = null;
-		try {
-			syncStatusMessage = clientSettingSyncHelper.saveClientSettings(syncDataResponseDto);
-			return syncStatusMessage;
-		} catch (Throwable runtimeException) {
-			LOGGER.error(runtimeException.getMessage(), runtimeException);
-			syncStatusMessage = runtimeException.getMessage();
-		}
-		throw new RegBaseUncheckedException(RegistrationConstants.MASTER_SYNC_EXCEPTION, syncStatusMessage);
 	}
 
 	public List<Location> getLocationDetails(String hierarchyName, String langCode) {

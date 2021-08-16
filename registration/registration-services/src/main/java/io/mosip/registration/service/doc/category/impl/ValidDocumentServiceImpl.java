@@ -49,6 +49,7 @@ public class ValidDocumentServiceImpl implements ValidDocumentService {
 			documents.setDescription(document.getDescription());
 			documents.setLangCode(document.getLangCode());
 			documents.setName(document.getName());
+			documents.setCode(document.getCode());
 			documentsDTO.add(documents);
 
 		});

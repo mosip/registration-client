@@ -92,8 +92,8 @@ public class DropDownFxControl extends FxControl {
 
 		/** Container holds title, fields and validation message elements */
 		VBox simpleTypeVBox = new VBox();
-		simpleTypeVBox.setPrefWidth(200);
-		simpleTypeVBox.setPrefHeight(95);
+		//simpleTypeVBox.setPrefWidth(200);
+		//simpleTypeVBox.setPrefHeight(95);
 		simpleTypeVBox.setSpacing(5);
 		simpleTypeVBox.setId(fieldName + RegistrationConstants.VBOX);
 
@@ -127,8 +127,10 @@ public class DropDownFxControl extends FxControl {
 		setListener(comboBox);
 
 		fieldTitle.setText(titleText);
-		simpleTypeVBox.getChildren().add(getLabel(uiFieldDTO.getId() + RegistrationConstants.MESSAGE, null,
-				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, false, simpleTypeVBox.getPrefWidth()));
+		Label messageLabel = getLabel(uiFieldDTO.getId() + RegistrationConstants.MESSAGE, null,
+				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, false, simpleTypeVBox.getPrefWidth());
+		messageLabel.setMaxWidth(200);
+		simpleTypeVBox.getChildren().add(messageLabel);
 
 		changeNodeOrientation(simpleTypeVBox, langCode);
 
@@ -195,12 +197,14 @@ public class DropDownFxControl extends FxControl {
 					}
 				}
 				getRegistrationDTo().addDemographicField(uiFieldDTO.getId(), values);
+				getRegistrationDTo().SELECTED_CODES.put(uiFieldDTO.getId()+"Code", selectedCode);
 				break;
 			default:
 				Optional<GenericDto> result = getPossibleValues(getRegistrationDTo().getSelectedLanguagesByApplicant().get(0)).stream()
 						.filter(b -> b.getCode().equals(selectedCode)).findFirst();
 				if (result.isPresent()) {
 					getRegistrationDTo().addDemographicField(uiFieldDTO.getId(), result.get().getName());
+					getRegistrationDTo().SELECTED_CODES.put(uiFieldDTO.getId()+"Code", selectedCode);
 				}
 				break;
 		}

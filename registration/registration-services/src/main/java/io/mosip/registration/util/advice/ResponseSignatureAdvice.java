@@ -126,12 +126,13 @@ public class ResponseSignatureAdvice {
 		LinkedHashMap<String, Object> restClientResponse = null;
 		try {
 			restClientResponse = (LinkedHashMap<String, Object>) result;
+			if (null == requestDto || !requestDto.getIsSignRequired())
+				return restClientResponse;
 
 			LinkedHashMap<String, Object> responseBodyMap = (LinkedHashMap<String, Object>) restClientResponse
 					.get(RegistrationConstants.REST_RESPONSE_BODY);
+			if (null != responseBodyMap && responseBodyMap.size() > 0 && null != responseBodyMap.get(RegistrationConstants.RESPONSE)) {
 
-			if (null != requestDto && requestDto.getIsSignRequired() && null != responseBodyMap && responseBodyMap.size() > 0
-					&& null != responseBodyMap.get(RegistrationConstants.RESPONSE)) {
 				if (responseBodyMap.get(RegistrationConstants.RESPONSE) instanceof LinkedHashMap){
 					LinkedHashMap<String, Object> resp = (LinkedHashMap<String, Object>) responseBodyMap
 							.get(RegistrationConstants.RESPONSE);

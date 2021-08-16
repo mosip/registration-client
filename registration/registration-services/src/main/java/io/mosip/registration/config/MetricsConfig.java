@@ -18,6 +18,7 @@ import io.tus.java.client.*;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -31,6 +32,7 @@ import java.util.Optional;
 
 @Configuration
 @EnableScheduling
+@EnableAspectJAutoProxy
 public class MetricsConfig {
 
     private static final Logger LOGGER = AppConfig.getLogger(MetricsConfig.class);

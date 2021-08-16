@@ -91,8 +91,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			if (userBiometrics.isEmpty())
 				return false;
 			userBiometrics.forEach(userBiometric -> {
-//				record.add(buildBir(userBiometric.getBioIsoImage(), biometricType));
-
 				record.add(bioService.buildBir(userBiometric.getUserBiometricId().getBioAttributeCode(),
 						userBiometric.getQualityScore(), userBiometric.getBioIsoImage(), ProcessedLevelType.PROCESSED));
 			});
@@ -111,7 +109,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		return false;
 	}
 
-	@Timed(value = "sdk", extraTags = {"function", "MATCH"})
 	private boolean verifyBiometrics(BiometricType biometricType, String modality,
 									 List<BIR> sample, List<BIR> record) throws BiometricException {
 		iBioProviderApi bioProvider = bioAPIFactory.getBioProvider(biometricType, BiometricFunction.MATCH);

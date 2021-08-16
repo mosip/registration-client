@@ -154,16 +154,12 @@ public class GenericController extends BaseController {
 	private PreRegistrationDataSyncService preRegistrationDataSyncService;
 
 	private ApplicationContext applicationContext = ApplicationContext.getInstance();
-
 	private static TreeMap<Integer, UiScreenDTO> orderedScreens = new TreeMap<>();
 	private static Map<String, FxControl> fxControlMap = new HashMap<String, FxControl>();
-	
 	private Stage keyboardStage;
-	
 	private boolean keyboardVisible = false;
-	
 	private String previousId;
-
+	private Integer additionalInfoReqIdScreenOrder = null;
 	public static Map<String, TreeMap<Integer, String>> hierarchyLevels = new HashMap<String, TreeMap<Integer, String>>();
 	public static Map<String, TreeMap<Integer, String>> currentHierarchyMap = new HashMap<String, TreeMap<Integer, String>>();
 	public static List<UiFieldDTO> fields = new ArrayList<>();
@@ -181,6 +177,7 @@ public class GenericController extends BaseController {
 		anchorPane.prefWidthProperty().bind(genericScreen.widthProperty());
 		anchorPane.prefHeightProperty().bind(genericScreen.heightProperty());
 		fields = getAllFields(registrationDTO.getProcessId(), registrationDTO.getIdSchemaVersion());
+		additionalInfoReqIdScreenOrder = null;
 	}
 
 
@@ -272,17 +269,24 @@ public class GenericController extends BaseController {
 			getRegistrationDTOFromSession().setAdditionalInfoReqId(newValue);
 			getRegistrationDTOFromSession().setAppId(newValue);
 		});
+
 		return hBox;
 	}
 
 	private boolean isAdditionalInfoRequestIdProvided(UiScreenDTO screenDTO) {
-		if(screenDTO.isAdditionalInfoRequestIdRequired()) {
-			TextField textField = (TextField) anchorPane.lookup("#additionalInfoRequestId");
-			if(textField.getText() == null || textField.getText().isBlank()) {
-				return false;
-			}
+		Node node =  anchorPane.lookup("#additionalInfoRequestId");
+		if(node == null) {
+			LOGGER.debug("#additionalInfoRequestId component is not created!");
+			return true; //as the element is not present, it's either not required / enabled.
 		}
-		return true;
+
+		TextField textField = (TextField) node;
+		boolean provided = (textField.getText() != null && !textField.getText().isBlank());
+
+		if(screenDTO.getOrder() < additionalInfoReqIdScreenOrder)
+			return true; //bypass check as current screen order is less than the screen it is displayed in.
+
+		return provided;
 	}
 
 	private void loadPreRegSync(ResponseDTO responseDTO) throws RegBaseCheckedException{
@@ -630,6 +634,7 @@ public class GenericController extends BaseController {
 				gridPane.add(getPreRegistrationFetchComponent(), 0, rowIndex++);
 			}
 			if(screenDTO.isAdditionalInfoRequestIdRequired()) {
+				additionalInfoReqIdScreenOrder = screenDTO.getOrder();
 				gridPane.add(getAdditionalInfoRequestIdComponent(), 0, rowIndex++);
 			}
 

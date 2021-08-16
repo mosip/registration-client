@@ -2,9 +2,7 @@ package io.mosip.registration.util.control.impl;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 
 
 import io.mosip.registration.dto.mastersync.GenericDto;
@@ -27,6 +25,7 @@ import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.enums.FlowType;
+import io.mosip.registration.service.doc.category.ValidDocumentService;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.util.common.ComboBoxAutoComplete;
 import io.mosip.registration.util.control.FxControl;
@@ -60,6 +59,8 @@ public class DocumentFxControl extends FxControl {
 
 	private MasterSyncService masterSyncService;
 
+	private ValidDocumentService validDocumentService;
+
 	private String PREVIEW_ICON = "previewIcon";
 
 	private String CLEAR_ID = "clear";
@@ -69,6 +70,7 @@ public class DocumentFxControl extends FxControl {
 		auditFactory = applicationContext.getBean(AuditManagerService.class);
 		documentScanController = applicationContext.getBean(DocumentScanController.class);
 		masterSyncService = applicationContext.getBean(MasterSyncService.class);
+		validDocumentService = applicationContext.getBean(ValidDocumentService.class);
 	}
 
 	@Override
@@ -89,7 +91,7 @@ public class DocumentFxControl extends FxControl {
 		GridPane tickMarkGridPane = getImageGridPane(PREVIEW_ICON, RegistrationConstants.DOC_PREVIEW_ICON);
 		tickMarkGridPane.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
 
-			scanDocument((ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId()), uiFieldDTO.getSubType(), true);
+			scanDocument(true);
 
 		});
 		// TICK-MARK
@@ -132,7 +134,7 @@ public class DocumentFxControl extends FxControl {
 		auditFactory.audit(auditEvent, Components.REG_DOCUMENTS, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 		
-		getRegistrationDTo().getDocuments().remove(this.uiFieldDTO.getId());
+		getRegistrationDTo().removeDocument(this.uiFieldDTO.getId());
 		
 		TextField textField = (TextField) getField(
 				uiFieldDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
@@ -190,17 +192,15 @@ public class DocumentFxControl extends FxControl {
 		return scanButtonGridPane;
 	}
 
-	private void scanDocument(ComboBox<DocumentCategoryDto> comboBox, String subType, boolean isPreviewOnly) {
+	private void scanDocument(boolean isPreviewOnly) {
 
-		if (isValid()) {
-			documentScanController.setFxControl(this);
-			documentScanController.scanDocument(uiFieldDTO.getId(), comboBox.getValue().getCode(),	isPreviewOnly);
-
-		} else {
+		if(!isValid()) {
 			documentScanController.generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PLEASE_SELECT)
 					+ RegistrationConstants.SPACE + uiFieldDTO.getSubType() + " " + RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.DOCUMENT));
+			return;
 		}
 
+		documentScanController.scanDocument(uiFieldDTO.getId(), this,	isPreviewOnly);
 	}
 
 	private VBox createDocRef(String id) {
@@ -278,9 +278,17 @@ public class DocumentFxControl extends FxControl {
 
 		comboBox.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> {
 			if (comboBox.getSelectionModel().getSelectedItem() != null) {
-				clearCapturedDocuments();
-				List<String> toolTipTextList = new ArrayList<>();
 				String selectedCode = comboBox.getSelectionModel().getSelectedItem().getCode();
+
+				if(getRegistrationDTo().getDocuments().containsKey(uiFieldDTO.getId()) &&
+						!selectedCode.equals(getRegistrationDTo().getDocuments().get(uiFieldDTO.getId()).getType())) {
+					LOGGER.error("As selected document is not part of applicantype based filtered doc categories, clearing previously captured document : {}",
+							uiFieldDTO.getId());
+					clearCapturedDocuments();
+				}
+
+				List<String> toolTipTextList = new ArrayList<>();
+
 				for (String langCode : getRegistrationDTo().getSelectedLanguagesByApplicant()) {
 					DocumentType documentType = masterSyncService.getDocumentType(selectedCode, langCode);
 					if (documentType != null) {
@@ -342,7 +350,9 @@ public class DocumentFxControl extends FxControl {
 
 				String configuredDocType = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.DOC_TYPE);
 				byte[] byteArray =  ("pdf".equalsIgnoreCase(configuredDocType)) ?
-						DocScannerUtil.asPDF(bufferedImages) : DocScannerUtil.asImage(bufferedImages);
+						DocScannerUtil.asPDF(bufferedImages,
+								ApplicationContext.getFloatValueFromApplicationMap(RegistrationConstants.JPG_COMPRESSION_QUALITY)) :
+						DocScannerUtil.asImage(bufferedImages);
 
 				if (byteArray == null) {
 					documentScanController.generateAlert(RegistrationConstants.ERROR,
@@ -350,8 +360,8 @@ public class DocumentFxControl extends FxControl {
 					return;
 				}
 
-				int docSize = Integer.parseInt(documentScanController
-						.getValueFromApplicationContext(RegistrationConstants.DOC_SIZE)) / (1024 * 1024);
+				int docSize = (int) Math.ceil(Integer.parseInt(documentScanController
+						.getValueFromApplicationContext(RegistrationConstants.DOC_SIZE)) / (1024 * 1024));
 				if (docSize <= (byteArray.length / (1024 * 1024))) {
 					bufferedImages.clear();
 					documentScanController.generateAlert(RegistrationConstants.ERROR,
@@ -395,12 +405,12 @@ public class DocumentFxControl extends FxControl {
 			documentScanController.generateAlert(RegistrationConstants.ERROR,
 					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_REG_PAGE));
 		}
-		refreshFields();
+		//refreshFields();
 	}
 
 	@Override
 	public Object getData() {
-		return documentScanController.getRegistrationDTOFromSession().getDocuments().get(uiFieldDTO.getId());
+		return getRegistrationDTo().getDocuments().get(uiFieldDTO.getId());
 	}
 
 	@Override
@@ -427,7 +437,6 @@ public class DocumentFxControl extends FxControl {
 
 	@Override
 	public List<GenericDto> getPossibleValues(String langCode) {
-
 		return null;
 	}
 
@@ -448,12 +457,7 @@ public class DocumentFxControl extends FxControl {
 				auditFactory.audit(auditEvent, Components.REG_DOCUMENTS, SessionContext.userId(),
 						AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-				Button clickedBtn = (Button) event.getSource();
-				clickedBtn.getId();
-				// TODO Check the scan option
-
-				scanDocument((ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId()), uiFieldDTO.getSubType(),
-						false);
+				scanDocument(false);
 			}
 		});
 		scanButton.hoverProperty().addListener((ov, oldValue, newValue) -> {
@@ -510,15 +514,15 @@ public class DocumentFxControl extends FxControl {
 
 			List<DocumentCategoryDto> vals = (List<DocumentCategoryDto>) data;
 			comboBox.getItems().addAll(vals);
-			new ComboBoxAutoComplete<DocumentCategoryDto>(comboBox);
+			//new ComboBoxAutoComplete<DocumentCategoryDto>(comboBox);
 		}
 
 	}
 
 	public boolean canContinue() {
-		if (getRegistrationDTo().getFlowType() == FlowType.LOST) {
+		/*if (getRegistrationDTo().getFlowType() == FlowType.LOST) {
 			return true;
-		}
+		}*/
 
 		if (requiredFieldValidator == null) {
 			requiredFieldValidator = Initialization.getApplicationContext().getBean(RequiredFieldValidator.class);
@@ -539,22 +543,51 @@ public class DocumentFxControl extends FxControl {
 
 	@Override
 	public void selectAndSet(Object data) {
-
 		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
 
 		if (comboBox != null) {
 			comboBox.getSelectionModel().selectFirst();
-
 			DocumentDto documentDto = (DocumentDto) data;
-
 			getRegistrationDTo().addDocument(this.uiFieldDTO.getId(), documentDto);
-
 			TextField textField = (TextField) getField(uiFieldDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
-
 			textField.setText(documentDto.getRefNumber());
-
 			getField(uiFieldDTO.getId() + PREVIEW_ICON).setVisible(true);
 			getField(uiFieldDTO.getId() + CLEAR_ID).setVisible(true);
+		}
+	}
+
+	@Override
+	public void refresh() {
+		super.refresh();
+		/*ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
+		Object applicantTypeCode = requiredFieldValidator.evaluateMvelScript("applicanttype.mvel",
+				getRegistrationDTo());
+		LOGGER.info("Refreshing document field {}, for applicantType : {}", uiFieldDTO.getId(), applicantTypeCode);
+		if(applicantTypeCode != null) {
+			List<DocumentCategoryDto> list = validDocumentService.getDocumentCategories((String) applicantTypeCode,
+					this.uiFieldDTO.getSubType(), ApplicationContext.applicationLanguage());
+
+			if(list != null) {
+				comboBox.getItems().clear();
+				comboBox.getItems().addAll(list);
+
+				Optional<DocumentCategoryDto> savedValue = list.stream()
+						.filter( d -> getRegistrationDTo().getDocuments().containsKey(uiFieldDTO.getId())
+								&& d.getCode().equals(getRegistrationDTo().getDocuments().get(uiFieldDTO.getId()).getType()))
+								.findFirst();
+
+				if(savedValue.isPresent())
+					comboBox.getSelectionModel().select(savedValue.get());
+			}
+		}*/
+
+		try {
+			if(documentScanController.loadDataIntoScannedPages(uiFieldDTO.getId())) {
+				getField(uiFieldDTO.getId() + PREVIEW_ICON).setVisible(true);
+				getField(uiFieldDTO.getId() + CLEAR_ID).setVisible(true);
+			}
+		} catch (IOException e) {
+			LOGGER.info("Failed to load documents into scannedpages", e);
 		}
 	}
 }

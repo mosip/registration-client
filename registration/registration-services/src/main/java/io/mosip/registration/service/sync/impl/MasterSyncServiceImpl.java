@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.util.*;
 
 import io.mosip.registration.dto.schema.ProcessSpecDto;
+import io.mosip.registration.exception.RegBaseUncheckedException;
+import io.mosip.registration.service.doc.category.ValidDocumentService;
+import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -102,6 +105,12 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 
 	@Autowired
 	private DocumentCategoryDAO documentCategoryDAO;
+
+	@Autowired
+	private ClientSettingSyncHelper clientSettingSyncHelper;
+
+	@Autowired
+	private ValidDocumentService validDocumentService;
 
 	/** Object for Logger. */
 	private static final Logger LOGGER = AppConfig.getLogger(MasterSyncServiceImpl.class);
@@ -532,9 +541,15 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 				new TypeReference<SyncDataResponseDto>() {
 				});
 
-		String response = masterSyncDao.saveSyncData(syncDataResponseDto);
+		String response = null;
+		try {
+			response = clientSettingSyncHelper.saveClientSettings(syncDataResponseDto);
+		} catch (Throwable runtimeException) {
+			LOGGER.error("", runtimeException);
+			throw new RegBaseUncheckedException(RegistrationConstants.MASTER_SYNC_EXCEPTION, runtimeException.getMessage());
+		}
 
-		if (response.equals(RegistrationConstants.SUCCESS)) {
+		if (RegistrationConstants.SUCCESS.equals(response)) {
 			setSuccessResponse(responseDTO, RegistrationConstants.MASTER_SYNC_SUCCESS_MESSAGE, null);
 			SyncTransaction syncTransaction = syncManager.createSyncTransaction(
 					RegistrationConstants.JOB_EXECUTION_SUCCESS, RegistrationConstants.JOB_EXECUTION_SUCCESS,
@@ -573,6 +588,9 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 		}
 
 		return isMatch;
+
+
+
 	}
 
 	@Override
