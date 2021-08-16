@@ -5,7 +5,6 @@ import static io.mosip.registration.constants.LoggerConstants.LOG_REG_SCAN_CONTR
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -16,12 +15,18 @@ import io.mosip.registration.api.docscanner.DocScannerFacade;
 import io.mosip.registration.api.docscanner.DocScannerUtil;
 import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import io.mosip.registration.util.common.RectangleSelection;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.event.EventHandler;
+import javafx.scene.control.*;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 
-import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
@@ -31,25 +36,16 @@ import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.reg.DocumentScanController;
 import io.mosip.registration.util.control.FxControl;
 import javafx.application.Platform;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Bounds;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.SnapshotParameters;
-import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.WritableImage;
 import javafx.scene.layout.GridPane;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -59,75 +55,40 @@ import javafx.stage.StageStyle;
 public class ScanPopUpViewController extends BaseController implements Initializable {
 	private static final Logger LOGGER = AppConfig.getLogger(ScanPopUpViewController.class);
 
-	@Autowired
-	private BaseController baseController;
-
-	@Autowired
-	private DocumentScanController documentScanController;
-
-	@FXML
-	private Label popupTitle;
-
+	/*@FXML
+	private Label popupTitle;*/
 	@FXML
 	private Text totalScannedPages;
-
 	@FXML
 	private Button saveBtn;
-
 	@FXML
 	private Text scanningMsg;
-
-	//private boolean isDocumentScan;
-
-	@Autowired
-	private Streamer streamer;
-
-	@FXML
-	private Hyperlink closeButton;
-
-	public TextField streamerValue;
-
-	@Value("${mosip.doc.stage.width:1200}")
-	private int width;
-
-	@Value("${mosip.doc.stage.height:620}")
-	private int height;
-
+	/*@FXML
+	private Hyperlink closeButton;*/
 	@FXML
 	protected Label docPreviewNext;
-
 	@FXML
 	protected Label docPreviewPrev;
-
 	@FXML
 	protected Text docCurrentPageNumber;
-
 	@FXML
 	protected GridPane previewOption;
-
-	private Stage popupStage;
-
 	@FXML
 	private Button captureBtn;
-
 	@FXML
 	private Button cancelBtn;
-
 	@FXML
 	private Button cropButton;
-
 	@FXML
 	private Button streamBtn;
 	@FXML
 	private Button previewBtn;
-
 	@FXML
 	private GridPane imageViewGridPane;
-
 	@FXML
 	private ImageView scanImage;
-	@FXML
-	private ImageView closeImageView;
+	/*@FXML
+	private ImageView closeImageView;*/
 	@FXML
 	private ImageView streamImageView;
 	@FXML
@@ -140,38 +101,48 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	private ImageView cancelImageView;	
 	@FXML
 	private ImageView previewImageView;
+	@FXML
+	private Group imageGroup;
+	@FXML
+	private StackPane groupStackPane;
+	@FXML
+	private ScrollPane docPreviewScrollPane;
+
+	@Autowired
+	private BaseController baseController;
+	@Autowired
+	private Streamer streamer;
+	@Autowired
+	private DocumentScanController documentScanController;
+	@Autowired
+	private DocScannerFacade docScannerFacade;
+
+	@Value("${mosip.doc.stage.width:1200}")
+	private int width;
+
+	@Value("${mosip.doc.stage.height:620}")
+	private int height;
+
+	private Stage popupStage;
+	public TextField streamerValue;
+	private FxControl fxControl;
+	private boolean isWebCamStream;
+	private boolean isStreamPaused;
+	public DocScanDevice docScanDevice;
+	private RectangleSelection rectangleSelection = null;
+	final DoubleProperty zoomProperty = new SimpleDoubleProperty(200);
 
 	public Group getImageGroup() {
 		return imageGroup;
 	}
 
-	@FXML
-	private Group imageGroup;
-
-	@Autowired
-	private BiometricsController biometricsController;
-
-	private FxControl fxControl;
-
-	private boolean isStreamPaused;
-
-	@Autowired
-	private DocScannerFacade docScannerFacade;
-
 	public StackPane getGroupStackPane() {
 		return groupStackPane;
 	}
 
-	@FXML
-	private StackPane groupStackPane;
-	public DocScanDevice docScanDevice;
-	private RectangleSelection rectangleSelection = null;
-
 	public boolean isStreamPaused() {
 		return isStreamPaused;
 	}
-
-	private boolean isWebCamStream;
 
 	public boolean isWebCamStream() {
 		return isWebCamStream;
@@ -205,7 +176,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		
-		setImage(closeImageView	, RegistrationConstants.CLOSE_IMG);
+		//setImage(closeImageView	, RegistrationConstants.CLOSE_IMG);
 		setImage(streamImageView	, RegistrationConstants.STREAM_IMG);
 		setImage(captureImageView	, RegistrationConstants.SCAN_IMG);
 		setImage(saveImageView	, RegistrationConstants.DWLD_PRE_REG_DATA_IMG);
@@ -235,26 +206,17 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		try {
 			streamerValue = new TextField();
 			baseController = parentControllerObj;
-			popupStage = new Stage();
-			popupStage.initStyle(StageStyle.UNDECORATED);
 
-			LOGGER.info(LOG_REG_IRIS_CAPTURE_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "loading scan.fxml");
+			LOGGER.info("Loading Document scan page : {}", RegistrationConstants.SCAN_PAGE);
 			Parent scanPopup = BaseController.load(getClass().getResource(RegistrationConstants.SCAN_PAGE));
-
 			scanImage.setPreserveRatio(true);
-
-			setDefaultImageGridPaneVisibility();
-			popupStage.setResizable(false);
-			popupTitle.setText(title);
-
+			//popupTitle.setText(title);
 			cropButton.setDisable(true);
 			cancelBtn.setDisable(true);
 			previewOption.setVisible(false);
 
 			LOGGER.info("Setting doc screen width :{}, height: {}", width, height);
-
 			Scene scene = new Scene(scanPopup, width, height);
-
 			if (documentScanController.getScannedPages() != null
 					&& !documentScanController.getScannedPages().isEmpty()) {
 				initializeDocPages(1, documentScanController.getScannedPages().size());
@@ -266,30 +228,31 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 				previewBtn.setDisable(true);
 			}
 			scene.getStylesheets().add(ClassLoader.getSystemClassLoader().getResource(getCssName()).toExternalForm());
+			popupStage = new Stage();
+			//popupStage.setResizable(true);
+			//popupStage.setFullScreen(true);
+			popupStage.setAlwaysOnTop(true);
+			//popupStage.initStyle(StageStyle.UNDECORATED);
 			popupStage.setScene(scene);
 			popupStage.initModality(Modality.WINDOW_MODAL);
 			popupStage.initOwner(fXComponents.getStage());
+			popupStage.setTitle(title);
 			popupStage.show();
 
 			LOGGER.debug("scan screen launched");
-
 			scanningMsg.textProperty().addListener((observable, oldValue, newValue) -> {
-
 				Platform.runLater(() -> {
 					if (RegistrationUIConstants.NO_DEVICE_FOUND.contains(newValue)) {
-
 						// captureBtn.setDisable(false);
-
 						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.NO_DEVICE_FOUND);
 						popupStage.close();
-
 					}
 				});
-
 			});
 
 			rectangleSelection = null;
 			clearSelection();
+			setScanImageViewZoomable();
 
 			LOGGER.info("Opening pop-up screen to scan for user registration");
 
@@ -299,6 +262,29 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		}
 	}
 
+
+	private void setScanImageViewZoomable() {
+		zoomProperty.addListener(new InvalidationListener() {
+			@Override
+			public void invalidated(Observable arg0) {
+				if(getImageGroup().getChildren().size() > 0) {
+					((ImageView)getImageGroup().getChildren().get(0)).setFitWidth(zoomProperty.get() * 4);
+					((ImageView)getImageGroup().getChildren().get(0)).setFitHeight(zoomProperty.get() * 3);
+				}
+			}
+		});
+
+		docPreviewScrollPane.addEventFilter(ScrollEvent.ANY, new EventHandler<ScrollEvent>() {
+			@Override
+			public void handle(ScrollEvent event) {
+				if (event.getDeltaY() > 0) {
+					zoomProperty.set(zoomProperty.get() * 1.1);
+				} else if (event.getDeltaY() < 0) {
+					zoomProperty.set(zoomProperty.get() / 1.1);
+				}
+			}
+		});
+	}
 
 
 	@FXML
@@ -363,7 +349,6 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		stopStreaming();
 		// Enable Auto-Logout
 		SessionContext.setAutoLogout(true);
-		DocumentScanController documentScanController = (DocumentScanController) baseController;
 		try {
 
 			if(rectangleSelection != null) {
@@ -504,8 +489,8 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		LOGGER.info(LOG_REG_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"Calling exit window to close the popup");
 
-		biometricsController.stopRCaptureService();
-		biometricsController.stopDeviceSearchService();
+		//biometricsController.stopRCaptureService();
+		//biometricsController.stopDeviceSearchService();
 		streamer.stop();
 
 		popupStage = (Stage) ((Node) event.getSource()).getParent().getScene().getWindow();
@@ -531,12 +516,6 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		}
 	}
 
-	public void setDefaultImageGridPaneVisibility() {
-		LOGGER.info(LOG_REG_IRIS_CAPTURE_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-				"Setting default visibilities for webCamParent and imageParent");
-//		webcamParent.setVisible(false);
-//		imageParent.setVisible(true);
-	}
 
 	/**
 	 * This method will preview the next document

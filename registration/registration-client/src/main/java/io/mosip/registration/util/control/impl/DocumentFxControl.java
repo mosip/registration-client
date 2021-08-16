@@ -91,7 +91,7 @@ public class DocumentFxControl extends FxControl {
 		GridPane tickMarkGridPane = getImageGridPane(PREVIEW_ICON, RegistrationConstants.DOC_PREVIEW_ICON);
 		tickMarkGridPane.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
 
-			scanDocument((ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId()), uiFieldDTO.getSubType(), true);
+			scanDocument(true);
 
 		});
 		// TICK-MARK
@@ -192,7 +192,7 @@ public class DocumentFxControl extends FxControl {
 		return scanButtonGridPane;
 	}
 
-	private void scanDocument(ComboBox<DocumentCategoryDto> comboBox, String subType, boolean isPreviewOnly) {
+	private void scanDocument(boolean isPreviewOnly) {
 
 		if(!isValid()) {
 			documentScanController.generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PLEASE_SELECT)
@@ -200,8 +200,7 @@ public class DocumentFxControl extends FxControl {
 			return;
 		}
 
-		documentScanController.setFxControl(this);
-		documentScanController.scanDocument(uiFieldDTO.getId(), comboBox.getValue().getCode(),	isPreviewOnly);
+		documentScanController.scanDocument(uiFieldDTO.getId(), this,	isPreviewOnly);
 	}
 
 	private VBox createDocRef(String id) {
@@ -351,7 +350,9 @@ public class DocumentFxControl extends FxControl {
 
 				String configuredDocType = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.DOC_TYPE);
 				byte[] byteArray =  ("pdf".equalsIgnoreCase(configuredDocType)) ?
-						DocScannerUtil.asPDF(bufferedImages) : DocScannerUtil.asImage(bufferedImages);
+						DocScannerUtil.asPDF(bufferedImages,
+								ApplicationContext.getFloatValueFromApplicationMap(RegistrationConstants.JPG_COMPRESSION_QUALITY)) :
+						DocScannerUtil.asImage(bufferedImages);
 
 				if (byteArray == null) {
 					documentScanController.generateAlert(RegistrationConstants.ERROR,
@@ -456,8 +457,7 @@ public class DocumentFxControl extends FxControl {
 				auditFactory.audit(auditEvent, Components.REG_DOCUMENTS, SessionContext.userId(),
 						AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-				scanDocument((ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId()), uiFieldDTO.getSubType(),
-						false);
+				scanDocument(false);
 			}
 		});
 		scanButton.hoverProperty().addListener((ov, oldValue, newValue) -> {
@@ -559,7 +559,7 @@ public class DocumentFxControl extends FxControl {
 	@Override
 	public void refresh() {
 		super.refresh();
-		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
+		/*ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
 		Object applicantTypeCode = requiredFieldValidator.evaluateMvelScript("applicanttype.mvel",
 				getRegistrationDTo());
 		LOGGER.info("Refreshing document field {}, for applicantType : {}", uiFieldDTO.getId(), applicantTypeCode);
@@ -579,7 +579,7 @@ public class DocumentFxControl extends FxControl {
 				if(savedValue.isPresent())
 					comboBox.getSelectionModel().select(savedValue.get());
 			}
-		}
+		}*/
 
 		try {
 			if(documentScanController.loadDataIntoScannedPages(uiFieldDTO.getId())) {

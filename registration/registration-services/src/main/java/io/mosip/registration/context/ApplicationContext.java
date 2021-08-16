@@ -275,15 +275,21 @@ public class ApplicationContext {
 	 * @param code the code
 	 * @return the integer value
 	 */
-	public static int getIntValueFromApplicationMap(String code) {
+	public static Integer getIntValueFromApplicationMap(String code) {
 
-		return Integer.parseInt((String) applicationMap.get(code));
+		return applicationMap.containsKey(code) ? Integer.parseInt((String) applicationMap.get(code)) : null;
 
 	}
 
 	public static String getStringValueFromApplicationMap(String code) {
 
-		return String.valueOf(applicationMap.get(code));
+		return applicationMap.containsKey(code) ? String.valueOf(applicationMap.get(code)) : null;
+
+	}
+
+	public static Float getFloatValueFromApplicationMap(String code) {
+
+		return applicationMap.containsKey(code) ? Float.parseFloat((String) applicationMap.get(code)) : null;
 
 	}
 
