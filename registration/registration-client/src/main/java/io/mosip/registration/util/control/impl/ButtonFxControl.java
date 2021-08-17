@@ -224,11 +224,8 @@ public class ButtonFxControl extends FxControl {
 
 		if (data instanceof List) {
 			List<SimpleDto> list = (List<SimpleDto>) data;
-			Optional<SimpleDto> value = list.stream()
-					.filter( dto -> dto.getLanguage().equalsIgnoreCase(getRegistrationDTo().getSelectedLanguagesByApplicant().get(0)))
-					.findFirst();
 			selectedNode = hbox.getChildren().stream()
-					.filter(node1 -> node1.getId().equals(uiFieldDTO.getId()+(value.isPresent()?value.get().getValue() : null)))
+					.filter(node1 -> node1.getId().equals(uiFieldDTO.getId()+(list.isEmpty()? null : list.get(0).getValue())))
 					.findFirst();
 		}
 		else {

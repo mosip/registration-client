@@ -52,7 +52,7 @@ public class DocumentFxControl extends FxControl {
 	 * Instance of {@link Logger}
 	 */
 	private static final Logger LOGGER = AppConfig.getLogger(DocumentFxControl.class);
-
+	private static final String SCRIPT_NAME = "applicanttype.mvel";
 	private static String loggerClassName = " Text Field Control Type Class";
 
 	private DocumentScanController documentScanController;
@@ -475,7 +475,7 @@ public class DocumentFxControl extends FxControl {
 			double prefWidth, boolean isDisable) {
 		ComboBox<DocumentCategoryDto> field = new ComboBox<DocumentCategoryDto>();
 		StringConverter<T> uiRenderForComboBox = FXUtils.getInstance().getStringConverterForComboBox();
-		VBox vbox = new VBox();
+		//VBox vbox = new VBox();
 		field.setId(id);
 		field.setPrefWidth(prefWidth);
 		field.setPromptText(titleText);
@@ -507,14 +507,11 @@ public class DocumentFxControl extends FxControl {
 
 	@Override
 	public void fillData(Object data) {
-
 		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
 
 		if (data != null) {
-
 			List<DocumentCategoryDto> vals = (List<DocumentCategoryDto>) data;
 			comboBox.getItems().addAll(vals);
-			//new ComboBoxAutoComplete<DocumentCategoryDto>(comboBox);
 		}
 
 	}
@@ -543,27 +540,42 @@ public class DocumentFxControl extends FxControl {
 
 	@Override
 	public void selectAndSet(Object data) {
-		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
+		if(data== null)
+			return;
 
+		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
 		if (comboBox != null) {
-			comboBox.getSelectionModel().selectFirst();
 			DocumentDto documentDto = (DocumentDto) data;
-			getRegistrationDTo().addDocument(this.uiFieldDTO.getId(), documentDto);
-			TextField textField = (TextField) getField(uiFieldDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
-			textField.setText(documentDto.getRefNumber());
-			getField(uiFieldDTO.getId() + PREVIEW_ICON).setVisible(true);
-			getField(uiFieldDTO.getId() + CLEAR_ID).setVisible(true);
+			Optional<DocumentCategoryDto> selected = comboBox.getItems()
+					.stream()
+					.filter(doc -> doc.getCode().equals(documentDto.getType()))
+					.findFirst();
+
+			if(selected.isPresent()) {
+				comboBox.getSelectionModel().select(selected.get());
+				TextField textField = (TextField) getField(uiFieldDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
+				textField.setText(documentDto.getRefNumber());
+				getField(uiFieldDTO.getId() + PREVIEW_ICON).setVisible(true);
+				getField(uiFieldDTO.getId() + CLEAR_ID).setVisible(true);
+			}
+			else {
+				LOGGER.error("Unable to find doc from pre-reg sync, field: {}, value: {}", uiFieldDTO.getId(), documentDto.getValue());
+				getRegistrationDTo().removeDocument(uiFieldDTO.getId());
+				auditFactory.audit(AuditEvent.REG_DOC_DELETE, Components.REG_DOCUMENTS, SessionContext.userId(),
+					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
+			}
 		}
 	}
 
 	@Override
 	public void refresh() {
 		super.refresh();
-		/*ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
-		Object applicantTypeCode = requiredFieldValidator.evaluateMvelScript("applicanttype.mvel",
-				getRegistrationDTo());
+		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
+		Object applicantTypeCode = requiredFieldValidator.evaluateMvelScript((String) ApplicationContext.map().getOrDefault(
+				RegistrationConstants.APPLICANT_TYPE_MVEL_SCRIPT, SCRIPT_NAME), getRegistrationDTo());
 		LOGGER.info("Refreshing document field {}, for applicantType : {}", uiFieldDTO.getId(), applicantTypeCode);
-		if(applicantTypeCode != null) {
+		//TODO - will be uncommented in RC2
+		/*if(applicantTypeCode != null) {
 			List<DocumentCategoryDto> list = validDocumentService.getDocumentCategories((String) applicantTypeCode,
 					this.uiFieldDTO.getSubType(), ApplicationContext.applicationLanguage());
 
@@ -581,13 +593,9 @@ public class DocumentFxControl extends FxControl {
 			}
 		}*/
 
-		try {
-			if(documentScanController.loadDataIntoScannedPages(uiFieldDTO.getId())) {
-				getField(uiFieldDTO.getId() + PREVIEW_ICON).setVisible(true);
-				getField(uiFieldDTO.getId() + CLEAR_ID).setVisible(true);
-			}
-		} catch (IOException e) {
-			LOGGER.info("Failed to load documents into scannedpages", e);
+		if(getRegistrationDTo().getDocuments().containsKey(uiFieldDTO.getId())) {
+			getField(uiFieldDTO.getId() + PREVIEW_ICON).setVisible(true);
+			getField(uiFieldDTO.getId() + CLEAR_ID).setVisible(true);
 		}
 	}
 }
