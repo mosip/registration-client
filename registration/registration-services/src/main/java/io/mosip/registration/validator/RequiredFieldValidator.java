@@ -5,7 +5,10 @@ import java.util.*;
 
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
+import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dto.schema.ConditionalBioAttributes;
+import org.json.JSONObject;
 import org.mvel2.MVEL;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.integration.impl.MapVariableResolverFactory;
@@ -96,11 +99,11 @@ public class RequiredFieldValidator {
 
 	public Object evaluateMvelScript(String scriptName, RegistrationDTO registrationDTO) {
 		try {
-
 			Map<String, String>  ageGroups = new HashMap<String, String>();
-			ageGroups.put("INFANT", "0-5");
-			ageGroups.put("MINOR", "6-17");
-			ageGroups.put("ADULT", "18-200");
+			JSONObject ageGroupConfig = new JSONObject((String) ApplicationContext.map().get(RegistrationConstants.AGE_GROUP_CONFIG));
+			for(String key : ageGroupConfig.keySet()) {
+				ageGroups.put(key, ageGroupConfig.getString(key));
+			}
 
 			Map context = new HashMap();
 			MVEL.evalFile(Paths.get(System.getProperty("user.dir"), scriptName).toFile(), context);

@@ -332,16 +332,7 @@ public class DropDownFxControl extends FxControl {
 
 				List<SimpleDto> list = (List<SimpleDto>) data;
 
-				for (SimpleDto simpleDto : list) {
-
-					if (getRegistrationDTo().getSelectedLanguagesByApplicant().get(0)
-							.equalsIgnoreCase(simpleDto.getLanguage())) {
-
-						selectItem((ComboBox<GenericDto>) getField(uiFieldDTO.getId()), simpleDto.getValue());
-
-						break;
-					}
-				}
+				selectItem((ComboBox<GenericDto>) getField(uiFieldDTO.getId()), list.isEmpty() ? null : list.get(0).getValue());
 
 			} else if (data instanceof String) {
 

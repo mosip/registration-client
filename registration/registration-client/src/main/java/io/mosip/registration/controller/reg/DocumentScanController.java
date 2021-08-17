@@ -213,6 +213,11 @@ public class DocumentScanController extends BaseController {
 
 	public boolean loadDataIntoScannedPages(String fieldId) throws IOException {
 		DocumentDto documentDto = getRegistrationDTOFromSession().getDocuments().get(fieldId);
+		if(documentDto == null) {
+			this.scannedPages = new ArrayList<>();
+			return false;
+		}
+
 		if (documentDto != null) {
 			if(RegistrationConstants.PDF.equalsIgnoreCase(documentDto.getFormat())) {
 				setScannedPages(DocScannerUtil.pdfToImages(documentDto.getDocument()));
