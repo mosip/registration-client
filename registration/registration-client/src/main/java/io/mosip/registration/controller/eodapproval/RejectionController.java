@@ -156,6 +156,7 @@ public class RejectionController extends BaseController implements Initializable
 
 		Map<String, String> map = new WeakHashMap<>();
 		map.put(RegistrationConstants.PACKET_APPLICATION_ID, rejRegData.getId());
+		map.put(RegistrationConstants.PACKET_ID, rejRegData.getPacketId());
 		map.put(RegistrationConstants.STATUSCODE, RegistrationClientStatusCode.REJECTED.getCode());
 		map.put(RegistrationConstants.STATUSCOMMENT, rejectionComboBox.getSelectionModel().getSelectedItem());
 		rejectionmapList.add(map);
@@ -171,6 +172,7 @@ public class RejectionController extends BaseController implements Initializable
 			RegistrationApprovalVO approvalDTO = new RegistrationApprovalVO(
 					regRejectionTable.getSelectionModel().getSelectedItem().getSlno(),
 					regRejectionTable.getSelectionModel().getSelectedItem().getId(),
+					regRejectionTable.getSelectionModel().getSelectedItem().getPacketId(),
 					regRejectionTable.getSelectionModel().getSelectedItem().getDate(),
 					regRejectionTable.getSelectionModel().getSelectedItem().getAcknowledgementFormPath(),
 					regRejectionTable.getSelectionModel().getSelectedItem().getOperatorId(),

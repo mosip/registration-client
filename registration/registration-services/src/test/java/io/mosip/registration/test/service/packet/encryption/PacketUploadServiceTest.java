@@ -167,12 +167,10 @@ public class PacketUploadServiceTest {
 		respObj.put("error", null);
 		//respObj = "PACKET_UPLOADED_TO_VIRUS_SCAN";
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(),Mockito.anyString())).thenReturn(respObj);
-		Mockito.when(registrationDAO.getRegistrationById(Mockito.anyString(), Mockito.anyString()))
-				.thenReturn(registration);
 		List<Registration> packetList = new ArrayList<>();
 		Registration registration1 = new Registration();
 		packetList.add(registration);
-		Mockito.when(registrationDAO.getRegistrationByAppId(Mockito.anyString())).thenReturn(registration);
+		Mockito.when(registrationDAO.getRegistrationByPacketId(Mockito.anyString())).thenReturn(registration);
 		Mockito.when(registrationDAO.updateRegStatus(Mockito.anyObject())).thenReturn(registration1);
 		packetUploadServiceImpl.uploadPacket("123456789");
 		assertEquals("PUSHED", registration.getClientStatusCode());
@@ -194,12 +192,10 @@ public class PacketUploadServiceTest {
 		Object respObj = new Object();
 		respObj = "PACKET_FAILED_TO_UPLOAD";
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(),Mockito.anyString())).thenReturn(respObj);
-		Mockito.when(registrationDAO.getRegistrationById(Mockito.anyString(), Mockito.anyString()))
-				.thenReturn(registration);
 		List<Registration> packetList = new ArrayList<>();
 		Registration registration1 = new Registration();
 		packetList.add(registration);
-		Mockito.when(registrationDAO.getRegistrationByAppId(Mockito.anyString())).thenReturn(registration);
+		Mockito.when(registrationDAO.getRegistrationByPacketId(Mockito.anyString())).thenReturn(registration);
 		Mockito.when(registrationDAO.updateRegStatus(Mockito.any())).thenReturn(registration1);
 		packetUploadServiceImpl.uploadPacket("123456789");
 		assertEquals("E", registration.getFileUploadStatus());
@@ -215,9 +211,7 @@ public class PacketUploadServiceTest {
 		regList.add(registration);
 		registration.setCrDtime(Timestamp.from(Instant.now()));
 
-		Mockito.when(registrationDAO.getRegistrationByAppId(Mockito.anyString())).thenReturn(registration);
-		Mockito.when(registrationDAO.getRegistrationById(Mockito.anyString(), Mockito.anyString()))
-				.thenReturn(registration);
+		Mockito.when(registrationDAO.getRegistrationByPacketId(Mockito.anyString())).thenReturn(registration);
 		packetUploadServiceImpl.uploadPacket("123456789");
 		assertEquals(null, registration.getFileUploadStatus());
 
@@ -231,9 +225,6 @@ public class PacketUploadServiceTest {
 		registration.setAckFilename("..//registration-services/src/test/resources/123456789_Ack.png");
 		registration.setUploadCount((short) 0);
 		regList.add(registration);
-		Mockito.when(registrationDAO.getRegistrationById(Mockito.anyString(), Mockito.anyString()))
-				.thenReturn(registration);
-
 		File f = new File("");
 		Object respObj = new Object();
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(),Mockito.anyString())).thenThrow(new RuntimeException());
@@ -251,9 +242,6 @@ public class PacketUploadServiceTest {
 		registration.setAckFilename("..//registration-services/src/test/resources/123456789_Ack.png");
 		registration.setUploadCount((short) 0);
 		regList.add(registration);
-		Mockito.when(registrationDAO.getRegistrationById(Mockito.anyString(), Mockito.anyString()))
-				.thenReturn(registration);
-
 		File f = new File("");
 		Object respObj = new Object();
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(),Mockito.anyString()))

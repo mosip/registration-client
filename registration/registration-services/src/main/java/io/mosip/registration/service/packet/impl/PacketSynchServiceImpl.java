@@ -138,20 +138,6 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 	 * (non-Javadoc)
 	 *
 	 * @see
-	 * io.mosip.registration.service.sync.PacketSynchService#fetchSynchedPacket(java
-	 * .lang.String)
-	 */
-	@Override
-	public Boolean fetchSynchedPacket(@NonNull String rId) {
-		Registration reg = syncRegistrationDAO
-				.getRegistrationById(RegistrationClientStatusCode.META_INFO_SYN_SERVER.getCode(), rId);
-		return reg != null && !reg.getId().isEmpty();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
 	 * io.mosip.registration.service.sync.PacketSynchService#syncPacket(java
 	 * .lang.String)
 	 */
@@ -174,12 +160,11 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 
 
 	@Override
-	public ResponseDTO syncPacket(@NonNull String triggerPoint, @NonNull List<String> appIds) {
-		LOGGER.info("Syncing specific rids to the server with count {}", appIds.size());
+	public ResponseDTO syncPacket(@NonNull String triggerPoint, @NonNull List<String> packetIDs) {
+		LOGGER.info("Syncing specific rids to the server with count {}", packetIDs.size());
 		ResponseDTO responseDTO = new ResponseDTO();
 		try {
-			List<String> rids = syncRegistrationDAO.getRegistrationIds(appIds);
-			syncRIDToServerWithRetryWrapper(triggerPoint, rids);
+			syncRIDToServerWithRetryWrapper(triggerPoint, packetIDs);
 			setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, null);
 
 		} catch (ConnectionException | RegBaseCheckedException | JsonProcessingException exception) {
@@ -194,14 +179,14 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 		return syncPacket(triggerPoint);
 	}
 
-	private void syncRIDToServerWithRetryWrapper(String triggerPoint, List<String> RIDs)
+	private void syncRIDToServerWithRetryWrapper(String triggerPoint, List<String> packetIDs)
 			throws RegBaseCheckedException, JsonProcessingException, ConnectionException {
 		RetryCallback<Boolean, ConnectionException> retryCallback = new RetryCallback<Boolean, ConnectionException>() {
 			@SneakyThrows
 			@Override
 			public Boolean doWithRetry(RetryContext retryContext) throws ConnectionException {
 				LOGGER.info("Currently in Retry wrapper. Current counter : {}", retryContext.getRetryCount());
-				syncRIDToServer(triggerPoint, RIDs);
+				syncRIDToServer(triggerPoint, packetIDs);
 				return true;
 			}
 		};
@@ -209,18 +194,18 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 	}
 
 	@VisibleForTesting
-	private synchronized void syncRIDToServer(String triggerPoint, List<String> RIDs)
+	private synchronized void syncRIDToServer(String triggerPoint, List<String> packetIDs)
 			throws RegBaseCheckedException, JsonProcessingException, ConnectionException {
 		//Precondition check, proceed only if met, otherwise throws exception
 		proceedWithPacketSync();
 
-		List<Registration> registrations = (RIDs != null) ? registrationDAO.get(RIDs) :
+		List<Registration> registrations = (packetIDs != null) ? registrationDAO.get(packetIDs) :
 				registrationDAO.getPacketsToBeSynched(RegistrationConstants.CLIENT_STATUS_APPROVED, batchCount);
 
 		List<SyncRegistrationDTO> syncDtoList = getPacketSyncDtoList(registrations);
 		
-		List<SyncRegistrationDTO> syncDtoWithPacketId = syncDtoList.stream().filter(dto -> dto.getPacketId() != null).collect(Collectors.toList());
-		List<SyncRegistrationDTO> syncDtoWithoutPacketId = syncDtoList.stream().filter(dto -> dto.getPacketId() == null).collect(Collectors.toList());
+		List<SyncRegistrationDTO> syncDtoWithPacketId = syncDtoList.stream().filter(dto -> !dto.getRegistrationId().equals(dto.getPacketId())).collect(Collectors.toList());
+		List<SyncRegistrationDTO> syncDtoWithoutPacketId = syncDtoList.stream().filter(dto -> dto.getRegistrationId().equals(dto.getPacketId())).collect(Collectors.toList());
 		
 		if(syncDtoList == null || syncDtoList.isEmpty())
 			return;
@@ -256,6 +241,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 					if (status != null && status.equalsIgnoreCase(RegistrationConstants.SUCCESS)) {
 						PacketStatusDTO packetStatusDTO = new PacketStatusDTO();
 						packetStatusDTO.setFileName(dto.getRegistrationId());
+						packetStatusDTO.setPacketId(dto.getPacketId());
 						packetStatusDTO.setPacketClientStatus(RegistrationClientStatusCode.META_INFO_SYN_SERVER.getCode());
 						// TODO - check on re-register status logic
 						syncRegistrationDAO.updatePacketSyncStatus(packetStatusDTO);

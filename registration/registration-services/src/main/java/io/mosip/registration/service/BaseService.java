@@ -30,8 +30,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import io.micrometer.core.annotation.Counted;
-import io.micrometer.core.annotation.Timed;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -63,9 +61,7 @@ import io.mosip.registration.constants.PreConditionChecks;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
-import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dao.RegistrationCenterDAO;
-import io.mosip.registration.dao.UserOnboardDAO;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationDTO;
@@ -86,7 +82,6 @@ import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.operator.UserDetailService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.PolicySyncService;
-import io.mosip.registration.service.template.impl.NotificationServiceImpl;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
@@ -117,12 +112,6 @@ public class BaseService {
 	 */
 	@Autowired
 	protected ServiceDelegateUtil serviceDelegateUtil;
-
-	@Autowired
-	private MachineMappingDAO machineMappingDAO;
-
-	@Autowired
-	private UserOnboardDAO userOnboardDAO;
 
 	@Autowired
 	private GlobalParamService globalParamService;
@@ -384,6 +373,7 @@ public class BaseService {
 	public PacketStatusDTO preparePacketStatusDto(Registration registration) {
 		PacketStatusDTO statusDTO = new PacketStatusDTO();
 		statusDTO.setFileName(registration.getAppId());
+		statusDTO.setPacketId(registration.getPacketId());
 		statusDTO.setPacketClientStatus(registration.getClientStatusCode());
 		statusDTO.setClientStatusComments(registration.getClientStatusComments());
 		statusDTO.setPacketServerStatus(registration.getServerStatusCode());

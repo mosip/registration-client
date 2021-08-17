@@ -8,6 +8,7 @@ package io.mosip.registration.dto;
 public class RegistrationApprovalDTO {
 
 	private String id;
+	private String packetId;
 	private String date;
 	private String acknowledgementFormPath;
 	private String operatorId;
@@ -25,10 +26,11 @@ public class RegistrationApprovalDTO {
 	 * @param statusComment 
 	 * 				the status comment
 	 */
-	public RegistrationApprovalDTO(String id, String date, String acknowledgementFormPath, String operatorId, String statusComment) {
+	public RegistrationApprovalDTO(String id, String packetId, String date, String acknowledgementFormPath, String operatorId, String statusComment) {
 		super();
 		
-		this.id = id;		
+		this.id = id;
+		this.packetId = packetId;
 		this.date = date;
 		this.acknowledgementFormPath =acknowledgementFormPath;
 		this.operatorId = operatorId;
@@ -42,6 +44,15 @@ public class RegistrationApprovalDTO {
 	 */
 	public String getId() {
 		return id;
+	}
+	
+	/**
+	 * Gets the packetId.
+	 *
+	 * @return the packetId
+	 */
+	public String getPacketId() {
+		return packetId;
 	}
 
 	/**

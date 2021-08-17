@@ -56,6 +56,7 @@ public class ReRegistrationServiceImpl extends BaseService implements ReRegistra
 		for (Registration reRegisterPacket : reRegisterPackets) {
 			PacketStatusDTO packetStatusDTO = new PacketStatusDTO();
 			packetStatusDTO.setFileName(reRegisterPacket.getAppId());
+			packetStatusDTO.setPacketId(reRegisterPacket.getPacketId());
 			packetStatusDTO.setPacketPath(reRegisterPacket.getAckFilename());
 			packetStatusDTO.setCreatedTime(regDateTimeConversion(reRegisterPacket.getCrDtime().toString()));
 			uiPacketDto.add(packetStatusDTO);
@@ -77,7 +78,7 @@ public class ReRegistrationServiceImpl extends BaseService implements ReRegistra
 				"Update the registration status of the packet in the table");
 		for (Map.Entry<String, String> reRegistration : reRegistrationStatus.entrySet()) {
 			PacketStatusDTO registration = new PacketStatusDTO();
-			registration.setFileName(reRegistration.getKey());
+			registration.setPacketId(reRegistration.getKey());
 			registration.setPacketClientStatus(RegistrationClientStatusCode.RE_REGISTER.getCode());
 			registration.setClientStatusComments("Re-Register-" + reRegistration.getValue());
 			registrationDAO.updateRegStatus(registration);

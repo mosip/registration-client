@@ -7,6 +7,7 @@ import javafx.beans.property.SimpleStringProperty;
 public class PacketStatusVO {
 
 	private SimpleStringProperty fileName;
+	private SimpleStringProperty packetId;
 	private SimpleStringProperty packetClientStatus;
 	private SimpleStringProperty packetServerStatus;
 	private BooleanProperty status = new SimpleBooleanProperty(false);
@@ -57,6 +58,14 @@ public class PacketStatusVO {
 
 	public void setFileName(String fileName) {
 		this.fileName = new SimpleStringProperty(fileName);
+	}
+	
+	public String getPacketId() {
+		return packetId.get();
+	}
+
+	public void setPacketId(String packetId) {
+		this.packetId = new SimpleStringProperty(packetId);
 	}
 
 	public String getPacketClientStatus() {

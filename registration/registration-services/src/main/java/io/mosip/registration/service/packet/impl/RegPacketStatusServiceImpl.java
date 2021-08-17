@@ -187,12 +187,12 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 		List<String> packetIds = new ArrayList<>();
 		
 		for (Registration registration : registrationList) {
-			if (registration.getPacketId() != null) {
-				registrationMap.put(registration.getPacketId(), registration);
-				packetIds.add(registration.getPacketId());
-			} else {
+			if (registration.getId().equals(registration.getPacketId())) {
 				registrationMap.put(registration.getId(), registration);
 				registrationIds.add(registration.getId());
+			} else {
+				registrationMap.put(registration.getPacketId(), registration);
+				packetIds.add(registration.getPacketId());
 			}
 		}
 		packets.put("packetIds", packetIds);
