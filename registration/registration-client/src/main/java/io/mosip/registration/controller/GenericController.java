@@ -494,33 +494,48 @@ public class GenericController extends BaseController {
 				next.setVisible(newScreenName.equals("AUTH") ? false : true);
 				authenticate.setVisible(newScreenName.equals("AUTH") ? true : false);
 
-				//request to load Preview / Auth page, allowed only when no errors are found in visible screens
-				if((newScreenName.equals("AUTH") || newScreenName.equals("PREVIEW")) && getInvalidScreenName(tabPane).equals(EMPTY)) {
-					notification.setVisible(false);
-					loadPreviewOrAuthScreen(tabPane, tabPane.getTabs().get(newValue.intValue()));
+				if(oldValue.intValue() < 0) {
+					tabPane.getSelectionModel().selectFirst();
 					return;
+				}
+
+				//request to load Preview / Auth page, allowed only when no errors are found in visible screens
+				if((newScreenName.equals("AUTH") || newScreenName.equals("PREVIEW"))) {
+					if(getInvalidScreenName(tabPane).equals(EMPTY)) {
+						notification.setVisible(false);
+						loadPreviewOrAuthScreen(tabPane, tabPane.getTabs().get(newValue.intValue()));
+						return;
+					}
+					else {
+						tabPane.getSelectionModel().select(oldValue.intValue());
+						return;
+					}
 				}
 
 				//Refresh screen visibility
 				tabPane.getTabs().get(newSelection).setDisable(!refreshScreenVisibility(newScreenName));
 				boolean isSelectedDisabledTab = tabPane.getTabs().get(newSelection).isDisabled();
 
-				if(oldValue.intValue() <0 && !isSelectedDisabledTab) {
-					tabPane.getSelectionModel().selectFirst();
-					return;
-				}
-
+				//selecting disabled tab, take no action, stay in the same screen
 				if(isSelectedDisabledTab) {
-					tabPane.getSelectionModel().selectNext();
+					tabPane.getSelectionModel().select(oldValue.intValue());
 					return;
 				}
 
-				if(oldValue.intValue() < newSelection && !isScreenValid(tabPane.getTabs().get(oldValue.intValue()).getId())) {
+				//traversing back is allowed without a need to validate current / next screen
+				if(oldValue.intValue() > newSelection) {
+					tabPane.getSelectionModel().select(newValue.intValue());
+					return;
+				}
+
+				//traversing forward is always one step next
+				if(!isScreenValid(tabPane.getTabs().get(oldValue.intValue()).getId())) {
 					LOGGER.error("Current screen is not fully valid : {}", oldValue.intValue());
 					tabPane.getSelectionModel().select(oldValue.intValue());
 					return;
 				}
-				tabPane.getSelectionModel().select(newValue.intValue());
+				tabPane.getSelectionModel().select((newSelection-oldValue.intValue() > 1) ?
+						oldValue.intValue() : newSelection);
 			}
 		});
 	}
