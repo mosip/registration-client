@@ -165,6 +165,7 @@ public class RegPacketStatusServiceTest {
 		List<Registration> list = new LinkedList<>();
 		Registration regis = new Registration();
 		regis.setId("12345");
+		regis.setPacketId("12345");
 		regis.setAckFilename("..//PacketStore/02-Jan-2019/2018782130000102012019115112_Ack.png");
 		regis.setClientStatusCode(RegistrationConstants.PACKET_STATUS_CODE_PROCESSED);
 		list.add(regis);
