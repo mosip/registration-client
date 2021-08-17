@@ -51,7 +51,7 @@ public interface RegistrationApprovalService {
 	 */
 	Registration updateRegistration(String registrationID,String statusComments,String clientStatusCode) throws RegBaseCheckedException;
 
-	Registration updateRegistrationWithAppId(String applicationId, String statusComments, String clientStatusCode)
+	Registration updateRegistrationWithPacketId(String packetId, String statusComments, String clientStatusCode)
 			throws RegBaseCheckedException;
 
 }

@@ -113,17 +113,6 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	 * @return the list of {@link Registration}
 	 */
 	List<Registration> findByclientStatusCodeOrderByCrDtimeAsc(String statusCode);
-
-	/**
-	 * Find by client status code and id.
-	 *
-	 * @param clientStatusCode 
-	 * 				the client status code
-	 * @param id 
-	 * 				the registration id
-	 * @return the registration
-	 */
-	Registration findByClientStatusCodeAndId(String clientStatusCode,String id);
 	
 	/**
 	 * Find by CrDtimes and client status code.
@@ -165,7 +154,7 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	List<Registration> findByClientStatusCodeNotInAndServerStatusCodeIn(List<String> clientStatusCodes,
 			List<String> serverStatusCodes);
 
-	@Query("select clientStatusCode, serverStatusCode, count(id) from Registration group by clientStatusCode, serverStatusCode")
+	@Query("select clientStatusCode, serverStatusCode, count(packetId) from Registration group by clientStatusCode, serverStatusCode")
 	List<Object[]> getStatusBasedCount();
 	
 	Long countByClientStatusCodeInOrderByUpdDtimesDesc(List<String> statusCodes);
@@ -176,10 +165,15 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	
 	Registration findTopByclientStatusCodeOrderByCrDtimeAsc(String statusCode);
 	
-	Registration findByAppId(String applicationId);
+	Registration findByPacketId(String packetId);
 	
 	@Query("select id from Registration where appId=:appId")
 	String getRIDByAppId(@Param("appId") String appId);
+	
+	List<Registration> findByPacketIdIn(List<String> packetIds);
 
 	List<Registration> findByClientStatusCommentsOrderByCrDtime(String statusComment);
+	
+	@Query("delete from Registration where packetId=:packetId")
+	void deleteByPacketId(String packetId);
 }

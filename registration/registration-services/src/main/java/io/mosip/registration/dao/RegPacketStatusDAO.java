@@ -22,14 +22,6 @@ public interface RegPacketStatusDAO {
 	 */
 	List<Registration> getPacketIdsByStatusUploaded();
 	
-	
-	/**
-	 * Fetch the registration based on the registration id.
-	 * @param registrationId - the id of required Registration Entity
-	 * @return registration	- the registration entity with given id
-	 */
-	Registration get(String registrationId);
-	
 	/**
 	 * Update the details in the {@link Registration} to the Registration as well as Registration Transaction table.
 	 * @param registration entity

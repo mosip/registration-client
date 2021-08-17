@@ -28,13 +28,6 @@ public class RegPacketStatusDaoImplTest {
 	RegPacketStatusDAOImpl packetStatusDao;
 
 	@Test
-	public void getTest() {
-		when(registrationRepository.findById(Mockito.any(), Mockito.anyString())).thenReturn(new Registration());
-
-		packetStatusDao.get("12345");
-	}
-
-	@Test
 	public void updateTest() {
 		Registration registration = new Registration();
 		when(registrationRepository.update(Mockito.any())).thenReturn(registration);

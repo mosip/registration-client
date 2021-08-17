@@ -11,6 +11,7 @@ public class RegistrationApprovalVO {
 
 	private SimpleStringProperty slno;
 	private SimpleStringProperty id;
+	private SimpleStringProperty packetId;
 	private SimpleStringProperty date;
 	private SimpleStringProperty acknowledgementFormPath;
 	private SimpleStringProperty operatorId;
@@ -23,10 +24,11 @@ public class RegistrationApprovalVO {
 	 * @param acknowledgementFormPath the acknowledgement form path
 	 * @param statusComment           the status comment
 	 */
-	public RegistrationApprovalVO(String slno, String id, String date,String acknowledgementFormPath, String operatorId, String statusComment) {
+	public RegistrationApprovalVO(String slno, String id, String packetId, String date, String acknowledgementFormPath, String operatorId, String statusComment) {
 		super();
 		this.slno = new SimpleStringProperty(slno);
 		this.id = new SimpleStringProperty(id);
+		this.packetId = new SimpleStringProperty(packetId);
 		this.date = new SimpleStringProperty(date);
 		this.acknowledgementFormPath = new SimpleStringProperty(acknowledgementFormPath);
 		this.operatorId = new SimpleStringProperty(operatorId);
@@ -47,6 +49,15 @@ public class RegistrationApprovalVO {
 	 */
 	public String getId() {
 		return id.get();
+	}
+	
+	/**
+	 * Gets the packetId.
+	 *
+	 * @return the packetId
+	 */
+	public String getPacketId() {
+		return packetId.get();
 	}
 
 	/**

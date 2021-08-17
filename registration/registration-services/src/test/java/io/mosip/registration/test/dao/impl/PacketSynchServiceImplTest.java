@@ -194,7 +194,6 @@ public class PacketSynchServiceImplTest {
 		PacketStatusDTO packetStatusDTO = new PacketStatusDTO();
 		synchedPackets.add(packetStatusDTO);
 
-		Mockito.when(syncRegistrationDAO.getRegistrationById(Mockito.anyString(), Mockito.anyString())).thenReturn(reg);
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
 				.thenReturn(obj);
 		Mockito.when(syncRegistrationDAO.updatePacketSyncStatus(packetStatusDTO)).thenReturn(reg);
@@ -214,7 +213,6 @@ public class PacketSynchServiceImplTest {
 		reg.setAckFilename("10001100010025920190430051904_Ack.html");
 		reg.setStatusCode("NEW");
 		
-		Mockito.when(syncRegistrationDAO.getRegistrationById(Mockito.anyString(), Mockito.anyString())).thenReturn(reg);
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
 				.thenThrow(new RuntimeException());
 		Mockito.when(HMACUtils2.generateHash(Mockito.anyString().getBytes())).thenReturn("asa".getBytes());
@@ -230,8 +228,7 @@ public class PacketSynchServiceImplTest {
 		reg.setStatusCode("NEW");
 		
 		Object respObj = new Object();
-		Mockito.when(syncRegistrationDAO.getRegistrationById(Mockito.anyString(), Mockito.anyString())).thenReturn(reg);
-
+		
 		List<SyncRegistrationDTO> syncDtoList = new ArrayList<>();
 		syncDtoList.add(new SyncRegistrationDTO());
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
@@ -258,13 +255,5 @@ public class PacketSynchServiceImplTest {
 				.thenReturn(respObj);
 
 		//assertTrue(packetSynchServiceImpl.syncPacketsToServer("123456789", "System").getErrorResponseDTOs()!=null);
-	}
-	
-	@Test
-	public void testfetchSynchedPacket() {
-		Registration reg=new Registration();
-		reg.setId("123456789");
-		Mockito.when(syncRegistrationDAO.getRegistrationById(Mockito.anyString(), Mockito.anyString())).thenReturn(reg);
-		assertTrue(packetSynchServiceImpl.fetchSynchedPacket("123456789"));
 	}
 }

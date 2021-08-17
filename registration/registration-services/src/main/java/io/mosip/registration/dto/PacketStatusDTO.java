@@ -1,7 +1,6 @@
 package io.mosip.registration.dto;
 
 import java.math.BigInteger;
-import java.util.List;
 
 import lombok.Data;
 
@@ -15,6 +14,7 @@ import lombok.Data;
 public class PacketStatusDTO {
 
 	private String fileName;
+	private String packetId;
 	private String packetClientStatus;
 	private String packetServerStatus;
 	private String packetPath;
