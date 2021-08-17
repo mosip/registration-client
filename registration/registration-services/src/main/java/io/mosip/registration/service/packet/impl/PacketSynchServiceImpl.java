@@ -204,6 +204,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 
 		List<SyncRegistrationDTO> syncDtoList = getPacketSyncDtoList(registrations);
 		
+		//This filtering is done for backward compatibility. For older version packets, registrationId will be copied to packetId column
 		List<SyncRegistrationDTO> syncDtoWithPacketId = syncDtoList.stream().filter(dto -> !dto.getRegistrationId().equals(dto.getPacketId())).collect(Collectors.toList());
 		List<SyncRegistrationDTO> syncDtoWithoutPacketId = syncDtoList.stream().filter(dto -> dto.getRegistrationId().equals(dto.getPacketId())).collect(Collectors.toList());
 		
