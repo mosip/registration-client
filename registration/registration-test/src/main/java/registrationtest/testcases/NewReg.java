@@ -145,11 +145,19 @@ public class NewReg {
 			if(flag==true)
 			{
 				ExtentReportUtil.test1.log(Status.PASS, "SUCCESS Operator Onboards");
+				alerts.clickAlertexit();
 			}
 			else
 			{
 				ExtentReportUtil.test1.log(Status.FAIL, "FAIL Operator Onboards");
-
+				try
+                {
+				    alerts.clickAlertexit();
+                }
+                catch(Exception e)
+                {
+                    logger.error("",e);
+                }
 				try
 				{
 					homePage.clickHomeImg();	
