@@ -51,7 +51,7 @@ public class AuditDAOTest {
 
 	@Test
 	public void testGetAudits() {
-		when(auditRepository.findByIdOrderByCreatedAtAsc("1234"))
+		when(auditRepository.findAllByOrderByActionTimeStampAsc())
 				.thenReturn(audits);
 
 		Assert.assertThat(auditDAO.getAudits("1234", null), is(audits));
@@ -59,7 +59,7 @@ public class AuditDAOTest {
 
 	@Test
 	public void testGetAuditsByNullAuditLogToTime() {
-		when(auditRepository.findByIdOrderByCreatedAtAsc("1234"))
+		when(auditRepository.findAllByOrderByActionTimeStampAsc())
 				.thenReturn(audits);
 
 		Assert.assertThat(auditDAO.getAudits("1234", null), is(audits));
@@ -67,7 +67,7 @@ public class AuditDAOTest {
 
 	@Test
 	public void testGetAuditsByAuditLogToTime() {
-		when(auditRepository.findByCreatedAtGreaterThanOrderByCreatedAtAsc(Mockito.any(LocalDateTime.class)))
+		when(auditRepository.findByActionTimeStampGreaterThanOrderByActionTimeStampAsc(Mockito.any(LocalDateTime.class)))
 				.thenReturn(audits);
 
 		Assert.assertThat(auditDAO.getAudits("1234", "2020-12-12 12:12:12"), is(audits));
@@ -75,7 +75,7 @@ public class AuditDAOTest {
 
 	@Test(expected = RegBaseUncheckedException.class)
 	public void testGetAuditsRuntimeException() {
-		when(auditRepository.findByIdOrderByCreatedAtAsc("1234"))
+		when(auditRepository.findAllByOrderByActionTimeStampAsc())
 				.thenThrow(new RuntimeException("SQL exception"));
 
 		auditDAO.getAudits("1234", null);
@@ -85,7 +85,7 @@ public class AuditDAOTest {
 	public void deleteAuditsTest() {
 		LocalDateTime toTime = new Timestamp(System.currentTimeMillis()).toLocalDateTime();
 
-		Mockito.doNothing().when(auditRepository).deleteAllInBatchByCreatedAtLessThan(toTime);
+		Mockito.doNothing().when(auditRepository).deleteAllInBatchByActionTimeStampLessThan(toTime);
 		auditDAO.deleteAudits(toTime);
 
 	}

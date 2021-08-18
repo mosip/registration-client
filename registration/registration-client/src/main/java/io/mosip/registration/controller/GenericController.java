@@ -236,7 +236,7 @@ public class GenericController extends BaseController {
 					loadPreRegSync(responseDTO);
 					getRegistrationDTOFromSession().setPreRegistrationId(textField.getText());
 					getRegistrationDTOFromSession().setAppId(textField.getText());
-
+					getRegistrationDTOFromSession().setRegistrationId(textField.getText());
 				} catch (RegBaseCheckedException exception) {
 					generateAlertLanguageSpecific(RegistrationConstants.ERROR, responseDTO.getErrorResponseDTOs().get(0).getMessage());
 				}
@@ -268,6 +268,7 @@ public class GenericController extends BaseController {
 		textField.textProperty().addListener((observable, oldValue, newValue) -> {
 			getRegistrationDTOFromSession().setAdditionalInfoReqId(newValue);
 			getRegistrationDTOFromSession().setAppId(newValue);
+			getRegistrationDTOFromSession().setRegistrationId(newValue);
 		});
 
 		return hBox;
