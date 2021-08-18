@@ -184,6 +184,17 @@ public class HomePage {
 	}
 	}
 
+	
+	public void clickbioCorrectionImage()
+    {try {
+        waitsUtil.clickNodeAssert( biocorrectionImage);
+    }
+    catch(Exception e)
+    {
+        logger.error("",e);
+    }
+    }
+
 
 	public DemographicPage clicklostUINImage() 
 	{try {

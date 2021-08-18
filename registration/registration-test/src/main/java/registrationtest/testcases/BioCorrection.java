@@ -83,8 +83,8 @@ import org.apache.log4j.Logger;
  * Fxrobot will take control of primary stage and perform keyboard and mouse driven activities.
  *
  */
-public class NewReg {
-	private static final Logger logger = LogManager.getLogger(NewReg.class);  
+public class BioCorrection {
+	private static final Logger logger = LogManager.getLogger(BioCorrection.class);  
 	FxRobot robot;
 	Schema schema;
 	Root root; 
@@ -180,7 +180,7 @@ public class NewReg {
 
 		return flag;
 	}
-	public RID newRegistration(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
+	public RID bioCorrection(FxRobot robot,String loginUserid,String loginPwd,String supervisorUserid,
 			String supervisorUserpwd,Stage applicationPrimaryStage1,String jsonContent,String process,String ageGroup,String fileName
 			,ApplicationContext applicationContext)  {
 
@@ -218,7 +218,7 @@ public class NewReg {
 			if(PropertiesUtil.getKeyValue("sync").equals("Y"))
 				homePage.clickSynchronizeData();
 
-			demographicPage=homePage.clickNewRegistration();
+			homePage.clickbioCorrectionImage();
 
 			if(PropertiesUtil.getKeyValue("multilang").equals("Y"))
 			{

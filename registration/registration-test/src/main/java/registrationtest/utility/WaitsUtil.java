@@ -94,6 +94,7 @@ public class WaitsUtil {
 	}
 
 
+
 	public void clickNodeAssert(String id)
 	{	
 		node=lookupById(id);

@@ -83,7 +83,7 @@ public class LoginPage {
 					}
 					
 					String str=listLang[2];
-					ComboBoxUtil.user_selects_combo_item(appLanguage,str);
+					//ComboBoxUtil.user_selects_combo_item(appLanguage,str);
 					
 //					GenericDto dto=new GenericDto();
 //					
@@ -92,24 +92,31 @@ public class LoginPage {
 //					dto.setName(listLang[2]);
 //					
 //
-//					try {
-//						Platform.runLater(new Runnable() {
-//							public void run() {
-//
-//					ComboBox comboBox= waitsUtil.lookupById(appLanguage);
-//
-//					//comboBox.getSelectionModel().select(dto); 
-//					Optional<GenericDto> op=comboBox.getItems().stream().filter(i->((GenericDto)i).getName().equalsIgnoreCase(str)).findFirst();
-//					if(op.isEmpty())
-//						comboBox.getSelectionModel().selectFirst();
-//					else 
-//						comboBox.getSelectionModel().select(op.get());
-//				}
-//			});
-//		} catch (Exception e) {
-//
-//			logger.error("",e);
-//		}
+					try {
+						Platform.runLater(new Runnable() {
+							public void run() {
+
+					ComboBox comboBox= waitsUtil.lookupById(appLanguage);
+
+					//comboBox.getSelectionModel().select(dto); 
+					Optional<GenericDto> op=comboBox.getItems().stream().filter(i->((GenericDto)i).getName().equalsIgnoreCase(str)).findFirst();
+					if(op.isEmpty())
+						comboBox.getSelectionModel().selectFirst();
+					else 
+						comboBox.getSelectionModel().select(op.get());
+					
+					  try {
+	                        Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
+	                    } catch (Exception e) {
+
+	                        logger.error("",e);
+	                    } 
+				}
+			});
+		} catch (Exception e) {
+
+			logger.error("",e);
+		}
 	}
 
 	public String getUserId() {

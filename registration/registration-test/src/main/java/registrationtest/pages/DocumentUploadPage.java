@@ -2,6 +2,7 @@ package registrationtest.pages;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
@@ -10,6 +11,7 @@ import org.apache.log4j.Logger;
 import org.testfx.api.FxRobot;
 
 import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
+import io.mosip.registration.dto.mastersync.GenericDto;
 import javafx.application.Platform;
 import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
@@ -66,30 +68,47 @@ public class DocumentUploadPage {
 
 	}
 
+	  public  void user_selects_combo_itemdoc(String comboBoxId, String val)  {
+	        try {
+	            Platform.runLater(new Runnable() {
+	                public void run() {
 
+	                    ComboBox comboBox= waitsUtil.lookupById(comboBoxId);
+
+	                    //comboBox.getSelectionModel().select(dto); 
+	                    Optional<DocumentCategoryDto> op=comboBox.getItems().stream().filter(i->((DocumentCategoryDto)i).getName().equalsIgnoreCase(val)).findFirst();
+	                    if(op.isEmpty())
+	                        comboBox.getSelectionModel().selectFirst();
+	                    else 
+	                        comboBox.getSelectionModel().select(op.get());
+	                    
+	                    try {
+	                        Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
+	                    } catch (Exception e) {
+
+	                        logger.error("",e);
+	                    } 
+	                }
+	            });
+	        } catch (Exception e) {
+
+	            logger.error("",e);
+	        }
+
+	    }
 
 	public void documentDropDownScan(Schema schema,String id,String JsonIdentity,String key) {
-		LinkedHashMap<String,String> mapDropValue;
-	
-		try {
-			mapDropValue=null;
+			try {
 			if(schema.getType().contains("documentType"))
 			{
-				mapDropValue=JsonUtil.JsonObjSimpleParsing(JsonIdentity,key);
+			    LinkedHashMap<String,String> mapDropValue=JsonUtil.JsonObjSimpleParsing(JsonIdentity,key);
 				Set<String> dropkeys = mapDropValue.keySet();
 				for(String ky:dropkeys)
 				{
-
-//					documentCategoryDto.setCode(ky);
-//					documentCategoryDto.setLangCode(ky);
-//					documentCategoryDto.setName(mapDropValue.get(ky));
-					ComboBoxUtil.user_selects_combo_item(id,mapDropValue.get(ky));
+					user_selects_combo_itemdoc(id,mapDropValue.get(ky));
 					String scanBtn=id+"button";
 
 					Button scanButton = waitsUtil.lookupByIdButton(scanBtn,robot);
-
-					//waitsUtil.lookupById(docPreviewImgViewPane);
-					
 					robot.moveTo(scanButton);
 					robot.clickOn(scanButton);
 					selectDocumentScan();

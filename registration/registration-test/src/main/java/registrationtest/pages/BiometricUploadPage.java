@@ -44,7 +44,7 @@ public class BiometricUploadPage {
 
 	}
 
-	public void exceptionsIrisDouble(String id,String identity,String subType)
+	public void exceptionsIrisDouble(String idmod,String id,String identity,String subType)
 	{
 
 		logger.info("  Bio attributes upload with List");
@@ -72,13 +72,13 @@ public class BiometricUploadPage {
 				waitsUtil.clickNodeAssert("#rightEye");
 			}
 			if(flag==false)
-			clickScanBtn(subType);
+			clickScanBtn(idmod);
 		} catch (Exception e) {
 			logger.error("",e);
 		}
 	}
 
-	public void exceptionsFingerPrintSlabThumbs(String id,String identity,String subType)
+	public void exceptionsFingerPrintSlabThumbs(String idmod,String id,String identity,String subType)
 	{
 
 		logger.info("  Bio attributes upload with List");
@@ -105,13 +105,13 @@ public class BiometricUploadPage {
 				waitsUtil.clickNodeAssert("#rightThumb");
 			}
 			if(flag==false)
-			clickScanBtn(subType);
+			clickScanBtn(idmod);
 		} catch (Exception e) {
 			logger.error("",e);
 		}
 	}
 	
-	public void exceptionsFingerPrintSlabRight(String id,String identity,String subType)
+	public void exceptionsFingerPrintSlabRight(String idmod,String id,String identity,String subType)
 	{
 
 		logger.info("  Bio attributes upload with List");
@@ -149,7 +149,7 @@ public class BiometricUploadPage {
 					waitsUtil.clickNodeAssert("#rightMiddle");
 				}}
 			if(flag==false)
-			clickScanBtn(subType);
+			clickScanBtn(idmod);
 		} catch (Exception e) {
 			logger.error("",e);
 		}
@@ -202,7 +202,7 @@ public class BiometricUploadPage {
 	return listException;
 }
 	
-	public void exceptionsFingerPrintSlabLeft(String id,String identity,String subType)
+	public void exceptionsFingerPrintSlabLeft(String idmod,String id,String identity,String subType)
 	{
 
 		logger.info("exceptionsFingerPrintSlabLeft");
@@ -241,15 +241,15 @@ public class BiometricUploadPage {
 					waitsUtil.clickNodeAssert("#leftMiddle");
 				}}
 			if(flag==false)
-			clickScanBtn(subType);
+			clickScanBtn(idmod);
 		} catch (Exception e) {
 			logger.error("",e);
 		}
 	}
 
 	
-	public void clickScanBtn(String subType)
-	{waitsUtil.clickNodeAssert( "#"+subType+scanBtn);
+	public void clickScanBtn(String id)
+	{waitsUtil.clickNodeAssert( id+scanBtn);
 
 	try {
 		Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait6")));
@@ -264,14 +264,14 @@ public class BiometricUploadPage {
 	}
 	
 	
-	public void bioScan(String subtype,String id,String identity)
+	public void bioScan(String id,String idModality,String identity)
 	{
 		try {
 			logger.info("bioScan");
-			waitsUtil.clickNodeAssert(id);
+			waitsUtil.clickNodeAssert(idModality);
 			//waitsUtil.scrollclickNodeAssert1(id);
 			Thread.sleep(400);
-			clickScanBtn(subtype);
+			clickScanBtn(id);
 		}
 		catch(Exception e)
 		{
@@ -304,21 +304,21 @@ public class BiometricUploadPage {
 			if(listException.isEmpty()){
 				if(list.contains(PropertiesUtil.getKeyValue("leftEye"))||list.contains(PropertiesUtil.getKeyValue("rightEye")))
 
-					bioScan(subtype,id+IRIS_DOUBLE,identity);
+					bioScan(id,id+IRIS_DOUBLE,identity);
 
 				if(list.contains(PropertiesUtil.getKeyValue("rightIndex"))||list.contains(PropertiesUtil.getKeyValue("rightLittle"))||list.contains(PropertiesUtil.getKeyValue("rightRing"))||list.contains(PropertiesUtil.getKeyValue("rightMiddle")))
 
-					bioScan(subtype,id+FINGERPRINT_SLAB_RIGHT,identity);
+					bioScan(id,id+FINGERPRINT_SLAB_RIGHT,identity);
 
 				if(list.contains(PropertiesUtil.getKeyValue("leftIndex"))||list.contains(PropertiesUtil.getKeyValue("leftLittle"))||list.contains(PropertiesUtil.getKeyValue("leftRing"))||list.contains(PropertiesUtil.getKeyValue("leftMiddle")))
 
-					bioScan(subtype,id+FINGERPRINT_SLAB_LEFT,identity);
+					bioScan(id,id+FINGERPRINT_SLAB_LEFT,identity);
 
 				if(list.contains(PropertiesUtil.getKeyValue("leftThumb"))||list.contains(PropertiesUtil.getKeyValue("rightThumb")))
-					bioScan(subtype,id+FINGERPRINT_SLAB_THUMBS,identity);
+					bioScan(id,id+FINGERPRINT_SLAB_THUMBS,identity);
 
 				if(list.contains(PropertiesUtil.getKeyValue("face")))
-					bioScan(subtype,id+FACE,identity);
+					bioScan(id,id+FACE,identity);
 
 			}
 			else if(listException.contains("leftEye")||listException.contains("rightEye")||	
@@ -331,25 +331,25 @@ public class BiometricUploadPage {
 			{
 
 				if(list.contains(PropertiesUtil.getKeyValue("leftEye"))||list.contains(PropertiesUtil.getKeyValue("rightEye")))
-					exceptionsIrisDouble(id+IRIS_DOUBLE, identity, subtype);
+					exceptionsIrisDouble(id,id+IRIS_DOUBLE, identity, subtype);
 
 				if(list.contains(PropertiesUtil.getKeyValue("rightIndex"))||list.contains(PropertiesUtil.getKeyValue("rightLittle"))||list.contains(PropertiesUtil.getKeyValue("rightRing"))||list.contains(PropertiesUtil.getKeyValue("rightMiddle")))
-					exceptionsFingerPrintSlabRight(id+FINGERPRINT_SLAB_RIGHT, identity, subtype);
+					exceptionsFingerPrintSlabRight(id,id+FINGERPRINT_SLAB_RIGHT, identity, subtype);
 					
 
 				if(list.contains(PropertiesUtil.getKeyValue("leftIndex"))||list.contains(PropertiesUtil.getKeyValue("leftLittle"))||list.contains(PropertiesUtil.getKeyValue("leftRing"))||list.contains(PropertiesUtil.getKeyValue("leftMiddle")))
-					exceptionsFingerPrintSlabLeft(id+FINGERPRINT_SLAB_LEFT, identity, subtype);
+					exceptionsFingerPrintSlabLeft(id,id+FINGERPRINT_SLAB_LEFT, identity, subtype);
 					
 
 				if(list.contains(PropertiesUtil.getKeyValue("leftThumb"))||list.contains(PropertiesUtil.getKeyValue("rightThumb")))
-					exceptionsFingerPrintSlabThumbs(id+FINGERPRINT_SLAB_THUMBS, identity, subtype);
+					exceptionsFingerPrintSlabThumbs(id,id+FINGERPRINT_SLAB_THUMBS, identity, subtype);
 					
 
 				if(list.contains(PropertiesUtil.getKeyValue("face")))
-					bioScan(subtype,id+FACE,identity);
+					bioScan(id,id+FACE,identity);
 				
 				if(subtype.equals("applicant"))		
-				bioScan(subtype,id+EXCEPTION_PHOTO,identity);
+				bioScan(id,id+EXCEPTION_PHOTO,identity);
 
 			}
 		}
@@ -366,7 +366,7 @@ public class BiometricUploadPage {
 		// TODO Auto-generated method stub
 		try {
 			if(biostring.contains(PropertiesUtil.getKeyValue("face")))
-				bioScan(subtype,id+FACE,identity);
+				bioScan(id,id+FACE,identity);
 		} catch (IOException e) {
 			logger.error("",e);
 		}

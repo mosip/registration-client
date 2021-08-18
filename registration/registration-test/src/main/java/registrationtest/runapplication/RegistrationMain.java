@@ -66,6 +66,7 @@ public class RegistrationMain{
 		UpdateReg updatereg=new UpdateReg();
 		ManualReg manualReg=new ManualReg();
 		WaitsUtil waitsUtil=new WaitsUtil();
+		BioCorrection bioCorrection=new BioCorrection();
 		Boolean flag;
 		Thread thread = new Thread() { 
 			@Override
@@ -128,6 +129,15 @@ public class RegistrationMain{
 							logger.info("RID RESULTS-"+ rid5.result +"\t"+ rid5.ridDateTime +"\t"+ rid5.rid);
 							ExtentReportUtil.reports.flush();
 							break;
+						 case "bioCorrection": 
+	                            rid1=null;
+	                            ageGroup= JsonUtil.JsonObjParsing(jsonContent,"ageGroup");
+	                    rid1=bioCorrection.bioCorrection(robot,operatorId, operatorPwd,supervisorId,supervisorPwd,
+	                            StartApplication.primaryStage,jsonContent,
+	                            process,ageGroup,fileName,StartApplication.applicationContext);
+	                    logger.info("RID RESULTS-"+ rid1.result +"\t"+ rid1.ridDateTime +"\t"+ rid1.rid );
+	                    ExtentReportUtil.reports.flush();
+	                    
 						case "InitialLaunch":
 							Boolean flag=false;
 							flag=loginNewRegLogout.initialRegclientSet(robot, operatorId, operatorPwd, StartApplication.primaryStage);
@@ -172,6 +182,13 @@ public class RegistrationMain{
 		thread.start();
 
 		String args[]= {};
+//		   System.setProperty("testfx.robot", "glass");
+//		    System.setProperty("testfx.headless", "true");
+//		    System.setProperty("prism.order", "sw");
+//		    System.setProperty("prism.text", "t2k");
+//		    System.setProperty("java.awt.headless", "true");
+//		    System.setProperty("glass.platform","Monocle");
+//		    System.setProperty("monocle.platform","Headless");
 		Application.launch(StartApplication.class, args); 
 	}
 	public static void invokeRegClient(
@@ -215,6 +232,19 @@ public class RegistrationMain{
 				System.setProperty("jdbc.drivers","org.apache.derby.jdbc.EmbeddedDriver");
 				System.setProperty("mosip.hostname",PropertiesUtil.getKeyValue("mosip.hostname"));
 				
+//				//if (Boolean.getBoolean("headless")) {
+//				    System.setProperty("testfx.robot", "glass");
+//				    System.setProperty("testfx.headless", "true");
+//				    System.setProperty("prism.order", "sw");
+//				    System.setProperty("prism.text", "t2k");
+//				   // System.setProperty("java.awt.headless", "true");
+//				    System.setProperty("glass.platform","Monocle");
+//				    System.setProperty("monocle.platform","Headless");
+//				    
+				    
+				    
+				    
+				   
 				invokeRegClient(
 						PropertiesUtil.getKeyValue("operatorId"), 
 						PropertiesUtil.getKeyValue("operatorPwd"),
