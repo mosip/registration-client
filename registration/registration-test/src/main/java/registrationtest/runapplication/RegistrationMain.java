@@ -58,7 +58,9 @@ public class RegistrationMain{
 	public static void invokeRegClient(	
 			String operatorId,String operatorPwd,
 			String supervisorId,
-			String supervisorPwd
+			String supervisorPwd,
+			String reviewerUserid,
+			String reviewerpwd
 			) 
 	{
 		NewReg loginNewRegLogout=new NewReg();  
@@ -150,6 +152,12 @@ public class RegistrationMain{
 					logger.info("Operator Onboarding status="+ onboardBioflag );
 					ExtentReportUtil.reports.flush();
 					break;	
+						case "ReviewerOnboard":
+                            Boolean reviewerflag=false;
+                            reviewerflag=loginNewRegLogout.initialRegclientSet(robot, reviewerUserid, reviewerUserid, StartApplication.primaryStage);
+                    logger.info("Operator Onboarding status="+ reviewerflag );
+                    ExtentReportUtil.reports.flush();
+                    break;  
 						default :
 								logger.info("Choose correct process for automation or go with manual flow");
 								
@@ -249,7 +257,10 @@ public class RegistrationMain{
 						PropertiesUtil.getKeyValue("operatorId"), 
 						PropertiesUtil.getKeyValue("operatorPwd"),
 						PropertiesUtil.getKeyValue("supervisorUserid"), 
-						PropertiesUtil.getKeyValue("supervisorUserpwd"));
+						PropertiesUtil.getKeyValue("supervisorUserpwd"),
+						PropertiesUtil.getKeyValue("reviewerUserid"), 
+                        PropertiesUtil.getKeyValue("reviewerpwd")
+				        );
 				}catch(Exception e)
 				{
 					logger.error("",e);

@@ -45,7 +45,7 @@ public void testcase()
 	}
 
 
-	@Test
+/*	@Test
 	public void testcase2()
 	{
 		System.setProperty("java.net.useSystemProxies", "true");
@@ -64,5 +64,5 @@ public void testcase()
 			e.printStackTrace();
 		}
 	}
-
+*/
 }
