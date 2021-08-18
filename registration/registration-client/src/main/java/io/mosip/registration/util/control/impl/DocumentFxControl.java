@@ -570,10 +570,10 @@ public class DocumentFxControl extends FxControl {
 	@Override
 	public void refresh() {
 		super.refresh();
-		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
-		Object applicantTypeCode = requiredFieldValidator.evaluateMvelScript((String) ApplicationContext.map().getOrDefault(
-				RegistrationConstants.APPLICANT_TYPE_MVEL_SCRIPT, SCRIPT_NAME), getRegistrationDTo());
-		LOGGER.info("Refreshing document field {}, for applicantType : {}", uiFieldDTO.getId(), applicantTypeCode);
+//		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
+//		Object applicantTypeCode = requiredFieldValidator.evaluateMvelScript((String) ApplicationContext.map().getOrDefault(
+//				RegistrationConstants.APPLICANT_TYPE_MVEL_SCRIPT, SCRIPT_NAME), getRegistrationDTo());
+//		LOGGER.info("Refreshing document field {}, for applicantType : {}", uiFieldDTO.getId(), applicantTypeCode);
 		//TODO - will be uncommented in RC2
 		/*if(applicantTypeCode != null) {
 			List<DocumentCategoryDto> list = validDocumentService.getDocumentCategories((String) applicantTypeCode,
