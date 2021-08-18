@@ -2,7 +2,7 @@
 	"BELOW_ARE_STATIC_KEYWORDS":"",
 	"ageGroup":"INFANT",
 	"process":"Update",
-	  "updateUINAttributes":["DateOfBirth","Biometrics"],
+	  "updateUINAttributes":["DateOfBirth","Biometrics","Consent","PreferredLanguage"],
 	  "bioAuthAttributes":["rightThumb"],
 	  "bioAttributes": [
 			 

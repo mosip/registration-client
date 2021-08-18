@@ -3,7 +3,7 @@
 	"ageGroup":"MINOR",
 	"process":"Update",
 	
-	  "updateUINAttributes":["DateOfBirth","FullName","IntroducerDetails"],
+	  "updateUINAttributes":["DateOfBirth","FullName","IntroducerDetails","Consent","PreferredLanguage"],
 	  "bioAuthAttributes":["rightThumb"],
 	  "bioAttributes": [
 			 "leftEye",

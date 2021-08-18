@@ -147,7 +147,7 @@
 	    "value" : "Kénitra"
 	  } ],
 	  "updateUINAttributes":["DateOfBirth", "FullName",
-		  "Gender", "Address", "ResidenceStatus", "ReferenceIdentityNumber", "Location","Phone", "Email"],
+		  "Gender", "Address", "ResidenceStatus", "ReferenceIdentityNumber", "Location","Phone", "Email","Consent","PreferredLanguage"],
 		  "bioAuthAttributes":["rightThumb"],
  
 	  "proofOfConsent" : [ {

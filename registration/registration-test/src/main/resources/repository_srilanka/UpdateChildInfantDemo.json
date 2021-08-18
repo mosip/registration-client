@@ -3,7 +3,7 @@
 	"ageGroup":"INFANT",
 	"process":"Update",
 		
-  	  "updateUINAttributes":["DateOfBirth","FullName"],
+  	  "updateUINAttributes":["DateOfBirth","FullName","Consent","PreferredLanguage"],
 	  "bioAuthAttributes":["rightThumb"],
 	  "bioAttributes": [
 			 	"face"

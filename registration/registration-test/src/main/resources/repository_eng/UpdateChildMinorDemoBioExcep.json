@@ -145,7 +145,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  } ],
-	  "updateUINAttributes":["DateOfBirth","FullName","Biometrics","Address"],
+	  "updateUINAttributes":["DateOfBirth","FullName","Biometrics","Address","Consent","PreferredLanguage"],
 	  "bioAuthAttributes":["rightThumb"],
   "bioExceptionAttributes": [
 		

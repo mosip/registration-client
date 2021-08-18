@@ -1,4 +1,21 @@
 { "identity" : {
+	 "BELOW_ARE_STATIC_KEYWORDS":"",
+	  
+	    "bioAttributes": [
+	      "leftEye",
+	      "rightEye",
+	      "rightIndex",
+	      "rightLittle",
+	      "rightRing",
+	      "rightMiddle",
+	      "leftIndex",
+	      "leftLittle",
+	      "leftRing",
+	      "leftMiddle",
+	      "leftThumb",
+	      "rightThumb",
+	      "face"
+	    ],
 	"ageGroup":"ADULT",
 	"process":"New",
 	"preferredLang":"English",

@@ -147,7 +147,7 @@
 	    "value" : "Kénitra"
 	  } ],
 	  
-	  "updateUINAttributes":["DateOfBirth","Biometrics"],	
+	  "updateUINAttributes":["DateOfBirth","Biometrics","Consent","PreferredLanguage"],	
 		  "bioAuthAttributes":["leftEye","leftLittle",
 				"leftRing",
 				"leftMiddle"],

@@ -2,7 +2,7 @@
 	"BELOW_ARE_STATIC_KEYWORDS":"",
 	"ageGroup":"MINOR",
 	"process":"Update",
-		  "updateUINAttributes":["DateOfBirth","FullName","Biometrics","Address"],
+		  "updateUINAttributes":["DateOfBirth","FullName","Biometrics","Address","Consent","PreferredLanguage"],
 	  "bioAuthAttributes":["rightThumb"],
   "bioExceptionAttributes": [
 		
