@@ -145,6 +145,7 @@ public class NewReg {
 			if(flag==true)
 			{
 				ExtentReportUtil.test1.log(Status.PASS, "SUCCESS Operator Onboards");
+				ExtentReportUtil.reports.flush();
 				alerts.clickAlertexit();
 			}
 			else
