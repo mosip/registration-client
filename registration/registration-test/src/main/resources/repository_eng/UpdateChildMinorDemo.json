@@ -3,6 +3,7 @@
 	"process":"Update",
 	"preferredLang":"English",
 	"UIN":"5931539704",
+	"documentUploadAttributes":["POB","POR","POA","POI"],
 	"gender" : [ {
     "language" : "eng",
     "value" : "Female"

@@ -3,6 +3,7 @@
 
 	"ageGroup":"ADULT",
 	"process":"Update",
+	"documentUploadAttributes":["POB","POR","POA","POI"],
 	  "updateUINAttributes":["DateOfBirth","Biometrics","Consent","PreferredLanguage"],	
 		  "bioAuthAttributes":["leftIndex"],
   "bioExceptionAttributes": [

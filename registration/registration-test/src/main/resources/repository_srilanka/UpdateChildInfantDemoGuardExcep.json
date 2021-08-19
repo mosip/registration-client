@@ -5,6 +5,7 @@
 		  "updateUINAttributes":["DateOfBirth","FullName","IntroducerDetails","Consent","PreferredLanguage"],
 	  "bioAuthAttributes":["rightIndex"],
 	  "bioExceptionAttributes": ["rightLittle"],
+	  "documentUploadAttributes":["POB","POR","POA","POI"],
 	  "bioAttributes": [
 			
 				"face"

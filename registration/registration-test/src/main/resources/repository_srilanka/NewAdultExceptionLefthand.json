@@ -3,6 +3,7 @@
 	  "BELOW_ARE_STATIC_KEYWORDS":"",
     "ageGroup": "ADULT",
     "process": "New",
+    "documentUploadAttributes":["POB","POR","POA","POI"],
     "bioExceptionAttributes": [
   	  "leftIndex",
   		"leftLittle",

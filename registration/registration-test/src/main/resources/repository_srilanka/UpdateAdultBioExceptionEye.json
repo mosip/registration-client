@@ -5,6 +5,7 @@
 	"process":"Update",
 	  "updateUINAttributes":["DateOfBirth","Biometrics","Consent","PreferredLanguage"],	
 		  "bioAuthAttributes":["leftIndex"],
+		  "documentUploadAttributes":["POB","POR","POA","POI"],
   "bioExceptionAttributes": [
 	  "leftEye","leftLittle",
 		"leftRing",

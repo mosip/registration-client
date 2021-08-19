@@ -3,7 +3,7 @@
 	"ageGroup":"MINOR",
 	"process":"Update",
 		  "updateUINAttributes":["DateOfBirth","Biometrics","Consent","PreferredLanguage"],
-	
+		  "documentUploadAttributes":["POB","POR","POA","POI"],
 	  "bioAuthAttributes":["leftIndex"],
 	  "bioAttributes": [
 			 "leftEye",

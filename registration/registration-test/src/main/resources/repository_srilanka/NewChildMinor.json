@@ -3,6 +3,7 @@
 	  "BELOW_ARE_STATIC_KEYWORDS":"",
 	  "ageGroup":"MINOR",
     "process": "New",
+    "documentUploadAttributes":["POB","POR","POA","POI"],
     "bioAuthAttributes":["leftThumb"],
 	  "bioAttributes": [
 			 "leftEye",

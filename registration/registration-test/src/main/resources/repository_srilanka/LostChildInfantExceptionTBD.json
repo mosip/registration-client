@@ -6,6 +6,7 @@
     "bioExceptionAttributes": [
 		"leftEye"
 		], 
+		"documentUploadAttributes":["POB","POR","POA","POI"],
 			  "bioAuthAttributes":["rightEye"],
 	
 			  "bioAttributes": [

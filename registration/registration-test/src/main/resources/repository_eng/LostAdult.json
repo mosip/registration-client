@@ -2,6 +2,7 @@
 	"ageGroup":"ADULT",
 	"process":"Lost",
 	"preferredLang":"English",
+	"documentUploadAttributes":["POB","POR","POA","POI"],
   "gender" : [ {
     "language" : "eng",
     "value" : "Female"

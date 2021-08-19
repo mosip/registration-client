@@ -2,6 +2,7 @@
 	"BELOW_ARE_STATIC_KEYWORDS":"",
 	"ageGroup":"INFANT",
 	"process":"Update",
+	"documentUploadAttributes":["POB","POR","POA","POI"],
 		  "updateUINAttributes":["DateOfBirth","FullName","IntroducerDetails","Consent","PreferredLanguage"],
 	  "bioAuthAttributes":["rightIndex"],
 	  "bioExceptionAttributes": ["rightLittle"],

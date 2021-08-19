@@ -4,6 +4,7 @@
 	"process":"Update",
 	  "updateUINAttributes":["DateOfBirth","Biometrics","Consent","PreferredLanguage"],
 		  "bioAuthAttributes":["rightThumb"],
+		  "documentUploadAttributes":["POB","POR","POA","POI"],
 		  "bioAttributes": [
 				 "leftEye",
 					"rightEye",
