@@ -1965,4 +1965,5 @@ public class RegistrationConstants {
 	public static final String ROLES_MODIFIED = "Roles Modified";
 
 	public static final String JPG_COMPRESSION_QUALITY = "mosip.registration.doc.jpg.compression";
+	public static final String APPLICANT_TYPE_MVEL_SCRIPT = "mosip.kernel.applicantType.mvel.file";
 }

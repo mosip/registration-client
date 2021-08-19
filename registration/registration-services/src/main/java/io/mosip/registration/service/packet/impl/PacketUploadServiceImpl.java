@@ -99,10 +99,10 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 	 * lang.String)
 	 */
 	@Override
-	public PacketStatusDTO uploadPacket(@NonNull String appId) throws RegBaseCheckedException {
+	public PacketStatusDTO uploadPacket(@NonNull String packetId) throws RegBaseCheckedException {
 		proceedWithPacketSync();
 
-		Registration registration = registrationDAO.getRegistrationByAppId(appId);
+		Registration registration = registrationDAO.getRegistrationByPacketId(packetId);
 		if(registration == null) {
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_PKT_ID.getErrorCode(),
 					RegistrationExceptionConstants.REG_PKT_ID.getErrorMessage());

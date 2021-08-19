@@ -115,7 +115,7 @@ public class RegistrationDAOTest {
 	public void updateRegStatusTest() {
 		Registration updatedPacket = new Registration();
 		updatedPacket.setUploadCount((short)0);
-		Mockito.when(registrationRepository.findByAppId(Mockito.any())).thenReturn(updatedPacket);
+		Mockito.when(registrationRepository.findByPacketId(Mockito.any())).thenReturn(updatedPacket);
 		Mockito.when(registrationRepository.update(updatedPacket)).thenReturn(updatedPacket);
 		
 		PacketStatusDTO packetStatusDTO=new PacketStatusDTO();
@@ -204,6 +204,7 @@ public class RegistrationDAOTest {
 	public void updatePacketSyncStatusTest() {
 		Registration regobjectrequest = new Registration();
 		regobjectrequest.setId("123456");
+		regobjectrequest.setPacketId("123456");
 		regobjectrequest.setClientStatusCode("R");
 		regobjectrequest.setUpdBy("mosip");
 		regobjectrequest.setApproverRoleCode("SUPERADMIN");
@@ -211,10 +212,12 @@ public class RegistrationDAOTest {
 
 		PacketStatusDTO packetStatusDTO = new PacketStatusDTO();
 		packetStatusDTO.setFileName("123456");
+		packetStatusDTO.setPacketId("123456");
 		packetStatusDTO.setPacketClientStatus("Approved");
 		
 		Registration reg = new Registration();
 		reg.setId("123456");
+		reg.setPacketId("123456");
 		reg.setClientStatusCode("Approved");
 		reg.setUpdBy("mosip");
 		reg.setApproverRoleCode("SUPERADMIN");
@@ -237,30 +240,6 @@ public class RegistrationDAOTest {
 	}
 
 	@Test
-	public void testgetRegistrationById() {
-		Registration registration = new Registration();
-		registration.setId("123456789");
-		registration.setClientStatusCode("APPROVED");
-		registration.setCrBy("mosip");
-
-		Mockito.when(registrationRepository.findByClientStatusCodeAndId("APPROVED", "123456789"))
-				.thenReturn(registration);
-		Registration reg = registrationDAOImpl.getRegistrationById("APPROVED", "123456789");
-		assertEquals("123456789", reg.getId());
-		assertEquals("APPROVED", reg.getClientStatusCode());
-		assertEquals("mosip", reg.getCrBy());
-	}
-
-	@Test
-	public void getRegistrationByIdTest() {
-		Registration registration = new Registration();
-		Mockito.when(registrationRepository.findByClientStatusCodeAndId(Mockito.anyString(), Mockito.anyString()))
-				.thenReturn(registration);
-		assertSame(registration, registrationDAOImpl.getRegistrationById("PROCESSED", "REG123456"));
-
-	}
-
-	@Test
 	public void getRegistrationsTest() {
 		List<String> ids = new LinkedList<>();
 		ids.add("REG123456");
@@ -269,7 +248,7 @@ public class RegistrationDAOTest {
 		Registration registration = new Registration();
 		registrations.add(registration);
 
-		Mockito.when(registrationRepository.findAllById(ids)).thenReturn(registrations);
+		Mockito.when(registrationRepository.findByPacketIdIn(ids)).thenReturn(registrations);
 		assertSame(registrations, registrationDAOImpl.get(ids));
 	}
 	

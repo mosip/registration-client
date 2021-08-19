@@ -26,7 +26,6 @@ import io.mosip.kernel.core.util.exception.JsonProcessingException;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.constants.RegistrationType;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.RegistrationDAO;
@@ -176,13 +175,13 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	 * java.lang.String, java.lang.String, java.lang.String, java.lang.String)
 	 */
 	@Override
-	public Registration updateRegistration(String registrationID, String statusComments, String clientStatusCode) {
+	public Registration updateRegistration(String packetID, String statusComments, String clientStatusCode) {
 		try {
 			LOGGER.info("REGISTRATION - UPDATE_STATUS - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
 					"Packet updation has been started");
 
 			Timestamp timestamp = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
-			Registration registration = registrationRepository.getOne(registrationID);
+			Registration registration = registrationRepository.getOne(packetID);
 			// registration.setStatusCode(clientStatusCode);
 			registration.setStatusTimestamp(timestamp);
 			registration.setClientStatusCode(clientStatusCode);
@@ -204,13 +203,13 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	}
 	
 	@Override
-	public Registration updateRegistrationWithAppId(String applicationId, String statusComments, String clientStatusCode) {
+	public Registration updateRegistrationWithPacketId(String packetId, String statusComments, String clientStatusCode) {
 		try {
 			LOGGER.info("REGISTRATION - UPDATE_STATUS - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
 					"Packet updation has been started");
 
 			Timestamp timestamp = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
-			Registration registration = registrationRepository.findByAppId(applicationId);
+			Registration registration = registrationRepository.findByPacketId(packetId);
 			// registration.setStatusCode(clientStatusCode);
 			registration.setStatusTimestamp(timestamp);
 			registration.setClientStatusCode(clientStatusCode);
@@ -295,7 +294,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 
 		Timestamp timestamp = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
 
-		Registration reg = registrationRepository.findByAppId(registrationPacket.getFileName());
+		Registration reg = registrationRepository.findByPacketId(registrationPacket.getPacketId());
 		reg.setClientStatusCode(registrationPacket.getPacketClientStatus());
 		if (registrationPacket.getUploadStatus() != null) {
 			reg.setFileUploadStatus(registrationPacket.getUploadStatus());
@@ -323,7 +322,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 				"Updating the packet details in the Registration table");
 
 		Timestamp timestamp = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
-		Registration reg = registrationRepository.getOne(packet.getFileName());
+		Registration reg = registrationRepository.getOne(packet.getPacketId());
 		// reg.setStatusCode(packet.getPacketClientStatus());
 		reg.setClientStatusCode(packet.getPacketClientStatus());
 		reg.setIsActive(true);
@@ -342,30 +341,11 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 		return registrationRepository.findByClientStatusCodeAndServerStatusCodeIn(clientStatus, serverStatus);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see io.mosip.registration.dao.RegistrationDAO#getRegistrationById(java.lang.
-	 * String)
-	 */
 	@Override
-	public Registration getRegistrationById(String clientStatusCode, String rId) {
-		LOGGER.debug("REGISTRATION - BY_STATUS - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
-				"Get Registration based on reg Id and client status code started");
-		return registrationRepository.findByClientStatusCodeAndId(clientStatusCode, rId);
-	}
+	public List<Registration> get(List<String> packetIds) {
+		LOGGER.debug("Get Registrations based on packetIds started");
 
-	@Override
-	public List<Registration> get(List<String> regIds) {
-		LOGGER.debug("REGISTRATION - BY_STATUS - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
-				"Get Registrations based on reg Ids started");
-
-		Iterable<String> iterableRegIds = regIds;
-
-		LOGGER.debug("REGISTRATION - BY_STATUS - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
-				"Get Registration based on reg Ids completed");
-
-		return registrationRepository.findAllById(iterableRegIds);
+		return registrationRepository.findByPacketIdIn(packetIds);
 	}
 
 	/*
@@ -446,7 +426,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	}
 	
 	@Override
-	public Registration getRegistrationByAppId(String appId) {
-		return registrationRepository.findByAppId(appId);
+	public Registration getRegistrationByPacketId(String packetId) {
+		return registrationRepository.findByPacketId(packetId);
 	}
 }

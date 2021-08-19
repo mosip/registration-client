@@ -19,7 +19,10 @@ import io.mosip.kernel.core.util.DateUtils;
 @Entity
 @Table(schema = "REG", name = "REGISTRATION")
 public class Registration extends RegistrationCommonFields {
+	
 	@Id
+	@Column(name = "PACKET_ID")
+	private String packetId;
 	@Column(name = "ID")
 	private String id;
 	@Column(name = "REG_TYPE")
@@ -78,8 +81,6 @@ public class Registration extends RegistrationCommonFields {
 	private byte[] additionalInfo;
 	@Column(name = "APP_ID")
 	private String appId;
-	@Column(name = "PACKET_ID")
-	private String packetId;
 	@Column(name = "ADDITIONAL_INFO_REQ_ID")
 	private String additionalInfoReqId;
 	

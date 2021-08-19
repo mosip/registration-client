@@ -264,14 +264,15 @@ public class ReRegistrationController extends BaseController implements Initiali
 	 */
 	public void informedToUser() {
 		authenticateBtn.setDisable(false);
-		reRegisterStatusMap.put(table.getSelectionModel().getSelectedItem().getFileName(), "informed");
+		reRegisterStatusMap.put(table.getSelectionModel().getSelectedItem().getPacketId(), "informed");
 		
 		int focusedIndex = table.getSelectionModel().getFocusedIndex();
 
-		int row = packetIds.get(table.getSelectionModel().getSelectedItem().getFileName());
+		int row = packetIds.get(table.getSelectionModel().getSelectedItem().getPacketId());
 		PacketStatusVO packetStatusVO = new PacketStatusVO();
 		packetStatusVO.setSlno(table.getSelectionModel().getSelectedItem().getSlno());
 		packetStatusVO.setFileName(table.getSelectionModel().getSelectedItem().getFileName());
+		packetStatusVO.setPacketId(table.getSelectionModel().getSelectedItem().getPacketId());
 		packetStatusVO.setCreatedTime(table.getSelectionModel().getSelectedItem().getCreatedTime());
 		packetStatusVO.setPacketPath(table.getSelectionModel().getSelectedItem().getPacketPath());
 		packetStatusVO.setPacketStatus(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.INFORMED));
@@ -288,11 +289,11 @@ public class ReRegistrationController extends BaseController implements Initiali
 	 */
 	public void notInformedToUser() {
 		authenticateBtn.setDisable(false);
-		reRegisterStatusMap.put(table.getSelectionModel().getSelectedItem().getFileName(), "notinformed");
+		reRegisterStatusMap.put(table.getSelectionModel().getSelectedItem().getPacketId(), "notinformed");
 
 		int focusedIndex = table.getSelectionModel().getFocusedIndex();
 
-		int row = packetIds.get(table.getSelectionModel().getSelectedItem().getFileName());
+		int row = packetIds.get(table.getSelectionModel().getSelectedItem().getPacketId());
 		PacketStatusVO packetStatusVO = new PacketStatusVO();
 		packetStatusVO.setSlno(table.getSelectionModel().getSelectedItem().getSlno());
 		packetStatusVO.setFileName(table.getSelectionModel().getSelectedItem().getFileName());
@@ -376,6 +377,7 @@ public class ReRegistrationController extends BaseController implements Initiali
 				PacketStatusVO packetStatusVO = new PacketStatusVO();
 				packetStatusVO.setSlno(String.valueOf("    "+count++));
 				packetStatusVO.setFileName(reRegisterPacket.getFileName());
+				packetStatusVO.setPacketId(reRegisterPacket.getPacketId());
 				packetStatusVO.setPacketPath(reRegisterPacket.getPacketPath());
 				packetStatusVO.setCreatedTime(reRegisterPacket.getCreatedTime());
 				packetStatusVO.setPacketStatus(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PENDING));
@@ -383,7 +385,7 @@ public class ReRegistrationController extends BaseController implements Initiali
 			}
 			int rowNum = 0;
 			for(PacketStatusDTO packetStatusDTO : reRegistrationPacketsList) {
-				packetIds.put(packetStatusDTO.getFileName(), rowNum++);
+				packetIds.put(packetStatusDTO.getPacketId(), rowNum++);
 			}
 			observableList = FXCollections.observableArrayList(packetStatusVOs);
 			wrapListAndAddFiltering(observableList);

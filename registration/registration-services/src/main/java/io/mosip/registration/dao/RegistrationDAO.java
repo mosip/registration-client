@@ -157,15 +157,6 @@ public interface RegistrationDAO {
 	List<Registration> getAllReRegistrationPackets(String clientStatus, List<String> serverStatus);
 
 	/**
-	 * This method is used to get the registration by id.
-	 *
-	 * @param clientStatusCode the client status code
-	 * @param rId              the registration id
-	 * @return the registration by id
-	 */
-	Registration getRegistrationById(String clientStatusCode, String rId);
-
-	/**
 	 * This method is used to get list of Registrations by passing list of registration id's.
 	 *
 	 * @param regIds id
@@ -215,10 +206,10 @@ public interface RegistrationDAO {
 
 	List<Object[]> getStatusBasedCount();
 
-	Registration updateRegistrationWithAppId(String applicationId, String statusComments, String clientStatusCode);
+	Registration updateRegistrationWithPacketId(String packetId, String statusComments, String clientStatusCode);
 
 	List<String> getRegistrationIds(@NonNull List<String> appIds);
 
-	Registration getRegistrationByAppId(String appId);
+	Registration getRegistrationByPacketId(String packetId);
 
 }

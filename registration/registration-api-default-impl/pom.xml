@@ -36,6 +36,12 @@
             <artifactId>kernel-logger-logback</artifactId>
             <version>${mosip.core.kernel.version}</version>
             <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-test</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

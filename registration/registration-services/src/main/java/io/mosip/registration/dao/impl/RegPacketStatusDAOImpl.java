@@ -60,19 +60,6 @@ public class RegPacketStatusDAOImpl implements RegPacketStatusDAO {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see io.mosip.registration.dao.RegPacketStatusDAO#get(java.lang.String)
-	 */
-	@Override
-	public Registration get(String registrationId) {
-		LOGGER.info("REGISTRATION - PACKET_STATUS_SYNC - REG_PACKET_STATUS_DAO", APPLICATION_NAME, APPLICATION_ID,
-				"Get registration has been started");
-
-		return registrationRepository.findById(Registration.class, registrationId);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see
 	 * io.mosip.registration.dao.RegPacketStatusDAO#update(io.mosip.registration.
 	 * entity.Registration)
@@ -90,7 +77,7 @@ public class RegPacketStatusDAOImpl implements RegPacketStatusDAO {
 		LOGGER.info("Delete registration has been started");
 
 		/* Delete Registartion */
-		registrationRepository.deleteById(registration.getId());
+		registrationRepository.deleteByPacketId(registration.getPacketId());
 	}
 
 }

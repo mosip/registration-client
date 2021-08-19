@@ -31,18 +31,6 @@ public interface PacketSynchService {
 	 */
 	List<PacketStatusDTO> fetchPacketsToBeSynched();
 
-
-
-
-	/**
-	 * To check the packets sync status with the db.
-	 *
-	 * @param rId - the registration id
-	 * @return true - if the registration id exists and the status is 'SYNCED'.
-	 *         otherwise return false.
-	 */
-	Boolean fetchSynchedPacket(String rId);
-
 	/**
 	 * Fetch the required packet related information from input 'PacketStatusDTO'
 	 * object and map it to 'SyncRegistrationDTO' object. It encrypts the request

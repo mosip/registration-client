@@ -215,8 +215,8 @@ public class PacketUploadController extends BaseController implements Initializa
 			return;
 		}
 
-		List<String> selectedAppIDs = selectedPackets.stream().map(PacketStatusVO::getFileName).collect(Collectors.toList());
-		ResponseDTO responseDTO = packetSynchService.syncPacket(RegistrationConstants.JOB_TRIGGER_POINT_USER, selectedAppIDs);
+		List<String> selectedPacketIDs = selectedPackets.stream().map(PacketStatusVO::getPacketId).collect(Collectors.toList());
+		ResponseDTO responseDTO = packetSynchService.syncPacket(RegistrationConstants.JOB_TRIGGER_POINT_USER, selectedPacketIDs);
 		if(responseDTO.getErrorResponseDTOs() != null && !responseDTO.getErrorResponseDTOs().isEmpty()) {
 			selectAllCheckBox.setSelected(false);
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_FAILURE));
@@ -275,7 +275,7 @@ public class PacketUploadController extends BaseController implements Initializa
 
 						for (int i = 0; i < selectedPackets.size(); i++) {
 							try {
-								PacketStatusDTO dto = packetUploadService.uploadPacket(selectedPackets.get(i).getFileName());
+								PacketStatusDTO dto = packetUploadService.uploadPacket(selectedPackets.get(i).getPacketId());
 								tableMap.put(dto.getFileName(), dto.getPacketClientStatus());
 							} catch (RegBaseCheckedException e) {
 								tableMap.put(selectedPackets.get(i).getFileName(), RegistrationConstants.ERROR);
@@ -316,6 +316,7 @@ public class PacketUploadController extends BaseController implements Initializa
 					PacketStatusDTO packetStatusVO = new PacketStatusDTO();
 					packetStatusVO.setClientStatusComments(packet.getClientStatusComments());
 					packetStatusVO.setFileName(packet.getFileName());
+					packetStatusVO.setPacketId(packet.getPacketId());
 					packetStatusVO.setPacketClientStatus(packet.getPacketClientStatus());
 					packetStatusVO.setPacketPath(packet.getPacketPath());
 					packetStatusVO.setPacketServerStatus(packet.getPacketServerStatus());
@@ -348,6 +349,7 @@ public class PacketUploadController extends BaseController implements Initializa
 				PacketStatusVO packetStatusVO = new PacketStatusVO();
 				packetStatusVO.setClientStatusComments(packet.getClientStatusComments());
 				packetStatusVO.setFileName(packet.getFileName());
+				packetStatusVO.setPacketId(packet.getPacketId());
 				packetStatusVO.setPacketClientStatus(packet.getPacketClientStatus());
 				packetStatusVO.setPacketPath(packet.getPacketPath());
 				packetStatusVO.setPacketServerStatus(packet.getPacketServerStatus());
@@ -605,6 +607,7 @@ public class PacketUploadController extends BaseController implements Initializa
 			PacketStatusVO packetStatusVO = new PacketStatusVO();
 			packetStatusVO.setClientStatusComments(packet.getClientStatusComments());
 			packetStatusVO.setFileName(packet.getFileName());
+			packetStatusVO.setPacketId(packet.getPacketId());
 			packetStatusVO.setPacketClientStatus(packet.getPacketClientStatus());
 			packetStatusVO.setPacketPath(packet.getPacketPath());
 			packetStatusVO.setPacketServerStatus(packet.getPacketServerStatus());

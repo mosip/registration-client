@@ -352,7 +352,7 @@ public class RegistrationApprovalController extends BaseController implements In
 				int count = 1;
 				for (RegistrationApprovalDTO approvalDTO : listData) {
 					registrationApprovalVO.add(
-							new RegistrationApprovalVO("    " + count++, approvalDTO.getId(), approvalDTO.getDate(),
+							new RegistrationApprovalVO("    " + count++, approvalDTO.getId(), approvalDTO.getPacketId(), approvalDTO.getDate(),
 									approvalDTO.getAcknowledgementFormPath(), approvalDTO.getOperatorId(), RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PENDING)));
 				}
 				int rowNum = 0;
@@ -496,6 +496,7 @@ public class RegistrationApprovalController extends BaseController implements In
 
 			Map<String, String> map = new WeakHashMap<>();
 			map.put(RegistrationConstants.PACKET_APPLICATION_ID, table.getSelectionModel().getSelectedItem().getId());
+			map.put(RegistrationConstants.PACKET_ID, table.getSelectionModel().getSelectedItem().getPacketId());
 			map.put(RegistrationConstants.STATUSCODE, RegistrationClientStatusCode.APPROVED.getCode());
 			map.put(RegistrationConstants.STATUSCOMMENT, RegistrationConstants.EMPTY);
 			approvalmapList.add(map);
@@ -508,6 +509,7 @@ public class RegistrationApprovalController extends BaseController implements In
 			RegistrationApprovalVO approvalDTO = new RegistrationApprovalVO(
 					table.getSelectionModel().getSelectedItem().getSlno(),
 					table.getSelectionModel().getSelectedItem().getId(),
+					table.getSelectionModel().getSelectedItem().getPacketId(),
 					table.getSelectionModel().getSelectedItem().getDate(),
 					table.getSelectionModel().getSelectedItem().getAcknowledgementFormPath(),
 					table.getSelectionModel().getSelectedItem().getOperatorId(),
@@ -607,7 +609,7 @@ public class RegistrationApprovalController extends BaseController implements In
 
 			List<String> regIds = new ArrayList<>();
 			for (Map<String, String> map : approvalmapList) {
-				registrationApprovalService.updateRegistrationWithAppId(map.get(RegistrationConstants.PACKET_APPLICATION_ID),
+				registrationApprovalService.updateRegistrationWithPacketId(map.get(RegistrationConstants.PACKET_ID),
 						map.get(RegistrationConstants.STATUSCOMMENT), map.get(RegistrationConstants.STATUSCODE));
 				regIds.add(map.get(RegistrationConstants.REGISTRATIONID));
 			}
