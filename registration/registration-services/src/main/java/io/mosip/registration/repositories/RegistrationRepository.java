@@ -115,7 +115,7 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	List<Registration> findByclientStatusCodeOrderByCrDtimeAsc(String statusCode);
 	
 	/**
-	 * Find by CrDtimes and client status code.
+	 * Find by CrDtimes and server status code.
 	 *
 	 * @param crDtimes 
 	 * 				the date upto packets to be deleted
@@ -123,7 +123,7 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	 * 				status of resgistrationPacket
 	 * @return list of registrations
 	 */
-	List<Registration> findByClientStatusCodeAndCrDtimeBeforeAndServerStatusCodeIn(String clientStatusCode, Timestamp crDtimes, List<String> statusCodes);
+	List<Registration> findByCrDtimeBeforeAndServerStatusCodeIn(Timestamp crDtimes, List<String> statusCodes);
 	
 	/**
 	 * fetches all the Registration records which is having the given server status
@@ -173,7 +173,4 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	List<Registration> findByPacketIdIn(List<String> packetIds);
 
 	List<Registration> findByClientStatusCommentsOrderByCrDtime(String statusComment);
-	
-	@Query("delete from Registration where packetId=:packetId")
-	void deleteByPacketId(String packetId);
 }

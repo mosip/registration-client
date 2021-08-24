@@ -26,7 +26,6 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.dao.impl.RegistrationDAOImpl;
@@ -266,8 +265,8 @@ public class RegistrationDAOTest {
 		
 		List<String> status = Arrays.asList("PROCESSED", "ACCEPTED");
 
-		Mockito.when(registrationRepository.findByClientStatusCodeAndCrDtimeBeforeAndServerStatusCodeIn(Mockito.anyString(), Mockito.any(), Mockito.any())).thenReturn(registrations);
-		assertSame("Approved",registrationDAOImpl.get(RegistrationClientStatusCode.RE_REGISTER.getCode(), timestamp, status).get(0).getClientStatusCode());
+		Mockito.when(registrationRepository.findByCrDtimeBeforeAndServerStatusCodeIn(Mockito.any(), Mockito.any())).thenReturn(registrations);
+		assertSame("Approved",registrationDAOImpl.get(timestamp, status).get(0).getClientStatusCode());
 	}
 	
 	@Test
