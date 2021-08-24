@@ -168,7 +168,7 @@ public class DemographicPage {
 
         try {
             jsonFromSchema = getProcessSchemaJsonTxt(flow);
-           
+
             processSchema = JsonUtil.convertJsonintoJava(jsonFromSchema, Root.class);
 
             logger.info("Automaiton Script - Printing Input file Json" + JsonIdentity);
@@ -348,7 +348,6 @@ public class DemographicPage {
             }
         }
     }
-
 
     public String getSchemaJsonTxt() {
         String jsonFromSchema = null;
@@ -561,15 +560,16 @@ public class DemographicPage {
     public void biometricsAuth(Schema schema, String scenario, String id, String identity) {
         try {
             if (scenario.equalsIgnoreCase("Update") && schema.subType.equalsIgnoreCase("applicant-auth"))
-
             {
-                scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+                Node node=waitsUtil.lookupById(id);
+                if(node.isVisible()) {
+                scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("authscroll")));
 
                 System.out.println("");
                 Thread.sleep(400);
                 biometricUploadPage.newRegbioUpload(schema.getSubType(),
                         biometricUploadPage.bioAuthAttributeList(identity), id, identity);
-
+                }
             }
 
         } catch (Exception e) {
@@ -610,8 +610,8 @@ public class DemographicPage {
                 if (ageGroup.equalsIgnoreCase("INFANT")) {
                     scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
                     // bioattributes=fetchbioAttr(schema,ageGroup,process);
-                    biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                            biometricUploadPage.bioAttributeList(identity), id, identity);
+                    biometricUploadPage.newRegbioUpload(schema.getId(),
+                            "face", id, identity);
                 } else {
                     if (ageGroup.equalsIgnoreCase("MINOR")) {
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
@@ -640,6 +640,11 @@ public class DemographicPage {
                 biometricUploadPage.newRegbioUpload(schema.getSubType(),
                         biometricUploadPage.bioAuthAttributeList(identity), id, identity);
 
+            } else if (schema.subType.equalsIgnoreCase("applicant-auth") && (!ageGroup.equals("INFANT"))) {
+
+             
+                biometricsAuth(schema, scenario, id, identity);
+
             }
 
         } catch (Exception e) {
@@ -647,6 +652,101 @@ public class DemographicPage {
         }
     }
 
+    
+    public void authBiometrics(Schema schema, String scenario, String id, String identity) {
+        try {
+            // RegistrationDTO registrationDTO = (RegistrationDTO)
+            // SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
+
+            // int age=registrationDTO.getAge();
+            String ageGroup = JsonUtil.JsonObjParsing(identity, "ageGroup");
+            String process = JsonUtil.JsonObjParsing(identity, "process");
+            List<String> bioattributes = null;
+
+            if (schema.subType.equalsIgnoreCase("applicant-auth") && (!ageGroup.equals("INFANT"))) {
+
+             
+                biometricsAuth(schema, scenario, id, identity);
+
+            }
+
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+    }
+
+    public void introducerBiometrics(Schema schema, String scenario, String id, String identity) {
+        try {
+            // RegistrationDTO registrationDTO = (RegistrationDTO)
+            // SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
+
+            // int age=registrationDTO.getAge();
+            String ageGroup = JsonUtil.JsonObjParsing(identity, "ageGroup");
+            String process = JsonUtil.JsonObjParsing(identity, "process");
+            List<String> bioattributes = null;
+
+           if (schema.subType.equalsIgnoreCase("introducer")
+                    && (ageGroup.equals("INFANT") || ageGroup.equals("MINOR"))) {
+               Node node=waitsUtil.lookupById(id);
+               if(node.isVisible()) {
+                if (ageGroup.equalsIgnoreCase("INFANT")) {
+                    scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+                    scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+                } else
+                    scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+
+                Thread.sleep(400);
+                
+                biometricUploadPage.newRegbioUpload(schema.getSubType(),
+                        biometricUploadPage.bioAuthAttributeList(identity), id, identity);
+               }
+            } 
+
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+    }
+
+    
+    public void applicantBiometrics(Schema schema, String scenario, String id, String identity) {
+        try {
+            // RegistrationDTO registrationDTO = (RegistrationDTO)
+            // SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
+
+            // int age=registrationDTO.getAge();
+            String ageGroup = JsonUtil.JsonObjParsing(identity, "ageGroup");
+            String process = JsonUtil.JsonObjParsing(identity, "process");
+            List<String> bioattributes = null;
+
+            if (schema.isInputRequired() && schema.subType.equalsIgnoreCase("applicant")) {
+                if (ageGroup.equalsIgnoreCase("INFANT")) {
+                    scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
+                    // bioattributes=fetchbioAttr(schema,ageGroup,process);
+                    biometricUploadPage.newRegbioUpload(schema.getId(),
+                            "face", id, identity);
+                } else {
+                    if (ageGroup.equalsIgnoreCase("MINOR")) {
+                        scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
+                        // bioattributes=fetchbioAttr(schema,ageGroup,process);
+                        biometricUploadPage.newRegbioUpload(schema.getSubType(),
+                                biometricUploadPage.bioAttributeList(identity), id, identity);
+                    } else if (ageGroup.equalsIgnoreCase("ADULT")) {
+                        scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+                        Thread.sleep(400);
+                        // bioattributes=fetchbioAttr(schema,ageGroup,process);
+
+                        biometricUploadPage.newRegbioUpload(schema.getSubType(),
+                                biometricUploadPage.bioAttributeList(identity), id, identity);
+                    }
+                }
+            } 
+
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+    }
+
+    
     public void fileupload(Schema schema, String JsonIdentity, String key, String id, String scenario,
             String ageGroup) {
         try {
@@ -847,7 +947,7 @@ public class DemographicPage {
                 if (opNode.isPresent()) {
                     ((Button) opNode.get()).fire();
                 }
-             
+
             }
         } catch (Exception e) {
             logger.error("", e);
@@ -951,7 +1051,7 @@ public class DemographicPage {
 
                 buttonUpdateSelection(schema, id, JsonIdentity, key);
                 break;
-            case "biometrics":
+            case "biometrics1":
                 if (getupdateUINAttributes(JsonIdentity).contains(schema.getGroup())) { // All Bio-- IRIS(U) <---
                                                                                         // Remaining() based on age
                                                                                         // biometricsupdate(schema,scenario,id,JsonIdentity);
@@ -969,7 +1069,44 @@ public class DemographicPage {
 
                 }
                 break;
+            case "biometrics2":
+                if (getupdateUINAttributes(JsonIdentity).contains(schema.getGroup())) { // All Bio-- IRIS(U) <---
+                    // Remaining() based on age
+                    // biometricsupdate(schema,scenario,id,JsonIdentity);
+                    biometrics(schema, scenario, id, JsonIdentity);
+                } else if (!getupdateUINAttributes(JsonIdentity).contains(schema.getGroup())
+                        && !getupdateUINAttributes(JsonIdentity)
+                                .contains(PropertiesUtil.getKeyValue("GuardianDetails"))) { // Single ---> AUTH
+                    
+                    biometrics(schema, scenario, id, JsonIdentity);
 
+                } else if (!getupdateUINAttributes(JsonIdentity).contains(schema.getGroup())
+                        && getupdateUINAttributes(JsonIdentity)
+                                .contains(PropertiesUtil.getKeyValue("GuardianDetails"))) {// Only Introducer
+                    // biometricsupdate(schema,scenario,id,JsonIdentity);
+                    biometrics(schema, scenario, id, JsonIdentity);
+
+                }
+
+                break;
+                
+            case "biometrics":
+                if (getupdateUINAttributes(JsonIdentity).contains(PropertiesUtil.getKeyValue("Biometrics"))) { // All Bio-- IRIS(U) <---
+                    applicantBiometrics(schema, scenario, id, JsonIdentity);
+                } else { // Single ---> AUTH
+                    authBiometrics(schema, scenario, id, JsonIdentity);
+                   
+                } 
+                
+//                if (!getupdateUINAttributes(JsonIdentity).contains(schema.getGroup())
+//                        && getupdateUINAttributes(JsonIdentity)
+//                                .contains(PropertiesUtil.getKeyValue("GuardianDetails"))) {// Only Introducer
+//                    
+                        introducerBiometrics(schema, scenario, id, JsonIdentity);
+
+                
+
+                break;
             }
 
         } catch (Exception e) {

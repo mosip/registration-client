@@ -41,7 +41,8 @@ public class LoginPage {
     String homeSelectionMenu = "#homeSelectionMenu";
     String logout = "#logout";
     String submit = "#submit1";
-    String success = "#context";
+    //String success = "#context";
+    String success = "Success";
     String exit = "#exit";
     String appLanguage = "#appLanguage";
 
@@ -188,11 +189,38 @@ public class LoginPage {
             assertNotNull(passwordTextField, "passwordTextField Not Present");
 
             passwordTextField.setText(pwd);
+            
+            // if home else fail or check the #context
 
             waitsUtil.clickNodeAssert("#sub2");
 
             Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
             waitsUtil.clickNodeAssert(success);
+
+            flag = true;
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+        return flag;
+
+    }
+    
+
+    public boolean verifyLoginAndHome(String pwd, Stage applicationPrimaryStage) {
+        boolean flag = false;
+        try {
+            passwordTextField = waitsUtil.lookupByIdTextField(password, robot);
+
+            assertNotNull(passwordTextField, "passwordTextField Not Present");
+
+            passwordTextField.setText(pwd);
+            
+            // if home else fail or check the #context
+
+            waitsUtil.clickNodeAssert("#sub2");
+
+            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
+            waitsUtil.clickNodeAssert("#homeImgView");
 
             flag = true;
         } catch (Exception e) {

@@ -70,12 +70,12 @@ public class NewReg {
     SelectLanguagePage selectLanguagePage;
     Alerts alerts;
 
-    public boolean initialRegclientSet(FxRobot robot, String loginUserid, String loginPwd,
+    public boolean initialRegclientSet(FxRobot robot, String loginUserid, String loginPwd, String filename,
             Stage applicationPrimaryStage1) {
         boolean flag = false;
         try {
-            ExtentReportUtil.ExtentSetting();
-            ExtentReportUtil.test1 = ExtentReportUtil.reports.createTest("Operator Onboard with Dafault Role");
+          
+            ExtentReportUtil.test1 = ExtentReportUtil.reports.createTest("Initial Launch " + filename);
 
             loginPage = new LoginPage(robot);
             buttons = new Buttons(robot);
@@ -100,6 +100,81 @@ public class NewReg {
             ExtentReportUtil.test1.info("Operator logs in");
 
             if (flag == true) {
+                ExtentReportUtil.test1.log(Status.PASS, "SUCCESS Operator Onboards");
+                ExtentReportUtil.reports.flush();
+                alerts.clickAlertexit();
+            } else {
+                ExtentReportUtil.test1.log(Status.FAIL, "FAIL Operator Onboards");
+                try {
+                    alerts.clickAlertexit();
+                } catch (Exception e) {
+                    logger.error("", e);
+                }
+                try {
+                    homePage.clickHomeImg();
+                    buttons.clickConfirmBtn();
+                } catch (Exception e) {
+                    logger.error("", e);
+                }
+                try {
+                    loginPage.logout();
+                    buttons.clickConfirmBtn();
+
+                } catch (Exception e) {
+                    logger.error("", e);
+                }
+            }
+
+        } catch (Exception e) {
+
+            logger.error(e.getMessage());
+        }
+
+        return flag;
+    }
+
+    
+    public boolean operatorOnboard(FxRobot robot, String operatorUserid, String operatorPwd, String filename,
+            Stage applicationPrimaryStage1) {
+        boolean flag = false;
+        try {
+          
+            ExtentReportUtil.test1 = ExtentReportUtil.reports.createTest("Onboard " + operatorUserid + filename);
+
+            loginPage = new LoginPage(robot);
+            buttons = new Buttons(robot);
+            authenticationPage = new AuthenticationPage(robot);
+            robotActions = new RobotActions(robot);
+            webViewDocument = new WebViewDocument(robot);
+            biometricUploadPage = new BiometricUploadPage(robot);
+            alerts = new Alerts(robot);
+            result = false;
+
+            // Load Login screen
+            loginPage.loadLoginScene(applicationPrimaryStage1);
+            ExtentReportUtil.test1.info("RegclientScreen Loaded");
+
+            ExtentReportUtil.test1.info("Operator Enter Details ");
+
+            // Enter userid and password
+            loginPage.setUserId(operatorUserid);
+            flag = loginPage.verifyLoginAndHome(operatorPwd, applicationPrimaryStage1);
+            ExtentReportUtil.test1.info("Operator logs in");
+
+            if (flag == true) {
+                try {
+                    homePage.clickHomeImg();
+                    buttons.clickConfirmBtn();
+                } catch (Exception e) {
+                    logger.error("", e);
+                }
+                try {
+                    loginPage.logout();
+                    buttons.clickConfirmBtn();
+
+                } catch (Exception e) {
+                    logger.error("", e);
+                }
                 ExtentReportUtil.test1.log(Status.PASS, "SUCCESS Operator Onboards");
                 ExtentReportUtil.reports.flush();
                 alerts.clickAlertexit();

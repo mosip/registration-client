@@ -33,8 +33,8 @@ public class JunitClass {
 
             System.setProperty("jdbc.drivers", "org.apache.derby.jdbc.EmbeddedDriver");
 
-            RegistrationMain.invokeRegClient(PropertiesUtil.getKeyValue("operatorId"),
-                    PropertiesUtil.getKeyValue("operatorPwd"), PropertiesUtil.getKeyValue("mosip.upgradeserver"));
+          //  RegistrationMain.invokeRegClient(PropertiesUtil.getKeyValue("operatorId"),
+                //    PropertiesUtil.getKeyValue("operatorPwd"), PropertiesUtil.getKeyValue("mosip.upgradeserver"));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

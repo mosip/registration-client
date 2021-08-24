@@ -334,7 +334,7 @@ public class BiometricUploadPage {
 
     }
 
-    public void newRegbioUpload(String subtype, String biostring, String id, String identity) {
+public void newRegbioUpload(String idmod, String biostring, String id, String identity) {
         // TODO Auto-generated method stub
         try {
             if (biostring.contains(PropertiesUtil.getKeyValue("face")))

@@ -59,10 +59,12 @@ public class RegistrationMain {
 
                     Set<String> fileNameSet = map.keySet();
                     for (String fileName : fileNameSet) {
-                        String jsonContent = map.get(fileName);
-                        String process = PropertiesUtil.getKeyValue("process");
-                        process = JsonUtil.JsonObjParsing(jsonContent, process);
-
+                        String jsonContent=null,process = null;
+                       
+                            jsonContent = map.get(fileName);
+                             process = PropertiesUtil.getKeyValue("process");
+                            process = JsonUtil.JsonObjParsing(jsonContent, process);
+                       
                         try {
                             switch (process) {
                             case "New":
@@ -103,22 +105,22 @@ public class RegistrationMain {
 
                             case "InitialLaunch":
                                 Boolean flag = false;
-                                flag = loginNewRegLogout.initialRegclientSet(robot, operatorId, operatorPwd,
+                                flag = loginNewRegLogout.initialRegclientSet(robot, operatorId, operatorPwd,fileName,
                                         StartApplication.primaryStage);
                                 logger.info("Operator Onboarding status=" + flag);
                                 ExtentReportUtil.reports.flush();
                                 break;
                             case "OperatorOnboard":
                                 Boolean onboardBioflag = false;
-                                onboardBioflag = loginNewRegLogout.initialRegclientSet(robot, operatorId, operatorPwd,
+                                onboardBioflag = loginNewRegLogout.operatorOnboard(robot, operatorId, operatorPwd,fileName,
                                         StartApplication.primaryStage);
                                 logger.info("Operator Onboarding status=" + onboardBioflag);
                                 ExtentReportUtil.reports.flush();
                                 break;
                             case "ReviewerOnboard":
                                 Boolean reviewerflag = false;
-                                reviewerflag = loginNewRegLogout.initialRegclientSet(robot, reviewerUserid,
-                                        reviewerUserid, StartApplication.primaryStage);
+                                reviewerflag = loginNewRegLogout.operatorOnboard(robot, reviewerUserid,
+                                        reviewerpwd, fileName,StartApplication.primaryStage);
                                 logger.info("Operator Onboarding status=" + reviewerflag);
                                 ExtentReportUtil.reports.flush();
                                 break;
@@ -163,37 +165,6 @@ public class RegistrationMain {
         Application.launch(StartApplication.class, args);
     }
 
-    public static void invokeRegClient(String operatorId, String operatorPwd, String targetUrl) {
-        NewReg lg = new NewReg();
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                try {
-
-                    logger.info("thread inside calling testcase");
-
-                    Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait")));
-                    robot = new FxRobot();
-                    boolean flag = lg.initialRegclientSet(robot, operatorId, operatorPwd,
-                            StartApplication.primaryStage);
-                    if (flag == true)
-                        logger.info("Initial setup Done");
-                    else
-                        logger.info("Initial setup not required");
-                    ExtentReportUtil.reports.flush();
-
-                } catch (Exception e) {
-                    logger.error("", e);
-                }
-
-            }
-        };
-
-        thread.start();
-
-        String args[] = {};
-        Application.launch(StartApplication.class, args);
-    }
 
     public static void main(String[] args) {
         try {
