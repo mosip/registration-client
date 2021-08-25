@@ -557,7 +557,7 @@ public class DemographicPage {
 
     }
 
-    public void biometricsAuth(Schema schema, String scenario, String id, String identity) {
+    public void biometricsAuth(Schema schema, String scenario, String id, String identity,String ageGroup) {
         try {
             if (scenario.equalsIgnoreCase("Update") && schema.subType.equalsIgnoreCase("applicant-auth"))
             {
@@ -568,7 +568,7 @@ public class DemographicPage {
                 System.out.println("");
                 Thread.sleep(400);
                 biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                        biometricUploadPage.bioAuthAttributeList(identity), id, identity);
+                        biometricUploadPage.bioAuthAttributeList(identity), id, identity,ageGroup);
                 }
             }
 
@@ -610,21 +610,21 @@ public class DemographicPage {
                 if (ageGroup.equalsIgnoreCase("INFANT")) {
                     scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
                     // bioattributes=fetchbioAttr(schema,ageGroup,process);
-                    biometricUploadPage.newRegbioUpload(schema.getId(),
-                            "face", id, identity);
+                    biometricUploadPage.newRegbioUpload(schema.getSubType(),
+                            biometricUploadPage.bioAttributeList(identity), id, identity,ageGroup);
                 } else {
                     if (ageGroup.equalsIgnoreCase("MINOR")) {
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
                         // bioattributes=fetchbioAttr(schema,ageGroup,process);
                         biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                                biometricUploadPage.bioAttributeList(identity), id, identity);
+                                biometricUploadPage.bioAttributeList(identity), id, identity,ageGroup);
                     } else if (ageGroup.equalsIgnoreCase("ADULT")) {
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
                         Thread.sleep(400);
                         // bioattributes=fetchbioAttr(schema,ageGroup,process);
 
                         biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                                biometricUploadPage.bioAttributeList(identity), id, identity);
+                                biometricUploadPage.bioAttributeList(identity), id, identity,ageGroup);
                     }
                 }
             } else if (schema.subType.equalsIgnoreCase("introducer")
@@ -638,12 +638,12 @@ public class DemographicPage {
 
                 Thread.sleep(400);
                 biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                        biometricUploadPage.bioAuthAttributeList(identity), id, identity);
+                        biometricUploadPage.bioAuthAttributeList(identity), id, identity,ageGroup);
 
             } else if (schema.subType.equalsIgnoreCase("applicant-auth") && (!ageGroup.equals("INFANT"))) {
 
              
-                biometricsAuth(schema, scenario, id, identity);
+                biometricsAuth(schema, scenario, id, identity,ageGroup);
 
             }
 
@@ -666,7 +666,7 @@ public class DemographicPage {
             if (schema.subType.equalsIgnoreCase("applicant-auth") && (!ageGroup.equals("INFANT"))) {
 
              
-                biometricsAuth(schema, scenario, id, identity);
+                biometricsAuth(schema, scenario, id, identity,ageGroup);
 
             }
 
@@ -698,7 +698,7 @@ public class DemographicPage {
                 Thread.sleep(400);
                 
                 biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                        biometricUploadPage.bioAuthAttributeList(identity), id, identity);
+                        biometricUploadPage.bioAuthAttributeList(identity), id, identity,ageGroup);
                }
             } 
 
@@ -723,20 +723,20 @@ public class DemographicPage {
                     scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
                     // bioattributes=fetchbioAttr(schema,ageGroup,process);
                     biometricUploadPage.newRegbioUpload(schema.getId(),
-                            "face", id, identity);
+                            biometricUploadPage.infantBioAttributeList(identity), id, identity,ageGroup);
                 } else {
                     if (ageGroup.equalsIgnoreCase("MINOR")) {
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
                         // bioattributes=fetchbioAttr(schema,ageGroup,process);
                         biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                                biometricUploadPage.bioAttributeList(identity), id, identity);
+                                biometricUploadPage.bioAttributeList(identity), id, identity,ageGroup);
                     } else if (ageGroup.equalsIgnoreCase("ADULT")) {
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
                         Thread.sleep(400);
                         // bioattributes=fetchbioAttr(schema,ageGroup,process);
 
                         biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                                biometricUploadPage.bioAttributeList(identity), id, identity);
+                                biometricUploadPage.bioAttributeList(identity), id, identity,ageGroup);
                     }
                 }
             } 
@@ -980,12 +980,7 @@ public class DemographicPage {
                 logger.info("Read Consent");
                 break;
             case "textbox":
-                // if(ageGroup.equalsIgnoreCase("MINOR")||ageGroup.equalsIgnoreCase("INFANT"))
-                // getTextboxKeyValueChild(id,JsonIdentity,key,schema.isTransliterate(),scenario);
-                // else
-                // getTextboxKeyValue(id,JsonIdentity,key,schema.isTransliterate(),scenario);
-
-                getTextboxKeyValue(schema, id, JsonIdentity, key, schema.isTransliterate(), scenario);
+                 getTextboxKeyValue(schema, id, JsonIdentity, key, schema.isTransliterate(), scenario);
                 break;
             case "ageDate":
                 // setdob(id,JsonIdentity,key);
@@ -1051,45 +1046,6 @@ public class DemographicPage {
 
                 buttonUpdateSelection(schema, id, JsonIdentity, key);
                 break;
-            case "biometrics1":
-                if (getupdateUINAttributes(JsonIdentity).contains(schema.getGroup())) { // All Bio-- IRIS(U) <---
-                                                                                        // Remaining() based on age
-                                                                                        // biometricsupdate(schema,scenario,id,JsonIdentity);
-                    biometrics(schema, scenario, id, JsonIdentity);
-                } else if (!getupdateUINAttributes(JsonIdentity).contains(schema.getGroup())
-                        && !getupdateUINAttributes(JsonIdentity)
-                                .contains(PropertiesUtil.getKeyValue("GuardianDetails"))) { // Single ---> AUTH
-                    biometricsAuth(schema, scenario, id, JsonIdentity);
-
-                } else if (!getupdateUINAttributes(JsonIdentity).contains(schema.getGroup())
-                        && getupdateUINAttributes(JsonIdentity)
-                                .contains(PropertiesUtil.getKeyValue("GuardianDetails"))) {// Only Introducer
-                                                                                           // biometricsupdate(schema,scenario,id,JsonIdentity);
-                    biometrics(schema, scenario, id, JsonIdentity);
-
-                }
-                break;
-            case "biometrics2":
-                if (getupdateUINAttributes(JsonIdentity).contains(schema.getGroup())) { // All Bio-- IRIS(U) <---
-                    // Remaining() based on age
-                    // biometricsupdate(schema,scenario,id,JsonIdentity);
-                    biometrics(schema, scenario, id, JsonIdentity);
-                } else if (!getupdateUINAttributes(JsonIdentity).contains(schema.getGroup())
-                        && !getupdateUINAttributes(JsonIdentity)
-                                .contains(PropertiesUtil.getKeyValue("GuardianDetails"))) { // Single ---> AUTH
-                    
-                    biometrics(schema, scenario, id, JsonIdentity);
-
-                } else if (!getupdateUINAttributes(JsonIdentity).contains(schema.getGroup())
-                        && getupdateUINAttributes(JsonIdentity)
-                                .contains(PropertiesUtil.getKeyValue("GuardianDetails"))) {// Only Introducer
-                    // biometricsupdate(schema,scenario,id,JsonIdentity);
-                    biometrics(schema, scenario, id, JsonIdentity);
-
-                }
-
-                break;
-                
             case "biometrics":
                 if (getupdateUINAttributes(JsonIdentity).contains(PropertiesUtil.getKeyValue("Biometrics"))) { // All Bio-- IRIS(U) <---
                     applicantBiometrics(schema, scenario, id, JsonIdentity);
@@ -1098,10 +1054,6 @@ public class DemographicPage {
                    
                 } 
                 
-//                if (!getupdateUINAttributes(JsonIdentity).contains(schema.getGroup())
-//                        && getupdateUINAttributes(JsonIdentity)
-//                                .contains(PropertiesUtil.getKeyValue("GuardianDetails"))) {// Only Introducer
-//                    
                         introducerBiometrics(schema, scenario, id, JsonIdentity);
 
                 

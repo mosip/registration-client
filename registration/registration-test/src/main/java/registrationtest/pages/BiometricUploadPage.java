@@ -163,7 +163,18 @@ public class BiometricUploadPage {
 
         return bioAttList;
     }
+    public List<String> infantBioAttributeList(String identity) {
+        List<String> bioAttList = new LinkedList<String>();
+        String bioAttributes = null;
+        try {
+            bioAttributes = PropertiesUtil.getKeyValue("infantBioAttributes");
+            bioAttList = JsonUtil.JsonObjArrayListParsing(identity, bioAttributes);
+        } catch (Exception e) {
+            logger.error("", e);
+        }
 
+        return bioAttList;
+    }
     public List<String> exceptionList(String identity) {
         List<String> listException = new LinkedList<String>();
         String bioExceptionAttributes = null;
@@ -254,7 +265,7 @@ public class BiometricUploadPage {
      * @throws InterruptedException
      * @throws IOException
      */
-    public void newRegbioUpload(String subtype, List<String> list, String id, String identity) {
+    public void newRegbioUpload(String subtype, List<String> list, String id, String identity,String ageGroup) {
         try
 
         {
@@ -266,7 +277,7 @@ public class BiometricUploadPage {
             } catch (Exception e) {
                 logger.error("", e);
             }
-            if (listException.isEmpty()) {
+            if (listException.isEmpty() || ageGroup.equalsIgnoreCase("INFANT")) {
                 if (list.contains(PropertiesUtil.getKeyValue("leftEye"))
                         || list.contains(PropertiesUtil.getKeyValue("rightEye")))
 
@@ -334,15 +345,40 @@ public class BiometricUploadPage {
 
     }
 
-public void newRegbioUpload(String idmod, String biostring, String id, String identity) {
+public void infantbioUploadTBD(String idmod,  List<String> list, String id, String identity) {
         // TODO Auto-generated method stub
         try {
-            if (biostring.contains(PropertiesUtil.getKeyValue("face")))
-                bioScan(id, id + FACE, identity);
+      
+
+        if (list.contains(PropertiesUtil.getKeyValue("leftEye"))
+                || list.contains(PropertiesUtil.getKeyValue("rightEye")))
+
+            bioScan(id, id + IRIS_DOUBLE, identity);
+
+        if (list.contains(PropertiesUtil.getKeyValue("rightIndex"))
+                || list.contains(PropertiesUtil.getKeyValue("rightLittle"))
+                || list.contains(PropertiesUtil.getKeyValue("rightRing"))
+                || list.contains(PropertiesUtil.getKeyValue("rightMiddle")))
+
+            bioScan(id, id + FINGERPRINT_SLAB_RIGHT, identity);
+
+        if (list.contains(PropertiesUtil.getKeyValue("leftIndex"))
+                || list.contains(PropertiesUtil.getKeyValue("leftLittle"))
+                || list.contains(PropertiesUtil.getKeyValue("leftRing"))
+                || list.contains(PropertiesUtil.getKeyValue("leftMiddle")))
+
+            bioScan(id, id + FINGERPRINT_SLAB_LEFT, identity);
+
+        if (list.contains(PropertiesUtil.getKeyValue("leftThumb"))
+                || list.contains(PropertiesUtil.getKeyValue("rightThumb")))
+            bioScan(id, id + FINGERPRINT_SLAB_THUMBS, identity);
+
+        if (list.contains(PropertiesUtil.getKeyValue("face")))
+            bioScan(id, id + FACE, identity);
+
         } catch (IOException e) {
             logger.error("", e);
         }
-
     }
 
 }

@@ -163,6 +163,11 @@ public class NewReg {
 
             if (flag == true) {
                 try {
+                    alerts.clickAlertexit();
+                } catch (Exception e) {
+                    logger.error("", e);
+                }
+                try {
                     homePage.clickHomeImg();
                     buttons.clickConfirmBtn();
                 } catch (Exception e) {
