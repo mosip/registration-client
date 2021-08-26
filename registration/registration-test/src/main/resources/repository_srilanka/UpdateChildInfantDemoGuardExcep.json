@@ -2,9 +2,10 @@
 	"BELOW_ARE_STATIC_KEYWORDS":"",
 	"ageGroup":"INFANT",
 	"process":"Update",
-		  "updateUINAttributes":["DateOfBirth","FullName","IntroducerDetails"],
+		  "updateUINAttributes":["DateOfBirth","FullName","IntroducerDetails","Consent","PreferredLanguage"],
 	  "bioAuthAttributes":["rightIndex"],
 	  "bioExceptionAttributes": ["rightLittle"],
+	  "documentUploadAttributes":["POB","POR","POA","POI"],
 	  "bioAttributes": [
 			
 				"face"
@@ -13,23 +14,7 @@
 			 "BELOW_ARE_THE_SCHEMA_LEVEL_ID's_DATA":"",
 			 "dateOfBirth" : "2",
 			 	"UIN":"7914738206",
-				 "preferredLang": [
-        {
-            "language": "hin",
-            "value": "हिंदी",
-            "code": "hin"
-          },
-   {
-            "language": "tam",
-            "value": "தமிழ்",
-            "code": "tam"
-          },
-          {
-            "language": "kan",
-            "value": "ಕನ್ನಡ",
-            "code": "kan"
-          }
-        ],
+			    "preferredLang":  "हिंदी",
     "gender": [
       {
         "language": "kan",

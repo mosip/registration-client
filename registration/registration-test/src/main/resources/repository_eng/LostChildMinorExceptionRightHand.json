@@ -2,6 +2,7 @@
 	"ageGroup":"MINOR",
 	"process":"Lost",
 	"preferredLang":"English",
+	"documentUploadAttributes":["POB","POR","POA","POI"],
 	"UIN":"5931539704",
 	"gender" : [ {
     "language" : "eng",

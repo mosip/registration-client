@@ -3,6 +3,7 @@
 	  "BELOW_ARE_STATIC_KEYWORDS":"",
 	  "ageGroup":"MINOR",
     "process": "New",
+    "documentUploadAttributes":["POB","POR","POA","POI"],
     "bioAuthAttributes":["leftThumb"],
 	  "bioAttributes": [
 			 "leftEye",
@@ -21,23 +22,7 @@
 			],
 		"BELOW_ARE_THE_SCHEMA_LEVEL_ID's_DATA":"",
 		 "dateOfBirth": "13",
-    "preferredLang": [
-        {
-            "language": "hin",
-            "value": "हिंदी",
-            "code": "hin"
-          },
-   {
-            "language": "tam",
-            "value": "தமிழ்",
-            "code": "tam"
-          },
-          {
-            "language": "kan",
-            "value": "ಕನ್ನಡ",
-            "code": "kan"
-          }
-        ],
+		    "preferredLang":  "हिंदी",
     "gender": [
       {
         "language": "kan",

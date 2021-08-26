@@ -2,6 +2,7 @@
 	"ageGroup":"MINOR",
 	"process":"Update",
 	"preferredLang":"English",
+	"documentUploadAttributes":["POB","POR","POA","POI"],
 	"UIN":"5931539704",
 	"gender" : [ {
     "language" : "eng",
@@ -145,7 +146,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  } ],
-	  "updateUINAttributes":["DateOfBirth","FullName","IntroducerDetails"],
+	  "updateUINAttributes":["DateOfBirth","FullName","IntroducerDetails","Consent","PreferredLanguage"],
 	  "bioAuthAttributes":["rightThumb"],
 	  "bioAttributes": [
 			 "leftEye",

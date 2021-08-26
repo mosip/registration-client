@@ -2,7 +2,8 @@
 	"BELOW_ARE_STATIC_KEYWORDS":"",
 	"ageGroup":"INFANT",
 	"process":"Update",
-	  "updateUINAttributes":["DateOfBirth","Biometrics"],
+	"documentUploadAttributes":["POB","POR","POA","POI"],
+	  "updateUINAttributes":["DateOfBirth","Biometrics","Consent","PreferredLanguage"],
 	  "bioAuthAttributes":["rightThumb"],
 	  "bioAttributes": [
 			 

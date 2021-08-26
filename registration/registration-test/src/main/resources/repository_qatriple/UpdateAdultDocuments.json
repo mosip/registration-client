@@ -2,7 +2,8 @@
 	"BELOW_ARE_STATIC_KEYWORDS":"",
 	"ageGroup":"ADULT",
 	"process":"Update",
-	  "updateUINAttributes":["DateOfBirth","Documents"],
+	"documentUploadAttributes":["POB","POR","POA","POI"],
+	  "updateUINAttributes":["DateOfBirth","Documents","Consent","PreferredLanguage"],
 		
 		  "bioAuthAttributes":["rightThumb","leftIndex"],
 	

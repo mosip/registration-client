@@ -2,30 +2,14 @@
 	"BELOW_ARE_STATIC_KEYWORDS":"",
 	"ageGroup":"ADULT",
 	"process":"Update",
-	  "updateUINAttributes":["DateOfBirth","Documents"],
-		
+	  "updateUINAttributes":["DateOfBirth","Documents","Consent","PreferredLanguage"],
+	  "documentUploadAttributes":["POB","POR","POA","POI"],
 		  "bioAuthAttributes":["rightThumb","leftIndex"],
 	
 				 "BELOW_ARE_THE_SCHEMA_LEVEL_ID's_DATA":"",
 		  "dateOfBirth" : "20",
 		  	"UIN":"8926150729",
-				 "preferredLang": [
-        {
-            "language": "hin",
-            "value": "हिंदी",
-            "code": "hin"
-          },
-   {
-            "language": "tam",
-            "value": "தமிழ்",
-            "code": "tam"
-          },
-          {
-            "language": "kan",
-            "value": "ಕನ್ನಡ",
-            "code": "kan"
-          }
-        ],
+		    "preferredLang":  "हिंदी",
     "gender": [
       {
         "language": "kan",

@@ -1,18 +1,16 @@
 package registrationtest.pages;
 
-import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeoutException;
-
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.testfx.api.FxRobot;
 
 import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import javafx.application.Platform;
-import javafx.geometry.VerticalDirection;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.input.KeyCode;
@@ -22,144 +20,110 @@ import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;
 
 public class DocumentUploadPage {
-	private static final Logger logger = LogManager.getLogger(DocumentUploadPage.class); 
+    private static final Logger logger = LogManager.getLogger(DocumentUploadPage.class);
 
-	FxRobot robot;
-	WaitsUtil waitsUtil;
-	String captureBtn="#captureBtn";
-	String success="#context";
-	String saveBtn="#saveBtn";
-	String UploadDocImg="#UploadDocImg";
+    FxRobot robot;
+    WaitsUtil waitsUtil;
+    String captureBtn = "#captureBtn";
+    String success = "#context";
+    String saveBtn = "#saveBtn";
+    String UploadDocImg = "#UploadDocImg";
 
-	String docPreviewImgViewPane="#docPreviewImgViewPane";
-	DocumentCategoryDto documentCategoryDto;
+    String docPreviewImgViewPane = "#docPreviewImgViewPane";
+    // DocumentCategoryDto documentCategoryDto;
 
-	DocumentUploadPage(FxRobot robot)
-	{
-		logger.info("In DocumentUploadPage Constructor");
-		this.robot=robot;
-		waitsUtil=new WaitsUtil(robot);
-		//waitsUtil.clickNodeAssert(robot, UploadDocImg);
+    DocumentUploadPage(FxRobot robot) {
+        logger.info("In DocumentUploadPage Constructor");
+        this.robot = robot;
+        waitsUtil = new WaitsUtil(robot);
+        // waitsUtil.clickNodeAssert(robot, UploadDocImg);
 
-		documentCategoryDto=new DocumentCategoryDto();
+        // documentCategoryDto=new DocumentCategoryDto();
 
+    }
 
-	}
-	public void selectDocumentScan()
-	{	logger.info("In selectDocumentScan");
-	try {
+    public void selectDocumentScan() {
+        logger.info("In selectDocumentScan");
+        try {
 
+            waitsUtil.clickNodeAssert(captureBtn);
+            waitsUtil.clickNodeAssert(success);
 
-		waitsUtil.clickNodeAssert( captureBtn);
-		waitsUtil.clickNodeAssert (success);
+            robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
 
- 		robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
+            waitsUtil.clickNodeAssert(saveBtn);
 
-		waitsUtil.clickNodeAssert( saveBtn);
+            // robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
+        } catch (Exception e) {
+            logger.error("", e);
+        }
 
-		//robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
-	}catch(Exception e)
-	{
-		logger.error("",e);
-	}
+    }
 
-	}
+    public void user_selects_combo_itemdoc(String comboBoxId, String val) {
+        try {
+            Platform.runLater(new Runnable() {
+                public void run() {
 
+                    ComboBox comboBox = waitsUtil.lookupById(comboBoxId);
 
-	public void user_selects_combo_item(FxRobot robot,String comboBoxId, DocumentCategoryDto dto)  {
+                    // comboBox.getSelectionModel().select(dto);
+                    Optional<DocumentCategoryDto> op = comboBox.getItems().stream()
+                            .filter(i -> ((DocumentCategoryDto) i).getName().equalsIgnoreCase(val)).findFirst();
+                    if (op.isEmpty())
+                        comboBox.getSelectionModel().selectFirst();
+                    else
+                        comboBox.getSelectionModel().select(op.get());
 
-		try {
+                    try {
+                        Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
+                    } catch (Exception e) {
 
+                        logger.error("", e);
+                    }
+                }
+            });
+        } catch (Exception e) {
 
-			Platform.runLater(new Runnable() {
-				@Override
-				public void run() {
-					ComboBox comboBox= waitsUtil.lookupById(comboBoxId);
+            logger.error("", e);
+        }
 
-					comboBox.getSelectionModel().select(dto); 
+    }
 
-				}});
+    public void documentDropDownScan(Schema schema, String id, String JsonIdentity, String key) {
+        try {
+            if (schema.getType().contains("documentType")) {
+                LinkedHashMap<String, String> mapDropValue = JsonUtil.JsonObjSimpleParsing(JsonIdentity, key);
+                Set<String> dropkeys = mapDropValue.keySet();
+                for (String ky : dropkeys) {
+                    user_selects_combo_itemdoc(id, mapDropValue.get(ky));
+                    String scanBtn = id + "button";
 
-			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait"))); 
+                    Button scanButton = waitsUtil.lookupByIdButton(scanBtn, robot);
+                    robot.moveTo(scanButton);
+                    robot.clickOn(scanButton);
+                    selectDocumentScan();
+                    break;
+                }
+            }
+        } catch (Exception e) {
 
-		} catch (InterruptedException | NumberFormatException | IOException e) {
-			
-			logger.error("",e);
-		}
-		logger.info( comboBoxId +  dto +"CHOOSEN" );
-	}
+            logger.error("", e);
+        }
+    }
 
+    public List<String> documentUploadAttributeList(String identity) {
+        List<String> documentUploadAttList = new LinkedList<String>();
+        String documentUploadAttributes = null;
+        try {
+            documentUploadAttributes = PropertiesUtil.getKeyValue("documentUploadAttributes");
 
-	public void documentDropDownScan1(Schema schema,String id,String JsonIdentity,String key) {
-		LinkedHashMap<String,String> mapDropValue;
-	
-		try {
-			mapDropValue=null;
-			if(schema.getType().contains("documentType"))
-			{
-				mapDropValue=JsonUtil.JsonObjSimpleParsing(JsonIdentity,key);
-				Set<String> dropkeys = mapDropValue.keySet();
-				for(String ky:dropkeys)
-				{
+            documentUploadAttList = JsonUtil.JsonObjArrayListParsing(identity, documentUploadAttributes);
+        } catch (Exception e) {
+            logger.error("", e);
+        }
 
-					documentCategoryDto.setCode(ky);
-					documentCategoryDto.setLangCode(ky);
-					documentCategoryDto.setName(mapDropValue.get(ky));
-					user_selects_combo_item(robot,id,documentCategoryDto);
-					String scanBtn=id+"button";
-
-					Button scanButton = waitsUtil.lookupByIdButton(scanBtn,robot);
-
-					//waitsUtil.lookupById(docPreviewImgViewPane);
-					
-					robot.moveTo(scanButton);
-					robot.clickOn(scanButton);
-					selectDocumentScan();
-					break;
-				}
-			}	}
-catch (Exception e) {
-			
-			logger.error("",e);
-		}
-	}
-	public void documentDropDownScan(Schema schema,String id,String JsonIdentity,String key) {
-		LinkedHashMap<String,String> mapDropValue;
-	
-		try {
-			mapDropValue=null;
-			if(schema.getType().contains("documentType"))
-			{
-				mapDropValue=JsonUtil.JsonObjSimpleParsingWithCode(JsonIdentity,key);
-				Set<String> dropkeys = mapDropValue.keySet();
-				for(String ky:dropkeys)
-				{
-
-					String valcode=mapDropValue.get(ky);
-					String valcodeArr[]=valcode.split("@@");
-					
-					documentCategoryDto.setName(valcodeArr[0]);
-					documentCategoryDto.setCode(valcodeArr[1]);
-					documentCategoryDto.setLangCode(ky);
-			
-					user_selects_combo_item(robot,id,documentCategoryDto);
-					String scanBtn=id+"button";
-
-					Button scanButton = waitsUtil.lookupByIdButton(scanBtn,robot);
-
-					//waitsUtil.lookupById(docPreviewImgViewPane);
-					
-					robot.moveTo(scanButton);
-					robot.clickOn(scanButton);
-					selectDocumentScan();
-					break;
-				}
-			}	}
-		catch (Exception e) {
-			
-			logger.error("",e);
-		}
-	}
+        return documentUploadAttList;
+    }
 
 }
-

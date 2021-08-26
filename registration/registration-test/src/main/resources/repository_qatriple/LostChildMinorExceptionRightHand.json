@@ -3,6 +3,7 @@
 						  "BELOW_ARE_STATIC_KEYWORDS":"",
 						  "ageGroup":"MINOR",
 					    "process": "Lost",
+					    "documentUploadAttributes":["POB","POR","POA","POI"],
 					    "bioExceptionAttributes": [
 					  	  
 							"rightLittle",
