@@ -137,17 +137,60 @@ public class DemographicPage {
 
                         Boolean appendDateTime = makeUniqueEntry == null ? false
                                 : makeUniqueEntry.contains(id1.replace("#", ""));
+
                         // appendDateTime =
                         // Arrays.asList(makeUniqueEntry).stream().anyMatch(uniqueid->uniqueid.equals(id));
 
                         logger.info(" textfield is visible and setting the text in " + id + "= " + value);
                         demoTextFieldvar.setText(appendDateTime ? value + DateUtil.getDateTime() : value);
 
+//                        try {
+//                            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SetTextTimeWait")));
+//                        } catch (Exception e) {
+//
+//                            logger.error("", e);
+//                        }
                     }
                 } catch (Exception e) {
                     logger.error("", e);
                 }
 
+            }
+        });
+    }
+
+    public void setTextFieldswithNothread(String id1, String id, String value) {
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                logger.info(" setTextFields in " + id + " " + value);
+
+                try {
+                    TextField demoTextFieldvar = waitsUtil.lookupById(id);
+                    assertNotNull(demoTextFieldvar, id + " not present");
+
+                    if (demoTextFieldvar.isEditable() && demoTextFieldvar.isVisible()) {
+                        String makeUniqueEntry = PropertiesUtil.getKeyValue("makeUniqueEntry");
+
+                        Boolean appendDateTime = makeUniqueEntry == null ? false
+                                : makeUniqueEntry.contains(id1.replace("#", ""));
+
+                        // appendDateTime =
+                        // Arrays.asList(makeUniqueEntry).stream().anyMatch(uniqueid->uniqueid.equals(id));
+
+                        logger.info(" textfield is visible and setting the text in " + id + "= " + value);
+                        demoTextFieldvar.setText(appendDateTime ? value + DateUtil.getDateTime() : value);
+
+                        try {
+                            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SetTextTimeWait")));
+                        } catch (Exception e) {
+
+                            logger.error("", e);
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error("", e);
+                }
             }
         });
     }
@@ -199,6 +242,12 @@ public class DemographicPage {
             fieldsList = screens.getFields();
 
             nameTab = screens.getName();
+            try {
+                Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SetTextTimeWait")));
+            } catch (Exception e) {
+
+                logger.error("", e);
+            }
             waitsUtil.clickNodeAssert("#" + nameTab + "_tab");
             // waitsUtil.clickNodeAssert("#"+nameTab);
             robot.moveTo("#" + nameTab);
@@ -215,6 +264,7 @@ public class DemographicPage {
                             if (flagproofOf) {
                                 scrollVerticalDirectioncount(
                                         Integer.parseInt(PropertiesUtil.getKeyValue("proofscroll")));
+
                                 flagproofOf = false;
                             }
                         } else if (schema.getGroup().equals(PropertiesUtil.getKeyValue("Biometrics"))) {
@@ -557,18 +607,17 @@ public class DemographicPage {
 
     }
 
-    public void biometricsAuth(Schema schema, String scenario, String id, String identity,String ageGroup) {
+    public void biometricsAuth(Schema schema, String scenario, String id, String identity, String ageGroup) {
         try {
-            if (scenario.equalsIgnoreCase("Update") && schema.subType.equalsIgnoreCase("applicant-auth"))
-            {
-                Node node=waitsUtil.lookupById(id);
-                if(node.isVisible()) {
-                scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("authscroll")));
+            if (scenario.equalsIgnoreCase("Update") && schema.subType.equalsIgnoreCase("applicant-auth")) {
+                Node node = waitsUtil.lookupById(id);
+                if (node.isVisible()) {
+                    scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("authscroll")));
 
-                System.out.println("");
-                Thread.sleep(400);
-                biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                        biometricUploadPage.bioAuthAttributeList(identity), id, identity,ageGroup);
+                    System.out.println("");
+                    Thread.sleep(400);
+                    biometricUploadPage.newRegbioUpload(schema.getSubType(),
+                            biometricUploadPage.bioAuthAttributeList(identity), id, identity, ageGroup);
                 }
             }
 
@@ -611,20 +660,20 @@ public class DemographicPage {
                     scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
                     // bioattributes=fetchbioAttr(schema,ageGroup,process);
                     biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                            biometricUploadPage.bioAttributeList(identity), id, identity,ageGroup);
+                            biometricUploadPage.bioAttributeList(identity), id, identity, ageGroup);
                 } else {
                     if (ageGroup.equalsIgnoreCase("MINOR")) {
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
                         // bioattributes=fetchbioAttr(schema,ageGroup,process);
                         biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                                biometricUploadPage.bioAttributeList(identity), id, identity,ageGroup);
+                                biometricUploadPage.bioAttributeList(identity), id, identity, ageGroup);
                     } else if (ageGroup.equalsIgnoreCase("ADULT")) {
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
                         Thread.sleep(400);
                         // bioattributes=fetchbioAttr(schema,ageGroup,process);
 
                         biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                                biometricUploadPage.bioAttributeList(identity), id, identity,ageGroup);
+                                biometricUploadPage.bioAttributeList(identity), id, identity, ageGroup);
                     }
                 }
             } else if (schema.subType.equalsIgnoreCase("introducer")
@@ -638,12 +687,11 @@ public class DemographicPage {
 
                 Thread.sleep(400);
                 biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                        biometricUploadPage.bioAuthAttributeList(identity), id, identity,ageGroup);
+                        biometricUploadPage.bioAuthAttributeList(identity), id, identity, ageGroup);
 
             } else if (schema.subType.equalsIgnoreCase("applicant-auth") && (!ageGroup.equals("INFANT"))) {
 
-             
-                biometricsAuth(schema, scenario, id, identity,ageGroup);
+                biometricsAuth(schema, scenario, id, identity, ageGroup);
 
             }
 
@@ -652,7 +700,6 @@ public class DemographicPage {
         }
     }
 
-    
     public void authBiometrics(Schema schema, String scenario, String id, String identity) {
         try {
             // RegistrationDTO registrationDTO = (RegistrationDTO)
@@ -665,8 +712,7 @@ public class DemographicPage {
 
             if (schema.subType.equalsIgnoreCase("applicant-auth") && (!ageGroup.equals("INFANT"))) {
 
-             
-                biometricsAuth(schema, scenario, id, identity,ageGroup);
+                biometricsAuth(schema, scenario, id, identity, ageGroup);
 
             }
 
@@ -685,29 +731,28 @@ public class DemographicPage {
             String process = JsonUtil.JsonObjParsing(identity, "process");
             List<String> bioattributes = null;
 
-           if (schema.subType.equalsIgnoreCase("introducer")
+            if (schema.subType.equalsIgnoreCase("introducer")
                     && (ageGroup.equals("INFANT") || ageGroup.equals("MINOR"))) {
-               Node node=waitsUtil.lookupById(id);
-               if(node.isVisible()) {
-                if (ageGroup.equalsIgnoreCase("INFANT")) {
-                    scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
-                    scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
-                } else
-                    scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+                Node node = waitsUtil.lookupById(id);
+                if (node.isVisible()) {
+                    if (ageGroup.equalsIgnoreCase("INFANT")) {
+                        scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+                        scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+                    } else
+                        scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
 
-                Thread.sleep(400);
-                
-                biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                        biometricUploadPage.bioAuthAttributeList(identity), id, identity,ageGroup);
-               }
-            } 
+                    Thread.sleep(400);
+
+                    biometricUploadPage.newRegbioUpload(schema.getSubType(),
+                            biometricUploadPage.bioAuthAttributeList(identity), id, identity, ageGroup);
+                }
+            }
 
         } catch (Exception e) {
             logger.error("", e);
         }
     }
 
-    
     public void applicantBiometrics(Schema schema, String scenario, String id, String identity) {
         try {
             // RegistrationDTO registrationDTO = (RegistrationDTO)
@@ -723,30 +768,29 @@ public class DemographicPage {
                     scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
                     // bioattributes=fetchbioAttr(schema,ageGroup,process);
                     biometricUploadPage.newRegbioUpload(schema.getId(),
-                            biometricUploadPage.infantBioAttributeList(identity), id, identity,ageGroup);
+                            biometricUploadPage.infantBioAttributeList(identity), id, identity, ageGroup);
                 } else {
                     if (ageGroup.equalsIgnoreCase("MINOR")) {
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
                         // bioattributes=fetchbioAttr(schema,ageGroup,process);
                         biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                                biometricUploadPage.bioAttributeList(identity), id, identity,ageGroup);
+                                biometricUploadPage.bioAttributeList(identity), id, identity, ageGroup);
                     } else if (ageGroup.equalsIgnoreCase("ADULT")) {
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
                         Thread.sleep(400);
                         // bioattributes=fetchbioAttr(schema,ageGroup,process);
 
                         biometricUploadPage.newRegbioUpload(schema.getSubType(),
-                                biometricUploadPage.bioAttributeList(identity), id, identity,ageGroup);
+                                biometricUploadPage.bioAttributeList(identity), id, identity, ageGroup);
                     }
                 }
-            } 
+            }
 
         } catch (Exception e) {
             logger.error("", e);
         }
     }
 
-    
     public void fileupload(Schema schema, String JsonIdentity, String key, String id, String scenario,
             String ageGroup) {
         try {
@@ -980,11 +1024,11 @@ public class DemographicPage {
                 logger.info("Read Consent");
                 break;
             case "textbox":
-                 getTextboxKeyValue(schema, id, JsonIdentity, key, schema.isTransliterate(), scenario);
+                getTextboxKeyValue(schema, id, JsonIdentity, key, schema.isTransliterate(), scenario);
                 break;
             case "ageDate":
-                // setdob(id,JsonIdentity,key);
                 setageDate(id, JsonIdentity, key);
+
                 break;
             case "date":
                 setdob(id, JsonIdentity, key);
@@ -1009,7 +1053,9 @@ public class DemographicPage {
 
             }
 
-        } catch (Exception e) {
+        } catch (
+
+        Exception e) {
             logger.error("", e);
         }
     }
@@ -1047,16 +1093,17 @@ public class DemographicPage {
                 buttonUpdateSelection(schema, id, JsonIdentity, key);
                 break;
             case "biometrics":
-                if (getupdateUINAttributes(JsonIdentity).contains(PropertiesUtil.getKeyValue("Biometrics"))) { // All Bio-- IRIS(U) <---
+                if (getupdateUINAttributes(JsonIdentity).contains(PropertiesUtil.getKeyValue("Biometrics"))) { // All
+                                                                                                               // Bio--
+                                                                                                               // IRIS(U)
+                                                                                                               // <---
                     applicantBiometrics(schema, scenario, id, JsonIdentity);
                 } else { // Single ---> AUTH
                     authBiometrics(schema, scenario, id, JsonIdentity);
-                   
-                } 
-                
-                        introducerBiometrics(schema, scenario, id, JsonIdentity);
 
-                
+                }
+
+                introducerBiometrics(schema, scenario, id, JsonIdentity);
 
                 break;
             }
