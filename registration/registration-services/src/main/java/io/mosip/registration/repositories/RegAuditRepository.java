@@ -37,9 +37,7 @@ public interface RegAuditRepository extends BaseRepository<Audit, Long> {
 	@Query(value = "UPDATE AUDIT.APP_AUDIT_LOG a SET a.IS_SYNC = true WHERE a.LOG_ID IN :audits", nativeQuery = true)
 	int updateSyncAudits(@Param("audits") List<String> auditUUIDs);
 	
-	void deleteAllInBatchBycreatedAtBetween(LocalDateTime auditLogFromDtimes,LocalDateTime auditLogToDtimes);
-	
-	void deleteAllInBatchByCreatedAtLessThan(LocalDateTime auditLogToDtimes);
+	void deleteAllInBatchByActionTimeStampLessThan(LocalDateTime auditLogToDtimes);
 
 	/**
 	 * Retrieves the {@link Audit} which are logged after the input parameter
@@ -50,15 +48,15 @@ public interface RegAuditRepository extends BaseRepository<Audit, Long> {
 	 * @return returns the {@link Audit} logged after the given
 	 *         {@link LocalDateTime}
 	 */
-	List<Audit> findByCreatedAtGreaterThanOrderByCreatedAtAsc(LocalDateTime auditTimeAfter);
+	List<Audit> findByActionTimeStampGreaterThanOrderByActionTimeStampAsc(LocalDateTime auditTimeAfter);
 
 	/**
 	 * Retrieves the {@link Audit} ordered by created time
 	 * 
 	 * @return returns the {@link Audit}
 	 */
-	List<Audit> findByEventIdStartsWithOrderByCreatedAtAsc(String registrationEvents);
+	List<Audit> findByEventIdStartsWithOrderByActionTimeStampAsc(String registrationEvents);
 	
-	List<Audit> findByIdOrderByCreatedAtAsc(String registrationId);
+	List<Audit> findAllByOrderByActionTimeStampAsc();
 
 }

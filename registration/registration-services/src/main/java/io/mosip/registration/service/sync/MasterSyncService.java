@@ -70,11 +70,10 @@ public interface MasterSyncService {
 	 * Gets all the black listed words that shouldn't be allowed while capturing
 	 * demographic information from user.
 	 *
-	 * @param langCode the lang code
 	 * @return the all black listed words
 	 * @throws RegBaseCheckedException
 	 */
-	List<BlacklistedWordsDto> getAllBlackListedWords(String langCode) throws RegBaseCheckedException;
+	List<BlacklistedWordsDto> getAllBlackListedWords() throws RegBaseCheckedException;
 
 	/**
 	 * Gets all the document categories from db that to be displayed in the UI

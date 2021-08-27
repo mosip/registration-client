@@ -77,7 +77,7 @@ public class RegPacketStatusDAOImpl implements RegPacketStatusDAO {
 		LOGGER.info("Delete registration has been started");
 
 		/* Delete Registartion */
-		registrationRepository.deleteByPacketId(registration.getPacketId());
+		registrationRepository.deleteById(registration.getPacketId());
 	}
 
 }

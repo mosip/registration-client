@@ -355,11 +355,11 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	 * java.lang.String)
 	 */
 	@Override
-	public List<Registration> get(String clientStatusCode, Timestamp crDtimes, List<String> serverStatusCodes) {
+	public List<Registration> get(Timestamp crDtimes, List<String> serverStatusCodes) {
 
 		LOGGER.debug("Retrieving Registrations based on crDtime and status codes");
 
-		return registrationRepository.findByClientStatusCodeAndCrDtimeBeforeAndServerStatusCodeIn(clientStatusCode, crDtimes, serverStatusCodes);
+		return registrationRepository.findByCrDtimeBeforeAndServerStatusCodeIn(crDtimes, serverStatusCodes);
 
 	}
 

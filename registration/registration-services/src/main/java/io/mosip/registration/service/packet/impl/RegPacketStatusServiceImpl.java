@@ -30,7 +30,6 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.RegPacketStatusDAO;
 import io.mosip.registration.dao.RegistrationDAO;
 import io.mosip.registration.dto.PacketStatusReaderDTO;
@@ -41,7 +40,6 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.packet.RegPacketStatusService;
-import io.mosip.registration.service.sync.PacketSynchService;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
@@ -61,9 +59,6 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 
 	@Autowired
 	private RegistrationDAO registrationDAO;
-
-	@Autowired
-	private PacketSynchService packetSynchService;
 
 	@Autowired
     @Qualifier("OfflinePacketCryptoServiceImpl")
@@ -105,13 +100,11 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 
 		try {
 			/* Get Registrations to be deleted */
-			List<Registration> registrations = registrationDAO.get(RegistrationClientStatusCode.RE_REGISTER.getCode(),
-					getPacketDeletionLastDate(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime())),
+			List<Registration> registrations = registrationDAO.get(getPacketDeletionLastDate(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime())),
 					RegistrationConstants.PACKET_PROCESSED_STATUS);
 
 			if (!isNull(registrations) && !isEmpty(registrations)) {
 				deleteRegistrations(registrations);
-
 			}
 
 			setSuccessResponse(responseDTO, RegistrationConstants.REGISTRATION_DELETION_BATCH_JOBS_SUCCESS, null);
@@ -326,15 +319,6 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 		return true;
 	}
 
-	private Registration updateRegistration(final Registration registration) {
-		LOGGER.info("Delete Registration Packet started");
-
-		Registration updatedRegistration = regPacketStatusDAO.update(registration);
-		LOGGER.info("Delete Registration Packet ended");
-
-		return updatedRegistration;
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -344,14 +328,13 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 	@Override
 	public void deleteRegistrations(final List<Registration> registrations) {
 		for (Registration registration : registrations) {
-
-			if (registration.getServerStatusCode()
-					.equalsIgnoreCase(RegistrationConstants.PACKET_STATUS_CODE_PROCESSED)) {
+			if (RegistrationConstants.PACKET_STATUS_CODE_PROCESSED.equalsIgnoreCase(registration.getServerStatusCode())
+					|| RegistrationConstants.PACKET_STATUS_CODE_ACCEPTED
+							.equalsIgnoreCase(registration.getServerStatusCode())) {
 				/* Delete Registration */
 				delete(registration);
 			}
 		}
-
 	}
 
 	private void delete(Registration registration) {
@@ -370,13 +353,6 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 		}
 		/* Delete row from DB */
 		regPacketStatusDAO.delete(registration);
-	}
-
-
-	private String createdByUser() {
-		return SessionContext.isSessionContextAvailable() && SessionContext.userContext() != null
-				&& SessionContext.userContext().getUserId() != null ? SessionContext.userContext().getUserId()
-						: RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM;
 	}
 
 }

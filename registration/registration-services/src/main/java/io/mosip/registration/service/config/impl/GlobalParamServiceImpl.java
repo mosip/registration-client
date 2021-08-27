@@ -57,7 +57,8 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 					"mosip.reg.db.current.version", "mosip.reg.services.version",
 					RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE, RegistrationConstants.SERVICES_VERSION_KEY,
 					RegistrationConstants.HTTP_API_READ_TIMEOUT, RegistrationConstants.HTTP_API_WRITE_TIMEOUT,
-					RegistrationConstants.LAST_SOFTWARE_UPDATE, RegistrationConstants.REGCLIENT_INSTALLED_TIME));
+					RegistrationConstants.LAST_SOFTWARE_UPDATE, RegistrationConstants.REGCLIENT_INSTALLED_TIME, 
+					RegistrationConstants.AUDIT_TIMESTAMP));
 	/**
 	 * Instance of LOGGER
 	 */

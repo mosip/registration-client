@@ -20,7 +20,6 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.vo.RegistrationApprovalVO;
 import io.mosip.registration.dto.mastersync.ReasonListDto;
@@ -142,8 +141,9 @@ public class RejectionController extends BaseController implements Initializable
 	 * 
 	 * 
 	 * @param event
+	 * @throws RegBaseCheckedException 
 	 */
-	public void packetUpdateStatus() {
+	public void packetUpdateStatus() throws RegBaseCheckedException {
 		LOGGER.info(LOG_REG_REJECT_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"Packet updation as rejection has been started");
 
@@ -176,7 +176,7 @@ public class RejectionController extends BaseController implements Initializable
 					regRejectionTable.getSelectionModel().getSelectedItem().getDate(),
 					regRejectionTable.getSelectionModel().getSelectedItem().getAcknowledgementFormPath(),
 					regRejectionTable.getSelectionModel().getSelectedItem().getOperatorId(),
-					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REJECTED));
+					new Image(getImagePath(RegistrationConstants.REJECT_IMG, true)));
 
 			observableList.set(rowNum, approvalDTO);
 			registrationApprovalController.wrapListAndAddFiltering(observableList);

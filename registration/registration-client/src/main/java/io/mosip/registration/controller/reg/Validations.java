@@ -115,9 +115,9 @@ public class Validations extends BaseController {
 		return this.isLostUIN;
 	}*/
 
-	private List<String> getBlackListedWords(String langCode) {
+	private List<String> getBlackListedWords() {
 		try {
-			return masterSync.getAllBlackListedWords(ApplicationContext.applicationLanguage()).stream()
+			return masterSync.getAllBlackListedWords().stream()
 					.map(BlacklistedWordsDto::getWord).collect(Collectors.toList());
 		} catch (RegBaseCheckedException regBaseCheckedException) {
 			LOGGER.error(RegistrationConstants.VALIDATION_LOGGER, APPLICATION_NAME,
@@ -175,7 +175,7 @@ public class Validations extends BaseController {
 			String langCode) {
 
 		return languageSpecificValidation(parentPane, node, id, getMessagesBundle(langCode),
-				getBlackListedWords(langCode), isPreviousValid, langCode);
+				getBlackListedWords(), isPreviousValid, langCode);
 
 	}
 
