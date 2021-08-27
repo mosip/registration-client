@@ -2,15 +2,14 @@ package io.mosip.registration.test.dao.impl;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
-import io.mosip.registration.dao.impl.MasterSyncDaoImpl;
-import io.mosip.registration.repositories.*;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -32,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
+import io.mosip.registration.dao.impl.MasterSyncDaoImpl;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.BiometricAttribute;
 import io.mosip.registration.entity.BlacklistedWords;
@@ -45,6 +45,19 @@ import io.mosip.registration.entity.ValidDocument;
 import io.mosip.registration.entity.id.ValidDocumentID;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
+import io.mosip.registration.repositories.BiometricAttributeRepository;
+import io.mosip.registration.repositories.BlacklistedWordsRepository;
+import io.mosip.registration.repositories.DocumentCategoryRepository;
+import io.mosip.registration.repositories.DocumentTypeRepository;
+import io.mosip.registration.repositories.LanguageRepository;
+import io.mosip.registration.repositories.LocationHierarchyRepository;
+import io.mosip.registration.repositories.LocationRepository;
+import io.mosip.registration.repositories.ReasonCategoryRepository;
+import io.mosip.registration.repositories.ReasonListRepository;
+import io.mosip.registration.repositories.SyncJobControlRepository;
+import io.mosip.registration.repositories.SyncJobDefRepository;
+import io.mosip.registration.repositories.ValidDocumentRepository;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import io.mosip.registration.util.mastersync.MetaDataUtils;
 
@@ -281,10 +294,10 @@ public class MasterSyncDaoImplTest {
 		allBlackWords.add(blackWord);
 
 		Mockito.when(
-				blacklistedWordsRepository.findBlackListedWordsByIsActiveTrueAndLangCode(Mockito.anyString()))
+				blacklistedWordsRepository.findBlackListedWordsByIsActiveTrue())
 				.thenReturn(allBlackWords);
 
-		masterSyncDaoImpl.getBlackListedWords("ENG");
+		masterSyncDaoImpl.getBlackListedWords();
 
 		assertTrue(allBlackWords != null);
 	}
