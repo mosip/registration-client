@@ -59,12 +59,12 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
@@ -111,7 +111,7 @@ public class RegistrationApprovalController extends BaseController implements In
 	
 	/** status comment column in the table. */
 	@FXML
-	private TableColumn<RegistrationApprovalVO, String> statusComment;
+	private TableColumn<RegistrationApprovalVO, Image> statusComment;
 	
 	@FXML
 	private TableColumn<RegistrationApprovalVO, String> operatorId;
@@ -221,7 +221,7 @@ public class RegistrationApprovalController extends BaseController implements In
 		});
 		
 		reloadTableView();
-		tableCellColorChangeListener();
+//		tableCellColorChangeListener();
 		id.setResizable(false);
 		statusComment.setResizable(false);
 		operatorId.setResizable(false);
@@ -229,24 +229,24 @@ public class RegistrationApprovalController extends BaseController implements In
 		table.getColumns().forEach(column -> column.setReorderable(false));
 	}
 
-	private void tableCellColorChangeListener() {
-		statusComment.setCellFactory(column -> {
-			return new TableCell<RegistrationApprovalVO, String>() {
-				@Override
-				public void updateItem(String item, boolean empty) {
-					super.updateItem(item, empty);
-					setText(item);
-					if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.APPROVED))) {
-						setTextFill(Color.GREEN);
-					} else if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REJECTED))) {
-						setTextFill(Color.RED);
-					} else {
-						setTextFill(Color.BLACK);
-					}
-				}
-			};
-		});
-	}
+//	private void tableCellColorChangeListener() {
+//		statusComment.setCellFactory(column -> {
+//			return new TableCell<RegistrationApprovalVO, String>() {
+//				@Override
+//				public void updateItem(String item, boolean empty) {
+//					super.updateItem(item, empty);
+//					setText(item);
+//					if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.APPROVED))) {
+//						setTextFill(Color.GREEN);
+//					} else if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REJECTED))) {
+//						setTextFill(Color.RED);
+//					} else {
+//						setTextFill(Color.BLACK);
+//					}
+//				}
+//			};
+//		});
+//	}
 
 	/**
 	 * Method to reload table.
@@ -266,12 +266,34 @@ public class RegistrationApprovalController extends BaseController implements In
 				new PropertyValueFactory<RegistrationApprovalVO, String>(RegistrationConstants.EOD_PROCESS_ID));
 		date.setCellValueFactory(
 				new PropertyValueFactory<RegistrationApprovalVO, String>(RegistrationConstants.EOD_PROCESS_DATE));
-		statusComment.setCellValueFactory(new PropertyValueFactory<RegistrationApprovalVO, String>(
-				RegistrationConstants.EOD_PROCESS_STATUSCOMMENT));
+//		statusComment.setCellValueFactory(new PropertyValueFactory<RegistrationApprovalVO, Image>(
+//				RegistrationConstants.EOD_PROCESS_STATUSCOMMENT));
 		acknowledgementFormPath.setCellValueFactory(new PropertyValueFactory<RegistrationApprovalVO, String>(
 				RegistrationConstants.EOD_PROCESS_ACKNOWLEDGEMENTFORMPATH));
 		operatorId.setCellValueFactory(new PropertyValueFactory<RegistrationApprovalVO, String>(
 				RegistrationConstants.OPERATOR_ID));
+		
+		statusComment.setCellFactory(param -> {
+		       //Set up the ImageView
+		       final ImageView imageview = new ImageView();
+		       imageview.setFitHeight(30);
+		       imageview.setFitWidth(30);
+
+		       //Set up the Table
+		       TableCell<RegistrationApprovalVO, Image> cell = new TableCell<RegistrationApprovalVO, Image>() {
+		           public void updateItem(Image item, boolean empty) {
+		             if (item != null) {
+		            	 imageview.setImage(item);
+		             } else {
+		            	 imageview.setImage(null);
+		             }
+		           }
+		        };
+		        // Attach the imageview to the cell
+		        cell.setGraphic(imageview);
+		        return cell;
+		   });
+		statusComment.setCellValueFactory(new PropertyValueFactory<RegistrationApprovalVO, Image>(RegistrationConstants.EOD_PROCESS_STATUSCOMMENT));
 
 		populateTable();
 
@@ -353,7 +375,7 @@ public class RegistrationApprovalController extends BaseController implements In
 				for (RegistrationApprovalDTO approvalDTO : listData) {
 					registrationApprovalVO.add(
 							new RegistrationApprovalVO("    " + count++, approvalDTO.getId(), approvalDTO.getPacketId(), approvalDTO.getDate(),
-									approvalDTO.getAcknowledgementFormPath(), approvalDTO.getOperatorId(), RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PENDING)));
+									approvalDTO.getAcknowledgementFormPath(), approvalDTO.getOperatorId(), null));
 				}
 				int rowNum = 0;
 				for (RegistrationApprovalDTO approvalDTO : listData) {
@@ -513,7 +535,7 @@ public class RegistrationApprovalController extends BaseController implements In
 					table.getSelectionModel().getSelectedItem().getDate(),
 					table.getSelectionModel().getSelectedItem().getAcknowledgementFormPath(),
 					table.getSelectionModel().getSelectedItem().getOperatorId(),
-					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.APPROVED));
+					new Image(getImagePath(RegistrationConstants.TICK_IMG, true)));
 			observableList.set(row, approvalDTO);
 			wrapListAndAddFiltering(observableList);
 			table.requestFocus();
@@ -667,7 +689,7 @@ public class RegistrationApprovalController extends BaseController implements In
 							.concat(approvaldto.getId()).concat("'").concat(RegistrationConstants.COMMA).concat("'")
 							.concat(approvaldto.getDate()).concat("'").concat(RegistrationConstants.COMMA)
 							.concat(approvaldto.getOperatorId()).concat("'").concat(RegistrationConstants.COMMA)
-							.concat(approvaldto.getStatusComment()))
+							.concat(approvaldto.getStatusComment().getUrl()))
 					.collect(Collectors.joining(RegistrationConstants.NEW_LINE));
 			String headers = RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.EOD_SLNO_LABEL).concat(RegistrationConstants.COMMA)
 					.concat(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.EOD_REGISTRATIONID_LABEL)).concat(RegistrationConstants.COMMA)

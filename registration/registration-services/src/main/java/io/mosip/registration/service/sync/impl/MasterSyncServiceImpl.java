@@ -1,17 +1,17 @@
 package io.mosip.registration.service.sync.impl;
 
 import static io.mosip.registration.constants.LoggerConstants.LOG_REG_MASTER_SYNC;
-import static io.mosip.registration.constants.LoggerConstants.LOG_REG_SCHEMA_SYNC;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
-import io.mosip.registration.dto.schema.ProcessSpecDto;
-import io.mosip.registration.exception.RegBaseUncheckedException;
-import io.mosip.registration.service.doc.category.ValidDocumentService;
-import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,7 +38,6 @@ import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import io.mosip.registration.dto.mastersync.DynamicFieldValueDto;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.mastersync.ReasonListDto;
-import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.BlacklistedWords;
 import io.mosip.registration.entity.DocumentCategory;
@@ -51,12 +50,14 @@ import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.entity.SyncTransaction;
 import io.mosip.registration.entity.ValidDocument;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.jobs.SyncManager;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
+import io.mosip.registration.service.doc.category.ValidDocumentService;
 import io.mosip.registration.service.sync.MasterSyncService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import io.mosip.registration.util.mastersync.MapperUtils;
 
 /**
@@ -248,33 +249,21 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	 * Gets all the black listed words that shouldn't be allowed while capturing
 	 * demographic information from user.
 	 *
-	 * @param langCode the lang code
 	 * @return the all black listed words
 	 * @throws RegBaseCheckedException
 	 */
 	@Override
-	public List<BlacklistedWordsDto> getAllBlackListedWords(String langCode) throws RegBaseCheckedException {
-
+	public List<BlacklistedWordsDto> getAllBlackListedWords() throws RegBaseCheckedException {
 		List<BlacklistedWordsDto> blackWords = new ArrayList<>();
-		if (langCodeNullCheck(langCode)) {
-			List<BlacklistedWords> blackListedWords = masterSyncDao.getBlackListedWords(langCode);
+		List<BlacklistedWords> blackListedWords = masterSyncDao.getBlackListedWords();
 
-			blackListedWords.forEach(blackList -> {
-
-				BlacklistedWordsDto words = new BlacklistedWordsDto();
-				words.setDescription(blackList.getDescription());
-				words.setLangCode(blackList.getLangCode());
-				words.setWord(blackList.getWord());
-				blackWords.add(words);
-
-			});
-		} else {
-			LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID,
-					RegistrationConstants.LANG_CODE_MANDATORY);
-			throw new RegBaseCheckedException(
-					RegistrationExceptionConstants.REG_MASTER_SYNC_SERVICE_IMPL_LANGCODE.getErrorCode(),
-					RegistrationExceptionConstants.REG_MASTER_SYNC_SERVICE_IMPL_LANGCODE.getErrorMessage());
-		}
+		blackListedWords.forEach(blackList -> {
+			BlacklistedWordsDto words = new BlacklistedWordsDto();
+			words.setDescription(blackList.getDescription());
+			words.setLangCode(blackList.getLangCode());
+			words.setWord(blackList.getWord());
+			blackWords.add(words);
+		});
 		return blackWords;
 	}
 

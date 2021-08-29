@@ -777,9 +777,9 @@ public class MasterSyncServiceTest {
 		allBlackWords.add(blackWord);
 		allBlackWords.add(blackWord);
 
-		Mockito.when(masterSyncDao.getBlackListedWords(Mockito.anyString())).thenReturn(allBlackWords);
+		Mockito.when(masterSyncDao.getBlackListedWords()).thenReturn(allBlackWords);
 
-		masterSyncServiceImpl.getAllBlackListedWords("ENG");
+		masterSyncServiceImpl.getAllBlackListedWords();
 
 	}
 
@@ -1074,11 +1074,6 @@ public class MasterSyncServiceTest {
 	@Test(expected=RegBaseCheckedException.class)
 	public void codeNotNullAllLangCode() throws RegBaseCheckedException {
 		masterSyncServiceImpl.getAllReasonsList(null);
-	}
-	
-	@Test(expected=RegBaseCheckedException.class)
-	public void getAllBlackListedWords() throws RegBaseCheckedException {
-		masterSyncServiceImpl.getAllBlackListedWords(null);
 	}
 
 }
