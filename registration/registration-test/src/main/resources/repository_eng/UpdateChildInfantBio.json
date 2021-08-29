@@ -3,6 +3,7 @@
 	"process":"Update",
 	"preferredLang":"English",
 	"UIN":"5931539704",
+	"documentUploadAttributes":["POB","POR","POA","POI"],
 	"gender" : [ {
     "language" : "eng",
     "value" : "Female"
@@ -145,7 +146,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  } ], 
-	  "updateUINAttributes":["DateOfBirth","Biometrics"],
+	  "updateUINAttributes":["DateOfBirth","Biometrics","Consent","PreferredLanguage"],
 	  "bioAuthAttributes":["rightThumb"],
 	  "bioAttributes": [
 			 

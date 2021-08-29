@@ -2,6 +2,7 @@
 	"ageGroup":"ADULT",
 	"process":"Update",
 	"preferredLang":"English",
+	"documentUploadAttributes":["POB","POR","POA","POI"],
 	"UIN":"5931539704",
   "gender" : [ {
     "language" : "eng",
@@ -147,7 +148,7 @@
 	    "value" : "Kénitra"
 	  } ],
 	  "updateUINAttributes":["DateOfBirth", "FullName",
-		  "Gender", "Address", "ResidenceStatus", "ReferenceIdentityNumber", "Location","Phone", "Email"],
+		  "Gender", "Address", "ResidenceStatus", "ReferenceIdentityNumber", "Location","Phone", "Email","Consent","PreferredLanguage"],
 		  "bioAuthAttributes":["rightThumb"],
  
 	  "proofOfConsent" : [ {
