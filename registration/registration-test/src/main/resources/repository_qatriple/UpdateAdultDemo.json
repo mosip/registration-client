@@ -1,9 +1,10 @@
 { "identity" : {
 	"BELOW_ARE_STATIC_KEYWORDS":"",
 "ageGroup":"ADULT",
-	"process":"Update",		  
+	"process":"Update",	
+	"documentUploadAttributes":["POB","POR","POA","POI"],
   	  "updateUINAttributes":["DateOfBirth", "FullName",
-		  "Gender", "Address", "ResidenceStatus", "ReferenceIdentityNumber", "Location","Phone", "Email"],
+		  "Gender", "Address", "ResidenceStatus", "ReferenceIdentityNumber", "Location","Phone", "Email","Consent","PreferredLanguage"],
 		  "bioAuthAttributes":["rightThumb"],
 		  "BELOW_ARE_THE_SCHEMA_LEVEL_ID's_DATA":"",
 		  "dateOfBirth" : "20",

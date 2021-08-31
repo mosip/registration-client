@@ -1,3 +1,4 @@
+
 package registrationtest.pages;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,8 +11,6 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.testfx.api.FxRobot;
 
-import com.aventstack.extentreports.Status;
-
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -21,225 +20,251 @@ import javafx.stage.Stage;
 import registrationtest.controls.Alerts;
 import registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.PropertiesUtil;
-import  registrationtest.utility.WaitsUtil;
+import registrationtest.utility.WaitsUtil;
+import java.util.Optional;
 
 public class LoginPage {
-	private static final Logger logger = LogManager.getLogger(LoginPage.class); 
+    private static final Logger logger = LogManager.getLogger(LoginPage.class);
 
+    FxRobot robot;
+    Stage applicationPrimaryStage;
+    Scene scene;
+    Node node;
 
-	FxRobot robot;
-	Stage applicationPrimaryStage;
-	Scene scene;
-	Node node;
+    TextField userIdTextField;
+    String userId = "#userId";
 
-	TextField userIdTextField;
-	String userId="#userId";
+    TextField passwordTextField;
+    String password = "#password";
 
-	TextField passwordTextField;
-	String password="#password";
+    String loginScreen = "#loginScreen";
+    String homeSelectionMenu = "#homeSelectionMenu";
+    String logout = "#logout";
+    String submit = "#submit1";
+    //String success = "#context";
+    String success = "Success";
+    String exit = "#exit";
+    String appLanguage = "#appLanguage";
 
-	String loginScreen="#loginScreen";	
-	String homeSelectionMenu="#homeSelectionMenu";
-	String logout="#logout";
-	String submit="#submit1";
-	String success="#context";
-	String exit="#exit";
-	String appLanguage="#appLanguage";
+    WaitsUtil waitsUtil;
+    Alerts alerts;
 
-	WaitsUtil waitsUtil;
-	Alerts alerts;
+    public LoginPage(FxRobot robot, Stage applicationPrimaryStage, Scene scene) {
+        logger.info("LoginPage Constructor");
+        this.robot = robot;
+        this.applicationPrimaryStage = applicationPrimaryStage;
+        this.scene = scene;
+        waitsUtil = new WaitsUtil(robot);
+        alerts = new Alerts(robot);
+    }
 
-	public LoginPage(FxRobot robot, Stage applicationPrimaryStage,Scene scene)
-	{
-		logger.info("LoginPage Constructor");
-		this.robot=robot;
-		this.applicationPrimaryStage=applicationPrimaryStage;
-		this.scene=scene;
-		waitsUtil=new WaitsUtil(robot);
-		alerts=new Alerts(robot);
-	}
+    public LoginPage(FxRobot robot) {
+        logger.info("LoginPage Constructor");
 
-	public LoginPage(FxRobot robot)
-	{
-		logger.info("LoginPage Constructor");
+        this.robot = robot;
+        waitsUtil = new WaitsUtil(robot);
+        waitsUtil.clickNodeAssert(loginScreen);
+    }
 
-		this.robot=robot;
-		waitsUtil=new WaitsUtil(robot);
-		waitsUtil.clickNodeAssert( loginScreen);
-	}
+    public void selectAppLang() {
+        String[] listLang = null;
+        try {
+            listLang = PropertiesUtil.getKeyValue("appLanguage").split("@@");
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
 
-	public void selectAppLang()
-	{
-		String[] listLang=null;
-					try {
-						listLang=PropertiesUtil.getKeyValue("appLanguage").split("@@");
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
-					GenericDto dto=new GenericDto();
-					
-					dto.setCode(listLang[0]);
-					dto.setLangCode(listLang[1]);
-					dto.setName(listLang[2]);
-					try {
-						Platform.runLater(new Runnable() {
-							public void run() {
+        String str = listLang[2];
+        // ComboBoxUtil.user_selects_combo_item(appLanguage,str);
 
-					ComboBox comboBox= waitsUtil.lookupById(appLanguage);
+//					GenericDto dto=new GenericDto();
+//					
+//					dto.setCode(listLang[0]);
+//					dto.setLangCode(listLang[1]);
+//					dto.setName(listLang[2]);
+//					
+//
+        try {
+            Platform.runLater(new Runnable() {
+                public void run() {
 
-					comboBox.getSelectionModel().select(dto); 
-					
-				}
-			});
-		} catch (Exception e) {
+                    ComboBox comboBox = waitsUtil.lookupById(appLanguage);
 
-			logger.error("",e);
-		}
-	}
+                    // comboBox.getSelectionModel().select(dto);
+                    Optional<GenericDto> op = comboBox.getItems().stream()
+                            .filter(i -> ((GenericDto) i).getName().equalsIgnoreCase(str)).findFirst();
+                    if (op.isEmpty())
+                        comboBox.getSelectionModel().selectFirst();
+                    else
+                        comboBox.getSelectionModel().select(op.get());
 
-	public String getUserId() {
-		logger.info("getUserId");
+                    try {
+                        Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
+                    } catch (Exception e) {
 
-		return userIdTextField.getText();
-	}
+                        logger.error("", e);
+                    }
+                }
+            });
+        } catch (Exception e) {
 
-	public void setUserId(String userIdText) {
-		logger.info("setUserId" +userIdText);
+            logger.error("", e);
+        }
+    }
 
-		try {
+    public String getUserId() {
+        logger.info("getUserId");
 
-				   Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait6")));
-			
-					userIdTextField=waitsUtil.lookupByIdTextField(userId, robot);
+        return userIdTextField.getText();
+    }
 
-					assertNotNull(userIdTextField, "userIdTextField not present");
+    public void setUserId(String userIdText) {
+        logger.info("setUserId" + userIdText);
 
-					//robot.clickOn(userIdTextField);
+        try {
 
-					userIdTextField.clear();
-					
-					userIdTextField.setText(userIdText);
-						
-					System.out.println("User id Entered ");
-					waitsUtil.clickNodeAssert("#sub1");
-					assertEquals(userIdText, userIdTextField.getText(),"User id is not as same as entered");
-				
+            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait6")));
 
+            userIdTextField = waitsUtil.lookupByIdTextField(userId, robot);
 
+            assertNotNull(userIdTextField, "userIdTextField not present");
 
-		}catch(Exception e)
-		{
-			logger.error("",e);
-		}
+            // robot.clickOn(userIdTextField);
 
-	}
-	/**
-	 * Verify HomePage after password enter
-	 * @param pwd
-	 * @return
-	 */
+            userIdTextField.clear();
 
-	public HomePage setPassword(String pwd) {
+            userIdTextField.setText(userIdText);
 
-		logger.info("setPassword" );
+            System.out.println("User id Entered ");
+            waitsUtil.clickNodeAssert("#sub1");
+            assertEquals(userIdText, userIdTextField.getText(), "User id is not as same as entered");
 
-		try {
-			
-			passwordTextField=waitsUtil.lookupByIdTextField(password, robot);
+        } catch (Exception e) {
+            logger.error("", e);
+        }
 
-			assertNotNull(passwordTextField, "passwordTextField Not Present");
+    }
 
-						passwordTextField.setText(pwd);
+    /**
+     * Verify HomePage after password enter
+     * 
+     * @param pwd
+     * @return
+     */
 
-			waitsUtil.clickNodeAssert("#sub2");
-						
-		}catch(Exception e)
-		{
-			logger.error("",e);
-		}
-		return new HomePage(robot);
+    public HomePage setPassword(String pwd) {
 
-	}
+        logger.info("setPassword");
 
-	/**
-	 * verifyAuthentication after password enter
-	 * @param pwd
-	 * @return
-	 * @throws InterruptedException 
-	 */
+        try {
 
-	public boolean verifyAuthentication(String pwd,Stage applicationPrimaryStage)  {
-		boolean flag=false;
-		try
-		{passwordTextField=waitsUtil.lookupByIdTextField(password, robot);
+            passwordTextField = waitsUtil.lookupByIdTextField(password, robot);
 
-		assertNotNull(passwordTextField, "passwordTextField Not Present");
+            assertNotNull(passwordTextField, "passwordTextField Not Present");
 
-		robot.clickOn(passwordTextField);
+            passwordTextField.setText(pwd);
 
-		passwordTextField.setText(pwd);
+            waitsUtil.clickNodeAssert("#sub2");
 
-		waitsUtil.clickNodeAssert(submit);
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+        return new HomePage(robot);
 
+    }
 
-		Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
-		waitsUtil.clickNodeAssert(success);
-		waitsUtil.clickNodeAssert(exit);
+    /**
+     * verifyAuthentication after password enter
+     * 
+     * @param pwd
+     * @return
+     * @throws InterruptedException
+     */
 
-		flag=true;
-		}
-		catch(Exception e)
-		{
-			logger.error("",e);
-		}
-		return flag;
+    public boolean verifyAuthentication(String pwd, Stage applicationPrimaryStage) {
+        boolean flag = false;
+        try {
+            passwordTextField = waitsUtil.lookupByIdTextField(password, robot);
 
-	}
+            assertNotNull(passwordTextField, "passwordTextField Not Present");
 
+            passwordTextField.setText(pwd);
+            
+            // if home else fail or check the #context
 
-	public void loadLoginScene(Stage applicationPrimaryStage) 
-	{
-		logger.info("In Login test Loaded");
+            waitsUtil.clickNodeAssert("#sub2");
 
-		try {
-			//alerts.clickAlertCancel();
-			
-			Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("Loginwait"))); 
-			
-			
-			waitsUtil.clickNodeAssert(loginScreen);
+            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
+            waitsUtil.clickNodeAssert(success);
 
+            flag = true;
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+        return flag;
 
-			scene=applicationPrimaryStage.getScene();
-			node=scene.lookup(loginScreen);
-			while(node.isDisable())
-			{Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait"))); 
+    }
+    
 
-			System.out.println("Disable login screen waiting to get it on");
-			}
-			assertNotNull(node,"Login Page is not shown");
+    public boolean verifyLoginAndHome(String pwd, Stage applicationPrimaryStage) {
+        boolean flag = false;
+        try {
+            passwordTextField = waitsUtil.lookupByIdTextField(password, robot);
 
-			ExtentReportUtil.test1.info( "Successfully Screen Loaded");
+            assertNotNull(passwordTextField, "passwordTextField Not Present");
 
-		}catch(Exception e)
-		{
-			logger.error("",e);
-		}
+            passwordTextField.setText(pwd);
+            
+            // if home else fail or check the #context
 
+            waitsUtil.clickNodeAssert("#sub2");
 
-	}
+            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
+            waitsUtil.clickNodeAssert("#homeImgView");
 
-	public void logout()
-	{
-		/**
-		 * Click Menu
-		 * Logout
-		 */
-		waitsUtil.clickNodeAssert( homeSelectionMenu);
+            flag = true;
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+        return flag;
 
-		waitsUtil.clickNodeAssert(logout);
+    }
 
+    public void loadLoginScene(Stage applicationPrimaryStage) {
+        logger.info("In Login test Loaded");
 
-	}
+        try {
+            // alerts.clickAlertCancel();
+
+            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("Loginwait")));
+
+            waitsUtil.clickNodeAssert(loginScreen);
+
+            scene = applicationPrimaryStage.getScene();
+            node = scene.lookup(loginScreen);
+            while (node.isDisable()) {
+                Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
+
+                System.out.println("Disable login screen waiting to get it on");
+            }
+            assertNotNull(node, "Login Page is not shown");
+
+            ExtentReportUtil.test1.info("Successfully Screen Loaded");
+
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+
+    }
+
+    public void logout() {
+        /**
+         * Click Menu Logout
+         */
+        waitsUtil.clickNodeAssert(homeSelectionMenu);
+
+        waitsUtil.clickNodeAssert(logout);
+
+    }
 
 }

@@ -3,6 +3,7 @@
 	  "BELOW_ARE_STATIC_KEYWORDS":"",
 	  "ageGroup":"INFANT",
     "process": "Lost",
+    "documentUploadAttributes":["POB","POR","POA","POI"],
     "bioExceptionAttributes": [
 		"leftEye"
 		], 

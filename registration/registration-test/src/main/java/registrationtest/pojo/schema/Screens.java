@@ -9,10 +9,18 @@ public class Screens{
     public String name;
     public HashMap<String, String> label;
     public HashMap<String, String> caption;
-    public List<String> fields;
+    public List<Schema> fields;
     public Object layoutTemplate;
     public boolean preRegFetchRequired;
-    public boolean active;
+    public boolean additionalInfoRequestIdRequired;
+    
+    public boolean isAdditionalInfoRequestIdRequired() {
+		return additionalInfoRequestIdRequired;
+	}
+	public void setAdditionalInfoRequestIdRequired(boolean additionalInfoRequestIdRequired) {
+		this.additionalInfoRequestIdRequired = additionalInfoRequestIdRequired;
+	}
+	public boolean active;
 	public int getOrder() {
 		return order;
 	}
@@ -37,10 +45,10 @@ public class Screens{
 	public void setCaption(HashMap<String, String> caption) {
 		this.caption = caption;
 	}
-	public List<String> getFields() {
+	public List<Schema> getFields() {
 		return fields;
 	}
-	public void setFields(List<String> fields) {
+	public void setFields(List<Schema> fields) {
 		this.fields = fields;
 	}
 	public Object getLayoutTemplate() {

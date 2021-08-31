@@ -3,8 +3,9 @@
 
 	"ageGroup":"ADULT",
 	"process":"Update",
-	  "updateUINAttributes":["DateOfBirth","Biometrics"],	
+	  "updateUINAttributes":["DateOfBirth","Biometrics","Consent","PreferredLanguage"],	
 		  "bioAuthAttributes":["leftIndex"],
+		  "documentUploadAttributes":["POB","POR","POA","POI"],
   "bioExceptionAttributes": [
 	  "leftEye","leftLittle",
 		"leftRing",
@@ -30,23 +31,7 @@
 		 "dateOfBirth": "20",
 			    
 				"UIN":"8926150729",
-				 "preferredLang": [
-        {
-            "language": "hin",
-            "value": "हिंदी",
-            "code": "hin"
-          },
-   {
-            "language": "tam",
-            "value": "தமிழ்",
-            "code": "tam"
-          },
-          {
-            "language": "kan",
-            "value": "ಕನ್ನಡ",
-            "code": "kan"
-          }
-        ],
+			    "preferredLang":  "हिंदी",
     "gender": [
       {
         "language": "kan",
