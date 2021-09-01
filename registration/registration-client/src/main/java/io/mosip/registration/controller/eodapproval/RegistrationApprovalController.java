@@ -26,6 +26,8 @@ import java.util.ResourceBundle;
 import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
+import io.mosip.registration.service.packet.PacketHandlerService;
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -177,6 +179,9 @@ public class RegistrationApprovalController extends BaseController implements In
 
 	@FXML
 	private TextField filterField;
+
+	@Autowired
+	private PacketHandlerService packetHandlerService;
 
 	private ObservableList<RegistrationApprovalVO> observableList;
 
@@ -336,20 +341,12 @@ public class RegistrationApprovalController extends BaseController implements In
 			rejectionBtn.setVisible(true);
 			imageAnchorPane.setVisible(true);
 
-			try (FileInputStream file = new FileInputStream(
-					new File(table.getSelectionModel().getSelectedItem().getAcknowledgementFormPath()))) {
-				BufferedReader bufferedReader = new BufferedReader(
-						new InputStreamReader(file, RegistrationConstants.TEMPLATE_ENCODING));
-				StringBuilder acknowledgementContent = new StringBuilder();
-				String line;
-				while ((line = bufferedReader.readLine()) != null) {
-					acknowledgementContent.append(line);
-				}
-				webView.getEngine().loadContent(acknowledgementContent.toString());
-			} catch (IOException ioException) {
-				LOGGER.error("REGISTRATION_APPROVAL_CONTROLLER - REGSITRATION_ACKNOWLEDGEMNT_PAGE_LOADING_FAILED",
-						APPLICATION_NAME, APPLICATION_ID,
-						ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
+			try{
+				String acknowledgementContent = packetHandlerService.getAcknowledgmentReceipt(table.getSelectionModel().getSelectedItem().getPacketId(),
+						table.getSelectionModel().getSelectedItem().getAcknowledgementFormPath());
+				webView.getEngine().loadContent(acknowledgementContent);
+			} catch (RegBaseCheckedException | io.mosip.kernel.core.exception.IOException ex) {
+				LOGGER.error("REGSITRATION_ACKNOWLEDGEMNT_PAGE_LOADING_FAILED", ex);
 			}
 
 		}

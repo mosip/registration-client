@@ -16,23 +16,13 @@ import org.mockito.junit.MockitoRule;
 
 import io.mosip.registration.dao.impl.TemplateDaoImpl;
 import io.mosip.registration.entity.Template;
-import io.mosip.registration.entity.TemplateEmbeddedKeyCommonFields;
-import io.mosip.registration.entity.TemplateFileFormat;
-import io.mosip.registration.entity.TemplateType;
-import io.mosip.registration.repositories.TemplateFileFormatRepository;
 import io.mosip.registration.repositories.TemplateRepository;
-import io.mosip.registration.repositories.TemplateTypeRepository;
 
 public class TemplateDaoImplTest {
 
 	@Mock
 	TemplateRepository<Template> templateRepository;
 
-	@Mock
-	TemplateTypeRepository<TemplateType> typeRepository;
-
-	@Mock
-	TemplateFileFormatRepository<TemplateFileFormat> fileFormatRepository;
 
 	@InjectMocks
 	TemplateDaoImpl templateDao;
@@ -55,7 +45,7 @@ public class TemplateDaoImplTest {
 		assertThat(templateDao.getAllTemplates("ackTemplate"), is(templates));
 	}
 
-	@Test
+	/*@Test
 	public void getTemplateTypesTest() {
 		List<TemplateType> templateTypes = new ArrayList<>();
 		TemplateType templateType = new TemplateType();
@@ -76,5 +66,5 @@ public class TemplateDaoImplTest {
 		fileFormats.add(fileFormat);
 		when(fileFormatRepository.findByIsActiveTrue()).thenReturn(fileFormats);
 		assertThat(templateDao.getAllTemplateFileFormats(), is(fileFormats));
-	}
+	}*/
 }

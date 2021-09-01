@@ -71,6 +71,7 @@ public class DocumentFxControl extends FxControl {
 		documentScanController = applicationContext.getBean(DocumentScanController.class);
 		masterSyncService = applicationContext.getBean(MasterSyncService.class);
 		validDocumentService = applicationContext.getBean(ValidDocumentService.class);
+		this.requiredFieldValidator = applicationContext.getBean(RequiredFieldValidator.class);
 	}
 
 	@Override
@@ -116,8 +117,7 @@ public class DocumentFxControl extends FxControl {
 
 		changeNodeOrientation(hBox, getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
 
-		fillData(masterSyncService.getDocumentCategories(uiFieldDTO.getSubType(),
-				getRegistrationDTo().getSelectedLanguagesByApplicant().get(0)));
+		fillData(getDocumentCategories());
 
 		return this.control;
 	}
@@ -570,32 +570,37 @@ public class DocumentFxControl extends FxControl {
 	@Override
 	public void refresh() {
 		super.refresh();
-//		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
-//		Object applicantTypeCode = requiredFieldValidator.evaluateMvelScript((String) ApplicationContext.map().getOrDefault(
-//				RegistrationConstants.APPLICANT_TYPE_MVEL_SCRIPT, SCRIPT_NAME), getRegistrationDTo());
-//		LOGGER.info("Refreshing document field {}, for applicantType : {}", uiFieldDTO.getId(), applicantTypeCode);
-		//TODO - will be uncommented in RC2
-		/*if(applicantTypeCode != null) {
-			List<DocumentCategoryDto> list = validDocumentService.getDocumentCategories((String) applicantTypeCode,
-					this.uiFieldDTO.getSubType(), ApplicationContext.applicationLanguage());
+		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
+		List<DocumentCategoryDto> list = getDocumentCategories();
+		if(list != null) {
+			comboBox.getItems().clear();
+			comboBox.getItems().addAll(list);
 
-			if(list != null) {
-				comboBox.getItems().clear();
-				comboBox.getItems().addAll(list);
+			Optional<DocumentCategoryDto> savedValue = list.stream()
+					.filter( d -> getRegistrationDTo().getDocuments().containsKey(uiFieldDTO.getId())
+							&& d.getCode().equals(getRegistrationDTo().getDocuments().get(uiFieldDTO.getId()).getType()))
+							.findFirst();
 
-				Optional<DocumentCategoryDto> savedValue = list.stream()
-						.filter( d -> getRegistrationDTo().getDocuments().containsKey(uiFieldDTO.getId())
-								&& d.getCode().equals(getRegistrationDTo().getDocuments().get(uiFieldDTO.getId()).getType()))
-								.findFirst();
+			if(savedValue.isPresent())
+				comboBox.getSelectionModel().select(savedValue.get());
+		}
 
-				if(savedValue.isPresent())
-					comboBox.getSelectionModel().select(savedValue.get());
-			}
-		}*/
 
 		if(getRegistrationDTo().getDocuments().containsKey(uiFieldDTO.getId())) {
 			getField(uiFieldDTO.getId() + PREVIEW_ICON).setVisible(true);
 			getField(uiFieldDTO.getId() + CLEAR_ID).setVisible(true);
 		}
+	}
+
+	private List<DocumentCategoryDto> getDocumentCategories() {
+		Object applicantTypeCode = requiredFieldValidator.evaluateMvelScript((String) ApplicationContext.map().getOrDefault(
+				RegistrationConstants.APPLICANT_TYPE_MVEL_SCRIPT, SCRIPT_NAME), getRegistrationDTo());
+		LOGGER.info("Document field {}, for applicantType : {}", uiFieldDTO.getId(), applicantTypeCode);
+		if(applicantTypeCode != null) {
+			return validDocumentService.getDocumentCategories((String) applicantTypeCode,
+					this.uiFieldDTO.getSubType(),
+					getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
+		}
+		return Collections.EMPTY_LIST;
 	}
 }

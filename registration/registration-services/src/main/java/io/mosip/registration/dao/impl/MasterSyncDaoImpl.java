@@ -26,7 +26,6 @@ import io.mosip.registration.entity.ReasonCategory;
 import io.mosip.registration.entity.ReasonList;
 import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.entity.SyncJobDef;
-import io.mosip.registration.entity.ValidDocument;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.BiometricAttributeRepository;
 import io.mosip.registration.repositories.BlacklistedWordsRepository;
@@ -39,7 +38,6 @@ import io.mosip.registration.repositories.ReasonCategoryRepository;
 import io.mosip.registration.repositories.ReasonListRepository;
 import io.mosip.registration.repositories.SyncJobControlRepository;
 import io.mosip.registration.repositories.SyncJobDefRepository;
-import io.mosip.registration.repositories.ValidDocumentRepository;
 
 /**
  * The implementation class of {@link MasterSyncDao}
@@ -83,10 +81,6 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	/** Object for Sync Reason List Repository. */
 	@Autowired
 	private ReasonListRepository reasonListRepository;
-
-	/** Object for Sync Valid Document Repository. */
-	@Autowired
-	private ValidDocumentRepository validDocumentRepository;
 
 	/** Object for Sync language Repository. */
 	@Autowired
@@ -212,16 +206,6 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 		return documentTypeRepository.findByIsActiveTrueAndLangCodeAndCode(langCode, docCode);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * io.mosip.registration.dao.MasterSyncDao#getValidDocumets(java.lang.String)
-	 */
-	@Override
-	public List<ValidDocument> getValidDocumets(String docCategoryCode) {
-		return validDocumentRepository.findByIsActiveTrueAndDocCategoryCode(docCategoryCode);
-	}
 
 	public List<SyncJobDef> getSyncJobs() {
 		return syncJobDefRepository.findAllByIsActiveTrue();

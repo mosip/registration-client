@@ -48,7 +48,6 @@ import io.mosip.registration.entity.ReasonList;
 import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.entity.SyncTransaction;
-import io.mosip.registration.entity.ValidDocument;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
@@ -268,15 +267,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	}
 
 
-	/**
-	 * Gets all the document categories from db that to be displayed in the UI
-	 * dropdown.
-	 *
-	 * @param docCode  the doc code
-	 * @param langCode the lang code
-	 * @return all the document categories
-	 * @throws RegBaseCheckedException
-	 */
+	/*
 	@Override
 	public List<DocumentCategoryDto> getDocumentCategories(String docCode, String langCode) {
 		List<DocumentCategoryDto> documentsDTO = new ArrayList<>();
@@ -303,7 +294,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 			});
 		}
 		return documentsDTO;
-	}
+	}*/
 
 
 

@@ -5,7 +5,11 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 import static io.mosip.registration.exception.RegistrationExceptionConstants.REG_PACKET_CREATION_ERROR_CODE;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -17,7 +21,10 @@ import java.util.stream.Collectors;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.mosip.commons.packet.dto.PacketInfo;
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.enums.Role;
@@ -130,18 +137,16 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	private MachineMappingDAO machineMappingDAO;
 
 	@Autowired
-	private RidGenerator<String> ridGeneratorImpl;
-	
-	@Autowired
 	private BioService bioService;
 
 	@Autowired
-	private PridGenerator<String> pridGenerator;
+	private RidGenerator<String> ridGenerator;
+
+	@Autowired
+	private ClientCryptoFacade clientCryptoFacade;
 
 	@Value("${objectstore.packet.source:REGISTRATION_CLIENT}")
 	private String source;
-
-	private ObjectMapper objectMapper = new ObjectMapper();
 
 	@Value("${packet.manager.account.name}")
 	private String packetManagerAccount;
@@ -149,13 +154,14 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	@Value("${object.store.base.location}")
 	private String baseLocation;
 
-	private static String SLASH = "/";
-
 	@Value("${objectstore.packet.officer_biometrics_file_name}")
 	private String officerBiometricsFileName;
 
 	@Value("${objectstore.packet.supervisor_biometrics_file_name}")
 	private String supervisorBiometricsFileName;
+
+	private ObjectMapper objectMapper = new ObjectMapper();
+	private static String SLASH = "/";
 
 	/*
 	 * (non-Javadoc)
@@ -600,11 +606,10 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		RegistrationMetaDataDTO registrationMetaDataDTO = new RegistrationMetaDataDTO();
 		registrationDTO.setRegistrationMetaDataDTO(registrationMetaDataDTO);
 
-		// Set RID
-		String registrationID = ridGeneratorImpl.generateId(
+		//set application id
+		registrationDTO.setAppId(ridGenerator.generateId(
 				(String) ApplicationContext.map().get(RegistrationConstants.USER_CENTER_ID),
-				(String) ApplicationContext.map().get(RegistrationConstants.USER_STATION_ID));
-		registrationDTO.setAppId(pridGenerator.generateId());
+				(String) ApplicationContext.map().get(RegistrationConstants.USER_STATION_ID)));
 		registrationDTO.setRegistrationId(registrationDTO.getAppId());
 
 		LOGGER.info("Registration Started for ApplicationId  : {}", registrationDTO.getAppId());
@@ -615,5 +620,44 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 		registrationDTO.setDefaultUpdatableFieldGroups(defaultFieldGroups);
 		return registrationDTO;
+	}
+
+	@Override
+	public void createAcknowledgmentReceipt(@NonNull String packetId, byte[] content, String format)
+			throws io.mosip.kernel.core.exception.IOException {
+		LOGGER.debug("Starting to create Registration ack receipt : {}", packetId);
+		byte[] signature = clientCryptoFacade.getClientSecurity().signData(content);
+		byte[] key = clientCryptoFacade.getClientSecurity().getEncryptionPublicPart();
+		FileUtils.copyToFile(new ByteArrayInputStream(clientCryptoFacade.encrypt(key, content)),
+				Paths.get(baseLocation, packetManagerAccount, packetId.concat("_Ack.").concat(format)).toFile());
+		registrationDAO.updateAckReceiptSignature(packetId, CryptoUtil.encodeBase64(signature));
+	}
+
+
+	public String getAcknowledgmentReceipt(@NonNull String packetId, @NonNull String filepath)
+			throws RegBaseCheckedException, io.mosip.kernel.core.exception.IOException {
+		Registration registration = registrationDAO.getRegistrationByPacketId(packetId);
+
+		//handling backward compatibility for existing pre-LTS packets receipt
+		if(registration.getAckSignature() == null && registration.getPacketId().equals(registration.getId())) {
+			try {
+				LOGGER.info("As signature is empty, attempting to sign and encrypt ack receipt : {}", packetId);
+				createAcknowledgmentReceipt(packetId,
+						FileUtils.readFileToByteArray(new File(filepath)),
+						RegistrationConstants.ACKNOWLEDGEMENT_FORMAT);
+				registration = registrationDAO.getRegistrationByPacketId(packetId);
+			} catch (io.mosip.kernel.core.exception.IOException  ex) {
+				LOGGER.error("Failed to sign and encrypt existing ack receipt : {}", packetId, ex);
+			}
+		}
+
+		byte[] decryptedContent = clientCryptoFacade.decrypt(FileUtils.readFileToByteArray(new File(filepath)));
+		boolean isSignatureValid = clientCryptoFacade.getClientSecurity()
+				.validateSignature(CryptoUtil.decodeBase64(registration.getAckSignature()), decryptedContent);
+		if(isSignatureValid)
+			return new String(decryptedContent);
+
+		throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_ACK_RECEIPT_READ_ERROR.getErrorCode(),
+				RegistrationExceptionConstants.REG_ACK_RECEIPT_READ_ERROR.getErrorMessage());
 	}
 }

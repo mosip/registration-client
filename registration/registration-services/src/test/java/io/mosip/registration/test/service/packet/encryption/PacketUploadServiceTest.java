@@ -11,13 +11,23 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import io.mosip.kernel.core.util.HMACUtils2;
+import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
@@ -38,6 +48,10 @@ import io.mosip.registration.service.packet.impl.PacketUploadServiceImpl;
 import io.mosip.registration.util.restclient.RequestHTTPDTO;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
+@RunWith(PowerMockRunner.class)
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
+@PrepareForTest({ RegistrationAppHealthCheckUtil.class, ApplicationContext.class, SessionContext.class ,
+		RegistrationSystemPropertiesChecker.class })
 public class PacketUploadServiceTest {
 
 	@Rule
@@ -151,7 +165,7 @@ public class PacketUploadServiceTest {
 	}
 
 	@Test
-	public void testUploadPacket() throws RegBaseCheckedException, ConnectionException {
+	public void testUploadPacket() throws Exception {
 		Registration registration = new Registration();
 		List<Registration> regList = new ArrayList<>();
 		registration.setId("123456789");
@@ -161,6 +175,11 @@ public class PacketUploadServiceTest {
 		registration.setFileUploadStatus("S");
 		registration.setCrDtime(Timestamp.from(Instant.now()));
 		regList.add(registration);
+
+		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class,
+				RegistrationSystemPropertiesChecker.class);
+		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 
 		LinkedHashMap<String, Object> respObj = new LinkedHashMap<>();
 		respObj.put("response", "Success");
@@ -179,7 +198,7 @@ public class PacketUploadServiceTest {
 	}
 
 	@Test
-	public void testUploadPacket1() throws RegBaseCheckedException, ConnectionException {
+	public void testUploadPacket1() throws Exception {
 		Registration registration = new Registration();
 		List<Registration> regList = new ArrayList<>();
 		registration.setId("123456789");
@@ -191,6 +210,12 @@ public class PacketUploadServiceTest {
 		
 		Object respObj = new Object();
 		respObj = "PACKET_FAILED_TO_UPLOAD";
+
+		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class,
+				RegistrationSystemPropertiesChecker.class);
+		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
+
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(),Mockito.anyString())).thenReturn(respObj);
 		List<Registration> packetList = new ArrayList<>();
 		Registration registration1 = new Registration();
@@ -210,6 +235,11 @@ public class PacketUploadServiceTest {
 		registration.setUploadCount((short) 0);
 		regList.add(registration);
 		registration.setCrDtime(Timestamp.from(Instant.now()));
+
+		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class,
+				RegistrationSystemPropertiesChecker.class);
+		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 
 		Mockito.when(registrationDAO.getRegistrationByPacketId(Mockito.anyString())).thenReturn(registration);
 		packetUploadServiceImpl.uploadPacket("123456789");

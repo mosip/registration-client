@@ -3,7 +3,6 @@ package io.mosip.registration.dao;
 import java.util.List;
 
 import io.mosip.registration.entity.ApplicantValidDocument;
-import io.mosip.registration.entity.ValidDocument;
 
 /**
  * This class is used to fetch all the ValidDocument from {@link ValidDocument} table.

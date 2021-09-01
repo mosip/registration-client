@@ -57,7 +57,7 @@ public class ButtonFxControl extends FxControl {
 
 		Map<String, Object> data = new LinkedHashMap<>();
 		String lang = getRegistrationDTo().getSelectedLanguagesByApplicant().get(0);
-		data.put(lang, masterSyncService.getFieldValues(uiFieldDTO.getId(), lang, false));
+		data.put(lang, masterSyncService.getFieldValues(uiFieldDTO.getSubType(), lang, false));
 		fillData(data);
 
 		return this.control;
@@ -104,7 +104,7 @@ public class ButtonFxControl extends FxControl {
 			List<SimpleDto> values = new ArrayList<SimpleDto>();
 			List<String> toolTipText = new ArrayList<>();
 			for (String langCode : getRegistrationDTo().getSelectedLanguagesByApplicant()) {
-				Optional<GenericDto> result = masterSyncService.getFieldValues(uiFieldDTO.getId(), langCode, false).stream()
+				Optional<GenericDto> result = masterSyncService.getFieldValues(uiFieldDTO.getSubType(), langCode, false).stream()
 						.filter(b -> b.getCode().equalsIgnoreCase(code)).findFirst();
 				if (result.isPresent()) {
 					values.add(new SimpleDto(langCode, result.get().getName()));
@@ -116,7 +116,7 @@ public class ButtonFxControl extends FxControl {
 			getRegistrationDTo().SELECTED_CODES.put(uiFieldDTO.getId()+"Code", code);
 			break;
 		default:
-			Optional<GenericDto> result = masterSyncService.getFieldValues(uiFieldDTO.getId(), getRegistrationDTo().getSelectedLanguagesByApplicant().get(0), false).stream()
+			Optional<GenericDto> result = masterSyncService.getFieldValues(uiFieldDTO.getSubType(), getRegistrationDTo().getSelectedLanguagesByApplicant().get(0), false).stream()
 					.filter(b -> b.getCode().equalsIgnoreCase(code)).findFirst();
 			if (result.isPresent()) {
 				getRegistrationDTo().addDemographicField(uiFieldDTO.getId(), result.get().getName());

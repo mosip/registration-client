@@ -68,17 +68,11 @@ public class TemplateGeneratorTest {
 		registrationDTO = DataProvider.getPacketDTO();
 		List<FingerprintDetailsDTO> segmentedFingerprints = new ArrayList<>();
 		segmentedFingerprints.add(new FingerprintDetailsDTO());
-		
-		/*registrationDTO.getBiometricDTO().getApplicantBiometricDTO().getFingerprintDetailsDTO()
-				.forEach(fingerPrintDTO -> {
-					fingerPrintDTO.setSegmentedFingerprints(segmentedFingerprints);
-				});*/
+
 		appMap.put(RegistrationConstants.DOC_DISABLE_FLAG, "Y");
 		appMap.put(RegistrationConstants.PRIMARY_LANGUAGE, "ara");
 		appMap.put(RegistrationConstants.SECONDARY_LANGUAGE, "fra");
-		//applicationContext.setApplicationMap(appMap);
-		templateGenerator.setGuidelines("My GuideLines");
-	//	applicationContext.loadResourceBundle();
+
 		when(qrCodeGenerator.generateQrCode(Mockito.anyString(), Mockito.any())).thenReturn(new byte[1024]);
 		BufferedImage image = null;
 		PowerMockito.mockStatic(ImageIO.class);

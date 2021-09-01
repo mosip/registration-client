@@ -783,27 +783,6 @@ public class MasterSyncServiceTest {
 
 	}
 
-	@SuppressWarnings("unchecked")
-	@Test
-	public void findDocumentCategories() throws RegBaseCheckedException {
-
-		List<DocumentType> documents = new ArrayList<>();
-		DocumentType document = new DocumentType();
-		document.setName("Aadhar");
-		document.setDescription("Aadhar card");
-		document.setLangCode("ENG");
-		documents.add(document);
-		documents.add(document);
-		List<String> validDocuments = new ArrayList<>();
-		validDocuments.add("CLR");
-		// validDocuments.add("MNA");
-		Mockito.when(masterSyncDao.getDocumentTypes(Mockito.anyList(), Mockito.anyString())).thenReturn(documents);
-
-		masterSyncServiceImpl.getDocumentCategories("ENG", "Test");
-
-	}
-
-
 	
 	@SuppressWarnings("unused")
 	@Test
