@@ -228,12 +228,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 	@Autowired
 	private HeaderController headerController;
 
-	@Value("${object.store.base.location}")
-	private String baseLocation;
-
-	@Value("${packet.manager.account.name}")
-	private String packetsLocation;
-
 	@Autowired
 	private GenericController genericController;
 	
@@ -477,9 +471,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 					platformLanguageCode);
 
 			if (ackTemplateText != null && !ackTemplateText.isEmpty()) {
-				String key = "mosip.registration.important_guidelines_" + applicationContext.getApplicationLanguage();
-				String guidelines = getValueFromApplicationContext(key);
-				templateGenerator.setGuidelines(guidelines);
+
 				ResponseDTO templateResponse = templateGenerator.generateTemplate(ackTemplateText, registrationDTO,
 						templateManagerBuilder, RegistrationConstants.ACKNOWLEDGEMENT_TEMPLATE, getImagePath(RegistrationConstants.CROSS_IMG, true));
 				if (templateResponse != null && templateResponse.getSuccessResponseDTO() != null) {
@@ -630,15 +622,8 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 				}
 
-				// Generate the file path for storing the Encrypted Packet and Acknowledgement
-				// Receipt
-				String separator = "/";
-				String filePath = baseLocation.concat(separator).concat(packetsLocation).concat(separator)
-						.concat(registrationDTO.getPacketId());
-
-				// Storing the Registration Acknowledge Receipt Image
-				FileUtils.copyToFile(new ByteArrayInputStream(ackInBytes),
-						new File(filePath.concat("_Ack.").concat(RegistrationConstants.ACKNOWLEDGEMENT_FORMAT)));
+				packetHandlerService.createAcknowledgmentReceipt(registrationDTO.getPacketId(), ackInBytes,
+						RegistrationConstants.ACKNOWLEDGEMENT_FORMAT);
 
 				// Sync and Uploads Packet when EOD Process Configuration is set to OFF
 				String supervisorApproval = getValueFromApplicationContext(RegistrationConstants.SUPERVISOR_APPROVAL_CONFIG_FLAG);
@@ -670,6 +655,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 		}
 		return response;
 	}
+
 
 	/**
 	 * Load re registration screen.

@@ -212,4 +212,6 @@ public interface RegistrationDAO {
 
 	Registration getRegistrationByPacketId(String packetId);
 
+	Registration updateAckReceiptSignature(String packetId, String signature);
+
 }
