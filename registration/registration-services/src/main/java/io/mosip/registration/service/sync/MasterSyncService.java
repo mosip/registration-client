@@ -84,7 +84,7 @@ public interface MasterSyncService {
 	 * @return all the document categories
 	 * @throws RegBaseCheckedException
 	 */
-	List<DocumentCategoryDto> getDocumentCategories(String docCode, String langCode);
+	//List<DocumentCategoryDto> getDocumentCategories(String docCode, String langCode);
 	
 	/**
 	 * Get the document Type from db that to be displayed in the UI
