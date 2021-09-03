@@ -41,8 +41,6 @@ import io.mosip.registration.entity.ReasonCategory;
 import io.mosip.registration.entity.ReasonList;
 import io.mosip.registration.entity.RegistrationCenterType;
 import io.mosip.registration.entity.SyncControl;
-import io.mosip.registration.entity.ValidDocument;
-import io.mosip.registration.entity.id.ValidDocumentID;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.BiometricAttributeRepository;
@@ -56,7 +54,6 @@ import io.mosip.registration.repositories.ReasonCategoryRepository;
 import io.mosip.registration.repositories.ReasonListRepository;
 import io.mosip.registration.repositories.SyncJobControlRepository;
 import io.mosip.registration.repositories.SyncJobDefRepository;
-import io.mosip.registration.repositories.ValidDocumentRepository;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import io.mosip.registration.util.mastersync.MetaDataUtils;
@@ -109,10 +106,6 @@ public class MasterSyncDaoImplTest {
 	/** Object for Sync Reason List Repository. */
 	@Mock
 	private ReasonListRepository reasonListRepository;
-
-	/** Object for Sync Valid Document Repository. */
-	@Mock
-	private ValidDocumentRepository validDocumentRepository;
 
 	/** Object for Sync language Repository. */
 	@Mock
@@ -324,7 +317,7 @@ public class MasterSyncDaoImplTest {
 	}
 
 
-	@Test
+	/*@Test
 	public void findValidDoc() {
 
 		List<ValidDocument> docList = new ArrayList<>();
@@ -341,7 +334,7 @@ public class MasterSyncDaoImplTest {
 
 		assertTrue(docList != null);
 
-	}
+	}*/
 
 	
 	@Test

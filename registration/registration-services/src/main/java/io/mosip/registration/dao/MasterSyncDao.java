@@ -13,7 +13,6 @@ import io.mosip.registration.entity.ReasonCategory;
 import io.mosip.registration.entity.ReasonList;
 import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.entity.SyncJobDef;
-import io.mosip.registration.entity.ValidDocument;
 
 /**
  * This class is used to store the master data details like Location,
@@ -85,13 +84,6 @@ public interface MasterSyncDao {
 	 */
 	List<DocumentType> getDocumentTypes(List<String> docCode, String langCode);
 
-	/**
-	 * Gets the valid documets.
-	 *
-	 * @param docCategoryCode the doc category code
-	 * @return the valid documets
-	 */
-	List<ValidDocument> getValidDocumets(String docCategoryCode);
 
 	/**
 	 * Get All the Active Sync JOBS

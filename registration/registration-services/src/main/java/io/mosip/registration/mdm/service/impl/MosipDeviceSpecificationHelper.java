@@ -62,9 +62,6 @@ public class MosipDeviceSpecificationHelper {
 	@Value("${mosip.registration.mdm.trust.domain.deviceinfo:DEVICE}")
 	private String deviceInfoTrustDomain;
 
-	@Value("${mosip.mds.validation.time.flag:Y}")
-	private String timeValidationFlag;
-
 	private final String CONTENT_LENGTH = "Content-Length:";
 
 	public String getPayLoad(String data) throws RegBaseCheckedException {
@@ -116,7 +113,7 @@ public class MosipDeviceSpecificationHelper {
 
 	public void validateJWTResponse(final String signedData, final String domain) throws DeviceException {
 		JWTSignatureVerifyRequestDto jwtSignatureVerifyRequestDto = new JWTSignatureVerifyRequestDto();
-		jwtSignatureVerifyRequestDto.setValidateTrust(false);
+		jwtSignatureVerifyRequestDto.setValidateTrust(true);
 		jwtSignatureVerifyRequestDto.setDomain(domain);
 		jwtSignatureVerifyRequestDto.setJwtSignatureData(signedData);
 		

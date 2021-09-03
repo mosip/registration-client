@@ -429,4 +429,14 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	public Registration getRegistrationByPacketId(String packetId) {
 		return registrationRepository.findByPacketId(packetId);
 	}
+
+	@Override
+	public Registration updateAckReceiptSignature(String packetId, String signature) {
+		Timestamp timestamp = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
+		Registration registration = registrationRepository.findByPacketId(packetId);
+		registration.setAckSignature(signature);
+		registration.setUpdBy(SessionContext.userContext().getUserId());
+		registration.setUpdDtimes(timestamp);
+		return registrationRepository.update(registration);
+	}
 }

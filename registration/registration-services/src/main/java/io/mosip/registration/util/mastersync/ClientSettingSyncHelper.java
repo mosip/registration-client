@@ -1,11 +1,6 @@
 package io.mosip.registration.util.mastersync;
 
 
-import static io.mosip.registration.constants.LoggerConstants.LOG_REG_MASTER_SYNC;
-import static io.mosip.registration.constants.LoggerConstants.LOG_REG_SCHEMA_SYNC;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -20,9 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
-import io.mosip.kernel.logger.logback.factory.Logfactory;
 import io.mosip.registration.dto.schema.ProcessSpecDto;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -35,7 +28,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.util.CryptoUtil;
-import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dto.mastersync.DynamicFieldDto;
@@ -54,7 +46,6 @@ import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.DocumentCategoryRepository;
 import io.mosip.registration.repositories.DocumentTypeRepository;
 import io.mosip.registration.repositories.DynamicFieldRepository;
-import io.mosip.registration.repositories.IdTypeRepository;
 import io.mosip.registration.repositories.LanguageRepository;
 import io.mosip.registration.repositories.LocationHierarchyRepository;
 import io.mosip.registration.repositories.LocationRepository;
@@ -71,10 +62,7 @@ import io.mosip.registration.repositories.RegistrationCenterUserRepository;
 import io.mosip.registration.repositories.ScreenAuthorizationRepository;
 import io.mosip.registration.repositories.ScreenDetailRepository;
 import io.mosip.registration.repositories.SyncJobDefRepository;
-import io.mosip.registration.repositories.TemplateFileFormatRepository;
 import io.mosip.registration.repositories.TemplateRepository;
-import io.mosip.registration.repositories.TemplateTypeRepository;
-import io.mosip.registration.repositories.ValidDocumentRepository;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import lombok.NonNull;
@@ -84,7 +72,8 @@ public class ClientSettingSyncHelper {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(ClientSettingSyncHelper.class);
 	
-	private static final String ENTITY_PACKAGE_NAME = "io.mosip.registration.entity.";	
+	private static final String ENTITY_PACKAGE_NAME = "io.mosip.registration.entity.";
+	private static final String FIELD_TYPE_DYNAMIC_URL = "dynamic-url";
 	private static final String FIELD_TYPE_DYNAMIC = "dynamic";
 	private static final String FIELD_TYPE_SCRIPT = "script";
 		
@@ -107,10 +96,6 @@ public class ClientSettingSyncHelper {
 	/** Object for Sync Document Type Repository. */
 	@Autowired
 	private DocumentTypeRepository documentTypeRepository;
-
-	/** Object for Sync Id Type Repository. */
-	@Autowired
-	private IdTypeRepository idTypeRepository;
 
 	/** Object for Sync Location Repository. */
 	@Autowired
@@ -136,25 +121,13 @@ public class ClientSettingSyncHelper {
 	@Autowired
 	private ReasonListRepository reasonListRepository;
 
-	/** Object for Sync Template File Format Repository. */
-	@Autowired
-	private TemplateFileFormatRepository templateFileFormatRepository;
-
 	/** Object for Sync Template Repository. */
 	@Autowired
 	private TemplateRepository templateRepository;
 
-	/** Object for Sync Template Type Repository. */
-	@Autowired
-	private TemplateTypeRepository templateTypeRepository;
-
 	/** Object for Sync Applicant Valid Document Repository. */
 	@Autowired
 	private ApplicantValidDocumentRepository applicantValidDocumentRepository;
-
-	/** Object for Sync Valid Document Repository. */
-	@Autowired
-	private ValidDocumentRepository validDocumentRepository;
 
 	/** Object for Sync language Repository. */
 	@Autowired
@@ -222,19 +195,9 @@ public class ClientSettingSyncHelper {
 	
 	
 	static {
-		ENTITY_CLASS_NAMES.put("Device", ENTITY_PACKAGE_NAME + "RegDeviceMaster");
-		ENTITY_CLASS_NAMES.put("DeviceType", ENTITY_PACKAGE_NAME + "RegDeviceType");
-		ENTITY_CLASS_NAMES.put("DeviceSpecification", ENTITY_PACKAGE_NAME + "RegDeviceSpec");
 		ENTITY_CLASS_NAMES.put("MachineSpecification", ENTITY_PACKAGE_NAME + "RegMachineSpec");
-		ENTITY_CLASS_NAMES.put("RegistrationCenterDevice", ENTITY_PACKAGE_NAME + "RegCenterDevice");
 		ENTITY_CLASS_NAMES.put("RegistrationCenterUser", ENTITY_PACKAGE_NAME + "RegCenterUser");
 		ENTITY_CLASS_NAMES.put("RegistrationCenterMachine", ENTITY_PACKAGE_NAME + "CenterMachine");
-		ENTITY_CLASS_NAMES.put("RegistrationCenterMachineDevice", ENTITY_PACKAGE_NAME + "RegCentreMachineDevice");
-		ENTITY_CLASS_NAMES.put("RegistrationDeviceMaster", ENTITY_PACKAGE_NAME + "RegDeviceMaster");
-		ENTITY_CLASS_NAMES.put("DeviceService", ENTITY_PACKAGE_NAME + "MosipDeviceService");
-		ENTITY_CLASS_NAMES.put("DeviceTypeDPM", ENTITY_PACKAGE_NAME + "RegisteredDeviceType");
-		ENTITY_CLASS_NAMES.put("DeviceSubTypeDPM", ENTITY_PACKAGE_NAME + "RegisteredSubDeviceType");
-		ENTITY_CLASS_NAMES.put("RegisteredDevice", ENTITY_PACKAGE_NAME + "RegisteredDeviceMaster");
 		ENTITY_CLASS_NAMES.put("Machine", ENTITY_PACKAGE_NAME + "MachineMaster");
 		ENTITY_CLASS_NAMES.put("RegistrationCenterUserMachine", ENTITY_PACKAGE_NAME + "UserMachineMapping");
 	}
@@ -289,7 +252,7 @@ public class ClientSettingSyncHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	private List buildEntities(SyncDataBaseDto syncDataBaseDto) throws SyncFailedException {	
+	private List buildEntities(SyncDataBaseDto syncDataBaseDto) throws SyncFailedException {
 		try {		
 			List<Object> entities = new ArrayList<Object>();
 			if(syncDataBaseDto == null || syncDataBaseDto.getData() == null || syncDataBaseDto.getData().isEmpty())
@@ -298,11 +261,21 @@ public class ClientSettingSyncHelper {
 			LOGGER.info("Building entity of type : {}", syncDataBaseDto.getEntityName());
 
 			byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(syncDataBaseDto.getData()));
-			JSONArray jsonArray = getDataList(new String(data));
+			JSONArray jsonArray = null;
+
+			switch (syncDataBaseDto.getEntityType()) {
+				case "structured-url": //TODO - handle URL
+					break;
+				case "structured":
+					jsonArray = getDataList(new String(data));	break;
+			}
+
+			if(jsonArray == null)
+				return entities;
 
 			for(int i =0; i < jsonArray.length(); i++) {
-				JSONObject jsonObject = new JSONObject(jsonArray.getString(i));
-				Object entity = MetaDataUtils.setCreateJSONObjectToMetaData(jsonObject, getEntityClass(syncDataBaseDto.getEntityName()));
+				Object entity = MetaDataUtils.setCreateJSONObjectToMetaData(jsonArray.getJSONObject(i),
+						getEntityClass(syncDataBaseDto.getEntityName()));
 				entities.add(entity);
 			}
 
@@ -407,8 +380,6 @@ public class ClientSettingSyncHelper {
 	@Async
 	private CompletableFuture handleTemplateSync(SyncDataResponseDto syncDataResponseDto) throws SyncFailedException{
 		try {
-			templateFileFormatRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "TemplateFileFormat")));
-			templateTypeRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "TemplateType")));
 			templateRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "Template")));
 		} catch (Exception e) {
 			LOGGER.error("Template Data sync failed", e);
@@ -428,7 +399,6 @@ public class ClientSettingSyncHelper {
 			documentTypeRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "DocumentType")));
 			documentCategoryRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "DocumentCategory")));
 			applicantValidDocumentRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "ApplicantValidDocument")));
-			validDocumentRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "ValidDocument")));
 		} catch (Exception e) {
 			LOGGER.error("Document Data sync failed", e);
 			throw new SyncFailedException("Document data sync failed due to " +  e.getMessage());
@@ -446,7 +416,6 @@ public class ClientSettingSyncHelper {
 		try {
 			biometricTypeRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "BiometricType")));
 			biometricAttributeRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "BiometricAttribute")));
-			idTypeRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "IdType")));
 			locationRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "Location")));
 			locationHierarchyRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "LocationHierarchy")));
 		} catch (Exception e) {
@@ -502,7 +471,8 @@ public class ClientSettingSyncHelper {
 	private CompletableFuture handleDynamicFieldSync(SyncDataResponseDto syncDataResponseDto) throws SyncFailedException {
 		try {
 			Iterator<SyncDataBaseDto> iterator = syncDataResponseDto.getDataToSync().stream()
-					.filter(obj -> FIELD_TYPE_DYNAMIC.equalsIgnoreCase(obj.getEntityType()))
+					.filter(obj -> FIELD_TYPE_DYNAMIC.equalsIgnoreCase(obj.getEntityType()) ||
+							FIELD_TYPE_DYNAMIC_URL.equalsIgnoreCase(obj.getEntityType()))
 					.iterator();
 			
 			List<DynamicField> fields = new ArrayList<DynamicField>();
@@ -511,10 +481,19 @@ public class ClientSettingSyncHelper {
 				
 				if(syncDataBaseDto != null && syncDataBaseDto.getData() != null && !syncDataBaseDto.getData().isEmpty()) {
 					byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(syncDataBaseDto.getData()));
-					JSONArray jsonArray = new JSONArray(new String(data));
+					JSONArray jsonArray = null;
+					switch (syncDataBaseDto.getEntityType()) {
+						case "dynamic-url": //TODO - handle URL
+							break;
+						case "dynamic":
+							jsonArray = getDataList(new String(data));	break;
+					}
+
+					if(jsonArray == null)
+						continue;
 
 					for(int i=0; i< jsonArray.length(); i++) {
-						DynamicFieldDto dynamicFieldDto = MapperUtils.convertJSONStringToDto(jsonArray.getString(i),
+						DynamicFieldDto dynamicFieldDto = MapperUtils.convertJSONStringToDto(jsonArray.getJSONObject(i).toString(),
 								new TypeReference<DynamicFieldDto>() {});
 						DynamicField dynamicField = new DynamicField();
 						dynamicField.setId(dynamicFieldDto.getId());

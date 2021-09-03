@@ -233,7 +233,9 @@ public enum RegistrationExceptionConstants {
 
 	ACCESS_ERROR("REG_ACCESS_ERR", "Failed to access server"),
 	
-	INVALID_LANGUAGE_CONFIGURED("REG-INIT-002", "**** ResourceBundle is not availabe for configured language(s) ! ****");
+	INVALID_LANGUAGE_CONFIGURED("REG-INIT-002", "**** ResourceBundle is not availabe for configured language(s) ! ****"),
+
+	REG_ACK_RECEIPT_READ_ERROR("REG-ACK-001" ,"Acknowledgment receipt integrity check failed");
 
 	/**
 	 * The constructor
