@@ -103,21 +103,19 @@ public class AuditManagerSerivceImpl extends BaseService implements AuditManager
 		if (val != null) {
 			try {
 				/* Delete Audits before given Time */
-				auditDAO.deleteAudits(Timestamp.valueOf(val).toLocalDateTime());
+				auditDAO.deleteAudits(DateUtils.parseToLocalDateTime(val));
 
 				setSuccessResponse(responseDTO, RegistrationConstants.AUDIT_LOGS_DELETION_SUCESS_MSG, null);
 
 			} catch (RuntimeException runtimeException) {
-				LOGGER.error(LoggerConstants.AUDIT_SERVICE_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
-						RegistrationConstants.APPLICATION_ID, runtimeException.getMessage());
+				LOGGER.error(runtimeException.getMessage(), runtimeException);
 
 				setErrorResponse(responseDTO, RegistrationConstants.AUDIT_LOGS_DELETION_FLR_MSG, null);
 			}
 		} else {
-			setErrorResponse(responseDTO, RegistrationConstants.AUDIT_LOGS_DELETION_FLR_MSG, null);
+			setSuccessResponse(responseDTO, RegistrationConstants.AUDIT_LOGS_DELETION_EMPTY_MSG, null);
 		}
-		LOGGER.info(LoggerConstants.AUDIT_SERVICE_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Deletion of Audit Logs Completed");
+		LOGGER.info("Deletion of Audit Logs Completed for datetime before : {}", val);
 
 		return responseDTO;
 	}
