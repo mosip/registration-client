@@ -5,13 +5,10 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 import static io.mosip.registration.constants.RegistrationConstants.REG_UI_LOGIN_LOADER_EXCEPTION;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.Writer;
 import java.net.URL;
 import java.nio.file.Path;
@@ -26,8 +23,6 @@ import java.util.ResourceBundle;
 import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
-import io.mosip.registration.service.packet.PacketHandlerService;
-import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -45,6 +40,7 @@ import io.mosip.registration.dto.RegistrationApprovalDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
+import io.mosip.registration.service.packet.PacketHandlerService;
 import io.mosip.registration.service.packet.RegistrationApprovalService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -209,6 +205,8 @@ public class RegistrationApprovalController extends BaseController implements In
 	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+				RegistrationConstants.ENABLE);
 
 		setImage(exportImageView	, RegistrationConstants.EXPORT_ICON_IMG);
 		setImage(authenticateImageView	, RegistrationConstants.AUTHENTICATE_IMG);
@@ -494,9 +492,11 @@ public class RegistrationApprovalController extends BaseController implements In
 	 *             the reg base checked exception
 	 */
 	public void updateStatus(ActionEvent event) throws RegBaseCheckedException {
-
 		LOGGER.info(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
 				"Registration status updation has been started");
+		
+		SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+				RegistrationConstants.DISABLE);		
 		actionCounter++;
 
 		ToggleButton tBtn = (ToggleButton) event.getSource();
@@ -554,6 +554,9 @@ public class RegistrationApprovalController extends BaseController implements In
 					authenticateBtn.setDisable(false);
 
 				} else if (tBtn.getId().equals(authenticateBtn.getId())) {
+					SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+							RegistrationConstants.ENABLE);
+					
 					loadStage(primarystage, RegistrationConstants.USER_AUTHENTICATION);
 					eodAuthenticationController.init(this, ProcessNames.EOD.getType());
 				}
