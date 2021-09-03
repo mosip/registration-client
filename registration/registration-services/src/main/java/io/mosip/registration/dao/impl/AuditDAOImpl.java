@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import io.mosip.kernel.core.util.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,7 +57,7 @@ public class AuditDAOImpl implements AuditDAO {
 				audits = regAuditRepository.findAllByOrderByActionTimeStampAsc();
 			} else {
 				audits = regAuditRepository.findByActionTimeStampGreaterThanOrderByActionTimeStampAsc(
-						Timestamp.valueOf(timestamp).toLocalDateTime());
+						DateUtils.parseToLocalDateTime(timestamp));
 			}
 
 			LOGGER.info("Fetching of all the audits which are to be added to Registartion packet ended with count - {}", audits.size());

@@ -228,7 +228,9 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 			LOGGER.info("Saving registration info in DB and on disk.");
 			registrationDAO.save(baseLocation + SLASH + packetManagerAccount + SLASH + registrationDTO.getPacketId(), registrationDTO);
-			
+
+			globalParamService.update(RegistrationConstants.AUDIT_TIMESTAMP, DateUtils.getUTCCurrentDateTime().toString());
+
 			auditFactory.audit(AuditEvent.PACKET_CREATION_SUCCESS, Components.PACKET_HANDLER,
 					registrationDTO.getRegistrationId(), AuditReferenceIdTypes.REGISTRATION_ID.getReferenceTypeId());
 
@@ -237,8 +239,6 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			successResponseDTO.setMessage("Success");
 			responseDTO.setSuccessResponseDTO(successResponseDTO);
 
-			globalParamService.update(RegistrationConstants.AUDIT_TIMESTAMP,
-					String.valueOf(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime())));
 		} catch (RegBaseCheckedException regBaseCheckedException) {
 			LOGGER.error("Exception while creating packet ",regBaseCheckedException);
 
