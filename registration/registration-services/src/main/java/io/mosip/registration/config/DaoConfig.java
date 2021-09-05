@@ -16,6 +16,7 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
@@ -208,6 +209,7 @@ public class DaoConfig extends HibernateDaoConfig {
 
 	private void setupDataSource() throws Exception {
 		LOGGER.info(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID, "****** SETTING UP DATASOURCE *******");
+		backwardCompatibleFix();
 		createDatabase();
 		reEncryptExistingDB();
 		setupUserAndPermits();
@@ -490,6 +492,27 @@ public class DaoConfig extends HibernateDaoConfig {
 				ClientCryptoManagerConstant.KEYS_DIR, ClientCryptoManagerConstant.DB_PWD_FILE).toFile())) {
 			fos.write(java.util.Base64.getEncoder().encode(cipher));
 			LOGGER.debug("REGISTRATION  - DaoConfig", APPLICATION_NAME, APPLICATION_ID, "Saved DB configuration");
+		}
+	}
+
+	//Move ${user.home}/.mosipkeys/db.conf to ${user.dir}/.mosipkeys/db.conf
+	private void backwardCompatibleFix() {
+		Path target = Paths.get(ClientCryptoManagerConstant.KEY_PATH, ClientCryptoManagerConstant.KEYS_DIR,
+				ClientCryptoManagerConstant.DB_PWD_FILE);
+		if(target.toFile().exists()) {
+			LOGGER.info("DB credential backward compatibility fix not applicable");
+			return;
+		}
+
+		Path source = Paths.get(System.getProperty("user.home"), ClientCryptoManagerConstant.KEYS_DIR,
+				ClientCryptoManagerConstant.DB_PWD_FILE);
+		if(source.toFile().exists()) {
+			try {
+				FileUtils.moveFile(source.toFile(), target.toFile());
+			} catch (IOException e) {
+				LOGGER.error("Failed to preform backward compatible fix. Failed to copy {} to {} due to {}",
+						source, target, e);
+			}
 		}
 	}
 
