@@ -69,7 +69,7 @@ This project is licensed under the terms of [Mozilla Public License 2.0](https:/
 
 
     NOTE:
-    -> In case of NON-TPM, machine keys will be created under <home-dir>/.mosipkeys folder on the first run of registration-client. 
+    -> In case of NON-TPM, machine keys will be created under <working-dir>/.mosipkeys folder on the first run of registration-client. 
     Hence in case of NON-TPM machine Step-2 need to be executed after Step-5 before login
     
 
