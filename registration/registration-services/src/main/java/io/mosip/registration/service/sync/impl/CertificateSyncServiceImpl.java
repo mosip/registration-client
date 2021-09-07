@@ -87,7 +87,7 @@ public class CertificateSyncServiceImpl extends BaseService implements Certifica
                     LocalDateTime.ofInstant(syncControl.getLastSyncDtimes().toInstant(), ZoneOffset.ofHours(0))));
         }
 
-        if(!RegistrationAppHealthCheckUtil.isNetworkAvailable())
+        if(!serviceDelegateUtil.isNetworkAvailable())
             return setErrorResponse(responseDTO, RegistrationConstants.NO_INTERNET, null);
 
         LOGGER.info("Network available cacerts sync started");

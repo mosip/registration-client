@@ -15,6 +15,7 @@ import io.mosip.registration.dto.AuthTokenDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 /**
  * This class will load all the property files as bundles All application level
@@ -304,7 +305,7 @@ public class ApplicationContext {
 
 	public static String getUpgradeServerURL() {
 		return applicationMap.get("client.upgrade.server.url") == null
-				? String.format("https://%s", RegistrationAppHealthCheckUtil.getHostName())
+				? "https://${mosip.hostname}"
 				: String.valueOf(applicationMap.get("client.upgrade.server.url"));
 	}
 

@@ -13,6 +13,7 @@ import javax.sql.DataSource;
 
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.exception.RemapException;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -88,6 +89,8 @@ public class CenterMachineReMapServiceTest {
 	FileUtils fileUtils;
 	@Mock
 	GlobalParamService globalParamService;
+	@Mock
+	private ServiceDelegateUtil serviceDelegateUtil;
 
 	@BeforeClass
 	public static void initialize() throws IOException, java.io.IOException {
@@ -103,7 +106,7 @@ public class CenterMachineReMapServiceTest {
 		PowerMockito.mockStatic(FileUtils.class);
 		PowerMockito.mockStatic(ScriptUtils.class);
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		GlobalParam globalParam = new GlobalParam();
 
@@ -138,7 +141,7 @@ public class CenterMachineReMapServiceTest {
 		PowerMockito.mockStatic(FileUtils.class);
 		PowerMockito.mockStatic(ScriptUtils.class);
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		GlobalParam globalParam = new GlobalParam();
 
@@ -173,7 +176,7 @@ public class CenterMachineReMapServiceTest {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		PowerMockito.mockStatic(FileUtils.class);
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		GlobalParam globalParam = new GlobalParam();
 
@@ -218,7 +221,7 @@ public class CenterMachineReMapServiceTest {
 	public void handleRemapProcessTestFailure() throws Exception {
 		PowerMockito.mockStatic(FileUtils.class);
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		GlobalParam globalParam = new GlobalParam();
 

@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -174,6 +175,9 @@ public class LoginServiceTest {
 	@Mock
 	private LocalConfigService localConfigService;
 
+	@Mock
+	private ServiceDelegateUtil serviceDelegateUtil;
+
 	@Before
 	public void initialize() throws Exception {
 		doNothing().when(auditFactory).audit(Mockito.any(AuditEvent.class), Mockito.any(Components.class),
@@ -195,7 +199,7 @@ public class LoginServiceTest {
 
 		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class,
 				RegistrationSystemPropertiesChecker.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
 

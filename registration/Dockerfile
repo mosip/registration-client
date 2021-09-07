@@ -34,6 +34,8 @@ ENV client_certificate_env=${client_certificate}
 
 ENV artifactory_url_env=${artifactory_url}
 
+ENV host_name_env=${host_name}
+
 # can be passed during Docker build as build time environment for github branch to pickup configuration from.
 ARG container_user=mosip
 

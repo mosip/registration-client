@@ -1,6 +1,7 @@
 package io.mosip.registration.util.restclient;
 
 import java.net.URI;
+import java.nio.file.Path;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -25,7 +26,26 @@ public class RequestHTTPDTO {
 	private HttpHeaders httpHeaders;
 	private Object requestBody;
 	private Boolean isSignRequired;
-	private boolean isRequestSignRequired; 
+	private boolean isRequestSignRequired;
+
+	private Path filePath;
+	private boolean isFileEncrypted;
+
+	public boolean isFileEncrypted() {
+		return isFileEncrypted;
+	}
+
+	public void setFileEncrypted(boolean fileEncrypted) {
+		isFileEncrypted = fileEncrypted;
+	}
+
+	public Path getFilePath() {
+		return filePath;
+	}
+
+	public void setFilePath(Path filePath) {
+		this.filePath = filePath;
+	}
 	
 	/**
 	 * @return the isSignRequired

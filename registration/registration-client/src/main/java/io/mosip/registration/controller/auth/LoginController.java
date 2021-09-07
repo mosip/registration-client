@@ -235,7 +235,7 @@ public class LoginController extends BaseController implements Initializable {
 		new Thread(() -> {
 
 			try {
-				if (RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+				if (serviceDelegateUtil.isNetworkAvailable()) {
 
 					// Check for updates
 					hasUpdate = headerController.hasUpdate();
@@ -549,7 +549,7 @@ public class LoginController extends BaseController implements Initializable {
 		UserDTO userDTO = loginService.getUserDetail(userId.getText());
 
 		if (isInitialSetUp) {
-			if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+			if (!serviceDelegateUtil.isNetworkAvailable()) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_INTERNET_CONNECTION));
 
 			} else {
@@ -1052,7 +1052,7 @@ public class LoginController extends BaseController implements Initializable {
 
 						LOGGER.info("REGISTRATION - INITIAL_SYNC - LOGIN_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 								"Handling all the sync activities before login");
-						if (RegistrationAppHealthCheckUtil.isNetworkAvailable()
+						if (serviceDelegateUtil.isNetworkAvailable()
 								&& (isInitialSetUp || authTokenUtilService.hasAnyValidToken()))
 							return loginService.initialSync(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
 						else {
