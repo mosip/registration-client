@@ -29,6 +29,7 @@ import javax.crypto.SecretKey;
 
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -294,7 +295,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 	private String getDomainUriValue() {
 		String pattern = String.valueOf(ApplicationContext.map().getOrDefault(RegistrationConstants.ID_AUTH_DOMAIN_URI,
 				DOMAIN_URI_VALUE));
-		return RegistrationAppHealthCheckUtil.prepareURLByHostName(pattern);
+		return serviceDelegateUtil.prepareURLByHostName(pattern);
 	}
 
 	private String getSubTypes(BiometricType bioType, String bioAttribute) {

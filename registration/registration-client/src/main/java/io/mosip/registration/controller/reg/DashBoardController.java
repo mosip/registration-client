@@ -1,8 +1,5 @@
 package io.mosip.registration.controller.reg;
 
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
-
 import java.io.Writer;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -41,8 +38,7 @@ public class DashBoardController extends BaseController implements Initializable
 		WebEngine webEngine = dashboardWebView.getEngine();
 		webEngine.loadContent(stringWriter.toString());
 		
-		LOGGER.info("REGISTRATION - UI - ACK-RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
-				"Dashboard template has been loaded to webview");
+		LOGGER.info("Dashboard template has been loaded to webview");
 	}
 
 }

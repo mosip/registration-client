@@ -19,8 +19,8 @@ public class RegistrationHealthCheckerTest {
 		RegistrationAppHealthCheckUtil.isDiskSpaceAvailable();
 	}
 
-	@Test
+	/*@Test
 	public void networkAvailableTest() {
 		RegistrationAppHealthCheckUtil.isNetworkAvailable();
-	}
+	}*/
 }

@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.mosip.kernel.core.util.HMACUtils2;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.util.common.OTPManager;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,6 +52,9 @@ public class AuthenticationServiceTest {
 	
 	@InjectMocks
 	private AuthenticationServiceImpl authenticationServiceImpl;
+
+	@Mock
+	private ServiceDelegateUtil serviceDelegateUtil;
 	
 	@Before
 	public void initialize() {
@@ -77,9 +82,9 @@ public class AuthenticationServiceTest {
 		AuthenticationValidatorDTO authenticationValidatorDTO=new AuthenticationValidatorDTO();
 		authenticationValidatorDTO.setUserId("mosip");
 		authenticationValidatorDTO.setPassword("mosip");
-		
+		PowerMockito.mockStatic(CryptoUtil.class, HMACUtils2.class);
 		Mockito.when(loginService.getUserDetail("mosip")).thenReturn(userDTO);		
-		Mockito.when(CryptoUtil.decodeBase64("salt")).thenReturn("salt".getBytes());		
+		Mockito.when(CryptoUtil.decodeBase64("salt")).thenReturn("salt".getBytes());
 		Mockito.when(HMACUtils2.digestAsPlainTextWithSalt("mosip".getBytes(), "salt".getBytes())).thenReturn("mosip");
 		
 		assertEquals("Username and Password Match", authenticationServiceImpl.validatePassword(authenticationValidatorDTO));

@@ -58,7 +58,7 @@ public class UserMachineMappingServiceTest {
 	@Test
 	public void syncUserDetailsTest() throws RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		List<UserMachineMapping> list = new ArrayList<>();
 		UserMachineMapping userMachineMapping = new UserMachineMapping();
 		UserDetail userDetail = new UserDetail();
@@ -106,7 +106,7 @@ public class UserMachineMappingServiceTest {
 	@Test
 	public void syncUserDetailsOffLineTest() {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(false);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(false);
 		assertNotNull(userMachineMappingServiceImpl.syncUserDetails());
 
 	}
@@ -138,7 +138,7 @@ public class UserMachineMappingServiceTest {
 		userFailureList.add(userDetailsMap);
 		responseMap.put("errors", userFailureList);
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		List<UserMachineMapping> list = new ArrayList<>();
 		UserMachineMapping userMachineMapping = new UserMachineMapping();
 		UserDetail userDetail = new UserDetail();
