@@ -235,7 +235,8 @@ public enum RegistrationExceptionConstants {
 	
 	INVALID_LANGUAGE_CONFIGURED("REG-INIT-002", "**** ResourceBundle is not availabe for configured language(s) ! ****"),
 
-	REG_ACK_RECEIPT_READ_ERROR("REG-ACK-001" ,"Acknowledgment receipt integrity check failed");
+	REG_ACK_RECEIPT_READ_ERROR("REG-ACK-001" ,"Acknowledgment receipt integrity check failed"),
+	REG_FILE_SIGNATURE_ERROR("REG-SIGN-001" ,"Downloaded file signature verification failed");
 
 	/**
 	 * The constructor
