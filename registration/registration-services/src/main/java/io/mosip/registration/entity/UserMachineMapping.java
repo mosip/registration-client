@@ -45,8 +45,7 @@ public class UserMachineMapping extends RegistrationCommonFields implements Seri
 	/** The machine master. */
 	@ManyToOne(fetch=FetchType.EAGER)
 	@JoinColumns({
-			@JoinColumn(name = "machine_id", referencedColumnName = "id", insertable = false, updatable = false),
-			@JoinColumn(name = "lang_code", referencedColumnName = "lang_code", insertable = false, updatable = false) })
+			@JoinColumn(name = "machine_id", referencedColumnName = "id", insertable = false, updatable = false) })
 	private MachineMaster machineMaster;
 
 	/** The is deleted. */
