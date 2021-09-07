@@ -8,12 +8,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
-import io.mosip.registration.dao.AuditDAO;
-import io.mosip.registration.service.config.LocalConfigService;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,21 +26,23 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import io.mosip.kernel.auditmanager.request.AuditRequestDto;
 import io.mosip.kernel.core.auditmanager.spi.AuditHandler;
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.audit.AuditManagerSerivceImpl;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.dao.AuditDAO;
 import io.mosip.registration.dao.RegistrationDAO;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.entity.Registration;
 import io.mosip.registration.service.config.GlobalParamService;
+import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.packet.RegPacketStatusService;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@PrepareForTest({ InetAddress.class, SessionContext.class, ApplicationContext.class })
+@PrepareForTest({ InetAddress.class, SessionContext.class, ApplicationContext.class, DateUtils.class })
 public class AuditFactoryTest {
 
 	@Rule
@@ -119,6 +117,8 @@ public class AuditFactoryTest {
 	public void deleteAuditLogsSuccessTest() {
 		when(ApplicationContext.map()).thenReturn(applicationMap);
 		Mockito.when(applicationMap.get(Mockito.anyString())).thenReturn("2020-12-12 12:12:12");
+		PowerMockito.mockStatic(DateUtils.class);
+		PowerMockito.when(DateUtils.parseToLocalDateTime(Mockito.anyString())).thenReturn(LocalDateTime.now());
 		Mockito.doNothing().when(auditDAO).deleteAudits(Mockito.any(LocalDateTime.class));
 		assertSame(RegistrationConstants.AUDIT_LOGS_DELETION_SUCESS_MSG,
 				auditFactory.deleteAuditLogs().getSuccessResponseDTO().getMessage());
@@ -128,9 +128,9 @@ public class AuditFactoryTest {
 	@Test
 	public void auditLogsDeletionFailureTest() {
 		Mockito.when(applicationMap.get(Mockito.anyString())).thenReturn(null);
-		assertNotNull(auditFactory.deleteAuditLogs().getErrorResponseDTOs());
-		assertSame(RegistrationConstants.AUDIT_LOGS_DELETION_FLR_MSG,
-				auditFactory.deleteAuditLogs().getErrorResponseDTOs().get(0).getMessage());
+		assertNotNull(auditFactory.deleteAuditLogs().getSuccessResponseDTO());
+		assertSame(RegistrationConstants.AUDIT_LOGS_DELETION_EMPTY_MSG,
+				auditFactory.deleteAuditLogs().getSuccessResponseDTO().getMessage());
 
 	}
 

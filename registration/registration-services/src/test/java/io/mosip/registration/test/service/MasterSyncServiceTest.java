@@ -777,32 +777,11 @@ public class MasterSyncServiceTest {
 		allBlackWords.add(blackWord);
 		allBlackWords.add(blackWord);
 
-		Mockito.when(masterSyncDao.getBlackListedWords(Mockito.anyString())).thenReturn(allBlackWords);
+		Mockito.when(masterSyncDao.getBlackListedWords()).thenReturn(allBlackWords);
 
-		masterSyncServiceImpl.getAllBlackListedWords("ENG");
-
-	}
-
-	@SuppressWarnings("unchecked")
-	@Test
-	public void findDocumentCategories() throws RegBaseCheckedException {
-
-		List<DocumentType> documents = new ArrayList<>();
-		DocumentType document = new DocumentType();
-		document.setName("Aadhar");
-		document.setDescription("Aadhar card");
-		document.setLangCode("ENG");
-		documents.add(document);
-		documents.add(document);
-		List<String> validDocuments = new ArrayList<>();
-		validDocuments.add("CLR");
-		// validDocuments.add("MNA");
-		Mockito.when(masterSyncDao.getDocumentTypes(Mockito.anyList(), Mockito.anyString())).thenReturn(documents);
-
-		masterSyncServiceImpl.getDocumentCategories("ENG", "Test");
+		masterSyncServiceImpl.getAllBlackListedWords();
 
 	}
-
 
 	
 	@SuppressWarnings("unused")
@@ -1074,11 +1053,6 @@ public class MasterSyncServiceTest {
 	@Test(expected=RegBaseCheckedException.class)
 	public void codeNotNullAllLangCode() throws RegBaseCheckedException {
 		masterSyncServiceImpl.getAllReasonsList(null);
-	}
-	
-	@Test(expected=RegBaseCheckedException.class)
-	public void getAllBlackListedWords() throws RegBaseCheckedException {
-		masterSyncServiceImpl.getAllBlackListedWords(null);
 	}
 
 }

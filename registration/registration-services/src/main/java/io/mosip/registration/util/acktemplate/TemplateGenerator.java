@@ -114,16 +114,6 @@ public class TemplateGenerator extends BaseService {
 	@Autowired
 	private SoftwareUpdateHandler softwareUpdateHandler;
 
-	private String guidelines;
-
-	public String getGuidelines() {
-		return guidelines;
-	}
-
-	public void setGuidelines(String guidelines) {
-		this.guidelines = guidelines;
-	}
-
 	public ResponseDTO generateTemplate(String templateText, RegistrationDTO registration, TemplateManagerBuilder
 			templateManagerBuilder, String templateType, String crossImagePath) throws RegBaseCheckedException {
 		ResponseDTO response = new ResponseDTO();
@@ -371,7 +361,6 @@ public class TemplateGenerator extends BaseService {
 			templateValues.put(RegistrationConstants.TEMPLATE_MODIFY_IMAGE_SOURCE, getEncodedImage(RegistrationConstants.TEMPLATE_MODIFY_IMAGE_PATH,
 					RegistrationConstants.TEMPLATE_PNG_IMAGE_ENCODING));
 			generateQRCode(registration, templateValues, firstLanguageProperties);
-			setUpImportantGuidelines(templateValues, guidelines);
 			LocalDateTime currentTime = OffsetDateTime.now().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 			templateValues.put(RegistrationConstants.TEMPLATE_DATE, currentTime.format(DateTimeFormatter.ofPattern(RegistrationConstants.TEMPLATE_DATE_FORMAT)));
 			templateValues.put(RegistrationConstants.TEMPLATE_DATE_LABEL, getLabel("date"));
@@ -402,12 +391,6 @@ public class TemplateGenerator extends BaseService {
 		} catch (RegBaseCheckedException ex) {
 			setErrorResponse(responseDTO, ex.getMessage(), null);
 		}
-	}
-
-	private void setUpImportantGuidelines(Map<String, Object> templateValues, String guidelines) {
-		String[] importantGuidelines = guidelines!=null ?
-				guidelines.split(RegistrationConstants.SPLIT_DELIMITOR) : new String[]{};
-		templateValues.put(RegistrationConstants.TEMPLATE_GUIDELINES, Arrays.asList(importantGuidelines));
 	}
 
 

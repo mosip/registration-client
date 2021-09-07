@@ -7,7 +7,6 @@ import java.util.*;
 
 import io.mosip.commons.packet.dto.packet.AuditDto;
 import io.mosip.commons.packet.dto.packet.SimpleDto;
-import io.mosip.registration.constants.IntroducerType;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.OSIDataDTO;
 import io.mosip.registration.dto.RegistrationDTO;
@@ -457,7 +456,6 @@ public class DataProvider {
 		OSIDataDTO osiDataDTO = new OSIDataDTO();
 		osiDataDTO.setOperatorID("op0r0s12");
 		osiDataDTO.setSupervisorID("s9ju2jhu");
-		osiDataDTO.setIntroducerType(IntroducerType.PARENT.getCode());
 		osiDataDTO.setOperatorAuthenticatedByPassword(true);
 		osiDataDTO.setSuperviorAuthenticatedByPIN(true);
 		return osiDataDTO;

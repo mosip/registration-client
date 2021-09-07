@@ -220,6 +220,7 @@ public class RegistrationPreviewController extends BaseController implements Ini
 		} catch (RegBaseCheckedException regBaseCheckedException) {
 			LOGGER.error(ExceptionUtils.getStackTrace(regBaseCheckedException));
 		}
+		LOGGER.error("Failed to setup preview content as preview template is null");
 		return null;
 	}
 

@@ -171,7 +171,7 @@ public interface RegistrationDAO {
 	 * @param serverStatusCode status of resgistrationPacket
 	 * @return list of registrations
 	 */
-	List<Registration> get(String clientStatusCode, Timestamp crDtimes, List<String> serverStatusCodes);
+	List<Registration> get(Timestamp crDtimes, List<String> serverStatusCodes);
 
 	/**
 	 * This method is used to find list of registrations by server status code in.
@@ -211,5 +211,7 @@ public interface RegistrationDAO {
 	List<String> getRegistrationIds(@NonNull List<String> appIds);
 
 	Registration getRegistrationByPacketId(String packetId);
+
+	Registration updateAckReceiptSignature(String packetId, String signature);
 
 }

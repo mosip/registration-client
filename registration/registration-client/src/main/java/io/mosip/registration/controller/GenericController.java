@@ -15,12 +15,10 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import io.mosip.kernel.core.idvalidator.exception.InvalidIDException;
-import io.mosip.registration.dto.schema.ProcessSpecDto;
-import io.mosip.registration.entity.LocationHierarchy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import io.mosip.kernel.core.idvalidator.exception.InvalidIDException;
 import io.mosip.kernel.core.idvalidator.spi.PridValidator;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
@@ -40,8 +38,10 @@ import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
+import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.schema.UiScreenDTO;
+import io.mosip.registration.entity.LocationHierarchy;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.sync.MasterSyncService;
@@ -57,8 +57,12 @@ import io.mosip.registration.util.control.impl.DropDownFxControl;
 import io.mosip.registration.util.control.impl.HtmlFxControl;
 import io.mosip.registration.util.control.impl.TextFieldFxControl;
 import io.mosip.registration.validator.RequiredFieldValidator;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -66,12 +70,12 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
@@ -97,6 +101,7 @@ public class GenericController extends BaseController {
 	protected static final Logger LOGGER = AppConfig.getLogger(GenericController.class);
 
 	private static final String LABEL_CLASS = "additionaInfoReqIdLabel";
+	private static final String NAV_LABEL_CLASS = "navigationLabel";
 	private static final String TEXTFIELD_CLASS = "preregFetchBtnStyle";
 	private static final String CONTROLTYPE_TEXTFIELD = "textbox";
 	private static final String CONTROLTYPE_BIOMETRICS = "biometrics";
@@ -128,6 +133,8 @@ public class GenericController extends BaseController {
 
 	@FXML
 	private Label notification;
+	
+	private ProgressIndicator progressIndicator;
 
 	@Autowired
 	private RegistrationController registrationController;
@@ -217,34 +224,80 @@ public class GenericController extends BaseController {
 		button.setText(applicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("fetch"));
 
-		button.setOnMouseClicked(new EventHandler<MouseEvent>() {
-			@Override
-			public void handle(MouseEvent event) {
-				boolean isValid = false;
-				try {
-					isValid = pridValidatorImpl.validateId(textField.getText());
-				} catch (InvalidIDException invalidIDException) { isValid = false; }
-
-				if(!isValid) {
-					generateAlertLanguageSpecific(RegistrationConstants.ERROR, RegistrationUIConstants.PRE_REG_ID_NOT_VALID);
-					return;
-				}
-
-				ResponseDTO responseDTO = preRegistrationDataSyncService.getPreRegistration(textField.getText(), false);
-
-				try {
-					loadPreRegSync(responseDTO);
-					getRegistrationDTOFromSession().setPreRegistrationId(textField.getText());
-					getRegistrationDTOFromSession().setAppId(textField.getText());
-
-				} catch (RegBaseCheckedException exception) {
-					generateAlertLanguageSpecific(RegistrationConstants.ERROR, responseDTO.getErrorResponseDTOs().get(0).getMessage());
-				}
-			}
+		button.setOnAction(event -> {
+			executePreRegFetchTask(textField);
 		});
 
 		hBox.getChildren().add(button);
+		progressIndicator = new ProgressIndicator();
+		progressIndicator.setId("progressIndicator");
+		progressIndicator.setVisible(false);
+		hBox.getChildren().add(progressIndicator);
 		return hBox;
+	}
+
+	private void executePreRegFetchTask(TextField textField) {
+		genericScreen.setDisable(true);
+		progressIndicator.setVisible(true);
+
+		Service<Void> taskService = new Service<Void>() {
+			@Override
+			protected Task<Void> createTask() {
+				return new Task<Void>() {
+					/*
+					 * (non-Javadoc)
+					 * 
+					 * @see javafx.concurrent.Task#call()
+					 */
+					@Override
+					protected Void call() {
+						Platform.runLater(() -> {
+							boolean isValid = false;
+							try {
+								isValid = pridValidatorImpl.validateId(textField.getText());
+							} catch (InvalidIDException invalidIDException) { isValid = false; }
+
+							if(!isValid) {
+								generateAlertLanguageSpecific(RegistrationConstants.ERROR, RegistrationUIConstants.PRE_REG_ID_NOT_VALID);
+								return;
+							}
+
+							ResponseDTO responseDTO = preRegistrationDataSyncService.getPreRegistration(textField.getText(), false);
+
+							try {
+								loadPreRegSync(responseDTO);
+								if (responseDTO.getSuccessResponseDTO() != null) {
+									getRegistrationDTOFromSession().setPreRegistrationId(textField.getText());
+									getRegistrationDTOFromSession().setAppId(textField.getText());
+									getRegistrationDTOFromSession().setRegistrationId(textField.getText());
+								}
+							} catch (RegBaseCheckedException exception) {
+								generateAlertLanguageSpecific(RegistrationConstants.ERROR, responseDTO.getErrorResponseDTOs().get(0).getMessage());
+							}
+						});
+						return null;
+					}
+				};
+			}
+		};
+
+		progressIndicator.progressProperty().bind(taskService.progressProperty());
+		taskService.start();
+		taskService.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
+			@Override
+			public void handle(WorkerStateEvent workerStateEvent) {
+				genericScreen.setDisable(false);
+				progressIndicator.setVisible(false);
+			}
+		});
+		taskService.setOnFailed(new EventHandler<WorkerStateEvent>() {
+			@Override
+			public void handle(WorkerStateEvent t) {
+				LOGGER.debug("Pre Registration Fetch failed");
+				genericScreen.setDisable(false);
+				progressIndicator.setVisible(false);
+			}
+		});
 	}
 
 	private HBox getAdditionalInfoRequestIdComponent() {
@@ -268,6 +321,7 @@ public class GenericController extends BaseController {
 		textField.textProperty().addListener((observable, oldValue, newValue) -> {
 			getRegistrationDTOFromSession().setAdditionalInfoReqId(newValue);
 			getRegistrationDTOFromSession().setAppId(newValue);
+			getRegistrationDTOFromSession().setRegistrationId(newValue);
 		});
 
 		return hBox;
@@ -401,9 +455,11 @@ public class GenericController extends BaseController {
 	private void addNavigationButtons(ProcessSpecDto processSpecDto) {
 
 		Label navigationLabel = new Label();
-		navigationLabel.getStyleClass().add(LABEL_CLASS);
+		navigationLabel.getStyleClass().add(NAV_LABEL_CLASS);
 		navigationLabel.setText(RegistrationConstants.SLASH + RegistrationConstants.SPACE +
 				processSpecDto.getLabel().get(ApplicationContext.applicationLanguage()));
+		navigationLabel.prefWidthProperty().bind(navigationAnchorPane.widthProperty());
+		navigationLabel.setWrapText(true);
 
 		navigationAnchorPane.getChildren().add(navigationLabel);
 		AnchorPane.setTopAnchor(navigationLabel, 5.0);

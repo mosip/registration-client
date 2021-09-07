@@ -18,7 +18,7 @@ public interface ApplicantValidDocumentRepository extends BaseRepository<Applica
 	List<ApplicantValidDocument> findByIsActiveTrueAndDocumentCategoryCodeAndDocumentCategoryLangCode(String docCategoryCode,
 			String langCode);
 
-	List<ApplicantValidDocument> findByIsActiveTrueAndValidDocumentAppTypeCodeAndDocumentCategoryCode(
+	List<ApplicantValidDocument> findByIsActiveTrueAndValidDocumentAppTypeCodeAndValidDocumentDocCatCode(
 			String applicantType, String docCategoryCode);
 	
 }

@@ -83,6 +83,8 @@ public class Registration extends RegistrationCommonFields {
 	private String appId;
 	@Column(name = "ADDITIONAL_INFO_REQ_ID")
 	private String additionalInfoReqId;
+	@Column(name= "ACK_SIGNATURE")
+	private String ackSignature;
 	
 	@ManyToOne
 	@JoinColumn(name = "CR_BY", referencedColumnName = "id", insertable = false, updatable = false)
@@ -350,4 +352,11 @@ public class Registration extends RegistrationCommonFields {
 		this.additionalInfoReqId = additionalInfoReqId;
 	}
 
+	public String getAckSignature() {
+		return ackSignature;
+	}
+
+	public void setAckSignature(String ackSignature) {
+		this.ackSignature = ackSignature;
+	}
 }

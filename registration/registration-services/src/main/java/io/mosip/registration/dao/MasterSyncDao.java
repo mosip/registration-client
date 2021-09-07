@@ -2,9 +2,17 @@ package io.mosip.registration.dao;
 
 import java.util.List;
 
-import io.mosip.registration.dto.mastersync.MasterDataResponseDto;
-import io.mosip.registration.dto.response.SyncDataResponseDto;
-import io.mosip.registration.entity.*;
+import io.mosip.registration.entity.BiometricAttribute;
+import io.mosip.registration.entity.BlacklistedWords;
+import io.mosip.registration.entity.DocumentCategory;
+import io.mosip.registration.entity.DocumentType;
+import io.mosip.registration.entity.Language;
+import io.mosip.registration.entity.Location;
+import io.mosip.registration.entity.LocationHierarchy;
+import io.mosip.registration.entity.ReasonCategory;
+import io.mosip.registration.entity.ReasonList;
+import io.mosip.registration.entity.SyncControl;
+import io.mosip.registration.entity.SyncJobDef;
 
 /**
  * This class is used to store the master data details like Location,
@@ -62,11 +70,10 @@ public interface MasterSyncDao {
 
 	/**
 	 * Gets the black listed words.
-	 *
-	 * @param langCode the lang code
+	 * 
 	 * @return the black listed words
 	 */
-	List<BlacklistedWords> getBlackListedWords(String langCode);
+	List<BlacklistedWords> getBlackListedWords();
 
 	/**
 	 * Gets the Document Categories.
@@ -77,13 +84,6 @@ public interface MasterSyncDao {
 	 */
 	List<DocumentType> getDocumentTypes(List<String> docCode, String langCode);
 
-	/**
-	 * Gets the valid documets.
-	 *
-	 * @param docCategoryCode the doc category code
-	 * @return the valid documets
-	 */
-	List<ValidDocument> getValidDocumets(String docCategoryCode);
 
 	/**
 	 * Get All the Active Sync JOBS

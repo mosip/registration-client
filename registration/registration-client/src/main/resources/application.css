@@ -2641,3 +2641,8 @@ Working on new Css by taleev
 	-fx-text-fill: #008080;
     -fx-font-size: 15px;
 }
+
+.navigationLabel {
+	-fx-text-fill: #008080;
+    -fx-font-size: 13px;
+}

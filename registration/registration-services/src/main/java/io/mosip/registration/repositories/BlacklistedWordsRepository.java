@@ -13,4 +13,5 @@ import io.mosip.registration.entity.BlacklistedWords;
  */
 public interface BlacklistedWordsRepository extends BaseRepository<BlacklistedWords, String> {
 	List<BlacklistedWords> findBlackListedWordsByIsActiveTrueAndLangCode(String langCode);
+	List<BlacklistedWords> findBlackListedWordsByIsActiveTrue();
 }

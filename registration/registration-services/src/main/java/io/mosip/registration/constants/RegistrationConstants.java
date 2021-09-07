@@ -746,6 +746,7 @@ public class RegistrationConstants {
 	public static final String PACKET_ID = "packetId";
 	public static final String STATUS_CODE = "statusCode";
 	public static final String PACKET_STATUS_CODE_PROCESSED = "PROCESSED";
+	public static final String PACKET_STATUS_CODE_ACCEPTED = "ACCEPTED";
 	public static final String PACKET_STATUS_CODE_PROCESSING = "PROCESSING";
 	public static final String PACKET_STATUS_CODE_REREGISTER = "REREGISTER";
 	public static final String RE_REGISTER_STATUS_COMEMNTS = "Re-Register";

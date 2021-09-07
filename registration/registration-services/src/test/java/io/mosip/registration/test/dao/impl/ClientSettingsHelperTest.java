@@ -73,8 +73,6 @@ public class ClientSettingsHelperTest {
 	@Mock
 	private DocumentTypeRepository masterSyncDocumentTypeRepository;
 
-	@Mock
-	private IdTypeRepository masterSyncIdTypeRepository;
 
 	@Mock
 	private LanguageRepository masterSyncLanguageRepository;
@@ -108,19 +106,10 @@ public class ClientSettingsHelperTest {
 	private RegistrationCenterTypeRepository masterSyncRegistrationCenterTypeRepository;
 
 	@Mock
-	private TemplateFileFormatRepository masterSyncTemplateFileFormatRepository;
-
-	@Mock
 	private TemplateRepository masterSyncTemplateRepository;
 
 	@Mock
-	private TemplateTypeRepository masterSyncTemplateTypeRepository;
-
-	@Mock
 	private ApplicantValidDocumentRepository masterSyncValidDocumentRepository;
-
-	@Mock
-	private ValidDocumentRepository validDocumentRepository;
 
 	@Mock
 	private AppAuthenticationRepository appAuthenticationRepository;
