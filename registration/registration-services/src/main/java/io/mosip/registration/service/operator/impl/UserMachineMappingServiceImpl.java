@@ -70,7 +70,7 @@ public class UserMachineMappingServiceImpl extends BaseService implements UserMa
 		List<Map<String, Object>> list = new ArrayList<>();
 		ResponseDTO responseDTO = new ResponseDTO();
 
-		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+		if (!serviceDelegateUtil.isNetworkAvailable()) {
 			buildErrorRespone(responseDTO, RegistrationConstants.POLICY_SYNC_CLIENT_NOT_ONLINE_ERROR_CODE,
 					RegistrationConstants.POLICY_SYNC_CLIENT_NOT_ONLINE_ERROR_MESSAGE);
 		} else {

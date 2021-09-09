@@ -1,11 +1,8 @@
 package io.mosip.registration.util.advice;
 
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.registration.exception.ConnectionException;
-import io.mosip.registration.repositories.UserTokenRepository;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -14,27 +11,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
 
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.JsonUtils;
-import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.kernel.core.util.exception.JsonProcessingException;
 import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.constants.LoggerConstants;
-import io.mosip.registration.constants.LoginMode;
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.context.SessionContext;
-import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dto.AuthTokenDTO;
-import io.mosip.registration.dto.LoginUserDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.RequestHTTPDTO;
-import io.mosip.registration.util.restclient.ServiceDelegateUtil;
+
 
 /**
  * The Class RestClientAuthAdvice checks whether the invoking REST service
@@ -48,23 +36,14 @@ import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 @Component
 public class RestClientAuthAdvice {
 
-	private static final String INVALID_TOKEN_STRING = "Invalid Token";
-	private static final String TOKEN_EXPIRED = "Token expired";
-	private static final boolean HAVE_TO_SAVE_AUTH_TOKEN = true;
-
 	private static final Logger LOGGER = AppConfig.getLogger(RestClientAuthAdvice.class);
-	@Autowired
-	private ServiceDelegateUtil serviceDelegateUtil;
-	@Autowired
-	private MachineMappingDAO machineMappingDAO;
+
 	@Autowired
 	private ClientCryptoFacade clientCryptoFacade;
 
 	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
 
-	@Autowired
-	private UserTokenRepository userTokenRepository;
 
 	/**
 	 * The {@link Around} advice method which be invoked for all web services. This
@@ -82,8 +61,7 @@ public class RestClientAuthAdvice {
 	public Object addAuthZToken(ProceedingJoinPoint joinPoint) throws RegBaseCheckedException, ConnectionException {
 		RequestHTTPDTO requestHTTPDTO = (RequestHTTPDTO) joinPoint.getArgs()[0];
 		try {
-			LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-					"Adding authZ token to web service request header if required");
+			LOGGER.info("Auth advice triggered to check add authZ token to web service request header...");
 
 			if (requestHTTPDTO.isRequestSignRequired()) {
 				addRequestSignature(requestHTTPDTO.getHttpHeaders(), requestHTTPDTO.getRequestBody());
@@ -97,41 +75,23 @@ public class RestClientAuthAdvice {
 			requestHTTPDTO.setHttpEntity(new HttpEntity<>(requestHTTPDTO.getRequestBody(), requestHTTPDTO.getHttpHeaders()));
 			Object response = joinPoint.proceed(joinPoint.getArgs());
 
-			if (handleInvalidTokenFromResponse(response, joinPoint)) {
-				LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-						"Found invalid token error, retrying with new token");
-				return joinPoint.proceed(joinPoint.getArgs());
-			}
-
-			LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME, "completed");
+			LOGGER.info("completed with request Auth advice");
 			return response;
 
-		} catch (HttpClientErrorException httpClientErrorException) {
-			String errorResponseBody = httpClientErrorException.getResponseBodyAsString();
-
-			if (errorResponseBody != null && StringUtils.containsIgnoreCase(errorResponseBody, INVALID_TOKEN_STRING)
-					|| 401 == httpClientErrorException.getRawStatusCode()) {
-				try {
-					RequestHTTPDTO requestHTTPDto = (RequestHTTPDTO) joinPoint.getArgs()[0];
-					getAuthZToken(requestHTTPDto);
-					return joinPoint.proceed(joinPoint.getArgs());
-				} catch (Throwable throwableError) {
-					LOGGER.error("UNKNOWN ERROR", throwableError);
-					throw new RegBaseCheckedException("UNKNOWN_ERROR", throwableError.getMessage());
-				}
-			}
-
-			LOGGER.error("Failed in the auth advice", httpClientErrorException);
-			throw new RegBaseCheckedException(httpClientErrorException.getRawStatusCode()+"", httpClientErrorException.getMessage());
-
-		} catch (ConnectionException | RegBaseCheckedException regBaseCheckedException) {
+		} catch (RegBaseCheckedException regBaseCheckedException) {
+			LOGGER.error("Failed in AuthAdvice >> {} {}", requestHTTPDTO.getUri(), regBaseCheckedException);
 			throw regBaseCheckedException;
 		} catch (Throwable throwable) {
-			LOGGER.error("UNKNOWN ERROR >> " + requestHTTPDTO.getUri(), throwable);
+			LOGGER.error("UNKNOWN ERROR >> {} {}", requestHTTPDTO.getUri(), throwable);
 			throw new RegBaseCheckedException("UNKNOWN_ERROR", throwable.getMessage());
 		}
 	}
 
+	@Around("execution(* io.mosip.registration.util.restclient.RestClientUtil.downloadFile(..))")
+	public void addAuthZTokenToDownloadRequest(ProceedingJoinPoint joinPoint) throws RegBaseCheckedException, ConnectionException {
+		RequestHTTPDTO requestHTTPDTO = (RequestHTTPDTO) joinPoint.getArgs()[0];
+		addAuthZToken(joinPoint);
+	}
 
 	private String getAuthZToken(RequestHTTPDTO requestHTTPDTO)
 			throws RegBaseCheckedException {
@@ -151,8 +111,7 @@ public class RestClientAuthAdvice {
 	 *            the Authorization Token or Cookie
 	 */
 	private void setAuthHeaders(HttpHeaders httpHeaders, String authHeader, String authZCookie) {
-		LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-				"Adding authZ token to request header");
+		LOGGER.info("Adding authZ token to request header");
 
 		String[] arrayAuthHeaders = null;
 
@@ -165,8 +124,7 @@ public class RestClientAuthAdvice {
 			}
 		}
 
-		LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-				"Adding of authZ token to request header completed");
+		LOGGER.info("Adding of authZ token to request header completed");
 	}
 
 	/**
@@ -180,8 +138,7 @@ public class RestClientAuthAdvice {
 	 *             exception while generating request signature
 	 */
 	private void addRequestSignature(HttpHeaders httpHeaders, Object requestBody) throws RegBaseCheckedException {
-		LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-				"Adding request signature to request header");
+		LOGGER.info("Adding request signature to request header");
 
 		try {
 			httpHeaders.add("request-signature", String.format("Authorization:%s", CryptoUtil
@@ -194,34 +151,7 @@ public class RestClientAuthAdvice {
 					jsonProcessingException);
 		}
 
-		LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-				"Completed adding request signature to request header completed");
-	}
-
-	private boolean handleInvalidTokenFromResponse(Object response, ProceedingJoinPoint joinPoint)
-			throws RegBaseCheckedException {
-		LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-				"Entering into the invalid token check");
-		if (response != null && (StringUtils.containsIgnoreCase(response.toString(), TOKEN_EXPIRED) || 
-				StringUtils.containsIgnoreCase(response.toString(), INVALID_TOKEN_STRING))) {
-			LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-					"Old Token got expired for the token  " +  response);
-			RequestHTTPDTO requestHTTPDTO = (RequestHTTPDTO) joinPoint.getArgs()[0];
-			LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-					"Creating the new token ");
-			getAuthZToken(requestHTTPDTO);
-			return true;
-		}
-		LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-				"Completed the invalid token check");
-		return false;
-	}
-	
-	private boolean isLoginModeOTP(LoginUserDTO loginUserDTO) {
-		LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-				"Checking for the Session Context with OTP is available :: " + (SessionContext.isSessionContextAvailable() && 
-						loginUserDTO != null && loginUserDTO.getOtp() != null));
-		return SessionContext.isSessionContextAvailable() && loginUserDTO != null && loginUserDTO.getOtp() != null;
+		LOGGER.info("Completed adding request signature to request header completed");
 	}
 
 }

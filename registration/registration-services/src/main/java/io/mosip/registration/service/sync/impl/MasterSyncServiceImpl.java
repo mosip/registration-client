@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,20 +28,16 @@ import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.dao.DocumentCategoryDAO;
 import io.mosip.registration.dao.DynamicFieldDAO;
 import io.mosip.registration.dao.IdentitySchemaDao;
-import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.mastersync.BlacklistedWordsDto;
-import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import io.mosip.registration.dto.mastersync.DynamicFieldValueDto;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.mastersync.ReasonListDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.BlacklistedWords;
-import io.mosip.registration.entity.DocumentCategory;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.entity.Location;
 import io.mosip.registration.entity.ReasonCategory;
@@ -54,7 +51,6 @@ import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.jobs.SyncManager;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
-import io.mosip.registration.service.doc.category.ValidDocumentService;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import io.mosip.registration.util.mastersync.MapperUtils;
@@ -86,10 +82,6 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	@Autowired
 	private MasterSyncDao masterSyncDao;
 
-	/** The machine mapping DAO. */
-	@Autowired
-	private MachineMappingDAO machineMappingDAO;
-
 	/** The global param service. */
 	@Autowired
 	private GlobalParamService globalParamService;
@@ -104,13 +96,10 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	private ClientCryptoFacade clientCryptoFacade;
 
 	@Autowired
-	private DocumentCategoryDAO documentCategoryDAO;
-
-	@Autowired
 	private ClientSettingSyncHelper clientSettingSyncHelper;
 
 	@Autowired
-	private ValidDocumentService validDocumentService;
+	private SoftwareUpdateHandler softwareUpdateHandler;
 
 	/** Object for Logger. */
 	private static final Logger LOGGER = AppConfig.getLogger(MasterSyncServiceImpl.class);
@@ -129,15 +118,14 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	@Timed(value = "sync", longTask = true, extraTags = {"type", "masterdata"})
 	@Override
 	public ResponseDTO getMasterSync(String masterSyncDtls, String triggerPoint) throws RegBaseCheckedException {
-		LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID, "Initiating the Master Sync");
+		LOGGER.info("Initiating the Master Sync");
 
 		if (masterSyncFieldsValidate(masterSyncDtls, triggerPoint)) {
 			ResponseDTO responseDto = syncClientSettings(masterSyncDtls, triggerPoint,
 					getRequestParamsForClientSettingsSync(masterSyncDtls));
 			return responseDto;
 		} else {
-			LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID,
-					"masterSyncDtls/triggerPoint is mandatory...");
+			LOGGER.info("masterSyncDtls/triggerPoint is mandatory...");
 			throw new RegBaseCheckedException(
 					RegistrationExceptionConstants.REG_MASTER_SYNC_SERVICE_IMPL.getErrorCode(),
 					RegistrationExceptionConstants.REG_MASTER_SYNC_SERVICE_IMPL.getErrorMessage());
@@ -265,37 +253,6 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 		});
 		return blackWords;
 	}
-
-
-	/*
-	@Override
-	public List<DocumentCategoryDto> getDocumentCategories(String docCode, String langCode) {
-		List<DocumentCategoryDto> documentsDTO = new ArrayList<>();
-		DocumentCategory documentCategory = documentCategoryDAO.getDocumentCategoryByCodeAndByLangCode(docCode,
-				langCode);
-		if (documentCategory != null && documentCategory.getIsActive()) {
-			List<String> validDocuments = new ArrayList<>();
-			List<ValidDocument> masterValidDocuments = masterSyncDao.getValidDocumets(docCode);
-			masterValidDocuments.forEach(docs -> {
-				validDocuments.add(docs.getDocTypeCode());
-			});
-
-			List<DocumentType> masterDocuments = masterSyncDao.getDocumentTypes(validDocuments, langCode);
-
-			masterDocuments.forEach(document -> {
-
-				DocumentCategoryDto documents = new DocumentCategoryDto();
-				documents.setCode(document.getCode());
-				documents.setDescription(document.getDescription());
-				documents.setLangCode(document.getLangCode());
-				documents.setName(document.getName());
-				documentsDTO.add(documents);
-
-			});
-		}
-		return documentsDTO;
-	}*/
-
 
 
 	@Override
@@ -447,6 +404,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 		Map<String, String> requestParamMap = new HashMap<String, String>();
 		requestParamMap.put(RegistrationConstants.KEY_INDEX.toLowerCase(),
 				CryptoUtil.computeFingerPrint(clientCryptoFacade.getClientSecurity().getEncryptionPublicPart(), null));
+		requestParamMap.put("version", softwareUpdateHandler.getCurrentVersion());
 
 		if (!isInitialSync()) {
 			// getting Last Sync date from Data from sync table

@@ -8,6 +8,8 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+import com.neovisionaries.i18n.LanguageAlpha3Code;
+
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
@@ -95,7 +97,10 @@ public class VirtualKeyboard {
 		LOGGER.info(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Opening virtual keyboard");
 
-		this.keyboard = ResourceBundle.getBundle("keyboards.keyboard", new Locale(langCode.substring(0, 2)));
+		String localeCode = LanguageAlpha3Code.getByCodeIgnoreCase(langCode) != null ? LanguageAlpha3Code.getByCodeIgnoreCase(langCode).getAlpha2().name() : null;
+		Locale locale = new Locale(localeCode != null ? localeCode : langCode.substring(0, 2));
+		
+		this.keyboard = ResourceBundle.getBundle("keyboards.keyboard", locale);
 		
 		this.root = new VBox(5);
 		root.setPadding(new Insets(10));

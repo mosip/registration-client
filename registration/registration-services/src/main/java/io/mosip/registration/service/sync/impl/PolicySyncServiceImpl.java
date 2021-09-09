@@ -89,7 +89,7 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 		LOGGER.debug("fetchPolicy invoked");
 
 		ResponseDTO responseDTO = new ResponseDTO();
-		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+		if (!serviceDelegateUtil.isNetworkAvailable()) {
 			return setErrorResponse(responseDTO, RegistrationConstants.NO_INTERNET, null);
 		}
 

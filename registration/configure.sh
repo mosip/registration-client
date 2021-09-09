@@ -27,11 +27,13 @@ echo "mosip.reg.dbpath=db/reg" >> "${work_dir}"/registration-libs/target/props/m
 echo "mosip.reg.xml.file.url=${client_upgrade_server}/registration-client/maven-metadata.xml" >> "${work_dir}"/registration-libs/target/props/mosip-application.properties
 echo "mosip.reg.client.tpm.availability=Y" >> "${work_dir}"/registration-libs/target/props/mosip-application.properties
 echo "mosip.client.upgrade.server.url=${client_upgrade_server}" >> "${work_dir}"/registration-libs/target/props/mosip-application.properties
+echo "mosip.hostname=${host_name_env}"  >> "${work_dir}"/registration-libs/target/props/mosip-application.properties
 
 echo "created mosip-application.properties"
 
 cd "${work_dir}"/registration-libs/target
 jar uf registration-libs-${client_version_env}.jar props/mosip-application.properties
+jar uf registration-services-${client_version_env}.jar props/mosip-application.properties
 cd "${work_dir}"
 
 
