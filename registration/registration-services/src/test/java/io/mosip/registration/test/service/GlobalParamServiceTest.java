@@ -88,7 +88,7 @@ public class GlobalParamServiceTest {
 	public void syncConfigDataTestError() throws RegBaseCheckedException, ConnectionException {
 
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 //		doNothing().when(pageFlow).getInitialPageDetails();
 		HashMap<String, Object> globalParamJsonMap = new HashMap<>();
 		globalParamJsonMap.put("retryAttempts", "3");
@@ -121,7 +121,7 @@ public class GlobalParamServiceTest {
 	public void syncConfigData() throws RegBaseCheckedException, ConnectionException {
 
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 //		doNothing().when(pageFlow).getInitialPageDetails();
 		HashMap<String, Object> globalParamJsonMap = new LinkedHashMap<>();
 		HashMap<String, Object> globalParamJsonMap1 = new LinkedHashMap<>();
@@ -173,7 +173,7 @@ public class GlobalParamServiceTest {
 	public void syncConfigTest() throws RegBaseCheckedException, ConnectionException {
 
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		HashMap<String, Object> globalParamJsonMap = new HashMap<>();
 		globalParamJsonMap.put("retryAttempts", "3");
 		globalParamJsonMap.put("kernel", "5");
@@ -263,7 +263,7 @@ public class GlobalParamServiceTest {
 	public void syncConfigDataUpdate()
 			throws RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 //		doNothing().when(pageFlow).getInitialPageDetails();
 		HashMap<String, Object> globalParamJsonMap = new LinkedHashMap<>();
 

@@ -90,7 +90,7 @@ public class OTPManagerTest {
 		messageMap.put("message", "otp send succesfully");
 		responseMap.put("response", messageMap);
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(authTokenUtilService.sendOtpWithRetryWrapper(Mockito.any())).thenReturn("otp send successfully");
 		when(serviceDelegateUtil.post(Mockito.any(), Mockito.any(),
 				Mockito.any())).thenReturn(responseMap);
@@ -107,8 +107,7 @@ public class OTPManagerTest {
 		map.put("message", "Invalid User Id type");
 		temp.add(map);
 		responseMap.put("errors", temp);
-		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(authTokenUtilService.sendOtpWithRetryWrapper(Mockito.any())).thenThrow(ConnectionException.class);
 		when(serviceDelegateUtil.post(Mockito.any(), Mockito.any(),
 				Mockito.any())).thenReturn(responseMap);
@@ -122,7 +121,7 @@ public class OTPManagerTest {
 		AuthTokenDTO authTokenDTO = new AuthTokenDTO();
 		authTokenDTO.setCookie("12345");
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(authTokenUtilService.getAuthTokenAndRefreshToken(Mockito.any(LoginMode.class), Mockito.any()))
 				.thenReturn(authTokenDTO);
 
@@ -133,7 +132,7 @@ public class OTPManagerTest {
 	public void validateOTPFailureTest() throws RegBaseCheckedException {
 
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.doThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST)).when(authTokenUtilService)
 				.getAuthTokenAndRefreshToken(Mockito.any(LoginMode.class), Mockito.any());
 
@@ -144,7 +143,7 @@ public class OTPManagerTest {
 	public void validateOTPExceptionTest() throws RegBaseCheckedException {
 
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		Mockito.doThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST)).when(authTokenUtilService)
 				.getAuthTokenAndRefreshToken(Mockito.any(LoginMode.class), Mockito.any());
@@ -159,7 +158,7 @@ public class OTPManagerTest {
 		otpGeneratorRequestDTO.setKey("mo");
 
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(authTokenUtilService.sendOtpWithRetryWrapper(Mockito.any())).thenThrow(ConnectionException.class);
 		when(serviceDelegateUtil.post(Mockito.any(), Mockito.any(),
 				Mockito.any())).thenThrow(HttpClientErrorException.class);
@@ -177,7 +176,7 @@ public class OTPManagerTest {
 		otpGeneratorRequestDTO.setKey("mo");
 
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(false);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(false);
 
 		when(serviceDelegateUtil.post(Mockito.any(), Mockito.any(),
 				Mockito.any())).thenThrow(IllegalStateException.class);
@@ -190,7 +189,7 @@ public class OTPManagerTest {
 	@Test
 	public void getOTPNoInternetTest() {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(false);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(false);
 
 		assertEquals(otpManager.getOTP("Key").getErrorResponseDTOs().get(0).getMessage(),
 				RegistrationConstants.CONNECTION_ERROR);
@@ -200,7 +199,7 @@ public class OTPManagerTest {
 	@Test
 	public void validateOTPNoInternetTest() {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(false);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(false);
 
 		assertNotNull(otpManager.validateOTP("Key", "123456", true));
 

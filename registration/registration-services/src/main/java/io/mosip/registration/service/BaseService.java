@@ -664,7 +664,7 @@ public class BaseService {
 	}
 
 	public void commonPreConditionChecks(String action) throws PreConditionCheckException {
-		if(!RegistrationAppHealthCheckUtil.isNetworkAvailable())
+		if(!serviceDelegateUtil.isNetworkAvailable())
 			throw new PreConditionCheckException(PreConditionChecks.NO_CONNECTION.name(),
 					action + " forbidden as User is inactive");
 

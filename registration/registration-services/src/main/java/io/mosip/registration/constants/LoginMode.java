@@ -6,8 +6,7 @@ package io.mosip.registration.constants;
 public enum LoginMode {
 
 	OTP("OTP"),
-	PASSWORD("PASSWORD"),
-	CLIENTID("CLIENTID_SECRETKEY");
+	PASSWORD("PASSWORD");
 
 	/**
 	 * Instantiates a new login mode.

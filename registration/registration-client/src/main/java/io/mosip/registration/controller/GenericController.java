@@ -101,6 +101,7 @@ public class GenericController extends BaseController {
 	protected static final Logger LOGGER = AppConfig.getLogger(GenericController.class);
 
 	private static final String LABEL_CLASS = "additionaInfoReqIdLabel";
+	private static final String NAV_LABEL_CLASS = "navigationLabel";
 	private static final String TEXTFIELD_CLASS = "preregFetchBtnStyle";
 	private static final String CONTROLTYPE_TEXTFIELD = "textbox";
 	private static final String CONTROLTYPE_BIOMETRICS = "biometrics";
@@ -268,6 +269,8 @@ public class GenericController extends BaseController {
 								if (responseDTO.getSuccessResponseDTO() != null) {
 									getRegistrationDTOFromSession().setPreRegistrationId(textField.getText());
 									getRegistrationDTOFromSession().setAppId(textField.getText());
+									TabPane tabPane = (TabPane) anchorPane.lookup(HASH+getRegistrationDTOFromSession().getRegistrationId());
+									tabPane.setId(textField.getText());
 									getRegistrationDTOFromSession().setRegistrationId(textField.getText());
 								}
 							} catch (RegBaseCheckedException exception) {
@@ -320,6 +323,8 @@ public class GenericController extends BaseController {
 		textField.textProperty().addListener((observable, oldValue, newValue) -> {
 			getRegistrationDTOFromSession().setAdditionalInfoReqId(newValue);
 			getRegistrationDTOFromSession().setAppId(newValue);
+			TabPane tabPane = (TabPane) anchorPane.lookup(HASH+getRegistrationDTOFromSession().getRegistrationId());
+			tabPane.setId(newValue);
 			getRegistrationDTOFromSession().setRegistrationId(newValue);
 		});
 
@@ -454,9 +459,11 @@ public class GenericController extends BaseController {
 	private void addNavigationButtons(ProcessSpecDto processSpecDto) {
 
 		Label navigationLabel = new Label();
-		navigationLabel.getStyleClass().add(LABEL_CLASS);
+		navigationLabel.getStyleClass().add(NAV_LABEL_CLASS);
 		navigationLabel.setText(RegistrationConstants.SLASH + RegistrationConstants.SPACE +
 				processSpecDto.getLabel().get(ApplicationContext.applicationLanguage()));
+		navigationLabel.prefWidthProperty().bind(navigationAnchorPane.widthProperty());
+		navigationLabel.setWrapText(true);
 
 		navigationAnchorPane.getChildren().add(navigationLabel);
 		AnchorPane.setTopAnchor(navigationLabel, 5.0);
