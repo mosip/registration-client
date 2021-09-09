@@ -3,7 +3,7 @@
 	 "BELOW_ARE_STATIC_KEYWORDS":"",
     "ageGroup": "ADULT",
     "process": "Lost",
-    "documentUploadAttributes":["POB","POR","POA","POI"],
+    "documentUploadAttributes":["POB","POA","POI"],
     "bioAttributes": [
       "leftEye",
       "rightEye",
