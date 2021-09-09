@@ -8,6 +8,9 @@ import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.neovisionaries.i18n.LanguageAlpha3Code;
+import com.neovisionaries.i18n.LanguageCode;
+
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
@@ -120,7 +123,8 @@ public class ApplicationContext {
 					for (String langCode : langList) {
 						if (!langCode.isBlank()) {
 							String labelLangCodeKey = String.format("%s_%s", langCode, RegistrationConstants.LABELS);
-							Locale locale = new Locale(langCode != null ? langCode.substring(0, 2) : "");
+							String localeCode = (langCode != null) ? (LanguageAlpha3Code.getByCodeIgnoreCase(langCode) != null ? LanguageAlpha3Code.getByCodeIgnoreCase(langCode).getAlpha2().name() : null) : "";
+							Locale locale = new Locale(localeCode != null ? localeCode : langCode.substring(0, 2));
 							ResourceBundle labelsBundle = ResourceBundle.getBundle(RegistrationConstants.LABELS, locale);
 							if (labelsBundle.getLocale().equals(locale)) {
 								resourceBundleMap.put(labelLangCodeKey, labelsBundle);

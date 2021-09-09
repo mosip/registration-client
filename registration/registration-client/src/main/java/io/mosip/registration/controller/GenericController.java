@@ -269,6 +269,8 @@ public class GenericController extends BaseController {
 								if (responseDTO.getSuccessResponseDTO() != null) {
 									getRegistrationDTOFromSession().setPreRegistrationId(textField.getText());
 									getRegistrationDTOFromSession().setAppId(textField.getText());
+									TabPane tabPane = (TabPane) anchorPane.lookup(HASH+getRegistrationDTOFromSession().getRegistrationId());
+									tabPane.setId(textField.getText());
 									getRegistrationDTOFromSession().setRegistrationId(textField.getText());
 								}
 							} catch (RegBaseCheckedException exception) {
@@ -321,6 +323,8 @@ public class GenericController extends BaseController {
 		textField.textProperty().addListener((observable, oldValue, newValue) -> {
 			getRegistrationDTOFromSession().setAdditionalInfoReqId(newValue);
 			getRegistrationDTOFromSession().setAppId(newValue);
+			TabPane tabPane = (TabPane) anchorPane.lookup(HASH+getRegistrationDTOFromSession().getRegistrationId());
+			tabPane.setId(newValue);
 			getRegistrationDTOFromSession().setRegistrationId(newValue);
 		});
 
