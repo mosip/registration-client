@@ -184,7 +184,7 @@ public class ClientSettingsHelperTest {
 	@Test
 	public void testClientSettingsSyncForValidJson() throws RegBaseCheckedException, ConnectionException, IOException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
 		Mockito.when(clientCryptoFacade.decrypt(Mockito.any())).thenReturn("[]".getBytes(StandardCharsets.UTF_8));
 

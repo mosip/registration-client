@@ -95,7 +95,7 @@ public class UserDetailServcieTest {
 	@Before
 	public void init() {
 		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 		Mockito.when(clientCryptoFacade.decrypt(Mockito.any())).thenReturn("[]".getBytes(StandardCharsets.UTF_8));
 
@@ -163,7 +163,7 @@ public class UserDetailServcieTest {
 		doNothing().when(userDetailDAO).save(Mockito.any());
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
 				.thenThrow(HttpClientErrorException.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		userDetailServiceImpl.save("System");
 	}
 
@@ -183,7 +183,7 @@ public class UserDetailServcieTest {
 		doNothing().when(userDetailDAO).save(Mockito.any());
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
 				.thenThrow(ConnectionException.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		userDetailServiceImpl.save("System");
 	}
 	
@@ -218,7 +218,7 @@ public class UserDetailServcieTest {
 		doNothing().when(userDetailDAO).save(Mockito.any());
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
 				.thenReturn(responseMap);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		userDetailServiceImpl.save("System");
 	}
 	
@@ -244,7 +244,7 @@ public class UserDetailServcieTest {
 		doNothing().when(userDetailDAO).save(Mockito.any());
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
 				.thenReturn(responseMap);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		userDetailServiceImpl.save("System");
 	}
 	
@@ -279,7 +279,7 @@ public class UserDetailServcieTest {
 		doNothing().when(userDetailDAO).save(Mockito.any());
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
 				.thenReturn(responseMap);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(false);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(false);
 		userDetailServiceImpl.save("System");
 	}
 

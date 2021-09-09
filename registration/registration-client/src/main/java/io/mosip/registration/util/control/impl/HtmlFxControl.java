@@ -83,7 +83,7 @@ public class HtmlFxControl extends FxControl {
         getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(langCode -> {
             final TitledPane titledPane = new TitledPane(resourceBundle.getString(langCode), buildWebView(langCode));
             accordion.getPanes().add(titledPane);
-titledPane.setId(uiFieldDTO.getId()+langCode);
+            titledPane.setId(uiFieldDTO.getId()+langCode);
         });
 
         //accordion.setExpandedPane(accordion.getPanes().get(0));
@@ -144,8 +144,10 @@ titledPane.setId(uiFieldDTO.getId()+langCode);
     public void selectAndSet(Object data) {
     }
 
-    private WebView buildWebView(String langCode) {
+    private VBox buildWebView(String langCode) {
+    	VBox vbox = new VBox();
         final WebView webView = new WebView();
+        webView.prefHeightProperty().bind(vbox.heightProperty());
         webView.setId(uiFieldDTO.getId());
         String content = getContent(langCode);
         contentHash.put(langCode, CryptoUtil.computeFingerPrint(content, null));
@@ -153,7 +155,8 @@ titledPane.setId(uiFieldDTO.getId()+langCode);
         webView.getEngine()
                 .documentProperty()
                 .addListener((observableValue, oldValue, document) -> addListeners(document));
-        return webView;
+        vbox.getChildren().add(webView);
+        return vbox;
     }
 
     private String getContent(String langCode) {

@@ -105,7 +105,7 @@ public class PolicySyncServiceTest {
 
 		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class,
 				RegistrationSystemPropertiesChecker.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
 
@@ -153,7 +153,7 @@ public class PolicySyncServiceTest {
 
 	@Test
 	public void netWorkAvailable() throws RegBaseCheckedException {
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(false);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(false);
 		assertNotNull(policySyncServiceImpl.fetchPolicy());
 
 	}
@@ -167,7 +167,7 @@ public class PolicySyncServiceTest {
 		Timestamp timestamp = new Timestamp(date.getTime());
 
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		Map<String, Object> responseMap = new LinkedHashMap<>();
 		LinkedHashMap<String, Object> valuesMap = new LinkedHashMap<>();

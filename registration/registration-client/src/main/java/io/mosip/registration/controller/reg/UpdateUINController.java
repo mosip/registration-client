@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-import io.mosip.registration.controller.GenericController;
-import io.mosip.registration.dto.schema.ProcessSpecDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -26,6 +24,8 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.FXUtils;
+import io.mosip.registration.controller.GenericController;
+import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -35,12 +35,14 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.RowConstraints;
 
 /**
@@ -78,6 +80,12 @@ public class UpdateUINController extends BaseController implements Initializable
 
 	@FXML
 	FlowPane parentFlowPane;
+	
+	@FXML
+	private HBox demographicHBox;
+	
+	@FXML
+	private ScrollPane scrollPane;	
 
 	private ObservableList<Node> parentFlow;
 
@@ -118,7 +126,9 @@ public class UpdateUINController extends BaseController implements Initializable
 				}
 			});
 		});
-
+		
+		scrollPane.prefWidthProperty().bind(demographicHBox.widthProperty());
+		
 		parentFlow = parentFlowPane.getChildren();
 		groupedMap.forEach((groupName, list) -> {
 			GridPane checkBox = addCheckBox(groupName);

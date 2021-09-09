@@ -1,21 +1,29 @@
 package io.mosip.registration.util.restclient;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import io.micrometer.core.annotation.Timed;
+import io.mosip.registration.config.DaoConfig;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -39,6 +47,7 @@ import io.mosip.registration.exception.RegistrationExceptionConstants;
 public class ServiceDelegateUtil {
 
 	private static final Logger LOGGER = AppConfig.getLogger(ServiceDelegateUtil.class);
+	public static final String MOSIP_HOSTNAME_PLACEHOLDER = "${mosip.hostname}";
 
 	@Autowired
 	private RestClientUtil restClientUtil;
@@ -46,6 +55,53 @@ public class ServiceDelegateUtil {
 	@Autowired
 	private Environment environment;
 
+	@Value("${mosip.hostname}")
+	private String mosipHostName;
+
+	@Value("${mosip.reg.healthcheck.url}")
+	private String healthCheckURL;
+
+
+	public String getHostName() {
+		String hostname = System.getProperty(RegistrationConstants.MOSIP_HOSTNAME);
+		if(hostname == null || hostname.isEmpty()) {
+			hostname = mosipHostName == null ? RegistrationConstants.MOSIP_HOSTNAME_DEF_VAL : mosipHostName ;
+		}
+		LOGGER.debug("MOSIP Host name : {} " , hostname);
+		return hostname;
+	}
+
+	public String prepareURLByHostName(String url) {
+		String mosipHostNameVal = getHostName();
+		return (url != null && mosipHostNameVal != null) ? url.replace(MOSIP_HOSTNAME_PLACEHOLDER, mosipHostNameVal)
+				: url;
+	}
+
+	/**
+	 * This method checks the Internet connectivity across the application.
+	 *
+	 * <p>
+	 * Creates a {@link HttpURLConnection} and opens a communications link to the
+	 * resource referenced by this URL. If the connection is established
+	 * successfully, this method will return true which indicates Internet Access
+	 * available, otherwise, it will return false, indicating Internet Access not
+	 * available.
+	 * </p>
+	 *
+	 * @return true, if is network available and false, if it is not available.
+	 */
+	@Timed(value = "check.connectivity", longTask = true)
+	public boolean isNetworkAvailable() {
+		LOGGER.info("Registration Network Checker had been called.");
+		try {
+			Assert.notNull(healthCheckURL, "Property mosip.reg.healthcheck.url missing");
+			String serviceUrl = prepareURLByHostName(healthCheckURL);
+			return restClientUtil.isConnectedToSyncServer(serviceUrl);
+		} catch (Exception exception) {
+			LOGGER.error("No Internet Access" , exception);
+		}
+		return false;
+	}
 
 
 	/**
@@ -88,7 +144,7 @@ public class ServiceDelegateUtil {
 
 			// URI creation
 			String url = getEnvironmentProperty(serviceName, RegistrationConstants.SERVICE_URL);
-			url = RegistrationAppHealthCheckUtil.prepareURLByHostName(url);
+			url = prepareURLByHostName(url);
 			Map<String, String> queryParams = new HashMap<>();
 			for (String key : requestParams.keySet()) {
 				if (!url.contains("{" + key + "}")) {
@@ -121,26 +177,23 @@ public class ServiceDelegateUtil {
 	}
 
 
-	public Object get(String url, Map<String, String> requestParams, String headers, boolean authRequired,
-					  String authHeader, String triggerPoint)
+	public void download(String url, Map<String, String> requestParams, String headers, boolean authRequired,
+					  String authHeader, String triggerPoint, @NonNull Path path, boolean isEncrypted)
 			throws RegBaseCheckedException, ConnectionException {
 		LOGGER.debug("Get method has been called - {}", url);
-
-		Map<String, Object> responseMap;
-		Object responseBody = null;
 		RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
-
 		try {
 			requestHTTPDTO.setHttpMethod(HttpMethod.GET);
 			requestHTTPDTO.setHttpHeaders(new HttpHeaders());
-			setTimeout(requestHTTPDTO);// set timeout
 			setHeaders(requestHTTPDTO.getHttpHeaders(), headers);// Headers
 			requestHTTPDTO.setAuthRequired(authRequired);
 			requestHTTPDTO.setAuthZHeader(authHeader);
 			requestHTTPDTO.setTriggerPoint(triggerPoint);
-			requestHTTPDTO.setIsSignRequired(false);
+			requestHTTPDTO.setIsSignRequired(true);
+			requestHTTPDTO.setFilePath(path);
+			requestHTTPDTO.setFileEncrypted(isEncrypted);
 
-			url = RegistrationAppHealthCheckUtil.prepareURLByHostName(url);
+			url = prepareURLByHostName(url);
 			Map<String, String> queryParams = new HashMap<>();
 			for (String key : requestParams.keySet()) {
 				if (!url.contains("{" + key + "}")) {
@@ -148,20 +201,15 @@ public class ServiceDelegateUtil {
 				}
 			}
 			setURI(requestHTTPDTO, queryParams, url);
-			requestHTTPDTO.getHttpHeaders().add(HttpHeaders.ACCEPT, "text/plain;charset=UTF-8");
-			requestHTTPDTO.setClazz(String.class);
-			responseMap = restClientUtil.invokeURL(requestHTTPDTO);
+			restClientUtil.downloadFile(requestHTTPDTO);
 		}  catch (RestClientException e) {
 			LOGGER.error(e.getMessage(), e);
 			throw new ConnectionException(RegistrationExceptionConstants.ACCESS_ERROR.getErrorCode(),
 					RegistrationExceptionConstants.ACCESS_ERROR.getErrorMessage(), e);
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(), e);
+			throw new RegBaseCheckedException("REG-FILE-ERR", e.getMessage());
 		}
-
-		if (isResponseValid(responseMap, RegistrationConstants.REST_RESPONSE_BODY)) {
-			responseBody = responseMap.get(RegistrationConstants.REST_RESPONSE_BODY);
-		}
-		LOGGER.debug("Get method has been ended - {}", url);
-		return responseBody;
 	}
 
 
@@ -321,12 +369,17 @@ public class ServiceDelegateUtil {
 	 */
 	private void setHeaders(HttpHeaders httpHeaders, String headers) {
 		LOGGER.debug("Preparing Header for web-service request");
+		if(headers == null || headers.trim().isEmpty())
+			return;
 
 		String[] header = headers.split(",");
 		String[] headerValues = null;
-		if (header != null) {
+		//if (header != null) {
 			for (String subheader : header) {
-				if (subheader != null) {
+				if(subheader.trim().isEmpty())
+					continue;
+
+				//if (subheader != null) {
 					headerValues = subheader.split(":");
 					if (headerValues[0].equalsIgnoreCase("timestamp")) {
 						headerValues[1] = DateUtils.formatToISOString(LocalDateTime.now());
@@ -341,10 +394,10 @@ public class ServiceDelegateUtil {
 						headerValues[1] = "sign";
 					}
 					httpHeaders.add(headerValues[0], headerValues[1]);
-				}
+				//}
 			}
 			httpHeaders.add("Cache-Control", "no-cache,max-age=0");
-		}
+		//}
 
 		LOGGER.debug("Completed preparing Header for web-service request");
 	}
@@ -364,27 +417,10 @@ public class ServiceDelegateUtil {
 				HttpMethod.valueOf(getEnvironmentProperty(serviceName, RegistrationConstants.HTTPMETHOD)));
 		requestHTTPDTO.setHttpHeaders(new HttpHeaders());
 		requestHTTPDTO.setRequestBody(requestBody);
-		// set timeout
-		setTimeout(requestHTTPDTO);
 		// Headers
 		setHeaders(requestHTTPDTO.getHttpHeaders(), getEnvironmentProperty(serviceName, RegistrationConstants.HEADERS));
 
 		LOGGER.debug("Completed preparing RequestHTTPDTO object for web-service");
-	}
-
-	/**
-	 * Method to set the request timeout
-	 * 
-	 * @param requestHTTPDTO requestedHTTPDTO
-	 */
-	private void setTimeout(RequestHTTPDTO requestHTTPDTO) {
-		// Timeout in milli second
-		SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-		requestFactory.setReadTimeout(
-				Integer.parseInt((String) ApplicationContext.map().get(RegistrationConstants.HTTP_API_READ_TIMEOUT)));
-		requestFactory.setConnectTimeout(
-				Integer.parseInt((String) ApplicationContext.map().get(RegistrationConstants.HTTP_API_WRITE_TIMEOUT)));
-		requestHTTPDTO.setSimpleClientHttpRequestFactory(requestFactory);
 	}
 
 

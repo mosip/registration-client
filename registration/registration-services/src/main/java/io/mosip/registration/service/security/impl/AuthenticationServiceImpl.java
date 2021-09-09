@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -72,6 +73,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
 
+	@Autowired
+	private ServiceDelegateUtil serviceDelegateUtil;
 
 	/*
 	 * (non-Javadoc)
@@ -148,7 +151,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			//Always mandate user to reach server to validate pwd when machine is online
 			//As in case of new user, any valid authtoken will be simply allowed
 			//to avoid any such scenario, mandate to fetch new token when login
-			if(RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+			if(serviceDelegateUtil.isNetworkAvailable()) {
 				authTokenUtilService.getAuthTokenAndRefreshToken(LoginMode.PASSWORD);
 			}
 

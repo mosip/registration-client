@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -24,18 +23,14 @@ import io.mosip.commons.packet.dto.packet.AuditDto;
 import io.mosip.commons.packet.dto.packet.BiometricsException;
 import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
-import io.mosip.registration.constants.IntroducerType;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.dto.biometric.BiometricDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
-import io.mosip.registration.dto.schema.ConditionalBioAttributes;
 import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.enums.Modality;
 import lombok.Data;
 import lombok.NonNull;
-import org.json.JSONObject;
 
 /**
  * This DTO class contains the Registration details.

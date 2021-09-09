@@ -2641,3 +2641,16 @@ Working on new Css by taleev
 	-fx-text-fill: #008080;
     -fx-font-size: 15px;
 }
+
+.navigationLabel {
+	-fx-text-fill: #008080;
+    -fx-font-size: 13px;
+}
+
+.uinupdate-scroll-pane > .viewport {
+   -fx-background-color: transparent;
+}
+
+.uinupdate-scroll-pane {
+   -fx-background-color: transparent;
+}

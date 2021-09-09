@@ -1,13 +1,28 @@
 package io.mosip.registration.validator;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.core.exception.IOException;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.CryptoUtil;
+import io.mosip.kernel.core.util.FileUtils;
+import io.mosip.kernel.core.util.HMACUtils2;
+import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
+import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import io.mosip.kernel.signature.dto.JWTSignatureVerifyRequestDto;
+import io.mosip.kernel.signature.dto.JWTSignatureVerifyResponseDto;
+import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dto.schema.ConditionalBioAttributes;
+import io.mosip.registration.entity.FileSignature;
+import io.mosip.registration.repositories.FileSignatureRepository;
 import org.json.JSONObject;
 import org.mvel2.MVEL;
 import org.mvel2.integration.VariableResolverFactory;
@@ -27,6 +42,19 @@ public class RequiredFieldValidator {
 
 	@Autowired
 	private IdentitySchemaService identitySchemaService;
+
+	@Autowired
+	private FileSignatureRepository fileSignatureRepository;
+
+	@Autowired
+	private KeymanagerService keymanagerService;
+
+	@Autowired
+	private SignatureService signatureService;
+
+	@Autowired
+	private ClientCryptoFacade clientCryptoFacade;
+
 
 	public boolean isRequiredField(UiFieldDTO schemaField, RegistrationDTO registrationDTO) {
 		boolean required = schemaField != null ? schemaField.isRequired() : false;
@@ -99,6 +127,24 @@ public class RequiredFieldValidator {
 
 	public Object evaluateMvelScript(String scriptName, RegistrationDTO registrationDTO) {
 		try {
+			Optional<FileSignature> fileSignature = fileSignatureRepository.findByFileName(scriptName);
+			if(!fileSignature.isPresent()) {
+				LOGGER.error("File signature not found : {}", scriptName);
+				return null;
+			}
+
+			Path path = Paths.get(System.getProperty("user.dir"), scriptName);
+			byte[] bytes = fileSignature.get().getEncrypted() ?
+					clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(
+							FileUtils.readFileToString(path.toFile(), StandardCharsets.UTF_8))) :
+					FileUtils.readFileToByteArray(path.toFile());
+			String actualData = String.format("{\"hash\":\"%s\"}", HMACUtils2.digestAsPlainText(bytes));
+
+			if(!validateScriptSignature(fileSignature.get().getSignature(), actualData)) {
+				LOGGER.error("File signature validation failed : {}", scriptName);
+				return null;
+			}
+
 			Map<String, String>  ageGroups = new HashMap<String, String>();
 			JSONObject ageGroupConfig = new JSONObject((String) ApplicationContext.map().get(RegistrationConstants.AGE_GROUP_CONFIG));
 			for(String key : ageGroupConfig.keySet()) {
@@ -106,7 +152,8 @@ public class RequiredFieldValidator {
 			}
 
 			Map context = new HashMap();
-			MVEL.evalFile(Paths.get(System.getProperty("user.dir"), scriptName).toFile(), context);
+			MVEL.eval(new String(bytes), context);
+			//MVEL.evalFile(Paths.get(System.getProperty("user.dir"), scriptName).toFile(), context);
 			context.put("identity", registrationDTO.getMVELDataContext());
 			context.put("ageGroups", ageGroups);
 			return MVEL.eval("return getApplicantType();", context, String.class);
@@ -115,6 +162,20 @@ public class RequiredFieldValidator {
 			LOGGER.error("Failed to evaluate mvel script", t);
 		}
 		return null;
+	}
+
+	private boolean validateScriptSignature(String signature, String actualData) throws Exception {
+		KeyPairGenerateResponseDto certificateDto = keymanagerService
+				.getCertificate(RegistrationConstants.RESPONSE_SIGNATURE_PUBLIC_KEY_APP_ID,
+						Optional.of(RegistrationConstants.RESPONSE_SIGNATURE_PUBLIC_KEY_REF_ID));
+
+		JWTSignatureVerifyRequestDto jwtSignatureVerifyRequestDto = new JWTSignatureVerifyRequestDto();
+		jwtSignatureVerifyRequestDto.setJwtSignatureData(signature);
+		jwtSignatureVerifyRequestDto.setActualData(CryptoUtil.encodeBase64(actualData.getBytes(StandardCharsets.UTF_8)));
+		jwtSignatureVerifyRequestDto.setCertificateData(certificateDto.getCertificate());
+
+		JWTSignatureVerifyResponseDto verifyResponseDto =  signatureService.jwtVerify(jwtSignatureVerifyRequestDto);
+		return verifyResponseDto.isSignatureValid();
 	}
 
 }

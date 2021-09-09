@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.SyncFailedException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -16,6 +19,9 @@ import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 import io.mosip.registration.dto.schema.ProcessSpecDto;
+import io.mosip.registration.exception.ConnectionException;
+import io.mosip.registration.exception.RegBaseCheckedException;
+import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -190,6 +196,9 @@ public class ClientSettingSyncHelper {
 	
 	@Autowired
 	private PermittedLocalConfigRepository permittedLocalConfigRepository;
+
+	@Autowired
+	private RegistrationAppHealthCheckUtil registrationAppHealthCheckUtil;
 		
 	private static final Map<String, String> ENTITY_CLASS_NAMES = new HashMap<String, String>();
 	
@@ -223,6 +232,7 @@ public class ClientSettingSyncHelper {
 			futures.add(handleMisellaneousSync1(syncDataResponseDto));
 			futures.add(handleMisellaneousSync2(syncDataResponseDto));
 			futures.add(handleDynamicFieldSync(syncDataResponseDto));
+			futures.add(handleDynamicURLFieldSync(syncDataResponseDto));
 			futures.add(handlePermittedConfigSync(syncDataResponseDto));
 			futures.add(syncSchema("System"));
 			futures.add(handleScripts(syncDataResponseDto));
@@ -258,16 +268,23 @@ public class ClientSettingSyncHelper {
 			if(syncDataBaseDto == null || syncDataBaseDto.getData() == null || syncDataBaseDto.getData().isEmpty())
 				return entities;
 
-			LOGGER.info("Building entity of type : {}", syncDataBaseDto.getEntityName());
-
-			byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(syncDataBaseDto.getData()));
+			LOGGER.info("Building entity of type : {} : {}", syncDataBaseDto.getEntityName(), syncDataBaseDto.getEntityType());
 			JSONArray jsonArray = null;
-
+			byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(syncDataBaseDto.getData()));
 			switch (syncDataBaseDto.getEntityType()) {
-				case "structured-url": //TODO - handle URL
+				case "structured-url":
+					Path path = Paths.get(System.getProperty("user.dir"), syncDataBaseDto.getEntityName());
+					JSONObject jsonObject = new JSONObject(new String(data));
+					downloadUrlData(path, jsonObject);
+					jsonArray = new JSONArray(jsonObject.getBoolean("encrypted") ?
+							new String(clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(FileUtils.readFileToString(path.toFile(),
+									StandardCharsets.UTF_8)))) :
+							FileUtils.readFileToString(path.toFile(), StandardCharsets.UTF_8));
+					path.toFile().delete();
 					break;
 				case "structured":
-					jsonArray = getDataList(new String(data));	break;
+					jsonArray = new JSONArray(new String(data));
+					break;
 			}
 
 			if(jsonArray == null)
@@ -286,15 +303,24 @@ public class ClientSettingSyncHelper {
 		}
 	}
 
-	private JSONArray getDataList(String jsonString) {
-		JSONArray jsonArray = null;
+	private void downloadUrlData(Path path, JSONObject jsonObject) throws SyncFailedException {
+		Map<String, String> requestParamMap = new HashMap<String, String>();
+		requestParamMap.put(RegistrationConstants.KEY_INDEX.toLowerCase(),
+				CryptoUtil.computeFingerPrint(clientCryptoFacade.getClientSecurity().getEncryptionPublicPart(), null));
+
 		try {
-			jsonArray = new JSONArray(jsonString);
-		} catch (org.json.JSONException ex) {
-			JSONObject jsonObject = new JSONObject(jsonString);
-			//get content-type for request
+			serviceDelegateUtil.download(jsonObject.getString("url"),
+					requestParamMap,
+					jsonObject.getString("headers"),
+					jsonObject.getBoolean("auth-required"),
+					jsonObject.getString("auth-token"),
+					"System",
+					path,
+					jsonObject.getBoolean("encrypted"));
+		} catch (Exception e) {
+			LOGGER.error("Building entities is failed {}", path, e);
+			throw new SyncFailedException("Failed to download entity file" + path.toString());
 		}
-		return jsonArray;
 	}
 	
 	private SyncDataBaseDto getSyncDataBaseDto(SyncDataResponseDto syncDataResponseDto, String entityName) {
@@ -462,6 +488,46 @@ public class ClientSettingSyncHelper {
 		}
 		return CompletableFuture.completedFuture(true);
 	}
+
+	@Async
+	private CompletableFuture handleDynamicURLFieldSync(SyncDataResponseDto syncDataResponseDto) throws SyncFailedException  {
+		try {
+			Iterator<SyncDataBaseDto> iterator = syncDataResponseDto.getDataToSync().stream()
+					.filter(obj -> FIELD_TYPE_DYNAMIC_URL.equalsIgnoreCase(obj.getEntityType()))
+					.iterator();
+
+			while(iterator.hasNext()) {
+				SyncDataBaseDto syncDataBaseDto = iterator.next();
+				byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(syncDataBaseDto.getData()));
+				Path path = Paths.get(System.getProperty("user.dir"), syncDataBaseDto.getEntityName());
+				JSONObject jsonObject = new JSONObject(new String(data));
+				downloadUrlData(path, jsonObject);
+
+				String downloadedData = jsonObject.getBoolean("encrypted") ?
+						new String(clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(FileUtils.readFileToString(path.toFile(),
+								StandardCharsets.UTF_8)))) :
+						FileUtils.readFileToString(path.toFile(), StandardCharsets.UTF_8);
+
+				path.toFile().delete();
+
+				if(syncDataBaseDto.getEntityName().equalsIgnoreCase("DynamicFieldDto")) {
+					List<SyncDataBaseDto> list = MapperUtils.convertJSONStringToDto(downloadedData,
+							new TypeReference<List<SyncDataBaseDto>>() {});
+					for(SyncDataBaseDto dto : list)	{
+						saveDynamicFieldData(dto.getData());
+					}
+				}
+				else {
+					saveDynamicFieldData(downloadedData);
+				}
+			}
+
+		} catch (Throwable t) {
+			LOGGER.error("Dynamic field URL based sync failed", t);
+			throw new SyncFailedException("Dynamic field URL based sync failed due to " +  t.getMessage());
+		}
+		return CompletableFuture.completedFuture(true);
+	}
 	
 	/**
 	 * save dynamic fields with value json
@@ -471,45 +537,15 @@ public class ClientSettingSyncHelper {
 	private CompletableFuture handleDynamicFieldSync(SyncDataResponseDto syncDataResponseDto) throws SyncFailedException {
 		try {
 			Iterator<SyncDataBaseDto> iterator = syncDataResponseDto.getDataToSync().stream()
-					.filter(obj -> FIELD_TYPE_DYNAMIC.equalsIgnoreCase(obj.getEntityType()) ||
-							FIELD_TYPE_DYNAMIC_URL.equalsIgnoreCase(obj.getEntityType()))
+					.filter(obj -> FIELD_TYPE_DYNAMIC.equalsIgnoreCase(obj.getEntityType()))
 					.iterator();
-			
-			List<DynamicField> fields = new ArrayList<DynamicField>();
+
 			while(iterator.hasNext()) {
 				SyncDataBaseDto syncDataBaseDto = iterator.next();
-				
 				if(syncDataBaseDto != null && syncDataBaseDto.getData() != null && !syncDataBaseDto.getData().isEmpty()) {
 					byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(syncDataBaseDto.getData()));
-					JSONArray jsonArray = null;
-					switch (syncDataBaseDto.getEntityType()) {
-						case "dynamic-url": //TODO - handle URL
-							break;
-						case "dynamic":
-							jsonArray = getDataList(new String(data));	break;
-					}
-
-					if(jsonArray == null)
-						continue;
-
-					for(int i=0; i< jsonArray.length(); i++) {
-						DynamicFieldDto dynamicFieldDto = MapperUtils.convertJSONStringToDto(jsonArray.getJSONObject(i).toString(),
-								new TypeReference<DynamicFieldDto>() {});
-						DynamicField dynamicField = new DynamicField();
-						dynamicField.setId(dynamicFieldDto.getId());
-						dynamicField.setDataType(dynamicFieldDto.getDataType());
-						dynamicField.setName(dynamicFieldDto.getName());
-						dynamicField.setLangCode(dynamicFieldDto.getLangCode());
-						dynamicField.setValueJson(dynamicFieldDto.getFieldVal() == null ?
-								"[]" : MapperUtils.convertObjectToJsonString(dynamicFieldDto.getFieldVal()));
-						dynamicField.setActive(dynamicFieldDto.isActive());
-						fields.add(dynamicField);
-					}
+					saveDynamicFieldData(new String(data));
 				}
-			}
-			
-			if (!fields.isEmpty()) {
-				dynamicFieldRepository.saveAll(fields);
 			}
 				
 		} catch(IOException e) {
@@ -519,12 +555,37 @@ public class ClientSettingSyncHelper {
 		return CompletableFuture.completedFuture(true);
 	}
 
+	private void saveDynamicFieldData(String data) throws IOException {
+		if(data == null || data.trim().isEmpty())
+			return;
+
+		JSONArray jsonArray = new JSONArray(data);
+		List<DynamicField> fields = new ArrayList<DynamicField>();
+		for(int i=0; i< jsonArray.length(); i++) {
+			DynamicFieldDto dynamicFieldDto = MapperUtils.convertJSONStringToDto(jsonArray.getJSONObject(i).toString(),
+					new TypeReference<DynamicFieldDto>() {});
+			DynamicField dynamicField = new DynamicField();
+			dynamicField.setId(dynamicFieldDto.getId());
+			dynamicField.setDataType(dynamicFieldDto.getDataType());
+			dynamicField.setName(dynamicFieldDto.getName());
+			dynamicField.setLangCode(dynamicFieldDto.getLangCode());
+			dynamicField.setValueJson(dynamicFieldDto.getFieldVal() == null ?
+					"[]" : MapperUtils.convertObjectToJsonString(dynamicFieldDto.getFieldVal()));
+			dynamicField.setActive(dynamicFieldDto.isActive());
+			fields.add(dynamicField);
+		}
+
+		if (!fields.isEmpty()) {
+			dynamicFieldRepository.saveAll(fields);
+		}
+	}
+
 
 	@Async
 	public CompletableFuture syncSchema(String triggerPoint) throws SyncFailedException {
 		LOGGER.info("ID Schema sync started .....");
 
-		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+		if (!serviceDelegateUtil.isNetworkAvailable()) {
 			throw new SyncFailedException(RegistrationConstants.NO_INTERNET);
 		}
 
@@ -586,22 +647,10 @@ public class ClientSettingSyncHelper {
 					.filter(obj -> obj.getEntityType().equalsIgnoreCase(FIELD_TYPE_SCRIPT))
 					.collect(Collectors.toList());
 
-			Map<String, String> requestParamMap = new HashMap<String, String>();
-			requestParamMap.put(RegistrationConstants.KEY_INDEX.toLowerCase(),
-					CryptoUtil.computeFingerPrint(clientCryptoFacade.getClientSecurity().getEncryptionPublicPart(), null));
-
-			for (SyncDataBaseDto syncDataBaseDto : scriptToDownload) {
-				byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(syncDataBaseDto.getData()));
-				JSONObject jsonObject = new JSONObject(new String(data));
-				String response = (String) serviceDelegateUtil.get(jsonObject.getString("url"), requestParamMap,
-						jsonObject.getString("headers"), jsonObject.getBoolean("auth-required"),
-						jsonObject.getString("auth-token"), "System");
-				try (FileWriter writer = new FileWriter(System.getProperty("user.dir") + File.separator +
-						syncDataBaseDto.getEntityName())) {
-					writer.write(response);
+				for (SyncDataBaseDto syncDataBaseDto : scriptToDownload) {
+					byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(syncDataBaseDto.getData()));
+					downloadUrlData(Paths.get(System.getProperty("user.dir"), syncDataBaseDto.getEntityName()), new JSONObject(new String(data)));
 				}
-			}
-
 			} catch (Exception e) {
 				LOGGER.error("Scripts sync failed", e);
 				throw new SyncFailedException("Scripts sync failed due to " +  e.getMessage());

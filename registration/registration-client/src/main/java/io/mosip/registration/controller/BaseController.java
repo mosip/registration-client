@@ -1416,7 +1416,7 @@ public class BaseController {
 
 	public boolean proceedOnAction(String job) {
 
-		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+		if (!serviceDelegateUtil.isNetworkAvailable()) {
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_INTERNET_CONNECTION));
 			return false;
 		}
