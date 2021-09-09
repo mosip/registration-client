@@ -57,6 +57,7 @@ public class DemographicPage {
     Boolean flagContinueBtnDocumentUpload = true;
     DocumentUploadPage documentUploadPage;
     BiometricUploadPage biometricUploadPage;
+    BioCorrectionPage bioCorrectionPage;
     WaitsUtil waitsUtil;
     String DemoDetailsImg = "#DemoDetailsImg";
     WebViewDocument webViewDocument;
@@ -88,6 +89,7 @@ public class DemographicPage {
         // waitsUtil.clickNodeAssert( DemoDetailsImg);
         documentUploadPage = new DocumentUploadPage(robot);
         biometricUploadPage = new BiometricUploadPage(robot);
+        bioCorrectionPage = new BioCorrectionPage(robot);
         buttons = new Buttons(robot);
         webViewDocument = new WebViewDocument(robot);
         allignmentgroupMap = new LinkedHashMap<String, Integer>();
@@ -647,6 +649,16 @@ public class DemographicPage {
 
     public void biometrics(Schema schema, String scenario, String id, String identity) {
         try {
+            if (scenario.equalsIgnoreCase("bioCorrection")) {
+                String additionalInfoRequestId = JsonUtil.JsonObjParsing(identity, "additionalInfoRequestId");
+                bioCorrectionPage.setAdditionalInfoRequestId(additionalInfoRequestId);
+            }
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+
+        try {
+
             // RegistrationDTO registrationDTO = (RegistrationDTO)
             // SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
 

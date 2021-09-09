@@ -3,7 +3,7 @@
 	"BELOW_ARE_STATIC_KEYWORDS":"",
     "ageGroup": "ADULT",
     "process": "New",
-    "documentUploadAttributes":["POB","POR","POA","POI"],
+    "documentUploadAttributes":["POB","POA","POI"],
     "bioExceptionAttributes": [
 		"leftEye"
 	],
@@ -77,23 +77,7 @@
         "code": "KNT"
       }
     ],
-    "postalCode": [
-        {
-            "language": "hin",
-            "value": "14022",
-            "code": "14022"
-          },
-          {
-            "language": "tam",
-            "value": "14022",
-            "code": "14022"
-          },
-          {
-            "language": "kan",
-            "value": "14022",
-            "code": "14022"
-          }
-        ],
+    "postalCode" : "14022",
     "fullName": [
       {
         "language": "hin",
