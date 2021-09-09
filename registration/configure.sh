@@ -33,7 +33,10 @@ echo "created mosip-application.properties"
 
 cd "${work_dir}"/registration-libs/target
 jar uf registration-libs-${client_version_env}.jar props/mosip-application.properties
-jar uf registration-services-${client_version_env}.jar props/mosip-application.properties
+
+cd "${work_dir}"/registration-client/target/lib
+jar uf registration-services-${client_version_env}.jar ${work_dir}/registration-libs/target/props/mosip-application.properties
+
 cd "${work_dir}"
 
 
