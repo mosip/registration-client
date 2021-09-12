@@ -3,6 +3,7 @@ package io.mosip.registration.service.login;
 import java.util.List;
 import java.util.Set;
 
+import io.mosip.registration.config.MetricTag;
 import io.mosip.registration.dto.AuthorizationDTO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.ResponseDTO;
@@ -138,6 +139,6 @@ public interface LoginService {
 	 * @return {@code ResponseDTO} based on the result the response DTO will be
 	 *         formed and return to the caller.
 	 */
-	ResponseDTO validateUser(String userId);
+	ResponseDTO validateUser(@MetricTag(value = "userid") String userId);
 
 }

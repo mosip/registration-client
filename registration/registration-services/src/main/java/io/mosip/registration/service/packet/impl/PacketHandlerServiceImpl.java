@@ -8,15 +8,12 @@ import static io.mosip.registration.exception.RegistrationExceptionConstants.REG
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
@@ -25,9 +22,9 @@ import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.FileUtils;
+import io.mosip.registration.config.MetricTag;
 import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.enums.FlowType;
-import io.mosip.registration.enums.Role;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import lombok.NonNull;
@@ -40,14 +37,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.commons.packet.dto.Document;
-import io.mosip.commons.packet.dto.packet.BiometricsException;
 import io.mosip.commons.packet.dto.packet.DeviceMetaInfo;
 import io.mosip.commons.packet.dto.packet.DigitalId;
 import io.mosip.commons.packet.facade.PacketWriter;
 import io.mosip.kernel.auditmanager.entity.Audit;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biometrics.entities.BiometricRecord;
-import io.mosip.kernel.core.idgenerator.spi.PridGenerator;
 import io.mosip.kernel.core.idgenerator.spi.RidGenerator;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.idgenerator.rid.constant.RidGeneratorPropertyConstant;
@@ -170,8 +165,8 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	 * io.mosip.registration.service.packet.PacketHandlerService#handle(io.mosip.
 	 * registration.dto.RegistrationDTO)
 	 */
-	@Counted(value = "registration", extraTags = {"function", "createpacket"})
-	@Timed(value = "registration", extraTags = {"function", "createpacket"})
+	@Counted
+	@Timed
 	@Override
 	public ResponseDTO handle(RegistrationDTO registrationDTO) {
 		LOGGER.info("Registration Handler had been called");
@@ -583,8 +578,8 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		return packets;
 	}
 
-	@Counted(value = "registration", extraTags = {"function", "start"})
-	@Timed(value = "registration", extraTags = {"function", "start"})
+	@Counted
+	@Timed
 	@Override
 	public RegistrationDTO startRegistration(String id, @NonNull String processId) throws RegBaseCheckedException {
 		//Pre-check conditions, throws exception if preconditions are not met

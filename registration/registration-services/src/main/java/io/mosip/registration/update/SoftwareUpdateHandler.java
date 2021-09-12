@@ -27,6 +27,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import io.micrometer.core.annotation.Counted;
 import io.mosip.kernel.core.util.HMACUtils2;
+import io.mosip.registration.config.MetricTag;
 import io.mosip.registration.context.ApplicationContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -109,7 +110,7 @@ public class SoftwareUpdateHandler extends BaseService {
 	 * @return Boolean true - If there is any update available. false - If no
 	 *         updates available
 	 */
-	@Counted(value = "sw.update", recordFailuresOnly = false)
+	@Counted(recordFailuresOnly = true)
 	public boolean hasUpdate() {
 
 		LOGGER.info("Checking for any new updates");
@@ -214,6 +215,7 @@ public class SoftwareUpdateHandler extends BaseService {
 	 * @throws Exception
 	 *             - IOException
 	 */
+	@Counted(recordFailuresOnly = true)
 	public void update() throws Exception {
 
 		LOGGER.info("Updating latest version started");
@@ -444,7 +446,8 @@ public class SoftwareUpdateHandler extends BaseService {
 		this.latestVersion = latestVersion;
 	}
 
-	private boolean isCheckSumValid(File jarFile, Manifest manifest) {
+	@Counted(recordFailuresOnly = true)
+	private boolean isCheckSumValid(@MetricTag(value = "name", extractor = "arg.getName()") File jarFile, Manifest manifest) {
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 				"Checking of checksum started for jar :" + jarFile.getName());
 		String checkSum;
@@ -466,7 +469,7 @@ public class SoftwareUpdateHandler extends BaseService {
 
 	}
 
-	@Counted(value = "sw.update", recordFailuresOnly = true)
+	@Counted(recordFailuresOnly = true)
 	private boolean hasSpace(int bytes) {
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Checking of space in machine");
 		return bytes < new File("/").getFreeSpace();
@@ -543,7 +546,9 @@ public class SoftwareUpdateHandler extends BaseService {
 	 * @return response of sql execution
 	 * @throws IOException
 	 */
-	public ResponseDTO executeSqlFile(String actualLatestVersion, String previousVersion) throws IOException {
+	@Counted(recordFailuresOnly = true)
+	public ResponseDTO executeSqlFile(@MetricTag("newversion") String actualLatestVersion,
+									  @MetricTag("oldversion") String previousVersion) throws IOException {
 
 		LOGGER.info("DB-Script files execution started from previous version : {} , To Current Version : {}",previousVersion, currentVersion);
 

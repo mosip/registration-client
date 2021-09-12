@@ -90,7 +90,7 @@ public class ServiceDelegateUtil {
 	 *
 	 * @return true, if is network available and false, if it is not available.
 	 */
-	@Timed(value = "check.connectivity", longTask = true)
+	@Timed
 	public boolean isNetworkAvailable() {
 		LOGGER.info("Registration Network Checker had been called.");
 		try {

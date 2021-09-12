@@ -4,17 +4,23 @@ import io.micrometer.core.aop.CountedAspect;
 import io.micrometer.core.aop.TimedAspect;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.binder.jvm.*;
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.logging.LoggingMeterRegistry;
 import io.micrometer.core.instrument.logging.LoggingRegistryConfig;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.metrics.DiskMetrics;
 import io.mosip.registration.metrics.PacketMetrics;
 import io.mosip.registration.metrics.SystemTimeMetrics;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 
 import io.tus.java.client.*;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.mvel2.MVEL;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,11 +30,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Optional;
+import java.util.*;
 
 @Configuration
 @EnableScheduling
@@ -41,7 +50,7 @@ public class MetricsConfig {
 
     @Bean
     public MeterRegistry getMeterRegistry() {
-        LoggingMeterRegistry registry = new LoggingMeterRegistry(new LoggingRegistryConfig() {
+        LoggingJsonMeterRegistry registry = new LoggingJsonMeterRegistry(new LoggingRegistryConfig() {
             @Override
             public Duration step() {
                 return Duration.ofSeconds(60);
@@ -100,12 +109,12 @@ public class MetricsConfig {
 
     @Bean
     public TimedAspect timedAspect(MeterRegistry meterRegistry) {
-        return new TimedAspect(meterRegistry);
+        return new TimedAspect(meterRegistry, this::tagFactory);
     }
 
     @Bean
     public CountedAspect countedAspect(MeterRegistry meterRegistry) {
-        return new CountedAspect(meterRegistry);
+        return new CountedAspect(meterRegistry, this::tagFactory);
     }
 
     @Bean
@@ -129,6 +138,45 @@ public class MetricsConfig {
         return packetMetrics;
     }
 
+    private Iterable<Tag> tagFactory(ProceedingJoinPoint pjp) {
+        return Tags.of(
+                        "class", pjp.getStaticPart().getSignature().getDeclaringTypeName(),
+                        "method", pjp.getStaticPart().getSignature().getName()
+                )
+                .and(getParameterTags(pjp));
+    }
+
+    private Iterable<Tag> getParameterTags(ProceedingJoinPoint pjp) {
+        Set<Tag> tags = new HashSet<>();
+
+        Method method = ((MethodSignature) pjp.getSignature()).getMethod();
+        Parameter[] parameters = method.getParameters();
+        for (int i = 0; i < parameters.length; i++) {
+            for (Annotation annotation : parameters[i].getAnnotations()) {
+                if (annotation instanceof MetricTag) {
+                    MetricTag metricTag = (MetricTag) annotation;
+                    tags.add(Tag.of(metricTag.value(), (metricTag.extractor() == null || metricTag.extractor().trim().isEmpty() ) ?
+                            String.valueOf(pjp.getArgs()[i]) :
+                            getValue(metricTag.extractor(), pjp.getArgs()[i])));
+                }
+            }
+        }
+
+        return tags;
+    }
+
+    private String getValue(String expression, Object data) {
+        try {
+            Map context = new HashMap();
+            context.put("arg", data);
+            return MVEL.evalToString(expression, context);
+        } catch (Exception ex) {
+            LOGGER.error("Failed to evaluate metrics value extractor", ex);
+        }
+        return RegistrationConstants.EMPTY;
+    }
+
+
     @Scheduled(initialDelay = 15*60*1000, fixedDelay =  15*60*1000)
     public void exportMetrics() {
 
@@ -138,18 +186,19 @@ public class MetricsConfig {
             // Configure tus HTTP endpoint. This URL will be used for creating new uploads
             // using the Creation extension
             String url = (String) io.mosip.registration.context.ApplicationContext.map()
-                    .getOrDefault(TUS_SERVER_URL_CONFIG,"http://localhost:8080/files");
+                    .getOrDefault(TUS_SERVER_URL_CONFIG,"https://dev.mosip.net/files/");
             int chunkSize = Integer.valueOf((String)io.mosip.registration.context.ApplicationContext.map()
                     .getOrDefault(TUS_SERVER_UPLOAD_CHUNKSIZE,"1024"));
             client.setUploadCreationURL(new URL(url));
 
             // Enable resumable uploads by storing the upload URL in memory
-            client.enableResuming(new TusURLMemoryStore());
+            client.enableResuming(new MetricsURLMemoryStore());
 
             // Open a file using which we will then create a TusUpload. If you do not have
             // a File object, you can manually construct a TusUpload using an InputStream.
             // See the documentation for more information.
-            final TusUpload upload = new TusUpload(getFile());
+            File file = getFile();
+            final TusUpload upload = new TusUpload(file);
 
             LOGGER.info("Starting upload...{}", upload.getMetadata());
 
@@ -193,7 +242,9 @@ public class MetricsConfig {
                     LOGGER.info("Upload finished.");
                     LOGGER.info("Upload available at: {}", uploader.getUploadURL().toString());
 
-                    //TODO delete archive log file
+                    //once successfully uploaded, delete the metrics archive file
+                    file.delete();
+
                 }
             };
             executor.makeAttempts();

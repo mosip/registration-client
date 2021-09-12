@@ -3,6 +3,7 @@ package io.mosip.registration.service.packet;
 import java.util.List;
 
 import io.mosip.kernel.core.exception.IOException;
+import io.mosip.registration.config.MetricTag;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationDTO;
@@ -10,7 +11,6 @@ import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.exception.RegBaseCheckedException;
-import lombok.NonNull;
 
 /**
  * The interface to handle the registration data to create packet out of it and
@@ -46,7 +46,7 @@ public interface PacketHandlerService {
 	 *            created
 	 * @return the {@link ResponseDTO} object
 	 */
-	public ResponseDTO handle(RegistrationDTO registrationDTO);
+	public ResponseDTO handle(@MetricTag(value = "process", extractor = "arg.processId") RegistrationDTO registrationDTO);
 	
 	public List<Registration> getAllRegistrations();
 
@@ -58,7 +58,7 @@ public interface PacketHandlerService {
 	 * @return
 	 * @throws RegBaseCheckedException
 	 */
-	public RegistrationDTO startRegistration(String id, String processId) throws RegBaseCheckedException;
+	public RegistrationDTO startRegistration(String id, @MetricTag("process") String processId) throws RegBaseCheckedException;
 
 	public List<PacketStatusDTO> getAllPackets();
 

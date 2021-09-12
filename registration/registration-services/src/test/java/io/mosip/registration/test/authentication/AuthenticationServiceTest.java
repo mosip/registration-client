@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.mosip.kernel.core.util.HMACUtils2;
+import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.util.common.OTPManager;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.junit.Before;
@@ -72,7 +74,7 @@ public class AuthenticationServiceTest {
 
 	
 	@Test
-	public void validatePasswordTest() throws NoSuchAlgorithmException {
+	public void validatePasswordTest() throws NoSuchAlgorithmException, RegBaseCheckedException {
 		UserDTO userDTO = new UserDTO();
 		userDTO.setSalt("salt");
 		UserPasswordDTO userPassword = new UserPasswordDTO();
@@ -87,7 +89,7 @@ public class AuthenticationServiceTest {
 		Mockito.when(CryptoUtil.decodeBase64("salt")).thenReturn("salt".getBytes());
 		Mockito.when(HMACUtils2.digestAsPlainTextWithSalt("mosip".getBytes(), "salt".getBytes())).thenReturn("mosip");
 		
-		assertEquals("Username and Password Match", authenticationServiceImpl.validatePassword(authenticationValidatorDTO));
+		assertEquals(true, authenticationServiceImpl.validatePassword(authenticationValidatorDTO));
 		
 	}
 	
@@ -106,9 +108,14 @@ public class AuthenticationServiceTest {
 		Mockito.when(loginService.getUserDetail("mosip")).thenReturn(userDTO);		
 		Mockito.when(CryptoUtil.decodeBase64("salt")).thenReturn("salt".getBytes());		
 		Mockito.when(HMACUtils2.digestAsPlainTextWithSalt("mosip1".getBytes(), "salt".getBytes())).thenReturn("mosip1");
-		
-		assertEquals("Username and Password Not Match", authenticationServiceImpl.validatePassword(authenticationValidatorDTO));
-		
+
+		String errorCode = null;
+		try {
+			authenticationServiceImpl.validatePassword(authenticationValidatorDTO);
+		} catch (RegBaseCheckedException e) {
+			errorCode =  e.getErrorCode();
+		}
+		assertEquals(RegistrationConstants.PWD_MISMATCH, errorCode);
 	}
 	
 	@Test
@@ -120,16 +127,28 @@ public class AuthenticationServiceTest {
 		authenticationValidatorDTO.setPassword("mosip");
 	
 		Mockito.when(loginService.getUserDetail("mosip")).thenReturn(userDTO);			
-		assertEquals("Credentials Not Found", authenticationServiceImpl.validatePassword(authenticationValidatorDTO));
-		
+
+		String errorCode = null;
+		try {
+			authenticationServiceImpl.validatePassword(authenticationValidatorDTO);
+		} catch (RegBaseCheckedException e) {
+			errorCode =  e.getErrorCode();
+		}
+		assertEquals(RegistrationConstants.CREDS_NOT_FOUND, errorCode);
 	}
 	
 	@Test
 	public void validatePasswordFailure1Test() {		
 		AuthenticationValidatorDTO authenticationValidatorDTO=new AuthenticationValidatorDTO();
 		
-		Mockito.when(loginService.getUserDetail("mosip")).thenReturn(null);			
-		assertEquals("Username and Password Not Match", authenticationServiceImpl.validatePassword(authenticationValidatorDTO));
+		Mockito.when(loginService.getUserDetail("mosip")).thenReturn(null);
+		String errorCode = null;
+		try {
+			authenticationServiceImpl.validatePassword(authenticationValidatorDTO);
+		} catch (RegBaseCheckedException e) {
+			errorCode =  e.getErrorCode();
+		}
+		assertEquals(RegistrationConstants.PWD_MISMATCH, errorCode);
 		
 	}
 

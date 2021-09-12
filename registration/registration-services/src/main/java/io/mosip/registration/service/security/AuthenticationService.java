@@ -2,9 +2,11 @@ package io.mosip.registration.service.security;
 
 import java.util.List;
 
+import io.mosip.registration.config.MetricTag;
 import io.mosip.registration.dto.AuthTokenDTO;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.exception.RegBaseCheckedException;
 
 public interface AuthenticationService {
 
@@ -15,7 +17,7 @@ public interface AuthenticationService {
 	 * @param biometrics
 	 * @return
 	 */
-	Boolean authValidator(String userId, String modality, List<BiometricsDto> biometrics);
+	Boolean authValidator(@MetricTag("userid") String userId, @MetricTag("modality") String modality, List<BiometricsDto> biometrics);
 	
 	/**
 	 * Validator for OTP authentication
@@ -31,7 +33,7 @@ public interface AuthenticationService {
 	 *            in context
 	 * @return {@link AuthTokenDTO} returning authtokendto
 	 */
-	AuthTokenDTO authValidator(String validatorType, String userId, String otp, boolean haveToSaveAuthToken);
+	AuthTokenDTO authValidator(@MetricTag("validatortype") String validatorType, @MetricTag("userid") String userId, String otp, boolean haveToSaveAuthToken);
 
 
 	/**
@@ -41,6 +43,6 @@ public interface AuthenticationService {
 	 *            The authentication validation inputs with user id and pwd
 	 * @return String
 	 */
-	String validatePassword(AuthenticationValidatorDTO authenticationValidatorDTO);
+	Boolean validatePassword(@MetricTag(value = "userid", extractor = "arg.userId") AuthenticationValidatorDTO authenticationValidatorDTO) throws RegBaseCheckedException;
 
 }
