@@ -119,7 +119,8 @@ public class BioCorrectionReg {
                 buttons.clicksubmitBtn();
             }
             
-
+           // bioCorrectionPage.setMDSscore("90");
+           // bioCorrectionPage.setMDSprofile("Default");
             
             webViewDocument = demographicPage.screensFlow(jsonContent, process, ageGroup);
 
@@ -178,7 +179,6 @@ public class BioCorrectionReg {
             authenticationPage.clicksubmitBtn();
             robotActions.clickWindow();
             homePage.clickHomeImg();
-            buttons.clickConfirmBtn();
             if (!rid2.rid.trim().isEmpty()) {
                 ExtentReportUtil.test1.info("Approve Packet done");
                 assertEquals(rid1.getRid(), rid2.getRid());

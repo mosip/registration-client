@@ -1,9 +1,11 @@
 package registrationtest.pages;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.json.JSONObject;
 import org.testfx.api.FxRobot;
 
 import javafx.scene.Node;
@@ -15,6 +17,9 @@ import registrationtest.controls.Alerts;
 
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
+import io.restassured.http.ContentType;
 
 public class BioCorrectionPage {
 
@@ -48,4 +53,35 @@ public class BioCorrectionPage {
 
 
     }
+    
+    public void setMDSscore(String qualityScore) {
+
+        try {
+            String requestBody = "{\"type\":\"Biometric Device\",\"qualityScore\":\"" + qualityScore
+                    + "\",\"fromIso\":false}";
+
+            Response response = RestAssured.given().baseUri("http://127.0.0.1:4501/admin/score")
+                    .contentType(ContentType.JSON).and().body(requestBody).when().post().then().extract().response();
+
+            assertEquals(200, response.statusCode());
+            assertEquals("Success", response.jsonPath().getString("errorInfo"));
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+    }
+
+    public void setMDSprofile(String type) {
+        try {
+            String requestBody = "{\"type\":\"Biometric Device\",\"profileId\":\"" + type + "\"}";
+
+            Response response = RestAssured.given().baseUri("http://127.0.0.1:4501/admin/profile")
+                    .contentType(ContentType.JSON).and().body(requestBody).when().post().then().extract().response();
+            assertEquals(200, response.statusCode());
+            assertEquals("Success", response.jsonPath().getString("errorInfo"));
+
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+    }
+
 }
