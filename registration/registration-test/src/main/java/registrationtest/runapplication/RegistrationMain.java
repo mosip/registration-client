@@ -33,7 +33,7 @@ public class RegistrationMain {
         UpdateReg updatereg = new UpdateReg();
         ManualReg manualReg = new ManualReg();
         WaitsUtil waitsUtil = new WaitsUtil();
-        BioCorrection bioCorrection = new BioCorrection();
+        BioCorrectionReg bioCorrection = new BioCorrectionReg();
         Boolean flag;
         Thread thread = new Thread() {
             @Override
@@ -155,13 +155,17 @@ public class RegistrationMain {
         thread.start();
 
         String args[] = {};
+        
+        
 //		   System.setProperty("testfx.robot", "glass");
 //		    System.setProperty("testfx.headless", "true");
 //		    System.setProperty("prism.order", "sw");
 //		    System.setProperty("prism.text", "t2k");
-//		  //  System.setProperty("java.awt.headless", "true");
+//		    System.setProperty("java.awt.headless", "true");
 //		    System.setProperty("glass.platform","Monocle");
 //		    System.setProperty("monocle.platform","Headless");
+    
+        
         Application.launch(StartApplication.class, args);
     }
 
@@ -179,7 +183,7 @@ public class RegistrationMain {
 //				    System.setProperty("testfx.headless", "true");
 //				    System.setProperty("prism.order", "sw");
 //				    System.setProperty("prism.text", "t2k");
-//				   // System.setProperty("java.awt.headless", "true");
+//				    System.setProperty("java.awt.headless", "true");
 //				    System.setProperty("glass.platform","Monocle");
 //				    System.setProperty("monocle.platform","Headless");
 				    

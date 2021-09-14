@@ -19,6 +19,7 @@ import javafx.stage.Stage;
 import registrationtest.controls.Alerts;
 import registrationtest.controls.Buttons;
 import registrationtest.pages.AuthenticationPage;
+import registrationtest.pages.BioCorrectionPage;
 import registrationtest.pages.BiometricUploadPage;
 import registrationtest.pages.DemographicPage;
 import registrationtest.pages.EodApprovalPage;
@@ -40,8 +41,8 @@ import org.apache.log4j.LogManager;
 
 import org.apache.log4j.Logger;
 
-public class BioCorrection {
-    private static final Logger logger = LogManager.getLogger(BioCorrection.class);
+public class BioCorrectionReg {
+    private static final Logger logger = LogManager.getLogger(BioCorrectionReg.class);
     FxRobot robot;
     Schema schema;
     Root root;
@@ -69,64 +70,9 @@ public class BioCorrection {
     UploadPacketPage uploadPacketPage;
     SelectLanguagePage selectLanguagePage;
     Alerts alerts;
+    BioCorrectionPage bioCorrectionPage;
 
-    public boolean initialRegclientSet(FxRobot robot, String loginUserid, String loginPwd,
-            Stage applicationPrimaryStage1) {
-        boolean flag = false;
-        try {
-            ExtentReportUtil.ExtentSetting();
-            ExtentReportUtil.test1 = ExtentReportUtil.reports.createTest("Operator Onboard with Dafault Role");
-
-            loginPage = new LoginPage(robot);
-            buttons = new Buttons(robot);
-            authenticationPage = new AuthenticationPage(robot);
-            robotActions = new RobotActions(robot);
-            webViewDocument = new WebViewDocument(robot);
-            biometricUploadPage = new BiometricUploadPage(robot);
-            alerts = new Alerts(robot);
-            rid1 = new RID();
-            rid2 = new RID();
-            result = false;
-
-            // Load Login screen
-            loginPage.loadLoginScene(applicationPrimaryStage1);
-            ExtentReportUtil.test1.info("RegclientScreen Loaded");
-
-            ExtentReportUtil.test1.info("Operator Enter Details ");
-
-            // Enter userid and password
-            loginPage.setUserId(loginUserid);
-            flag = loginPage.verifyAuthentication(loginPwd, applicationPrimaryStage1);
-            ExtentReportUtil.test1.info("Operator logs in");
-
-            if (flag == true) {
-                ExtentReportUtil.test1.log(Status.PASS, "SUCCESS Operator Onboards");
-            } else {
-                ExtentReportUtil.test1.log(Status.FAIL, "FAIL Operator Onboards");
-
-                try {
-                    homePage.clickHomeImg();
-                    buttons.clickConfirmBtn();
-                } catch (Exception e) {
-                    logger.error("", e);
-                }
-                try {
-                    loginPage.logout();
-                    buttons.clickConfirmBtn();
-
-                } catch (Exception e) {
-                    logger.error("", e);
-                }
-            }
-
-        } catch (Exception e) {
-
-            logger.error(e.getMessage());
-        }
-
-        return flag;
-    }
-
+  
     public RID bioCorrection(FxRobot robot, String loginUserid, String loginPwd, String supervisorUserid,
             String supervisorUserpwd, Stage applicationPrimaryStage1, String jsonContent, String process,
             String ageGroup, String fileName, ApplicationContext applicationContext) {
@@ -141,6 +87,9 @@ public class BioCorrection {
             authenticationPage = new AuthenticationPage(robot);
             robotActions = new RobotActions(robot);
             selectLanguagePage = new SelectLanguagePage(robot);
+            bioCorrectionPage=new BioCorrectionPage(robot);
+            demographicPage=new DemographicPage(robot);
+            
 
             rid1 = null;
             rid2 = null;
@@ -169,7 +118,10 @@ public class BioCorrection {
                 selectLanguagePage.selectLang();
                 buttons.clicksubmitBtn();
             }
-
+            
+           // bioCorrectionPage.setMDSscore("90");
+           // bioCorrectionPage.setMDSprofile("Default");
+            
             webViewDocument = demographicPage.screensFlow(jsonContent, process, ageGroup);
 
             buttons.clicknextBtn();
@@ -227,7 +179,6 @@ public class BioCorrection {
             authenticationPage.clicksubmitBtn();
             robotActions.clickWindow();
             homePage.clickHomeImg();
-            buttons.clickConfirmBtn();
             if (!rid2.rid.trim().isEmpty()) {
                 ExtentReportUtil.test1.info("Approve Packet done");
                 assertEquals(rid1.getRid(), rid2.getRid());
