@@ -517,9 +517,6 @@ public class DocumentFxControl extends FxControl {
 	}
 
 	public boolean canContinue() {
-		/*if (getRegistrationDTo().getFlowType() == FlowType.LOST) {
-			return true;
-		}*/
 
 		if (requiredFieldValidator == null) {
 			requiredFieldValidator = Initialization.getApplicationContext().getBean(RequiredFieldValidator.class);
@@ -540,10 +537,13 @@ public class DocumentFxControl extends FxControl {
 
 	@Override
 	public void selectAndSet(Object data) {
-		if(data== null)
-			return;
-
 		ComboBox<DocumentCategoryDto> comboBox = (ComboBox<DocumentCategoryDto>) getField(uiFieldDTO.getId());
+
+		if(data == null) {
+			comboBox.getSelectionModel().clearSelection();
+			return;
+		}
+
 		if (comboBox != null) {
 			DocumentDto documentDto = (DocumentDto) data;
 			Optional<DocumentCategoryDto> selected = comboBox.getItems()

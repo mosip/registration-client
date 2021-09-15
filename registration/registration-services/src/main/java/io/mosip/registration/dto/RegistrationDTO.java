@@ -90,27 +90,30 @@ public class RegistrationDTO {
 	public Map<String, String> SELECTED_CODES = new HashMap<>();
 	public Map<String, BlocklistedConsentDto> BLOCKLISTED_CHECK = new HashMap<>();
 
-	public void addDemographicField(String fieldId, String value) {
-		this.demographics.put(fieldId, (value != null && !value.isEmpty()) ? value : null);
+	public void clearRegistrationDto(){
+		demographics.clear();
+		defaultDemographics.clear();
+		documents.clear();
+		biometrics.clear();
+		biometricExceptions.clear();
+
+		BIO_CAPTURES.clear();
+		BIO_SCORES.clear();
+		AGE_GROUPS.clear();
+		ATTEMPTS.clear();
+		SELECTED_CODES.clear();
+		BLOCKLISTED_CHECK.clear();
 	}
 
-	public void addDemographicField(String fieldId, List<SimpleDto> values) {
+	public void addDemographicField(@NonNull String fieldId, @NonNull String value) {
+		if(value != null && !value.trim().isEmpty())
+			this.demographics.put(fieldId, value);
+	}
+
+	public void addDemographicField(@NonNull String fieldId, @NonNull List<SimpleDto> values) {
 		if (fieldId != null && !values.isEmpty()) {
 			this.demographics.put(fieldId, values);
 		}
-	}
-
-	public void addDefaultDemographicField(String fieldId, String applicationLanguage, String value,
-			String localLanguage, String localValue) {
-		List<SimpleDto> values = new ArrayList<SimpleDto>();
-		if (value != null && !value.isEmpty())
-			values.add(new SimpleDto(applicationLanguage, value));
-
-		if (localValue != null && !localValue.isEmpty())
-			values.add(new SimpleDto(localLanguage, localValue));
-
-		if (!values.isEmpty())
-			this.defaultDemographics.put(fieldId, values);
 	}
 
 	public void removeDemographicField(String fieldId) {
@@ -243,10 +246,8 @@ public class RegistrationDTO {
 	public Map<String, Object> getMVELDataContext() {
 		Map<String, Object> allIdentityDetails = new LinkedHashMap<String, Object>();
 		allIdentityDetails.put("IDSchemaVersion", idSchemaVersion);
-		allIdentityDetails.put("isNew", FlowType.NEW == this.flowType);
-		allIdentityDetails.put("isUpdate", FlowType.UPDATE == this.flowType);
-		allIdentityDetails.put("isLost", FlowType.LOST == this.flowType);
-		allIdentityDetails.put("isCorrection", FlowType.CORRECTION == this.flowType);
+		allIdentityDetails.put("_flow", this.flowType.getCategory());
+		allIdentityDetails.put("_process", this.processId);
 		allIdentityDetails.put("langCodes", this.selectedLanguagesByApplicant);
 		allIdentityDetails.put("updatableFields",
 				this.updatableFields == null ? Collections.EMPTY_LIST : this.updatableFields);

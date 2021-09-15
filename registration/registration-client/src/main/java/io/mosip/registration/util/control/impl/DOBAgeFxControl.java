@@ -243,24 +243,26 @@ public class DOBAgeFxControl extends FxControl {
 
 	@Override
 	public void selectAndSet(Object data) {
+		TextField yyyy = ((TextField) getField(
+				this.uiFieldDTO.getId() + RegistrationConstants.YYYY + RegistrationConstants.TEXT_FIELD));
+		TextField mm = ((TextField) getField(
+				this.uiFieldDTO.getId() + RegistrationConstants.MM + RegistrationConstants.TEXT_FIELD));
+		TextField dd = ((TextField) getField(
+				this.uiFieldDTO.getId() + RegistrationConstants.DD + RegistrationConstants.TEXT_FIELD));
 
-		if (data != null && data instanceof String) {
+		if(data == null || ((String) data).trim().isEmpty()) {
+			yyyy.clear();
+			mm.clear();
+			dd.clear();
+			return;
+		}
 
+		if (data instanceof String) {
 			String[] dobArray = ((String) data).split("/");
-
-			TextField yyyy = ((TextField) getField(
-					this.uiFieldDTO.getId() + RegistrationConstants.YYYY + RegistrationConstants.TEXT_FIELD));
-
-			TextField mm = ((TextField) getField(
-					this.uiFieldDTO.getId() + RegistrationConstants.MM + RegistrationConstants.TEXT_FIELD));
-			TextField dd = ((TextField) getField(
-					this.uiFieldDTO.getId() + RegistrationConstants.DD + RegistrationConstants.TEXT_FIELD));
 			yyyy.setText(dobArray[0]);
 			mm.setText(dobArray[1]);
 			dd.setText(dobArray[2]);
-
 		}
-
 	}
 
 }
