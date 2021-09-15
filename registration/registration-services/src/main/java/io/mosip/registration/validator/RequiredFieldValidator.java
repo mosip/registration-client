@@ -39,6 +39,7 @@ import io.mosip.registration.service.IdentitySchemaService;
 public class RequiredFieldValidator {
 
 	private static final Logger LOGGER = AppConfig.getLogger(RequiredFieldValidator.class);
+	private static final Map<String, String> SCRIPT_CACHE = new HashMap<>();
 
 	@Autowired
 	private IdentitySchemaService identitySchemaService;
@@ -127,6 +128,29 @@ public class RequiredFieldValidator {
 
 	public Object evaluateMvelScript(String scriptName, RegistrationDTO registrationDTO) {
 		try {
+			Map<String, String>  ageGroups = new HashMap<String, String>();
+			JSONObject ageGroupConfig = new JSONObject((String) ApplicationContext.map().get(RegistrationConstants.AGE_GROUP_CONFIG));
+			for(String key : ageGroupConfig.keySet()) {
+				ageGroups.put(key, ageGroupConfig.getString(key));
+			}
+
+			Map context = new HashMap();
+			MVEL.eval(getScript(scriptName), context);
+			context.put("identity", registrationDTO.getMVELDataContext());
+			context.put("ageGroups", ageGroups);
+			return MVEL.eval("return getApplicantType();", context, String.class);
+
+		} catch (Throwable t) {
+			LOGGER.error("Failed to evaluate mvel script", t);
+		}
+		return null;
+	}
+
+	private String getScript(String scriptName) {
+		if(SCRIPT_CACHE.containsKey(scriptName) && SCRIPT_CACHE.get(scriptName) != null)
+			return SCRIPT_CACHE.get(scriptName);
+
+		try {
 			Optional<FileSignature> fileSignature = fileSignatureRepository.findByFileName(scriptName);
 			if(!fileSignature.isPresent()) {
 				LOGGER.error("File signature not found : {}", scriptName);
@@ -144,24 +168,12 @@ public class RequiredFieldValidator {
 				LOGGER.error("File signature validation failed : {}", scriptName);
 				return null;
 			}
-
-			Map<String, String>  ageGroups = new HashMap<String, String>();
-			JSONObject ageGroupConfig = new JSONObject((String) ApplicationContext.map().get(RegistrationConstants.AGE_GROUP_CONFIG));
-			for(String key : ageGroupConfig.keySet()) {
-				ageGroups.put(key, ageGroupConfig.getString(key));
-			}
-
-			Map context = new HashMap();
-			MVEL.eval(new String(bytes), context);
-			//MVEL.evalFile(Paths.get(System.getProperty("user.dir"), scriptName).toFile(), context);
-			context.put("identity", registrationDTO.getMVELDataContext());
-			context.put("ageGroups", ageGroups);
-			return MVEL.eval("return getApplicantType();", context, String.class);
+			SCRIPT_CACHE.put(scriptName, new String(bytes));
 
 		} catch (Throwable t) {
-			LOGGER.error("Failed to evaluate mvel script", t);
+			LOGGER.error("Failed to get mvel script", t);
 		}
-		return null;
+		return SCRIPT_CACHE.get(scriptName);
 	}
 
 	private boolean validateScriptSignature(String signature, String actualData) throws Exception {
