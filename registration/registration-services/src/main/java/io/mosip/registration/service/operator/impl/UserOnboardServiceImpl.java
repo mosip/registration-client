@@ -29,7 +29,7 @@ import javax.crypto.SecretKey;
 
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
-import io.mosip.registration.config.MetricTag;
+import io.mosip.kernel.logger.logback.util.MetricTag;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;

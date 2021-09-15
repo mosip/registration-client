@@ -3,7 +3,7 @@ package io.mosip.registration.service.packet;
 import java.util.List;
 
 import io.mosip.kernel.core.exception.IOException;
-import io.mosip.registration.config.MetricTag;
+import io.mosip.kernel.logger.logback.util.MetricTag;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationDTO;
@@ -58,7 +58,7 @@ public interface PacketHandlerService {
 	 * @return
 	 * @throws RegBaseCheckedException
 	 */
-	public RegistrationDTO startRegistration(String id, @MetricTag("process") String processId) throws RegBaseCheckedException;
+	public RegistrationDTO startRegistration(String id,  @MetricTag("process") String processId) throws RegBaseCheckedException;
 
 	public List<PacketStatusDTO> getAllPackets();
 

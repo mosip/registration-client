@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.List;
 
-import io.mosip.registration.config.MetricTag;
+import io.mosip.kernel.logger.logback.util.MetricTag;
 import org.apache.http.ParseException;
 
 import com.fasterxml.jackson.core.JsonParseException;

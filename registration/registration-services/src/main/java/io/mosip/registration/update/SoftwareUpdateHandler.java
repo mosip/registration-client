@@ -27,7 +27,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import io.micrometer.core.annotation.Counted;
 import io.mosip.kernel.core.util.HMACUtils2;
-import io.mosip.registration.config.MetricTag;
+import io.mosip.kernel.logger.logback.util.MetricTag;
 import io.mosip.registration.context.ApplicationContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

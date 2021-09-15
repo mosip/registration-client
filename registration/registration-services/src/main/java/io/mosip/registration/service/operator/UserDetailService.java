@@ -2,7 +2,7 @@ package io.mosip.registration.service.operator;
 
 import java.util.List;
 
-import io.mosip.registration.config.MetricTag;
+import io.mosip.kernel.logger.logback.util.MetricTag;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.entity.UserDetail;
 import io.mosip.registration.exception.RegBaseCheckedException;

@@ -3,7 +3,7 @@ package io.mosip.registration.service.login;
 import java.util.List;
 import java.util.Set;
 
-import io.mosip.registration.config.MetricTag;
+import io.mosip.kernel.logger.logback.util.MetricTag;
 import io.mosip.registration.dto.AuthorizationDTO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.ResponseDTO;
@@ -42,7 +42,7 @@ public interface LoginService {
 	 * 
 	 * @return {@code UserDTO} UserDTO which will have roles, pword, center and machine information
 	 */
-	UserDTO getUserDetail(String userId);
+	UserDTO getUserDetail(@MetricTag(value = "userid") String userId);
 
 	/**
 	 * This method will fetch Registration Center details based on the center id

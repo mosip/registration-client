@@ -22,7 +22,6 @@ import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.FileUtils;
-import io.mosip.registration.config.MetricTag;
 import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.service.config.GlobalParamService;

@@ -2,7 +2,7 @@ package io.mosip.registration.service.security;
 
 import java.util.List;
 
-import io.mosip.registration.config.MetricTag;
+import io.mosip.kernel.logger.logback.util.MetricTag;
 import io.mosip.registration.dto.AuthTokenDTO;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;

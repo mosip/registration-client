@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
-import io.mosip.registration.config.MetricTag;
 import io.mosip.registration.context.SessionContext;
 import lombok.NonNull;
 import org.json.JSONObject;
