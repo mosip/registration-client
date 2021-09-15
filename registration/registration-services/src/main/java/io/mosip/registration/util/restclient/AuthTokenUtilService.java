@@ -1,6 +1,7 @@
 package io.mosip.registration.util.restclient;
 
 
+import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -298,7 +299,8 @@ public class AuthTokenUtilService {
         return null;
     }
 
-    @Timed(value = "auth.token", longTask = true)
+    @Counted(recordFailuresOnly = true)
+    @Timed
     private JSONObject getAuthTokenResponse(Map<String, Object> responseMap) throws RegBaseCheckedException {
         if(responseMap.get(RegistrationConstants.REST_RESPONSE_BODY) != null) {
             Map<String, Object> respBody = (Map<String, Object>) responseMap.get(RegistrationConstants.REST_RESPONSE_BODY);

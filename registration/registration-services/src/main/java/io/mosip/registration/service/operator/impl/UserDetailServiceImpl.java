@@ -6,7 +6,6 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -22,7 +21,6 @@ import lombok.NonNull;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,7 +29,6 @@ import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.CryptoUtil;
-import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.UserDetailDAO;
@@ -43,10 +40,8 @@ import io.mosip.registration.entity.UserDetail;
 import io.mosip.registration.entity.UserRole;
 import io.mosip.registration.entity.id.UserRoleId;
 import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.operator.UserDetailService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 
 /**
  * Implementation for {@link UserDetailService}
@@ -73,7 +68,7 @@ public class UserDetailServiceImpl extends BaseService implements UserDetailServ
 	 * 
 	 * @see io.mosip.registration.service.UserDetailService#save()
 	 */
-	@Timed(value = "sync", longTask = true, extraTags = {"type", "userdetails"})
+	@Timed
 	public synchronized ResponseDTO save(String triggerPoint) throws RegBaseCheckedException {
 		ResponseDTO responseDTO = new ResponseDTO();
 
@@ -218,7 +213,7 @@ public class UserDetailServiceImpl extends BaseService implements UserDetailServ
 		return userRoleIdList.stream().map(UserRoleId::getRoleCode).collect(Collectors.toList());	
 	}
 
-	@Counted(value = "invalid", recordFailuresOnly = true, extraTags = {"type", "username"})
+	@Counted(recordFailuresOnly = true)
 	@Override
 	public boolean isValidUser(@NonNull String userId) {
 		return (null == userDetailDAO.getUserDetail(userId)) ? false : true;

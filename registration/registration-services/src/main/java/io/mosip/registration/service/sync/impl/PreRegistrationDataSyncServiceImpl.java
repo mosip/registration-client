@@ -18,7 +18,6 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
@@ -102,8 +101,8 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 	 * @see io.mosip.registration.service.sync.PreRegistrationDataSyncService#
 	 * getPreRegistrationIds(java.lang.String)
 	 */
-	@Counted(value = "pre-registration", extraTags = {"type", "sync"})
-	@Timed(value = "pre-registration", extraTags = {"type", "sync"})
+	@Counted
+	@Timed
 	@Override
 	public ResponseDTO getPreRegistrationIds(@NonNull String syncJobId) {
 		LOGGER.info("Fetching Pre-Registration Id's started, syncJobId : {}", syncJobId);
@@ -159,9 +158,6 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 			try {
 				executorServiceForPreReg.execute(
 						new Runnable() {
-
-							@Counted(value = "pre-registration", extraTags = {"type", "packet-download"})
-							@Timed(value = "pre-registration", extraTags = {"type", "packet-download"})
 							public void run() {
 								//TODO - Need to inform pre-reg team to correct date format
 								preRegDetail.setValue(preRegDetail.getValue().endsWith("Z") ? preRegDetail.getValue() : preRegDetail.getValue() + "Z");
@@ -227,6 +223,8 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 		return preRegistration;
 	}
 
+	@Counted
+	@Timed
 	private PreRegistrationList downloadAndSavePacket(PreRegistrationList preRegistration, @NonNull String preRegistrationId,
 			 Timestamp lastUpdatedTimeStamp) throws Exception {
 		Map<String, String> requestParamMap = new HashMap<>();

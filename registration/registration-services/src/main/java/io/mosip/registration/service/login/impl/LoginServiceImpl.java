@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import io.micrometer.core.annotation.Counted;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -56,7 +57,6 @@ import io.mosip.registration.service.sync.CertificateSyncService;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.PublicKeySync;
 import io.mosip.registration.service.sync.TPMPublicKeySyncService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
 
 
@@ -328,7 +328,8 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	 * 6. CA cert sync
 	 * user salt sync is removed @Since 1.1.3
 	 */
-	@Timed(value = "sync", longTask = true, extraTags = {"type", "initial"})
+	@Counted(recordFailuresOnly = true)
+	@Timed
 	@Override
 	public List<String> initialSync(String triggerPoint) {
 		long start = System.currentTimeMillis();
@@ -398,22 +399,6 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 		return results;
 	}
 
-	//Not required as this validation is handled in ClientSecurityFacade
-	/*private String verifyMachinePublicKeyMapping(boolean isInitialSetup) throws RegBaseCheckedException {
-		final boolean tpmAvailable = RegistrationConstants.ENABLE.equals(getGlobalConfigValueOf(RegistrationConstants.TPM_AVAILABILITY));
-		final String environment = getGlobalConfigValueOf(RegistrationConstants.SERVER_ACTIVE_PROFILE);
-
-		if(RegistrationConstants.SERVER_PROD_PROFILE.equalsIgnoreCase(environment) && !tpmAvailable) {
-			LOGGER.info("REGISTRATION  - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID, "TPM IS REQUIRED TO BE ENABLED.");
-			throw new RegBaseCheckedException(RegistrationExceptionConstants.TPM_REQUIRED.getErrorCode(),
-					RegistrationExceptionConstants.TPM_REQUIRED.getErrorMessage());
-		}
-
-		LOGGER.info("REGISTRATION  - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID, "CURRENT PROFILE : " +
-				environment != null ? environment : RegistrationConstants.SERVER_NO_PROFILE);
-
-		return tpmPublicKeySyncService.syncTPMPublicKey();
-	}*/
 	
 	private void validateResponse(ResponseDTO responseDTO, String syncStep) throws RegBaseCheckedException {
 		if(responseDTO == null)
@@ -519,6 +504,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	 * @see io.mosip.registration.service.login.LoginService#validateUser(java.lang.
 	 * String)
 	 */
+	@Counted
 	public ResponseDTO validateUser(String userId) {
 		ResponseDTO responseDTO = new ResponseDTO();
 		

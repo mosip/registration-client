@@ -115,7 +115,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	 * @return success or failure status as Response DTO.
 	 * @throws RegBaseCheckedException
 	 */
-	@Timed(value = "sync", longTask = true, extraTags = {"type", "masterdata"})
+	@Timed
 	@Override
 	public ResponseDTO getMasterSync(String masterSyncDtls, String triggerPoint) throws RegBaseCheckedException {
 		LOGGER.info("Initiating the Master Sync");
