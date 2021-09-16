@@ -315,14 +315,10 @@ public class NewReg {
             authenticationPage.enterPassword(supervisorUserpwd);
             authenticationPage.clicksubmitBtn();
             robotActions.clickWindow();
-<<<<<<< HEAD
-            homePage.clickHomeImg();
-=======
+
             // waitsUtil.clickNodeAssert(exit);
            homePage.clickHomeImg();
-           
-            
->>>>>>> 90135d903a (Bio correction flow)
+
             if (!rid2.rid.trim().isEmpty()) {
                 ExtentReportUtil.test1.info("Approve Packet done");
                 assertEquals(rid1.getRid(), rid2.getRid());
