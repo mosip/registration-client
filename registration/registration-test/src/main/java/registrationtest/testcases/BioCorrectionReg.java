@@ -118,9 +118,9 @@ public class BioCorrectionReg {
                 selectLanguagePage.selectLang();
                 buttons.clicksubmitBtn();
             }
+            //bioCorrectionPage.setMDSprofile(JsonUtil.JsonObjParsing(jsonContent, "MDSprofile"));
+            //bioCorrectionPage.setMDSscore("Biometric Device",JsonUtil.JsonObjParsing(jsonContent, "score"+1));
             
-            bioCorrectionPage.setMDSscore("60");
-            bioCorrectionPage.setMDSprofile("Default");
             
             webViewDocument = demographicPage.screensFlow(jsonContent, process, ageGroup);
 

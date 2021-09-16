@@ -28,6 +28,7 @@ public class BioCorrectionPage {
     TextField additionalInfoTextBox;
     String additionalInfoRequestId = "#additionalInfoRequestId";
     WaitsUtil waitsUtil;
+    
 
     public BioCorrectionPage(FxRobot robot) {
         this.robot = robot;
@@ -47,15 +48,15 @@ public class BioCorrectionPage {
             additionalInfoTextBox.setText(value);
 
         } catch (Exception e) {
-            logger.error("", e);
+            logger.error("Issue with setAdditionalInfoRequestId", e);
         }
 
     }
 
-    public void setMDSscore(String qualityScore) {
-
+    public void setMDSscore(String type,String qualityScore) { 
+        
         try {
-            String requestBody = "{\"type\":\"Biometric Device\",\"qualityScore\":\"" + qualityScore
+            String requestBody = "{\"type\":\""+type+"\",\"qualityScore\":\"" + qualityScore
                     + "\",\"fromIso\":false}";
 
             Response response = RestAssured.given().baseUri("http://127.0.0.1:4501/admin/score")
@@ -64,7 +65,7 @@ public class BioCorrectionPage {
             assertEquals(200, response.statusCode());
             assertEquals("Success", response.jsonPath().getString("errorInfo"));
         } catch (Exception e) {
-            logger.error("", e);
+            logger.error("Issue with the Rest Assured MOCKMDS Score Request", e);
         }
     }
 
@@ -78,8 +79,10 @@ public class BioCorrectionPage {
             assertEquals("Success", response.jsonPath().getString("errorInfo"));
 
         } catch (Exception e) {
-            logger.error("", e);
+            logger.error("Issue with the Rest Assured MOCKMDS Profile Request", e);
         }
     }
+    
+    
 
 }

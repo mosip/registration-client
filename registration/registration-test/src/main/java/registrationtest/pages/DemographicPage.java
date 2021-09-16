@@ -780,7 +780,7 @@ public class DemographicPage {
                     scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
                     // bioattributes=fetchbioAttr(schema,ageGroup,process);
                     biometricUploadPage.newRegbioUpload(schema.getId(),
-                            biometricUploadPage.infantBioAttributeList(identity), id, identity, ageGroup);
+                            biometricUploadPage.bioAttributeList(identity), id, identity, ageGroup);
                 } else {
                     if (ageGroup.equalsIgnoreCase("MINOR")) {
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("childbioscroll")));
