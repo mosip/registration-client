@@ -15,7 +15,7 @@ public class RobotActions {
         this.robot = robot;
     }
 
-    public void closeWindow() {
+    public void closeWindow1() {
         robot.press(KeyCode.ALT);
         robot.press(KeyCode.F4);
         robot.release(KeyCode.F4);

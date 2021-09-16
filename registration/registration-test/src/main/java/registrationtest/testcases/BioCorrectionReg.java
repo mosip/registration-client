@@ -71,7 +71,9 @@ public class BioCorrectionReg {
     SelectLanguagePage selectLanguagePage;
     Alerts alerts;
     BioCorrectionPage bioCorrectionPage;
-
+    WaitsUtil waitsUtil;
+    String exit="#exit";
+  
   
     public RID bioCorrection(FxRobot robot, String loginUserid, String loginPwd, String supervisorUserid,
             String supervisorUserpwd, Stage applicationPrimaryStage1, String jsonContent, String process,
@@ -89,7 +91,8 @@ public class BioCorrectionReg {
             selectLanguagePage = new SelectLanguagePage(robot);
             bioCorrectionPage=new BioCorrectionPage(robot);
             demographicPage=new DemographicPage(robot);
-            
+            waitsUtil=new WaitsUtil();
+           
 
             rid1 = null;
             rid2 = null;
@@ -178,6 +181,7 @@ public class BioCorrectionReg {
             authenticationPage.enterPassword(supervisorUserpwd);
             authenticationPage.clicksubmitBtn();
             robotActions.clickWindow();
+           // waitsUtil.clickNodeAssert(exit);
             homePage.clickHomeImg();
             if (!rid2.rid.trim().isEmpty()) {
                 ExtentReportUtil.test1.info("Approve Packet done");
