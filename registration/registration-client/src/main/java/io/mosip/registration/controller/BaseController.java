@@ -805,11 +805,13 @@ public class BaseController {
 		authenticationValidatorDTO.setUserId(username);
 		authenticationValidatorDTO.setPassword(password);
 
-		String status = authenticationService.validatePassword(authenticationValidatorDTO);
-		if (status.equals(RegistrationConstants.PWD_MATCH)) {
-			return RegistrationConstants.SUCCESS;
-		} else if (status.equals(RegistrationConstants.CREDS_NOT_FOUND)) {
-			return RegistrationConstants.CREDS_NOT_FOUND;
+		try {
+			return authenticationService.validatePassword(authenticationValidatorDTO) ? RegistrationConstants.SUCCESS :
+					RegistrationConstants.FAILURE;
+		} catch (RegBaseCheckedException e) {
+			LOGGER.error("PWD login failed due to : ", e.getErrorCode());
+			if(RegistrationConstants.CREDS_NOT_FOUND.equalsIgnoreCase(e.getErrorCode()))
+				return RegistrationConstants.CREDS_NOT_FOUND;
 		}
 		return RegistrationConstants.FAILURE;
 	}

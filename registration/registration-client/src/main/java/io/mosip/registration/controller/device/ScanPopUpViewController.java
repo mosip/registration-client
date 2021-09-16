@@ -237,6 +237,8 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 			popupStage.initModality(Modality.WINDOW_MODAL);
 			popupStage.initOwner(fXComponents.getStage());
 			popupStage.setTitle(title);
+			popupStage.setMinHeight(docScanDevice.getHeight());
+			popupStage.setMinWidth(docScanDevice.getWidth());
 			popupStage.show();
 
 			LOGGER.debug("scan screen launched");

@@ -67,7 +67,7 @@ public class PublicKeySyncImpl extends BaseService implements PublicKeySync {
 	 * @return
 	 * @throws RegBaseCheckedException
 	 */
-	@Timed(value = "sync", longTask = true, extraTags = {"type", "publickey"})
+	@Timed
 	@Override
 	public ResponseDTO getPublicKey(String triggerPoint) throws RegBaseCheckedException {
 		LOGGER.info("Entering into get public key method.....");

@@ -29,7 +29,7 @@ import javax.crypto.SecretKey;
 
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
-import io.mosip.registration.util.restclient.ServiceDelegateUtil;
+import io.mosip.kernel.logger.logback.util.MetricTag;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +73,6 @@ import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.operator.UserOnboardService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 
 /**
  * Implementation for {@link UserOnboardService}
@@ -122,7 +121,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 					RegistrationExceptionConstants.REG_BIOMETRIC_DTO_NULL.getErrorMessage());
 
 		ResponseDTO responseDTO = new ResponseDTO();
-		if (validateWithIDA(biometrics, responseDTO)) {
+		if (validateWithIDA(SessionContext.userContext().getUserId(), biometrics, responseDTO)) {
 			responseDTO = save(biometrics);
 			LOGGER.info(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID,
 					RegistrationConstants.USER_ON_BOARDING_SUCCESS_MSG);
@@ -130,8 +129,9 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 		return responseDTO;
 	}
 
-	@Timed(value = "onboard")
-	public boolean validateWithIDA(List<BiometricsDto> biometrics, ResponseDTO responseDTO) throws PreConditionCheckException {
+	@Counted
+	@Timed
+	public boolean validateWithIDA(@MetricTag("userid") String userId, List<BiometricsDto> biometrics, ResponseDTO responseDTO) throws PreConditionCheckException {
 
 		//Precondition check, proceed only if met, otherwise throws exception
 		proceedWithOperatorOnboard();
@@ -198,7 +198,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 
 			Map<String, Object> response = getIdaAuthResponse(idaRequestMap, requestMap, requestParamMap,
 					certificate, responseDTO);
-			boolean onboardAuthFlag = userOnBoardStatusFlag(response, responseDTO);
+			boolean onboardAuthFlag = userOnBoardStatusFlag(userId, response, responseDTO);
 			LOGGER.info(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID,
 					"User Onboarded authentication flag... :" + onboardAuthFlag);
 
@@ -445,8 +445,8 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 	 * @return the boolean
 	 */
 	@SuppressWarnings("unchecked")
-	@Counted(value = "failed", recordFailuresOnly = true, extraTags = {"operation", "onboard"})
-	private Boolean userOnBoardStatusFlag(Map<String, Object> onBoardResponseMap, ResponseDTO responseDTO) {
+	@Counted(recordFailuresOnly = true)
+	private Boolean userOnBoardStatusFlag(@MetricTag("userid") String userId, Map<String, Object> onBoardResponseMap, ResponseDTO responseDTO) {
 
 		Boolean userOnbaordFlag = false;
 

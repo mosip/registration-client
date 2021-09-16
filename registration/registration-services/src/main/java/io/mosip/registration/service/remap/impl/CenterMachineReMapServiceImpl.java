@@ -103,7 +103,7 @@ public class CenterMachineReMapServiceImpl implements CenterMachineReMapService 
 	 * @see io.mosip.registration.service.remap.CenterMachineReMapService#
 	 * handleReMapProcess()
 	 */
-	@Counted(value = "center.remap")
+	@Counted
 	@Override
 	public void handleReMapProcess(int step) throws RemapException {
 

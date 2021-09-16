@@ -57,7 +57,7 @@ public class TPMPublicKeySyncServiceImpl  extends BaseService implements TPMPubl
 	 * @see
 	 * io.mosip.registration.service.sync.TPMPublicKeySyncService#syncTPMPublicKey()
 	 */
-	@Timed(value = "sync", longTask = true, extraTags = {"type", "verify-machine"})
+	@Timed
 	@Override
 	@SuppressWarnings("unchecked")
 	public ResponseDTO syncTPMPublicKey() throws RegBaseCheckedException {

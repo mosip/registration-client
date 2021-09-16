@@ -216,10 +216,17 @@ public class ButtonFxControl extends FxControl {
 
 	@Override
 	public void selectAndSet(Object data) {
-		if (data == null)
-			return;
-
 		HBox hbox = (HBox) getField(uiFieldDTO.getId() + RegistrationConstants.HBOX);
+		if (data == null) {
+			hbox.getChildrenUnmodifiable().forEach(node -> {
+				if (node instanceof Button) {
+					node.getStyleClass().clear();
+					node.getStyleClass().addAll(residence, buttonStyle);
+				}
+			});
+			return;
+		}
+
 		Optional<Node> selectedNode = null;
 
 		if (data instanceof List) {
@@ -235,7 +242,7 @@ public class ButtonFxControl extends FxControl {
 		}
 
 		if(selectedNode.isPresent()) {
-			selectedNode.get().getStyleClass().add(selectedResidence);
+			resetButtons((Button) selectedNode.get());
 		}
 	}
 

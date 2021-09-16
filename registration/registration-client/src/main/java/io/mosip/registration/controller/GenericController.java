@@ -100,6 +100,7 @@ public class GenericController extends BaseController {
 
 	protected static final Logger LOGGER = AppConfig.getLogger(GenericController.class);
 
+	private static final String TAB_LABEL_ERROR_CLASS = "tabErrorLabel";
 	private static final String LABEL_CLASS = "additionaInfoReqIdLabel";
 	private static final String NAV_LABEL_CLASS = "navigationLabel";
 	private static final String TEXTFIELD_CLASS = "preregFetchBtnStyle";
@@ -261,7 +262,6 @@ public class GenericController extends BaseController {
 								generateAlertLanguageSpecific(RegistrationConstants.ERROR, RegistrationUIConstants.PRE_REG_ID_NOT_VALID);
 								return;
 							}
-
 							ResponseDTO responseDTO = preRegistrationDataSyncService.getPreRegistration(textField.getText(), false);
 
 							try {
@@ -322,10 +322,10 @@ public class GenericController extends BaseController {
 
 		textField.textProperty().addListener((observable, oldValue, newValue) -> {
 			getRegistrationDTOFromSession().setAdditionalInfoReqId(newValue);
-			getRegistrationDTOFromSession().setAppId(newValue);
+			getRegistrationDTOFromSession().setAppId(newValue.split("-")[0]);
 			TabPane tabPane = (TabPane) anchorPane.lookup(HASH+getRegistrationDTOFromSession().getRegistrationId());
-			tabPane.setId(newValue);
-			getRegistrationDTOFromSession().setRegistrationId(newValue);
+			tabPane.setId(getRegistrationDTOFromSession().getAppId());
+			getRegistrationDTOFromSession().setRegistrationId(getRegistrationDTOFromSession().getAppId());
 		});
 
 		return hBox;
@@ -344,6 +344,10 @@ public class GenericController extends BaseController {
 		if(screenDTO.getOrder() < additionalInfoReqIdScreenOrder)
 			return true; //bypass check as current screen order is less than the screen it is displayed in.
 
+		if (!provided) {
+			showHideErrorNotification(applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
+					.getString(RegistrationUIConstants.ADDITIONAL_INFO_REQ_ID_MISSING));
+		}
 		return provided;
 	}
 
@@ -367,17 +371,17 @@ public class GenericController extends BaseController {
 
 		for (UiScreenDTO screenDTO : orderedScreens.values()) {
 			for (UiFieldDTO field : screenDTO.getFields()) {
-
 				FxControl fxControl = getFxControl(field.getId());
-
 				if (fxControl != null) {
-
-					if (preRegistrationDTO.getDemographics().containsKey(field.getId())) {
-						fxControl.selectAndSet(preRegistrationDTO.getDemographics().get(field.getId()));
-					}
-
-					else if (preRegistrationDTO.getDocuments().containsKey(field.getId())) {
-						fxControl.selectAndSet(preRegistrationDTO.getDocuments().get(field.getId()));
+					switch (fxControl.getUiSchemaDTO().getType()) {
+						case "biometricsType":
+							break;
+						case "documentType":
+							fxControl.selectAndSet(preRegistrationDTO.getDocuments().get(field.getId()));
+							break;
+						default:
+							fxControl.selectAndSet(preRegistrationDTO.getDemographics().get(field.getId()));
+							break;
 					}
 				}
 			}
@@ -423,11 +427,11 @@ public class GenericController extends BaseController {
 		GridPane gridPane = new GridPane();
 		gridPane.setId(screenName);
 		RowConstraints topRowConstraints = new RowConstraints();
-		topRowConstraints.setPercentHeight(0.2);
+		topRowConstraints.setPercentHeight(2);
 		RowConstraints midRowConstraints = new RowConstraints();
-		midRowConstraints.setPercentHeight(99.6);
+		midRowConstraints.setPercentHeight(96);
 		RowConstraints bottomRowConstraints = new RowConstraints();
-		bottomRowConstraints.setPercentHeight(0.2);
+		bottomRowConstraints.setPercentHeight(2);
 		gridPane.getRowConstraints().addAll(topRowConstraints,midRowConstraints, bottomRowConstraints);
 
 		ColumnConstraints columnConstraint1 = new ColumnConstraints();
@@ -473,9 +477,9 @@ public class GenericController extends BaseController {
 		authenticate.setOnAction(getRegistrationAuthActionHandler());
 	}
 
-	private String getScreenName(Tab tab) {
+	/*private String getScreenName(Tab tab) {
 		return tab.getId().replace("_tab", EMPTY);
-	}
+	}*/
 
 	private boolean refreshScreenVisibility(String screenName) {
 		boolean atLeastOneVisible = true;
@@ -561,7 +565,8 @@ public class GenericController extends BaseController {
 
 				//request to load Preview / Auth page, allowed only when no errors are found in visible screens
 				if((newScreenName.equals("AUTH") || newScreenName.equals("PREVIEW"))) {
-					if(getInvalidScreenName(tabPane).equals(EMPTY)) {
+					String invalidScreenName = getInvalidScreenName(tabPane);
+					if(invalidScreenName.equals(EMPTY)) {
 						notification.setVisible(false);
 						loadPreviewOrAuthScreen(tabPane, tabPane.getTabs().get(newValue.intValue()));
 						return;
@@ -594,6 +599,8 @@ public class GenericController extends BaseController {
 					tabPane.getSelectionModel().select(oldValue.intValue());
 					return;
 				}
+
+				tabPane.getTabs().get(oldValue.intValue()).getStyleClass().remove(TAB_LABEL_ERROR_CLASS);
 				tabPane.getSelectionModel().select((newSelection-oldValue.intValue() > 1) ?
 						oldValue.intValue() : newSelection);
 			}
@@ -652,11 +659,17 @@ public class GenericController extends BaseController {
 					.anyMatch( field -> getFxControl(field.getId()) != null &&
 							getFxControl(field.getId()).canContinue() == false );
 
+			Optional<Tab> result = tabPane.getTabs().stream()
+					.filter(t -> t.getId().equalsIgnoreCase(screen.getName()+"_tab"))
+					.findFirst();
 			if(anyInvalidField) {
 				LOGGER.error("Screen validation failed {}", screen.getName());
 				errorScreen = screen.getName();
+				result.get().getStyleClass().add(TAB_LABEL_ERROR_CLASS);
 				break;
 			}
+			else
+				result.get().getStyleClass().remove(TAB_LABEL_ERROR_CLASS);
 		}
 		return errorScreen;
 	}

@@ -126,6 +126,13 @@ public class DocumentScanController extends BaseController {
 			}
 
 			Optional<DocScanDevice> result = docScannerFacade.getConnectedDevices().stream().filter(d -> d.getId().equals(selectedScanDeviceName)).findFirst();
+			if(!result.isPresent()) {
+				LOGGER.error("No scan devices found");
+				generateAlert(RegistrationConstants.ERROR,
+						RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
+				return;
+			}
+
 			result.get().setFrame(null);
 			result.get().setWidth(0);
 			result.get().setHeight(0);
@@ -176,7 +183,7 @@ public class DocumentScanController extends BaseController {
 		LOGGER.info("Connected devices : {}", devices);
 
 		if (devices.isEmpty()) {
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOCUMENT_CONNECTION_ERR));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
 			return;
 		}
 
@@ -186,17 +193,18 @@ public class DocumentScanController extends BaseController {
 
 		if(!result.isPresent()) {
 			LOGGER.info("No devices found for the selected device name : {}", selectedScanDeviceName);
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOCUMENT_CONNECTION_ERR));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
 			return;
 		}
 
+		scanPopUpViewController.docScanDevice = result.get();
 		scanPopUpViewController.init(this,
 				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOC_TITLE));
 
 		if(isPreviewOnly)
 			scanPopUpViewController.setUpPreview();
-		else
-			scanPopUpViewController.docScanDevice = result.get();
+		/*else
+			scanPopUpViewController.docScanDevice = result.get();*/
 	}
 
 	public List<BufferedImage> getScannedPages() {

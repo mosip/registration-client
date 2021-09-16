@@ -83,7 +83,7 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 	 *
 	 * @see io.mosip.registration.service.PolicySyncService#fetchPolicy(centerId)
 	 */
-	@Timed(value = "sync", longTask = true, extraTags = {"type", "policy"})
+	@Timed
 	@Override
 	public ResponseDTO fetchPolicy() throws RegBaseCheckedException {
 		LOGGER.debug("fetchPolicy invoked");

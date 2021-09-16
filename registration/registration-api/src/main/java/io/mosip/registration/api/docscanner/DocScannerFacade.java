@@ -1,9 +1,11 @@
 package io.mosip.registration.api.docscanner;
 
+import io.micrometer.core.annotation.Timed;
 import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -15,22 +17,21 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@ConfigurationProperties(prefix = "mosip.registration.docscanner")
 @Component
 public class DocScannerFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DocScannerFacade.class);
 
-    //<id> : <deviceId>
+    @Value("#{${mosip.registration.docscanner.id}}")
     private Map<String, String> id;
 
-    //<id> : <dpi>
+    @Value("#{${mosip.registration.docscanner.dpi}}")
     private Map<String, Integer> dpi;
 
-    //<id> : <width>
+    @Value("#{${mosip.registration.docscanner.width}}")
     private Map<String, Integer> width;
 
-    //<id> : <height>
+    @Value("#{${mosip.registration.docscanner.height}}")
     private Map<String, Integer> height;
 
     @Autowired
@@ -40,7 +41,9 @@ public class DocScannerFacade {
         List<DocScanDevice> allDevices = new ArrayList<>();
         for(DocScannerService service : docScannerServiceList) {
             try {
-                allDevices.addAll(service.getConnectedDevices());
+                service.getConnectedDevices().forEach(device -> {
+                        allDevices.add(setDefaults(device));
+                });
             } catch (Throwable t) {
                 LOGGER.error("Failed to get connected device list from service " + service.getServiceName(), t);
             }
@@ -52,12 +55,28 @@ public class DocScannerFacade {
         List<DocScanDevice> allDevices = new ArrayList<>();
         for(DocScannerService service : docScannerServiceList) {
             allDevices.addAll(service.getConnectedDevices()
-                    .stream().filter(d -> d.getDeviceType().equals(DeviceType.CAMERA)).collect(Collectors.toList()));
+                    .stream()
+                    .filter(d -> d.getDeviceType().equals(DeviceType.CAMERA))
+                    .map(this::setDefaults)
+                    .collect(Collectors.toList()));
         }
         return allDevices;
     }
 
+    @Timed
     public BufferedImage scanDocument(@NonNull DocScanDevice docScanDevice) {
+        setDefaults(docScanDevice);
+        LOGGER.debug("Selected device details with configuration fully set : {}", docScanDevice);
+        Optional<DocScannerService> result = docScannerServiceList.stream()
+                .filter(s -> s.getServiceName().equals(docScanDevice.getServiceName())).findFirst();
+
+        if(result.isPresent()) {
+            return result.get().scan(docScanDevice);
+        }
+        return null;
+    }
+
+    private DocScanDevice setDefaults(@NonNull DocScanDevice docScanDevice) {
         if(id != null && id.containsValue(docScanDevice.getId())) {
             Optional<String> result = id.keySet().stream().filter( k -> id.get(k).equals(docScanDevice.getId()) ).findFirst();
             if(result.isPresent()) {
@@ -66,15 +85,6 @@ public class DocScannerFacade {
                 docScanDevice.setHeight(height.get(result.get()));
             }
         }
-
-        LOGGER.debug("Selected device details with configuration fully set : {}", docScanDevice);
-
-        Optional<DocScannerService> result = docScannerServiceList.stream()
-                .filter(s -> s.getServiceName().equals(docScanDevice.getServiceName())).findFirst();
-
-        if(result.isPresent()) {
-            return result.get().scan(docScanDevice);
-        }
-        return null;
+        return docScanDevice;
     }
 }
