@@ -9,6 +9,11 @@
 			 
 				"face"
 			],
+			   "profile":"Default",
+			    "score1":"10",
+			    "score2":"20",
+			    "score3":"90",
+			    "score4":"90",
 			 "BELOW_ARE_THE_SCHEMA_LEVEL_ID's_DATA":"",
 			 "dateOfBirth" : "2",
 			 	"UIN":"7914738206",

@@ -3,7 +3,12 @@
 	"process":"Update",
 	"preferredLang":"English",
 	"documentUploadAttributes":["POB","POA","POI"],
-	"UIN":"4960390832",
+	"UIN":"4538471905",
+	   "profile":"Default",
+	    "score1":"10",
+	    "score2":"20",
+	    "score3":"90",
+	    "score4":"90",
 	"gender" : [ {
     "language" : "eng",
     "value" : "Female"

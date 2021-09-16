@@ -69,9 +69,9 @@ public class BioCorrectionPage {
         }
     }
 
-    public void setMDSprofile(String type) {
+    public void setMDSprofile(String type,String profile) {
         try {
-            String requestBody = "{\"type\":\"Biometric Device\",\"profileId\":\"" + type + "\"}";
+            String requestBody = "{\"type\":\""+type+"\",\"profileId\":\"" + profile + "\"}";
 
             Response response = RestAssured.given().baseUri("http://127.0.0.1:4501/admin/profile")
                     .contentType(ContentType.JSON).and().body(requestBody).when().post().then().extract().response();

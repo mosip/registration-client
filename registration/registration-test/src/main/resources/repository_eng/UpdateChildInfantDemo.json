@@ -2,8 +2,13 @@
 	"ageGroup":"INFANT",
 	"process":"Update",
 	"preferredLang":"English",
-	"UIN":"5931539704",
+	"UIN":"4370410569",
 	"documentUploadAttributes":["POB","POR","POA","POI"],
+	   "profile":"Default",
+	    "score1":"10",
+	    "score2":"20",
+	    "score3":"90",
+	    "score4":"90",
 	"gender" : [ {
     "language" : "eng",
     "value" : "Female"
