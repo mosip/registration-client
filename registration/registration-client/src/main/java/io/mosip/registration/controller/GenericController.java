@@ -322,10 +322,10 @@ public class GenericController extends BaseController {
 
 		textField.textProperty().addListener((observable, oldValue, newValue) -> {
 			getRegistrationDTOFromSession().setAdditionalInfoReqId(newValue);
-			getRegistrationDTOFromSession().setAppId(newValue);
+			getRegistrationDTOFromSession().setAppId(newValue.split("-")[0]);
 			TabPane tabPane = (TabPane) anchorPane.lookup(HASH+getRegistrationDTOFromSession().getRegistrationId());
-			tabPane.setId(newValue);
-			getRegistrationDTOFromSession().setRegistrationId(newValue);
+			tabPane.setId(getRegistrationDTOFromSession().getAppId());
+			getRegistrationDTOFromSession().setRegistrationId(getRegistrationDTOFromSession().getAppId());
 		});
 
 		return hBox;
@@ -344,6 +344,10 @@ public class GenericController extends BaseController {
 		if(screenDTO.getOrder() < additionalInfoReqIdScreenOrder)
 			return true; //bypass check as current screen order is less than the screen it is displayed in.
 
+		if (!provided) {
+			showHideErrorNotification(applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
+					.getString(RegistrationUIConstants.ADDITIONAL_INFO_REQ_ID_MISSING));
+		}
 		return provided;
 	}
 
@@ -423,11 +427,11 @@ public class GenericController extends BaseController {
 		GridPane gridPane = new GridPane();
 		gridPane.setId(screenName);
 		RowConstraints topRowConstraints = new RowConstraints();
-		topRowConstraints.setPercentHeight(0.2);
+		topRowConstraints.setPercentHeight(2);
 		RowConstraints midRowConstraints = new RowConstraints();
-		midRowConstraints.setPercentHeight(99.6);
+		midRowConstraints.setPercentHeight(96);
 		RowConstraints bottomRowConstraints = new RowConstraints();
-		bottomRowConstraints.setPercentHeight(0.2);
+		bottomRowConstraints.setPercentHeight(2);
 		gridPane.getRowConstraints().addAll(topRowConstraints,midRowConstraints, bottomRowConstraints);
 
 		ColumnConstraints columnConstraint1 = new ColumnConstraints();

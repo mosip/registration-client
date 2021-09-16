@@ -236,8 +236,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 
 			if (response != null && response.getSuccessResponseDTO() != null) {
 				for (SyncRegistrationDTO dto : syncDtoList) {
-					String status = (String) response.getSuccessResponseDTO().getOtherAttributes().get(packetIdExists ?
-							dto.getPacketId() : dto.getRegistrationId());
+					String status = (String) response.getSuccessResponseDTO().getOtherAttributes().get(dto.getRegistrationId());
 
 					if (status != null && status.equalsIgnoreCase(RegistrationConstants.SUCCESS)) {
 						PacketStatusDTO packetStatusDTO = new PacketStatusDTO();
@@ -333,7 +332,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 				Map<String, Object> statusMap = new WeakHashMap<>();
 				for (LinkedHashMap<String, Object> responseMap : (List<LinkedHashMap<String, Object>>) response
 						.get("response")) {
-					statusMap.put((String) (responseMap.containsKey("packetId") ? responseMap.get("packetId") : responseMap.get("registrationId")), responseMap.get("status"));
+					statusMap.put((String) responseMap.get("registrationId"), responseMap.get("status"));
 				}
 				successResponseDTO.setOtherAttributes(statusMap);
 				responseDTO.setSuccessResponseDTO(successResponseDTO);
