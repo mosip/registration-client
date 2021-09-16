@@ -23,65 +23,63 @@ import io.restassured.http.ContentType;
 
 public class BioCorrectionPage {
 
-    private static final Logger logger = LogManager.getLogger(BioCorrectionPage.class);
-    FxRobot robot;
-    TextField additionalInfoTextBox;
-    String additionalInfoRequestId = "#additionalInfoRequestId";
-    WaitsUtil waitsUtil;
+	private static final Logger logger = LogManager.getLogger(BioCorrectionPage.class);
+	FxRobot robot;
+	TextField additionalInfoTextBox;
+	String additionalInfoRequestId = "#additionalInfoRequestId";
+	WaitsUtil waitsUtil;
 
-    public BioCorrectionPage(FxRobot robot) {
-        this.robot = robot;
-        waitsUtil = new WaitsUtil(robot);
+	public BioCorrectionPage(FxRobot robot) {
+		this.robot = robot;
+		waitsUtil = new WaitsUtil(robot);
 
-    }
+	}
 
-    public void setAdditionalInfoRequestId(String value) {
+	public void setAdditionalInfoRequestId(String value) {
 
-        logger.info("set additional info ");
+		logger.info("set additional info ");
 
-        try {
-            additionalInfoTextBox = waitsUtil.lookupByIdTextField(additionalInfoRequestId, robot);
+		try {
+			additionalInfoTextBox = waitsUtil.lookupByIdTextField(additionalInfoRequestId, robot);
 
-            assertNotNull(additionalInfoTextBox, "additionalInfoTextBox Not Present");
+			assertNotNull(additionalInfoTextBox, "additionalInfoTextBox Not Present");
 
-            additionalInfoTextBox.setText(value);
+			additionalInfoTextBox.setText(value);
 
+		} catch (Exception e) {
+			logger.error("Issue with setAdditionalInfoRequestId", e);
+		}
 
-        } catch (Exception e) {
-            logger.error("", e);
-        }
+	}
 
+	public void setMDSscore(String type, String qualityScore) {
 
-    }
-    
-    public void setMDSscore(String qualityScore) {
+		try {
+			String requestBody = "{\"type\":\"" + type + "\",\"qualityScore\":\"" + qualityScore
+					+ "\",\"fromIso\":false}";
 
-        try {
-            String requestBody = "{\"type\":\"Biometric Device\",\"qualityScore\":\"" + qualityScore
-                    + "\",\"fromIso\":false}";
+			Response response = RestAssured.given().baseUri("http://127.0.0.1:4501/admin/score")
+					.contentType(ContentType.JSON).and().body(requestBody).when().post().then().extract().response();
 
-            Response response = RestAssured.given().baseUri("http://127.0.0.1:4501/admin/score")
-                    .contentType(ContentType.JSON).and().body(requestBody).when().post().then().extract().response();
+			assertEquals(200, response.statusCode());
+			assertEquals("Success", response.jsonPath().getString("errorInfo"));
+		} catch (Exception e) {
+			logger.error("Issue with the Rest Assured MOCKMDS Score Request", e);
+		}
+	}
 
-            assertEquals(200, response.statusCode());
-            assertEquals("Success", response.jsonPath().getString("errorInfo"));
-        } catch (Exception e) {
-            logger.error("", e);
-        }
-    }
+	public void setMDSprofile(String type) {
+		try {
+			String requestBody = "{\"type\":\"Biometric Device\",\"profileId\":\"" + type + "\"}";
 
-    public void setMDSprofile(String type) {
-        try {
-            String requestBody = "{\"type\":\"Biometric Device\",\"profileId\":\"" + type + "\"}";
+			Response response = RestAssured.given().baseUri("http://127.0.0.1:4501/admin/profile")
+					.contentType(ContentType.JSON).and().body(requestBody).when().post().then().extract().response();
+			assertEquals(200, response.statusCode());
+			assertEquals("Success", response.jsonPath().getString("errorInfo"));
 
-            Response response = RestAssured.given().baseUri("http://127.0.0.1:4501/admin/profile")
-                    .contentType(ContentType.JSON).and().body(requestBody).when().post().then().extract().response();
-            assertEquals(200, response.statusCode());
-            assertEquals("Success", response.jsonPath().getString("errorInfo"));
-
-        } catch (Exception e) {
-            logger.error("", e);
-        }
-    }
+		} catch (Exception e) {
+			logger.error("Issue with the Rest Assured MOCKMDS Profile Request", e);
+		}
+	}
 
 }
