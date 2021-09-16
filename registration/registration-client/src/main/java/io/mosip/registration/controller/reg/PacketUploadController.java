@@ -420,14 +420,14 @@ public class PacketUploadController extends BaseController implements Initializa
 				while (displayData.next()) {
 					boolean isAdded = false;
 					for (PacketStatusVO packet : selectedPackets) {
-						if (packet.getFileName().equals(table.getItems().get(displayData.getFrom()).getFileName())) {
+						if (displayData.getFrom() < table.getItems().size() && packet.getFileName().equals(table.getItems().get(displayData.getFrom()).getFileName())) {
 							isAdded = true;
 						}
 					}
 					if (displayData.wasUpdated()) {
-						if (!isAdded && !uploadedPackets.contains(table.getItems().get(displayData.getFrom()))) {
+						if (!isAdded && (displayData.getFrom() < table.getItems().size()) && !uploadedPackets.contains(table.getItems().get(displayData.getFrom()))) {
 							selectedPackets.add(table.getItems().get(displayData.getFrom()));
-						} else {
+						} else if (displayData.getFrom() < table.getItems().size()){
 							selectedPackets.remove(table.getItems().get(displayData.getFrom()));
 						}
 						// saveToDevice.setDisable(!selectedPackets.isEmpty());
