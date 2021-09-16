@@ -296,7 +296,11 @@ public class BiometricUploadPage {
             logger.error("", e);
         }
         
-        
+        try {
+            bioCorrectionPage.setMDSprofile(type,JsonUtil.JsonObjParsing(jsonContent, "profile"));
+        } catch (Exception e) {
+            logger.error("", e);
+        }
         try {
             for (int i = 1; i <=bioCapattempvalue; i++) {
             bioCorrectionPage.setMDSscore(type,JsonUtil.JsonObjParsing(jsonContent, "score"+i));

@@ -61,6 +61,7 @@ public class BioCorrectionPage {
 			Response response = RestAssured.given().baseUri("http://127.0.0.1:4501/admin/score")
 					.contentType(ContentType.JSON).and().body(requestBody).when().post().then().extract().response();
 
+
 			assertEquals(200, response.statusCode());
 			assertEquals("Success", response.jsonPath().getString("errorInfo"));
 		} catch (Exception e) {
@@ -68,9 +69,9 @@ public class BioCorrectionPage {
 		}
 	}
 
-	public void setMDSprofile(String type) {
-		try {
-			String requestBody = "{\"type\":\"Biometric Device\",\"profileId\":\"" + type + "\"}";
+    public void setMDSprofile(String type,String profile) {
+        try {
+            String requestBody = "{\"type\":\""+type+"\",\"profileId\":\"" + profile + "\"}";
 
 			Response response = RestAssured.given().baseUri("http://127.0.0.1:4501/admin/profile")
 					.contentType(ContentType.JSON).and().body(requestBody).when().post().then().extract().response();

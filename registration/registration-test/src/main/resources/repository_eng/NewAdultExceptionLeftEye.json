@@ -2,13 +2,19 @@
 	"ageGroup":"ADULT",
 	"process":"New",
 	"preferredLang":"English",
-	"documentUploadAttributes":["POB","POR","POA","POI"],
+
+	"documentUploadAttributes":["POB","POA","POI"],
+	   "profile":"Default",
+	    "score1":"10",
+	    "score2":"20",
+	    "score3":"90",
+	    "score4":"90",
   "gender" : [ {
     "language" : "eng",
     "value" : "Female"
   }, {
     "language" : "ara",
-    "value" : "أنثى"
+    "value" : "Ø£Ù†Ø«Ù‰"
   },
   {
 	    "language" : "fra",
@@ -19,11 +25,11 @@
 	    "value" : "Kenitra"
 	  }, {
 	    "language" : "ara",
-	    "value" : "االقنيطرة"
+	    "value" : "Ø§Ø§Ù„Ù‚Ù†ÙŠØ·Ø±Ø©"
 	  },
 	  {
 		    "language" : "fra",
-		    "value" : "Kénitra"
+		    "value" : "KÃ©nitra"
 		  } ],
   "postalCode" : "14022",
   "fullName" : [ {
@@ -31,11 +37,11 @@
     "value" : "Test Automation"
   }, {
     "language" : "ara",
-    "value" : "القنيطرة"
+    "value" : "Ø§Ù„Ù‚Ù†ÙŠØ·Ø±Ø©"
   } ,
   {
 	    "language" : "fra",
-	    "value" : "Kénitra"
+	    "value" : "KÃ©nitra"
 	  }],
 	  "dateOfBirth" : "20",
   "referenceIdentityNumber" : "23444444444444322",
@@ -51,18 +57,18 @@
     "value" : "Kenitra"
   }, {
     "language" : "ara",
-    "value" : "االقنيطرة"
+    "value" : "Ø§Ø§Ù„Ù‚Ù†ÙŠØ·Ø±Ø©"
   },
   {
 	    "language" : "fra",
-	    "value" : "Kénitra"
+	    "value" : "KÃ©nitra"
 	  } ],
   "zone" : [ {
     "language" : "eng",
     "value" : "Ben Mansour"
   }, {
     "language" : "ara",
-    "value" : "بن منصور"
+    "value" : "Ø¨Ù† Ù…Ù†ØµÙˆØ±"
   },
   {
 	    "language" : "fra",
@@ -74,29 +80,29 @@
     "value" : "Upgrade1.1.4aa"
   }, {
     "language" : "ara",
-    "value" : "بن منصور"
+    "value" : "Ø¨Ù† Ù…Ù†ØµÙˆØ±"
   } ,
   {
 	    "language" : "fra",
-	    "value" : "Kénitra"
+	    "value" : "KÃ©nitra"
 	  }],
   "addressLine2" : [ {
     "language" : "eng",
     "value" : "Upgrade1.1.4"
   }, {
     "language" : "ara",
-    "value" : "بن منصور"
+    "value" : "Ø¨Ù† Ù…Ù†ØµÙˆØ±"
   },
   {
 	    "language" : "fra",
-	    "value" : "Kénitra"
+	    "value" : "KÃ©nitra"
 	  } ],
   "residenceStatus" : [ {
     "language" : "fra",
-    "value" : "Étrangère"
+    "value" : "Ã‰trangÃ¨re"
   }, {
     "language" : "ara",
-    "value" :"غير أجنبي"
+    "value" :"ØºÙŠØ± Ø£Ø¬Ù†Ø¨ÙŠ"
   },
   {
 	    "language" : "eng",
@@ -107,28 +113,28 @@
 	    "value" : "Upgrade1.1.4"
 	  }, {
 	    "language" : "ara",
-	    "value" : "غير أجنبي"
+	    "value" : "ØºÙŠØ± Ø£Ø¬Ù†Ø¨ÙŠ"
 	  },
 	  {
 		    "language" : "fra",
-		    "value" : "Kénitra"
+		    "value" : "KÃ©nitra"
 		  } ],
   "region" : [ {
     "language" : "eng",
     "value" : "Rabat Sale Kenitra"
   }, {
     "language" : "ara",
-    "value" : "جهة الرباط سلا القنيطرة"
+    "value" : "Ø¬Ù‡Ø© Ø§Ù„Ø±Ø¨Ø§Ø· Ø³Ù„Ø§ Ø§Ù„Ù‚Ù†ÙŠØ·Ø±Ø©"
   },{
 	    "language" : "fra",
-	    "value" : "Rabat-Salé-Kénitra"
+	    "value" : "Rabat-SalÃ©-KÃ©nitra"
 	  } ],
   "modeOfClaim" : [ {
 	    "language" : "eng",
 	    "value" : "Pick-up"
 	  }, {
 	    "language" : "ara",
-	    "value" : "يلتقط"
+	    "value" : "ÙŠÙ„ØªÙ‚Ø·"
 	  } ],
   "email" : "abc@abc.co.in",
   "consent":"Y",
@@ -139,11 +145,11 @@
     "value" : "Upgrade1.1.4"
   }, {
     "language" : "ara",
-    "value" : "يلتقط"
+    "value" : "ÙŠÙ„ØªÙ‚Ø·"
   },
   {
 	    "language" : "fra",
-	    "value" : "Kénitra"
+	    "value" : "KÃ©nitra"
 	  } ],
   "bioExceptionAttributes": [
 		"leftEye"
@@ -168,7 +174,7 @@
 		    "value" : "Registration Form"
 		  }, {
 		    "language" : "ara",
-		    "value" : "إستمارة تسجيل"
+		    "value" : "Ø¥Ø³ØªÙ…Ø§Ø±Ø© ØªØ³Ø¬ÙŠÙ„"
 		  } ],
 		  "proofOfAddress" :  [ {
 			    "language" : "eng",
@@ -178,7 +184,7 @@
 				    "value" : "Passeport"
 				  }, {
 			    "language" : "ara",
-			    "value" : "جواز سفر"
+			    "value" : "Ø¬ÙˆØ§Ø² Ø³Ù�Ø±"
 			  } ],
 			  "proofOfIdentity" : [ {
 				    "language" : "eng",
@@ -188,7 +194,7 @@
 					    "value" : "Passeport"
 					  }, {
 				    "language" : "ara",
-				    "value" : "جواز سفر"
+				    "value" : "Ø¬ÙˆØ§Ø² Ø³Ù�Ø±"
 				  } ],
 				  "proofOfRelationship" : [ {
 					    "language" : "eng",
@@ -199,7 +205,7 @@
 					  },
 					  {
 						    "language" : "ara",
-						    "value" : "جواز سفر"
+						    "value" : "Ø¬ÙˆØ§Ø² Ø³Ù�Ø±"
 						  } ],
 						  "proofOfDateOfBirth" : [ {
 							    "language" : "eng",
@@ -210,7 +216,7 @@
 							  },
 							  {
 								    "language" : "ara",
-								    "value" : "شهادة الميلاد"
+								    "value" : "Ø´Ù‡Ø§Ø¯Ø© Ø§Ù„Ù…ÙŠÙ„Ø§Ø¯"
 								  } ]
 } } 
 

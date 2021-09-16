@@ -3,7 +3,13 @@
 	 "BELOW_ARE_STATIC_KEYWORDS":"",
     "ageGroup": "ADULT",
     "process": "Lost",
-    "documentUploadAttributes":["POB","POR","POA","POI"],
+    "documentUploadAttributes":["POB","POA","POI"],
+    "profile":"Default",
+    "score1":"10",
+    "score2":"20",
+    "score3":"90",
+    "score4":"90",
+>>>>>>> 74b692380b (Added bio correction related testdata in input files)
     "bioAttributes": [
       "leftEye",
       "rightEye",

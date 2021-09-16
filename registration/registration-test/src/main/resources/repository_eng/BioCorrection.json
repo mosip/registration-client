@@ -1,35 +1,34 @@
 {
   "identity": {
-	"BELOW_ARE_STATIC_KEYWORDS":"",
-    "ageGroup": "ADULT",
-    "process": "New",
+	  "additionalInfoRequestId":"34287982413467-BIOMETRIC_CORRECTION-1",
+	  "BELOW_ARE_STATIC_KEYWORDS":"",
+	  "ageGroup":"MINOR",
+    "process": "bioCorrection",
+    "profile":"Default",
+    "score1":"10",
+    "score2":"20",
+    "score3":"90",
+    "score4":"90",
     "documentUploadAttributes":["POB","POR","POA","POI"],
-    "bioExceptionAttributes": [
-		"leftEye"
-	],
-	 "bioAttributes": [
-		 "leftEye",
-			"rightEye",
-			"rightIndex",
-			"rightLittle",
-			"rightRing",
-			"rightMiddle",
-			"leftIndex",
-			"leftLittle",
-			"leftRing",
-			"leftMiddle",
-			"leftThumb",
-			"rightThumb",
-			"face"
-		],
-		   "profile":"Default",
-		    "score1":"10",
-		    "score2":"20",
-		    "score3":"90",
-		    "score4":"90",
+    "bioAuthAttributes":["leftThumb"],
+	  "bioAttributes": [
+			 "leftEye",
+				"rightEye",
+				"rightIndex",
+				"rightLittle",
+				"rightRing",
+				"rightMiddle",
+				"leftIndex",
+				"leftLittle",
+				"leftRing",
+				"leftMiddle",
+				"leftThumb",
+				"rightThumb",
+				"face"
+			],
 		"BELOW_ARE_THE_SCHEMA_LEVEL_ID's_DATA":"",
-		"dateOfBirth": "20",
-	    "preferredLang":  "हिंदी",
+		 "dateOfBirth": "13",
+		    "preferredLang":  "English",
     "gender": [
       {
         "language": "kan",
@@ -81,23 +80,7 @@
         "code": "KNT"
       }
     ],
-    "postalCode": [
-        {
-            "language": "hin",
-            "value": "14022",
-            "code": "14022"
-          },
-          {
-            "language": "tam",
-            "value": "14022",
-            "code": "14022"
-          },
-          {
-            "language": "kan",
-            "value": "14022",
-            "code": "14022"
-          }
-        ],
+    "postalCode" : "14022",
     "fullName": [
       {
         "language": "hin",
@@ -113,7 +96,8 @@
       }
     ],
    
-    "referenceIdentityNumber": "23444444444444322",   
+    "referenceIdentityNumber": "23444444444444322",
+  
     "province": [
       {
         "language": "hin",
@@ -244,9 +228,9 @@
     ],
     "email": "abc@abc.co.in",
     "consent": "Y",
-    "introducerRID1": "10002100870001120210806171437",
-    "introducerUIN1": "8926150729",
-    "introducerName1": [
+    "introducerRID": "10002100870001120210806171437",
+    "introducerUIN": "8926150729",
+    "introducerName": [
     	{
             "language": "hin",
             "value": "परीक्षण स्वचालन"
@@ -345,7 +329,7 @@
         "code": "COB"
       }
     ]
-  ,
+,
 					         "BELOW ARE SRILANKA SPECIFIC DATA":"",
 					       "printedName": [
 					   		{
