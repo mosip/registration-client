@@ -168,7 +168,7 @@ public class RejectionController extends BaseController implements Initializable
 
 			int focusedIndex = regRejectionTable.getSelectionModel().getFocusedIndex();
 
-			int rowNum = packetIds.get(regRejectionTable.getSelectionModel().getSelectedItem().getId());
+			int rowNum = packetIds.get(regRejectionTable.getSelectionModel().getSelectedItem().getPacketId());
 			RegistrationApprovalVO approvalDTO = new RegistrationApprovalVO(
 					regRejectionTable.getSelectionModel().getSelectedItem().getSlno(),
 					regRejectionTable.getSelectionModel().getSelectedItem().getId(),

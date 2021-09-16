@@ -374,7 +374,7 @@ public class RegistrationApprovalController extends BaseController implements In
 				}
 				int rowNum = 0;
 				for (RegistrationApprovalDTO approvalDTO : listData) {
-					packetIds.put(approvalDTO.getId(), rowNum++);
+					packetIds.put(approvalDTO.getPacketId(), rowNum++);
 				}
 
 				// 1. Wrap the ObservableList in a FilteredList (initially display all data).
@@ -505,7 +505,7 @@ public class RegistrationApprovalController extends BaseController implements In
 
 			for (Map<String, String> registrationMap : approvalmapList) {
 
-				if (registrationMap.containsValue(table.getSelectionModel().getSelectedItem().getId())) {
+				if (registrationMap.containsValue(table.getSelectionModel().getSelectedItem().getPacketId())) {
 
 					approvalmapList.remove(registrationMap);
 
@@ -524,7 +524,7 @@ public class RegistrationApprovalController extends BaseController implements In
 
 			int focusedIndex = table.getSelectionModel().getFocusedIndex();
 
-			int row = packetIds.get(table.getSelectionModel().getSelectedItem().getId());
+			int row = packetIds.get(table.getSelectionModel().getSelectedItem().getPacketId());
 			RegistrationApprovalVO approvalDTO = new RegistrationApprovalVO(
 					table.getSelectionModel().getSelectedItem().getSlno(),
 					table.getSelectionModel().getSelectedItem().getId(),
