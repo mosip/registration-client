@@ -69,7 +69,9 @@ public class LostReg {
     SelectLanguagePage selectLanguagePage;
 
     Alerts alerts;
-
+    WaitsUtil waitsUtil;
+    String exit="#exit";
+ 
     public RID lostRegistration(FxRobot robot, String loginUserid, String loginPwd, String supervisorUserid,
             String supervisorUserpwd, Stage applicationPrimaryStage1, String jsonContent, String flow, String ageGroup,
             String fileName, ApplicationContext applicationContext) {
@@ -85,6 +87,8 @@ public class LostReg {
             robotActions = new RobotActions(robot);
             selectLanguagePage = new SelectLanguagePage(robot);
             alerts = new Alerts(robot);
+            waitsUtil=new WaitsUtil();
+          
             rid1 = null;
             rid2 = null;
             result = false;
@@ -166,6 +170,7 @@ public class LostReg {
             authenticationPage.enterPassword(supervisorUserpwd);
             authenticationPage.clicksubmitBtn();
             robotActions.clickWindow();
+            // waitsUtil.clickNodeAssert(exit);
             homePage.clickHomeImg();
            
             
