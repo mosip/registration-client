@@ -81,8 +81,8 @@ public class UploadPacketPage {
 
             waitsUtil.clickNodeAssert(rid);
             result = true;
-           // robotActions.closeWindow();
-            alerts.clickAlertexit();
+            robotActions.closeWindow();
+           // alerts.clickAlertexit();
         } catch (Exception e) {
             logger.error("Failure Unable to upload", e);
             result = false;
