@@ -2,7 +2,7 @@
 	"BELOW_ARE_STATIC_KEYWORDS":"",
 	"ageGroup":"MINOR",
 	"process":"Update",
-	"documentUploadAttributes":["POB","POR","POA","POI"],
+	 "documentUploadAttributes":["POB","POA","POI"],
 		  "updateUINAttributes":["DateOfBirth","FullName","Consent","PreferredLanguage"],
 	  "bioAuthAttributes":["rightThumb"],
 	  "bioAttributes": [
@@ -81,24 +81,8 @@
         "code": "KNT"
       }
     ],
-    "postalCode": [
-        {
-            "language": "hin",
-            "value": "14022",
-            "code": "14022"
-          },
-          {
-            "language": "tam",
-            "value": "14022",
-            "code": "14022"
-          },
-          {
-            "language": "kan",
-            "value": "14022",
-            "code": "14022"
-          }
-        ],
-    "fullName": [
+    "postalCode" : "14022",
+        "fullName": [
       {
         "language": "hin",
         "value": "परीक्षण स्वचालन"

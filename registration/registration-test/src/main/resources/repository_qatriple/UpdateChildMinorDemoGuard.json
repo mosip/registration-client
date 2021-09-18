@@ -2,7 +2,7 @@
 	"BELOW_ARE_STATIC_KEYWORDS":"",
 	"ageGroup":"MINOR",
 	"process":"Update",
-	"documentUploadAttributes":["POB","POR","POA","POI"],
+	"documentUploadAttributes":["POB","POA","POI"],
 	  "updateUINAttributes":["DateOfBirth","FullName","IntroducerDetails","Consent","PreferredLanguage"],
 	  "bioAuthAttributes":["rightThumb"],
 	  "bioAttributes": [
