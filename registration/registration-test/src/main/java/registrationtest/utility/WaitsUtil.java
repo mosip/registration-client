@@ -20,6 +20,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import org.apache.log4j.LogManager;
@@ -172,6 +173,20 @@ public class WaitsUtil {
         return robot.lookup(controlId).queryAs(TextField.class);
     }
 
+    
+    public <T extends Node> Label lookupByIdLabel(String controlId, FxRobot robot) {
+        try {
+            with().dontCatchUncaughtExceptions().await().pollDelay(2, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS)
+                    .until(() -> (robot.lookup(controlId).queryAs(Label.class)) != null);
+        } catch (Exception e) {
+            logger.error("", e);
+            capture();
+
+        }
+
+        return robot.lookup(controlId).queryAs(Label.class);
+    }
+    
     public <T extends Node> Button lookupByIdButton(String controlId, FxRobot robot) {
         try {
 

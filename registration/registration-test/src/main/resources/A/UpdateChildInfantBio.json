@@ -2,13 +2,8 @@
 	"ageGroup":"INFANT",
 	"process":"Update",
 	"preferredLang":"English",
-	"documentUploadAttributes":["POB","POR","POA","POI"],
 	"UIN":"4370410569",
-	   "profile":"Default",
-	    "score1":"10",
-	    "score2":"20",
-	    "score3":"90",
-	    "score4":"90",
+	"documentUploadAttributes":["POB","POR","POA","POI"],
 	"gender" : [ {
     "language" : "eng",
     "value" : "Female"
@@ -150,8 +145,8 @@
   {
 	    "language" : "fra",
 	    "value" : "Kénitra"
-	  } ],
-	  "updateUINAttributes":["DateOfBirth","FullName","IntroducerDetails","Consent","PreferredLanguage"],
+	  } ], 
+	  "updateUINAttributes":["DateOfBirth","Biometrics","Consent","PreferredLanguage"],
 	  "bioAuthAttributes":["rightThumb"],
 	  "bioAttributes": [
 			 

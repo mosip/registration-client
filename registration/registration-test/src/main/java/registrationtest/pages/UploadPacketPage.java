@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import org.testfx.api.FxRobot;
 
 import javafx.scene.control.TextField;
+import registrationtest.controls.Alerts;
 
 //import com.itextpdf.text.log.SysoCounter;
 
@@ -24,12 +25,14 @@ public class UploadPacketPage {
     String uploaded = "PUSHED";
     String selectAll = "#selectAllCheckBox";
     RobotActions robotActions;
+    Alerts alerts;
 
     UploadPacketPage(FxRobot robot) {
         logger.info("UploadPacketPage Constructor");
         this.robot = robot;
         waitsUtil = new WaitsUtil(robot);
         robotActions = new RobotActions(robot);
+        alerts=new Alerts(robot);
     }
 
     public void clickOnfilterField(FxRobot robot) {
@@ -74,13 +77,16 @@ public class UploadPacketPage {
         logger.info("verifyPacketUpload" + rid);
         try {
             Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("PacketUploadTimeWait")));
+           
             waitsUtil.clickNodeAssert(uploaded);
 
             waitsUtil.clickNodeAssert(rid);
             result = true;
             robotActions.closeWindow();
+           // alerts.clickAlertexit();
         } catch (Exception e) {
             logger.error("Failure Unable to upload", e);
+            robotActions.closeWindow();
             result = false;
         }
 

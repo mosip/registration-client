@@ -3,11 +3,15 @@ package registrationtest.pages;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.testfx.api.FxRobot;
 
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import registrationtest.controls.Buttons;
 import registrationtest.utility.JsonUtil;
 import registrationtest.utility.PropertiesUtil;
@@ -31,26 +35,74 @@ public class BiometricUploadPage {
     String success = "#context";
     Buttons buttons;
 
+    String thresholdScoreLabel = "#thresholdScoreLabel";
+    String qualityScore = "#qualityScore";
+    String attemptSlap = "#attemptSlap";
+    BioCorrectionPage bioCorrectionPage;
+
     public BiometricUploadPage(FxRobot robot) {
         logger.info("BiometricUploadPage Constructor");
 
         this.robot = robot;
         waitsUtil = new WaitsUtil(robot);
         buttons = new Buttons(robot);
+        bioCorrectionPage=new BioCorrectionPage(robot);
         // waitsUtil.clickNodeAssert( BiometricDetail);
 
     }
 
-    public void exceptionsIrisDouble(String idmod, String id, String identity, String subType) {
+    public int getThresholdScoreLabel() {
+      
+        Label thresholdScore = waitsUtil.lookupByIdLabel(thresholdScoreLabel, robot);
+        String val = thresholdScore.getText();
+        val=val.replace("%", "");
+        if (val.equalsIgnoreCase("")) val="0";
+        return Integer.parseInt(val);  
+     
+    }
+
+    public void setThresholdScoreLabel(String thresholdScoreLabel) {
+        this.thresholdScoreLabel = thresholdScoreLabel;
+    }
+
+    public int getQualityScore() {
+
+        Label score = waitsUtil.lookupByIdLabel(qualityScore, robot);
+        String val = score.getText();
+        val=val.replace("%", "");
+        if (val.equalsIgnoreCase("")) val="0";
+        return Integer.parseInt(val);  
+    }
+
+    public void setQualityScore(String qualityScore) {
+        this.qualityScore = qualityScore;
+    }
+
+    public int getAttemptSlap() {
+        Label slap = waitsUtil.lookupByIdLabel(attemptSlap, robot);
+        logger.info("Automation text" +slap.getText());
+        logger.info("Automation attemptslap" +slap);
+        logger.info("Automation attemptslap ID" +slap.getId());
+        String val = slap.getText();
+        val=val.replace("%", "");
+        if (val.equalsIgnoreCase("")) val="0";
+        return Integer.parseInt(val);  
+    }
+
+    public void setAttemptSlap(String attemptSlap) {
+        this.attemptSlap = attemptSlap;
+    }
+
+    public void exceptionsIrisDouble(String idBioType, String idModality, String jsonContent, String subType) {
 
         logger.info("  Bio attributes upload with List");
 
         List<String> listException = null;
         Boolean flag = false;
         try {
-            listException = exceptionList(identity);
+            listException = exceptionList(jsonContent);
             // IRIS DOUBLE
-            waitsUtil.clickNodeAssert(id);
+            waitsUtil.clickNodeAssert(idModality);
             Thread.sleep(400);
 
             if (listException.contains("leftEye") && listException.contains("rightEye")) {
@@ -63,22 +115,22 @@ public class BiometricUploadPage {
                 waitsUtil.clickNodeAssert("#rightEye");
             }
             if (flag == false)
-                clickScanBtn(idmod);
+                clickScanBtn(idBioType,jsonContent,idModality);
         } catch (Exception e) {
             logger.error("", e);
         }
     }
 
-    public void exceptionsFingerPrintSlabThumbs(String idmod, String id, String identity, String subType) {
+    public void exceptionsFingerPrintSlabThumbs(String idBioType, String idModality, String jsonContent, String subType) {
 
         logger.info("  Bio attributes upload with List");
 
         List<String> listException = null;
         Boolean flag = false;
         try {
-            listException = exceptionList(identity);
+            listException = exceptionList(jsonContent);
             // FINGERPRINT_SLAB_THUMBS
-            waitsUtil.clickNodeAssert(id);
+            waitsUtil.clickNodeAssert(idModality);
             Thread.sleep(400);
 
             if (listException.contains("leftThumb") && listException.contains("rightThumb")) {
@@ -91,22 +143,22 @@ public class BiometricUploadPage {
                 waitsUtil.clickNodeAssert("#rightThumb");
             }
             if (flag == false)
-                clickScanBtn(idmod);
+                clickScanBtn(idBioType,jsonContent,idModality);
         } catch (Exception e) {
             logger.error("", e);
         }
     }
 
-    public void exceptionsFingerPrintSlabRight(String idmod, String id, String identity, String subType) {
+    public void exceptionsFingerPrintSlabRight(String idBioType, String idModality, String jsonContent, String subType) {
 
         logger.info("  Bio attributes upload with List");
 
         List<String> listException = null;
         Boolean flag = false;
         try {
-            listException = exceptionList(identity);
+            listException = exceptionList(jsonContent);
             // FINGERPRINT_SLAB_RIGHT
-            waitsUtil.clickNodeAssert(id);
+            waitsUtil.clickNodeAssert(idModality);
             Thread.sleep(400);
 
             if (listException.contains("rightIndex") && listException.contains("rightLittle")
@@ -131,7 +183,7 @@ public class BiometricUploadPage {
                 }
             }
             if (flag == false)
-                clickScanBtn(idmod);
+                clickScanBtn(idBioType,jsonContent,idModality);
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -163,6 +215,7 @@ public class BiometricUploadPage {
 
         return bioAttList;
     }
+
     public List<String> infantBioAttributeList(String identity) {
         List<String> bioAttList = new LinkedList<String>();
         String bioAttributes = null;
@@ -175,6 +228,7 @@ public class BiometricUploadPage {
 
         return bioAttList;
     }
+
     public List<String> exceptionList(String identity) {
         List<String> listException = new LinkedList<String>();
         String bioExceptionAttributes = null;
@@ -189,16 +243,16 @@ public class BiometricUploadPage {
         return listException;
     }
 
-    public void exceptionsFingerPrintSlabLeft(String idmod, String id, String identity, String subType) {
+    public void exceptionsFingerPrintSlabLeft(String idmod, String idModality, String jsonContent, String subType) {
 
         logger.info("exceptionsFingerPrintSlabLeft");
 
         List<String> listException = null;
         Boolean flag = false;
         try {
-            listException = exceptionList(identity);
+            listException = exceptionList(jsonContent);
             // FINGERPRINT_SLAB_LEFT
-            waitsUtil.clickNodeAssert(id);
+            waitsUtil.clickNodeAssert(idModality);
             Thread.sleep(400);
 
             if (listException.contains("leftIndex") && listException.contains("leftLittle")
@@ -223,34 +277,101 @@ public class BiometricUploadPage {
                 }
             }
             if (flag == false)
-                clickScanBtn(idmod);
+                clickScanBtn(idmod,jsonContent,idModality);
         } catch (Exception e) {
             logger.error("", e);
         }
     }
 
-    public void clickScanBtn(String id) {
-        waitsUtil.clickNodeAssert(id + scanBtn);
-
+    public void modalityScoreAttempt(String idBioType,String jsonContent,String idModality) {
+       String type=null; //“Biometric Device”, “Fingerprint”, “Face”, “Iris”
+       int bioCapattempvalue = 0;
+        if(idModality.toLowerCase().contains("iris"))
+            type="Iris";
+        else if(idModality.toLowerCase().contains("fingerprint"))
+            type="Finger";
+        else if(idModality.toLowerCase().contains("face"))
+            type="Face";
+        else 
+            type="Biometric Device";
+        
         try {
-            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait6")));
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        waitsUtil.clickNodeAssert(alertImage);
+            bioCapattempvalue = Integer.parseInt(PropertiesUtil.getKeyValue("bioCaptureAttempts"));
 
-        waitsUtil.clickNodeAssert(success);
-        waitsUtil.clickNodeAssert(exit);
+        } catch (NumberFormatException e) {
+            logger.error("", e);
+        } catch (IOException e) {
+            logger.error("", e);
+        }
+        
+        try {
+            bioCorrectionPage.setMDSprofile(type,JsonUtil.JsonObjParsing(jsonContent, "profile"));
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+        try {
+            for (int i = 1; i <=bioCapattempvalue; i++) {
+            bioCorrectionPage.setMDSscore(type,JsonUtil.JsonObjParsing(jsonContent, "score"+i));
+            
+
+            waitsUtil.clickNodeAssert(idBioType + scanBtn);
+            
+
+            
+            try {
+                Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait6")));
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            waitsUtil.clickNodeAssert(alertImage);
+
+            waitsUtil.clickNodeAssert(success);
+            waitsUtil.clickNodeAssert(exit);
+            
+            
+            logger.info(idBioType+idModality + " ATTEMPT " + getAttemptSlap());
+            logger.info(idBioType+idModality + " SCORE "+ getQualityScore());
+            logger.info(idBioType+idModality + " THRESHOLD " +getThresholdScoreLabel());
+           
+         if(getQualityScore()>=getThresholdScoreLabel())break;
+
+            }
+        } catch (Exception e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        
+  
     }
 
-    public void bioScan(String id, String idModality, String identity) {
+    public void clickScanBtn(String id,String identityJson,String idModality) {
+        // Adding Logic for Bio quality capture based on threshold
+         modalityScoreAttempt(id,identityJson,idModality);
+
+    /*   
+           waitsUtil.clickNodeAssert(id + scanBtn);
+            try {
+                Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait6")));
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            waitsUtil.clickNodeAssert(alertImage);
+
+            waitsUtil.clickNodeAssert(success);
+            waitsUtil.clickNodeAssert(exit);
+  */
+        }
+    
+
+    public void bioScan(String id, String idModality, String jsonContent) {
         try {
             logger.info("bioScan");
             waitsUtil.clickNodeAssert(idModality);
             // waitsUtil.scrollclickNodeAssert1(id);
             Thread.sleep(400);
-            clickScanBtn(id);
+            clickScanBtn(id,jsonContent,idModality);
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -265,7 +386,7 @@ public class BiometricUploadPage {
      * @throws InterruptedException
      * @throws IOException
      */
-    public void newRegbioUpload(String subtype, List<String> list, String id, String identity,String ageGroup) {
+    public void newRegbioUpload(String subtype, List<String> list, String id, String identity, String ageGroup) {
         try
 
         {
@@ -345,36 +466,35 @@ public class BiometricUploadPage {
 
     }
 
-public void infantbioUploadTBD(String idmod,  List<String> list, String id, String identity) {
+    public void infantbioUploadTBD(String idmod, List<String> list, String id, String identity) {
         // TODO Auto-generated method stub
         try {
-      
 
-        if (list.contains(PropertiesUtil.getKeyValue("leftEye"))
-                || list.contains(PropertiesUtil.getKeyValue("rightEye")))
+            if (list.contains(PropertiesUtil.getKeyValue("leftEye"))
+                    || list.contains(PropertiesUtil.getKeyValue("rightEye")))
 
-            bioScan(id, id + IRIS_DOUBLE, identity);
+                bioScan(id, id + IRIS_DOUBLE, identity);
 
-        if (list.contains(PropertiesUtil.getKeyValue("rightIndex"))
-                || list.contains(PropertiesUtil.getKeyValue("rightLittle"))
-                || list.contains(PropertiesUtil.getKeyValue("rightRing"))
-                || list.contains(PropertiesUtil.getKeyValue("rightMiddle")))
+            if (list.contains(PropertiesUtil.getKeyValue("rightIndex"))
+                    || list.contains(PropertiesUtil.getKeyValue("rightLittle"))
+                    || list.contains(PropertiesUtil.getKeyValue("rightRing"))
+                    || list.contains(PropertiesUtil.getKeyValue("rightMiddle")))
 
-            bioScan(id, id + FINGERPRINT_SLAB_RIGHT, identity);
+                bioScan(id, id + FINGERPRINT_SLAB_RIGHT, identity);
 
-        if (list.contains(PropertiesUtil.getKeyValue("leftIndex"))
-                || list.contains(PropertiesUtil.getKeyValue("leftLittle"))
-                || list.contains(PropertiesUtil.getKeyValue("leftRing"))
-                || list.contains(PropertiesUtil.getKeyValue("leftMiddle")))
+            if (list.contains(PropertiesUtil.getKeyValue("leftIndex"))
+                    || list.contains(PropertiesUtil.getKeyValue("leftLittle"))
+                    || list.contains(PropertiesUtil.getKeyValue("leftRing"))
+                    || list.contains(PropertiesUtil.getKeyValue("leftMiddle")))
 
-            bioScan(id, id + FINGERPRINT_SLAB_LEFT, identity);
+                bioScan(id, id + FINGERPRINT_SLAB_LEFT, identity);
 
-        if (list.contains(PropertiesUtil.getKeyValue("leftThumb"))
-                || list.contains(PropertiesUtil.getKeyValue("rightThumb")))
-            bioScan(id, id + FINGERPRINT_SLAB_THUMBS, identity);
+            if (list.contains(PropertiesUtil.getKeyValue("leftThumb"))
+                    || list.contains(PropertiesUtil.getKeyValue("rightThumb")))
+                bioScan(id, id + FINGERPRINT_SLAB_THUMBS, identity);
 
-        if (list.contains(PropertiesUtil.getKeyValue("face")))
-            bioScan(id, id + FACE, identity);
+            if (list.contains(PropertiesUtil.getKeyValue("face")))
+                bioScan(id, id + FACE, identity);
 
         } catch (IOException e) {
             logger.error("", e);
