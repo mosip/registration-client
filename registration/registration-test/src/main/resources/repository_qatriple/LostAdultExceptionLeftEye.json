@@ -4,6 +4,11 @@
     "ageGroup": "ADULT",
     "process": "Lost",
     "documentUploadAttributes":["POB","POA","POI"],
+    "profile":"Default",
+    "score1":"10",
+    "score2":"20",
+    "score3":"90",
+    "score4":"90",
     "bioExceptionAttributes": [
 		"leftEye"
 	],
