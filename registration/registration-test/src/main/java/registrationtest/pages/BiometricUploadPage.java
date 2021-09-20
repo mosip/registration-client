@@ -3,11 +3,13 @@ package registrationtest.pages;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.testfx.api.FxRobot;
 
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import registrationtest.controls.Buttons;
@@ -54,6 +56,7 @@ public class BiometricUploadPage {
         Label thresholdScore = waitsUtil.lookupByIdLabel(thresholdScoreLabel, robot);
         String val = thresholdScore.getText();
         val=val.replace("%", "");
+        if (val.equalsIgnoreCase("")) val="0";
         return Integer.parseInt(val);  
      
     }
@@ -67,6 +70,7 @@ public class BiometricUploadPage {
         Label score = waitsUtil.lookupByIdLabel(qualityScore, robot);
         String val = score.getText();
         val=val.replace("%", "");
+        if (val.equalsIgnoreCase("")) val="0";
         return Integer.parseInt(val);  
     }
 
@@ -76,8 +80,12 @@ public class BiometricUploadPage {
 
     public int getAttemptSlap() {
         Label slap = waitsUtil.lookupByIdLabel(attemptSlap, robot);
+        logger.info("Automation text" +slap.getText());
+        logger.info("Automation attemptslap" +slap);
+        logger.info("Automation attemptslap ID" +slap.getId());
         String val = slap.getText();
         val=val.replace("%", "");
+        if (val.equalsIgnoreCase("")) val="0";
         return Integer.parseInt(val);  
     }
 
