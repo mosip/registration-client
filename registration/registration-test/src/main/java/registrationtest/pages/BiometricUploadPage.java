@@ -334,7 +334,7 @@ public class BiometricUploadPage {
             logger.info(idBioType+idModality + " SCORE "+ getQualityScore());
             logger.info(idBioType+idModality + " THRESHOLD " +getThresholdScoreLabel());
            
-         if(getQualityScore()>getThresholdScoreLabel())break;
+         if(getQualityScore()>=getThresholdScoreLabel())break;
 
             }
         } catch (Exception e1) {
