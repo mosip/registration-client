@@ -35,9 +35,9 @@ public class BiometricUploadPage {
     String success = "#context";
     Buttons buttons;
 
-    String thresholdScoreLabel = "#thresholdScoreLabel";
-    String qualityScore = "#qualityScore";
-    String attemptSlap = "#attemptSlap";
+    String thresholdScoreLabel = "ThresholdScoreLabel";
+    String qualityScore = "QualityScore";
+    String attemptSlap = "AttemptSlap";
     BioCorrectionPage bioCorrectionPage;
 
     public BiometricUploadPage(FxRobot robot) {
@@ -51,9 +51,9 @@ public class BiometricUploadPage {
 
     }
 
-    public int getThresholdScoreLabel() {
+    public int getThresholdScoreLabel(String idBioType) {
       
-        Label thresholdScore = waitsUtil.lookupByIdLabel(thresholdScoreLabel, robot);
+        Label thresholdScore = waitsUtil.lookupByIdLabel(idBioType + thresholdScoreLabel, robot);
         String val = thresholdScore.getText();
         val=val.replace("%", "");
         if (val.equalsIgnoreCase("")) val="0";
@@ -65,9 +65,9 @@ public class BiometricUploadPage {
         this.thresholdScoreLabel = thresholdScoreLabel;
     }
 
-    public int getQualityScore() {
+    public int getQualityScore(String idBioType) {
 
-        Label score = waitsUtil.lookupByIdLabel(qualityScore, robot);
+        Label score = waitsUtil.lookupByIdLabel(idBioType + qualityScore, robot);
         String val = score.getText();
         val=val.replace("%", "");
         if (val.equalsIgnoreCase("")) val="0";
@@ -78,8 +78,8 @@ public class BiometricUploadPage {
         this.qualityScore = qualityScore;
     }
 
-    public int getAttemptSlap() {
-        Label slap = waitsUtil.lookupByIdLabel(attemptSlap, robot);
+    public int getAttemptSlap(String idBioType) {
+        Label slap = waitsUtil.lookupByIdLabel(idBioType + attemptSlap, robot);
         logger.info("Automation text" +slap.getText());
         logger.info("Automation attemptslap" +slap);
         logger.info("Automation attemptslap ID" +slap.getId());
@@ -330,11 +330,11 @@ public class BiometricUploadPage {
             waitsUtil.clickNodeAssert(exit);
             
             
-            logger.info(idBioType+idModality + " ATTEMPT " + getAttemptSlap());
-            logger.info(idBioType+idModality + " SCORE "+ getQualityScore());
-            logger.info(idBioType+idModality + " THRESHOLD " +getThresholdScoreLabel());
+            logger.info(idBioType+idModality + " ATTEMPT " + getAttemptSlap(idBioType));
+            logger.info(idBioType+idModality + " SCORE "+ getQualityScore(idBioType));
+            logger.info(idBioType+idModality + " THRESHOLD " +getThresholdScoreLabel(idBioType));
            
-         if(getQualityScore()>=getThresholdScoreLabel())break;
+         if(getQualityScore(idBioType)>=getThresholdScoreLabel(idBioType))break;
 
             }
         } catch (Exception e1) {

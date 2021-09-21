@@ -1449,6 +1449,9 @@ public class GenericBiometricsController extends BaseController {
 
 		this.fxControl = (BiometricFxControl) fxControl;
 		this.scanBtn.setId(this.fxControl.getUiSchemaDTO().getId()+"ScanBtn");
+		this.attemptSlap.setId(this.fxControl.getUiSchemaDTO().getId()+"AttemptSlap");
+		this.thresholdScoreLabel.setId(this.fxControl.getUiSchemaDTO().getId()+"ThresholdScoreLabel");
+		this.qualityScore.setId(this.fxControl.getUiSchemaDTO().getId()+"QualityScore");
 		this.currentModality = modality;
 		this.configBioAttributes = configBioAttributes;
 		this.nonConfigBioAttributes = nonConfigBioAttributes;
