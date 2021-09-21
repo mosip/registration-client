@@ -77,6 +77,7 @@ public class UploadPacketPage {
         logger.info("verifyPacketUpload" + rid);
         try {
             Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("PacketUploadTimeWait")));
+           
             waitsUtil.clickNodeAssert(uploaded);
 
             waitsUtil.clickNodeAssert(rid);
@@ -85,6 +86,7 @@ public class UploadPacketPage {
            // alerts.clickAlertexit();
         } catch (Exception e) {
             logger.error("Failure Unable to upload", e);
+            robotActions.closeWindow();
             result = false;
         }
 
