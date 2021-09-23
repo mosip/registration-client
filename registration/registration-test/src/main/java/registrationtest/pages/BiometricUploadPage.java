@@ -3,11 +3,13 @@ package registrationtest.pages;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.testfx.api.FxRobot;
 
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import registrationtest.controls.Buttons;
@@ -78,9 +80,13 @@ public class BiometricUploadPage {
 
     public int getAttemptSlap(String idBioType) {
         Label slap = waitsUtil.lookupByIdLabel(idBioType + attemptSlap, robot);
+
+        logger.info("Automation text" +slap.getText());
+        logger.info("Automation attemptslap" +slap);
+        logger.info("Automation attemptslap ID" +slap.getId());
         String val = slap.getText();
         val=val.replace("%", "");
-        if(val.equalsIgnoreCase(""))val="0";
+        if (val.equalsIgnoreCase("")) val="0";
         return Integer.parseInt(val);  
     }
 

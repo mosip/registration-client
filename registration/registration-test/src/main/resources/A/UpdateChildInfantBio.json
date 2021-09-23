@@ -1,23 +1,11 @@
 { "identity" : {
-	"ageGroup":"MINOR",
-	"process":"New",
+	"ageGroup":"INFANT",
+	"process":"Update",
 	"preferredLang":"English",
-	"documentUploadAttributes":["POB","POA","POI"],
-
-	"UIN":"5931539704",
-    "profile":"Default",
-    "score1":"10",
-    "score2":"20",
-    "score3":"90",
-    "score4":"90",
+	"UIN":"4370410569",
+	"documentUploadAttributes":["POB","POR","POA","POI"],
 	"gender" : [ {
-
     "language" : "eng",
-    "profile":"Default",
-    "score1":"10",
-    "score2":"20",
-    "score3":"90",
-    "score4":"90",
     "value" : "Female"
   }, {
     "language" : "ara",
@@ -50,7 +38,7 @@
 	    "language" : "fra",
 	    "value" : "Kénitra"
 	  }],
-	  "dateOfBirth" : "13",
+	  "dateOfBirth" : "2",
   "referenceIdentityNumber" : "23444444444444322",
   "individualBiometrics" : {
     "format" : "cbeff",
@@ -157,22 +145,11 @@
   {
 	    "language" : "fra",
 	    "value" : "Kénitra"
-	  } ],
- 
-	  "bioAuthAttributes":["leftThumb"],
+	  } ], 
+	  "updateUINAttributes":["DateOfBirth","Biometrics","Consent","PreferredLanguage"],
+	  "bioAuthAttributes":["rightThumb"],
 	  "bioAttributes": [
-			 "leftEye",
-				"rightEye",
-				"rightIndex",
-				"rightLittle",
-				"rightRing",
-				"rightMiddle",
-				"leftIndex",
-				"leftLittle",
-				"leftRing",
-				"leftMiddle",
-				"leftThumb",
-				"rightThumb",
+			 
 				"face"
 			],
 	  "proofOfConsent" : [ {
@@ -339,7 +316,7 @@
 							             "language":"ara",
 							             "value":"آحرون"
 							          }
-							       ],
+							       ], 
 							      "relationWithChild":[
 							         {
 							            "language":"eng",
