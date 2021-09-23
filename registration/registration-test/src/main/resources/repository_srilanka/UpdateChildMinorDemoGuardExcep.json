@@ -2,7 +2,7 @@
 	"BELOW_ARE_STATIC_KEYWORDS":"",
 	"ageGroup":"MINOR",
 	"process":"Update",
-	"documentUploadAttributes":["POB","POR","POA","POI"],
+	 "documentUploadAttributes":["POB","POA","POI"],
 		  "updateUINAttributes":["DateOfBirth","FullName","IntroducerDetails","Consent","PreferredLanguage"],
 	  "bioAuthAttributes":["rightIndex"],
 	  "bioExceptionAttributes": ["rightLittle"],
@@ -10,7 +10,11 @@
 			
 				"face"
 			],
-			
+			   "profile":"Default",
+			    "score1":"10",
+			    "score2":"20",
+			    "score3":"90",
+			    "score4":"90",
 			 "BELOW_ARE_THE_SCHEMA_LEVEL_ID's_DATA":"",
 			 "dateOfBirth" : "13",
 			 	"UIN":"2357126316",
@@ -66,23 +70,7 @@
         "code": "KNT"
       }
     ],
-    "postalCode": [
-        {
-            "language": "hin",
-            "value": "14022",
-            "code": "14022"
-          },
-          {
-            "language": "tam",
-            "value": "14022",
-            "code": "14022"
-          },
-          {
-            "language": "kan",
-            "value": "14022",
-            "code": "14022"
-          }
-        ],
+    "postalCode" : "14022",
     "fullName": [
       {
         "language": "hin",

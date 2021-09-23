@@ -157,7 +157,8 @@ public class DaoConfig extends HibernateDaoConfig {
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer properties() {
 		ppc = new PropertySourcesPlaceholderConfigurer();
-		Resource[] resources = new ClassPathResource[] { new ClassPathResource("spring.properties") };
+		Resource[] resources = new ClassPathResource[] { new ClassPathResource("spring.properties"),
+				new ClassPathResource("props/mosip-application.properties") };
 		ppc.setLocations(resources);
 		ppc.setTrimValues(true);
 		return ppc;

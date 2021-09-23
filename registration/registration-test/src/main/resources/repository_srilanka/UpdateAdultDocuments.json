@@ -3,12 +3,17 @@
 	"ageGroup":"ADULT",
 	"process":"Update",
 	  "updateUINAttributes":["DateOfBirth","Documents","Consent","PreferredLanguage"],
-	  "documentUploadAttributes":["POB","POR","POA","POI"],
+	  "documentUploadAttributes":["POB","POA","POI"],
 		  "bioAuthAttributes":["rightThumb","leftIndex"],
 	
 				 "BELOW_ARE_THE_SCHEMA_LEVEL_ID's_DATA":"",
 		  "dateOfBirth" : "20",
 		  	"UIN":"8926150729",
+		    "profile":"Default",
+		    "score1":"10",
+		    "score2":"20",
+		    "score3":"90",
+		    "score4":"90",
 		    "preferredLang":  "हिंदी",
     "gender": [
       {
@@ -61,23 +66,7 @@
         "code": "KNT"
       }
     ],
-    "postalCode": [
-        {
-            "language": "hin",
-            "value": "14022",
-            "code": "14022"
-          },
-          {
-            "language": "tam",
-            "value": "14022",
-            "code": "14022"
-          },
-          {
-            "language": "kan",
-            "value": "14022",
-            "code": "14022"
-          }
-        ],
+    "postalCode" : "14022",
     "fullName": [
       {
         "language": "hin",

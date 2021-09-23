@@ -102,7 +102,7 @@ public class PublicKeySyncTest {
 	public void init() {
 		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class,
 				RegistrationSystemPropertiesChecker.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
 
@@ -136,7 +136,7 @@ public class PublicKeySyncTest {
 		valuesMap.put("issuedAt", "2020-04-09T05:51:17.334");
 		valuesMap.put("expiryAt", "2020-04-09T05:51:17.334");
 		responseMap.put(RegistrationConstants.RESPONSE, valuesMap);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
 				Mockito.anyString())).thenReturn(responseMap);
 
@@ -155,7 +155,7 @@ public class PublicKeySyncTest {
 		valuesMap.put("issuedAt", "2020-04-09T05:51:17.334");
 		valuesMap.put("expiryAt", "2020-04-09T05:51:17.334");
 		responseMap.put(RegistrationConstants.RESPONSE, valuesMap);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
 				Mockito.anyString())).thenReturn(responseMap);
 
@@ -175,7 +175,7 @@ public class PublicKeySyncTest {
 		valuesMap.add(errorMap);
 		responseMap.put(RegistrationConstants.RESPONSE, null);
 		responseMap.put(RegistrationConstants.ERRORS, valuesMap);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
 				Mockito.anyString())).thenReturn(responseMap);
 
@@ -198,7 +198,7 @@ public class PublicKeySyncTest {
 		valuesMap.add(errorMap);
 		responseMap.put(RegistrationConstants.RESPONSE, null);
 		responseMap.put(RegistrationConstants.ERRORS, valuesMap);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
 				Mockito.anyString())).thenReturn(responseMap);
 
@@ -222,7 +222,7 @@ public class PublicKeySyncTest {
 		valuesMap.add(errorMap);
 		responseMap.put(RegistrationConstants.RESPONSE, null);
 		responseMap.put(RegistrationConstants.ERRORS, valuesMap);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
 				Mockito.anyString())).thenThrow(ConnectionException.class);
 
@@ -246,7 +246,7 @@ public class PublicKeySyncTest {
 		valuesMap.put("issuedAt", "2020-04-09T05:51:17.334");
 		valuesMap.put("expiryAt", "2020-04-09T05:51:17.334");
 		responseMap.put(RegistrationConstants.RESPONSE, valuesMap);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(false);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(false);
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
 				Mockito.anyString())).thenReturn(responseMap);
 

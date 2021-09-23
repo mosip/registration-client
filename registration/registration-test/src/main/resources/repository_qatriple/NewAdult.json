@@ -2,7 +2,7 @@
   "identity": {
 	  "BELOW_ARE_STATIC_KEYWORDS":"",
     "ageGroup": "ADULT",
-    "documentUploadAttributes":["POB","POR","POA","POI"],
+    "documentUploadAttributes":["POB","POA","POI"],
     "process": "New",
     "bioAttributes": [
       "leftEye",
@@ -19,6 +19,11 @@
       "rightThumb",
       "face"
     ],
+    "profile":"Default",
+    "score1":"10",
+    "score2":"20",
+    "score3":"90",
+    "score4":"90",
     "BELOW_ARE_THE_SCHEMA_LEVEL_ID's_DATA":"",
     "dateOfBirth": "20",
     "preferredLang": [

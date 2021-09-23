@@ -8,6 +8,9 @@ import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.neovisionaries.i18n.LanguageAlpha3Code;
+import com.neovisionaries.i18n.LanguageCode;
+
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
@@ -15,6 +18,7 @@ import io.mosip.registration.dto.AuthTokenDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 /**
  * This class will load all the property files as bundles All application level
@@ -119,7 +123,8 @@ public class ApplicationContext {
 					for (String langCode : langList) {
 						if (!langCode.isBlank()) {
 							String labelLangCodeKey = String.format("%s_%s", langCode, RegistrationConstants.LABELS);
-							Locale locale = new Locale(langCode != null ? langCode.substring(0, 2) : "");
+							String localeCode = (langCode != null) ? (LanguageAlpha3Code.getByCodeIgnoreCase(langCode) != null ? LanguageAlpha3Code.getByCodeIgnoreCase(langCode).getAlpha2().name() : null) : "";
+							Locale locale = new Locale(localeCode != null ? localeCode : langCode.substring(0, 2));
 							ResourceBundle labelsBundle = ResourceBundle.getBundle(RegistrationConstants.LABELS, locale);
 							if (labelsBundle.getLocale().equals(locale)) {
 								resourceBundleMap.put(labelLangCodeKey, labelsBundle);
@@ -304,7 +309,7 @@ public class ApplicationContext {
 
 	public static String getUpgradeServerURL() {
 		return applicationMap.get("client.upgrade.server.url") == null
-				? String.format("https://%s", RegistrationAppHealthCheckUtil.getHostName())
+				? "https://${mosip.hostname}"
 				: String.valueOf(applicationMap.get("client.upgrade.server.url"));
 	}
 

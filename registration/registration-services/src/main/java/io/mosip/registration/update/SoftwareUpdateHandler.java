@@ -27,6 +27,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import io.micrometer.core.annotation.Counted;
 import io.mosip.kernel.core.util.HMACUtils2;
+import io.mosip.kernel.logger.logback.util.MetricTag;
 import io.mosip.registration.context.ApplicationContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -109,11 +110,10 @@ public class SoftwareUpdateHandler extends BaseService {
 	 * @return Boolean true - If there is any update available. false - If no
 	 *         updates available
 	 */
-	@Counted(value = "sw.update", recordFailuresOnly = false)
+	@Counted(recordFailuresOnly = true)
 	public boolean hasUpdate() {
 
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Checking for updates from " +
-				ApplicationContext.getUpgradeServerURL());
+		LOGGER.info("Checking for any new updates");
 		try {
 			return !getCurrentVersion().equals(getLatestVersion());
 		} catch (IOException | ParserConfigurationException | SAXException | RuntimeException exception) {
@@ -170,8 +170,7 @@ public class SoftwareUpdateHandler extends BaseService {
 	 * @return current version
 	 */
 	public String getCurrentVersion() {
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Checking for current version started : " + ApplicationContext.getUpgradeServerURL());
+		LOGGER.info("Checking for current version started...");
 
 		// Get Local manifest file
 		try {
@@ -179,13 +178,11 @@ public class SoftwareUpdateHandler extends BaseService {
 				setCurrentVersion((String) localManifest.getMainAttributes().get(Attributes.Name.MANIFEST_VERSION));
 			}
 		} catch (IOException exception) {
-			LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
-					exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+			LOGGER.error(exception.getMessage(), exception);
 
 		}
 
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Checking for current version completed");
+		LOGGER.info("Checking for current version completed : {}", currentVersion);
 		return currentVersion;
 	}
 
@@ -218,10 +215,10 @@ public class SoftwareUpdateHandler extends BaseService {
 	 * @throws Exception
 	 *             - IOException
 	 */
+	@Counted(recordFailuresOnly = true)
 	public void update() throws Exception {
 
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Updating latest version started");
+		LOGGER.info("Updating latest version started");
 		Path backUp = null;
 
 		try {
@@ -449,7 +446,8 @@ public class SoftwareUpdateHandler extends BaseService {
 		this.latestVersion = latestVersion;
 	}
 
-	private boolean isCheckSumValid(File jarFile, Manifest manifest) {
+	@Counted(recordFailuresOnly = true)
+	private boolean isCheckSumValid(@MetricTag(value = "name", extractor = "arg.getName()") File jarFile, Manifest manifest) {
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 				"Checking of checksum started for jar :" + jarFile.getName());
 		String checkSum;
@@ -471,7 +469,7 @@ public class SoftwareUpdateHandler extends BaseService {
 
 	}
 
-	@Counted(value = "sw.update", recordFailuresOnly = true)
+	@Counted(recordFailuresOnly = true)
 	private boolean hasSpace(int bytes) {
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Checking of space in machine");
 		return bytes < new File("/").getFreeSpace();
@@ -541,14 +539,16 @@ public class SoftwareUpdateHandler extends BaseService {
 	 * run from the sql file
 	 * </p>
 	 * 
-	 * @param latestVersion
+	 * @param actualLatestVersion
 	 *            latest version
 	 * @param previousVersion
 	 *            previous version
 	 * @return response of sql execution
 	 * @throws IOException
 	 */
-	public ResponseDTO executeSqlFile(String actualLatestVersion, String previousVersion) throws IOException {
+	@Counted(recordFailuresOnly = true)
+	public ResponseDTO executeSqlFile(@MetricTag("newversion") String actualLatestVersion,
+									  @MetricTag("oldversion") String previousVersion) throws IOException {
 
 		LOGGER.info("DB-Script files execution started from previous version : {} , To Current Version : {}",previousVersion, currentVersion);
 
@@ -562,13 +562,11 @@ public class SoftwareUpdateHandler extends BaseService {
 
 		try {
 
-			LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					"Checking Started : " + newVersion + SLASH + exectionSqlFile);
+			LOGGER.info("Checking Started : " + newVersion + SLASH + exectionSqlFile);
 
 			execute(SQL + SLASH + newVersion + SLASH + exectionSqlFile);
 
-			LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					"Checking completed : " + newVersion + SLASH + exectionSqlFile);
+			LOGGER.info("Checking completed : " + newVersion + SLASH + exectionSqlFile);
 
 		}
 
@@ -580,13 +578,11 @@ public class SoftwareUpdateHandler extends BaseService {
 			// ROLL BACK QUERIES
 			try {
 
-				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Checking started : " + newVersion + SLASH + rollBackSqlFile);
+				LOGGER.info("Checking started : " + newVersion + SLASH + rollBackSqlFile);
 
 				execute(SQL + SLASH + newVersion + SLASH + rollBackSqlFile);
 
-				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Checking completed : " + newVersion + SLASH + rollBackSqlFile);
+				LOGGER.info("Checking completed : " + newVersion + SLASH + rollBackSqlFile);
 
 			} catch (RuntimeException | IOException exception) {
 
@@ -768,8 +764,9 @@ public class SoftwareUpdateHandler extends BaseService {
 	}
 
 	private String getURL(String urlPostFix) {
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Upgrade server : " + ApplicationContext.getUpgradeServerURL());
-		return String.format(urlPostFix, ApplicationContext.getUpgradeServerURL());
+		String url = String.format(urlPostFix, ApplicationContext.getUpgradeServerURL());
+		url = serviceDelegateUtil.prepareURLByHostName(url);
+		LOGGER.info("Upgrade server : {}", url);
+		return url;
 	}
 }

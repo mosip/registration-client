@@ -90,7 +90,11 @@
                                  <children>
                                     <HBox fx:id="demographicHBox" prefHeight="161.0" prefWidth="${contentGridPane.width}" spacing="30" styleClass="updateUinCheckBoxCommon">
                                        <children>
-                                          <FlowPane fx:id="parentFlowPane" prefHeight="372.0" prefWidth="${contentGridPane.width}" />
+                                          <ScrollPane fx:id="scrollPane" hbarPolicy="NEVER" prefViewportHeight="372.0" prefViewportWidth="610.0" styleClass="uinupdate-scroll-pane" vbarPolicy="NEVER">
+                                             <content>
+                                                <FlowPane fx:id="parentFlowPane" prefHeight="372.0" prefWidth="${contentGridPane.width}" />
+                                             </content>
+                                          </ScrollPane>
                                        </children>
                                     </HBox>
                                  </children>

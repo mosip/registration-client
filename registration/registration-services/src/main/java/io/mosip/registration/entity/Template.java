@@ -39,7 +39,7 @@ public class Template extends RegistrationCommonFields {
 	@Column(name = "file_format_code")
 	private String fileFormatCode;
 	private String model;
-	@Column(name = "file_txt", length = 4000)
+	@Column(name = "file_txt")
 	private String fileText;
 	@Column(name = "module_id")
 	private String moduleId;

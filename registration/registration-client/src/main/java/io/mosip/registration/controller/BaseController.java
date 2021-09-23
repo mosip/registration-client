@@ -25,12 +25,6 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import io.mosip.registration.dto.mastersync.GenericDto;
-import io.mosip.registration.dto.schema.ProcessSpecDto;
-import io.mosip.registration.dto.schema.UiFieldDTO;
-import javafx.scene.image.PixelWriter;
-import javafx.scene.image.WritableImage;
-import javafx.stage.Modality;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,9 +54,11 @@ import io.mosip.registration.controller.reg.Validations;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.dto.schema.SchemaDto;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RemapException;
@@ -79,7 +75,6 @@ import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.security.AuthenticationService;
 import io.mosip.registration.service.sync.SyncStatusValidatorService;
 import io.mosip.registration.util.common.PageFlow;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import io.mosip.registration.validator.RequiredFieldValidator;
@@ -110,10 +105,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -805,11 +803,13 @@ public class BaseController {
 		authenticationValidatorDTO.setUserId(username);
 		authenticationValidatorDTO.setPassword(password);
 
-		String status = authenticationService.validatePassword(authenticationValidatorDTO);
-		if (status.equals(RegistrationConstants.PWD_MATCH)) {
-			return RegistrationConstants.SUCCESS;
-		} else if (status.equals(RegistrationConstants.CREDS_NOT_FOUND)) {
-			return RegistrationConstants.CREDS_NOT_FOUND;
+		try {
+			return authenticationService.validatePassword(authenticationValidatorDTO) ? RegistrationConstants.SUCCESS :
+					RegistrationConstants.FAILURE;
+		} catch (RegBaseCheckedException e) {
+			LOGGER.error("PWD login failed due to : ", e.getErrorCode());
+			if(RegistrationConstants.CREDS_NOT_FOUND.equalsIgnoreCase(e.getErrorCode()))
+				return RegistrationConstants.CREDS_NOT_FOUND;
 		}
 		return RegistrationConstants.FAILURE;
 	}
@@ -1049,8 +1049,7 @@ public class BaseController {
 	}
 
 	public void remapMachine() {
-
-		String message = RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REMAP_NO_ACCESS_MESSAGE);
+		String message = RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REMAP_MESSAGE);
 
 		if (isPacketsPendingForEODOrReRegister()) {
 			message += RegistrationConstants.NEW_LINE + RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REMAP_EOD_PROCESS_MESSAGE);
@@ -1097,7 +1096,6 @@ public class BaseController {
 				handleRemapResponse(service, false);
 			}
 		});
-
 	}
 
 	private void handleRemapResponse(Service<String> service, boolean isSuccess) {
@@ -1416,7 +1414,7 @@ public class BaseController {
 
 	public boolean proceedOnAction(String job) {
 
-		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+		if (!serviceDelegateUtil.isNetworkAvailable()) {
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_INTERNET_CONNECTION));
 			return false;
 		}

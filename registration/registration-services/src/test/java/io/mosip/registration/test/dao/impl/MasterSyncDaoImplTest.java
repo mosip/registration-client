@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -136,6 +137,9 @@ public class MasterSyncDaoImplTest {
 	@InjectMocks
 	private MasterSyncDaoImpl masterSyncDaoImpl;
 
+	@Mock
+	private ServiceDelegateUtil serviceDelegateUtil;
+
 	
 	@Before
 	public void initialize() throws Exception {
@@ -144,7 +148,7 @@ public class MasterSyncDaoImplTest {
 		PowerMockito.doReturn(userContext).when(SessionContext.class, "userContext");
 		PowerMockito.when(SessionContext.userContext().getUserId()).thenReturn("mosip");
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		//Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
 		//Mockito.when(clientCryptoService.asymmetricDecrypt(Mockito.any())).thenReturn("[]".getBytes(StandardCharsets.UTF_8));
 

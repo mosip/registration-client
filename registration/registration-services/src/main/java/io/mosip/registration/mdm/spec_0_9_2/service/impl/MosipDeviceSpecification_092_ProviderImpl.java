@@ -13,6 +13,7 @@ import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 
+import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import org.apache.http.Consts;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -121,7 +122,8 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 		return mdmBioDevices;
 	}
 
-	@Timed(value = "mdm.stream", extraTags = {"version", "0.9.2"})
+	@Counted(extraTags = {"version", "0.9.2"})
+	@Timed(extraTags = {"version", "0.9.2"})
 	@Override
 	public InputStream stream(MdmBioDevice bioDevice, String modality) throws RegBaseCheckedException {
 
@@ -173,7 +175,8 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 
 	}
 
-	@Timed(value = "mdm.rcapture", extraTags = {"version", "0.9.2"})
+	@Counted(extraTags = {"version", "0.9.2"})
+	@Timed(extraTags = {"version", "0.9.2"})
 	@Override
 	public List<BiometricsDto> rCapture(MdmBioDevice bioDevice, MDMRequestDto mdmRequestDto)
 			throws RegBaseCheckedException {
@@ -357,6 +360,7 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 
 	}
 
+	@Counted(recordFailuresOnly = true, extraTags = {"version", "0.9.2"})
 	@Override
 	public boolean isDeviceAvailable(MdmBioDevice mdmBioDevice) {
 

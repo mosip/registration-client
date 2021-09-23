@@ -73,6 +73,8 @@ public class UpdateReg {
     SelectLanguagePage selectLanguagePage;
     Alerts alerts;
     UpdatePage updatePage;
+    WaitsUtil waitsUtil;
+    String exit="#exit";
 
     public RID updateRegistration(FxRobot robot, String loginUserid, String loginPwd, String supervisorUserid,
             String supervisorUserpwd, Stage applicationPrimaryStage1, String jsonContent, String process,
@@ -88,6 +90,8 @@ public class UpdateReg {
             robotActions = new RobotActions(robot);
             selectLanguagePage = new SelectLanguagePage(robot);
             updatePage = new UpdatePage(robot);
+            waitsUtil=new WaitsUtil();
+          
 
             rid1 = null;
             rid2 = null;
@@ -174,8 +178,8 @@ public class UpdateReg {
             authenticationPage.enterPassword(supervisorUserpwd);
             authenticationPage.clicksubmitBtn();
             robotActions.clickWindow();
+            // waitsUtil.clickNodeAssert(exit);
             homePage.clickHomeImg();
-            buttons.clickConfirmBtn();
             if (!rid2.rid.trim().isEmpty()) {
                 ExtentReportUtil.test1.info("Approve Packet done");
                 assertEquals(rid1.getRid(), rid2.getRid());

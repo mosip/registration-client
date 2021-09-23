@@ -2,7 +2,6 @@ package io.mosip.registration.dao;
 
 import java.util.List;
 
-import io.mosip.registration.constants.DeviceTypes;
 import io.mosip.registration.entity.UserMachineMapping;
 import io.mosip.registration.exception.RegBaseCheckedException;
 

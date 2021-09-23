@@ -299,7 +299,7 @@ public class TextFieldFxControl extends FxControl {
 		
 		return langCodes.stream().allMatch(langCode -> {
 			TextField textField = (TextField) getField(uiFieldDTO.getId() + langCode);
-			return textField.getText().isEmpty();
+			return textField.getText().trim().isEmpty();
 		});
 	}
 
@@ -334,28 +334,33 @@ public class TextFieldFxControl extends FxControl {
 
 	@Override
 	public void selectAndSet(Object data) {
+		if (data == null) {
+			getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(langCode -> {
+				TextField textField = (TextField) getField(uiFieldDTO.getId() + langCode);
+				if(textField != null) { textField.clear(); }
+			});
+			return;
+		}
 
-		if (data != null) {
-			if (data instanceof String) {
+		if (data instanceof String) {
 
-				TextField textField = (TextField) getField(
-						uiFieldDTO.getId() + getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
+			TextField textField = (TextField) getField(
+					uiFieldDTO.getId() + getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
 
-				textField.setText((String) data);
-			} else if (data instanceof List) {
+			textField.setText((String) data);
+		} else if (data instanceof List) {
 
-				List<SimpleDto> list = (List<SimpleDto>) data;
+			List<SimpleDto> list = (List<SimpleDto>) data;
 
-				for (SimpleDto simpleDto : list) {
+			for (SimpleDto simpleDto : list) {
 
-					TextField textField = (TextField) getField(uiFieldDTO.getId() + simpleDto.getLanguage());
+				TextField textField = (TextField) getField(uiFieldDTO.getId() + simpleDto.getLanguage());
 
-					if (textField != null) {
-						textField.setText(simpleDto.getValue());
-					}
+				if (textField != null) {
+					textField.setText(simpleDto.getValue());
 				}
-
 			}
+
 		}
 
 	}

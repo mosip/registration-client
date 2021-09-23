@@ -261,18 +261,20 @@ public class SessionContext {
 	private static boolean validatePword(String loginMethod, UserDTO userDTO,
 			AuthenticationValidatorDTO authenticationValidatorDTO, boolean skipAuthModes) {
 		AuthenticationService authenticationService = applicationContext.getBean(AuthenticationService.class);
-		if (authenticationValidatorDTO != null && authenticationService.validatePassword(authenticationValidatorDTO)
-				.equalsIgnoreCase(RegistrationConstants.PWD_MATCH)) {
-			createSessionContext();
-			SessionContext.authTokenDTO().setLoginMode(loginMethod);
-			validAuthModes.add(loginMethod);
-			createSecurityContext(userDTO, skipAuthModes);
-			return true;
-		} else {
-			validAuthModes.remove(loginMethod);
-			sessionContext = null;
-			return false;
+		try {
+			if (authenticationValidatorDTO != null && authenticationService.validatePassword(authenticationValidatorDTO)) {
+				createSessionContext();
+				SessionContext.authTokenDTO().setLoginMode(loginMethod);
+				validAuthModes.add(loginMethod);
+				createSecurityContext(userDTO, skipAuthModes);
+				return true;
+			}
+		} catch (RegBaseCheckedException e) {
+			LOGGER.error("Failed validating password", e);
 		}
+		validAuthModes.remove(loginMethod);
+		sessionContext = null;
+		return false;
 	}
 
 	/**

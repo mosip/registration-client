@@ -76,7 +76,7 @@ public class CertificateSyncServiceImpl extends BaseService implements Certifica
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-    @Timed(value = "sync", longTask = true, extraTags = {"type", "cacerts"})
+    @Timed
     @Override
     public ResponseDTO getCACertificates(String triggerPoint) {
         ResponseDTO responseDTO = new ResponseDTO();
@@ -87,7 +87,7 @@ public class CertificateSyncServiceImpl extends BaseService implements Certifica
                     LocalDateTime.ofInstant(syncControl.getLastSyncDtimes().toInstant(), ZoneOffset.ofHours(0))));
         }
 
-        if(!RegistrationAppHealthCheckUtil.isNetworkAvailable())
+        if(!serviceDelegateUtil.isNetworkAvailable())
             return setErrorResponse(responseDTO, RegistrationConstants.NO_INTERNET, null);
 
         LOGGER.info("Network available cacerts sync started");

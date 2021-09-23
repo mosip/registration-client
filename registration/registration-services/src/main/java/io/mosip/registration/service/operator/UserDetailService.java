@@ -2,6 +2,7 @@ package io.mosip.registration.service.operator;
 
 import java.util.List;
 
+import io.mosip.kernel.logger.logback.util.MetricTag;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.entity.UserDetail;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -52,6 +53,6 @@ public interface UserDetailService {
 
 	public List<String> getUserRoleByUserId(String userId);
 
-	public boolean isValidUser(String userId);
+	public boolean isValidUser(@MetricTag("userid") String userId);
 
 }

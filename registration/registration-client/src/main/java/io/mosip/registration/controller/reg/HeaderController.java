@@ -270,7 +270,7 @@ public class HeaderController extends BaseController {
 
 			@Override
 			public void run() {
-				Boolean flag = RegistrationAppHealthCheckUtil.isNetworkAvailable();
+				Boolean flag = serviceDelegateUtil.isNetworkAvailable();
 				online.setVisible(flag);
 				offline.setVisible(!flag);
 			}
@@ -793,7 +793,7 @@ public class HeaderController extends BaseController {
 
 	private void softwareUpdateInitiate(Pane pane, ProgressIndicator progressIndicator, String context,
 			boolean isPreLaunchTaskToBeStopped) {
-		if (RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+		if (serviceDelegateUtil.isNetworkAvailable()) {
 			executeSoftwareUpdateTask(pane, progressIndicator);
 		} else {
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_INTERNET_CONNECTION));
