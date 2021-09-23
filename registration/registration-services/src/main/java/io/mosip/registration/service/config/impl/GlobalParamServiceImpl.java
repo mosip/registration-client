@@ -85,7 +85,7 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 	 * @see io.mosip.registration.service.config.GlobalParamService#synchConfigData(
 	 * boolean)
 	 */
-	@Timed(value = "sync", longTask = true, extraTags = {"type", "configuration"})
+	@Timed(extraTags = {"type", "configuration"})
 	@Override
 	public ResponseDTO synchConfigData(boolean isJob) {
 		LOGGER.info("config data sync is started");

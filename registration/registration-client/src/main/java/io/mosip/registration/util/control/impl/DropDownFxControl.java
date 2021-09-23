@@ -326,18 +326,21 @@ public class DropDownFxControl extends FxControl {
 
 	@Override
 	public void selectAndSet(Object data) {
-		if (data != null) {
+		ComboBox<GenericDto> field = (ComboBox<GenericDto>) getField(uiFieldDTO.getId());
+		if (data == null) {
+			field.getSelectionModel().clearSelection();
+			return;
+		}
 
-			if (data instanceof List) {
+		if (data instanceof List) {
 
-				List<SimpleDto> list = (List<SimpleDto>) data;
+			List<SimpleDto> list = (List<SimpleDto>) data;
 
-				selectItem((ComboBox<GenericDto>) getField(uiFieldDTO.getId()), list.isEmpty() ? null : list.get(0).getValue());
+			selectItem(field, list.isEmpty() ? null : list.get(0).getValue());
 
-			} else if (data instanceof String) {
+		} else if (data instanceof String) {
 
-				selectItem((ComboBox<GenericDto>) getField(uiFieldDTO.getId()), (String) data);
-			}
+			selectItem(field, (String) data);
 		}
 	}
 

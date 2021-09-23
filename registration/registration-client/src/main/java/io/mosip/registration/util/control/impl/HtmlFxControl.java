@@ -83,6 +83,7 @@ public class HtmlFxControl extends FxControl {
         getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(langCode -> {
             final TitledPane titledPane = new TitledPane(resourceBundle.getString(langCode), buildWebView(langCode));
             accordion.getPanes().add(titledPane);
+            changeNodeOrientation(titledPane, langCode);
             titledPane.setId(uiFieldDTO.getId()+langCode);
         });
 
@@ -155,6 +156,7 @@ public class HtmlFxControl extends FxControl {
         webView.getEngine()
                 .documentProperty()
                 .addListener((observableValue, oldValue, document) -> addListeners(document));
+        changeNodeOrientation(webView, langCode);
         vbox.getChildren().add(webView);
         return vbox;
     }

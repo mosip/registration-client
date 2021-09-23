@@ -27,7 +27,7 @@ public class RegistrationMain {
     static String process, ageGroup;
 
     public static void invokeRegClient(String operatorId, String operatorPwd, String supervisorId, String supervisorPwd,
-            String reviewerUserid, String reviewerpwd) {
+        String reviewerUserid, String reviewerpwd) {
         NewReg loginNewRegLogout = new NewReg();
         LostReg lostUINLogout = new LostReg();
         UpdateReg updatereg = new UpdateReg();

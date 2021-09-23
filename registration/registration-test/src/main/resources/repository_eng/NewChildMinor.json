@@ -3,6 +3,7 @@
 	"process":"New",
 	"preferredLang":"English",
 	"documentUploadAttributes":["POB","POA","POI"],
+
 	"UIN":"5931539704",
     "profile":"Default",
     "score1":"10",
@@ -10,7 +11,13 @@
     "score3":"90",
     "score4":"90",
 	"gender" : [ {
+
     "language" : "eng",
+    "profile":"Default",
+    "score1":"10",
+    "score2":"20",
+    "score3":"90",
+    "score4":"90",
     "value" : "Female"
   }, {
     "language" : "ara",

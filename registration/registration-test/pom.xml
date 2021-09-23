@@ -9,6 +9,7 @@
   <name>registration-test</name>
   <description>Maven project of MOSIP Registration Test</description>
    <version>1.2.0-rc2-SNAPSHOT</version>
+
    <properties>
       <maven.compiler.source>11</maven.compiler.source>
       <maven.compiler.target>11</maven.compiler.target>
@@ -69,7 +70,7 @@
          <groupId>org.testfx</groupId>
          <artifactId>openjfx-monocle</artifactId>
          <version>jdk-11+26</version> <!-- jdk-11+26 for Java 11, jdk-9+181 for Java 9, 8u76-b04 for Java 8 -->
-         <scope>test</scope>
+         
       </dependency>
       <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-graphics -->
 <dependency>
@@ -77,8 +78,9 @@
     <artifactId>javafx-graphics</artifactId>
     <version>15</version>
 </dependency>
-      
-	<!-- https://mvnrepository.com/artifact/io.rest-assured/rest-assured -->
+
+     <!-- https://mvnrepository.com/artifact/io.rest-assured/rest-assured -->
+
 <dependency>
     <groupId>io.rest-assured</groupId>
     <artifactId>rest-assured</artifactId>

@@ -247,7 +247,7 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 	 * @param errorResponseDTOList
 	 *            the error response DTO list
 	 */
-	@Timed(value = "pending-check", extraTags = {"function", "packetcount"})
+	@Timed
 	private void validatingRegisteredPacketCountAndDuration(List<ErrorResponseDTO> errorResponseDTOList) {
 		LOGGER.info(LoggerConstants.OPT_TO_REG_LOGGER_SESSION_ID, APPLICATION_NAME, APPLICATION_ID,
 				"Fetching Registration details where status is Registered");

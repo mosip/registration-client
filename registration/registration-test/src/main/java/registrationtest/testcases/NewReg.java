@@ -315,10 +315,10 @@ public class NewReg {
             authenticationPage.enterPassword(supervisorUserpwd);
             authenticationPage.clicksubmitBtn();
             robotActions.clickWindow();
-
             // waitsUtil.clickNodeAssert(exit);
            homePage.clickHomeImg();
-
+           
+            
             if (!rid2.rid.trim().isEmpty()) {
                 ExtentReportUtil.test1.info("Approve Packet done");
                 assertEquals(rid1.getRid(), rid2.getRid());

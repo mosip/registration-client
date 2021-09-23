@@ -333,7 +333,7 @@ public class BaseService {
 	 * @param stationId the station id
 	 * @return the center id
 	 */
-	public String getCenterId(@NonNull String stationId) {
+	public String getCenterId(String stationId) {
 		CenterMachine centerMachine = centerMachineRepository.findByCenterMachineIdMachineId(stationId);
 		return centerMachine != null && registrationCenterDAO.isMachineCenterActive(stationId) ?
 				centerMachine.getCenterMachineId().getRegCenterId() : null;

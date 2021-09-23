@@ -145,6 +145,11 @@ public class CheckBoxFxControl extends FxControl {
 	@Override
 	public void selectAndSet(Object data) {
 		CheckBox checkBox = (CheckBox) getField(uiFieldDTO.getId());
+		if(data == null) {
+			checkBox.setSelected(false);
+			return;
+		}
+
 		checkBox.setSelected(data != null && ((String)data).equals("Y") ? true : false);
 	}
 

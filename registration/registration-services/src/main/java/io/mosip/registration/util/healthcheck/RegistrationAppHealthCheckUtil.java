@@ -64,46 +64,6 @@ public class RegistrationAppHealthCheckUtil {
 	}
 
 	/**
-	 * This method checks the Internet connectivity across the application.
-	 * 
-	 * <p>
-	 * Creates a {@link HttpURLConnection} and opens a communications link to the
-	 * resource referenced by this URL. If the connection is established
-	 * successfully, this method will return true which indicates Internet Access
-	 * available, otherwise, it will return false, indicating Internet Access not
-	 * available.
-	 * </p>
-	 *
-	 * @return true, if is network available and false, if it is not available.
-	 */
-	/*@Timed(value = "check.connectivity", longTask = true)
-	public boolean isNetworkAvailable() {
-		LOGGER.info("Registration Network Checker had been called.");
-		try {
-			String serviceUrl = prepareURLByHostName(keys.getProperty("mosip.reg.healthcheck.url"));
-			return restClientUtil.isConnectedToSyncServer(serviceUrl);
-		} catch (Exception exception) {
-			LOGGER.error("No Internet Access" , exception);
-		}
-		return false;
-	}*/
-
-	/*public static String getHostName() {
-		String hostname = System.getProperty(RegistrationConstants.MOSIP_HOSTNAME);
-		if(hostname == null || hostname.isEmpty()) {
-			hostname = keys.getProperty(RegistrationConstants.MOSIP_HOSTNAME, RegistrationConstants.MOSIP_HOSTNAME_DEF_VAL);
-		}
-		LOGGER.debug("MOSIP Host name : {} " , hostname);
-		return hostname;
-	}
-
-	public static String prepareURLByHostName(String url) {
-		String mosipHostNameVal = getHostName();
-		return (url != null && mosipHostNameVal != null) ? url.replace(mosipHostNamePlaceHolder, mosipHostNameVal)
-				: url;
-	}*/
-
-	/**
 	 * This method checks for the Disk Space Availability.
 	 * 
 	 * <p>
@@ -142,72 +102,4 @@ public class RegistrationAppHealthCheckUtil {
 				APPLICATION_ID, "Registration Disk Space Checker had been ended.");
 		return isSpaceAvailable;
 	}
-
-	/**
-	 * This method is used to accept any SSL certificate.
-	 * 
-	 * <p>
-	 * Installs the all-trusting {@link TrustManager} by creating a null
-	 * implementation which is treated as a successful validation and removing all
-	 * other implementations.
-	 * </p>
-	 *
-	 * @throws NoSuchAlgorithmException
-	 *             the no such algorithm exception
-	 * @throws KeyManagementException
-	 *             the key management exception
-	 */
-	/*public static void acceptAnySSLCerticficate() throws NoSuchAlgorithmException, KeyManagementException {
-		// Install the all-trusting trust manager
-		final SSLContext sc = SSLContext.getInstance("SSL");
-		sc.init(null, UNQUESTIONING_TRUST_MANAGER, null);
-		HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-	}
-
-	*//** The Constant UNQUESTIONING_TRUST_MANAGER. *//*
-	public static final TrustManager[] UNQUESTIONING_TRUST_MANAGER = new TrustManager[] { new X509TrustManager() {
-		public X509Certificate[] getAcceptedIssuers() {
-			return null;
-		}
-
-		*//*
-		 * (non-Javadoc)
-		 * 
-		 * @see javax.net.ssl.X509TrustManager#checkClientTrusted(java.security.cert.
-		 * X509Certificate[], java.lang.String)
-		 *//*
-		@Override
-		public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-		}
-
-		*//*
-		 * (non-Javadoc)
-		 * 
-		 * @see javax.net.ssl.X509TrustManager#checkServerTrusted(java.security.cert.
-		 * X509Certificate[], java.lang.String)
-		 *//*
-		@Override
-		public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-		}
-
-	} };*/
-
-	/**
-	 * This method checks if the Operating System is windows.
-	 *
-	 * @return true, if the OS is windows
-	 */
-	/*public static boolean isWindows() {
-		return operatingSystem instanceof WindowsOperatingSystem;
-
-	}
-
-	*//**
-	 * This method checks if the Operating System is Linux.
-	 *
-	 * @return true, if the OS is Linux
-	 *//*
-	public static boolean isLinux() {
-		return operatingSystem instanceof LinuxOperatingSystem;
-	}*/
 }

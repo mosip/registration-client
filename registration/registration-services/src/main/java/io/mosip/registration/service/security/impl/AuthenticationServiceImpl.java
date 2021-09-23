@@ -83,7 +83,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	 * authValidator(java.lang.String,
 	 * io.mosip.registration.dto.AuthenticationValidatorDTO)
 	 */
-	@Counted(value = "invalid", recordFailuresOnly = true, extraTags = {"type" , "biometric-login"})
+	@Counted(recordFailuresOnly = true, extraTags = {"type" , "biometric-login"})
 	public Boolean authValidator(String userId, String modality, List<BiometricsDto> biometrics) {
 		LOGGER.info("OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
 				modality + " >> authValidator invoked.");
@@ -144,9 +144,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	 *                                   password entered by the user
 	 * @return appropriate message after validation
 	 */
-	public String validatePassword(AuthenticationValidatorDTO authenticationValidatorDTO) {
-		LOGGER.debug("REGISTRATION - OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
-				"Validating credentials using database >>>> " + authenticationValidatorDTO.getUserId());
+	@Counted(recordFailuresOnly = true, extraTags = {"type" , "pwd-login"})
+	public Boolean validatePassword(AuthenticationValidatorDTO authenticationValidatorDTO) throws  RegBaseCheckedException {
+		LOGGER.debug("Validating credentials using database >>>> {}", authenticationValidatorDTO.getUserId());
 		try {
 			//Always mandate user to reach server to validate pwd when machine is online
 			//As in case of new user, any valid authtoken will be simply allowed
@@ -161,18 +161,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 							.digestAsPlainTextWithSalt(authenticationValidatorDTO.getPassword().getBytes(),
 									CryptoUtil.decodeBase64(userDTO.getSalt()))
 							.equals(userDTO.getUserPassword().getPwd())) {
-				return RegistrationConstants.PWD_MATCH;
-			} else if (null != userDTO && null == userDTO.getSalt()) {
-				return RegistrationConstants.CREDS_NOT_FOUND;
-			} else {
-				return RegistrationConstants.PWD_MISMATCH;
+				return  true;
+			}
+
+			if (null != userDTO && null == userDTO.getSalt()) {
+				throw new RegBaseCheckedException(RegistrationConstants.CREDS_NOT_FOUND,
+						RegistrationConstants.CREDS_NOT_FOUND);
 			}
 
 		} catch (RuntimeException | RegBaseCheckedException | NoSuchAlgorithmException runtimeException) {
-			LOGGER.error("REGISTRATION - OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
-					ExceptionUtils.getStackTrace(runtimeException));
-			return RegistrationConstants.PWD_MISMATCH;
+			LOGGER.error("Pwd validation failed", runtimeException);
 		}
+		throw new RegBaseCheckedException(RegistrationConstants.PWD_MISMATCH, RegistrationConstants.PWD_MISMATCH);
 	}
 
 }

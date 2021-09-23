@@ -184,6 +184,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 				JSONObject jsonObject = (JSONObject) new JSONObject(jsonString.toString()).get("identity");
 				//Always use latest schema, ignoring missing / removed fields
 				RegistrationDTO registrationDTO = getRegistrationDTOFromSession();
+				getRegistrationDTOFromSession().clearRegistrationDto();
 				List<UiFieldDTO> fieldList = identitySchemaService.getAllFieldSpec(registrationDTO.getProcessId(), registrationDTO.getIdSchemaVersion());
 
 				for(UiFieldDTO field : fieldList) {
@@ -201,7 +202,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 							documentDto.setType(fieldValue.getString("type"));
 							documentDto.setValue(fieldValue.getString("value"));
 							try {
-							    documentDto.setRefNumber((fieldValue.getString("docRefId")));
+							    documentDto.setRefNumber((fieldValue.getString("refNumber")));
 							} catch(JSONException jsonException) {
 								LOGGER.error("Unable to find Document Refernce Number for Pre-Reg-Sync : ", jsonException);
 							}

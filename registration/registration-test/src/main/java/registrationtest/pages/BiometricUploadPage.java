@@ -56,7 +56,7 @@ public class BiometricUploadPage {
         Label thresholdScore = waitsUtil.lookupByIdLabel(idBioType + thresholdScoreLabel, robot);
         String val = thresholdScore.getText();
         val=val.replace("%", "");
-        if (val.equalsIgnoreCase("")) val="0";
+        if(val.equalsIgnoreCase(""))val="0";
         return Integer.parseInt(val);  
      
     }
@@ -70,7 +70,7 @@ public class BiometricUploadPage {
         Label score = waitsUtil.lookupByIdLabel(idBioType + qualityScore, robot);
         String val = score.getText();
         val=val.replace("%", "");
-        if (val.equalsIgnoreCase("")) val="0";
+        if(val.equalsIgnoreCase(""))val="0";
         return Integer.parseInt(val);  
     }
 
@@ -80,6 +80,7 @@ public class BiometricUploadPage {
 
     public int getAttemptSlap(String idBioType) {
         Label slap = waitsUtil.lookupByIdLabel(idBioType + attemptSlap, robot);
+
         logger.info("Automation text" +slap.getText());
         logger.info("Automation attemptslap" +slap);
         logger.info("Automation attemptslap ID" +slap.getId());
