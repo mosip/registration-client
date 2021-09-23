@@ -247,6 +247,5 @@ public class UpdateUINController extends BaseController implements Initializable
 			LOGGER.error(exception.getMessage(), exception);
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_REG_PAGE));
 		}
-		clearRegistrationData();
 	}
 }
