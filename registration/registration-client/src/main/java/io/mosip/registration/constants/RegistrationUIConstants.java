@@ -93,6 +93,7 @@ public class RegistrationUIConstants {
 
 	// MACHINE CENTER REMAP
 	public static final String REMAP_NO_ACCESS_MESSAGE = "REMAP_NO_ACCESS_MESSAGE";
+	public static final String REMAP_MESSAGE = "REMAP_MESSAGE";
 	public static final String REMAP_EOD_PROCESS_MESSAGE = "REMAP_EOD_PROCESS_MESSAGE";
 	public static final String REMAP_CLICK_OK = "REMAP_CLICK_OK";
 	public static final String REMAP_PROCESS_SUCCESS = "REMAP_PROCESS_SUCCESS";
