@@ -134,7 +134,9 @@ public class DemographicPage {
                     TextField demoTextFieldvar = waitsUtil.lookupById(id);
                     assertNotNull(demoTextFieldvar, id + " not present");
 
-                    if (demoTextFieldvar.isEditable() && demoTextFieldvar.isVisible()) {
+                   
+                    if (demoTextFieldvar.isEditable() && demoTextFieldvar.getParent().isVisible()) {
+                        logger.info("id="+id + "value"+value);
                         String makeUniqueEntry = PropertiesUtil.getKeyValue("makeUniqueEntry");
 
                         Boolean appendDateTime = makeUniqueEntry == null ? false
