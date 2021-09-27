@@ -625,7 +625,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		byte[] key = clientCryptoFacade.getClientSecurity().getEncryptionPublicPart();
 		FileUtils.copyToFile(new ByteArrayInputStream(clientCryptoFacade.encrypt(key, content)),
 				Paths.get(baseLocation, packetManagerAccount, packetId.concat("_Ack.").concat(format)).toFile());
-		registrationDAO.updateAckReceiptSignature(packetId, CryptoUtil.encodeBase64(signature));
+		registrationDAO.updateAckReceiptSignature(packetId, CryptoUtil.encodeToURLSafeBase64(signature));
 	}
 
 
@@ -648,7 +648,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 		byte[] decryptedContent = clientCryptoFacade.decrypt(FileUtils.readFileToByteArray(new File(filepath)));
 		boolean isSignatureValid = clientCryptoFacade.getClientSecurity()
-				.validateSignature(CryptoUtil.decodeBase64(registration.getAckSignature()), decryptedContent);
+				.validateSignature(CryptoUtil.decodeURLSafeBase64(registration.getAckSignature()), decryptedContent);
 		if(isSignatureValid)
 			return new String(decryptedContent);
 

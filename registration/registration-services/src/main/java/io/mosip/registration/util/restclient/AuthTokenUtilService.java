@@ -305,7 +305,7 @@ public class AuthTokenUtilService {
         if(responseMap.get(RegistrationConstants.REST_RESPONSE_BODY) != null) {
             Map<String, Object> respBody = (Map<String, Object>) responseMap.get(RegistrationConstants.REST_RESPONSE_BODY);
             if (respBody.get("response") != null) {
-                byte[] decryptedData = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64((String)respBody.get("response")));
+                byte[] decryptedData = clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64((String)respBody.get("response")));
                 return new JSONObject(new String(decryptedData));
             }
 
