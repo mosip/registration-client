@@ -137,9 +137,9 @@ public class NewReg {
     }
 
     
-    public boolean operatorOnboard(FxRobot robot, String operatorUserid, String operatorPwd, String jsoncontent,String filename,
+    public void operatorOnboard(FxRobot robot, String operatorUserid, String operatorPwd, String jsoncontent,String filename,
             Stage applicationPrimaryStage1) {
-        boolean flag1 = false,flag2=false;
+        boolean flag = false;
         try {
           
             ExtentReportUtil.test1 = ExtentReportUtil.reports.createTest("Onboard " + operatorUserid +  " "+filename);
@@ -162,12 +162,12 @@ public class NewReg {
             // Enter userid and password
             loginPage.selectAppLang();
             loginPage.setUserId(operatorUserid);
-            flag1 = loginPage.verifyLoginAndHome(operatorPwd, applicationPrimaryStage1);
-            flag2 = loginPage.verifyOnboardBio(jsoncontent);
+            flag = loginPage.verifyOnbard(operatorPwd, jsoncontent);
+        //    flag2 = loginPage.verifyOnboardBio(jsoncontent);
             
             ExtentReportUtil.test1.info("Operator logs in");
 
-            if (flag1 == true || flag2==true) {
+            if (flag == true ) {
                 try {
                     alerts.clickAlertexit();
                 } catch (Exception e) {
@@ -216,7 +216,6 @@ public class NewReg {
             logger.error(e.getMessage());
         }
 
-        return flag1;
     }
 
     public RID newRegistration(FxRobot robot, String loginUserid, String loginPwd, String supervisorUserid,

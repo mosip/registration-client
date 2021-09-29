@@ -196,7 +196,7 @@ public class LoginPage {
 
     }
 
-    public boolean verifyLoginAndHome(String pwd, Stage applicationPrimaryStage) {
+    public boolean verifyOnbard(String pwd, String identity) {
         boolean flag = false;
         try {
             passwordTextField = waitsUtil.lookupByIdTextField(password, robot);
@@ -211,10 +211,19 @@ public class LoginPage {
 
             Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
             waitsUtil.clickNodeAssert("#homeImgView");
-
             flag = true;
+            try {
+                Node node = waitsUtil.lookupById("#getOnboardedPane");
+                if (node.isVisible())
+                    flag = verifyOnboardBio(identity);
+            } catch (Exception e) {
+                logger.error("", e);
+               
+            }
+           
         } catch (Exception e) {
             logger.error("", e);
+            flag = false;
         }
         return flag;
 
@@ -232,11 +241,12 @@ public class LoginPage {
             waitsUtil.clickNodeAssert("#continueBtn");
 
             Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
-            
+
             waitsUtil.clickNodeAssert(userOnboardMessage);
             flag = true;
         } catch (Exception e) {
             logger.error("", e);
+            flag = false;
         }
         return flag;
 

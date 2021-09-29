@@ -424,7 +424,7 @@ public class DemographicPage {
         try {
             // schemaJsonFileVersion=JsonUtil.JsonObjDoubleParsing(JsonIdentity,"IDSchemaVersion");
 
-            schemaJsonFileVersion = Double.parseDouble(PropertiesUtil.getKeyValue("IDSchemaVersion"));
+           // schemaJsonFileVersion = Double.parseDouble(PropertiesUtil.getKeyValue("IDSchemaVersion"));
             schemaJsonFilePath = System.getProperty("user.dir") + File.separator + flow.toLowerCase() + "Process.json";
             jsonFromSchema = Files.readString(Paths.get(schemaJsonFilePath));
             logger.info("Automaiton Script - Printing jsonFromSchema" + jsonFromSchema);

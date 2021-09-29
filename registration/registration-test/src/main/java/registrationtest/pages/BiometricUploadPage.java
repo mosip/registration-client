@@ -111,8 +111,10 @@ public class BiometricUploadPage {
             listException = exceptionList(jsonContent);
             // IRIS DOUBLE
             clickModality(idBioType,idModality);
-            Thread.sleep(400);
-
+           
+            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait1")));
+            
+            
             if (listException.contains("leftEye") && listException.contains("rightEye")) {
                 waitsUtil.clickNodeAssert("#leftEye");
                 waitsUtil.clickNodeAssert("#rightEye");
@@ -140,7 +142,9 @@ public class BiometricUploadPage {
             listException = exceptionList(jsonContent);
             // FINGERPRINT_SLAB_THUMBS
             clickModality(idBioType,idModality);
-            Thread.sleep(400);
+            
+            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait1")));
+            
 
             if (listException.contains("leftThumb") && listException.contains("rightThumb")) {
                 waitsUtil.clickNodeAssert("#leftThumb");
@@ -169,8 +173,10 @@ public class BiometricUploadPage {
             listException = exceptionList(jsonContent);
             // FINGERPRINT_SLAB_RIGHT
             clickModality(idBioType,idModality);
-            Thread.sleep(1000);
-
+          
+            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait1")));
+            
+            
             if (listException.contains("rightIndex") && listException.contains("rightLittle")
                     && listException.contains("rightRing") && listException.contains("rightMiddle")) {
                 waitsUtil.clickNodeAssert("#rightIndex");
@@ -263,13 +269,9 @@ public class BiometricUploadPage {
             listException = exceptionList(jsonContent);
             // FINGERPRINT_SLAB_LEFT
             clickModality(idBioType,idModality);
-            try {
-                Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait1")));
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
+           
+            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait1")));
+           
             if (listException.contains("leftIndex") && listException.contains("leftLittle")
                     && listException.contains("leftRing") && listException.contains("leftMiddle")) {
                 waitsUtil.clickNodeAssert("#leftIndex");
@@ -328,9 +330,7 @@ public class BiometricUploadPage {
             for (int i = 1; i <= bioCapattempvalue; i++) {
                 bioCorrectionPage.setMDSscore(type, JsonUtil.JsonObjParsing(jsonContent, "score" + i));
 
-              //  waitsUtil.clickNodeAssert(idBioType + scanBtn);
-
-
+             
                 String idBioTypeScan=idBioType.equals("#")?idBioType.concat("s"):idBioType.concat("S");
                 clickScanBasedModality(idBioTypeScan + scanBtn);
                 
@@ -378,11 +378,9 @@ public class BiometricUploadPage {
     public void bioScan(String idBioType, String idModality, String jsonContent) {
         try {
             logger.info("bioScan");
-
             clickModality(idBioType,idModality);
-            // clickModality(idBioType,idModality);
-            // waitsUtil.scrollclickNodeAssert1(id);
-           
+            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait1")));
+            
             clickScanBtn(idBioType, jsonContent, idModality);
         } catch (Exception e) {
             logger.error("", e);
@@ -414,16 +412,17 @@ public class BiometricUploadPage {
 
             }
         });
-     try {
-        Thread.sleep(1000);
-    } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-    }  
     }
 
     
     private void clickScanBasedModality(String idModality) {
+                  logger.info("clickModality = " + idModality);
+                
+                     waitsUtil.clickNodeAssert(idModality);
+                             
+    }
+    
+    private void clickScanBasedModality1(String idModality) {
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
@@ -451,14 +450,11 @@ public class BiometricUploadPage {
 
             }
         });
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }  
+        
+        
+      
+        
     }
-    
     
     
     /**
