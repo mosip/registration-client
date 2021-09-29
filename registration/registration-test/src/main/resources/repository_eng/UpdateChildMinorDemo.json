@@ -3,7 +3,7 @@
 	"process":"Update",
 	"preferredLang":"English",
 	"UIN":"5931539704",
-	"documentUploadAttributes":["POB","POA","POI"],
+	"documentUploadAttributes":["POB","POR","POA","POI"],
 	   "profile":"Default",
 	    "score1":"10",
 	    "score2":"20",

@@ -112,15 +112,16 @@ public class RegistrationMain {
                                 break;
                             case "OperatorOnboard":
                                 Boolean onboardBioflag = false;
-                                onboardBioflag = loginNewRegLogout.operatorOnboard(robot, operatorId, operatorPwd,fileName,
+                                onboardBioflag = loginNewRegLogout.operatorOnboard(robot, operatorId, operatorPwd,jsonContent,fileName,
                                         StartApplication.primaryStage);
                                 logger.info("Operator Onboarding status=" + onboardBioflag);
                                 ExtentReportUtil.reports.flush();
                                 break;
                             case "ReviewerOnboard":
                                 Boolean reviewerflag = false;
+                                
                                 reviewerflag = loginNewRegLogout.operatorOnboard(robot, reviewerUserid,
-                                        reviewerpwd, fileName,StartApplication.primaryStage);
+                                        reviewerpwd, jsonContent,fileName,StartApplication.primaryStage);
                                 logger.info("Operator Onboarding status=" + reviewerflag);
                                 ExtentReportUtil.reports.flush();
                                 break;

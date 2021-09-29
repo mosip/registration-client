@@ -2,6 +2,7 @@ package registrationtest.pages;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -107,7 +108,7 @@ public class DemographicPage {
                     TextField demoTextField = waitsUtil.lookupById(id);
                     assertNotNull(demoTextField, id + " not present");
 
-                    if (demoTextField.isEditable() && demoTextField.isVisible()) {
+                    if (demoTextField.isEditable() && demoTextField.getParent().isVisible()) {
                         logger.info(" textfield is visible ans setting the text in " + id + " " + idSchema);
                         demoTextField.setText(idSchema);
 
@@ -173,7 +174,7 @@ public class DemographicPage {
                     TextField demoTextFieldvar = waitsUtil.lookupById(id);
                     assertNotNull(demoTextFieldvar, id + " not present");
 
-                    if (demoTextFieldvar.isEditable() && demoTextFieldvar.isVisible()) {
+                    if (demoTextFieldvar.isEditable() && demoTextFieldvar.getParent().isVisible()) {
                         String makeUniqueEntry = PropertiesUtil.getKeyValue("makeUniqueEntry");
 
                         Boolean appendDateTime = makeUniqueEntry == null ? false
@@ -409,7 +410,7 @@ public class DemographicPage {
             // schemaJsonFileVersion=JsonUtil.JsonObjDoubleParsing(JsonIdentity,"IDSchemaVersion");
 
             schemaJsonFileVersion = Double.parseDouble(PropertiesUtil.getKeyValue("IDSchemaVersion"));
-            schemaJsonFilePath = System.getProperty("user.dir") + "\\SCHEMA_" + schemaJsonFileVersion + ".json";
+            schemaJsonFilePath = System.getProperty("user.dir") + "/SCHEMA_" + schemaJsonFileVersion + ".json";
             jsonFromSchema = Files.readString(Paths.get(schemaJsonFilePath));
             logger.info("Automaiton Script - Printing jsonFromSchema" + jsonFromSchema);
         } catch (Exception e) {
@@ -424,7 +425,7 @@ public class DemographicPage {
             // schemaJsonFileVersion=JsonUtil.JsonObjDoubleParsing(JsonIdentity,"IDSchemaVersion");
 
             schemaJsonFileVersion = Double.parseDouble(PropertiesUtil.getKeyValue("IDSchemaVersion"));
-            schemaJsonFilePath = System.getProperty("user.dir") + "\\" + flow.toLowerCase() + "Process.json";
+            schemaJsonFilePath = System.getProperty("user.dir") + File.separator + flow.toLowerCase() + "Process.json";
             jsonFromSchema = Files.readString(Paths.get(schemaJsonFilePath));
             logger.info("Automaiton Script - Printing jsonFromSchema" + jsonFromSchema);
         } catch (Exception e) {

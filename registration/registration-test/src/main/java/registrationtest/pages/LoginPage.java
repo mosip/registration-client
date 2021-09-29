@@ -18,9 +18,12 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import registrationtest.controls.Alerts;
+import registrationtest.pojo.schema.Schema;
 import registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;
+
+import java.util.List;
 import java.util.Optional;
 
 public class LoginPage {
@@ -41,13 +44,14 @@ public class LoginPage {
     String homeSelectionMenu = "#homeSelectionMenu";
     String logout = "#logout";
     String submit = "#submit1";
-    //String success = "#context";
+    String userOnboardMessage = "#userOnboardMessage";
     String success = "Success";
     String exit = "#exit";
     String appLanguage = "#appLanguage";
 
     WaitsUtil waitsUtil;
     Alerts alerts;
+    BiometricUploadPage biometricUploadPage;
 
     public LoginPage(FxRobot robot, Stage applicationPrimaryStage, Scene scene) {
         logger.info("LoginPage Constructor");
@@ -56,6 +60,8 @@ public class LoginPage {
         this.scene = scene;
         waitsUtil = new WaitsUtil(robot);
         alerts = new Alerts(robot);
+        biometricUploadPage = new BiometricUploadPage(robot);
+
     }
 
     public LoginPage(FxRobot robot) {
@@ -64,27 +70,12 @@ public class LoginPage {
         this.robot = robot;
         waitsUtil = new WaitsUtil(robot);
         waitsUtil.clickNodeAssert(loginScreen);
+        biometricUploadPage = new BiometricUploadPage(robot);
     }
 
     public void selectAppLang() {
-        String[] listLang = null;
         try {
-            listLang = PropertiesUtil.getKeyValue("appLanguage").split("@@");
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        }
-
-        String str = listLang[2];
-        // ComboBoxUtil.user_selects_combo_item(appLanguage,str);
-
-//					GenericDto dto=new GenericDto();
-//					
-//					dto.setCode(listLang[0]);
-//					dto.setLangCode(listLang[1]);
-//					dto.setName(listLang[2]);
-//					
-//
-        try {
+            String str = PropertiesUtil.getKeyValue("appLanguage");
             Platform.runLater(new Runnable() {
                 public void run() {
 
@@ -189,7 +180,7 @@ public class LoginPage {
             assertNotNull(passwordTextField, "passwordTextField Not Present");
 
             passwordTextField.setText(pwd);
-            
+
             // if home else fail or check the #context
 
             waitsUtil.clickNodeAssert("#sub2");
@@ -204,7 +195,6 @@ public class LoginPage {
         return flag;
 
     }
-    
 
     public boolean verifyLoginAndHome(String pwd, Stage applicationPrimaryStage) {
         boolean flag = false;
@@ -214,7 +204,7 @@ public class LoginPage {
             assertNotNull(passwordTextField, "passwordTextField Not Present");
 
             passwordTextField.setText(pwd);
-            
+
             // if home else fail or check the #context
 
             waitsUtil.clickNodeAssert("#sub2");
@@ -222,6 +212,28 @@ public class LoginPage {
             Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
             waitsUtil.clickNodeAssert("#homeImgView");
 
+            flag = true;
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+        return flag;
+
+    }
+
+    public boolean verifyOnboardBio(String identity) {
+        boolean flag = false;
+        try {
+            waitsUtil.clickNodeAssert("#getOnboardedPane");
+
+            List<String> str = biometricUploadPage.bioAttributeList(identity);
+
+            biometricUploadPage.newRegbioUpload("applicant", str, "#", identity, "ADULT");
+
+            waitsUtil.clickNodeAssert("#continueBtn");
+
+            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
+            
+            waitsUtil.clickNodeAssert(userOnboardMessage);
             flag = true;
         } catch (Exception e) {
             logger.error("", e);
