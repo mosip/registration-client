@@ -10,6 +10,5 @@ public class BlocklistedConsentDto {
     private String screenName;
     private List<String> words;
     private Boolean operatorConsent;
-    private String supervisorId;
-    private String supervisorAuthType;
+    private String operatorId;
 }

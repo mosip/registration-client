@@ -35,7 +35,6 @@ import io.mosip.registration.dto.BlocklistedConsentDto;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
-import io.mosip.registration.enums.Role;
 import io.mosip.registration.util.common.DemographicChangeActionHandler;
 import io.mosip.registration.util.control.FxControl;
 import javafx.collections.ObservableList;
@@ -271,9 +270,7 @@ public class TextFieldFxControl extends FxControl {
 					blockListedConsent.setWords(validation.getBlackListedWordsList(textField));
 					blockListedConsent.setOperatorConsent(true);
 					blockListedConsent.setScreenName(genericController.getCurrentScreenName());
-					if (Role.hasSupervisorRole(SessionContext.userContext().getRoles())) {
-						blockListedConsent.setSupervisorId(SessionContext.userId());
-					}
+					blockListedConsent.setOperatorId(SessionContext.userId());
 					getRegistrationDTo().BLOCKLISTED_CHECK.put(uiFieldDTO.getId(), blockListedConsent);
 				}
 
