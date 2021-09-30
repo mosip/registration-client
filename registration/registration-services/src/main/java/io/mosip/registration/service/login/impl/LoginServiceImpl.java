@@ -7,6 +7,7 @@ import static io.mosip.registration.mapper.CustomObjectMapper.MAPPER_FACADE;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -143,6 +144,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	 * io.mosip.registration.service.login.LoginService#getModesOfLogin(java.lang.
 	 * String, java.util.Set)
 	 */
+	@SuppressWarnings("unlikely-arg-type")
 	@Override
 	public List<String> getModesOfLogin(String authType, Set<String> roleList) {
 		// Retrieve Login information
@@ -164,16 +166,14 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 			loginModes = appAuthenticationDAO.getModesOfLogin(authType, roleList);
 
 			if(mandatePwdLogin) {
-				Optional<String> pwdMode = loginModes.stream().filter(loginMode ->
-						loginMode.equalsIgnoreCase(LoginMode.OTP.getCode()) ||
-								loginMode.equalsIgnoreCase(LoginMode.PASSWORD.getCode()) ||
-								loginMode.equalsIgnoreCase(RegistrationConstants.PWORD)).findFirst();
-
-				LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "PWD LOGIN mode already present ? " + pwdMode.isPresent());
-				if(!pwdMode.isPresent())
+				List<String> constantLoginModes = Arrays.asList(LoginMode.OTP.getCode(), LoginMode.PASSWORD.getCode(), RegistrationConstants.PWORD); 
+				String pwdMode = null;
+				if(loginModes.contains(constantLoginModes)) {
+					pwdMode = loginModes.get(0);
+				}
+				LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "PWD LOGIN mode already present ? " + pwdMode == null ?false:true);
+				if(pwdMode == null || pwdMode.isEmpty() || pwdMode.isBlank())
 					loginModes.add(RegistrationConstants.PWORD);
-
-				return loginModes;
 			}
 			
 			LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
@@ -380,7 +380,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 			validateResponse(responseDTO, CACERT_SYNC_STEP);
 			LOGGER.info("REGISTRATION  - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID, CACERT_SYNC_STEP+ " task completed in (ms) : " +
 					(System.currentTimeMillis() - taskStart));
-
+			
 			if(isInitialSync()) {
 				LoginUserDTO loginUserDTO = (LoginUserDTO) ApplicationContext.map().get(RegistrationConstants.USER_DTO);
 				userDetailDAO.updateUserPwd(loginUserDTO.getUserId(), loginUserDTO.getPassword());
@@ -468,7 +468,6 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 				} else {
 					return RegistrationConstants.ERROR;
 				}
-				return "false";
 
 			} else {
 				if (!errorMessage.isEmpty()) {
@@ -487,7 +486,6 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 						return errorMessage;
 					}
 				}
-				return "true";
 			}
 
 		} catch (RegBaseCheckedException regBaseCheckedException) {

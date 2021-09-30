@@ -45,6 +45,7 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.AppAuthenticationDAO;
 import io.mosip.registration.dao.AppAuthenticationDetails;
+import io.mosip.registration.dao.AppRolePriorityDetails;
 import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dao.ScreenAuthorizationDAO;
 import io.mosip.registration.dao.ScreenAuthorizationDetails;
@@ -68,7 +69,9 @@ import io.mosip.registration.entity.id.RegCenterUserId;
 import io.mosip.registration.entity.id.UserMachineMappingID;
 import io.mosip.registration.entity.id.UserRoleId;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.repositories.AppAuthenticationRepository;
+import io.mosip.registration.repositories.AppRolePriorityRepository;
 import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.repositories.RegistrationCenterRepository;
@@ -106,6 +109,9 @@ public class LoginServiceTest {
 
 	@Mock
 	private AppAuthenticationRepository appAuthenticationRepository;
+	
+	@Mock
+	private AppRolePriorityRepository appRolePriorityRepositoryTest;
 
 	@Mock
 	private AppAuthenticationDAO appAuthenticationDAO;
@@ -255,9 +261,41 @@ public class LoginServiceTest {
 	}
 	
 	@Test
-	public void getModesOfLoginNegativeTest() {
-		Set<String> roleSet = new HashSet<>();		
+	public void getModesOfLoginRoleEmptyNegativeTest() {
+		Set<String> roleSet = new HashSet<>();
 		loginServiceImpl.getModesOfLogin("LOGIN", roleSet);		
+	}
+	
+	@Test
+	public void getModesOfLoginAuthTypeEmptyNegativeTest() {
+		Set<String> roleSet = new HashSet<>();
+		roleSet.add("ADMIN");
+		loginServiceImpl.getModesOfLogin("", roleSet);		
+	}
+	
+	@Test
+	public void getModesOfLoginMultiToken() {
+
+		List<AppAuthenticationDetails> loginList = new ArrayList<AppAuthenticationDetails>();
+		Set<String> roleSet = new HashSet<>();
+		roleSet.add("OFFICER");
+		Mockito.when(appAuthenticationRepository
+				.findByIsActiveTrueAndAppAuthenticationMethodIdProcessIdAndAppAuthenticationMethodIdRoleCodeInOrderByMethodSequence(
+						"LOGIN", roleSet))
+				.thenReturn(loginList);
+
+		List<String> modes = new ArrayList<>();
+		loginList.stream().map(loginMethod -> loginMethod.getAppAuthenticationMethodId().getAuthMethodCode())
+				.collect(Collectors.toList());
+
+		Mockito.when(appAuthenticationRepository
+				.findByIsActiveTrueAndAppAuthenticationMethodIdProcessIdAndAppAuthenticationMethodIdRoleCodeInOrderByMethodSequence(
+						"LOGIN", roleSet))
+				.thenReturn(loginList);
+
+		Mockito.when(authTokenUtilService.hasAnyValidToken()).thenReturn(true);
+		Mockito.when(appAuthenticationDAO.getModesOfLogin("LOGIN", roleSet)).thenReturn(modes);
+		assertEquals(modes, loginServiceImpl.getModesOfLogin("LOGIN", roleSet));
 	}
 	
 	@Test
@@ -300,8 +338,13 @@ public class LoginServiceTest {
 	}
 	
 	@Test
-	public void getRegistrationCenterDetailsFailureTest() {
+	public void getRegistrationCenterDetailsCerterIdEmptyTest() {
 		loginServiceImpl.getRegistrationCenterDetails("", "eng");
+	}
+	
+	@Test
+	public void getRegistrationCenterDetailsLangCodeEmptyTest() {
+		loginServiceImpl.getRegistrationCenterDetails("10001", "");
 	}
 
 	@Test
@@ -466,6 +509,54 @@ public class LoginServiceTest {
 		Mockito.when(userDetailService.save(RegistrationConstants.JOB_TRIGGER_POINT_USER)).thenReturn(responseDTO);
 
 		Assert.assertTrue(loginServiceImpl.initialSync(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM).contains(RegistrationConstants.FAILURE));
+	}
+	
+	@Test
+	public void initialSyncFalseTest2() throws Exception {
+		Map<String, Object> applicationMap = new HashMap<>();
+		applicationMap.put(RegistrationConstants.INITIAL_SETUP, RegistrationConstants.ENABLE);
+
+		PowerMockito.doReturn(applicationMap).when(ApplicationContext.class, "map");
+
+		ResponseDTO responseDTO = new ResponseDTO();
+		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
+		successResponseDTO.setCode("Success");
+		successResponseDTO.setMessage("Sync Success");
+		successResponseDTO.setInfoType("All Sync");
+		successResponseDTO.setOtherAttributes(new HashMap<>());
+		responseDTO.setSuccessResponseDTO(successResponseDTO);
+		
+		Mockito.when(tpmPublicKeySyncService.syncTPMPublicKey()).thenReturn(responseDTO);
+
+		Mockito.when(publicKeySyncImpl.getPublicKey(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM))
+				.thenReturn(responseDTO);
+
+		Mockito.when(globalParamService.synchConfigData(false)).thenReturn(responseDTO);
+
+		Mockito.when(masterSyncService.getMasterSync(RegistrationConstants.OPT_TO_REG_MDS_J00001,
+				RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM)).thenReturn(responseDTO);
+
+		Mockito.when(userDetailService.save(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM)).thenReturn(responseDTO);
+		Mockito.when(certificateSyncService.getCACertificates(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM)).thenReturn(responseDTO);
+
+		Mockito.doNothing().when(userDetailDAO).updateUserPwd(Mockito.anyString(), Mockito.anyString());
+		Assert.assertTrue(loginServiceImpl.initialSync(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM).contains(RegistrationConstants.FAILURE));
+		
+	}
+	
+	@Test
+	public void initialSyncValidateResponseFailTest() throws RegBaseCheckedException {
+		
+		ResponseDTO responseDTO = new ResponseDTO();
+		ErrorResponseDTO errorResponseDTO=new ErrorResponseDTO();
+		errorResponseDTO.setCode(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode());
+		errorResponseDTO.setMessage(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode());
+		List<ErrorResponseDTO> errorResponseDTOs=new LinkedList<>();
+		errorResponseDTOs.add(errorResponseDTO);
+		
+		responseDTO.setErrorResponseDTOs(errorResponseDTOs);
+		
+		Mockito.when(publicKeySyncImpl.getPublicKey(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM)).thenReturn(responseDTO);
 	}
 	
 	@Test
@@ -766,6 +857,24 @@ public class LoginServiceTest {
 		Mockito.doNothing().when(userDetailDAO).updateLoginParams(userDetail);
 		
 		assertEquals("sample", loginServiceImpl.validateInvalidLogin(userDTO, "sample", 3, 3));
+	}
+	
+	@Test
+	public void validateInvalidLoginTest5() {
+		UserDTO userDTO = new UserDTO();
+		userDTO.setId("mosip");
+		userDTO.setUnsuccessfulLoginCount(0);
+		userDTO.setUserlockTillDtimes(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
+		userDTO.setLastLoginDtimes(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
+		userDTO.setLastLoginMethod("PWD");		
+		
+		UserDetail userDetail = new UserDetail();
+		
+		Mockito.when(userDetailDAO.getUserDetail("mosip")).thenReturn(userDetail);
+		
+		Mockito.doNothing().when(userDetailDAO).updateLoginParams(userDetail);
+		
+		assertEquals("ERROR", loginServiceImpl.validateInvalidLogin(userDTO, "sampleError", 1, 1));
 	}
 	
 	@Test
