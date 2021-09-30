@@ -2,6 +2,9 @@ package io.mosip.registration.dto;
 
 import java.util.List;
 
+import lombok.Data;
+
+@Data
 public class BlocklistedConsentDto {
 
     private String screenName;
