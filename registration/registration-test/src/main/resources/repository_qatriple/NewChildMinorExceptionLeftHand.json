@@ -2,8 +2,8 @@
   "identity": {
 	  "BELOW_ARE_STATIC_KEYWORDS":"",
 	  "ageGroup":"MINOR",
-	  "documentUploadAttributes":["POB","POA","POI"],
-    "process": "New",
+	  "documentUploadAttributes":["POB","POR","POA","POI"],
+	   "process": "New",
     "bioExceptionAttributes": [
   	  
 		"leftLittle",

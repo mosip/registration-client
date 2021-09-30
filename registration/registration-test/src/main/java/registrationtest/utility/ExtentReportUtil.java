@@ -14,11 +14,9 @@ import com.aventstack.extentreports.reporter.ExtentHtmlReporter;
 public class ExtentReportUtil {
     private static final Logger logger = LogManager.getLogger(ExtentReportUtil.class);
 
-    public static Path REPORTPATH = Paths.get(System.getProperty("user.dir"), "Report",
+    public static Path REPORTPATH = Paths.get(System.getProperty("user.dir"), "report",
             "extentReport" + DateUtil.getDateTime() + ".html");
 
-    // System.getProperty("user.dir")
-    // +"\\Report\\extentReport"+DateUtil.getDateTime()+".html";
     public static ExtentHtmlReporter htmlReporter;
     public static ExtentReports reports;
     public static ExtentTest test1, test2, test3, test4, test5, test6, test7;

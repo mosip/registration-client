@@ -257,6 +257,8 @@ public class BiometricFxControl extends FxControl {
 
 	private Button addModalityButton(Modality modality) {
 		Button button = new Button();
+		button.setId(uiFieldDTO.getId()+ modality+"Button");
+		
 		button.setMaxSize(100, 90);
 		button.setMinSize(100, 90);
 		button.setPrefSize(100, 90);
