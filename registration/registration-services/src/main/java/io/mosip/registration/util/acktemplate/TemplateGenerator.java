@@ -59,9 +59,9 @@ import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.dto.BlocklistedConsentDto;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.mastersync.BlacklistedWordsDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.entity.SyncControl;
@@ -532,16 +532,15 @@ public class TemplateGenerator extends BaseService {
 			value = String.valueOf(fieldValue);
 		}
 		
-		try {
-			List<String> blockListedWords = masterSyncServiceImpl.getAllBlackListedWords().stream().map(BlacklistedWordsDto::getWord).collect(Collectors.toList());
-			if (value != null) {
-				for (String word : blockListedWords) {
-					value = value.replaceAll(word, "<mark>"+word+"</mark>");
-				}
+		if (value != null && !getRegistrationDTOFromSession().BLOCKLISTED_CHECK.isEmpty()) {
+			List<BlocklistedConsentDto> blockListedWords = getRegistrationDTOFromSession().BLOCKLISTED_CHECK.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
+			List<String> words = new ArrayList<>();
+			blockListedWords.forEach(blockListedWord -> words.addAll(blockListedWord.getWords()));
+			for (String word : words) {
+				value = value.replaceAll(word, "<mark>"+word+"</mark>");
 			}
-		} catch (RegBaseCheckedException e) {
-			LOGGER.error("Exception in getting blocklisted words", e);
 		}
+		
 		return value == null ? RegistrationConstants.EMPTY : value;
 	}
 
