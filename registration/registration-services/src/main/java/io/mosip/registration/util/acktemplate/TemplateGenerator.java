@@ -18,27 +18,32 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
-import io.mosip.biometrics.util.ConvertRequestDto;
-import io.mosip.biometrics.util.face.FaceDecoder;
-import io.mosip.biometrics.util.finger.FingerDecoder;
-import io.mosip.biometrics.util.iris.IrisDecoder;
-import io.mosip.registration.enums.Modality;
-import io.mosip.registration.enums.Role;
-import io.mosip.registration.service.IdentitySchemaService;
-import io.mosip.registration.service.packet.PacketHandlerService;
-import io.mosip.registration.service.sync.MasterSyncService;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import io.mosip.biometrics.util.ConvertRequestDto;
+import io.mosip.biometrics.util.face.FaceDecoder;
+import io.mosip.biometrics.util.finger.FingerDecoder;
+import io.mosip.biometrics.util.iris.IrisDecoder;
 import io.mosip.commons.packet.constants.Biometric;
 import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -54,19 +59,25 @@ import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.dto.BlocklistedConsentDto;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.entity.UserDetail;
+import io.mosip.registration.enums.Modality;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.BaseService;
+import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.config.JobConfigurationService;
 import io.mosip.registration.service.operator.UserDetailService;
 import io.mosip.registration.service.operator.UserMachineMappingService;
+import io.mosip.registration.service.packet.PacketHandlerService;
 import io.mosip.registration.service.packet.RegistrationApprovalService;
+import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.PacketSynchService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 
@@ -520,6 +531,16 @@ public class TemplateGenerator extends BaseService {
 				|| fieldValue instanceof Double) {
 			value = String.valueOf(fieldValue);
 		}
+		
+		if (value != null && !getRegistrationDTOFromSession().BLOCKLISTED_CHECK.isEmpty()) {
+			List<BlocklistedConsentDto> blockListedWords = getRegistrationDTOFromSession().BLOCKLISTED_CHECK.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
+			List<String> words = new ArrayList<>();
+			blockListedWords.forEach(blockListedWord -> words.addAll(blockListedWord.getWords()));
+			for (String word : words) {
+				value = value.replaceAll(word, "<mark>"+word+"</mark>");
+			}
+		}
+		
 		return value == null ? RegistrationConstants.EMPTY : value;
 	}
 
