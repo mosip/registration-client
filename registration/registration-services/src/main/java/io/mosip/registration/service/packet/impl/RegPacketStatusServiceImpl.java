@@ -2,6 +2,8 @@ package io.mosip.registration.service.packet.impl;
 
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -11,7 +13,6 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
-import org.assertj.core.util.Files;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.retry.RetryCallback;
@@ -338,18 +339,18 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 	}
 
 	private void delete(Registration registration) {
-		File ackFile = null;
-		File zipFile = null;
 		String ackPath = registration.getAckFilename();
-		ackFile = FileUtils.getFile(ackPath);
+		File ackFile = FileUtils.getFile(ackPath);
 		String zipPath = ackPath.replace("_Ack.html", RegistrationConstants.ZIP_FILE_EXTENSION);
-		zipFile = FileUtils.getFile(zipPath);
+		File zipFile = FileUtils.getFile(zipPath);
 
 		if (zipFile.exists()) {
-
-			Files.delete(ackFile);
-			Files.delete(zipFile);
-
+			try {
+				Files.delete(ackFile.toPath());
+				Files.delete(zipFile.toPath());
+			} catch (IOException e) {
+				LOGGER.error(e.getMessage(), e);
+			}
 		}
 		/* Delete row from DB */
 		regPacketStatusDAO.delete(registration);

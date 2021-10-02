@@ -91,7 +91,7 @@ public class UserDetailServiceImpl extends BaseService implements UserDetailServ
 
 			if (jsonObject.has("userDetails")) {
 				byte[] data = clientCryptoFacade
-						.decrypt(CryptoUtil.decodeBase64((String) jsonObject.get("userDetails")));
+						.decrypt(CryptoUtil.decodeURLSafeBase64((String) jsonObject.get("userDetails")));
 				jsonString = new String(data);
 			}
 
