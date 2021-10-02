@@ -108,7 +108,7 @@ public class DemographicPage {
                     TextField demoTextField = waitsUtil.lookupById(id);
                     assertNotNull(demoTextField, id + " not present");
 
-                    if (demoTextField.isEditable() && demoTextField.getParent().isVisible()) {
+                    if (demoTextField.isEditable() && demoTextField.getParent().getParent().isVisible()) {
                         logger.info(" textfield is visible ans setting the text in " + id + " " + idSchema);
                         demoTextField.setText(idSchema);
 
@@ -136,7 +136,7 @@ public class DemographicPage {
                     assertNotNull(demoTextFieldvar, id + " not present");
 
                    
-                    if (demoTextFieldvar.isEditable() && demoTextFieldvar.getParent().isVisible()) {
+                    if (demoTextFieldvar.isEditable() && demoTextFieldvar.getParent().getParent().isVisible()) {
                         logger.info("id="+id + "value"+value);
                         String makeUniqueEntry = PropertiesUtil.getKeyValue("makeUniqueEntry");
 
@@ -174,7 +174,7 @@ public class DemographicPage {
                     TextField demoTextFieldvar = waitsUtil.lookupById(id);
                     assertNotNull(demoTextFieldvar, id + " not present");
 
-                    if (demoTextFieldvar.isEditable() && demoTextFieldvar.getParent().isVisible()) {
+                    if (demoTextFieldvar.isEditable() && demoTextFieldvar.getParent().getParent().isVisible()) {
                         String makeUniqueEntry = PropertiesUtil.getKeyValue("makeUniqueEntry");
 
                         Boolean appendDateTime = makeUniqueEntry == null ? false
