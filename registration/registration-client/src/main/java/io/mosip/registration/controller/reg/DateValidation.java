@@ -166,39 +166,6 @@ public class DateValidation extends BaseController {
 				: MessageFormat.format(rb.getString(defaultMessageKey), args);
 	}
 
-	/*public void resetFieldStyleClass(Pane parentPane, String fieldId, boolean isError, Validator validator) {
-		TextField dd = (TextField) getFxElement(parentPane,
-				fieldId + RegistrationConstants.DD + RegistrationConstants.TEXT_FIELD);
-		TextField mm = (TextField) getFxElement(parentPane,
-				fieldId + RegistrationConstants.MM + RegistrationConstants.TEXT_FIELD);
-		TextField yyyy = (TextField) getFxElement(parentPane,
-				fieldId + RegistrationConstants.YYYY + RegistrationConstants.TEXT_FIELD);
-		TextField ageField = (TextField) getFxElement(parentPane,
-				fieldId + RegistrationConstants.AGE_FIELD + RegistrationConstants.TEXT_FIELD);
-
-		Label dobMessage = (Label) getFxElement(parentPane, fieldId + RegistrationConstants.ERROR_MSG);
-
-		setTextFieldStyle(parentPane, dd, isError);
-		setTextFieldStyle(parentPane, mm, isError);
-		setTextFieldStyle(parentPane, yyyy, isError);
-		setTextFieldStyle(parentPane, ageField, isError);
-
-		if (isError) {
-			ResourceBundle rb = ApplicationContext.getInstance().getBundle(
-					getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0),
-					RegistrationConstants.MESSAGES);
-			String errorMessage = validator != null && validator.getErrorCode() != null
-					&& rb.getString(validator.getErrorCode()) != null ? rb.getString(validator.getErrorCode())
-							: rb.getString(RegistrationConstants.DOB_REQUIRED);
-			dobMessage.setText(errorMessage);
-			dobMessage.setVisible(true);
-			generateAlert(parentPane, RegistrationConstants.DOB, dobMessage.getText());
-		} else {
-			dobMessage.setText(RegistrationConstants.EMPTY);
-			dobMessage.setVisible(false);
-		}
-	}*/
-
 	public void resetFieldStyleClass(Pane parentPane, String fieldId, String errorMessage) {
 		TextField dd = (TextField) getFxElement(parentPane,
 				fieldId + RegistrationConstants.DD + RegistrationConstants.TEXT_FIELD);
