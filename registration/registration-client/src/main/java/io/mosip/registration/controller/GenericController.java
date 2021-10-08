@@ -933,4 +933,9 @@ public class GenericController extends BaseController {
 	public void setPreviousId(String previousId) {
 		this.previousId = previousId;
 	}
+	
+	public String getCurrentScreenName() {
+		TabPane tabPane = (TabPane) anchorPane.lookup(HASH + getRegistrationDTOFromSession().getRegistrationId());
+		return tabPane.getSelectionModel().getSelectedItem().getId().replace("_tab", EMPTY);
+	}
 }

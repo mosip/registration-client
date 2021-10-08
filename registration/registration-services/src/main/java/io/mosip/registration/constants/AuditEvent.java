@@ -306,7 +306,12 @@ public enum AuditEvent {
 	REG_SUPERVISOR_AUTH_IRIS("REG-EVT-100", USER_EVENT.getCode(), "REG_SUPERVISOR_AUTH_IRIS",
 			"Supervisor authentication with iris: Capture and submit"),
 	REG_SUPERVISOR_AUTH_FACE("REG-EVT-101", USER_EVENT.getCode(), "REG_SUPERVISOR_AUTH_FACE",
-			"Supervisor authentication with face: Capture and submit");
+			"Supervisor authentication with face: Capture and submit"),
+	
+	REG_BLOCKLISTED_WORD_ACCEPTED("REG-EVT-102", USER_EVENT.getCode(), "REG_BLOCKLISTED_WORD_ACCEPTED",
+			"Demographic Details : A blocklisted word has been accepted in Registration"),
+	REG_BLOCKLISTED_WORD_REJECTED("REG-EVT-103", USER_EVENT.getCode(), "REG_BLOCKLISTED_WORD_REJECTED",
+			"Demographic Details : A blocklisted word has been rejected in Registration");
 
 	/**
 	 * The constructor

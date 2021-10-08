@@ -231,7 +231,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 					.concat(RegistrationConstants.UNDER_SCORE)
 					.concat(String.valueOf(ApplicationContext.map().get(RegistrationConstants.USER_STATION_ID)));
 			
-			ResponseDTO response = syncPacketsToServer(CryptoUtil.encodeBase64(offlinePacketCryptoServiceImpl
+			ResponseDTO response = syncPacketsToServer(CryptoUtil.encodeToURLSafeBase64(offlinePacketCryptoServiceImpl
 					.encrypt(refId, javaObjectToJsonString(registrationPacketSyncDTO).getBytes())), triggerPoint, packetIdExists);
 
 			if (response != null && response.getSuccessResponseDTO() != null) {

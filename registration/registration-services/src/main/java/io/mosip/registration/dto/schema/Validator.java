@@ -2,8 +2,8 @@ package io.mosip.registration.dto.schema;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -36,4 +36,9 @@ public class Validator {
 	 * Langcode to opt validator 
 	 */
 	private String langCode;
+	
+	/**
+	 * errorCode to display specific validation 
+	 */
+	private String errorCode;
 }

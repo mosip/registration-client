@@ -142,7 +142,7 @@ public class RestClientAuthAdvice {
 
 		try {
 			httpHeaders.add("request-signature", String.format("Authorization:%s", CryptoUtil
-					.encodeBase64(clientCryptoFacade.getClientSecurity().signData(JsonUtils.javaObjectToJsonString(requestBody).getBytes()))));
+					.encodeToURLSafeBase64(clientCryptoFacade.getClientSecurity().signData(JsonUtils.javaObjectToJsonString(requestBody).getBytes()))));
 			httpHeaders.add(RegistrationConstants.KEY_INDEX, CryptoUtil.computeFingerPrint(
 					clientCryptoFacade.getClientSecurity().getEncryptionPublicPart(), null));
 		} catch (JsonProcessingException jsonProcessingException) {

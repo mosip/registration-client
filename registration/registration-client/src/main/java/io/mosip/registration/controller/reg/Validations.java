@@ -3,6 +3,7 @@ package io.mosip.registration.controller.reg;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -173,10 +174,24 @@ public class Validations extends BaseController {
 	 */
 	public boolean validateTextField(Pane parentPane, TextField node, String id, boolean isPreviousValid,
 			String langCode) {
+		return languageSpecificValidation(parentPane, node, id, getMessagesBundle(langCode), isPreviousValid, langCode);
+	}
+	
+	public boolean validateForBlackListedWords(Pane parentPane, TextField node, String fieldId, boolean isPreviousValid,
+			String langCode) {
+		LOGGER.debug("started to validate :: {} for blacklisted words", fieldId);
+		
+		ResourceBundle messageBundle = getMessagesBundle(langCode);
+		boolean showAlert = (noAlert.contains(node.getId()) && fieldId.contains(RegistrationConstants.ON_TYPE));
+		if (validateBlackListedWords(parentPane, node, node.getId(), fieldId, getBlackListedWords(), showAlert, messageBundle)) {
+			return true;
+		}
 
-		return languageSpecificValidation(parentPane, node, id, getMessagesBundle(langCode),
-				getBlackListedWords(), isPreviousValid, langCode);
+		return false;
+	}
 
+	public List<String> getBlackListedWordsList(TextField textField) {
+		return getBlackListedWords().stream().filter(bWord -> textField.getText().contains(bWord)).collect(Collectors.toList());
 	}
 
 	private ResourceBundle getMessagesBundle(String langCode) {
@@ -193,7 +208,7 @@ public class Validations extends BaseController {
 	 * @return true, if successful
 	 */
 	private boolean languageSpecificValidation(Pane parentPane, TextField node, String id, ResourceBundle messageBundle,
-			List<String> blackListedWords, boolean isPreviousValid, String langCode) {
+			boolean isPreviousValid, String langCode) {
 		LOGGER.debug("started to validate :: {} " , id);
 		boolean isInputValid = true;
 		try {
@@ -205,7 +220,7 @@ public class Validations extends BaseController {
 			if (uiFieldDTO != null) {
 				if (requiredFieldValidator.isRequiredField(uiFieldDTO, getRegistrationDTOFromSession())
 						&& !isMandatoryFieldFilled(parentPane, uiFieldDTO, node, node.getText())) {
-					generateInvalidValueAlert(parentPane, id,
+					generateInvalidValueAlert(parentPane, id + langCode,
 							getFromLabelMap(id + langCode).concat(RegistrationConstants.SPACE)
 									.concat(messageBundle.getString(RegistrationConstants.REG_LGN_001)),
 							showAlert);
@@ -224,7 +239,7 @@ public class Validations extends BaseController {
 
 				if (node.isVisible() && (node.getText() != null && !node.getText().isEmpty())) {
 					isInputValid = checkForValidValue(parentPane, node, id, node.getText(), messageBundle, showAlert,
-							isPreviousValid, blackListedWords, uiFieldDTO, langCode);
+							isPreviousValid, uiFieldDTO, langCode);
 				}
 			}
 
@@ -236,7 +251,7 @@ public class Validations extends BaseController {
 	}
 
 	private boolean checkForValidValue(Pane parentPane, TextField node, String fieldId, String value,
-                                       ResourceBundle messageBundle, boolean showAlert, boolean isPreviousValid, List<String> blackListedWords,
+                                       ResourceBundle messageBundle, boolean showAlert, boolean isPreviousValid,
                                        UiFieldDTO uiFieldDTO, String langCode) {
 
 		boolean isLocalLanguageField = node.getId().contains(RegistrationConstants.LOCAL_LANGUAGE);
@@ -249,21 +264,14 @@ public class Validations extends BaseController {
 				return false;
 		}
 
-		boolean isNonBlacklisted = validateBlackListedWords(parentPane, node, node.getId(), blackListedWords, showAlert,
-				String.format("%s %s %s", messageBundle.getString(RegistrationConstants.BLACKLISTED_1),
-						getFromLabelMap(fieldId + langCode), messageBundle.getString(RegistrationConstants.BLACKLISTED_2)),
-				messageBundle.getString(RegistrationConstants.BLACKLISTED_ARE),
-				messageBundle.getString(RegistrationConstants.BLACKLISTED_IS));
-
-		if (!isNonBlacklisted)
-			return false;
-
-		String regex = getRegex(fieldId, RegistrationConstants.REGEX_TYPE, langCode);
-		if (regex != null && !value.matches(regex)) {
-			generateInvalidValueAlert(parentPane, node.getId(),
-					getFromLabelMap(fieldId + langCode).concat(RegistrationConstants.SPACE)
-							.concat(messageBundle.getString(RegistrationConstants.REG_DDC_004)),
-					showAlert);
+		Validator validator = getRegex(fieldId, RegistrationConstants.REGEX_TYPE, langCode);
+		if (validator != null && validator.getValidator() != null && !value.matches(validator.getValidator())) {
+			String errorMessage = validator.getErrorCode() != null
+					&& messageBundle.containsKey(validator.getErrorCode())
+							? messageBundle.getString(validator.getErrorCode())
+							: (getFromLabelMap(fieldId + langCode).concat(RegistrationConstants.SPACE)
+									.concat(messageBundle.getString(RegistrationConstants.REG_DDC_004)));
+			generateInvalidValueAlert(parentPane, node.getId(), errorMessage, showAlert);
 			if (isPreviousValid && !node.getId().contains(RegistrationConstants.ON_TYPE)) {
 				addInvalidInputStyleClass(parentPane, node, false);
 			}
@@ -385,16 +393,22 @@ public class Validations extends BaseController {
 		return null;
 	}
 
-	private boolean validateBlackListedWords(Pane parentPane, TextField node, String id, List<String> blackListedWords,
-			boolean showAlert, String errorMessage, String are, String is) {
+	private boolean validateBlackListedWords(Pane parentPane, TextField node, String id, String fieldId, List<String> blackListedWords,
+			boolean showAlert, ResourceBundle messageBundle) {
 		boolean isInputValid = true;
 		if (blackListedWords != null && !id.contains(RegistrationConstants.ON_TYPE)) {
+			if (getRegistrationDTOFromSession().BLOCKLISTED_CHECK.containsKey(fieldId)
+					&& getRegistrationDTOFromSession().BLOCKLISTED_CHECK.get(fieldId).getWords()
+							.stream().filter(word -> node.getText().contains(word)).findAny().isPresent() && Stream.of(node.getText().split(" "))
+                            .collect(Collectors.toList())
+							.stream().filter(word -> blackListedWords.contains(word) && !getRegistrationDTOFromSession().BLOCKLISTED_CHECK.get(fieldId).getWords().contains(word)).findAny().isEmpty()) {
+				return true;
+			}
 			if (blackListedWords.contains(node.getText())) {
 				isInputValid = false;
-				generateInvalidValueAlert(parentPane, id, String.format("%s %s", node.getText(), errorMessage),
+				generateInvalidValueAlert(parentPane, id, MessageFormat.format(messageBundle.getString("BLOCKLISTED_ERROR"), node.getText()),
 						showAlert);
 			} else {
-
 				Set<String> invalidWorlds = blackListedWords.stream().flatMap(l1 -> Stream
 						.of(node.getText().split("\\s+")).collect(Collectors.toList()).stream().filter(l2 -> {
 							return l1.equalsIgnoreCase(l2);
@@ -403,7 +417,7 @@ public class Validations extends BaseController {
 				String bWords = String.join(", ", invalidWorlds);
 				if (bWords.length() > 0) {
 					generateInvalidValueAlert(parentPane, id,
-							String.format("%s %s %s", bWords, invalidWorlds.size() > 1 ? are : is, errorMessage),
+							MessageFormat.format(messageBundle.getString("BLOCKLISTED_ERROR"), invalidWorlds.toString()),
 							showAlert);
 					isInputValid = false;
 				} else {
@@ -534,13 +548,12 @@ public class Validations extends BaseController {
 	/**
 	 * Validate for the single string.
 	 *
-	 * @param value the value to be validated
 	 * @param id    the id of the UI field whose value is provided as input
-	 * @return <code>true</code>, if successful, else <code>false</code>
+	 * @param langCode the langCode for validation
+	 * @return <code>Validator</code>
 	 */
-	public boolean validateSingleString(String value, String id, String langCode) {
-		String regex = getRegex(id, RegistrationConstants.REGEX_TYPE, langCode);
-		return regex != null ? value.matches(regex) : true;
+	public Validator validateSingleString(String id, String langCode) {
+		return getRegex(id, RegistrationConstants.REGEX_TYPE, langCode);
 	}
 
 
@@ -560,7 +573,7 @@ public class Validations extends BaseController {
 		validationMessage.delete(0, validationMessage.length());
 	}
 
-	private String getRegex(String fieldId, String regexType, String langCode) {
+	private Validator getRegex(String fieldId, String regexType, String langCode) {
 		UiFieldDTO uiFieldDTO = GenericController.getFxControlMap().get(fieldId).getUiSchemaDTO();
 		if (uiFieldDTO != null && uiFieldDTO.getValidators() != null) {
 
@@ -572,7 +585,7 @@ public class Validations extends BaseController {
 							.filter(v -> v.getType().equalsIgnoreCase(regexType)
 									&& v.getLangCode() == null).findFirst() ;
 			if (validator.isPresent()) {
-				return validator.get().getValidator();
+				return validator.get();
 			}
 		}
 		return null;

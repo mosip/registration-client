@@ -373,7 +373,7 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 
 	private Map<String, Object> getParams(String encodedCipher) {
 		try {
-			byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(encodedCipher));
+			byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(encodedCipher));
 			Map<String, Object> paramMap = objectMapper.readValue(data, HashMap.class);
 			return paramMap;
 		} catch (IOException e) {

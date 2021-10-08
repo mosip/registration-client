@@ -182,7 +182,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 					String bioSubType = getSubTypes(bioType, dto.getBioAttribute());
 					LinkedHashMap<String, Object> dataBlock = buildDataBlock(bioType.name(), bioSubType,
 							dto.getAttributeISO(), previousHash, dto);
-					dataBlock.put(RegistrationConstants.ONBOARD_CERT_THUMBPRINT, CryptoUtil.encodeBase64(getCertificateThumbprint(certificate)));
+					dataBlock.put(RegistrationConstants.ONBOARD_CERT_THUMBPRINT, CryptoUtil.encodeToURLSafeBase64(getCertificateThumbprint(certificate)));
 					previousHash = (String) dataBlock.get(RegistrationConstants.AUTH_HASH);
 					listOfBiometric.add(dataBlock);
 				}
@@ -271,7 +271,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 		try {
 			dataBlockJsonString = new ObjectMapper().writeValueAsString(data);
 			dataBlock.put(RegistrationConstants.ON_BOARD_BIO_DATA,
-					CryptoUtil.encodeBase64(dataBlockJsonString.getBytes()));
+					CryptoUtil.encodeToURLSafeBase64(dataBlockJsonString.getBytes()));
 		} catch (IOException exIoException) {
 			LOGGER.error(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(exIoException));
@@ -349,7 +349,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 			try {
 				dataBlockJsonString = new ObjectMapper().writeValueAsString(data);
 				faceData.put(RegistrationConstants.ON_BOARD_BIO_DATA,
-						CryptoUtil.encodeBase64(dataBlockJsonString.getBytes()));
+						CryptoUtil.encodeToURLSafeBase64(dataBlockJsonString.getBytes()));
 			} catch (IOException exIoException) {
 				LOGGER.error(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID,
 						ExceptionUtils.getStackTrace(exIoException));
@@ -500,7 +500,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 		try {
 
 			PublicKey publicKey = certificate.getPublicKey();
-			idaRequestMap.put(RegistrationConstants.ONBOARD_CERT_THUMBPRINT, CryptoUtil.encodeBase64(getCertificateThumbprint(certificate)));
+			idaRequestMap.put(RegistrationConstants.ONBOARD_CERT_THUMBPRINT, CryptoUtil.encodeToURLSafeBase64(getCertificateThumbprint(certificate)));
 
 			LOGGER.info(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID, "Getting Symmetric Key.....");
 			// Symmetric key alias session key
@@ -511,20 +511,20 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 			LOGGER.info(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID, "preparing request.....");
 			// request
 			idaRequestMap.put(RegistrationConstants.ON_BOARD_REQUEST,
-					CryptoUtil.encodeBase64(cryptoCore.symmetricEncrypt(symmentricKey,
+					CryptoUtil.encodeToURLSafeBase64(cryptoCore.symmetricEncrypt(symmentricKey,
 							new ObjectMapper().writeValueAsString(requestMap).getBytes(), null)));
 
 			LOGGER.info(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID, "preparing request HMAC.....");
 			// requestHMAC
 			idaRequestMap.put(RegistrationConstants.ON_BOARD_REQUEST_HMAC,
-					CryptoUtil.encodeBase64(cryptoCore.symmetricEncrypt(symmentricKey, HMACUtils2
+					CryptoUtil.encodeToURLSafeBase64(cryptoCore.symmetricEncrypt(symmentricKey, HMACUtils2
 							.digestAsPlainText(new ObjectMapper().writeValueAsString(requestMap).getBytes()).getBytes(),
 							null)));
 
 			LOGGER.info(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID, "preparing request Session Key.....");
 			// requestSession Key
 			idaRequestMap.put(RegistrationConstants.ON_BOARD_REQUEST_SESSION_KEY,
-					CryptoUtil.encodeBase64(cryptoCore.asymmetricEncrypt(publicKey, symmentricKey.getEncoded())));
+					CryptoUtil.encodeToURLSafeBase64(cryptoCore.asymmetricEncrypt(publicKey, symmentricKey.getEncoded())));
 
 			LOGGER.info(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID, "Ida Auth rest calling.....");
 
@@ -553,11 +553,11 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 		byte[] aadLastBytes = getLastBytes(xorBytes, 16);
 
 		CryptomanagerRequestDto cryptomanagerRequestDto = new CryptomanagerRequestDto();
-		cryptomanagerRequestDto.setAad(CryptoUtil.encodeBase64(aadLastBytes));
+		cryptomanagerRequestDto.setAad(CryptoUtil.encodeToURLSafeBase64(aadLastBytes));
 		cryptomanagerRequestDto.setApplicationId(RegistrationConstants.AP_IDA);
-		cryptomanagerRequestDto.setData(CryptoUtil.encodeBase64(data));
+		cryptomanagerRequestDto.setData(CryptoUtil.encodeToURLSafeBase64(data));
 		cryptomanagerRequestDto.setReferenceId(RegistrationConstants.IDA_REFERENCE_ID);
-		cryptomanagerRequestDto.setSalt(CryptoUtil.encodeBase64(saltLastBytes));
+		cryptomanagerRequestDto.setSalt(CryptoUtil.encodeToURLSafeBase64(saltLastBytes));
 		cryptomanagerRequestDto.setTimeStamp(DateUtils.getUTCCurrentDateTime());
 		//Note: As thumbprint is sent as part of request, there is no need to prepend thumbprint in encrypted data
 		cryptomanagerRequestDto.setPrependThumbprint(false);
@@ -645,10 +645,10 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 	 * @return the splitted encrypted data
 	 */
 	public SplittedEncryptedData splitEncryptedData(String data) {
-		byte[] dataBytes = CryptoUtil.decodeBase64(data);
+		byte[] dataBytes = CryptoUtil.decodeURLSafeBase64(data);
 		byte[][] splits = splitAtFirstOccurance(dataBytes,
 				String.valueOf(ApplicationContext.map().get(RegistrationConstants.KEY_SPLITTER)).getBytes());
-		return new SplittedEncryptedData(CryptoUtil.encodeBase64(splits[0]), CryptoUtil.encodeBase64(splits[1]));
+		return new SplittedEncryptedData(CryptoUtil.encodeToURLSafeBase64(splits[0]), CryptoUtil.encodeToURLSafeBase64(splits[1]));
 	}
 
 	/**

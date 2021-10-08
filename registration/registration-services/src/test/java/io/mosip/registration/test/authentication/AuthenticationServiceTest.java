@@ -86,7 +86,7 @@ public class AuthenticationServiceTest {
 		authenticationValidatorDTO.setPassword("mosip");
 		PowerMockito.mockStatic(CryptoUtil.class, HMACUtils2.class);
 		Mockito.when(loginService.getUserDetail("mosip")).thenReturn(userDTO);		
-		Mockito.when(CryptoUtil.decodeBase64("salt")).thenReturn("salt".getBytes());
+		Mockito.when(CryptoUtil.decodeURLSafeBase64("salt")).thenReturn("salt".getBytes());
 		Mockito.when(HMACUtils2.digestAsPlainTextWithSalt("mosip".getBytes(), "salt".getBytes())).thenReturn("mosip");
 		
 		assertEquals(true, authenticationServiceImpl.validatePassword(authenticationValidatorDTO));

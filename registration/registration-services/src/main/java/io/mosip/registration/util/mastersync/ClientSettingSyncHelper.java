@@ -270,14 +270,14 @@ public class ClientSettingSyncHelper {
 
 			LOGGER.info("Building entity of type : {} : {}", syncDataBaseDto.getEntityName(), syncDataBaseDto.getEntityType());
 			JSONArray jsonArray = null;
-			byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(syncDataBaseDto.getData()));
+			byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(syncDataBaseDto.getData()));
 			switch (syncDataBaseDto.getEntityType()) {
 				case "structured-url":
 					Path path = Paths.get(System.getProperty("user.dir"), syncDataBaseDto.getEntityName());
 					JSONObject jsonObject = new JSONObject(new String(data));
 					downloadUrlData(path, jsonObject);
 					jsonArray = new JSONArray(jsonObject.getBoolean("encrypted") ?
-							new String(clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(FileUtils.readFileToString(path.toFile(),
+							new String(clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(FileUtils.readFileToString(path.toFile(),
 									StandardCharsets.UTF_8)))) :
 							FileUtils.readFileToString(path.toFile(), StandardCharsets.UTF_8));
 					path.toFile().delete();
@@ -498,13 +498,13 @@ public class ClientSettingSyncHelper {
 
 			while(iterator.hasNext()) {
 				SyncDataBaseDto syncDataBaseDto = iterator.next();
-				byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(syncDataBaseDto.getData()));
+				byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(syncDataBaseDto.getData()));
 				Path path = Paths.get(System.getProperty("user.dir"), syncDataBaseDto.getEntityName());
 				JSONObject jsonObject = new JSONObject(new String(data));
 				downloadUrlData(path, jsonObject);
 
 				String downloadedData = jsonObject.getBoolean("encrypted") ?
-						new String(clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(FileUtils.readFileToString(path.toFile(),
+						new String(clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(FileUtils.readFileToString(path.toFile(),
 								StandardCharsets.UTF_8)))) :
 						FileUtils.readFileToString(path.toFile(), StandardCharsets.UTF_8);
 
@@ -543,7 +543,7 @@ public class ClientSettingSyncHelper {
 			while(iterator.hasNext()) {
 				SyncDataBaseDto syncDataBaseDto = iterator.next();
 				if(syncDataBaseDto != null && syncDataBaseDto.getData() != null && !syncDataBaseDto.getData().isEmpty()) {
-					byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(syncDataBaseDto.getData()));
+					byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(syncDataBaseDto.getData()));
 					saveDynamicFieldData(new String(data));
 				}
 			}
@@ -648,7 +648,7 @@ public class ClientSettingSyncHelper {
 					.collect(Collectors.toList());
 
 				for (SyncDataBaseDto syncDataBaseDto : scriptToDownload) {
-					byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(syncDataBaseDto.getData()));
+					byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(syncDataBaseDto.getData()));
 					downloadUrlData(Paths.get(System.getProperty("user.dir"), syncDataBaseDto.getEntityName()), new JSONObject(new String(data)));
 				}
 			} catch (Exception e) {

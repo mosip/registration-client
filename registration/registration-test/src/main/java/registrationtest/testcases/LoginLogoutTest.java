@@ -89,7 +89,7 @@ public class LoginLogoutTest {
                     robot = new FxRobot();
                     LoginLogoutTest lg = new LoginLogoutTest();
 
-                    lg.loginlogout("110123", "mosip123");
+                    lg.loginlogout("", "");
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();

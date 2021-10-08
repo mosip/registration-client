@@ -259,10 +259,10 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 		if (userDetail != null) {
 			if (userDetail.getSalt() == null)
 				userDetail
-						.setSalt(CryptoUtil.encodeBase64(DateUtils.formatToISOString(LocalDateTime.now()).getBytes()));
+						.setSalt(CryptoUtil.encodeToURLSafeBase64(DateUtils.formatToISOString(LocalDateTime.now()).getBytes()));
 
 			userDetail.getUserPassword().setPwd(HMACUtils2.digestAsPlainTextWithSalt(password.getBytes(),
-					CryptoUtil.decodeBase64(userDetail.getSalt())));
+					CryptoUtil.decodeURLSafeBase64(userDetail.getSalt())));
 			userDetail.getUserPassword().setUpdDtimes(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 			userPwdRepository.save(userDetail.getUserPassword());

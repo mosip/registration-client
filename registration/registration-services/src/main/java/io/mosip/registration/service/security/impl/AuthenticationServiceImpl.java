@@ -159,7 +159,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			if (null != userDTO && null != userDTO.getSalt() && HMACUtils2
 							.digestAsPlainTextWithSalt(authenticationValidatorDTO.getPassword().getBytes(),
-									CryptoUtil.decodeBase64(userDTO.getSalt()))
+									CryptoUtil.decodeURLSafeBase64(userDTO.getSalt()))
 							.equals(userDTO.getUserPassword().getPwd())) {
 				return  true;
 			}
