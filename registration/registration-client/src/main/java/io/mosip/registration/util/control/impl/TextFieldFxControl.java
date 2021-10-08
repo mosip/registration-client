@@ -9,24 +9,31 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationContext;
 
-import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.transliteration.spi.Transliteration;
+import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
+import io.mosip.registration.constants.AuditEvent;
+import io.mosip.registration.constants.AuditReferenceIdTypes;
+import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
+import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.FXComponents;
 import io.mosip.registration.controller.FXUtils;
 import io.mosip.registration.controller.GenericController;
 import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.controller.VirtualKeyboard;
 import io.mosip.registration.controller.reg.Validations;
+import io.mosip.registration.dto.BlocklistedConsentDto;
 import io.mosip.registration.dto.RegistrationDTO;
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.util.common.DemographicChangeActionHandler;
 import io.mosip.registration.util.control.FxControl;
@@ -34,6 +41,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -88,6 +96,7 @@ public class TextFieldFxControl extends FxControl {
 			break;
 		}
 		genericController = applicationContext.getBean(GenericController.class);
+		this.auditFactory = applicationContext.getBean(AuditManagerService.class);
 	}
 
 	@Override
@@ -170,6 +179,7 @@ public class TextFieldFxControl extends FxControl {
 		simpleTypeVBox.getChildren().add(fieldTitle);
 
 		VBox vBox = new VBox();
+		vBox.setPrefWidth(simpleTypeVBox.getPrefWidth());
 		List<String> labels = new ArrayList<>();
 		switch (this.uiFieldDTO.getType()) {
 			case RegistrationConstants.SIMPLE_TYPE :
@@ -178,21 +188,116 @@ public class TextFieldFxControl extends FxControl {
 					vBox.getChildren().add(createTextBox(langCode,true));
 					vBox.getChildren().add(getLabel(uiFieldDTO.getId() + langCode + RegistrationConstants.MESSAGE, null,
 							RegistrationConstants.DemoGraphicFieldMessageLabel, false, simpleTypeVBox.getPrefWidth()));
+					
+					HBox hyperLinkHBox = new HBox();
+					hyperLinkHBox.setVisible(false);
+					hyperLinkHBox.setPrefWidth(simpleTypeVBox.getPrefWidth());
+					hyperLinkHBox.setId(uiFieldDTO.getId() + langCode + "HyperlinkHBox");
+					hyperLinkHBox.getChildren()
+							.add(getHyperlink(uiFieldDTO.getId() + langCode + "Accept", langCode,
+									io.mosip.registration.context.ApplicationContext.getInstance()
+											.getBundle(langCode, RegistrationConstants.LABELS).getString("accept_word"),
+									RegistrationConstants.DemoGraphicFieldMessageLabel, true));
+					hyperLinkHBox.getChildren().add(getLabel(uiFieldDTO.getId() + langCode + "HyperlinkLabel",
+							io.mosip.registration.context.ApplicationContext.getInstance()
+									.getBundle(langCode, RegistrationConstants.LABELS).getString("slash"),
+							RegistrationConstants.DemoGraphicFieldMessageLabel, true, simpleTypeVBox.getPrefWidth()));
+					hyperLinkHBox.getChildren()
+							.add(getHyperlink(uiFieldDTO.getId() + langCode + "Reject", langCode,
+									io.mosip.registration.context.ApplicationContext.getInstance()
+											.getBundle(langCode, RegistrationConstants.LABELS).getString("reject_word"),
+									RegistrationConstants.DemoGraphicFieldMessageLabel, true));
+
+					vBox.getChildren().add(hyperLinkHBox);
 				});
 				break;
 			default:
-				getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(langCode -> {
-							labels.add(this.uiFieldDTO.getLabel().get(langCode));});
-				vBox.getChildren().add(createTextBox(getRegistrationDTo().getSelectedLanguagesByApplicant().get(0),false));
-				vBox.getChildren().add(getLabel(uiFieldDTO.getId() +
-								getRegistrationDTo().getSelectedLanguagesByApplicant().get(0) + RegistrationConstants.MESSAGE, null,
-						RegistrationConstants.DemoGraphicFieldMessageLabel, false, simpleTypeVBox.getPrefWidth()));
+				String langCode = getRegistrationDTo().getSelectedLanguagesByApplicant().get(0);
+				getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(langcode -> {
+							labels.add(this.uiFieldDTO.getLabel().get(langcode));});
+				vBox.getChildren().add(createTextBox(langCode,false));
+				vBox.getChildren().add(getLabel(uiFieldDTO.getId() + langCode + RegistrationConstants.MESSAGE,
+						null, RegistrationConstants.DemoGraphicFieldMessageLabel, false, simpleTypeVBox.getPrefWidth()));
+				
+				HBox hyperLinkHBox = new HBox();
+				hyperLinkHBox.setVisible(false);
+				hyperLinkHBox.setId(uiFieldDTO.getId() + langCode + "HyperlinkHBox");
+				hyperLinkHBox.getChildren()
+						.add(getHyperlink(uiFieldDTO.getId() + langCode + "Accept", langCode,
+								io.mosip.registration.context.ApplicationContext.getInstance()
+										.getBundle(langCode, RegistrationConstants.LABELS).getString("accept_word"),
+								RegistrationConstants.DemoGraphicFieldMessageLabel, true));
+				hyperLinkHBox.getChildren()
+						.add(getLabel(uiFieldDTO.getId() + "HyperlinkLabel",
+								io.mosip.registration.context.ApplicationContext.getInstance()
+										.getBundle(langCode, RegistrationConstants.LABELS).getString("slash"),
+								RegistrationConstants.DemoGraphicFieldMessageLabel, true, simpleTypeVBox.getPrefWidth()));
+				hyperLinkHBox.getChildren()
+						.add(getHyperlink(uiFieldDTO.getId() + langCode + "Reject", langCode,
+								io.mosip.registration.context.ApplicationContext.getInstance()
+										.getBundle(langCode, RegistrationConstants.LABELS).getString("reject_word"),
+								RegistrationConstants.DemoGraphicFieldMessageLabel, true));
+
+				vBox.getChildren().add(hyperLinkHBox);
 				break;
 		}
 
 		fieldTitle.setText(String.join(RegistrationConstants.SLASH, labels)	+ getMandatorySuffix(uiFieldDTO));
 		simpleTypeVBox.getChildren().add(vBox);
 		return simpleTypeVBox;
+	}
+	
+	private Hyperlink getHyperlink(String id, String langCode, String titleText, String styleClass, boolean isVisible) {
+		/** Field Title */
+		Hyperlink hyperLink = new Hyperlink();
+		hyperLink.setId(id);
+		hyperLink.setText(titleText);
+		hyperLink.getStyleClass().add(styleClass);
+		hyperLink.setVisible(isVisible);
+		hyperLink.setWrapText(true);
+		if (id.contains("Accept")) {
+			hyperLink.setOnAction(event -> {
+				auditFactory.audit(AuditEvent.REG_BLOCKLISTED_WORD_ACCEPTED, Components.REG_DEMO_DETAILS, SessionContext.userId(),
+						AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
+				
+				TextField textField = (TextField) getField(uiFieldDTO.getId() + langCode);
+				if (getRegistrationDTo().BLOCKLISTED_CHECK.containsKey(uiFieldDTO.getId())) {
+					List<String> words = getRegistrationDTo().BLOCKLISTED_CHECK.get(uiFieldDTO.getId()).getWords();
+					words.addAll(validation.getBlackListedWordsList(textField));
+					getRegistrationDTo().BLOCKLISTED_CHECK.get(uiFieldDTO.getId()).setWords(words.stream().distinct().collect(Collectors.toList()));
+				} else {
+					BlocklistedConsentDto blockListedConsent = new BlocklistedConsentDto();
+					blockListedConsent.setWords(validation.getBlackListedWordsList(textField));
+					blockListedConsent.setOperatorConsent(true);
+					blockListedConsent.setScreenName(genericController.getCurrentScreenName());
+					blockListedConsent.setOperatorId(SessionContext.userId());
+					getRegistrationDTo().BLOCKLISTED_CHECK.put(uiFieldDTO.getId(), blockListedConsent);
+				}
+
+				if (isValid()) {
+					FXUtils.getInstance().setTextValidLabel((Pane) getNode(), textField, uiFieldDTO.getId());
+					setData(null);
+					// handling other handlers
+					demographicChangeActionHandler.actionHandle((Pane) getNode(), node.getId(),
+							uiFieldDTO.getChangeAction());
+				}
+			});
+		} else {
+			hyperLink.setOnAction(event -> {
+				auditFactory.audit(AuditEvent.REG_BLOCKLISTED_WORD_REJECTED, Components.REG_DEMO_DETAILS, SessionContext.userId(),
+						AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
+				
+				TextField textField = (TextField) getField(uiFieldDTO.getId() + langCode);
+				textField.setText(RegistrationConstants.EMPTY);
+				getField(uiFieldDTO.getId() + langCode + "HyperlinkHBox").setVisible(false);
+				if (!isValid()) {
+					getRegistrationDTo().BLOCKLISTED_CHECK.remove(uiFieldDTO.getId());
+					getRegistrationDTo().getDemographics().remove(this.uiFieldDTO.getId());
+					FXUtils.getInstance().showErrorLabel(textField, (Pane) getNode());
+				}
+			});
+		}
+		return hyperLink;
 	}
 
 	private HBox createTextBox(String langCode, boolean isSimpleType) {
@@ -272,19 +377,47 @@ public class TextFieldFxControl extends FxControl {
 				break;
 			}
 
+			getField(uiFieldDTO.getId() + langCode + "HyperlinkHBox").setVisible(false);
+			
 			if (validation.validateTextField((Pane) getNode(), textField, uiFieldDTO.getId(), true, langCode)) {
-				FXUtils.getInstance().setTextValidLabel((Pane) getNode(), textField, uiFieldDTO.getId());
+				if (validation.validateForBlackListedWords((Pane) getNode(), textField, uiFieldDTO.getId(), true, langCode)) {
+					FXUtils.getInstance().setTextValidLabel((Pane) getNode(), textField, uiFieldDTO.getId());
+					getField(uiFieldDTO.getId() + langCode + "HyperlinkHBox").setVisible(false);
+				} else {
+					FXUtils.getInstance().showErrorLabel(textField, (Pane) getNode());
+					if (!getField(uiFieldDTO.getId() + langCode + "HyperlinkHBox").isVisible()) {
+						getField(uiFieldDTO.getId() + langCode + "HyperlinkHBox").setVisible(true);
+					}
+					isValid = false;
+					break;
+				}
 			} else {
 				FXUtils.getInstance().showErrorLabel(textField, (Pane) getNode());
 				isValid = false;
 				break;
 			}
-
+			
 			if(!this.uiFieldDTO.getType().equalsIgnoreCase(RegistrationConstants.SIMPLE_TYPE)) {
 				break; //not required to iterate further
 			}
 		}
+		
+		checkForBlocklistedWords();
+		
 		return isValid;
+	}
+
+	private void checkForBlocklistedWords() {
+		if (getRegistrationDTo().BLOCKLISTED_CHECK.containsKey(uiFieldDTO.getId()) && !getRegistrationDTo().BLOCKLISTED_CHECK.get(uiFieldDTO.getId()).getWords().isEmpty()) {
+			List<TextField> textFields = new ArrayList<>();
+			getRegistrationDTo().getSelectedLanguagesByApplicant().stream().forEach(langCode -> {
+				TextField textField = (TextField) getField(uiFieldDTO.getId() + langCode);
+				if (textField != null && textField.getText() != null) {
+					textFields.add(textField);
+				}
+			});
+			getRegistrationDTo().BLOCKLISTED_CHECK.get(uiFieldDTO.getId()).getWords().removeIf(word -> textFields.stream().filter(textField -> textField.getText().contains(word)).findAny().isEmpty());
+		}
 	}
 
 	@Override

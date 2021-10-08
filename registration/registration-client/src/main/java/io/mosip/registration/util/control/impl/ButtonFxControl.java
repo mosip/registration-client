@@ -199,6 +199,7 @@ public class ButtonFxControl extends FxControl {
 			resetButtons(button);
 			if (isValid()) {
 				setData(null);
+				refreshFields();
 			}
 		});
 	}

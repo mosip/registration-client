@@ -159,7 +159,7 @@ public class RequiredFieldValidator {
 
 			Path path = Paths.get(System.getProperty("user.dir"), scriptName);
 			byte[] bytes = fileSignature.get().getEncrypted() ?
-					clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(
+					clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(
 							FileUtils.readFileToString(path.toFile(), StandardCharsets.UTF_8))) :
 					FileUtils.readFileToByteArray(path.toFile());
 			String actualData = String.format("{\"hash\":\"%s\"}", HMACUtils2.digestAsPlainText(bytes));
@@ -183,7 +183,7 @@ public class RequiredFieldValidator {
 
 		JWTSignatureVerifyRequestDto jwtSignatureVerifyRequestDto = new JWTSignatureVerifyRequestDto();
 		jwtSignatureVerifyRequestDto.setJwtSignatureData(signature);
-		jwtSignatureVerifyRequestDto.setActualData(CryptoUtil.encodeBase64(actualData.getBytes(StandardCharsets.UTF_8)));
+		jwtSignatureVerifyRequestDto.setActualData(CryptoUtil.encodeToURLSafeBase64(actualData.getBytes(StandardCharsets.UTF_8)));
 		jwtSignatureVerifyRequestDto.setCertificateData(certificateDto.getCertificate());
 
 		JWTSignatureVerifyResponseDto verifyResponseDto =  signatureService.jwtVerify(jwtSignatureVerifyRequestDto);

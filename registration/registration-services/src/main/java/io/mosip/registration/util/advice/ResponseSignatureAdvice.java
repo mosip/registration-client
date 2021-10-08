@@ -170,7 +170,7 @@ public class ResponseSignatureAdvice {
 		try {
 			if(result.isPresent()) {
 				byte[] data = requestHTTPDTO.isFileEncrypted() ?
-						clientCryptoFacade.decrypt(CryptoUtil.decodeBase64(
+						clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(
 								FileUtils.readFileToString(requestHTTPDTO.getFilePath().toFile(), StandardCharsets.UTF_8))) :
 						FileUtils.readFileToByteArray(requestHTTPDTO.getFilePath().toFile());
 				String actualData = String.format("{\"hash\":\"%s\"}", HMACUtils2.digestAsPlainText(data));
@@ -194,7 +194,7 @@ public class ResponseSignatureAdvice {
 
 		JWTSignatureVerifyRequestDto jwtSignatureVerifyRequestDto = new JWTSignatureVerifyRequestDto();
 		jwtSignatureVerifyRequestDto.setJwtSignatureData(signature);
-		jwtSignatureVerifyRequestDto.setActualData(CryptoUtil.encodeBase64(actualData.getBytes(StandardCharsets.UTF_8)));
+		jwtSignatureVerifyRequestDto.setActualData(CryptoUtil.encodeToURLSafeBase64(actualData.getBytes(StandardCharsets.UTF_8)));
 		jwtSignatureVerifyRequestDto.setCertificateData(certificateDto.getCertificate());
 
 		JWTSignatureVerifyResponseDto verifyResponseDto =  signatureService.jwtVerify(jwtSignatureVerifyRequestDto);
