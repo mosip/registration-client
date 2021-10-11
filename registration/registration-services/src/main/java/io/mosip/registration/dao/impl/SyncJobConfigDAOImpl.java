@@ -40,6 +40,13 @@ public class SyncJobConfigDAOImpl implements SyncJobConfigDAO {
 
 		return jobConfigRepository.findAll();
 	}
+	
+	@Override
+	public SyncJobDef getSyncJob(String jobId) {
+		LOGGER.info("Getting SyncJob for " + jobId);
+
+		return jobConfigRepository.findById(jobId).get();
+	}
 
 	/*
 	 * (non-Javadoc)
