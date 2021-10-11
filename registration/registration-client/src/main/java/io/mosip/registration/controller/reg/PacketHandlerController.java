@@ -875,14 +875,13 @@ public class PacketHandlerController extends BaseController implements Initializ
 		} else {
 			String processId = ((GridPane) event.getSource()).getId();
 			try {
+				languageSelectionController.setProcessId(processId);
 				if(isLanguageSelectionRequired()) {
 					getStage().getScene().getRoot().setDisable(true);
 					languageSelectionController.init();
-					languageSelectionController.setProcessId(processId);
 				}
 				else {
 					languageSelectionController.submitLanguagesAndProceed(baseService.getMandatoryLanguages());
-					languageSelectionController.setProcessId(processId);
 				}
 			} catch (PreConditionCheckException e) {
 				generateAlert(RegistrationConstants.ERROR, e.getErrorCode());

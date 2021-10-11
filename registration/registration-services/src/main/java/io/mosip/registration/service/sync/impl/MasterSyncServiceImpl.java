@@ -433,7 +433,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	@SuppressWarnings("unchecked")
 	private ResponseDTO syncClientSettings(String masterSyncDtls, String triggerPoint,
 			Map<String, String> requestParam) {
-		LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID, "Client settings sync started.....");
+		LOGGER.info("Client settings sync invoked.....");
 		ResponseDTO responseDTO = new ResponseDTO();
 		LinkedHashMap<String, Object> masterSyncResponse = null;
 
@@ -441,7 +441,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 			// Precondition check, proceed only if met, otherwise throws exception
 			proceedWithMasterAndKeySync(masterSyncDtls);
 
-			LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID, new JSONObject(requestParam).toString());
+			LOGGER.info("Client settings sync started with this params : {}", requestParam);
 
 			masterSyncResponse = (LinkedHashMap<String, Object>) serviceDelegateUtil
 					.get(RegistrationConstants.MASTER_VALIDATOR_SERVICE_NAME, requestParam, true, triggerPoint);
@@ -450,6 +450,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 			if (RegistrationConstants.MACHINE_REMAP_CODE.equalsIgnoreCase(errorCode)) {
 				// Machine is remapped, exit from sync and mark the remap process to start
 				globalParamService.update(RegistrationConstants.MACHINE_CENTER_REMAP_FLAG, RegistrationConstants.TRUE);
+				LOGGER.info("Client settings sync - Found that machine is remapped : {}", errorCode);
 				return responseDTO;
 			}
 
@@ -465,14 +466,13 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 			setErrorResponse(responseDTO, RegistrationConstants.MASTER_SYNC_FAILURE_MSG, null);
 		}
 
-		LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID,
-				"Client settings sync completed :: " + responseDTO.toString());
+		LOGGER.info("Client settings sync completed :: {}", responseDTO);
 		return responseDTO;
 	}
 
 	private void saveClientSettings(String masterSyncDtls, String triggerPoint,
 			LinkedHashMap<String, Object> masterSyncResponse, ResponseDTO responseDTO) throws Exception {
-		LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID, "save Client Settings started...");
+		LOGGER.info("save Client Settings started...");
 		String jsonString = MapperUtils
 				.convertObjectToJsonString(masterSyncResponse.get(RegistrationConstants.RESPONSE));
 		SyncDataResponseDto syncDataResponseDto = MapperUtils.convertJSONStringToDto(jsonString,
@@ -494,8 +494,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 					triggerPoint, masterSyncDtls);
 			syncManager.updateClientSettingLastSyncTime(syncTransaction,
 					getTimestamp(syncDataResponseDto.getLastSyncTime()));
-			LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID,
-					"Save Client Settings completed successfully.");
+			LOGGER.info("Save Client Settings completed successfully : {}", syncDataResponseDto.getLastSyncTime());
 		} else
 			setErrorResponse(responseDTO, RegistrationConstants.MASTER_SYNC_ERROR_MESSAGE, null);
 	}

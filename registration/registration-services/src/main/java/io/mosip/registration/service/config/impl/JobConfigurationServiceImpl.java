@@ -458,15 +458,16 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 	 */
 
 	public ResponseDTO executeJob(String jobId, String triggerPoint) {
-
-		LOGGER.info(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Execute job started : " + jobId);
 		ResponseDTO responseDTO = new ResponseDTO();
 		if (jobId != null && triggerPoint != null) {
 			try {
-				SyncJobDef syncJobDef = syncActiveJobMap.get(jobId);
+				SyncJobDef syncJobDef = jobConfigDAO.getSyncJob(jobId);
 
-				if (syncJobDef != null && !isNull(syncJobDef.getApiName())) {
+				if (syncJobDef != null && !isNull(syncJobDef.getApiName()) && syncActiveJobMap.containsKey(jobId) 
+						&& syncJobDef.getIsActive()) {
+					LOGGER.info(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
+							RegistrationConstants.APPLICATION_ID, "Execute job started : " + jobId);
+					
 					// Get Job using application context and api name
 					baseJob = (BaseJob) applicationContext.getBean(syncJobDef.getApiName());
 
