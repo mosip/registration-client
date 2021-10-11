@@ -38,9 +38,9 @@ public class RegPacketStatusDaoImplTest {
 	@Test
 	public void findByClientStatusCodeTest() {
 		List<Registration> registrations = null;
-		when(registrationRepository.findByclientStatusCodeOrderByCrDtime(Mockito.any())).thenReturn(registrations);
+		when(registrationRepository.findByClientStatusCodeOrClientStatusCommentsOrderByCrDtime(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(registrations);
 
-		packetStatusDao.getPacketIdsByStatusUploaded();
+		packetStatusDao.getPacketIdsByStatusUploadedOrExported(10);
 	}
 
 	@Test
