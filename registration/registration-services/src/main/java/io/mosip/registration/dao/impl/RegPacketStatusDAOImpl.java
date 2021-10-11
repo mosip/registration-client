@@ -6,6 +6,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -39,13 +40,13 @@ public class RegPacketStatusDAOImpl implements RegPacketStatusDAO {
 	 * io.mosip.registration.dao.RegPacketStatusDAO#getPacketIdsByStatusUploaded()
 	 */
 	@Override
-	public List<Registration> getPacketIdsByStatusUploaded() {
+	public List<Registration> getPacketIdsByStatusUploadedOrExported(int limit) {
 		LOGGER.info("REGISTRATION - PACKET_STATUS_SYNC - REG_PACKET_STATUS_DAO", APPLICATION_NAME, APPLICATION_ID,
 				"getting packets by status uploaded-successfully has been started");
 
-		return registrationRepository
-				.findByclientStatusCodeOrderByCrDtime(RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode());
-
+		return registrationRepository.findByClientStatusCodeOrClientStatusCommentsOrderByCrDtime(
+				RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode(),
+				RegistrationClientStatusCode.EXPORT.getCode(), PageRequest.of(0, limit));
 	}
 	
 	@Override
