@@ -202,7 +202,7 @@ public abstract class BaseJob extends QuartzJobBean {
 			SyncTransaction syncTransaction = syncManager.createSyncTransaction(status, status, triggerPoint,
 					syncJobId);
 
-			if (RegistrationConstants.JOB_EXECUTION_SUCCESS.equals(status)) {
+			if (RegistrationConstants.JOB_EXECUTION_SUCCESS.equals(status) && lastSyncTime != null) {
 				/* Insert Sync Control transaction */
 				syncManager.createSyncControlTransaction(syncTransaction, lastSyncTime);
 			}

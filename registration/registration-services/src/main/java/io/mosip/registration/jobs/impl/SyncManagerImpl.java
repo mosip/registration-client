@@ -84,7 +84,7 @@ public class SyncManagerImpl extends BaseService implements SyncManager {
 
 		}
 		syncControl.setSynctrnId(syncTransaction.getId());
-		if(lastSyncTime != null) { syncControl.setLastSyncDtimes(lastSyncTime); }
+		syncControl.setLastSyncDtimes(lastSyncTime);
 
 		if (isNotCreated) {
 			syncControl = syncJobDAO.save(syncControl);
