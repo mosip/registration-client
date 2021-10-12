@@ -61,6 +61,15 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	 * @return the list of {@link Registration}
 	 */
 	List<Registration> findByclientStatusCodeOrderByCrDtime(String statusCode);
+	
+	/**
+	 * This method returns the list of {@link Registration} based on status code or status comments
+	 * 
+	 * @param statusCode
+	 * @param statusComments
+	 * @return the list of {@link Registration}
+	 */
+	List<Registration> findByClientStatusCodeOrClientStatusCommentsOrderByCrDtime(String statusCode, String statusComments, Pageable pageable);
 
 	/**
 	 * This method fetches the registration packets based on given client status

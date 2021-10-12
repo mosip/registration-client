@@ -15,6 +15,7 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
@@ -65,6 +66,9 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
     @Qualifier("OfflinePacketCryptoServiceImpl")
     private IPacketCryptoService offlinePacketCryptoServiceImpl;
 
+	@Value("${mosip.registration.status_sync_batch_size:10}")
+	private int batchCount;
+	
 	private static final Logger LOGGER = AppConfig.getLogger(RegPacketStatusServiceImpl.class);
 
 	private HashMap<String, Registration> registrationMap = new HashMap<>();
@@ -174,8 +178,7 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 		
 		HashMap<String, List<String>> packets = new HashMap<>();
 
-		List<Registration> registrationList = regPacketStatusDAO.getPacketIdsByStatusUploaded();
-		registrationList.addAll(regPacketStatusDAO.getPacketIdsByStatusExported());
+		List<Registration> registrationList = regPacketStatusDAO.getPacketIdsByStatusUploadedOrExported(batchCount);
 
 		List<String> registrationIds = new ArrayList<>();
 		List<String> packetIds = new ArrayList<>();

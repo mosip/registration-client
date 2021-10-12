@@ -170,7 +170,7 @@ public class RegPacketStatusServiceTest {
 		regis.setClientStatusCode(RegistrationConstants.PACKET_STATUS_CODE_PROCESSED);
 		list.add(regis);
 
-		when(packetStatusDao.getPacketIdsByStatusUploaded()).thenReturn(list);
+		when(packetStatusDao.getPacketIdsByStatusUploadedOrExported(Mockito.anyInt())).thenReturn(list);
 
 		when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.any(), Mockito.anyString())).thenReturn(response);
 		Assert.assertNotNull(packetStatusService.syncServerPacketStatus("System").getSuccessResponseDTO());
@@ -199,7 +199,7 @@ public class RegPacketStatusServiceTest {
 		registrations.add(registration12);
 
 		List<Registration> list = new LinkedList<>();
-		when(packetStatusDao.getPacketIdsByStatusUploaded()).thenReturn(list);
+		when(packetStatusDao.getPacketIdsByStatusUploadedOrExported(Mockito.anyInt())).thenReturn(list);
 
 		when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString())).thenReturn(response);
 		Assert.assertNotNull(packetStatusService.syncServerPacketStatus("System").getSuccessResponseDTO());
@@ -218,7 +218,7 @@ public class RegPacketStatusServiceTest {
 		regis.setAckFilename("..//PacketStore/02-Jan-2019/2018782130000102012019115112_Ack.png");
 		regis.setClientStatusCode(RegistrationConstants.PACKET_STATUS_CODE_PROCESSED);
 		list.add(regis);
-		when(packetStatusDao.getPacketIdsByStatusUploaded()).thenReturn(list);
+		when(packetStatusDao.getPacketIdsByStatusUploadedOrExported(Mockito.anyInt())).thenReturn(list);
 
 		when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString()))
 				.thenThrow(ConnectionException.class);
@@ -237,7 +237,7 @@ public class RegPacketStatusServiceTest {
 		regis.setAckFilename("..//PacketStore/02-Jan-2019/2018782130000102012019115112_Ack.png");
 		regis.setClientStatusCode(RegistrationConstants.PACKET_STATUS_CODE_PROCESSED);
 		list.add(regis);
-		when(packetStatusDao.getPacketIdsByStatusUploaded()).thenReturn(list);
+		when(packetStatusDao.getPacketIdsByStatusUploadedOrExported(Mockito.anyInt())).thenReturn(list);
 
 		when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString()))
 				.thenThrow(RuntimeException.class);
@@ -256,7 +256,7 @@ public class RegPacketStatusServiceTest {
 		regis.setClientStatusCode(RegistrationConstants.PACKET_STATUS_CODE_PROCESSED);
 		list.add(regis);
 
-		when(packetStatusDao.getPacketIdsByStatusUploaded()).thenReturn(list);
+		when(packetStatusDao.getPacketIdsByStatusUploadedOrExported(Mockito.anyInt())).thenReturn(list);
 
 		List<LinkedHashMap<String, String>> registrations = new ArrayList<>();
 
