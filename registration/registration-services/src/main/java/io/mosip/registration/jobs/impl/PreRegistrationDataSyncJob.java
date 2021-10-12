@@ -1,5 +1,6 @@
 package io.mosip.registration.jobs.impl;
 
+import io.mosip.kernel.core.util.DateUtils;
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -14,6 +15,8 @@ import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.service.sync.PreRegistrationDataSyncService;
+
+import java.sql.Timestamp;
 
 /**
  * The {@code PreRegistrationDataSyncJob} is a job to sync the pre registrations
@@ -76,7 +79,7 @@ public class PreRegistrationDataSyncJob extends BaseJob {
 						.getPreRegistrationIds(RegistrationConstants.OPT_TO_REG_PDS_J00003);
 			}
 
-			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+			syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		} catch (RegBaseUncheckedException baseUncheckedException) {
 			LOGGER.error(LoggerConstants.PRE_REG_DATA_SYNC_JOB_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
@@ -109,7 +112,7 @@ public class PreRegistrationDataSyncJob extends BaseJob {
 		if (responseDTO.getSuccessResponseDTO() != null) {
 			this.responseDTO = preRegistrationDataSyncService.getPreRegistrationIds(RegistrationConstants.OPT_TO_REG_PDS_J00003);
 		}
-		syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+		syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		LOGGER.info(LoggerConstants.PRE_REG_DATA_SYNC_JOB_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "execute job ended");

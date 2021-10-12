@@ -2,6 +2,7 @@ package io.mosip.registration.jobs.impl;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.ResponseDTO;
@@ -14,6 +15,8 @@ import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
+import java.sql.Timestamp;
 
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
@@ -45,7 +48,7 @@ public class SyncCertificateJob extends BaseJob {
             LOGGER.error("", APPLICATION_NAME, APPLICATION_ID, ExceptionUtils.getStackTrace(exception));
             this.responseDTO.setSuccessResponseDTO(null);
         }
-        syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+        syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
         LOGGER.info("", RegistrationConstants.APPLICATION_NAME,
                 RegistrationConstants.APPLICATION_ID, "execute job ended");
@@ -78,7 +81,7 @@ public class SyncCertificateJob extends BaseJob {
             responseDTO.setSuccessResponseDTO(null);
         }
 
-        syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+        syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
         LOGGER.info("", RegistrationConstants.APPLICATION_NAME,
                 RegistrationConstants.APPLICATION_ID, "job execute internal Ended");

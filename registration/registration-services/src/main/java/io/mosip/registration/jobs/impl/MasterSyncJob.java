@@ -81,7 +81,7 @@ public class MasterSyncJob extends BaseJob {
 				this.responseDTO = masterSyncService.getMasterSync(jobId, triggerPoint);
 			}
 
-			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+			syncTransactionUpdate(responseDTO, triggerPoint, jobId, null);
 
 		} catch (RegBaseUncheckedException baseUncheckedException) {
 			LOGGER.error(LoggerConstants.MASTER_SYNC_STATUS_JOB_TITLE, RegistrationConstants.APPLICATION_NAME,
@@ -109,7 +109,7 @@ public class MasterSyncJob extends BaseJob {
 			LOGGER.error(LoggerConstants.USER_DETAIL_SERVICE_JOB_TITLE, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(checkedException));
 		}
-		syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+		syncTransactionUpdate(responseDTO, triggerPoint, jobId, null);
 
 		LOGGER.info(LoggerConstants.MASTER_SYNC_STATUS_JOB_TITLE, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "execute job ended");
