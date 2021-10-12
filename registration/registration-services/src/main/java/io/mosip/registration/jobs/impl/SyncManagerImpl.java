@@ -60,7 +60,7 @@ public class SyncManagerImpl extends BaseService implements SyncManager {
 	 * registration.entity.SyncTransaction)
 	 */
 	@Override
-	public synchronized SyncControl createSyncControlTransaction(final SyncTransaction syncTransaction) {
+	public synchronized SyncControl createSyncControlTransaction(final SyncTransaction syncTransaction, Timestamp lastSyncTime) {
 
 		SyncControl syncControl = syncJobDAO.findBySyncJobId(syncTransaction.getSyncJobId());
 
@@ -84,7 +84,7 @@ public class SyncManagerImpl extends BaseService implements SyncManager {
 
 		}
 		syncControl.setSynctrnId(syncTransaction.getId());
-		syncControl.setLastSyncDtimes(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
+		if(lastSyncTime != null) { syncControl.setLastSyncDtimes(lastSyncTime); }
 
 		if (isNotCreated) {
 			syncControl = syncJobDAO.save(syncControl);

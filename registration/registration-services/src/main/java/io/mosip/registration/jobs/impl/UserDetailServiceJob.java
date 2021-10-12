@@ -3,6 +3,7 @@ package io.mosip.registration.jobs.impl;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import io.mosip.kernel.core.util.DateUtils;
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -18,6 +19,8 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.service.operator.UserDetailService;
+
+import java.sql.Timestamp;
 
 /**
  * This is a job to sync the user detail data.
@@ -82,7 +85,7 @@ public class UserDetailServiceJob extends BaseJob {
 
 			}
 
-			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+			syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		} catch (RegBaseUncheckedException baseUncheckedException) {
 			LOGGER.error(LoggerConstants.USER_DETAIL_SERVICE_JOB_TITLE, RegistrationConstants.APPLICATION_NAME,
@@ -115,7 +118,7 @@ public class UserDetailServiceJob extends BaseJob {
 						ExceptionUtils.getStackTrace(checkedException));
 			}
 		}
-		syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+		syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		LOGGER.info(LoggerConstants.USER_DETAIL_SERVICE_JOB_TITLE, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "execute job ended");

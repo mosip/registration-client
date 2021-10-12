@@ -1,5 +1,6 @@
 package io.mosip.registration.jobs;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -105,7 +106,7 @@ public abstract class BaseJob extends QuartzJobBean {
 	 * job.
 	 * 
 	 * If current job has any parent job : The Parent job will internally call
-	 * {@value executeJob} and continues same as executing the service class defined
+	 * executeJob and continues same as executing the service class defined
 	 * in the functionality which and continue for the same.
 	 * 
 	 * As after executing the service it will update the job execution information
@@ -119,8 +120,6 @@ public abstract class BaseJob extends QuartzJobBean {
 	 * 
 	 * @param currentJobID
 	 *            current job executing
-	 * @param jobMap
-	 *            is a job's map
 	 */
 	public synchronized ResponseDTO executeParentJob(String currentJobID) {
 
@@ -183,7 +182,8 @@ public abstract class BaseJob extends QuartzJobBean {
 	 * @param syncJobId
 	 *            - the sync job ID
 	 */
-	public synchronized void syncTransactionUpdate(ResponseDTO responseDTO, String triggerPoint, String syncJobId) {
+	public synchronized void syncTransactionUpdate(ResponseDTO responseDTO, String triggerPoint, String syncJobId
+			, Timestamp lastSyncTime) {
 
 		String status = (responseDTO != null && responseDTO.getSuccessResponseDTO() != null)
 				? RegistrationConstants.JOB_EXECUTION_SUCCESS
@@ -204,7 +204,7 @@ public abstract class BaseJob extends QuartzJobBean {
 
 			if (RegistrationConstants.JOB_EXECUTION_SUCCESS.equals(status)) {
 				/* Insert Sync Control transaction */
-				syncManager.createSyncControlTransaction(syncTransaction);
+				syncManager.createSyncControlTransaction(syncTransaction, lastSyncTime);
 			}
 
 		} catch (RegBaseUncheckedException regBaseUncheckedException) {
