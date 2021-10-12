@@ -38,6 +38,7 @@ cd "${work_dir}"/registration-client/target/lib
 mkdir -p ${work_dir}/registration-client/target/lib/props
 cp "${work_dir}"/mosip-application.properties ${work_dir}/registration-client/target/lib/props/mosip-application.properties
 jar uf registration-services-${client_version_env}.jar props/mosip-application.properties
+rm -rf ${work_dir}/registration-client/target/lib/props
 
 cd "${work_dir}"
 
