@@ -34,11 +34,10 @@ mkdir -p ${work_dir}/registration-libs/target/props
 cp "${work_dir}"/mosip-application.properties ${work_dir}/registration-libs/target/props/mosip-application.properties
 jar uf registration-libs-${client_version_env}.jar props/mosip-application.properties
 
-cd "${work_dir}"/registration-services/target
-mkdir -p ${work_dir}/registration-services/target/props
-cp "${work_dir}"/mosip-application.properties ${work_dir}/registration-services/target/props/mosip-application.properties
+cd "${work_dir}"/registration-client/target/lib
+mkdir -p ${work_dir}/registration-client/target/lib/props
+cp "${work_dir}"/mosip-application.properties ${work_dir}/registration-client/target/lib/props/mosip-application.properties
 jar uf registration-services-${client_version_env}.jar props/mosip-application.properties
-cp registration-services-${client_version_env}.jar "${work_dir}"/registration-client/target/lib/
 
 cd "${work_dir}"
 
