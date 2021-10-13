@@ -934,7 +934,7 @@ public class HeaderController extends BaseController {
 	}
 
 	private boolean validUser(boolean showAlert) {
-		if (!userDetailService.isValidUser(SessionContext.getInstance().getUserContext().getUserId())) {
+		if (SessionContext.getInstance() == null || !userDetailService.isValidUser(SessionContext.getInstance().getUserContext().getUserId())) {
 			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USER_IN_ACTIVE));
 			logout(null);
 			return false;
