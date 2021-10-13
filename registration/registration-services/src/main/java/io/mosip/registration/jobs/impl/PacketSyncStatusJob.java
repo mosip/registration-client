@@ -3,6 +3,7 @@ package io.mosip.registration.jobs.impl;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.exception.ConnectionException;
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,8 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.service.packet.RegPacketStatusService;
+
+import java.sql.Timestamp;
 
 /**
  * The {@code PacketSyncStatusJob} is a job to sync the packet status
@@ -83,7 +86,7 @@ public class PacketSyncStatusJob extends BaseJob {
 				this.responseDTO = packetStatusService.syncServerPacketStatusWithRetryWrapper(triggerPoint);
 			}
 
-			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+			syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		} catch (RegBaseUncheckedException baseUncheckedException) {
 			LOGGER.error(LoggerConstants.PRE_REG_DATA_SYNC_JOB_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
@@ -119,7 +122,7 @@ public class PacketSyncStatusJob extends BaseJob {
 			if (responseDTO.getSuccessResponseDTO() != null) {
 				this.responseDTO = packetStatusService.syncServerPacketStatusWithRetryWrapper(triggerPoint);
 			}
-			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+			syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 			LOGGER.info(LoggerConstants.PACKET_SYNC_STATUS_JOB_TITLE, RegistrationConstants.APPLICATION_NAME,
 					RegistrationConstants.APPLICATION_ID, "execute job ended");

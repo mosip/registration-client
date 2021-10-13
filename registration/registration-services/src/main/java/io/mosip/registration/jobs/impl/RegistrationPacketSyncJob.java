@@ -1,5 +1,6 @@
 package io.mosip.registration.jobs.impl;
 
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.service.sync.PacketSynchService;
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,8 @@ import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.service.packet.RegPacketStatusService;
+
+import java.sql.Timestamp;
 
 /**
  * The {@code RegistrationPacketSyncJob} is a job to sync the packet status
@@ -75,7 +78,7 @@ public class RegistrationPacketSyncJob extends BaseJob {
 				this.responseDTO = packetSynchService.syncPacket(triggerPoint);
 
 			}
-			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+			syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 		} catch (RegBaseUncheckedException baseUncheckedException) {
 			LOGGER.error(LoggerConstants.REG_PACKET_SYNC_STATUS_JOB, RegistrationConstants.APPLICATION_NAME,
 					RegistrationConstants.APPLICATION_ID, baseUncheckedException.getMessage());
@@ -105,7 +108,7 @@ public class RegistrationPacketSyncJob extends BaseJob {
 		if (responseDTO.getSuccessResponseDTO() != null) {
 			this.responseDTO = packetSynchService.syncPacket(triggerPoint);
 		}
-		syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+		syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		LOGGER.debug(LoggerConstants.REG_PACKET_SYNC_STATUS_JOB, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "execute job ended");

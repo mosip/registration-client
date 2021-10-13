@@ -15,27 +15,30 @@ artifactory_url="$artifactory_url_env"
 
 echo "initalized variables"
 
-mkdir -p ${work_dir}/registration-libs/target/props
-
-echo "mosip.reg.app.key=${crypto_key_env}" > "${work_dir}"/registration-libs/target/props/mosip-application.properties
-echo "mosip.reg.version=${client_version_env}" >> "${work_dir}"/registration-libs/target/props/mosip-application.properties
-echo "mosip.reg.client.url=${client_upgrade_server}/registration-client/" >> "${work_dir}"/registration-libs/target/props/mosip-application.properties
-echo "mosip.reg.healthcheck.url=${healthcheck_url_env}" >> "${work_dir}"/registration-libs/target/props/mosip-application.properties
-echo "mosip.reg.rollback.path=../BackUp" >> "${work_dir}"/registration-libs/target/props/mosip-application.properties
-echo "mosip.reg.cerpath=/cer/mosip_cer.cer" >> "${work_dir}"/registration-libs/target/props/mosip-application.properties
-echo "mosip.reg.dbpath=db/reg" >> "${work_dir}"/registration-libs/target/props/mosip-application.properties
-echo "mosip.reg.xml.file.url=${client_upgrade_server}/registration-client/maven-metadata.xml" >> "${work_dir}"/registration-libs/target/props/mosip-application.properties
-echo "mosip.reg.client.tpm.availability=Y" >> "${work_dir}"/registration-libs/target/props/mosip-application.properties
-echo "mosip.client.upgrade.server.url=${client_upgrade_server}" >> "${work_dir}"/registration-libs/target/props/mosip-application.properties
-echo "mosip.hostname=${host_name_env}"  >> "${work_dir}"/registration-libs/target/props/mosip-application.properties
+echo "mosip.reg.app.key=${crypto_key_env}" > "${work_dir}"/mosip-application.properties
+echo "mosip.reg.version=${client_version_env}" >> "${work_dir}"/mosip-application.properties
+echo "mosip.reg.client.url=${client_upgrade_server}/registration-client/" >> "${work_dir}"/mosip-application.properties
+echo "mosip.reg.healthcheck.url=${healthcheck_url_env}" >> "${work_dir}"/mosip-application.properties
+echo "mosip.reg.rollback.path=../BackUp" >> "${work_dir}"/mosip-application.properties
+echo "mosip.reg.cerpath=/cer/mosip_cer.cer" >> "${work_dir}"/mosip-application.properties
+echo "mosip.reg.dbpath=db/reg" >> "${work_dir}"/mosip-application.properties
+echo "mosip.reg.xml.file.url=${client_upgrade_server}/registration-client/maven-metadata.xml" >> "${work_dir}"/mosip-application.properties
+echo "mosip.reg.client.tpm.availability=Y" >> "${work_dir}"/mosip-application.properties
+echo "mosip.client.upgrade.server.url=${client_upgrade_server}" >> "${work_dir}"/mosip-application.properties
+echo "mosip.hostname=${host_name_env}"  >> "${work_dir}"/mosip-application.properties
 
 echo "created mosip-application.properties"
 
 cd "${work_dir}"/registration-libs/target
+mkdir -p ${work_dir}/registration-libs/target/props
+cp "${work_dir}"/mosip-application.properties ${work_dir}/registration-libs/target/props/mosip-application.properties
 jar uf registration-libs-${client_version_env}.jar props/mosip-application.properties
 
 cd "${work_dir}"/registration-client/target/lib
-jar uf registration-services-${client_version_env}.jar ${work_dir}/registration-libs/target/props/mosip-application.properties
+mkdir -p ${work_dir}/registration-client/target/lib/props
+cp "${work_dir}"/mosip-application.properties ${work_dir}/registration-client/target/lib/props/mosip-application.properties
+jar uf registration-services-${client_version_env}.jar props/mosip-application.properties
+rm -rf ${work_dir}/registration-client/target/lib/props
 
 cd "${work_dir}"
 
