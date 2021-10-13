@@ -37,7 +37,7 @@ public interface SyncManager {
 	 *            last transaction
 	 * @return updated sync control for respective sync job transaction
 	 */
-	public SyncControl createSyncControlTransaction(SyncTransaction syncTransaction);
+	public SyncControl createSyncControlTransaction(SyncTransaction syncTransaction, Timestamp lastSyncTime);
 
 	/**
 	 * To create / update job sync details with provided last sync time

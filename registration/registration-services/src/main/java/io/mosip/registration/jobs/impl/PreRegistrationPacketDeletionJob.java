@@ -3,8 +3,10 @@ package io.mosip.registration.jobs.impl;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.sql.Timestamp;
 import java.util.LinkedList;
 
+import io.mosip.kernel.core.util.DateUtils;
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -73,7 +75,7 @@ public class PreRegistrationPacketDeletionJob extends BaseJob {
 			this.responseDTO = preRegistrationDataSyncService.fetchAndDeleteRecords();
 		}
 
-		syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+		syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		LOGGER.info("REGISTRATION - PRE_REG_PACKET_DELETION_CHILD_JOB_ENDED - PRE_REGISTRATION_PACKET_DELETION_JOB",
 				APPLICATION_NAME, APPLICATION_ID, "Pre-Registration Packet Deletion job ended");
@@ -117,7 +119,7 @@ public class PreRegistrationPacketDeletionJob extends BaseJob {
 				}
 			}
 
-			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+			syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		} catch (RegBaseUncheckedException baseUncheckedException) {
 			LOGGER.error("REGISTRATION - PRE_REG_PACKET_DELETION_ERROR - PRE_REGISTRATION_PACKET_DELETION_JOB",

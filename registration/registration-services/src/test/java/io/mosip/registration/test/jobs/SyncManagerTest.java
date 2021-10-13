@@ -14,6 +14,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.*;
@@ -217,7 +218,8 @@ public class SyncManagerTest {
 		SyncControl syncControl = new SyncControl();
 		Mockito.when(syncJobDAO.findBySyncJobId(Mockito.anyString())).thenReturn(syncControl);
 		Mockito.when(syncJobDAO.update(Mockito.any(SyncControl.class))).thenReturn(syncControl);
-		assertNotNull(syncTransactionManagerImpl.createSyncControlTransaction(syncTransaction));
+		assertNotNull(syncTransactionManagerImpl.createSyncControlTransaction(syncTransaction,
+				Timestamp.valueOf(DateUtils.getUTCCurrentDateTime())));
 	}
 	
 	@Test
@@ -252,7 +254,7 @@ public class SyncManagerTest {
 		syncControl =new SyncControl();
 		syncControl.setId(syncTransaction.getId());
 		Mockito.when(syncJobDAO.save(Mockito.any(SyncControl.class))).thenReturn(syncControl);
-		assertNotNull(syncTransactionManagerImpl.createSyncControlTransaction(syncTransaction));
+		assertNotNull(syncTransactionManagerImpl.createSyncControlTransaction(syncTransaction,Timestamp.valueOf(DateUtils.getUTCCurrentDateTime())));
 	}
 
 	private SyncDataResponseDto getSyncDataResponseDto(String fileName) {
