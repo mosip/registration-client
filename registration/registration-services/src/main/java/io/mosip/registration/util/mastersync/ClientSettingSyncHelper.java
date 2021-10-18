@@ -47,7 +47,7 @@ import io.mosip.registration.repositories.AppRolePriorityRepository;
 import io.mosip.registration.repositories.ApplicantValidDocumentRepository;
 import io.mosip.registration.repositories.BiometricAttributeRepository;
 import io.mosip.registration.repositories.BiometricTypeRepository;
-import io.mosip.registration.repositories.BlacklistedWordsRepository;
+import io.mosip.registration.repositories.BlocklistedWordsRepository;
 import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.DocumentCategoryRepository;
 import io.mosip.registration.repositories.DocumentTypeRepository;
@@ -91,9 +91,9 @@ public class ClientSettingSyncHelper {
 	@Autowired
 	private BiometricTypeRepository biometricTypeRepository;
 
-	/** Object for Sync Blacklisted Words Repository. */
+	/** Object for Sync Blocklisted Words Repository. */
 	@Autowired
-	private BlacklistedWordsRepository blacklistedWordsRepository;
+	private BlocklistedWordsRepository blocklistedWordsRepository;
 
 	/** Object for Sync Document Category Repository. */
 	@Autowired
@@ -459,7 +459,7 @@ public class ClientSettingSyncHelper {
 	@Async
 	private CompletableFuture handleMisellaneousSync1(SyncDataResponseDto syncDataResponseDto) throws SyncFailedException  {
 		try {
-			blacklistedWordsRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "BlacklistedWords")));
+			blocklistedWordsRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "BlocklistedWords")));
 			processListRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "ProcessList")));
 			screenDetailRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "ScreenDetail")));
 			screenAuthorizationRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "ScreenAuthorization")));

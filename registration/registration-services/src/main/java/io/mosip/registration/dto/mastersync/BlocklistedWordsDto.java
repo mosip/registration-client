@@ -1,15 +1,15 @@
 package io.mosip.registration.dto.mastersync;
 
 /**
- * Blacklisted word DTO.
+ * Blocklisted word DTO.
  * 
  * @author Sreekar Chukka
  * @since 1.0.0
  */
 
-public class BlacklistedWordsDto extends MasterSyncBaseDto{
+public class BlocklistedWordsDto extends MasterSyncBaseDto{
 	/**
-	 * The blacklisted word.
+	 * The blocklisted word.
 	 */
 	private String word;
 	/**

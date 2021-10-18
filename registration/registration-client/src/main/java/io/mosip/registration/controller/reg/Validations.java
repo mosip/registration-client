@@ -32,7 +32,7 @@ import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.schema.Validator;
-import io.mosip.registration.dto.mastersync.BlacklistedWordsDto;
+import io.mosip.registration.dto.mastersync.BlocklistedWordsDto;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.validator.RequiredFieldValidator;
@@ -58,7 +58,7 @@ public class Validations extends BaseController {
 	private ResourceBundle applicationMessageBundle;
 //	private ResourceBundle applicationLabelBundle;
 	private StringBuilder validationMessage;
-	private List<String> applicationLanguageblackListedWords;
+	private List<String> applicationLanguageblockListedWords;
 	private List<String> noAlert;
 	private boolean isLostUIN = false;
 
@@ -116,10 +116,10 @@ public class Validations extends BaseController {
 		return this.isLostUIN;
 	}*/
 
-	private List<String> getBlackListedWords() {
+	private List<String> getBlockListedWords() {
 		try {
-			return masterSync.getAllBlackListedWords().stream()
-					.map(BlacklistedWordsDto::getWord).collect(Collectors.toList());
+			return masterSync.getAllBlockListedWords().stream()
+					.map(BlocklistedWordsDto::getWord).collect(Collectors.toList());
 		} catch (RegBaseCheckedException regBaseCheckedException) {
 			LOGGER.error(RegistrationConstants.VALIDATION_LOGGER, APPLICATION_NAME,
 					RegistrationConstants.APPLICATION_ID,
@@ -177,21 +177,21 @@ public class Validations extends BaseController {
 		return languageSpecificValidation(parentPane, node, id, getMessagesBundle(langCode), isPreviousValid, langCode);
 	}
 	
-	public boolean validateForBlackListedWords(Pane parentPane, TextField node, String fieldId, boolean isPreviousValid,
+	public boolean validateForBlockListedWords(Pane parentPane, TextField node, String fieldId, boolean isPreviousValid,
 			String langCode) {
-		LOGGER.debug("started to validate :: {} for blacklisted words", fieldId);
+		LOGGER.debug("started to validate :: {} for blocklisted words", fieldId);
 		
 		ResourceBundle messageBundle = getMessagesBundle(langCode);
 		boolean showAlert = (noAlert.contains(node.getId()) && fieldId.contains(RegistrationConstants.ON_TYPE));
-		if (validateBlackListedWords(parentPane, node, node.getId(), fieldId, getBlackListedWords(), showAlert, messageBundle)) {
+		if (validateBlockListedWords(parentPane, node, node.getId(), fieldId, getBlockListedWords(), showAlert, messageBundle)) {
 			return true;
 		}
 
 		return false;
 	}
 
-	public List<String> getBlackListedWordsList(TextField textField) {
-		return getBlackListedWords().stream().filter(bWord -> textField.getText().contains(bWord)).collect(Collectors.toList());
+	public List<String> getBlockListedWordsList(TextField textField) {
+		return getBlockListedWords().stream().filter(bWord -> textField.getText().contains(bWord)).collect(Collectors.toList());
 	}
 
 	private ResourceBundle getMessagesBundle(String langCode) {
@@ -393,23 +393,23 @@ public class Validations extends BaseController {
 		return null;
 	}
 
-	private boolean validateBlackListedWords(Pane parentPane, TextField node, String id, String fieldId, List<String> blackListedWords,
+	private boolean validateBlockListedWords(Pane parentPane, TextField node, String id, String fieldId, List<String> blockListedWords,
 			boolean showAlert, ResourceBundle messageBundle) {
 		boolean isInputValid = true;
-		if (blackListedWords != null && !id.contains(RegistrationConstants.ON_TYPE)) {
+		if (blockListedWords != null && !id.contains(RegistrationConstants.ON_TYPE)) {
 			if (getRegistrationDTOFromSession().BLOCKLISTED_CHECK.containsKey(fieldId)
 					&& getRegistrationDTOFromSession().BLOCKLISTED_CHECK.get(fieldId).getWords()
 							.stream().filter(word -> node.getText().contains(word)).findAny().isPresent() && Stream.of(node.getText().split(" "))
                             .collect(Collectors.toList())
-							.stream().filter(word -> blackListedWords.contains(word) && !getRegistrationDTOFromSession().BLOCKLISTED_CHECK.get(fieldId).getWords().contains(word)).findAny().isEmpty()) {
+							.stream().filter(word -> blockListedWords.contains(word) && !getRegistrationDTOFromSession().BLOCKLISTED_CHECK.get(fieldId).getWords().contains(word)).findAny().isEmpty()) {
 				return true;
 			}
-			if (blackListedWords.contains(node.getText())) {
+			if (blockListedWords.contains(node.getText())) {
 				isInputValid = false;
 				generateInvalidValueAlert(parentPane, id, MessageFormat.format(messageBundle.getString("BLOCKLISTED_ERROR"), node.getText()),
 						showAlert);
 			} else {
-				Set<String> invalidWorlds = blackListedWords.stream().flatMap(l1 -> Stream
+				Set<String> invalidWorlds = blockListedWords.stream().flatMap(l1 -> Stream
 						.of(node.getText().split("\\s+")).collect(Collectors.toList()).stream().filter(l2 -> {
 							return l1.equalsIgnoreCase(l2);
 						})).collect(Collectors.toSet());

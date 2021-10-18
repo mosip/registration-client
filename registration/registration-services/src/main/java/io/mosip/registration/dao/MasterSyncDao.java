@@ -3,7 +3,7 @@ package io.mosip.registration.dao;
 import java.util.List;
 
 import io.mosip.registration.entity.BiometricAttribute;
-import io.mosip.registration.entity.BlacklistedWords;
+import io.mosip.registration.entity.BlocklistedWords;
 import io.mosip.registration.entity.DocumentCategory;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.entity.Language;
@@ -69,11 +69,11 @@ public interface MasterSyncDao {
 	List<ReasonList> getReasonList(String langCode, List<String> reasonCat);
 
 	/**
-	 * Gets the black listed words.
+	 * Gets the block listed words.
 	 * 
-	 * @return the black listed words
+	 * @return the block listed words
 	 */
-	List<BlacklistedWords> getBlackListedWords();
+	List<BlocklistedWords> getBlockListedWords();
 
 	/**
 	 * Gets the Document Categories.
