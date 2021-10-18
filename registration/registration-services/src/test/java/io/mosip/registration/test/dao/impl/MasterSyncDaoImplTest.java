@@ -35,7 +35,7 @@ import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.dao.impl.MasterSyncDaoImpl;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.BiometricAttribute;
-import io.mosip.registration.entity.BlacklistedWords;
+import io.mosip.registration.entity.BlocklistedWords;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.entity.Location;
 import io.mosip.registration.entity.ReasonCategory;
@@ -45,7 +45,7 @@ import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.BiometricAttributeRepository;
-import io.mosip.registration.repositories.BlacklistedWordsRepository;
+import io.mosip.registration.repositories.BlocklistedWordsRepository;
 import io.mosip.registration.repositories.DocumentCategoryRepository;
 import io.mosip.registration.repositories.DocumentTypeRepository;
 import io.mosip.registration.repositories.LanguageRepository;
@@ -84,9 +84,9 @@ public class MasterSyncDaoImplTest {
 	@Mock
 	private BiometricAttributeRepository biometricAttributeRepository;
 
-	/** Object for Sync Blacklisted Words Repository. */
+	/** Object for Sync Blocklisted Words Repository. */
 	@Mock
-	private BlacklistedWordsRepository blacklistedWordsRepository;
+	private BlocklistedWordsRepository blocklistedWordsRepository;
 
 	/** Object for Sync Document Category Repository. */
 	@Mock
@@ -280,23 +280,23 @@ public class MasterSyncDaoImplTest {
 	}
 
 	@Test
-	public void findBlackWords() throws RegBaseCheckedException {
+	public void findBlockWords() throws RegBaseCheckedException {
 
-		List<BlacklistedWords> allBlackWords = new ArrayList<>();
-		BlacklistedWords blackWord = new BlacklistedWords();
-		blackWord.setWord("asdfg");
-		blackWord.setDescription("asdfg");
-		blackWord.setLangCode("ENG");
-		allBlackWords.add(blackWord);
-		allBlackWords.add(blackWord);
+		List<BlocklistedWords> allBlockWords = new ArrayList<>();
+		BlocklistedWords blockWord = new BlocklistedWords();
+		blockWord.setWord("asdfg");
+		blockWord.setDescription("asdfg");
+		blockWord.setLangCode("ENG");
+		allBlockWords.add(blockWord);
+		allBlockWords.add(blockWord);
 
 		Mockito.when(
-				blacklistedWordsRepository.findBlackListedWordsByIsActiveTrue())
-				.thenReturn(allBlackWords);
+				blocklistedWordsRepository.findBlockListedWordsByIsActiveTrue())
+				.thenReturn(allBlockWords);
 
-		masterSyncDaoImpl.getBlackListedWords();
+		masterSyncDaoImpl.getBlockListedWords();
 
-		assertTrue(allBlackWords != null);
+		assertTrue(allBlockWords != null);
 	}
 
 	@Test

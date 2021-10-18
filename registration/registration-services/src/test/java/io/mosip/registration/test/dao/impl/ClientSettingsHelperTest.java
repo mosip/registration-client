@@ -65,7 +65,7 @@ public class ClientSettingsHelperTest {
 	private BiometricTypeRepository masterSyncBiometricTypeRepository;
 
 	@Mock
-	private BlacklistedWordsRepository masterSyncBlacklistedWordsRepository;
+	private BlocklistedWordsRepository masterSyncBlocklistedWordsRepository;
 
 	@Mock
 	private DocumentCategoryRepository masterSyncDocumentCategoryRepository;

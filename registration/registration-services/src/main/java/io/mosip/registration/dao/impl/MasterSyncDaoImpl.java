@@ -16,7 +16,7 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.entity.BiometricAttribute;
-import io.mosip.registration.entity.BlacklistedWords;
+import io.mosip.registration.entity.BlocklistedWords;
 import io.mosip.registration.entity.DocumentCategory;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.entity.Language;
@@ -28,7 +28,7 @@ import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.BiometricAttributeRepository;
-import io.mosip.registration.repositories.BlacklistedWordsRepository;
+import io.mosip.registration.repositories.BlocklistedWordsRepository;
 import io.mosip.registration.repositories.DocumentCategoryRepository;
 import io.mosip.registration.repositories.DocumentTypeRepository;
 import io.mosip.registration.repositories.LanguageRepository;
@@ -58,9 +58,9 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	@Autowired
 	private BiometricAttributeRepository biometricAttributeRepository;
 
-	/** Object for Sync Blacklisted Words Repository. */
+	/** Object for Sync Blocklisted Words Repository. */
 	@Autowired
-	private BlacklistedWordsRepository blacklistedWordsRepository;
+	private BlocklistedWordsRepository blocklistedWordsRepository;
 
 	/** Object for Sync Document Category Repository. */
 	@Autowired
@@ -177,11 +177,11 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * io.mosip.registration.dao.MasterSyncDao#getBlackListedWords(java.lang.String)
+	 * io.mosip.registration.dao.MasterSyncDao#getBlockListedWords(java.lang.String)
 	 */
 	@Override
-	public List<BlacklistedWords> getBlackListedWords() {
-		return blacklistedWordsRepository.findBlackListedWordsByIsActiveTrue();
+	public List<BlocklistedWords> getBlockListedWords() {
+		return blocklistedWordsRepository.findBlockListedWordsByIsActiveTrue();
 	}
 
 	/*
