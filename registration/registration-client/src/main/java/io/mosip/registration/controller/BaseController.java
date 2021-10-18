@@ -474,7 +474,7 @@ public class BaseController {
 	 * @return
 	 */
 	protected boolean pageNavigantionAlert() {
-		if (!fXComponents.getScene().getRoot().getId().equals("mainBox") && !SessionContext.map()
+		if (!fXComponents.getScene().getRoot().getId().equals("mainBox") && SessionContext.getInstance() != null && !SessionContext.map()
 				.get(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ).equals(RegistrationConstants.ENABLE)) {
 
 			Alert alert = createAlert(AlertType.CONFIRMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.INFORMATION),
