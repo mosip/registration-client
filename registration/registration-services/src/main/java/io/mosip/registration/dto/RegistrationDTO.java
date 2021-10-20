@@ -105,13 +105,13 @@ public class RegistrationDTO {
 		BLOCKLISTED_CHECK.clear();
 	}
 
-	public void addDemographicField(@NonNull String fieldId,@NonNull String value) {
+	public void addDemographicField(@NonNull String fieldId, String value) {
 		if(value != null && !value.trim().isEmpty())
 			this.demographics.put(fieldId, value);
 	}
 
-	public void addDemographicField(@NonNull String fieldId,@NonNull List<SimpleDto> values) {
-		if (fieldId != null && !values.isEmpty()) {
+	public void addDemographicField(@NonNull String fieldId, List<SimpleDto> values) {
+		if (fieldId != null && values != null && !values.isEmpty()) {
 			this.demographics.put(fieldId, values);
 		}
 	}
