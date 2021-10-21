@@ -447,6 +447,10 @@
 					<groupId>io.mosip.kernel</groupId>
 					<artifactId>kernel-logger-logback</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>com.vaadin.external.google</groupId>
+					<artifactId>android-json</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 
