@@ -31,7 +31,7 @@ public class MasterDataResponseDto {
 	private List<TemplateFileFormatDto> templateFileFormat;
 	private List<PostReasonCategoryDto> reasonCategory;
 	private List<ReasonListDto> reasonList;
-	private List<BlacklistedWordsDto> blackListedWords;
+	private List<BlocklistedWordsDto> blockListedWords;
 	private List<LocationDto> locationHierarchy;
 	private List<BiometricTypeDto> biometricTypes;
 	private List<ApplicationDto> applications;

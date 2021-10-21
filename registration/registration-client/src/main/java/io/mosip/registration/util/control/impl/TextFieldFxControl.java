@@ -263,11 +263,11 @@ public class TextFieldFxControl extends FxControl {
 				TextField textField = (TextField) getField(uiFieldDTO.getId() + langCode);
 				if (getRegistrationDTo().BLOCKLISTED_CHECK.containsKey(uiFieldDTO.getId())) {
 					List<String> words = getRegistrationDTo().BLOCKLISTED_CHECK.get(uiFieldDTO.getId()).getWords();
-					words.addAll(validation.getBlackListedWordsList(textField));
+					words.addAll(validation.getBlockListedWordsList(textField));
 					getRegistrationDTo().BLOCKLISTED_CHECK.get(uiFieldDTO.getId()).setWords(words.stream().distinct().collect(Collectors.toList()));
 				} else {
 					BlocklistedConsentDto blockListedConsent = new BlocklistedConsentDto();
-					blockListedConsent.setWords(validation.getBlackListedWordsList(textField));
+					blockListedConsent.setWords(validation.getBlockListedWordsList(textField));
 					blockListedConsent.setOperatorConsent(true);
 					blockListedConsent.setScreenName(genericController.getCurrentScreenName());
 					blockListedConsent.setOperatorId(SessionContext.userId());
@@ -380,7 +380,7 @@ public class TextFieldFxControl extends FxControl {
 			getField(uiFieldDTO.getId() + langCode + "HyperlinkHBox").setVisible(false);
 			
 			if (validation.validateTextField((Pane) getNode(), textField, uiFieldDTO.getId(), true, langCode)) {
-				if (validation.validateForBlackListedWords((Pane) getNode(), textField, uiFieldDTO.getId(), true, langCode)) {
+				if (validation.validateForBlockListedWords((Pane) getNode(), textField, uiFieldDTO.getId(), true, langCode)) {
 					FXUtils.getInstance().setTextValidLabel((Pane) getNode(), textField, uiFieldDTO.getId());
 					getField(uiFieldDTO.getId() + langCode + "HyperlinkHBox").setVisible(false);
 				} else {

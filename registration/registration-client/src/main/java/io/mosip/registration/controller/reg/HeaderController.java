@@ -298,16 +298,15 @@ public class HeaderController extends BaseController {
 	public void logout(ActionEvent event) {
 		streamer.stop();
 		if (pageNavigantionAlert()) {
-			auditFactory.audit(AuditEvent.LOGOUT_USER, Components.NAVIGATION, SessionContext.userContext().getUserId(),
+			auditFactory.audit(AuditEvent.LOGOUT_USER, Components.NAVIGATION, SessionContext.userId(),
 					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
 			LOGGER.info(LoggerConstants.LOG_REG_HEADER, APPLICATION_NAME, APPLICATION_ID,
-					"Clearing Session context" + SessionContext.authTokenDTO());
+					"Clearing Session context");
 
 			closeAlreadyExistedAlert();
 
 			logoutCleanUp();
-
 		}
 	}
 
@@ -644,7 +643,13 @@ public class HeaderController extends BaseController {
 				progressIndicator.setVisible(false);
 			}
 		});
-
+		taskService.setOnFailed(event -> {
+			gridPane.setDisable(false);
+			boolean showAlert = false;
+			if (validUser(showAlert))
+				machineRemapCheck(showAlert);
+			progressIndicator.setVisible(false);
+		});
 	}
 
 	private void progressTask() {

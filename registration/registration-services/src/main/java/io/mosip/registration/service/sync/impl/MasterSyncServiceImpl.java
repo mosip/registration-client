@@ -32,12 +32,12 @@ import io.mosip.registration.dao.DynamicFieldDAO;
 import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.mastersync.BlacklistedWordsDto;
+import io.mosip.registration.dto.mastersync.BlocklistedWordsDto;
 import io.mosip.registration.dto.mastersync.DynamicFieldValueDto;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.mastersync.ReasonListDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
-import io.mosip.registration.entity.BlacklistedWords;
+import io.mosip.registration.entity.BlocklistedWords;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.entity.Location;
 import io.mosip.registration.entity.ReasonCategory;
@@ -233,25 +233,25 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	}
 
 	/**
-	 * Gets all the black listed words that shouldn't be allowed while capturing
+	 * Gets all the block listed words that shouldn't be allowed while capturing
 	 * demographic information from user.
 	 *
-	 * @return the all black listed words
+	 * @return the all block listed words
 	 * @throws RegBaseCheckedException
 	 */
 	@Override
-	public List<BlacklistedWordsDto> getAllBlackListedWords() throws RegBaseCheckedException {
-		List<BlacklistedWordsDto> blackWords = new ArrayList<>();
-		List<BlacklistedWords> blackListedWords = masterSyncDao.getBlackListedWords();
+	public List<BlocklistedWordsDto> getAllBlockListedWords() throws RegBaseCheckedException {
+		List<BlocklistedWordsDto> blockWords = new ArrayList<>();
+		List<BlocklistedWords> blockListedWords = masterSyncDao.getBlockListedWords();
 
-		blackListedWords.forEach(blackList -> {
-			BlacklistedWordsDto words = new BlacklistedWordsDto();
-			words.setDescription(blackList.getDescription());
-			words.setLangCode(blackList.getLangCode());
-			words.setWord(blackList.getWord());
-			blackWords.add(words);
+		blockListedWords.forEach(blockList -> {
+			BlocklistedWordsDto words = new BlocklistedWordsDto();
+			words.setDescription(blockList.getDescription());
+			words.setLangCode(blockList.getLangCode());
+			words.setWord(blockList.getWord());
+			blockWords.add(words);
 		});
-		return blackWords;
+		return blockWords;
 	}
 
 
