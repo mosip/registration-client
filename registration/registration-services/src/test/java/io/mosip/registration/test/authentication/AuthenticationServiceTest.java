@@ -197,7 +197,7 @@ public class AuthenticationServiceTest {
 		Mockito.when(authTokenUtilService.getAuthTokenAndRefreshToken(LoginMode.PASSWORD)).thenReturn(null);
 		Mockito.when(loginService.getUserDetail(authenticationValidatorDTO.getUserId())).thenReturn(userDTO);
 		PowerMockito.mockStatic(HMACUtils2.class, CryptoUtil.class);
-		Mockito.when(CryptoUtil.decodeBase64("salt")).thenReturn("salt".getBytes());
+		Mockito.when(CryptoUtil.decodeURLSafeBase64("salt")).thenReturn("salt".getBytes());
 		Mockito.when(HMACUtils2.digestAsPlainTextWithSalt("mosip".getBytes(), "salt".getBytes())).thenReturn("mosip");
 		
 		Assert.assertTrue(authenticationServiceImpl.validatePassword(authenticationValidatorDTO));
@@ -220,7 +220,7 @@ public class AuthenticationServiceTest {
 		Mockito.when(authTokenUtilService.getAuthTokenAndRefreshToken(LoginMode.PASSWORD)).thenReturn(null);
 		Mockito.when(loginService.getUserDetail(authenticationValidatorDTO.getUserId())).thenReturn(userDTO);
 		PowerMockito.mockStatic(HMACUtils2.class, CryptoUtil.class);
-		Mockito.when(CryptoUtil.decodeBase64("salt")).thenReturn("salt".getBytes());
+		Mockito.when(CryptoUtil.decodeURLSafeBase64("salt")).thenReturn("salt".getBytes());
 		Mockito.when(HMACUtils2.digestAsPlainTextWithSalt("mosip".getBytes(), "salt".getBytes())).thenReturn("mosip");
 		
 		Assert.assertTrue(authenticationServiceImpl.validatePassword(authenticationValidatorDTO));
