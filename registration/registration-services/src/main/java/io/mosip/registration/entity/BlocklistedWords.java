@@ -22,9 +22,9 @@ import io.mosip.registration.entity.id.WordAndLanguageCodeID;
  */
 
 @Entity
-@Table(name = "blacklisted_words", schema = "reg")
+@Table(name = "blocklisted_words", schema = "reg")
 @IdClass(WordAndLanguageCodeID.class)
-public class BlacklistedWords extends RegistrationCommonFields implements Serializable {
+public class BlocklistedWords extends RegistrationCommonFields implements Serializable {
 
 	/**
 	 * Serialized version ID.
@@ -35,7 +35,7 @@ public class BlacklistedWords extends RegistrationCommonFields implements Serial
 	@AttributeOverrides({ @AttributeOverride(name = "word", column = @Column(name = "word")),
 			@AttributeOverride(name = "langCode", column = @Column(name = "lang_code")) })
 	/**
-	 * The blacklisted word.
+	 * The blocklisted word.
 	 */
 	private String word;
 

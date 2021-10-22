@@ -8,5 +8,6 @@ public class Validator {
     public String validator;
     public List<Object> arguments;
     public Object langCode;
+    public Object errorCode;
 
 }

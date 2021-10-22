@@ -67,13 +67,13 @@ public interface MasterSyncService {
 	List<ReasonListDto> getAllReasonsList(String langCode) throws RegBaseCheckedException;
 
 	/**
-	 * Gets all the black listed words that shouldn't be allowed while capturing
+	 * Gets all the block listed words that shouldn't be allowed while capturing
 	 * demographic information from user.
 	 *
-	 * @return the all black listed words
+	 * @return the all block listed words
 	 * @throws RegBaseCheckedException
 	 */
-	List<BlacklistedWordsDto> getAllBlackListedWords() throws RegBaseCheckedException;
+	List<BlocklistedWordsDto> getAllBlockListedWords() throws RegBaseCheckedException;
 
 	/**
 	 * Gets all the document categories from db that to be displayed in the UI
