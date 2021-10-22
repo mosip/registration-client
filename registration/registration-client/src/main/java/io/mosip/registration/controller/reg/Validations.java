@@ -238,9 +238,10 @@ public class Validations extends BaseController {
 				}
 
 				if (node.isVisible() && (node.getText() != null && !node.getText().isEmpty())) {
-					isInputValid = checkForValidValue(parentPane, node, id, node.getText(), messageBundle, showAlert,
-							isPreviousValid, uiFieldDTO, langCode);
-				}
+				isInputValid = checkForValidValue(parentPane, node, id, node.getText(), messageBundle, showAlert,
+						isPreviousValid, uiFieldDTO, langCode);
+			}
+			
 			}
 
 		} catch (RuntimeException runtimeException) {
@@ -396,7 +397,8 @@ public class Validations extends BaseController {
 	private boolean validateBlockListedWords(Pane parentPane, TextField node, String id, String fieldId, List<String> blockListedWords,
 			boolean showAlert, ResourceBundle messageBundle) {
 		boolean isInputValid = true;
-		if (blockListedWords != null && !id.contains(RegistrationConstants.ON_TYPE)) {
+		
+		if (node.getText()!=null && blockListedWords != null && !id.contains(RegistrationConstants.ON_TYPE)) {
 			if (getRegistrationDTOFromSession().BLOCKLISTED_CHECK.containsKey(fieldId)
 					&& getRegistrationDTOFromSession().BLOCKLISTED_CHECK.get(fieldId).getWords()
 							.stream().filter(word -> node.getText().contains(word)).findAny().isPresent() && Stream.of(node.getText().split(" "))
