@@ -1,0 +1,101 @@
+{ "identity" : {
+  "proofOfAddress" : {
+    "value" : "proofOfAddress",
+    "type" : "DOC006",
+    "format" : "PDF"
+  },
+  "gender" : [ {
+    "language" : "eng",
+    "value" : "Female"
+  }, {
+    "language" : "ara",
+    "value" : "أنثى"
+  } ],
+  "city" : [ {
+    "language" : "eng",
+    "value" : "Kenitra"
+  }, {
+    "language" : "ara",
+    "value" : "القنيطرة"
+  } ],
+  "postalCode" : "14022",
+  "fullName" : [ {
+    "language" : "eng",
+    "value" : "Upgrade1.1.4child"
+  }, {
+    "language" : "ara",
+    "value" : "ُپگرَدِ١٬١٬٤"
+  } ],
+  "dateOfBirth" : "2020/01/01",
+  "referenceIdentityNumber" : "23444444444444322",
+  "individualBiometrics" : {
+    "format" : "cbeff",
+    "version" : 1.0,
+    "value" : "individualBiometrics_bio_CBEFF"
+  },
+  "proofOfIdentity" : {
+    "value" : "proofOfIdentity",
+    "type" : "CIN",
+    "format" : "png"
+  },
+  "IDSchemaVersion" : 0.1,
+  "province" : [ {
+    "language" : "eng",
+    "value" : "Kenitra"
+  }, {
+    "language" : "ara",
+    "value" : "القنيطرة"
+  } ],
+  "zone" : [ {
+    "language" : "eng",
+    "value" : "Ben Mansour"
+  }, {
+    "language" : "ara",
+    "value" : "بن منصور"
+  } ],
+  "phone" : "8600097143",
+  "addressLine1" : [ {
+    "language" : "eng",
+    "value" : "Upgrade1.1.4"
+  }, {
+    "language" : "ara",
+    "value" : "ُپگرَدِ١٬١٬٤"
+  } ],
+  "addressLine2" : [ {
+    "language" : "eng",
+    "value" : "Upgrade1.1.4"
+  }, {
+    "language" : "ara",
+    "value" : "Upgrade1.1.4"
+  } ],
+  "residenceStatus" : [ {
+    "language" : "eng",
+    "value" : "Non-Foreigner"
+  }, {
+    "language" : "ara",
+    "value" : "غير أجنبي"
+  } ],
+  "addressLine3" : [ {
+    "language" : "eng",
+    "value" : "Upgrade1.1.4"
+  }, {
+    "language" : "ara",
+    "value" : "Upgrade1.1.4"
+  } ],
+  "region" : [ {
+    "language" : "eng",
+    "value" : "Rabat Sale Kenitra"
+  }, {
+    "language" : "ara",
+    "value" : "جهة الرباط سلا القنيطرة"
+  } ],
+  "email" : "abc@abc.co.in",
+  "parentOrGuardianRID" : "10002100870000320210420134337",
+   "parentOrGuardianName" : [ {
+    "language" : "eng",
+    "value" : "Upgrade1.1.4"
+  }, {
+    "language" : "ara",
+    "value" : "ُپگرَدِ١٬١٬٤"
+  } ]
+} } 

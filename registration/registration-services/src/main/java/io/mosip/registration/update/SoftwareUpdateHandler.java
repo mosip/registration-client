@@ -16,10 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -40,6 +37,7 @@ import org.xml.sax.SAXException;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
@@ -60,9 +58,29 @@ import io.mosip.registration.service.config.GlobalParamService;
 @Component
 public class SoftwareUpdateHandler extends BaseService {
 
-	private static String SLASH = "/";
+	/**
+	 * Instance of {@link Logger}
+	 */
+	private static final Logger LOGGER = AppConfig.getLogger(SoftwareUpdateHandler.class);
+	private static final String SLASH = "/";
+	private static final String manifestFile = "MANIFEST.MF";
+	private static final String libFolder = "lib/";
+	private static final String binFolder = "bin/";
+	private static final String lastUpdatedTag = "lastUpdated";
+	private static final String SQL = "sql";
+	private static final String exectionSqlFile = "initial_db_scripts.sql";
+	private static final String rollBackSqlFile = "rollback_scripts.sql";
+	private static final String mosip = "mosip";
+	private static final String versionTag = "version";
+	private static final String MOSIP_SERVICES = "mosip-services.jar";
+	private static final String MOSIP_CLIENT = "mosip-client.jar";
 
-	private String manifestFile = "MANIFEST.MF";
+	private static Map<String, String> CHECKSUM_MAP;
+	private String currentVersion;
+	private String latestVersion;
+	private Manifest localManifest;
+	private Manifest serverManifest;
+	private String latestVersionReleaseTimestamp;
 
 	@Value("${mosip.reg.rollback.path}")
 	private String backUpPath;
@@ -73,44 +91,12 @@ public class SoftwareUpdateHandler extends BaseService {
 	@Value("${mosip.reg.xml.file.url}")
 	private String serverMosipXmlFileUrl;
 
-	private static String libFolder = "lib/";
-	private String binFolder = "bin/";
-
-	private String currentVersion;
-
-	private String latestVersion;
-
-	private Manifest localManifest;
-
-	private Manifest serverManifest;
-
-	private String mosip = "mosip";
-
-	private String versionTag = "version";
-
-	private String latestVersionReleaseTimestamp;
-
-	private String lastUpdatedTag = "lastUpdated";
-
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
-	// @Value("${HTTP_API_READ_TIMEOUT}")
-	// private int readTimeout;
-	//
-	// @Value("${HTTP_API_WRITE_TIMEOUT}")
-	// private int connectTimeout;
-
-	/**
-	 * Instance of {@link Logger}
-	 */
-	private static final Logger LOGGER = AppConfig.getLogger(SoftwareUpdateHandler.class);
-
 	@Autowired
 	private GlobalParamService globalParamService;
-	private String SQL = "sql";
-	private String exectionSqlFile = "initial_db_scripts.sql";
-	private String rollBackSqlFile = "rollback_scripts.sql";
+
 
 	/**
 	 * It will check whether any software updates are available or not.
@@ -299,6 +285,10 @@ public class SoftwareUpdateHandler extends BaseService {
 			// Update global param of software update flag as false
 			globalParamService.update(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE,
 					RegistrationConstants.DISABLE);
+			
+			Timestamp time = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());			
+			globalParamService.update(RegistrationConstants.LAST_SOFTWARE_UPDATE,
+					String.valueOf(time));
 
 		} catch (RuntimeException | IOException | ParserConfigurationException | SAXException exception) {
 			LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
@@ -556,10 +546,13 @@ public class SoftwareUpdateHandler extends BaseService {
 	 * @return response of sql execution
 	 * @throws IOException
 	 */
-	public ResponseDTO executeSqlFile(String latestVersion, String previousVersion) throws IOException {
+	public ResponseDTO executeSqlFile(String actualLatestVersion, String previousVersion) throws IOException {
 
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"DB-Script files execution started");
+		LOGGER.info("DB-Script files execution started from previous version : {} , To Current Version : {}",previousVersion, currentVersion);
+
+		String newVersion = actualLatestVersion.split("-")[0];
+		previousVersion = previousVersion.split("-")[0];
+		
 
 		ResponseDTO responseDTO = new ResponseDTO();
 
@@ -568,12 +561,12 @@ public class SoftwareUpdateHandler extends BaseService {
 		try {
 
 			LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					"Checking Started : " + latestVersion + SLASH + exectionSqlFile);
+					"Checking Started : " + newVersion + SLASH + exectionSqlFile);
 
-			execute(SQL + SLASH + latestVersion + SLASH + exectionSqlFile);
+			execute(SQL + SLASH + newVersion + SLASH + exectionSqlFile);
 
 			LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					"Checking completed : " + latestVersion + SLASH + exectionSqlFile);
+					"Checking completed : " + newVersion + SLASH + exectionSqlFile);
 
 		}
 
@@ -586,12 +579,12 @@ public class SoftwareUpdateHandler extends BaseService {
 			try {
 
 				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Checking started : " + latestVersion + SLASH + rollBackSqlFile);
+						"Checking started : " + newVersion + SLASH + rollBackSqlFile);
 
-				execute(SQL + SLASH + latestVersion + SLASH + rollBackSqlFile);
+				execute(SQL + SLASH + newVersion + SLASH + rollBackSqlFile);
 
 				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Checking completed : " + latestVersion + SLASH + rollBackSqlFile);
+						"Checking completed : " + newVersion + SLASH + rollBackSqlFile);
 
 			} catch (RuntimeException | IOException exception) {
 
@@ -610,9 +603,9 @@ public class SoftwareUpdateHandler extends BaseService {
 		}
 
 		// Update global param with current version
-		globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, latestVersion);
+		globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, actualLatestVersion);
 
-		addProperties(latestVersion);
+		//addProperties(latestVersion);
 
 		setSuccessResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_SUCCESS, null);
 
@@ -761,6 +754,15 @@ public class SoftwareUpdateHandler extends BaseService {
 
 		// checksum (content-type)
 		return checksum;
+	}
+
+	public Map<String, String> getJarChecksum() {
+		if(CHECKSUM_MAP == null) {
+			CHECKSUM_MAP = new HashMap<>();
+			CHECKSUM_MAP.put(MOSIP_CLIENT, getCheckSum(MOSIP_CLIENT, null));
+			CHECKSUM_MAP.put(MOSIP_SERVICES, getCheckSum(MOSIP_SERVICES, null));
+		}
+		return CHECKSUM_MAP;
 	}
 
 	private String getURL(String urlPostFix) {

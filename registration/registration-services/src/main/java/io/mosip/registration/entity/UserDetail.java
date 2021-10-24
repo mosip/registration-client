@@ -65,7 +65,7 @@ public class UserDetail extends RegistrationCommonFields implements Serializable
 	@Column(name = "del_dtimes")
 	private Timestamp delDtimes;
 
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "userDetail", cascade = CascadeType.ALL)
+	@OneToMany(fetch = FetchType.EAGER, mappedBy = "userDetail", orphanRemoval = true, cascade = CascadeType.ALL)
 	private Set<UserRole> userRole;
 
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "userDetail", cascade = CascadeType.ALL)

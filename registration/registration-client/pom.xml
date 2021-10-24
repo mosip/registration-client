@@ -6,13 +6,13 @@
 
 	<parent>
 		<groupId>io.mosip.registration</groupId>
-		<artifactId>registration-parent</artifactId>
-		<version>1.1.4</version>
+		<artifactId>registration-client-parent</artifactId>
+		<version>1.1.5.4</version>
 	</parent>
 
 	<artifactId>registration-client</artifactId>
 	<packaging>jar</packaging>
-	<version>1.1.4</version>
+	<version>1.1.5.4</version>
 	<name>registration-client</name>
 	<description>Maven project of MOSIP Registration UI</description>
 
@@ -22,8 +22,9 @@
 		<dependency>
 			<groupId>io.mosip.registration</groupId>
 			<artifactId>registration-services</artifactId>
-			<version>1.1.4</version>
+			<version>1.1.5.4</version>
 		</dependency>
+		
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-web</artifactId>
@@ -70,7 +71,12 @@
 			<artifactId>javafx-web</artifactId>
 			<version>${openjfx.version}</version>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>io.mosip.biometric.util</groupId>
+            <artifactId>biometrics-util</artifactId>
+            <version>1.1.5</version>
+        </dependency>
+    </dependencies>
 	<build>
 		<plugins>
 			<plugin>

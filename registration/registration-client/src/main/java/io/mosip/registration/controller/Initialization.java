@@ -3,6 +3,7 @@ package io.mosip.registration.controller;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
 import org.springframework.context.ApplicationContext;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.SessionContext;
@@ -38,6 +40,7 @@ public class Initialization extends Application {
 	private static Stage applicationPrimaryStage;
 	private static String upgradeServer = null;
 	private static String tpmRequired = "Y";
+	private static String applicationStartTime;
 
 	@Override
 	public void start(Stage primaryStage) {
@@ -71,14 +74,17 @@ public class Initialization extends Application {
 		try {
 			System.setProperty("java.net.useSystemProxies", "true");
 			System.setProperty("file.encoding", "UTF-8");
+			
 			io.mosip.registration.context.ApplicationContext.getInstance();
 			if (args.length > 1) {
 				upgradeServer = args[0];
 				tpmRequired = args[1];
 				io.mosip.registration.context.ApplicationContext.setTPMUsageFlag(args[1]);
 			}
+			Timestamp time = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
+			applicationStartTime = String.valueOf(time);
 
-			applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+			applicationContext = createApplicationContext();
 			launch(args);
 
 			LOGGER.info("REGISTRATION - APPLICATION INITILIZATION - REGISTRATIONAPPINITILIZATION", APPLICATION_NAME,
@@ -91,6 +97,20 @@ public class Initialization extends Application {
 							+ new SimpleDateFormat(RegistrationConstants.HH_MM_SS).format(System.currentTimeMillis())
 							+ ExceptionUtils.getStackTrace(exception));
 		}
+	}
+
+	/**
+	 * Create Application context with AppConfig Class
+	 * @return Spring Application context 
+	 */
+	public static ApplicationContext createApplicationContext() {
+
+		if(System.getProperty(RegistrationConstants.MOSIP_HOSTNAME)==null && System.getenv(RegistrationConstants.MOSIP_HOSTNAME)!=null) {
+			
+			System.setProperty(RegistrationConstants.MOSIP_HOSTNAME, System.getenv(RegistrationConstants.MOSIP_HOSTNAME));
+		}
+		
+		return new AnnotationConfigApplicationContext(AppConfig.class);
 	}
 
 	@Override
@@ -109,10 +129,6 @@ public class Initialization extends Application {
 		} finally {
 			System.exit(0);
 		}
-	}
-	
-	private ClientCryptoFacade getClientCryptoFacade() {
-		return applicationContext.getBean(ClientCryptoFacade.class);
 	}
 
 	private ClientCryptoFacade getClientCryptoFacade() {
@@ -133,5 +149,9 @@ public class Initialization extends Application {
 
 	public static void setPrimaryStage(Stage primaryStage) {
 		applicationPrimaryStage = primaryStage;
+	}
+	
+	public static String getApplicationStartTime() {
+		return applicationStartTime;
 	}
 }

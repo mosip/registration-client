@@ -8,8 +8,8 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 import javax.transaction.Transactional;
 
@@ -24,7 +24,6 @@ import io.mosip.kernel.core.util.exception.JsonProcessingException;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.constants.RegistrationTransactionType;
 import io.mosip.registration.constants.RegistrationType;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
@@ -34,7 +33,6 @@ import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationDataDto;
 import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.entity.Registration;
-import io.mosip.registration.entity.RegistrationTransaction;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
@@ -96,39 +94,26 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			
 			RegistrationDataDto registrationDataDto = new RegistrationDataDto();
 			
-			String applicantName = null;
-			String fullNameKey = getKey(RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME);
-			if (fullNameKey.contains(RegistrationConstants.COMMA)) {
+			List<String> fullName = new ArrayList<>();
+			String fullNameKey = getKey(RegistrationConstants.UI_SCHEMA_SUBTYPE_FULL_NAME);
+			if(fullNameKey != null) {
 				List<String> fullNameKeys = Arrays.asList(fullNameKey.split(RegistrationConstants.COMMA));
 				for (String key : fullNameKeys) {
 					Object fullNameObj = registrationDTO.getDemographics().get(key);
-					applicantName = applicantName == null ? getAdditionalInfo(fullNameObj) : applicantName.concat(RegistrationConstants.SPACE).concat(getAdditionalInfo(fullNameObj));
+					fullName.add(getAdditionalInfo(fullNameObj));
 				}
-			} else {
-				Object fullNameObj = registrationDTO.getDemographics().get(fullNameKey);
-				applicantName = getAdditionalInfo(fullNameObj);
 			}
 
-			Object emailObj = registrationDTO.getDemographics().get(getKey(RegistrationConstants.UI_SCHEMA_GROUP_EMAIL));
-			Object phoneObj = registrationDTO.getDemographics().get(getKey(RegistrationConstants.UI_SCHEMA_GROUP_PHONE));
+			Object emailObj = registrationDTO.getDemographics().get(getKey(RegistrationConstants.UI_SCHEMA_SUBTYPE_EMAIL));
+			Object phoneObj = registrationDTO.getDemographics().get(getKey(RegistrationConstants.UI_SCHEMA_SUBTYPE_PHONE));
 			
-			registrationDataDto.setName(applicantName);
+			fullName.removeIf(Objects::isNull);
+			registrationDataDto.setName(String.join(RegistrationConstants.SPACE, fullName));
 			registrationDataDto.setEmail(getAdditionalInfo(emailObj));
 			registrationDataDto.setPhone(getAdditionalInfo(phoneObj));
 			
 			String additionalInfo = JsonUtils.javaObjectToJsonString(registrationDataDto);
 			registration.setAdditionalInfo(additionalInfo.getBytes());
-
-			List<RegistrationTransaction> registrationTransactions = new ArrayList<>();
-			RegistrationTransaction registrationTxn = new RegistrationTransaction();
-			registrationTxn.setRegId(registration.getId());
-			registrationTxn.setTrnTypeCode(RegistrationTransactionType.CREATED.getCode());
-			registrationTxn.setLangCode(RegistrationConstants.ENGLISH_LANG_CODE);
-			registrationTxn.setStatusCode(RegistrationClientStatusCode.CREATED.getCode());
-			registrationTxn.setCrBy(SessionContext.userContext().getUserId());
-			registrationTxn.setCrDtime(time);
-			registrationTransactions.add(registrationTxn);
-			registration.setRegistrationTransaction(registrationTransactions);
 
 			registrationRepository.create(registration);
 
@@ -140,13 +125,13 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 		}
 	}
 	
-	private String getKey(String groupName) throws RegBaseCheckedException {
+	private String getKey(String subType) throws RegBaseCheckedException {
 		String key = null;
 		List<UiSchemaDTO> schemaFields = identitySchemaService.getLatestEffectiveUISchema();
 		for (UiSchemaDTO schemaField : schemaFields) {
-			if (schemaField.getGroup() != null && schemaField.getGroup().equalsIgnoreCase(groupName)) {
+			if (schemaField.getSubType() != null && schemaField.getSubType().equalsIgnoreCase(subType)) {
 
-				if (groupName.equalsIgnoreCase(RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME)) {
+				if (subType.equalsIgnoreCase(RegistrationConstants.UI_SCHEMA_SUBTYPE_FULL_NAME)) {
 					key = key == null ? schemaField.getId() : key.concat(RegistrationConstants.COMMA).concat(schemaField.getId());
 				} else {
 					key = schemaField.getId();
@@ -158,18 +143,21 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	}
 
 	private String getAdditionalInfo(Object fieldValue) {
-		String value = null;
+		if(fieldValue == null) { return null; }
+
 		if (fieldValue instanceof List<?>) {
 			Optional<SimpleDto> demoValueInRequiredLang = ((List<SimpleDto>) fieldValue).stream()
 					.filter(valueDTO -> valueDTO.getLanguage().equals(ApplicationContext.applicationLanguage())).findFirst();
 
-			if (demoValueInRequiredLang.isPresent() && demoValueInRequiredLang.get().getValue() != null) {
-				value = demoValueInRequiredLang.get().getValue();
+			if (demoValueInRequiredLang.isPresent()) {
+				return demoValueInRequiredLang.get().getValue();
 			}
-		} else if (fieldValue instanceof String) {
-			value = (String) fieldValue;
 		}
-		return value;
+
+		if (fieldValue instanceof String) {
+			return (String) fieldValue;
+		}
+		return null;
 	}
 
 	/*
@@ -196,20 +184,6 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			registration.setApproverRoleCode(SessionContext.userContext().getRoles().get(0));
 			registration.setUpdBy(SessionContext.userContext().getUserId());
 			registration.setUpdDtimes(timestamp);
-
-			List<RegistrationTransaction> registrationTransaction = registration.getRegistrationTransaction();
-
-			RegistrationTransaction registrationTxn = new RegistrationTransaction();
-			registrationTxn.setRegId(registrationID);
-			registrationTxn.setTrnTypeCode(RegistrationTransactionType.UPDATED.getCode());
-			registrationTxn.setLangCode(RegistrationConstants.ENGLISH_LANG_CODE);
-			registrationTxn.setStatusCode(clientStatusCode);
-			registrationTxn.setStatusComment(statusComments);
-			registrationTxn.setCrBy(SessionContext.userContext().getUserId());
-			registrationTxn.setCrDtime(timestamp);
-			registrationTransaction.add(registrationTxn);
-			
-			registration.setRegistrationTransaction(registrationTransaction);
 
 			LOGGER.info("REGISTRATION - UPDATE_STATUS - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
 					"Packet updation has been ended");
@@ -283,7 +257,6 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 		reg.setIsActive(true);
 		reg.setUploadTimestamp(timestamp);
 		reg.setClientStatusTimestamp(timestamp);
-		reg.setRegistrationTransaction(buildRegistrationTransaction(reg));
 		reg.setClientStatusComments(registrationPacket.getClientStatusComments());
 		reg.setUpdDtimes(timestamp);
 		reg.setUploadCount((short) (reg.getUploadCount() + 1));
@@ -309,37 +282,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 		reg.setClientStatusCode(packet.getPacketClientStatus());
 		reg.setIsActive(true);
 		reg.setUploadTimestamp(timestamp);
-		reg.setRegistrationTransaction(buildRegistrationTransaction(reg));
 		return registrationRepository.update(reg);
-	}
-
-	/**
-	 * Builds the registration transaction.
-	 *
-	 * @param registrationPacket
-	 *            the registration packet
-	 * @return the list
-	 */
-	private List<RegistrationTransaction> buildRegistrationTransaction(Registration registrationPacket) {
-		LOGGER.info("REGISTRATION - PACKET_ENCRYPTION - REGISTRATION_TRANSACTION_DAO", APPLICATION_NAME, APPLICATION_ID,
-				"Packet encryption has been ended");
-
-		RegistrationTransaction regTransaction = new RegistrationTransaction();
-		regTransaction.setId(String.valueOf(UUID.randomUUID().getMostSignificantBits()));
-		regTransaction.setRegId(registrationPacket.getId());
-		regTransaction.setTrnTypeCode(RegistrationTransactionType.UPDATED.getCode());
-		regTransaction.setStatusCode(registrationPacket.getClientStatusCode());
-		regTransaction.setLangCode(RegistrationConstants.ENGLISH_LANG_CODE);
-		regTransaction.setCrBy(SessionContext.isSessionContextAvailable() ? SessionContext.userContext().getUserId()
-				: RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
-		regTransaction.setCrDtime(registrationPacket.getCrDtime());
-		regTransaction.setStatusComment(registrationPacket.getClientStatusComments());
-		List<RegistrationTransaction> registrationTransaction = registrationPacket.getRegistrationTransaction();
-		registrationTransaction.add(regTransaction);
-		LOGGER.info("REGISTRATION - PACKET_ENCRYPTION - REGISTRATION_TRANSACTION_DAO", APPLICATION_NAME, APPLICATION_ID,
-				"Packet encryption has been ended");
-
-		return registrationTransaction;
 	}
 
 	/*
@@ -433,5 +376,13 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 		return registrationRepository.findByClientStatusCodeNotInAndServerStatusCodeIn(
 				Arrays.asList(RegistrationClientStatusCode.RE_REGISTER.getCode()),
 				Arrays.asList(RegistrationConstants.PACKET_STATUS_CODE_REREGISTER));
+	}
+	
+	@Override
+	public List<Registration> getAllRegistrations() {
+		LOGGER.debug("REGISTRATION - BY_STATUS - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
+				"fetch all the registration entries");
+		
+		return registrationRepository.findAll();
 	}
 }

@@ -23,6 +23,7 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.config.DaoConfig;
 import io.mosip.registration.constants.LoggerConstants;
+import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.util.restclient.RestClientUtil;
 import oshi.SystemInfo;
 import oshi.software.os.FileSystem;
@@ -46,8 +47,7 @@ public class RegistrationAppHealthCheckUtil {
 
 	/** The operating system. */
 	private static OperatingSystem operatingSystem;
-	private static String defaultHost;
-
+	
 	public static String mosipHostNamePlaceHolder = "${mosip.hostname}";
 
 	static {
@@ -84,7 +84,6 @@ public class RegistrationAppHealthCheckUtil {
 			Properties keys = new Properties();
 			keys.load(keyStream);
 
-			defaultHost = keys.getProperty("mosip.hostname");
 			return checkServiceAvailability(keys.getProperty("mosip.reg.healthcheck.url"));
 		} catch (IOException exception) {
 			LOGGER.error("REGISTRATION - REGISTRATIONAPPHEALTHCHECKUTIL - ISNETWORKAVAILABLE" + false, APPLICATION_NAME,
@@ -138,19 +137,17 @@ public class RegistrationAppHealthCheckUtil {
 						APPLICATION_ID, "Internet Access Not Available." + "====>" + connection.getResponseCode());
 			}
 		} catch (Exception exception) {
-			LOGGER.error("REGISTRATION - REGISTRATIONAPPHEALTHCHECKUTIL - ISNETWORKAVAILABLE" + isNWAvailable,
-					APPLICATION_NAME, APPLICATION_ID, "No Internet Access." + ExceptionUtils.getStackTrace(exception));
+			LOGGER.error("No Internet Access : {}" , ExceptionUtils.getStackTrace(exception));
 		}
 		return isNWAvailable;
 	}
 
 	public static String getHostName() {
-		String hostname = System.getenv("mosip.hostname");
+		String hostname = System.getProperty(RegistrationConstants.MOSIP_HOSTNAME);
 		if(hostname == null || hostname.isEmpty()) {
-			hostname = defaultHost;
+			hostname = RegistrationConstants.MOSIP_HOSTNAME_DEF_VAL;
 		}
-		LOGGER.debug(LoggerConstants.LOG_SERVICE_DELEGATE_UTIL_PREPARE_POST, APPLICATION_NAME, APPLICATION_ID,
-				"MOSIP Host name : " + hostname);
+		LOGGER.debug("MOSIP Host name : {} " , hostname);
 		return hostname;
 	}
 

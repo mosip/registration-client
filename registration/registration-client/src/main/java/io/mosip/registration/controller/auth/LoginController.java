@@ -138,11 +138,11 @@ public class LoginController extends BaseController implements Initializable {
 	@FXML
 	private Label otpValidity;
 
+//	@FXML
+//	private Hyperlink forgotUsrnme;
+	
 	@FXML
-	private Hyperlink forgotUsrnme;
-
-	@FXML
-	private Hyperlink resetPword;
+	private Hyperlink forgotPword;
 
 	@Autowired
 	private LoginService loginService;
@@ -282,7 +282,7 @@ public class LoginController extends BaseController implements Initializable {
 
 			showUserNameScreen(primaryStage);
 
-			org.apache.log4j.Logger.getLogger(Initialization.class).info("Mosip client Screen loaded");
+			AppConfig.getLogger(Initialization.class).info("Mosip client Screen loaded");
 
 			// Execute SQL file (Script files on update)
 			executeSQLFile();
@@ -332,6 +332,9 @@ public class LoginController extends BaseController implements Initializable {
 		scene = getScene(loginRoot);
 		loadUIElementsFromSchema();
 		pageFlow.loadPageFlow();
+		
+		//forgotUsrnme.setVisible(ApplicationContext.map().containsKey(RegistrationConstants.FORGOT_USERNAME_URL));
+		
 		Screen screen = Screen.getPrimary();
 		Rectangle2D bounds = screen.getVisualBounds();
 		primaryStage.setX(bounds.getMinX());
@@ -351,7 +354,7 @@ public class LoginController extends BaseController implements Initializable {
 		String version = getValueFromApplicationContext(RegistrationConstants.SERVICES_VERSION_KEY);
 
 		try {
-			if (!softwareUpdateHandler.getCurrentVersion().equalsIgnoreCase(version)) {
+			if (!version.equals("0") && !softwareUpdateHandler.getCurrentVersion().equalsIgnoreCase(version)) {
 
 				LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Software Update found");
 
@@ -830,6 +833,7 @@ public class LoginController extends BaseController implements Initializable {
 			break;
 		case RegistrationConstants.PWORD:
 			credentialsPane.setVisible(true);
+			setPwordLabelVisibility();
 			break;
 		case RegistrationConstants.FINGERPRINT_UPPERCASE:
 			fingerprintPane.setVisible(true);
@@ -842,6 +846,7 @@ public class LoginController extends BaseController implements Initializable {
 			break;
 		default:
 			credentialsPane.setVisible(true);
+			setPwordLabelVisibility();
 		}
 
 		if (!loginList.isEmpty()) {
@@ -849,37 +854,46 @@ public class LoginController extends BaseController implements Initializable {
 		}
 	}
 
+	private void setPwordLabelVisibility() {
+		forgotPword.setVisible(ApplicationContext.map().containsKey(RegistrationConstants.FORGOT_PWORD_URL));
+	}
+
 	/**
 	 * Redirects to mosip.io in case of user forgot user name
 	 * 
 	 * @param event event for forgot user name
 	 */
-	public void forgotUsrname(ActionEvent event) {
-		forgotUsrnme.setOnAction(e -> {
-			if (Desktop.isDesktopSupported()) {
-				try {
-					Desktop.getDesktop().browse(new URI(RegistrationConstants.MOSIP_URL));
-				} catch (IOException ioException) {
-					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
-							ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
-				} catch (URISyntaxException uriSyntaxException) {
-					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
-							uriSyntaxException.getMessage() + ExceptionUtils.getStackTrace(uriSyntaxException));
-				}
-			}
-		});
-	}
-
+//	public void forgotUsrname(ActionEvent event) {
+//		forgotUsrnme.setOnAction(e -> {
+//			if (Desktop.isDesktopSupported()) {
+//				try {
+//					Desktop.getDesktop().browse(new URI(ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.FORGOT_USERNAME_URL)));
+//				} catch (IOException ioException) {
+//					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
+//							ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
+//				} catch (URISyntaxException uriSyntaxException) {
+//					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
+//							uriSyntaxException.getMessage() + ExceptionUtils.getStackTrace(uriSyntaxException));
+//				}
+//			}			
+//		});
+//	}
+	
 	/**
-	 * Redirects to mosip.io in case of user reset pword
+	 * Redirects to mosip.io in case of user forgot pword
 	 * 
-	 * @param event event for reset pword
+	 * @param event event for forgot pword
 	 */
-	public void resetPwd(ActionEvent event) {
-		resetPword.setOnAction(e -> {
+	public void forgotPword(ActionEvent event) {
+		forgotPword.setOnAction(e -> {
 			if (Desktop.isDesktopSupported()) {
 				try {
-					Desktop.getDesktop().browse(new URI(RegistrationConstants.MOSIP_URL));
+					String url = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.FORGOT_PWORD_URL);
+					if (url.toUpperCase().contains(RegistrationConstants.EMAIL_PLACEHOLDER)) {
+						UserDTO userDTO = loginService.getUserDetail(userId.getText());
+						url = url.replace(RegistrationConstants.EMAIL_PLACEHOLDER, userDTO.getEmail());
+					}
+					Desktop.getDesktop().browse(new URI(url));
 				} catch (IOException ioException) {
 					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 							ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
