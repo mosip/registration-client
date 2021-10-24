@@ -36,16 +36,11 @@ import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
-import io.mosip.registration.dto.demographic.DemographicDTO;
-import io.mosip.registration.dto.demographic.DemographicInfoDTO;
-import io.mosip.registration.dto.demographic.IndividualIdentity;
 import io.mosip.registration.dto.demographic.ValuesDTO;
 import io.mosip.registration.entity.Registration;
-import io.mosip.registration.entity.RegistrationTransaction;
 import io.mosip.registration.entity.UserDetail;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
-import io.mosip.registration.repositories.RegTransactionRepository;
 import io.mosip.registration.repositories.RegistrationRepository;
 
 @RunWith(PowerMockRunner.class)
@@ -59,21 +54,11 @@ public class RegistrationDAOTest {
 	private RegistrationDAOImpl registrationDAOImpl;
 	@Mock
 	private RegistrationRepository registrationRepository;
-	@Mock
-	private RegTransactionRepository regTransactionRepository;
-	private RegistrationTransaction regTransaction;
+
 	Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
 	@Before
 	public void initialize() throws Exception {
-		Timestamp time = new Timestamp(System.currentTimeMillis());
-		regTransaction = new RegistrationTransaction();
-		regTransaction.setId(String.valueOf(UUID.randomUUID().getMostSignificantBits()));
-		regTransaction.setRegId("11111");
-		regTransaction.setTrnTypeCode(RegistrationClientStatusCode.CREATED.getCode());
-		regTransaction.setStatusCode(RegistrationClientStatusCode.CREATED.getCode());
-		regTransaction.setCrBy("Officer");
-		regTransaction.setCrDtime(time);
 
 		UserContext userContext = Mockito.mock(SessionContext.UserContext.class);
 		List<String> roles = Arrays.asList("SUPERADMIN", "SUPERVISOR");
@@ -132,9 +117,6 @@ public class RegistrationDAOTest {
 	public void updateRegStatusTest() {
 		Registration updatedPacket = new Registration();
 		updatedPacket.setUploadCount((short)0);
-		List<RegistrationTransaction> registrationTransactions = new ArrayList<>();
-		registrationTransactions.add(new RegistrationTransaction());
-		updatedPacket.setRegistrationTransaction(registrationTransactions);
 		Mockito.when(registrationRepository.getOne(Mockito.any())).thenReturn(updatedPacket);
 		Mockito.when(registrationRepository.update(updatedPacket)).thenReturn(updatedPacket);
 		
@@ -152,7 +134,6 @@ public class RegistrationDAOTest {
 		regobjectrequest.setUpdBy("mosip");
 		regobjectrequest.setApproverRoleCode("SUPERADMIN");
 		regobjectrequest.setAckFilename("file1");
-		regobjectrequest.setRegistrationTransaction(new ArrayList<>());
 
 		when(registrationRepository.getOne(Mockito.anyString())).thenReturn(regobjectrequest);
 		Registration regobj1 = registrationRepository.getOne("123456");
@@ -167,17 +148,6 @@ public class RegistrationDAOTest {
 		registration.setApproverUsrId("Mosip1214");
 		registration.setStatusComment("");
 		registration.setUpdBy("Mosip1214");
-
-		List<RegistrationTransaction> registrationTransaction = new ArrayList<>();
-		RegistrationTransaction registrationTxn = new RegistrationTransaction();
-		registrationTxn.setTrnTypeCode(RegistrationTransactionType.UPDATED.getCode());
-		registrationTxn.setLangCode("ENG");
-		registrationTxn.setStatusCode(RegistrationClientStatusCode.APPROVED.getCode());
-		registrationTxn.setStatusComment("");
-		registrationTxn.setCrBy("Mosip1214");
-		registrationTxn.setCrDtime(timestamp);
-		registrationTransaction.add(registrationTxn);
-		registration.getRegistrationTransaction();
 
 		when(registrationRepository.update(regobj1)).thenReturn(registration);
 		Registration regobj = registrationDAOImpl.updateRegistration("123456", "", "A");
@@ -240,7 +210,6 @@ public class RegistrationDAOTest {
 		regobjectrequest.setUpdBy("mosip");
 		regobjectrequest.setApproverRoleCode("SUPERADMIN");
 		regobjectrequest.setAckFilename("file1");
-		regobjectrequest.setRegistrationTransaction(new ArrayList<>());
 
 		PacketStatusDTO packetStatusDTO = new PacketStatusDTO();
 		packetStatusDTO.setFileName("123456");
@@ -252,7 +221,6 @@ public class RegistrationDAOTest {
 		reg.setUpdBy("mosip");
 		reg.setApproverRoleCode("SUPERADMIN");
 		reg.setAckFilename("file1");
-		reg.setRegistrationTransaction(new ArrayList<>());
 		
 		when(registrationRepository.getOne(Mockito.anyString())).thenReturn(regobjectrequest);
 		when(registrationRepository.update(Mockito.any())).thenReturn(reg);
@@ -313,14 +281,12 @@ public class RegistrationDAOTest {
 		Registration registration1 = new Registration();
 		registration1.setId("12345");
 		registration1.setClientStatusCode("Approved");
-		registration1.setRegistrationTransaction(new ArrayList<>());
 		registrations.add(registration1);
 		Registration registration2 = new Registration();
 		registration2.setId("23456");
 		registration2.setClientStatusCode("Approved");
 		registrations.add(registration2);
-		
-		registration2.setRegistrationTransaction(new ArrayList<>());
+
 		Mockito.when(registrationRepository.findByCrDtimeBeforeAndServerStatusCode(timestamp,"Approved")).thenReturn(registrations);
 		assertSame("Approved",registrationDAOImpl.get(timestamp, "Approved").get(0).getClientStatusCode());
 	}
@@ -332,7 +298,6 @@ public class RegistrationDAOTest {
 		registration1.setId("12345");
 		registration1.setClientStatusCode("Approved");
 		registration1.setServerStatusCode("S");
-		registration1.setRegistrationTransaction(new ArrayList<>());
 		registrations.add(registration1);
 		Registration registration2 = new Registration();
 		registration2.setId("23456");
@@ -343,8 +308,7 @@ public class RegistrationDAOTest {
 		List<String> codes = new ArrayList<>();
 		codes.add("S");
 		codes.add("F");
-		
-		registration2.setRegistrationTransaction(new ArrayList<>());
+
 		Mockito.when(registrationRepository.findByServerStatusCodeIn(codes)).thenReturn(registrations);
 		assertSame("Approved",registrationDAOImpl.findByServerStatusCodeIn(codes).get(0).getClientStatusCode());
 		assertSame( "Approved",registrationDAOImpl.findByServerStatusCodeIn(codes).get(1).getClientStatusCode());
@@ -357,7 +321,6 @@ public class RegistrationDAOTest {
 		Registration registration1 = new Registration();
 		registration1.setId("12345");
 		registration1.setClientStatusCode("Approved");
-		registration1.setRegistrationTransaction(new ArrayList<>());
 		registrations.add(registration1);
 		Registration registration2 = new Registration();
 		registration2.setId("23456");
@@ -367,8 +330,7 @@ public class RegistrationDAOTest {
 		List<String> codes = new ArrayList<>();
 		codes.add("S");
 		codes.add("F");
-		
-		registration2.setRegistrationTransaction(new ArrayList<>());
+
 		Mockito.when(registrationRepository.findByServerStatusCodeNotInOrServerStatusCodeIsNull(codes)).thenReturn(registrations);
 		assertSame("Approved",registrationDAOImpl.findByServerStatusCodeNotIn(codes).get(0).getClientStatusCode());
 	}
@@ -380,7 +342,6 @@ public class RegistrationDAOTest {
 		registration1.setId("12345");
 		registration1.setClientStatusCode("Approved");
 		registration1.setServerStatusCode("S");
-		registration1.setRegistrationTransaction(new ArrayList<>());
 		registrations.add(registration1);
 		Registration registration2 = new Registration();
 		registration2.setId("23456");
@@ -391,8 +352,7 @@ public class RegistrationDAOTest {
 		List<String> codes = new ArrayList<>();
 		codes.add("Approved");
 		codes.add("Rejected");
-		
-		registration2.setRegistrationTransaction(new ArrayList<>());
+
 		Mockito.when(registrationRepository.findByClientStatusCodeInOrServerStatusCodeOrderByUpdDtimesDesc(codes,"S")).thenReturn(registrations);
 		assertSame("Approved",registrationDAOImpl.fetchPacketsToUpload(codes, "S").get(0).getClientStatusCode());
 		assertSame("Rejected",registrationDAOImpl.fetchPacketsToUpload(codes, "S").get(1).getClientStatusCode());

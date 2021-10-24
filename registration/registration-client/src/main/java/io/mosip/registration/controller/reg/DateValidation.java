@@ -2,14 +2,13 @@ package io.mosip.registration.controller.reg;
 
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import java.time.*;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.TimeZone;
 
-import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -19,8 +18,8 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.controller.BaseController;
-import io.mosip.registration.controller.FXUtils;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -40,8 +39,6 @@ public class DateValidation extends BaseController {
 	private static final Logger LOGGER = AppConfig.getLogger(DateValidation.class);
 	@Autowired
 	private Validations validation;
-	@Autowired
-	private DemographicDetailController demographicDetailController;
 
 	int maxAge = 0;
 
@@ -68,7 +65,7 @@ public class DateValidation extends BaseController {
 	}
 
 	public boolean validateDate(Pane parentPane, String fieldId) {
-		resetFieldStyleClass(parentPane, fieldId, false);
+		resetFieldStyleClass(parentPane, fieldId, false, getValueFromApplicationContext(RegistrationConstants.MAX_AGE));
 
 		TextField dd = (TextField) getFxElement(parentPane, fieldId+ "__" + RegistrationConstants.DD);
 		TextField mm = (TextField) getFxElement(parentPane, fieldId+ "__" + RegistrationConstants.MM);
@@ -87,13 +84,35 @@ public class DateValidation extends BaseController {
 			}
 		}
 
-		resetFieldStyleClass(parentPane, fieldId, !isValid);
+		resetFieldStyleClass(parentPane, fieldId, !isValid, getValueFromApplicationContext(RegistrationConstants.MAX_AGE));
+		return isValid;
+	}
+	
+	public boolean validateExpiryOfDate(Pane parentPane, String fieldId, int minDate, int maxDate) {
+		resetFieldStyleClass(parentPane, fieldId, false, minDate+"-"+maxDate);
+		
+		TextField dd = (TextField) getFxElement(parentPane, fieldId+ "__" + RegistrationConstants.DD);
+		TextField mm = (TextField) getFxElement(parentPane, fieldId+ "__" + RegistrationConstants.MM);
+		TextField yyyy = (TextField) getFxElement(parentPane, fieldId+ "__" + RegistrationConstants.YYYY);
+
+		boolean isValid = false;
+		if(dd.getText().matches(RegistrationConstants.NUMBER_REGEX) &&
+				mm.getText().matches(RegistrationConstants.NUMBER_REGEX) &&
+				yyyy.getText().matches(RegistrationConstants.NUMBER_REGEX) &&
+				yyyy.getText().matches(RegistrationConstants.FOUR_NUMBER_REGEX)) {
+			isValid = isValidDateContent(parentPane, dd.getText(), mm.getText(), yyyy.getText(), fieldId, minDate, maxDate);
+			if(isValid) {
+				setLocalDateFields(parentPane, dd, mm, yyyy);
+			}
+		}
+
+		resetFieldStyleClass(parentPane, fieldId, !isValid, minDate+"-"+maxDate);
 		return isValid;
 	}
 
 	public boolean validateAge(Pane parentPane, TextField ageField) {
 		String fieldId = ageField.getId().split("__")[0];
-		resetFieldStyleClass(parentPane, fieldId, false);
+		resetFieldStyleClass(parentPane, fieldId, false, getValueFromApplicationContext(RegistrationConstants.MAX_AGE));
 		boolean isValid = ageField.getText().matches(RegistrationConstants.NUMBER_REGEX);
 
 		if(isValid) {
@@ -109,7 +128,7 @@ public class DateValidation extends BaseController {
 					defaultDate.set(Calendar.MONTH, 0);
 					defaultDate.add(Calendar.YEAR, -age);
 
-					LocalDate date = LocalDate.of(defaultDate.get(Calendar.YEAR), defaultDate.get(Calendar.MONTH + 1),
+					LocalDate date = LocalDate.of(defaultDate.get(Calendar.YEAR), defaultDate.get(Calendar.MONTH) + 1,
 							defaultDate.get(Calendar.DATE));
 					isValid = validation.validateSingleString(date.format(DateTimeFormatter.ofPattern(ApplicationContext.getDateFormat())),
 							fieldId);
@@ -127,15 +146,16 @@ public class DateValidation extends BaseController {
 			}
 		}
 
-		resetFieldStyleClass(parentPane, fieldId, !isValid);
+		resetFieldStyleClass(parentPane, fieldId, !isValid, getValueFromApplicationContext(RegistrationConstants.MAX_AGE));
 		return isValid;
 	}
 
-	private void resetFieldStyleClass(Pane parentPane, String fieldId, boolean isError) {
+	private void resetFieldStyleClass(Pane parentPane, String fieldId, boolean isError, String allowedLimit) {
 		TextField dd = (TextField)getFxElement(parentPane, fieldId + "__" + RegistrationConstants.DD);
 		TextField mm = (TextField)getFxElement(parentPane, fieldId + "__" + RegistrationConstants.MM);
 		TextField yyyy = (TextField)getFxElement(parentPane, fieldId + "__" + RegistrationConstants.YYYY);
 		TextField ageField = (TextField)getFxElement(parentPane, fieldId + "__" + RegistrationConstants.AGE_FIELD);
+		TextField expiryDateField = (TextField)getFxElement(parentPane, fieldId + "_" + RegistrationConstants.DATE);
 
 		Label dobMessage = (Label) getFxElement(parentPane, fieldId+ "__" + RegistrationConstants.DOB_MESSAGE);
 
@@ -143,15 +163,28 @@ public class DateValidation extends BaseController {
 		setTextFieldStyle(parentPane, mm, isError);
 		setTextFieldStyle(parentPane, yyyy, isError);
 		setTextFieldStyle(parentPane, ageField, isError);
-
-		if(isError) {
-			dobMessage.setText(RegistrationUIConstants.INVALID_DATE.concat(" / ")
-					.concat(RegistrationUIConstants.INVALID_AGE + getValueFromApplicationContext(RegistrationConstants.MAX_AGE)));
-			dobMessage.setVisible(true);
-			generateAlert(parentPane, RegistrationConstants.DOB, dobMessage.getText());
-		} else {
-			dobMessage.setText(RegistrationConstants.EMPTY);
-			dobMessage.setVisible(false);
+		setTextFieldStyle(parentPane, ageField, isError);
+		setTextFieldStyle(parentPane, expiryDateField, isError);
+		if(ageField != null) {
+			if(isError) {
+				dobMessage.setText(RegistrationUIConstants.INVALID_DATE.concat(" / ")
+						.concat(RegistrationUIConstants.INVALID_AGE).concat(allowedLimit));
+				dobMessage.setVisible(true);
+				generateAlert(parentPane, RegistrationConstants.DOB, dobMessage.getText());
+			} else {
+				dobMessage.setText(RegistrationConstants.EMPTY);
+				dobMessage.setVisible(false);
+			}
+		}else {
+			if(isError) {
+				dobMessage.setText(RegistrationUIConstants.INVALID_DATE.concat(" / ")
+						.concat(RegistrationUIConstants.INVALID_DATE_LIMIT).concat(allowedLimit));
+				dobMessage.setVisible(true);
+				generateAlert(parentPane, RegistrationConstants.DATE, dobMessage.getText());
+			} else {
+				dobMessage.setText(RegistrationConstants.EMPTY);
+				dobMessage.setVisible(false);
+			}
 		}
 	}
 
@@ -188,7 +221,7 @@ public class DateValidation extends BaseController {
 		defaultDate.add(Calendar.YEAR, -age);
 
 		dd.setText(String.valueOf(defaultDate.get(Calendar.DATE)));
-		mm.setText(String.valueOf(defaultDate.get(Calendar.MONTH + 1)));
+		mm.setText(String.valueOf(defaultDate.get(Calendar.MONTH) + 1));
 		yyyy.setText(String.valueOf(defaultDate.get(Calendar.YEAR)));
 
 		setLocalDateFields(parentPane, dd, mm, yyyy);
@@ -200,6 +233,19 @@ public class DateValidation extends BaseController {
 				LocalDate date = LocalDate.of(Integer.valueOf(yyyy), Integer.valueOf(mm), Integer.valueOf(dd));
 				String dob = date.format(DateTimeFormatter.ofPattern(ApplicationContext.getDateFormat()));
 				return validation.validateSingleString(dob, fieldId);
+			} catch (Exception ex) {
+				LOGGER.error(LoggerConstants.DATE_VALIDATION, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID, ExceptionUtils.getStackTrace(ex));
+			}
+		}
+		return false;
+	}
+	
+	private boolean isValidDateContent(Pane parentPane, String dd, String mm, String yyyy, String fieldId, int minDate, int maxDate) {
+		if(isValidValue(dd) && isValidValue(mm) && isValidValue(yyyy)) {
+			try {
+				LocalDate date = LocalDate.of(Integer.valueOf(yyyy), Integer.valueOf(mm), Integer.valueOf(dd));
+				String dateContent = date.format(DateTimeFormatter.ofPattern(ApplicationContext.getDateFormat()));
+				return validation.validateExpiryDate(dateContent, fieldId, minDate, maxDate);
 			} catch (Exception ex) {
 				LOGGER.error(LoggerConstants.DATE_VALIDATION, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID, ExceptionUtils.getStackTrace(ex));
 			}
@@ -240,7 +286,10 @@ public class DateValidation extends BaseController {
 
 
 	private void setTextFieldStyle(Pane parentPane, TextField node, boolean isError) {
-		Label label = (Label)getFxElement(parentPane, node.getId()+RegistrationConstants.LABEL);
+		if(parentPane == null || node == null)  { return; }
+		Node labelNode = getFxElement(parentPane, node.getId() + RegistrationConstants.LABEL);
+		if(labelNode == null) { return; }
+		Label label = (Label)labelNode;
 		if(isError) {
 			node.getStyleClass().clear();
 			node.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_TEXTFIELD_FOCUSED);
@@ -253,195 +302,10 @@ public class DateValidation extends BaseController {
 		}
 	}
 
-
-	/**
-	 * Validate the date and populate its corresponding local or secondary language
-	 * 	 * field if date is valid
-	 * @param parentPane
-	 * @param date
-	 * @param month
-	 * @param year
-	 * @param fxUtils
-	 * @param ageField
-	 * @param ageLocalField
-	 * @param dobMessage
-	 */
-	public void validateDate(Pane parentPane, TextField date, TextField month, TextField year,
-			FXUtils fxUtils, TextField ageField, TextField ageLocalField, Label dobMessage) {
-		if (maxAge == 0)
-			maxAge = Integer.parseInt(getValueFromApplicationContext(RegistrationConstants.MAX_AGE));
-		try {
-			fxUtils.validateOnType(parentPane, date, validation, false);
-			date.textProperty().addListener((obsValue, oldValue, newValue) -> {
-				populateAge(parentPane, date, month, year, ageField, dobMessage);
-			});
-
-		} catch (RuntimeException runTimeException) {
-			LOGGER.error(LoggerConstants.DATE_VALIDATION, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-					runTimeException.getMessage() + ExceptionUtils.getStackTrace(runTimeException));
-
-		}
-	}
-
-	/**
-	 * Validate the month and populate its corresponding local or secondary language
-	 * 	 * field if month is valid
-	 * @param parentPane
-	 * @param date
-	 * @param month
-	 * @param year
-	 * @param fxUtils
-	 * @param ageField
-	 * @param ageLocalField
-	 * @param dobMessage
-	 */
-	public void validateMonth(Pane parentPane, TextField date, TextField month, TextField year,
-			FXUtils fxUtils, TextField ageField, TextField ageLocalField, Label dobMessage) {
-		try {
-			fxUtils.validateOnType(parentPane, month, validation, false);
-			month.textProperty().addListener((obsValue, oldValue, newValue) -> {
-				populateAge(parentPane, date, month, year, ageField, dobMessage);
-
-			});
-		} catch (RuntimeException runTimeException) {
-			LOGGER.error(LoggerConstants.DATE_VALIDATION, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-					runTimeException.getMessage() + ExceptionUtils.getStackTrace(runTimeException));
-
-		}
-	}
-
-	/**
-	 * Validate the year and populate its corresponding local or secondary language
-	 * 	 * field if year is valid
-	 * @param parentPane
-	 * @param date
-	 * @param month
-	 * @param year
-	 * @param fxUtils
-	 * @param ageField
-	 * @param ageLocalField
-	 * @param dobMessage
-	 */
-	public void validateYear(Pane parentPane, TextField date, TextField month, TextField year,
-			FXUtils fxUtils, TextField ageField, TextField ageLocalField, Label dobMessage) {
-		try {
-			fxUtils.validateOnType(parentPane, year, validation, false);
-
-			year.textProperty().addListener((obsValue, oldValue, newValue) -> {
-				populateAge(parentPane, date, month, year, ageField, dobMessage);
-			});
-		} catch (RuntimeException runTimeException) {
-			LOGGER.error(LoggerConstants.DATE_VALIDATION, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-					runTimeException.getMessage() + ExceptionUtils.getStackTrace(runTimeException));
-
-		}
-	}
-
-	private void populateAge(Pane parentPane, TextField date, TextField month, TextField year, TextField ageField,
-			Label dobMessage) {
-
-		if (date != null && month != null && year != null) {
-
-			if (getFxElement(parentPane, date.getId() + RegistrationConstants.LOCAL_LANGUAGE) != null) {
-				((TextField) getFxElement(parentPane, date.getId() + RegistrationConstants.LOCAL_LANGUAGE))
-
-						.setText(date.getText());
-			}
-
-			if (getFxElement(parentPane, date.getId() + RegistrationConstants.LOCAL_LANGUAGE) != null) {
-				((TextField) getFxElement(parentPane, month.getId() + RegistrationConstants.LOCAL_LANGUAGE))
-						.setText(month.getText());
-
-			}
-
-			if (getFxElement(parentPane, year.getId() + RegistrationConstants.LOCAL_LANGUAGE) != null) {
-				((TextField) getFxElement(parentPane, year.getId() + RegistrationConstants.LOCAL_LANGUAGE))
-						.setText(year.getText());
-
-			}
-
-			if (!date.getText().isEmpty() && !month.getText().isEmpty() && !year.getText().isEmpty()
-					&& year.getText().matches(RegistrationConstants.FOUR_NUMBER_REGEX)) {
-
-				try {
-					LocalDate givenDate = LocalDate.of(Integer.parseInt(year.getText()),
-							Integer.parseInt(month.getText()), Integer.parseInt(date.getText()));
-					LocalDate localDate = LocalDate.now();
-
-					if (localDate.compareTo(givenDate) >= 0) {
-
-						int age = Period.between(givenDate, localDate).getYears();
-
-						getRegistrationDTOFromSession().setAgeCalculatedByDOB(true);
-
-						ageField.setText(String.valueOf(age));
-						ageField.requestFocus();
-						dobMessage.setText(RegistrationConstants.EMPTY);
-						dobMessage.setVisible(false);
-						date.getStyleClass().removeIf((s) -> {
-							return s.equals("demoGraphicTextFieldFocused");
-						});
-						month.getStyleClass().removeIf((s) -> {
-							return s.equals("demoGraphicTextFieldFocused");
-						});
-						year.getStyleClass().removeIf((s) -> {
-							return s.equals("demoGraphicTextFieldFocused");
-						});
-						date.getStyleClass().add("demoGraphicTextField");
-						month.getStyleClass().add("demoGraphicTextField");
-						year.getStyleClass().add("demoGraphicTextField");
-						// demographicDetailController.ageValidation(false);
-
-						if (getFxElement(parentPane, ageField.getId() + RegistrationConstants.LOCAL_LANGUAGE) != null) {
-							((TextField) getFxElement(parentPane,
-									ageField.getId() + RegistrationConstants.LOCAL_LANGUAGE))
-											.setText(ageField.getText());
-						}
-					} else {
-						ageField.clear();
-						dobMessage.setText(RegistrationUIConstants.FUTURE_DOB);
-						dobMessage.setVisible(true);
-						generateAlert(parentPane, RegistrationConstants.DOB, dobMessage.getText());
-					}
-				} catch (Throwable exception) {
-					setErrorMsg(parentPane, date, month, year, ageField, dobMessage);
-					generateAlert(parentPane, RegistrationConstants.DOB, dobMessage.getText());
-					LOGGER.error(LoggerConstants.DATE_VALIDATION, APPLICATION_NAME,
-							RegistrationConstants.APPLICATION_ID,
-							exception.getMessage() + ExceptionUtils.getStackTrace(exception));
-				}
-			} else if ((!date.getText().isEmpty() && Integer.parseInt(date.getText()) > RegistrationConstants.DAYS)
-					|| (!month.getText().isEmpty() && Integer.parseInt(month.getText()) > RegistrationConstants.MONTH)
-					|| (!year.getText().isEmpty() && (Integer.parseInt(year.getText()) > LocalDate.now().getYear()
-							|| (((LocalDate.now().getYear() - Integer.parseInt(year.getText())) > Integer
-									.parseInt(getValueFromApplicationContext(RegistrationConstants.MAX_AGE)))
-									&& year.getText().length() > RegistrationConstants.YEAR)))) {
-				setErrorMsg(parentPane, date, month, year, ageField, dobMessage);
-				generateAlert(parentPane, RegistrationConstants.DOB, dobMessage.getText());
-			}
-		}
-	}
-
-	private void setErrorMsg(Pane parentPane, TextField date, TextField month, TextField year, TextField ageField,
-			Label dobMessage) {
-		date.getStyleClass().removeIf((s) -> {
-			return s.equals("demoGraphicTextFieldOnType");
-		});
-		month.getStyleClass().removeIf((s) -> {
-			return s.equals("demoGraphicTextFieldOnType");
-		});
-		year.getStyleClass().removeIf((s) -> {
-			return s.equals("demoGraphicTextFieldOnType");
-		});
-		date.getStyleClass().add("demoGraphicTextFieldFocused");
-		month.getStyleClass().add("demoGraphicTextFieldFocused");
-		year.getStyleClass().add("demoGraphicTextFieldFocused");
-		dobMessage.setText(RegistrationUIConstants.INVALID_DATE);
-		ageField.clear();
-		dobMessage.setVisible(true);
-	}
-
 	private Node getFxElement(Pane pane, String fieldId) {
-		return pane.lookup(RegistrationConstants.HASH + fieldId);
+		Node node = pane.lookup(RegistrationConstants.HASH + fieldId);
+		if(node == null)
+			node = pane.getParent().getParent().getParent().lookup(RegistrationConstants.HASH + fieldId);
+		return node;
 	}
 }

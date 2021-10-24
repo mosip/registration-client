@@ -90,11 +90,15 @@
                                   <RowConstraints percentHeight="100.0" vgrow="SOMETIMES" />
                                 </rowConstraints>
                                  <children>
-                                    <Group fx:id="imageGroup">
-                                       <children>
-                                          <ImageView fx:id="scanImage" pickOnBounds="true" preserveRatio="true" />
-                                       </children>
-                                    </Group>
+                                     <ScrollPane fitToHeight="true" fitToWidth="true" >
+                                         <StackPane fx:id="groupStackPane" alignment="CENTER">
+                                             <Group fx:id="imageGroup">
+                                                 <children>
+                                                     <ImageView fx:id="scanImage" pickOnBounds="true" preserveRatio="true"/>
+                                                 </children>
+                                             </Group>
+                                         </StackPane>
+                                     </ScrollPane>
                                  </children>
                               </GridPane>
                            </children>

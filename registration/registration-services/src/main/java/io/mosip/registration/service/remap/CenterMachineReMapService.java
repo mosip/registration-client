@@ -1,5 +1,7 @@
 package io.mosip.registration.service.remap;
 
+import io.mosip.registration.exception.RemapException;
+
 /**
  * Service class {@code CenterMachineReMapService} for Center Machine Remapping
  * 
@@ -15,7 +17,7 @@ public interface CenterMachineReMapService {
 	 * 
 	 * @param step - step number for a particular remap operation
 	 */
-	void handleReMapProcess(int step);
+	void handleReMapProcess(int step) throws RemapException;
 
 	/**
 	 * checks if there is any Registration packets are not yet been processed by the
@@ -41,16 +43,9 @@ public interface CenterMachineReMapService {
 	Boolean isMachineRemapped();
 
 	/**
-	 * checks if the Machine was in-active
-	 * 
-	 * @return Boolean - true if machine is in-active
-	 */
-	Boolean isMachineInActive();
-
-	/**
 	 * starts the remap process if the remap flag is enabled
 	 */
-	void startRemapProcess();
+	void startRemapProcess() throws RemapException;
 
 	boolean isPacketsPendingForReRegister();
 }

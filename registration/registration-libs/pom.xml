@@ -6,35 +6,23 @@
 
 	<parent>
 		<groupId>io.mosip.registration</groupId>
-		<artifactId>registration-parent</artifactId>
-		<version>1.1.4</version>
+		<artifactId>registration-client-parent</artifactId>
+		<version>1.1.5.4</version>
 	</parent>
 
 	<artifactId>registration-libs</artifactId>
 	<name>registration-libs</name>
 	<description>Maven project of MOSIP Registration library</description>
-	<version>1.1.4</version>
+	<version>1.1.5.4</version>
 	<properties>
 		<main.basedir>${project.parent.basedir}</main.basedir>
 	</properties>
 	<dependencies>
-		<!--<dependency>
-			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-keygenerator-bouncycastle</artifactId>
-		</dependency>-->
-		<!--<dependency>
-			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-crypto-jce</artifactId>
-		</dependency>-->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!--<dependency>
-			<groupId>org.apache.derby</groupId>
-			<artifactId>derby</artifactId>
-		</dependency>-->
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
@@ -71,15 +59,6 @@
 			<version>2.0.0-beta.5</version>
 			<scope>test</scope>
 		</dependency>
-		<!--<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-web</artifactId>
-			<version>5.0.3.RELEASE</version>
-		</dependency>
-		<dependency>
-			<groupId>com.github.microsoft</groupId>
-			<artifactId>TSS.Java</artifactId>
-		</dependency>-->
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-logger-logback</artifactId>
@@ -92,61 +71,6 @@
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-auditmanager-api</artifactId>
 		</dependency>
-		<!--<dependency>
-			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-idvalidator-rid</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-idvalidator-uin</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-idvalidator-prid</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-idgenerator-rid</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-crypto-signature</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-templatemanager-velocity</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>dom4j</groupId>
-					<artifactId>dom4j</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-qrcodegenerator-zxing</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-pdfgenerator-itext</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-virusscanner-clamav</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-transliteration-icu4j</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.mosip.kernel</groupId>
-			<artifactId>kernel-applicanttype-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.javassist</groupId>
-			<artifactId>javassist</artifactId>
-			<version>3.24.0-GA</version>
-		</dependency>-->
 		<!-- java 11 -->
 		<dependency>
 			<groupId>com.sun.activation</groupId>

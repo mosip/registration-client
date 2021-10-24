@@ -3,16 +3,14 @@ package io.mosip.registration.controller.reg;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.Set;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javafx.scene.Group;
 import javafx.scene.control.*;
 import org.bridj.cpp.std.list;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -153,10 +151,10 @@ public class Validations extends BaseController {
 	private boolean nodeToValidate(List<String> notTovalidate, Node node) {
 		if (node.getId() != null && (node.getId().contains("gender") || node.getId().contains("residence"))) {
 			return !(node.getId() == null || notTovalidate.contains(node.getId()) || node instanceof ImageView
-					|| node instanceof Label || node instanceof Hyperlink );
+					|| node instanceof Label || node instanceof Hyperlink || node instanceof Group || node instanceof ScrollPane);
 		}
 		return !(node.getId() == null || notTovalidate.contains(node.getId()) || node instanceof ImageView
-				|| node instanceof Button || node instanceof Label || node instanceof Hyperlink);
+				|| node instanceof Button || node instanceof Label || node instanceof Hyperlink || node instanceof Group || node instanceof ScrollPane);
 	}
 
 	/**
@@ -349,7 +347,7 @@ public class Validations extends BaseController {
 		if(!isNonBlacklisted)
 			return false;
 
-		String regex = getRegex(fieldId, RegistrationUIConstants.REGEX_TYPE);
+		String regex = getRegex(fieldId, RegistrationUIConstants.REGEX_TYPE, messageBundle.getLocale());
 		if(!isLocalLanguageField && regex != null && !value.matches(regex)) {
 			generateInvalidValueAlert(parentPane, node.getId(), getFromLabelMap(fieldId).concat(RegistrationConstants.SPACE)
 					.concat(messageBundle.getString(RegistrationConstants.REG_DDC_004)), showAlert);
@@ -604,8 +602,38 @@ public class Validations extends BaseController {
 	 * @return <code>true</code>, if successful, else <code>false</code>
 	 */
 	public boolean validateSingleString(String value, String id) {
-		String regex = getRegex(id, RegistrationUIConstants.REGEX_TYPE);
+		String regex = getRegex(id, RegistrationUIConstants.REGEX_TYPE, null);
 		return regex != null ? value.matches(regex) : true;
+	}
+	
+	/**
+	 * Validate for the single string.
+	 *
+	 * @param value the value to be validated
+	 * @param id    the id of the UI field whose value is provided as input
+	 * @return <code>true</code>, if successful, else <code>false</code>
+	 * @throws ParseException 
+	 */
+	public boolean validateExpiryDate(String value, String id, int minDays, int maxDays) throws ParseException {
+		
+		SimpleDateFormat dateFormat = new SimpleDateFormat(ApplicationContext.getDateFormat());
+		dateFormat.setLenient(false);
+		
+		 Date date = dateFormat.parse(value);
+		 
+		 Calendar inputDate = Calendar.getInstance();
+		 inputDate.setTime(date);
+		 
+		 Calendar currentDateAfterMaxDays = Calendar.getInstance();
+		 currentDateAfterMaxDays.setTime(currentDateAfterMaxDays.getTime());
+		 currentDateAfterMaxDays.add(Calendar.DATE, maxDays);
+		 
+		 Calendar currentDateAfterMinDays = Calendar.getInstance();
+		 currentDateAfterMinDays.setTime(currentDateAfterMinDays.getTime());
+		 currentDateAfterMinDays.add(Calendar.DATE, minDays);
+		 
+		 return !(inputDate.before(currentDateAfterMinDays) || inputDate.after(currentDateAfterMaxDays));
+		 
 	}
 
 	/**
@@ -642,12 +670,15 @@ public class Validations extends BaseController {
 		validationMessage.delete(0, validationMessage.length());
 	}
 
-
-	private String getRegex(String fieldId, String regexType) {
+	//TODO
+	private String getRegex(String fieldId, String regexType, Locale locale) {
+		LOGGER.debug("Fetching regex for fieldid {} with locale {}", fieldId, locale);
 		UiSchemaDTO uiSchemaDTO = getValidationMap().get(fieldId);
 		if (uiSchemaDTO != null && uiSchemaDTO.getValidators() != null) {
 			Optional<Validator> validator = uiSchemaDTO.getValidators().stream()
-					.filter(v -> v.getType().equalsIgnoreCase(regexType)).findFirst();
+					.filter(v -> v.getType().equalsIgnoreCase(regexType)
+							&& (v.getLangCode() != null ? v.getLangCode().startsWith(locale.getLanguage()) : true))
+					.findFirst();
 			if (validator.isPresent())
 				return validator.get().getValidator();
 		}

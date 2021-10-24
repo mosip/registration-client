@@ -190,6 +190,8 @@
                      <items>
                      	<MenuItem fx:id="userGuide" mnemonicParsing="false" onAction="#userGuide" text="%userGuide" />
                         <SeparatorMenuItem />
+                        <MenuItem fx:id="resetPword" mnemonicParsing="false" onAction="#resetPword" text="%resetPassword" />
+                        <SeparatorMenuItem />
                         <MenuItem fx:id="logout" mnemonicParsing="false" onAction="#logout" text="%logout" />
                      </items>
                   </Menu>
@@ -200,7 +202,7 @@
             <Insets />
          </GridPane.margin>
       </GridPane>
-      <ImageView fitHeight="23.0" fitWidth="28.0" onMousePressed="#redirectHome" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="1">
+      <ImageView fx:id="homeimg" fitHeight="23.0" fitWidth="28.0" onMousePressed="#redirectHome" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="1">
       <image>
             <Image url="@../images/Home.png" />
          </image>

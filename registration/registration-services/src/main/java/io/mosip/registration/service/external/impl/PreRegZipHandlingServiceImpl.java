@@ -246,12 +246,8 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 				LOGGER.debug("REGISTRATION - PRE_REG_ZIP_HANDLING_SERVICE_IMPL", RegistrationConstants.APPLICATION_NAME,
 						RegistrationConstants.APPLICATION_ID, jsonString.toString());
 				
-				if(!jsonObject.has("IDSchemaVersion"))
-					throw new RegBaseCheckedException("IDSchemaVersion not found", "IDSchemaVersion not found");
-				
-				List<UiSchemaDTO> fieldList = identitySchemaService.getUISchema(jsonObject.getDouble("IDSchemaVersion"));	
-				getRegistrationDtoContent().setIdSchemaVersion(jsonObject.getDouble("IDSchemaVersion"));
-							
+				List<UiSchemaDTO> fieldList = identitySchemaService.getUISchema(getRegistrationDtoContent().getIdSchemaVersion());
+
 				for(UiSchemaDTO field : fieldList) {
 					if(field.getId().equalsIgnoreCase("IDSchemaVersion"))
 						continue;
@@ -266,6 +262,12 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 							documentDto.setFormat(fieldValue.getString("format"));
 							documentDto.setType(fieldValue.getString("type"));
 							documentDto.setValue(fieldValue.getString("value"));
+							try {
+							    documentDto.setRefNumber((fieldValue.getString("docRefId")));
+							} catch(JSONException jsonException) {
+								LOGGER.error("Unable to find Document Refernce Number for Pre-Reg-Sync : {} "
+										, ExceptionUtils.getStackTrace(jsonException));
+							}
 							getRegistrationDtoContent().addDocument(field.getId(), documentDto);
 						}
 						break;
@@ -276,23 +278,14 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 					default:
 						Object fieldValue = getValueFromJson(field.getId(), field.getType(), jsonObject);
 						if(fieldValue != null) {
-							if(field.getControlType().equalsIgnoreCase("ageDate"))
-								getRegistrationDtoContent().setDateField(field.getId(), (String)fieldValue);
+							if(field.getControlType().toLowerCase().contains("date"))
+								getRegistrationDtoContent().parseAndSetDateField(field.getId(), (String)fieldValue,
+										field.getControlType());
 							else
 								getRegistrationDtoContent().getDemographics().put(field.getId(), fieldValue);
 						}
 						break;
 					}
-					
-					/*if(field.getType() != "documentType" && field.getType() != "biometricsType") {
-						Object fieldValue = getValueFromJson(field.getId(), field.getType(), jsonObject);
-						if(fieldValue != null) {
-							if(field.getControlType().equalsIgnoreCase("ageDate"))
-								getRegistrationDtoContent().setDateField(field.getId(), (String)fieldValue);
-							else
-								getRegistrationDtoContent().getDemographics().put(field.getId(), fieldValue);
-						}
-					}*/
 				}
 			}
 		} catch (JSONException | IOException e) {

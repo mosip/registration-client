@@ -5,14 +5,32 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
+import io.mosip.commons.packet.constants.CryptomanagerConstant;
+import io.mosip.kernel.core.exception.BaseCheckedException;
+import io.mosip.kernel.core.exception.BaseUncheckedException;
+import io.mosip.kernel.core.keymanager.exception.KeystoreProcessingException;
+import io.mosip.kernel.core.util.CryptoUtil;
+import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
+import io.mosip.kernel.keymanagerservice.exception.KeymanagerServiceException;
+import io.mosip.kernel.keymanagerservice.exception.NoUniqueAliasException;
+import io.mosip.kernel.signature.dto.JWTSignatureVerifyRequestDto;
+import io.mosip.kernel.signature.dto.JWTSignatureVerifyResponseDto;
+import io.mosip.kernel.signature.dto.TimestampRequestDto;
+import io.mosip.kernel.signature.service.SignatureService;
+import io.mosip.registration.service.sync.PublicKeySync;
+import io.mosip.registration.service.sync.impl.PublicKeySyncImpl;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +47,8 @@ import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.util.restclient.RequestHTTPDTO;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * All the responses of the rest call services which are invoking from the
@@ -45,12 +65,28 @@ public class ResponseSignatureAdvice {
 	/** The Constant LOGGER. */
 	private static final Logger LOGGER = AppConfig.getLogger(ResponseSignatureAdvice.class);
 
+	private static final String CERTIFICATE_API_PATH = "/v1/syncdata/getCertificate";
+	private static final List<String> IGNORE_ERROR_CODES = new ArrayList<String>();
+
+	static {
+		IGNORE_ERROR_CODES.add("KER-KMS-012");
+		IGNORE_ERROR_CODES.add("KER-KMS-002");
+	}
+
+	@Value("${mosip.utc-datetime-pattern:yyyy-MM-dd'T'HH:mm:ss.SSS'Z'}")
+	private String DATETIME_PATTERN;
+
+	@Value("${mosip.sign.refid:SIGN}")
+	private String signRefId;
+
 	@Autowired
-    @Qualifier("OfflinePacketCryptoServiceImpl")
-    private IPacketCryptoService offlinePacketCryptoServiceImpl;
+    private SignatureService signatureService;
 	
 	@Autowired
 	private KeymanagerService keymanagerService;
+
+	@Autowired
+	private PublicKeySyncImpl publicKeySync;
 
 	/**
 	 * <p>
@@ -67,7 +103,7 @@ public class ResponseSignatureAdvice {
 	 * <li>Response Body - Getting from the Service response</li>
 	 * </ol>
 	 * 
-	 * The above three values are passed to the {@link SignatureUtil} where the
+	 * The above three values are passed to the {@link SignatureService} where the
 	 * validation will happen for the response that we send
 	 * 
 	 * @param joinPoint - the JointPoint
@@ -91,43 +127,31 @@ public class ResponseSignatureAdvice {
 		try {
 			restClientResponse = (LinkedHashMap<String, Object>) result;
 
-			LinkedHashMap<String, Object> keyResponse = (LinkedHashMap<String, Object>) restClientResponse
+			LinkedHashMap<String, Object> responseBodyMap = (LinkedHashMap<String, Object>) restClientResponse
 					.get(RegistrationConstants.REST_RESPONSE_BODY);
 
-			if (null != requestDto && requestDto.getIsSignRequired() && null != keyResponse && keyResponse.size() > 0
-					&& null != keyResponse.get(RegistrationConstants.RESPONSE)) {
-				if (keyResponse.get(RegistrationConstants.RESPONSE) instanceof LinkedHashMap){
-					LinkedHashMap<String, Object> resp = (LinkedHashMap<String, Object>) keyResponse
+			if (null != requestDto && requestDto.getIsSignRequired() && null != responseBodyMap && responseBodyMap.size() > 0
+					&& null != responseBodyMap.get(RegistrationConstants.RESPONSE)) {
+				if (responseBodyMap.get(RegistrationConstants.RESPONSE) instanceof LinkedHashMap){
+					LinkedHashMap<String, Object> resp = (LinkedHashMap<String, Object>) responseBodyMap
 							.get(RegistrationConstants.RESPONSE);
-					if (resp.containsKey(RegistrationConstants.CERTIFICATE) && resp.get(RegistrationConstants.CERTIFICATE) != null) {
-						uploadCertificate(resp, joinPoint);
-					}
+					checkAndUploadCertificate(resp, joinPoint);
 				}
 
-				LOGGER.info(LoggerConstants.RESPONSE_SIGNATURE_VALIDATION, APPLICATION_ID, APPLICATION_NAME,
-						requestDto.getUri().getPath().replaceAll("/", "====>"));
-
-				LinkedHashMap<String, Object> responseBodyMap = (LinkedHashMap<String, Object>) restClientResponse
-						.get(RegistrationConstants.REST_RESPONSE_BODY);
-
 				responseHeader = (HttpHeaders) restClientResponse.get(RegistrationConstants.REST_RESPONSE_HEADERS);
-				
-				if (offlinePacketCryptoServiceImpl.verify(
-						new ObjectMapper().writeValueAsString(responseBodyMap).getBytes(),
-						responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE).get(0).getBytes())) {
-					LOGGER.info(LoggerConstants.RESPONSE_SIGNATURE_VALIDATION, APPLICATION_ID, APPLICATION_NAME,
-							"response signature is valid...");
+
+				if (isResponseSignatureValid(responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE).get(0),
+						new ObjectMapper().writeValueAsString(responseBodyMap)) ) {
+					LOGGER.info("Response signature is valid... {}", requestDto.getUri());
 					return restClientResponse;
 				} else {
-					LOGGER.info(LoggerConstants.RESPONSE_SIGNATURE_VALIDATION, APPLICATION_ID, APPLICATION_NAME,
-							"response signature is Invalid...");
+					LOGGER.info("Response signature is Invalid... {}", requestDto.getUri());
 					restClientResponse.put(RegistrationConstants.REST_RESPONSE_BODY, new LinkedHashMap<>());
 					restClientResponse.put(RegistrationConstants.REST_RESPONSE_HEADERS, new LinkedHashMap<>());
 				}
 			}
-		} catch (RuntimeException | JsonProcessingException | UnsupportedEncodingException regBaseCheckedException) {
-			LOGGER.error(LoggerConstants.RESPONSE_SIGNATURE_VALIDATION, APPLICATION_ID, APPLICATION_NAME,
-					ExceptionUtils.getStackTrace(regBaseCheckedException));
+		} catch (RuntimeException | JsonProcessingException regBaseCheckedException) {
+			LOGGER.error(regBaseCheckedException.getMessage(), regBaseCheckedException);
 			throw new RegBaseCheckedException("Exception in response signature", regBaseCheckedException.getMessage());
 		}
 
@@ -138,31 +162,40 @@ public class ResponseSignatureAdvice {
 
 	}
 
-	private void uploadCertificate(LinkedHashMap<String, Object> resp, JoinPoint joinPoint) throws UnsupportedEncodingException {
+	private boolean isResponseSignatureValid(String signature, String actualData) {
+		KeyPairGenerateResponseDto certificateDto = keymanagerService
+				.getCertificate(RegistrationConstants.RESPONSE_SIGNATURE_PUBLIC_KEY_APP_ID,
+						Optional.of(RegistrationConstants.RESPONSE_SIGNATURE_PUBLIC_KEY_REF_ID));
+
+		JWTSignatureVerifyRequestDto jwtSignatureVerifyRequestDto = new JWTSignatureVerifyRequestDto();
+		jwtSignatureVerifyRequestDto.setJwtSignatureData(signature);
+		jwtSignatureVerifyRequestDto.setActualData(CryptoUtil.encodeBase64(actualData.getBytes(StandardCharsets.UTF_8)));
+		jwtSignatureVerifyRequestDto.setCertificateData(certificateDto.getCertificate());
+
+		JWTSignatureVerifyResponseDto verifyResponseDto =  signatureService.jwtVerify(jwtSignatureVerifyRequestDto);
+		return verifyResponseDto.isSignatureValid();
+	}
+
+	/**
+	 * Checks if this is Sign certificate fetch API call
+	 * if yes, it saves the certificate in keystore
+	 * @param resp
+	 * @param joinPoint
+	 */
+	private void checkAndUploadCertificate(LinkedHashMap<String, Object> resp, JoinPoint joinPoint) {
 		if(joinPoint.getArgs() != null && joinPoint.getArgs() instanceof Object[] && joinPoint.getArgs()[0] != null) {
-			RequestHTTPDTO request = (RequestHTTPDTO) joinPoint.getArgs()[0];
-			if (request.getUri().toString().contains("syncdata/getCertificate")) {
-				Map<String, String> queryPairs = new LinkedHashMap<String, String>();
-			    String query = request.getUri().getQuery();
-			    String[] pairs = query.split("&");
-			    for (String pair : pairs) {
-			        int index = pair.indexOf("=");
-			        queryPairs.put(URLDecoder.decode(pair.substring(0, index), "UTF-8"), URLDecoder.decode(pair.substring(index + 1), "UTF-8"));
-			    }
-			    LOGGER.info(LoggerConstants.RESPONSE_SIGNATURE_VALIDATION, APPLICATION_ID, APPLICATION_NAME,
-						"Extracted query params from the request to upload certificate..." + queryPairs);
-			    
-				if (queryPairs.get(RegistrationConstants.REF_ID).equals(RegistrationConstants.KER)) {
-					UploadCertificateRequestDto uploadCertRequestDto = new UploadCertificateRequestDto();
-					uploadCertRequestDto.setApplicationId(queryPairs.get(RegistrationConstants.GET_CERT_APP_ID));
-					uploadCertRequestDto.setCertificateData(resp.get(RegistrationConstants.CERTIFICATE).toString());
-					uploadCertRequestDto.setReferenceId(RegistrationConstants.KERNEL_REF_ID);
-					keymanagerService.uploadOtherDomainCertificate(uploadCertRequestDto);
-					
-					LOGGER.info(LoggerConstants.RESPONSE_SIGNATURE_VALIDATION, APPLICATION_ID, APPLICATION_NAME,
-							"Uploaded certificate with request..." + uploadCertRequestDto);
-				}								
+			RequestHTTPDTO requestDto = (RequestHTTPDTO) joinPoint.getArgs()[0];
+
+			UriComponents uriComponents = UriComponentsBuilder.fromUri(requestDto.getUri()).build();
+			if(!(uriComponents.getPath().equals(CERTIFICATE_API_PATH) &&
+					uriComponents.getQueryParams().containsKey(RegistrationConstants.GET_CERT_APP_ID) &&
+					uriComponents.getQueryParams().getFirst(RegistrationConstants.GET_CERT_APP_ID).equals(RegistrationConstants.KERNEL_APP_ID) &&
+					uriComponents.getQueryParams().containsKey(RegistrationConstants.REF_ID) &&
+					uriComponents.getQueryParams().getFirst(RegistrationConstants.REF_ID).equals(signRefId))) {
+				return;
 			}
+
+			publicKeySync.saveSignPublicKey(resp.get(RegistrationConstants.CERTIFICATE).toString());
 		}
 	}
 

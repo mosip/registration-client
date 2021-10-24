@@ -48,6 +48,8 @@ public class RegistrationDTO {
 	private int age;
 	private boolean isChild;
 	private boolean isBiometricMarkedForUpdate;
+	
+	private LocalDate date;
 
 	private RegistrationMetaDataDTO registrationMetaDataDTO;
 	private OSIDataDTO osiDataDTO;
@@ -118,7 +120,33 @@ public class RegistrationDTO {
 		this.demographics.remove(fieldId);
 	}
 
-	public void setDateField(String fieldId, String day, String month, String year) {
+	/*public void setDateField(String fieldId, String day, String month, String year) {
+		if (isValidValue(day) && isValidValue(month) && isValidValue(year)) {
+			LocalDate date = LocalDate.of(Integer.valueOf(year), Integer.valueOf(month), Integer.valueOf(day));
+			if (fieldId != null && fieldId.equalsIgnoreCase("dateOfBirth")) {
+				this.demographics.put(fieldId, date.format(DateTimeFormatter.ofPattern(
+						ApplicationContext.getDateFormat()
+				)));
+			
+			this.age = Period.between(date, LocalDate.now(ZoneId.of("UTC"))).getYears();
+
+			int minAge = Integer
+					.parseInt((String) applicationContext.getApplicationMap().get(RegistrationConstants.MIN_AGE));
+			int maxAge = Integer
+					.parseInt((String) applicationContext.getApplicationMap().get(RegistrationConstants.MAX_AGE));
+			this.isChild = this.age < minAge;
+			
+			}else if(fieldId != null && fieldId.equalsIgnoreCase("date")) {
+				this.demographics.put(fieldId, date.format(DateTimeFormatter.ofPattern(
+						ApplicationContext.getDateFormat()
+				)));
+				
+				this.date = date;
+			}
+		}
+	}*/
+	
+	public void setAgeDateField(String fieldId, String day, String month, String year) {
 		if (isValidValue(day) && isValidValue(month) && isValidValue(year)) {
 			LocalDate date = LocalDate.of(Integer.valueOf(year), Integer.valueOf(month), Integer.valueOf(day));
 			if (fieldId != null) {
@@ -137,13 +165,33 @@ public class RegistrationDTO {
 		}
 	}
 
-	public void setDateField(String fieldId, String dateString) {
+	public void setDateField(String fieldId, String day, String month, String year) {
+		if (isValidValue(day) && isValidValue(month) && isValidValue(year)) {
+			LocalDate date = LocalDate.of(Integer.valueOf(year), Integer.valueOf(month), Integer.valueOf(day));
+			if (fieldId != null) {
+				this.demographics.put(fieldId, date.format(DateTimeFormatter.ofPattern(
+						ApplicationContext.getDateFormat()
+				)));
+			}
+		}
+	}
+
+	public void parseAndSetDateField(String fieldId, String dateString, String controlType) {
 		if (isValidValue(dateString)) {
 			LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern(
 					ApplicationContext.getDateFormat()
 			));
-			setDateField(fieldId, String.valueOf(date.getDayOfMonth()), String.valueOf(date.getMonthValue()),
-					String.valueOf(date.getYear()));
+
+			switch (controlType) {
+				case RegistrationConstants.AGE_DATE:
+					setAgeDateField(fieldId, String.valueOf(date.getDayOfMonth()), String.valueOf(date.getMonthValue()),
+							String.valueOf(date.getYear()));
+					break;
+				case RegistrationConstants.DATE:
+					setDateField(fieldId, String.valueOf(date.getDayOfMonth()), String.valueOf(date.getMonthValue()),
+							String.valueOf(date.getYear()));
+					break;
+			}
 		}
 	}
 
@@ -183,11 +231,11 @@ public class RegistrationDTO {
 
 	public BiometricsDto addBiometric(String subType, String bioAttribute, BiometricsDto value) {
 		String key = String.format("%s_%s", subType, bioAttribute);
-		int currentCount = 0;
+		/*int currentCount = 0;
 		if (this.biometrics.get(key) != null) {
 			currentCount = this.biometrics.get(key).getNumOfRetries();
-		}
-		value.setNumOfRetries(currentCount + 1);
+		}*/
+		value.setNumOfRetries(value.getNumOfRetries());
 		value.setSubType(subType);
 		this.biometrics.put(key, value);
 		this.biometricExceptions.remove(key);
@@ -281,7 +329,7 @@ public class RegistrationDTO {
 
 			savedBiometrics = new LinkedList<>();
 
-			boolean isForceCaptured = false;
+			boolean isQualityCheckPassed = false, isForceCaptured = false;
 			
 			if (!biometricsDTOMap.isEmpty()) {
 				thresholdScore = thresholdScore * biometricsDTOMap.size();
@@ -298,11 +346,13 @@ public class RegistrationDTO {
 					BiometricsDto biometricsDto = getBiometric(subType, Biometric
 							.getBiometricByAttribute(biometricsList.get(0).getBioAttribute()).getAttributeName());
 
-					if (biometricsDto != null && biometricsDto.getNumOfRetries() + 1 >= maxRetryAttempt) {
+					if (biometricsDto == null && biometricsList.get(0).getNumOfRetries() >= maxRetryAttempt) {
 						isForceCaptured = true;
 					}
 				}
 			}
+			else
+				isQualityCheckPassed = true;
 
 			/** Modify the Biometrics DTO and save */
 			for (Entry<String, BiometricsDto> entry : biometricsDTOMap.entrySet()) {
@@ -310,16 +360,14 @@ public class RegistrationDTO {
 				BiometricsDto savedRegistrationBiometric = getBiometric(subType, entry.getKey());
 
 				BiometricsDto value = entry.getValue();
-
-				if (savedRegistrationBiometric != null
-						&& savedRegistrationBiometric.getQualityScore() > value.getQualityScore()) {
-					value = savedRegistrationBiometric;
-				}
 				value.setForceCaptured(isForceCaptured);
-
 				value.setSubType(subType);
-				savedBiometrics.add(addBiometric(subType, entry.getKey(), value));
 
+				if( (savedRegistrationBiometric == null && (isQualityCheckPassed || isForceCaptured)) ||
+						(savedRegistrationBiometric != null &&
+								value.getQualityScore() >= savedRegistrationBiometric.getQualityScore())) {
+					savedBiometrics.add(addBiometric(subType, entry.getKey(), value));
+				}
 			}
 		}
 

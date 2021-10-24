@@ -184,6 +184,7 @@ public enum RegistrationExceptionConstants {
 	
 	REG_POLICY_SYNC_SERVICE_IMPL("REG-PSS-001","responseDTO cannot be null or empty"),
 	REG_POLICY_SYNC_SERVICE_IMPL_CENTERMACHINEID("REG-PSS-002","centerMachineId is mandatory"),
+	REG_POLICY_SYNC_FAILED("REG-PSS-003","Policy key sync failed"),
 	
 	REG_GLOBALPARAM_SYNC_SERVICE_IMPL("REG-GPSS-001","responseDTO cannot be null or empty"),
 	REG_GLOBALPARAM_SYNC_SERVICE_IMPL_TRIGGER_POINT("REG-GPSS-002","triggerPoint is mandatory"),
@@ -220,6 +221,7 @@ public enum RegistrationExceptionConstants {
 	MDS_PROVIDER_NOT_FOUND("REG-MDS-004","MDS provider not found"),
 	MDS_JWT_INVALID("REG-MDS-005","Invalid JWT value (Header.Payload.Signature)"),
 	MDS_PAYLOAD_EMPTY("REG-MDS-006","Payload is Empty"),
+	MDS_STREAM_TIMEOUT("REG-MDS-007","Stream Timeout Reached"),
 
 	APP_INVALID_STATE("REG-INIT-001", "Application found in invalid state, tampering detected !");
 

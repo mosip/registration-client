@@ -164,8 +164,8 @@ public class RegistrationUIConstants {
 	public static final String SCAN_DOC_CATEGORY_MULTIPLE = bundle.getString("SCAN_DOC_CATEGORY_MULTIPLE");
 	public static final String SCAN_DOC_SUCCESS = bundle.getString("SCAN_DOC_SUCCESS");
 	public static final String CROP_DOC_SUCCESS = bundle.getString("CROP_DOC_SUCCESS");
-	public static final String SCAN_DOC_SIZE = bundle.getString("SCAN_DOC_SIZE");
-	public static final String SCAN_DOC_INFO = bundle.getString("SCAN_DOC_INFO");
+	public static String SCAN_DOC_SIZE = bundle.getString("SCAN_DOC_SIZE");
+	public static String SCAN_DOC_INFO = bundle.getString("SCAN_DOC_INFO");
 	public static final String SELECTED_SCANNER = bundle.getString("SELECTED_SCANNER");
 	public static final String NO_SCANNER_FOUND = bundle.getString("NO_SCANNER_FOUND");
 	public static final String SCAN_DOCUMENT_CONNECTION_ERR = bundle.getString("SCAN_DOCUMENT_CONNECTION_ERR");
@@ -187,10 +187,12 @@ public class RegistrationUIConstants {
 	public static final String UIN_INVALID = bundle.getString("UIN_INVALID");
 	public static final String IS_BLOCKED_WORD = bundle.getString("IS_BLOCKED_WORD");
 	public static final String THRESHOLD = bundle.getString("THRESHOLD");
+	public static final String DOB_REQUIRED = bundle.getString("DOB_REQUIRED");
 	public static final String INVALID_DATE = bundle.getString("INVALID_DATE");
 	public static final String INVALID_YEAR = bundle.getString("INVALID_YEAR");
 	public static final String FUTURE_DOB = bundle.getString("FUTURE_DOB");
 	public static final String INVALID_AGE = bundle.getString("INVALID_AGE");
+	public static final String INVALID_DATE_LIMIT = bundle.getString("INVALID_DATE_LIMIT");
 	public static final String INVALID_MONTH = bundle.getString("INVALID_MONTH");
 	public static final String SELECT = bundle.getString("SELECT");
 	public static final String LEFT_SLAP = bundle.getString("LEFT_SLAP");
@@ -259,6 +261,7 @@ public class RegistrationUIConstants {
 	public static final String UNABLE_LOAD_NOTIFICATION_PAGE = bundle.getString("UNABLE_LOAD_NOTIFICATION_PAGE");
 	public static final String UNABLE_LOAD_PREVIEW_PAGE = bundle.getString("UNABLE_LOAD_PREVIEW_PAGE");
 	public static final String UNABLE_LOAD_ACKNOWLEDGEMENT_PAGE = bundle.getString("UNABLE_LOAD_ACKNOWLEDGEMENT_PAGE");
+	public static final String UNABLE_LOAD_DASHBOARD_PAGE = bundle.getString("UNABLE_LOAD_DASHBOARD_PAGE");
 
 	// Individual Registartion - Iris Capture
 	public static final String UNABLE_LOAD_IRIS_SCAN_POPUP = bundle.getString("UNABLE_LOAD_IRIS_SCAN_POPUP");
