@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -329,7 +328,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 					.post(packetIdExists ? RegistrationConstants.PACKET_SYNC_V2 : RegistrationConstants.PACKET_SYNC, javaObjectToJsonString(encodedString), triggerPoint);
 			if (response.get("response") != null) {
 				SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
-				Map<String, Object> statusMap = new WeakHashMap<>();
+				Map<String, Object> statusMap = new LinkedHashMap<>();
 				for (LinkedHashMap<String, Object> responseMap : (List<LinkedHashMap<String, Object>>) response
 						.get("response")) {
 					statusMap.put((String) responseMap.get("registrationId"), responseMap.get("status"));

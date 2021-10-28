@@ -121,8 +121,20 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 		LOGGER.info("Initiating the Master Sync");
 
 		if (masterSyncFieldsValidate(masterSyncDtls, triggerPoint)) {
+			Map<String, String> requestParamMap = getRequestParamsForClientSettingsSync(masterSyncDtls);
 			ResponseDTO responseDto = syncClientSettings(masterSyncDtls, triggerPoint,
-					getRequestParamsForClientSettingsSync(masterSyncDtls));
+					requestParamMap);
+
+			//Perform sync once again only during initial sync to pull all the latest changes.
+			if(responseDto.getSuccessResponseDTO() != null && isInitialSync()) {
+				// getting Last Sync date from Data from sync table
+				SyncControl masterSyncDetails = masterSyncDao.syncJobDetails(masterSyncDtls);
+				if (masterSyncDetails != null) {
+					requestParamMap.put(RegistrationConstants.MASTER_DATA_LASTUPDTAE,
+							DateUtils.formatToISOString(masterSyncDetails.getLastSyncDtimes().toLocalDateTime()));
+				}
+				responseDto = syncClientSettings(masterSyncDtls, triggerPoint, requestParamMap);
+			}
 			return responseDto;
 		} else {
 			LOGGER.info("masterSyncDtls/triggerPoint is mandatory...");
