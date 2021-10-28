@@ -86,7 +86,7 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 		if(userDetail != null && userDetail.getIsActive())
 			return userDetail;
 
-		LOGGER.info("User details fetched {} with status : {}", userDetail, (userDetail==null? null : userDetail.getIsActive()));
+		LOGGER.info("User details fetched with status : {}", (userDetail==null? null : userDetail.getIsActive()));
 		return null;
 	}
 
