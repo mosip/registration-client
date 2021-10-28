@@ -514,6 +514,8 @@ public class GenericController extends BaseController {
 				int selectedIndex = tabPane.getSelectionModel().getSelectedIndex();
 				while(selectedIndex < tabPane.getTabs().size()) {
 					selectedIndex++;
+					String newScreenName = tabPane.getTabs().get(selectedIndex).getId().replace("_tab", EMPTY);
+					tabPane.getTabs().get(selectedIndex).setDisable(!refreshScreenVisibility(newScreenName));
 					if(!tabPane.getTabs().get(selectedIndex).isDisabled()) {
 						tabPane.getSelectionModel().select(selectedIndex);
 						break;
@@ -601,12 +603,24 @@ public class GenericController extends BaseController {
 				}
 
 				tabPane.getTabs().get(oldValue.intValue()).getStyleClass().remove(TAB_LABEL_ERROR_CLASS);
-				tabPane.getSelectionModel().select((newSelection-oldValue.intValue() > 1) ?
-						oldValue.intValue() : newSelection);
+				//tabPane.getSelectionModel().select(newSelection);
+				tabPane.getSelectionModel().select(getNextSelection(tabPane, oldValue.intValue(), newSelection));
 			}
 		});
 	}
 
+	private int getNextSelection(TabPane tabPane, int oldSelection, int newSelection) {
+		if (newSelection-oldSelection <= 1) {
+			return newSelection;
+		} 
+		for (int i = oldSelection + 1; i < newSelection; i++) {
+			if (!tabPane.getTabs().get(i).isDisabled()) {
+				return oldSelection;
+			}
+		}		
+		return newSelection;
+	}
+	
 	private boolean isScreenValid(final String screenName) {
 		Optional<UiScreenDTO> result = orderedScreens.values()
 				.stream().filter(screen -> screen.getName().equals(screenName.replace("_tab", EMPTY))).findFirst();
@@ -702,14 +716,14 @@ public class GenericController extends BaseController {
 			getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().forEach(langCode -> {
 				labels.add(screenDTO.getLabel().get(langCode));
 			});
-
+			
+			if(screenFieldGroups == null || screenFieldGroups.isEmpty())
+				continue;
+			
 			Tab screenTab = new Tab();
 			screenTab.setId(screenDTO.getName()+"_tab");
 			screenTab.setText(labels.get(0));
 			screenTab.setTooltip(new Tooltip(String.join(RegistrationConstants.SLASH, labels)));
-
-			if(screenFieldGroups == null || screenFieldGroups.isEmpty())
-				screenTab.setDisable(true);
 
 			GridPane screenGridPane = getScreenGridPane(screenDTO.getName());
 			screenGridPane.prefWidthProperty().bind(tabPane.widthProperty());
