@@ -221,6 +221,7 @@ public class DaoConfig extends HibernateDaoConfig {
 	@VisibleForTesting
 	private void setupDataSource() throws Exception {
 		LOGGER.info(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID, "****** SETTING UP DATASOURCE *******");
+		System.setProperty("derby.stream.error.method", "io.mosip.registration.config.DerbySlf4jBridge.bridge");
 		backwardCompatibleFix();
 		createDatabase();
 		reEncryptExistingDB();
@@ -332,6 +333,11 @@ public class DaoConfig extends HibernateDaoConfig {
 					statement.executeUpdate(
 							"CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.database.fullAccessUsers', '"
 									+ dbConf.get(USERNAME_KEY) + "')");
+					statement.executeUpdate(
+							"CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.stream.error.method', 'io.mosip.registration.config.DerbySlf4jBridge.bridge')");
+
+					statement.executeUpdate(
+							"CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.stream.error.field', 'io.mosip.registration.config.DerbySlf4jBridge.bridge')");
 					// property ensures that database-wide properties cannot be overridden by
 					// system-wide properties
 					statement.executeUpdate(
