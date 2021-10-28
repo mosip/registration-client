@@ -79,16 +79,15 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 	 * String)
 	 */
 	public UserDetail getUserDetail(String userId) {
+		LOGGER.info("Fetching User details");
 
-		LOGGER.info("REGISTRATION - USER_DETAIL - REGISTRATION_USER_DETAIL_DAO_IMPL", APPLICATION_NAME, APPLICATION_ID,
-				"Fetching User details");
+		UserDetail userDetail = userDetailRepository.findByIdIgnoreCase(userId);
 
-		UserDetail userDetail = userDetailRepository.findByIdIgnoreCaseAndIsActiveTrue(userId);
+		if(userDetail != null && userDetail.getIsActive())
+			return userDetail;
 
-		LOGGER.info("REGISTRATION - USER_DETAIL - REGISTRATION_USER_DETAIL_DAO_IMPL", APPLICATION_NAME, APPLICATION_ID,
-				"User details fetched successfully");
-
-		return userDetail;
+		LOGGER.info("User details fetched with status : {}", (userDetail==null? null : userDetail.getIsActive()));
+		return null;
 	}
 
 	/*
