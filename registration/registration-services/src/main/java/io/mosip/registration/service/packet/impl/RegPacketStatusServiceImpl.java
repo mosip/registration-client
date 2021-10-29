@@ -216,6 +216,7 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 				Registration registration = registrationMap
 						.get(registrationStatus.containsKey(RegistrationConstants.PACKET_ID) ? registrationStatus.get(RegistrationConstants.PACKET_ID) : 
 							registrationStatus.get(RegistrationConstants.REGISTRATION_ID));
+				registration.setClientStatusCode(RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode());
 				registration.setServerStatusCode(
 						registrationStatus.get(RegistrationConstants.STATUS_CODE));
 				registration.setServerStatusTimestamp(new Timestamp(System.currentTimeMillis()));
