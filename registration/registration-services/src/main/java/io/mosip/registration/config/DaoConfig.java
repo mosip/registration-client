@@ -148,21 +148,6 @@ public class DaoConfig extends HibernateDaoConfig {
 		return jdbcTemplate;
 	}
 
-	/**
-	 * setting profile for spring properties
-	 *
-	 * @return the {@link PropertyPlaceholderConfigurer} after setting the
-	 *         properties
-	 */
-	@Bean
-	public static PropertySourcesPlaceholderConfigurer properties() {
-		ppc = new PropertySourcesPlaceholderConfigurer();
-		Resource[] resources = new ClassPathResource[] { new ClassPathResource("spring.properties"),
-				new ClassPathResource("props/mosip-application.properties") };
-		ppc.setLocations(resources);
-		ppc.setTrimValues(true);
-		return ppc;
-	}
 
 	@Override
 	@Bean
