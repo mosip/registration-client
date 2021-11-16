@@ -123,11 +123,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			String additionalInfo = JsonUtils.javaObjectToJsonString(registrationDataDto);
 			registration.setAdditionalInfo(additionalInfo.getBytes());
 
-			if (!registrationDTO.BLOCKLISTED_CHECK.isEmpty()) {
-				registration.setHasBwords(true);
-			} else {
-				registration.setHasBwords(false);
-			}
+			registration.setHasBwords(!registrationDTO.BLOCKLISTED_CHECK.isEmpty());
 			
 			registrationRepository.save(registration);
 
