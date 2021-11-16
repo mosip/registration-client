@@ -13,6 +13,7 @@ public class RegistrationApprovalDTO {
 	private String acknowledgementFormPath;
 	private String operatorId;
 	private String statusComment;
+	private boolean hasBwords;
 
 	/**
 	 * Instantiates a new registration approval DTO.
@@ -26,7 +27,7 @@ public class RegistrationApprovalDTO {
 	 * @param statusComment 
 	 * 				the status comment
 	 */
-	public RegistrationApprovalDTO(String id, String packetId, String date, String acknowledgementFormPath, String operatorId, String statusComment) {
+	public RegistrationApprovalDTO(String id, String packetId, String date, String acknowledgementFormPath, String operatorId, String statusComment, boolean hasBwords) {
 		super();
 		
 		this.id = id;
@@ -35,6 +36,7 @@ public class RegistrationApprovalDTO {
 		this.acknowledgementFormPath =acknowledgementFormPath;
 		this.operatorId = operatorId;
 		this.statusComment = statusComment;
+		this.hasBwords = hasBwords;
 	}
 	
 	/**
@@ -82,5 +84,9 @@ public class RegistrationApprovalDTO {
 	
 	public String getOperatorId() {
 		return operatorId;
+	}
+	
+	public boolean getHasBwords() {
+		return hasBwords;
 	}
 }

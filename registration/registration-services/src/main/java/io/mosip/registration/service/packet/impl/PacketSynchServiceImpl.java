@@ -199,7 +199,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 		proceedWithPacketSync();
 
 		List<Registration> registrations = (packetIDs != null) ? registrationDAO.get(packetIDs) :
-				registrationDAO.getPacketsToBeSynched(RegistrationConstants.CLIENT_STATUS_APPROVED, batchCount);
+				registrationDAO.getPacketsToBeSynched(RegistrationConstants.CLIENT_STATUS_TO_BE_SYNCED, batchCount);
 
 		List<SyncRegistrationDTO> syncDtoList = getPacketSyncDtoList(registrations);
 		

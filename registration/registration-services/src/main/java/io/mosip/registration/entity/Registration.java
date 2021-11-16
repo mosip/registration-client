@@ -85,6 +85,8 @@ public class Registration extends RegistrationCommonFields {
 	private String additionalInfoReqId;
 	@Column(name= "ACK_SIGNATURE")
 	private String ackSignature;
+	@Column(name="HAS_BWORDS")
+	private Boolean hasBwords;
 	
 	@ManyToOne
 	@JoinColumn(name = "CR_BY", referencedColumnName = "id", insertable = false, updatable = false)
@@ -358,5 +360,13 @@ public class Registration extends RegistrationCommonFields {
 
 	public void setAckSignature(String ackSignature) {
 		this.ackSignature = ackSignature;
+	}
+
+	public Boolean getHasBwords() {
+		return hasBwords;
+	}
+
+	public void setHasBwords(Boolean hasBwords) {
+		this.hasBwords = hasBwords;
 	}
 }
