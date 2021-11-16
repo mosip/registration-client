@@ -262,8 +262,8 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 		return registrationRepository.findByClientStatusCodeInOrderByUpdDtimesDesc(statusCodes);
 	}
 	
-	public List<Registration> getPacketsToBeSynched(String statusCode, int limit) {
-		return registrationRepository.findByClientStatusCodeOrderByCrDtimeAsc(statusCode, PageRequest.of(0, limit));
+	public List<Registration> getPacketsToBeSynched(List<String> statusCodes, int limit) {
+		return registrationRepository.findByClientStatusCodeInOrderByCrDtimeAsc(statusCodes, PageRequest.of(0, limit));
 	}
 
 	/*
