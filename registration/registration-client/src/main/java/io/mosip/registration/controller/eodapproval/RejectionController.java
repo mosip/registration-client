@@ -176,7 +176,8 @@ public class RejectionController extends BaseController implements Initializable
 					regRejectionTable.getSelectionModel().getSelectedItem().getDate(),
 					regRejectionTable.getSelectionModel().getSelectedItem().getAcknowledgementFormPath(),
 					regRejectionTable.getSelectionModel().getSelectedItem().getOperatorId(),
-					new Image(getImagePath(RegistrationConstants.REJECT_IMG, true)));
+					new Image(getImagePath(RegistrationConstants.REJECT_IMG, true)),
+					regRejectionTable.getSelectionModel().getSelectedItem().getHasBwords());
 
 			observableList.set(rowNum, approvalDTO);
 			registrationApprovalController.wrapListAndAddFiltering(observableList);

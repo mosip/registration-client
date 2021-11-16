@@ -224,32 +224,12 @@ public class RegistrationApprovalController extends BaseController implements In
 		});
 		
 		reloadTableView();
-//		tableCellColorChangeListener();
 		id.setResizable(false);
 		statusComment.setResizable(false);
 		operatorId.setResizable(false);
 		disableColumnsReorder(table);
 		table.getColumns().forEach(column -> column.setReorderable(false));
 	}
-
-//	private void tableCellColorChangeListener() {
-//		statusComment.setCellFactory(column -> {
-//			return new TableCell<RegistrationApprovalVO, String>() {
-//				@Override
-//				public void updateItem(String item, boolean empty) {
-//					super.updateItem(item, empty);
-//					setText(item);
-//					if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.APPROVED))) {
-//						setTextFill(Color.GREEN);
-//					} else if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REJECTED))) {
-//						setTextFill(Color.RED);
-//					} else {
-//						setTextFill(Color.BLACK);
-//					}
-//				}
-//			};
-//		});
-//	}
 
 	/**
 	 * Method to reload table.
@@ -295,7 +275,28 @@ public class RegistrationApprovalController extends BaseController implements In
 		        // Attach the imageview to the cell
 		        cell.setGraphic(imageview);
 		        return cell;
-		   });
+		});
+		
+		id.setCellFactory(param -> {
+			// Set up the Table
+			TableCell<RegistrationApprovalVO, String> cell = new TableCell<RegistrationApprovalVO, String>() {
+				public void updateItem(String item, boolean empty) {
+					if (!empty) {
+						setText(item);
+						int currentIndex = indexProperty().getValue() < 0 ? 0 : indexProperty().getValue();
+						if (param.getTableView().getItems().get(currentIndex).getHasBwords()) {
+							setStyle("-fx-background-color: yellow;");
+						}
+					}
+					if (item == null) {
+						setText(null);
+						setStyle(null);
+					}
+				}
+			};
+			return cell;
+		});
+		
 		statusComment.setCellValueFactory(new PropertyValueFactory<RegistrationApprovalVO, Image>(RegistrationConstants.EOD_PROCESS_STATUSCOMMENT));
 
 		populateTable();
@@ -370,7 +371,7 @@ public class RegistrationApprovalController extends BaseController implements In
 				for (RegistrationApprovalDTO approvalDTO : listData) {
 					registrationApprovalVO.add(
 							new RegistrationApprovalVO("    " + count++, approvalDTO.getId(), approvalDTO.getPacketId(), approvalDTO.getDate(),
-									approvalDTO.getAcknowledgementFormPath(), approvalDTO.getOperatorId(), null));
+									approvalDTO.getAcknowledgementFormPath(), approvalDTO.getOperatorId(), null, approvalDTO.getHasBwords()));
 				}
 				int rowNum = 0;
 				for (RegistrationApprovalDTO approvalDTO : listData) {
@@ -532,7 +533,8 @@ public class RegistrationApprovalController extends BaseController implements In
 					table.getSelectionModel().getSelectedItem().getDate(),
 					table.getSelectionModel().getSelectedItem().getAcknowledgementFormPath(),
 					table.getSelectionModel().getSelectedItem().getOperatorId(),
-					new Image(getImagePath(RegistrationConstants.TICK_IMG, true)));
+					new Image(getImagePath(RegistrationConstants.TICK_IMG, true)), 
+					table.getSelectionModel().getSelectedItem().getHasBwords());
 			observableList.set(row, approvalDTO);
 			wrapListAndAddFiltering(observableList);
 			table.requestFocus();
