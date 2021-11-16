@@ -123,6 +123,12 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			String additionalInfo = JsonUtils.javaObjectToJsonString(registrationDataDto);
 			registration.setAdditionalInfo(additionalInfo.getBytes());
 
+			if (!registrationDTO.BLOCKLISTED_CHECK.isEmpty()) {
+				registration.setHasBwords(true);
+			} else {
+				registration.setHasBwords(false);
+			}
+			
 			registrationRepository.save(registration);
 
 			LOGGER.info(LOG_SAVE_PKT, APPLICATION_NAME, APPLICATION_ID, "Save Registration has been ended");
