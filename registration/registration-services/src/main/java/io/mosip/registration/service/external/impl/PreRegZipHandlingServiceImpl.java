@@ -202,7 +202,8 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 							documentDto.setType(fieldValue.getString("type"));
 							documentDto.setValue(fieldValue.getString("value"));
 							try {
-							    documentDto.setRefNumber((fieldValue.getString("refNumber")));
+							    documentDto.setRefNumber(fieldValue.has("refNumber") ? fieldValue.getString("refNumber") :
+										(fieldValue.has("docRefId") ? fieldValue.getString("docRefId") : null));
 							} catch(JSONException jsonException) {
 								LOGGER.error("Unable to find Document Refernce Number for Pre-Reg-Sync : ", jsonException);
 							}
