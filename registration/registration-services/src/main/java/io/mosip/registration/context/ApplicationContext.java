@@ -298,27 +298,6 @@ public class ApplicationContext {
 
 	}
 
-	public static void setUpgradeServerURL(String url) {
-		applicationMap.put("client.upgrade.server.url", url);
-	}
-
-	@Deprecated(since = "1.1.4")
-	public static void setTPMUsageFlag(String tpmUsageFlag) {
-		applicationMap.put("client.tpm.required", tpmUsageFlag);
-	}
-
-	public static String getUpgradeServerURL() {
-		return applicationMap.get("client.upgrade.server.url") == null
-				? "https://${mosip.hostname}"
-				: String.valueOf(applicationMap.get("client.upgrade.server.url"));
-	}
-
-	@Deprecated(since = "1.1.4")
-	public static String getTPMUsageFlag() {
-		return applicationMap.get("client.tpm.required") == null ? "Y"
-				: String.valueOf(applicationMap.get("client.tpm.required"));
-	}
-
 	public static String getDateFormat() {
 		return applicationMap.get("mosip.default.date.format") == null ? "yyyy/MM/dd"
 				: String.valueOf(applicationMap.get("mosip.default.date.format"));

@@ -38,8 +38,6 @@ public class Initialization extends Application {
 
 	private static ApplicationContext applicationContext;
 	private static Stage applicationPrimaryStage;
-	private static String upgradeServer = null;
-	private static String tpmRequired = "Y";
 	private static String applicationStartTime;
 
 	@Override
@@ -48,8 +46,6 @@ public class Initialization extends Application {
 			LOGGER.info("REGISTRATION - LOGIN SCREEN INITILIZATION - REGISTRATIONAPPINITILIZATION", APPLICATION_NAME,
 					APPLICATION_ID, "Login screen initilization "
 							+ new SimpleDateFormat(RegistrationConstants.HH_MM_SS).format(System.currentTimeMillis()));
-
-			io.mosip.registration.context.ApplicationContext.setUpgradeServerURL(upgradeServer);
 
 			setPrimaryStage(primaryStage);
 			LoginController loginController = applicationContext.getBean(LoginController.class);
@@ -76,11 +72,6 @@ public class Initialization extends Application {
 			System.setProperty("file.encoding", "UTF-8");
 			
 			io.mosip.registration.context.ApplicationContext.getInstance();
-			if (args.length > 1) {
-				upgradeServer = args[0];
-				tpmRequired = args[1];
-				io.mosip.registration.context.ApplicationContext.setTPMUsageFlag(args[1]);
-			}
 			Timestamp time = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
 			applicationStartTime = String.valueOf(time);
 
@@ -105,8 +96,7 @@ public class Initialization extends Application {
 	 */
 	public static ApplicationContext createApplicationContext() {
 
-		if(System.getProperty(RegistrationConstants.MOSIP_HOSTNAME)==null && System.getenv(RegistrationConstants.MOSIP_HOSTNAME)!=null) {
-			
+		if(System.getenv(RegistrationConstants.MOSIP_HOSTNAME)!=null) {
 			System.setProperty(RegistrationConstants.MOSIP_HOSTNAME, System.getenv(RegistrationConstants.MOSIP_HOSTNAME));
 		}
 		
@@ -118,8 +108,7 @@ public class Initialization extends Application {
 		try {
 			super.stop();
 			getClientCryptoFacade().getClientSecurity().closeSecurityInstance();
-			LOGGER.info("REGISTRATION - APPLICATION INITILIZATION - REGISTRATIONAPPINITILIZATION", APPLICATION_NAME,
-					APPLICATION_ID, "Closed the Client Security Instance");
+			LOGGER.info("Closed the Client Security Instance");
 		} catch (Exception exception) {
 			LOGGER.error("REGISTRATION - APPLICATION INITILIZATION - REGISTRATIONAPPINITILIZATION", APPLICATION_NAME,
 					APPLICATION_ID,

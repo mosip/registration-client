@@ -75,8 +75,9 @@ public class UserDetailDAOTest {
 
 		UserDetail userDetail = new UserDetail();
 		userDetail.setName("Sravya");
+		userDetail.setIsActive(true);
 
-		Mockito.when(userDetailRepository.findByIdIgnoreCaseAndIsActiveTrue("mosip"))
+		Mockito.when(userDetailRepository.findByIdIgnoreCase("mosip"))
 				.thenReturn(userDetail);
 		assertNotNull(userDetail);
 		assertNotNull(userDetailDAOImpl.getUserDetail("mosip"));
@@ -86,8 +87,9 @@ public class UserDetailDAOTest {
 	public void getUserDetailFailureTest() {
 
 		UserDetail userDetail = new UserDetail();
+		userDetail.setIsActive(true);
 
-		Mockito.when(userDetailRepository.findByIdIgnoreCaseAndIsActiveTrue("mosip"))
+		Mockito.when(userDetailRepository.findByIdIgnoreCase("mosip"))
 				.thenReturn(userDetail);
 		assertNotNull(userDetail);
 		assertNotNull(userDetailDAOImpl.getUserDetail("mosip"));

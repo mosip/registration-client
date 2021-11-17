@@ -123,6 +123,8 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			String additionalInfo = JsonUtils.javaObjectToJsonString(registrationDataDto);
 			registration.setAdditionalInfo(additionalInfo.getBytes());
 
+			registration.setHasBwords(!registrationDTO.BLOCKLISTED_CHECK.isEmpty());
+			
 			registrationRepository.save(registration);
 
 			LOGGER.info(LOG_SAVE_PKT, APPLICATION_NAME, APPLICATION_ID, "Save Registration has been ended");
@@ -256,8 +258,8 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 		return registrationRepository.findByClientStatusCodeInOrderByUpdDtimesDesc(statusCodes);
 	}
 	
-	public List<Registration> getPacketsToBeSynched(String statusCode, int limit) {
-		return registrationRepository.findByClientStatusCodeOrderByCrDtimeAsc(statusCode, PageRequest.of(0, limit));
+	public List<Registration> getPacketsToBeSynched(List<String> statusCodes, int limit) {
+		return registrationRepository.findByClientStatusCodeInOrderByCrDtimeAsc(statusCodes, PageRequest.of(0, limit));
 	}
 
 	/*
