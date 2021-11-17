@@ -154,7 +154,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 		try {
 			getModesOfLoginValidation(authType, roleList);
 
-			boolean mandatePwdLogin = serviceDelegateUtil.isNetworkAvailable() && !authTokenUtilService.hasAnyValidToken();
+			boolean mandatePwdLogin = !authTokenUtilService.hasAnyValidToken() && serviceDelegateUtil.isNetworkAvailable();
 
 			LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "PWD LOGIN MANDATED ? " + mandatePwdLogin);
 
