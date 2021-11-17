@@ -138,7 +138,7 @@ public interface RegistrationDAO {
 	 */
 	List<Registration> getPacketsToBeSynched(List<String> statusCodes);
 	
-	List<Registration> getPacketsToBeSynched(String statusCode, int count);
+	List<Registration> getPacketsToBeSynched(List<String> statusCodes, int count);
 
 	/**
 	 * This method is used to update the Packet sync status in the database.

@@ -21,6 +21,7 @@ import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.repositories.UserTokenRepository;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import lombok.SneakyThrows;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -76,6 +77,9 @@ public class AuthTokenUtilService {
 
     @Autowired
     private UserTokenRepository userTokenRepository;
+
+    @Autowired
+    private ServiceDelegateUtil serviceDelegateUtil;
 
     private RetryTemplate retryTemplate;
 
@@ -347,6 +351,7 @@ public class AuthTokenUtilService {
     }
 
     private void setURI(RequestHTTPDTO requestHTTPDTO, Map<String, String> requestParams, String url) {
+        url = serviceDelegateUtil.prepareURLByHostName(url);
         LOGGER.info("Preparing URI for web-service >>>>>  {} ", url);
         UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(url);
         if (requestParams != null) {

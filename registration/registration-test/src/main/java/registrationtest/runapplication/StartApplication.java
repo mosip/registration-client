@@ -25,8 +25,6 @@ public class StartApplication extends Application {
 
     static Stage primaryStage;
     static ApplicationContext applicationContext;
-    String upgradeServer = null;
-    String tpmRequired = "Y";
     FxRobotContext context;
     Scene scene;
 
@@ -34,10 +32,6 @@ public class StartApplication extends Application {
 
         try {
             io.mosip.registration.context.ApplicationContext.getInstance();
-            io.mosip.registration.context.ApplicationContext.setTPMUsageFlag(tpmRequired);
-            // io.mosip.registration.context.ApplicationContext.setUpgradeServerURL(System.getProperty("mosip.upgradeserver"));
-
-            // System.out.println(System.getProperty("mosip.upgradeserver"));
             System.out.println(System.getProperty("mosip.hostname"));
 
             // applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
@@ -61,7 +55,7 @@ public class StartApplication extends Application {
             System.setProperty("java.net.useSystemProxies", "true");
             System.setProperty("file.encoding", "UTF-8");
             System.setProperty("derby.ui.codeset", "UTF-8");
-            System.setProperty("mosip.upgradeserver", PropertiesUtil.getKeyValue("mosip.upgradeserver"));
+            System.setProperty("client.upgrade.server.url", PropertiesUtil.getKeyValue("mosip.upgradeserver"));
             System.setProperty("mosip.hostname", PropertiesUtil.getKeyValue("mosip.hostname"));
 
             launch(args);
