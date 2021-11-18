@@ -309,6 +309,8 @@ public class BaseService {
 
 		if(machineMaster != null && machineMaster.getId() != null && machineMaster.getIsActive())
 			return machineMaster.getId();
+
+		LOGGER.error("Machine fetched {}", machineMaster);
 		return null;
 	}
 
@@ -320,10 +322,10 @@ public class BaseService {
 	public String getCenterId() {
 		String stationId = getStationId();
 		if (stationId != null) {
-			CenterMachine centerMachine = centerMachineRepository.findByCenterMachineIdMachineId(stationId);
-			return centerMachine != null && centerMachine.getIsActive() ?
-					centerMachine.getCenterMachineId().getRegCenterId() : null;
+			return getCenterId(stationId);
 		}
+
+		LOGGER.error("stationId fetched {}", stationId);
 		return null;
 	}
 

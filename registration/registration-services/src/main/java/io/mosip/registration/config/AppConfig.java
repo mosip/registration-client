@@ -58,7 +58,7 @@ import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderIm
 		"io.mosip.kernel.idobjectvalidator.impl", "io.mosip.kernel.biosdk.provider.impl",
 		"io.mosip.kernel.biosdk.provider.factory", "io.mosip.commons.packet",
 		"io.mosip.registration.api.config" })
-@PropertySource(value = { "classpath:spring.properties" })
+@PropertySource(value = { "classpath:spring.properties", "classpath:props/mosip-application.properties" })
 @ImportAutoConfiguration(RefreshAutoConfiguration.class)
 @EnableConfigurationProperties
 @EnableRetry

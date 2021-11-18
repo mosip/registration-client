@@ -90,6 +90,7 @@ public class RegistrationApprovalServiceTest {
 		regobject.setCrBy("Mosip123");
 		regobject.setCrDtime(time);
 		regobject.setAckFilename("file1");
+		regobject.setHasBwords(false);
 
 		regobject.setUserdetail(regUserDetail);
 		details.add(regobject);

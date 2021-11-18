@@ -1,5 +1,6 @@
 package io.mosip.registration.controller.vo;
 
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.image.Image;
 
@@ -17,6 +18,7 @@ public class RegistrationApprovalVO {
 	private SimpleStringProperty acknowledgementFormPath;
 	private SimpleStringProperty operatorId;
 	private Image statusComment;
+	private SimpleBooleanProperty hasBwords;
 
 	/**
 	 * Instantiates a new registration approval VO.
@@ -25,7 +27,7 @@ public class RegistrationApprovalVO {
 	 * @param acknowledgementFormPath the acknowledgement form path
 	 * @param statusComment           the status comment
 	 */
-	public RegistrationApprovalVO(String slno, String id, String packetId, String date, String acknowledgementFormPath, String operatorId, Image statusComment) {
+	public RegistrationApprovalVO(String slno, String id, String packetId, String date, String acknowledgementFormPath, String operatorId, Image statusComment, boolean hasBwords) {
 		super();
 		this.slno = new SimpleStringProperty(slno);
 		this.id = new SimpleStringProperty(id);
@@ -34,6 +36,7 @@ public class RegistrationApprovalVO {
 		this.acknowledgementFormPath = new SimpleStringProperty(acknowledgementFormPath);
 		this.operatorId = new SimpleStringProperty(operatorId);
 		this.statusComment = statusComment;
+		this.hasBwords = new SimpleBooleanProperty(hasBwords);
 	}
 
 	/**
@@ -88,5 +91,9 @@ public class RegistrationApprovalVO {
 	
 	public String getOperatorId() {
 		return operatorId.get();
+	}
+	
+	public boolean getHasBwords() {
+		return hasBwords.get();
 	}
 }

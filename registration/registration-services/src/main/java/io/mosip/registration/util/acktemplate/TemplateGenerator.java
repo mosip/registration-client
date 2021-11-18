@@ -233,7 +233,7 @@ public class TemplateGenerator extends BaseService {
 			bio_data.put(RegistrationConstants.TEMPLATE_LEFT_EYE, (biometricsDto.getAttributeISO() != null) ?
 					RegistrationConstants.TEMPLATE_RIGHT_MARK : RegistrationConstants.TEMPLATE_CROSS_MARK);
 			setBiometricImage(bio_data, RegistrationConstants.TEMPLATE_CAPTURED_LEFT_EYE,
-					isPrevTemplate ? null : RegistrationConstants.TEMPLATE_EYE_IMAGE_PATH,
+					isPrevTemplate ? crossImagePath : RegistrationConstants.TEMPLATE_EYE_IMAGE_PATH,
 					isPrevTemplate ? getImageFromISO(Modality.IRIS_DOUBLE, Arrays.asList(biometricsDto)).get(0) : null);
 		}
 
@@ -244,7 +244,7 @@ public class TemplateGenerator extends BaseService {
 			bio_data.put(RegistrationConstants.TEMPLATE_RIGHT_EYE, (biometricsDto.getAttributeISO() != null) ?
 					RegistrationConstants.TEMPLATE_RIGHT_MARK : RegistrationConstants.TEMPLATE_CROSS_MARK);
 			setBiometricImage(bio_data, RegistrationConstants.TEMPLATE_CAPTURED_RIGHT_EYE,
-					isPrevTemplate ? null : RegistrationConstants.TEMPLATE_EYE_IMAGE_PATH,
+					isPrevTemplate ? crossImagePath : RegistrationConstants.TEMPLATE_EYE_IMAGE_PATH,
 					isPrevTemplate ? getImageFromISO(Modality.IRIS_DOUBLE, Arrays.asList(biometricsDto)).get(1) : null);
 		}
 

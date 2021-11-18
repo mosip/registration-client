@@ -81,7 +81,7 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	 */
 	List<Registration> findByClientStatusCodeInOrderByUpdDtimesDesc(List<String> statusCodes);
 	
-	List<Registration> findByClientStatusCodeOrderByCrDtimeAsc(String statusCode, Pageable pageable);
+	List<Registration> findByClientStatusCodeInOrderByCrDtimeAsc(List<String> statusCodes, Pageable pageable);
 	
 	/**
 	 * To fetch the records for Packet Upload.

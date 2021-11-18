@@ -31,6 +31,7 @@ import io.mosip.kernel.logger.logback.util.MetricTag;
 import io.mosip.registration.context.ApplicationContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -98,6 +99,9 @@ public class SoftwareUpdateHandler extends BaseService {
 
 	@Autowired
 	private GlobalParamService globalParamService;
+
+	@Autowired
+	private Environment environment;
 
 
 	/**
@@ -764,7 +768,8 @@ public class SoftwareUpdateHandler extends BaseService {
 	}
 
 	private String getURL(String urlPostFix) {
-		String url = String.format(urlPostFix, ApplicationContext.getUpgradeServerURL());
+		String upgradeServerURL = environment.getProperty("client.upgrade.server.url", "https://${mosip.hostname}");
+		String url = String.format(urlPostFix, upgradeServerURL);
 		url = serviceDelegateUtil.prepareURLByHostName(url);
 		LOGGER.info("Upgrade server : {}", url);
 		return url;

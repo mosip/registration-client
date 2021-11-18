@@ -54,8 +54,6 @@ public class RegistrationAppHealthCheckUtil {
 
 	/** The operating system. */
 	private static OperatingSystem operatingSystem;
-	
-	public static final String mosipHostNamePlaceHolder = "${mosip.hostname}";
 
 
 	static {
