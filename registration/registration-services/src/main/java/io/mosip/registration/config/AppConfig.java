@@ -2,6 +2,8 @@ package io.mosip.registration.config;
 
 import javax.sql.DataSource;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -73,13 +75,16 @@ public class AppConfig {
 	}
 
 	@Bean
-	public RestTemplate getRestTemplate() {
+	public RestTemplate restTemplate() {
 		return new RestTemplate();
 	}
 
 	@Bean
-	public ObjectMapper getObjectMapper() {
-		return new ObjectMapper();
+	public ObjectMapper mapper() {
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+		return mapper;
 	}
 
 	@Bean
