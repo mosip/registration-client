@@ -123,9 +123,9 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 				RegistrationConstants.PACKET_STATUS_UPLOAD, RegistrationConstants.SERVER_STATUS_RESEND);
 		packetsToBeSynched.forEach(reg -> {
 			if (reg.getServerStatusCode() == null
-					|| (reg.getClientStatusTimestamp() != null && reg.getServerStatusTimestamp() != null
+					|| (reg.getClientStatusTimestamp() != null
 					&& !(RegistrationConstants.SERVER_STATUS_RESEND.equalsIgnoreCase(reg.getServerStatusCode())
-					&& reg.getClientStatusTimestamp().after(reg.getServerStatusTimestamp())))) {
+					&& (reg.getServerStatusTimestamp() != null && reg.getClientStatusTimestamp().after(reg.getServerStatusTimestamp()))))) {
 				idsToBeSynched.add(preparePacketStatusDto(reg));
 			}
 		});

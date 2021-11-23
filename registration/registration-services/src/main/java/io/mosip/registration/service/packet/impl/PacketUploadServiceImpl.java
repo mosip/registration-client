@@ -180,6 +180,10 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 			packetStatusDTO.setPacketServerStatus(status);
 		} catch (RegBaseCheckedException exception) {
 			LOGGER.error("Error while pushing packets to the server", exception);
+			if (exception.getMessage() != null && exception.getMessage().contains(" --> ") && exception.getMessage().split(" --> ").length > 1) {
+				String errorMessage = exception.getMessage().split(" --> ")[1];
+				packetStatusDTO.setPacketServerStatus(errorMessage);
+			}
 			if(exception.getMessage().toLowerCase().contains(RegistrationConstants.PACKET_DUPLICATE)) {
 				packetStatusDTO.setPacketClientStatus(RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode());
 				packetStatusDTO.setUploadStatus(RegistrationClientStatusCode.UPLOAD_SUCCESS_STATUS.getCode());
