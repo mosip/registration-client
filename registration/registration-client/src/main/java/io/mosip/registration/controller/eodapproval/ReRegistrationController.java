@@ -153,6 +153,9 @@ public class ReRegistrationController extends BaseController implements Initiali
 		LOGGER.info("REGISTRATION - PAGE_LOADING - RE_REGISTRATION_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 				"Page loading has been started");
 
+		SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+				RegistrationConstants.ENABLE);
+		
 		setImage(informedImageView	, RegistrationConstants.INFORMED_IMG);
 		setImage(cantInformImageView	, RegistrationConstants.CANT_INFORM_IMG);
 		setImage(authenticateImageView	, RegistrationConstants.AUTHENTICATE_IMG);
@@ -263,6 +266,9 @@ public class ReRegistrationController extends BaseController implements Initiali
 	 * This method will call on click of Informed Button
 	 */
 	public void informedToUser() {
+		SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+				RegistrationConstants.DISABLE);
+		
 		authenticateBtn.setDisable(false);
 		reRegisterStatusMap.put(table.getSelectionModel().getSelectedItem().getPacketId(), "informed");
 		
@@ -288,6 +294,9 @@ public class ReRegistrationController extends BaseController implements Initiali
 	 * This method will call on click of Not Informed Button
 	 */
 	public void notInformedToUser() {
+		SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+				RegistrationConstants.DISABLE);
+		
 		authenticateBtn.setDisable(false);
 		reRegisterStatusMap.put(table.getSelectionModel().getSelectedItem().getPacketId(), "notinformed");
 
@@ -319,6 +328,8 @@ public class ReRegistrationController extends BaseController implements Initiali
 			showAuthenticatePage(primarystage);
 			eodAuthenticationController.init(this, ProcessNames.EOD.getType());
 
+			SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+					RegistrationConstants.ENABLE);
 		} catch (IOException ioException) {
 			LOGGER.error("RE_REGISTRATION_CONTROLLER - AUTHENTICATE_USER_FAILED", APPLICATION_NAME, APPLICATION_ID,
 					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
