@@ -682,7 +682,7 @@ public class GenericController extends BaseController {
 				result.get().getStyleClass().add(TAB_LABEL_ERROR_CLASS);
 				break;
 			}
-			else
+			else if (result.isPresent())
 				result.get().getStyleClass().remove(TAB_LABEL_ERROR_CLASS);
 		}
 		return errorScreen;
