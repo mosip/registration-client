@@ -13,7 +13,6 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.kernel.logger.logback.impl.LoggerImpl;
-import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderImpl;
 import io.mosip.registration.config.AppConfig;
 
 public class AppConfigTest {
@@ -26,12 +25,12 @@ public class AppConfigTest {
 
 	@Test
 	public void getRestTemplateTest() {
-		assertEquals(appConfig.getRestTemplate().getClass(), RestTemplate.class);
+		assertEquals(appConfig.restTemplate().getClass(), RestTemplate.class);
 	}
 
 	@Test
 	public void getObjectMapper() {
-		assertEquals(appConfig.getObjectMapper().getClass(), ObjectMapper.class);
+		assertEquals(appConfig.mapper().getClass(), ObjectMapper.class);
 	}
 
 	@Test

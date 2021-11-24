@@ -1,52 +1,72 @@
 package io.mosip.registration.test.config;
 
 import java.io.InputStream;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Map;
 import java.util.Properties;
+import java.util.WeakHashMap;
 
+import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
+import io.mosip.registration.config.DaoConfig;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.FilterType;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.*;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.orm.jpa.JpaDialect;
+import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.Database;
+import org.springframework.orm.jpa.vendor.HibernateJpaDialect;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 
 import io.mosip.kernel.dataaccess.hibernate.config.HibernateDaoConfig;
 import io.mosip.registration.context.ApplicationContext;
+import org.springframework.transaction.PlatformTransactionManager;
 
 
 @Configuration
 @ComponentScan(excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = {
-		"io.mosip.kernel.idobjectvalidator.impl.IdObjectCompositeValidator",
-		"io.mosip.kernel.idobjectvalidator.impl.IdObjectMasterDataValidator",
-		"io.mosip.kernel.packetmanager.impl.PacketDecryptorImpl",
-		 "io.mosip.kernel.packetmanager.util.IdSchemaUtils"}), basePackages = {
-				"io.mosip.registration", "io.mosip.kernel.core", 
-				"io.mosip.kernel.idvalidator", "io.mosip.kernel.ridgenerator","io.mosip.kernel.qrcode",
-				"io.mosip.kernel.core.signatureutil", "io.mosip.kernel.crypto", "io.mosip.kernel.jsonvalidator",
-				"io.mosip.kernel.idgenerator", "io.mosip.kernel.virusscanner", "io.mosip.kernel.transliteration",
-				"io.mosip.kernel.applicanttype", "io.mosip.kernel.core.pdfgenerator.spi",
-				"io.mosip.kernel.pdfgenerator.itext.impl", "io.mosip.kernel.cryptosignature",
-				"io.mosip.kernel.core.signatureutil", "io.mosip.kernel.idobjectvalidator.impl", 
-				"io.mosip.kernel.packetmanager.impl", "io.mosip.kernel.packetmanager.util", 
-				"io.mosip.kernel.biosdk.provider.factory"})
-public class TestDaoConfig extends HibernateDaoConfig {
+		".*IdObjectCompositeValidator",
+		".*IdObjectMasterDataValidator",
+		".*PacketDecryptorImpl",
+		".*IdSchemaUtils", ".*OnlinePacketCryptoServiceImpl"}),
+		basePackages = {
+		"io.mosip.registration",
+		"io.mosip.kernel.idvalidator", "io.mosip.kernel.ridgenerator", "io.mosip.kernel.qrcode",
+		"io.mosip.kernel.crypto", "io.mosip.kernel.jsonvalidator", "io.mosip.kernel.idgenerator",
+		"io.mosip.kernel.virusscanner", "io.mosip.kernel.transliteration", "io.mosip.kernel.applicanttype",
+		"io.mosip.kernel.core.pdfgenerator.spi", "io.mosip.kernel.pdfgenerator.itext.impl",
+		"io.mosip.kernel.idobjectvalidator.impl", "io.mosip.kernel.biosdk.provider.impl",
+		"io.mosip.kernel.biosdk.provider.factory", "io.mosip.commons.packet",
+		"io.mosip.registration.api.config"})
+@PropertySource(value = { "classpath:spring-test.properties", "classpath:props/mosip-application.properties" })
+public class TestDaoConfig extends DaoConfig {
 
 	
 	private static final String DRIVER_CLASS_NAME = "org.h2.Driver";
-	private static final String URL = "jdbc:h2:mem:db;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM 'classpath:initial.sql";
+	private static final String URL = "jdbc:h2:mem:db;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM 'classpath:initial.sql'";
+	private static final String GLOBAL_PARAM_PROPERTIES = "SELECT CODE, VAL FROM REG.GLOBAL_PARAM WHERE IS_ACTIVE=TRUE AND VAL IS NOT NULL";
+	private static final String KEY = "CODE";
+	private static final String VALUE = "VAL";
+	private static final String LOCAL_PREFERENCES = "SELECT NAME, VAL FROM REG.LOCAL_PREFERENCES WHERE IS_DELETED=FALSE AND CONFIG_TYPE='CONFIGURATION' AND VAL IS NOT NULL";
+	private static final String NAME = "NAME";
 
 	private static DataSource dataSource;
+	private static JdbcTemplate jdbcTemplate;
 	private static Properties keys = new Properties();
-	
+
+	@Autowired
+	private ConfigurableEnvironment environment;
 	
 	static {
 		ApplicationContext.getInstance();
@@ -54,7 +74,6 @@ public class TestDaoConfig extends HibernateDaoConfig {
 		try (InputStream keyStream = TestDaoConfig.class.getClassLoader().getResourceAsStream("spring-test.properties")) {		
 			
 			keys.load(keyStream);
-			dataSource = setupDatasource();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -64,16 +83,14 @@ public class TestDaoConfig extends HibernateDaoConfig {
 	@Override
 	@Bean(name = "dataSource")
 	public DataSource dataSource() {
-		return dataSource;
+		return setupDatasource();
 	}
 
 	
 	@Bean
-	public static JdbcTemplate jdbcTemplate() {
-		return new JdbcTemplate(dataSource);
+	public JdbcTemplate jdbcTemplate() {
+		return new JdbcTemplate(dataSource());
 	}
-
-
 	
 	@Bean
 	@Lazy(false)
@@ -94,7 +111,7 @@ public class TestDaoConfig extends HibernateDaoConfig {
 
 		HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
 		vendorAdapter.setDatabase(Database.H2);
-		vendorAdapter.setGenerateDdl(true);
+		vendorAdapter.setGenerateDdl(false);
 
 		LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
 		em.setDataSource(dataSource());
@@ -104,14 +121,35 @@ public class TestDaoConfig extends HibernateDaoConfig {
 
 		return em;
 	}
+
+	@Override
+	@Bean
+	public JpaDialect jpaDialect() {
+		return new HibernateJpaDialect();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see io.mosip.kernel.core.dao.config.BaseDaoConfig#transactionManager(javax.
+	 * persistence.EntityManagerFactory)
+	 */
+	@Override
+	@Bean
+	public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
+		JpaTransactionManager jpaTransactionManager = new JpaTransactionManager(entityManagerFactory);
+		jpaTransactionManager.setDataSource(dataSource);
+		jpaTransactionManager.setJpaDialect(jpaDialect());
+		return jpaTransactionManager;
+	}
 	
 	private Properties additionalProperties() {
 		Properties properties = new Properties();
-		properties.setProperty("hibernate.hbm2ddl.auto", "create");
+		properties.setProperty("hibernate.hbm2ddl.auto", "none");
 		properties.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
 		//properties.setProperty("hibernate.current_session_context_class", keys.getProperty("hibernate.current_session_context_class"));
 		//properties.setProperty("hibernate.jdbc.lob.non_contextual_creation", keys.getProperty("hibernate.jdbc.lob.non_contextual_creation"));
-		properties.setProperty("hibernate.show_sql", "false");
+		properties.setProperty("hibernate.show_sql", "true");
 		properties.setProperty("hibernate.format_sql", "false");
 		return properties;
 	}

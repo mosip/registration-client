@@ -616,7 +616,9 @@ public class ClientSettingSyncHelper {
 	//saves processes and subprocess as separate schema
 	private void saveProcessSpec(SchemaDto schemaDto, String jsonString) {
 		JSONObject jsonObject = new JSONObject(jsonString);
-		jsonObject.keySet().forEach( key -> {
+		Iterator<String> keys = jsonObject.keys();
+		while (keys.hasNext()) {
+			String key = keys.next();
 			if(key.toLowerCase().endsWith("process")) {
 				try {
 					ProcessSpecDto processSpecDto = MapperUtils.convertJSONStringToDto(jsonObject.get(key).toString(),
@@ -626,7 +628,7 @@ public class ClientSettingSyncHelper {
 					LOGGER.error(e.getMessage(), e);
 				}
 			}
-		});
+		}
 	}
 	
 	@Async
