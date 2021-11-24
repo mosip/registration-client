@@ -115,6 +115,9 @@ public class GlobalConfigSettingsController extends BaseController implements Se
 
 	private void setContent() {
 		try {
+			SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+					RegistrationConstants.ENABLE);
+			
 			modifiedProperties.clear();
 			if (observableList != null) {
 				observableList.clear();
@@ -197,6 +200,8 @@ public class GlobalConfigSettingsController extends BaseController implements Se
 										&& (modifiedProperties.containsKey(getTableRow().getItem().getKey()))) {
 									modifiedProperties.remove(getTableRow().getItem().getKey());
 								}
+								SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+										modifiedProperties.isEmpty() ? RegistrationConstants.ENABLE : RegistrationConstants.DISABLE);
 							});
 							setGraphic(textField);
 						} else {
