@@ -180,10 +180,9 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 			packetStatusDTO.setPacketServerStatus(status);
 		} catch (RegBaseCheckedException exception) {
 			LOGGER.error("Error while pushing packets to the server", exception);
-			if (exception.getMessage() != null && exception.getMessage().contains(" --> ") && exception.getMessage().split(" --> ").length > 1) {
-				String errorMessage = exception.getMessage().split(" --> ")[1];
-				packetStatusDTO.setPacketServerStatus(errorMessage);
-			}
+			
+			packetStatusDTO.setPacketServerStatus(exception.getErrorText());
+			
 			if(exception.getMessage().toLowerCase().contains(RegistrationConstants.PACKET_DUPLICATE)) {
 				packetStatusDTO.setPacketClientStatus(RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode());
 				packetStatusDTO.setUploadStatus(RegistrationClientStatusCode.UPLOAD_SUCCESS_STATUS.getCode());
@@ -230,9 +229,10 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 				.post(RegistrationConstants.PACKET_UPLOAD, map, RegistrationConstants.JOB_TRIGGER_POINT_USER);
 
 		if (response.get(RegistrationConstants.ERRORS) != null) {
-			throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_PACKET_UPLOAD_ERROR.getErrorCode(),
-					((List<LinkedHashMap<String, String>>) response.get(RegistrationConstants.ERRORS)).get(0)
-							.get("message"));
+			LOGGER.error("Packet upload failed {}", response.get(RegistrationConstants.ERRORS));
+			
+			LinkedHashMap<String, String> error = ((List<LinkedHashMap<String, String>>) response.get(RegistrationConstants.ERRORS)).get(0);
+			throw new RegBaseCheckedException(error.get("errorCode"), error.get("message"));
 		}
 
 		if (response.get(RegistrationConstants.RESPONSE) != null) {
