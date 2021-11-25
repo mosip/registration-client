@@ -560,7 +560,7 @@ public class ClientSettingSyncHelper {
 			return;
 
 		JSONArray jsonArray = new JSONArray(data);
-		List<DynamicField> fields = new ArrayList<DynamicField>();
+		Map<String, DynamicField> fields = new HashMap<>();
 		for(int i=0; i< jsonArray.length(); i++) {
 			DynamicFieldDto dynamicFieldDto = MapperUtils.convertJSONStringToDto(jsonArray.getJSONObject(i).toString(),
 					new TypeReference<DynamicFieldDto>() {});
@@ -572,11 +572,11 @@ public class ClientSettingSyncHelper {
 			dynamicField.setValueJson(dynamicFieldDto.getFieldVal() == null ?
 					"[]" : MapperUtils.convertObjectToJsonString(dynamicFieldDto.getFieldVal()));
 			dynamicField.setActive(dynamicFieldDto.isActive());
-			fields.add(dynamicField);
+			fields.put(dynamicFieldDto.getName()+dynamicFieldDto.getLangCode(), dynamicField);
 		}
 
 		if (!fields.isEmpty()) {
-			dynamicFieldRepository.saveAll(fields);
+			dynamicFieldRepository.saveAll(fields.values());
 		}
 	}
 
