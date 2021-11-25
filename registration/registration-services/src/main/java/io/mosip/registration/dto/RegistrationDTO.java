@@ -43,6 +43,7 @@ import lombok.NonNull;
 @Data
 public class RegistrationDTO {
 
+	private static final String APPLICANT_DOB_SUBTYPE = "dateOfBirth";
 	protected ApplicationContext applicationContext = ApplicationContext.getInstance();
 
 	private double idSchemaVersion;
@@ -51,7 +52,6 @@ public class RegistrationDTO {
 	private String appId;
 	private String packetId;
 	private String additionalInfoReqId;
-	//private String registrationCategory;
 	private String processId;
 	private FlowType flowType;
 	private RegistrationMetaDataDTO registrationMetaDataDTO;
@@ -59,12 +59,10 @@ public class RegistrationDTO {
 	private List<String> selectedLanguagesByApplicant = new ArrayList<>();
 
 	private boolean isBiometricMarkedForUpdate;
-	//private HashMap<String, Object> selectionListDTO;
 	private List<String> updatableFields;
 	private List<String> updatableFieldGroups;
 	private boolean isUpdateUINNonBiometric;
 	private boolean isNameNotUpdated;
-	//private List<String> defaultUpdatableFields;
 	private List<String> defaultUpdatableFieldGroups;
 
 	private Map<String, Object> demographics = new HashMap<>();
@@ -90,19 +88,31 @@ public class RegistrationDTO {
 	public Map<String, String> SELECTED_CODES = new HashMap<>();
 	public Map<String, BlocklistedConsentDto> BLOCKLISTED_CHECK = new HashMap<>();
 
-	public void clearRegistrationDto(){
-		demographics.clear();
-		defaultDemographics.clear();
-		documents.clear();
-		biometrics.clear();
-		biometricExceptions.clear();
+	public void clearRegistrationDto() {
+		this.AGE_GROUPS.clear();
+		this.biometrics.clear();
+		this.biometricExceptions.clear();
+		this.BIO_CAPTURES.clear();
+		this.BIO_SCORES.clear();
+		this.ATTEMPTS.clear();
+		this.SELECTED_CODES.clear();
 
-		BIO_CAPTURES.clear();
-		BIO_SCORES.clear();
-		AGE_GROUPS.clear();
-		ATTEMPTS.clear();
-		SELECTED_CODES.clear();
-		BLOCKLISTED_CHECK.clear();
+		List<String> allKeys = new ArrayList<>();
+		allKeys.addAll(demographics.keySet());
+		allKeys.addAll(defaultDemographics.keySet());
+		allKeys.addAll(documents.keySet());
+
+		String config = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.FIELDS_TO_RETAIN_ON_PRID_FETCH);
+		List<String> keysToRetain = config == null ? Collections.EMPTY_LIST : List.of(config.split(RegistrationConstants.COMMA));
+
+		allKeys.forEach( k -> {
+			if(!keysToRetain.contains(k)) {
+				this.demographics.remove(k);
+				this.defaultDemographics.remove(k);
+				this.documents.remove(k);
+				this.BLOCKLISTED_CHECK.remove(k);
+			}
+		});
 	}
 
 	public void addDemographicField(@NonNull String fieldId, String value) {
@@ -120,7 +130,7 @@ public class RegistrationDTO {
 		this.demographics.remove(fieldId);
 	}
 
-	public void setDateField(@NonNull String fieldId, String day, String month, String year, boolean computeAgeGroup) {
+	public void setDateField(@NonNull String fieldId, String day, String month, String year, String subType) {
 		if (isValidValue(day) && isValidValue(month) && isValidValue(year)) {
 			LocalDate date = LocalDate.of(Integer.valueOf(year), Integer.valueOf(month), Integer.valueOf(day));
 
@@ -135,7 +145,7 @@ public class RegistrationDTO {
 					AGE_GROUPS.put(String.format("%s_%s", fieldId, "ageGroup"), group);
 					AGE_GROUPS.put(String.format("%s_%s", fieldId, "age"), ageInYears);
 
-					if(computeAgeGroup) {
+					if(APPLICANT_DOB_SUBTYPE.equals(subType)) {
 						AGE_GROUPS.put("ageGroup", group);
 						AGE_GROUPS.put("age", ageInYears);
 					}
@@ -151,12 +161,12 @@ public class RegistrationDTO {
 		return (int) AGE_GROUPS.getOrDefault("age", null);
 	}
 
-	public void setDateField(String fieldId, String dateString, boolean computeAgeGroup) {
+	public void setDateField(String fieldId, String dateString, String subType) {
 		if (isValidValue(dateString)) {
 			LocalDate date = LocalDate.parse(dateString,
 					DateTimeFormatter.ofPattern(ApplicationContext.getDateFormat()));
 			setDateField(fieldId, String.valueOf(date.getDayOfMonth()), String.valueOf(date.getMonthValue()),
-					String.valueOf(date.getYear()), computeAgeGroup);
+					String.valueOf(date.getYear()), subType);
 		}
 	}
 

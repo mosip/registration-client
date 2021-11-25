@@ -97,8 +97,12 @@ public class ButtonFxControl extends FxControl {
 
 		Button selectedButton = getSelectedButton(primaryHbox);
 
+		if(selectedButton == null) {
+			return;
+		}
+
 		String code = selectedButton.getId().replaceAll(uiFieldDTO.getId(), "");
-		
+
 		switch (this.uiFieldDTO.getType()) {
 		case RegistrationConstants.SIMPLE_TYPE:
 			List<SimpleDto> values = new ArrayList<SimpleDto>();
@@ -122,7 +126,7 @@ public class ButtonFxControl extends FxControl {
 				getRegistrationDTo().addDemographicField(uiFieldDTO.getId(), result.get().getName());
 				getRegistrationDTo().SELECTED_CODES.put(uiFieldDTO.getId()+"Code", code);
 			}
-	}
+		}
 	}
 
 	private Button getSelectedButton(HBox hBox) {

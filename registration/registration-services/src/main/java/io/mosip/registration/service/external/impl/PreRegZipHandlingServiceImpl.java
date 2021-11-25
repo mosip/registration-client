@@ -30,6 +30,7 @@ import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.crypto.spi.CryptoCoreSpec;
 import io.mosip.kernel.keygenerator.bouncycastle.KeyGenerator;
 import io.mosip.registration.service.BaseService;
+import io.mosip.registration.service.sync.MasterSyncService;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
@@ -67,7 +68,9 @@ import io.mosip.registration.service.external.PreRegZipHandlingService;
 @Service
 public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZipHandlingService {
 
-	private static final String DOBSubType = "dateOfBirth";
+	private static final Logger LOGGER = AppConfig.getLogger(PreRegZipHandlingServiceImpl.class);
+	private static final String CONTROLTYPE_DOB = "date";
+	private static final String CONTROLTYPE_DOB_AGE = "ageDate";
 
 	@Autowired
 	private DocumentTypeDAO documentTypeDAO;
@@ -88,8 +91,6 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 	private CryptoCoreSpec<byte[], byte[], SecretKey, PublicKey, PrivateKey, String> cryptoCore;
 
 
-	private static final Logger LOGGER = AppConfig.getLogger(PreRegZipHandlingServiceImpl.class);
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -106,7 +107,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 				while ((zipEntry = zipInputStream.getNextEntry()) != null) {
 					if (zipEntry.getName().equalsIgnoreCase("ID.json")) {
 						bufferedReader = new BufferedReader(new InputStreamReader(zipInputStream, StandardCharsets.UTF_8));
-						parseDemographicJson(bufferedReader, zipEntry);						
+						parseDemographicJson(bufferedReader);
 					}	
 				}
 			}finally {
@@ -164,13 +165,11 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 	 * 
 	 * @param bufferedReader
 	 *            - reader for text file
-	 * @param zipEntry
-	 *            - a file entry in zip
 	 * @throws RegBaseCheckedException
 	 *             - holds the cheked exceptions
 	 */
 	@SuppressWarnings("unchecked")
-	private void parseDemographicJson(BufferedReader bufferedReader, ZipEntry zipEntry) throws RegBaseCheckedException {
+	private void parseDemographicJson(BufferedReader bufferedReader) throws RegBaseCheckedException {
 
 		try {
 			
@@ -184,8 +183,8 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 				JSONObject jsonObject = (JSONObject) new JSONObject(jsonString.toString()).get("identity");
 				//Always use latest schema, ignoring missing / removed fields
 				RegistrationDTO registrationDTO = getRegistrationDTOFromSession();
-				getRegistrationDTOFromSession().clearRegistrationDto();
 				List<UiFieldDTO> fieldList = identitySchemaService.getAllFieldSpec(registrationDTO.getProcessId(), registrationDTO.getIdSchemaVersion());
+				getRegistrationDTOFromSession().clearRegistrationDto();
 
 				for(UiFieldDTO field : fieldList) {
 					if(field.getId().equalsIgnoreCase("IDSchemaVersion"))
@@ -217,11 +216,10 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 					default:
 						Object fieldValue = getValueFromJson(field.getId(), field.getType(), jsonObject);
 						if(fieldValue != null) {
-							switch (field.getControlType().toLowerCase()) {
-								case "agedate":
-								case "date":
-									getRegistrationDTOFromSession().setDateField(field.getId(), (String)fieldValue,
-											DOBSubType.equalsIgnoreCase(field.getSubType()));
+							switch (field.getControlType()) {
+								case CONTROLTYPE_DOB_AGE:
+								case CONTROLTYPE_DOB:
+									getRegistrationDTOFromSession().setDateField(field.getId(), (String)fieldValue, field.getSubType());
 									break;
 								default:
 									getRegistrationDTOFromSession().getDemographics().put(field.getId(), fieldValue);

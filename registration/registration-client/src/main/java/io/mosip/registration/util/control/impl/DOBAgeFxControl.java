@@ -151,8 +151,7 @@ public class DOBAgeFxControl extends FxControl {
 		TextField yyyy = (TextField) getField(
 				uiFieldDTO.getId() + RegistrationConstants.YYYY + RegistrationConstants.TEXT_FIELD);
 
-		getRegistrationDTo().setDateField(uiFieldDTO.getId(), dd.getText(), mm.getText(), yyyy.getText(),
-				DOBSubType.equalsIgnoreCase(uiFieldDTO.getSubType()));
+		getRegistrationDTo().setDateField(uiFieldDTO.getId(), dd.getText(), mm.getText(), yyyy.getText(), uiFieldDTO.getSubType());
 	}
 
 	@Override

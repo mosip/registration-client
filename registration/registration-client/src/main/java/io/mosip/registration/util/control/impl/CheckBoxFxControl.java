@@ -128,6 +128,7 @@ public class CheckBoxFxControl extends FxControl {
 	public void setListener(Node node) {
 		CheckBox checkBox = (CheckBox) node;
 		checkBox.selectedProperty().addListener((options, oldValue, newValue) -> {
+			getRegistrationDTo().addDemographicField(uiFieldDTO.getId(), newValue ? "Y" : "N");
 			// handling other handlers
 			demographicChangeActionHandler.actionHandle((Pane) getNode(), node.getId(),
 					uiFieldDTO.getChangeAction());
