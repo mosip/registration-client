@@ -509,6 +509,7 @@ public class GenericBiometricsController extends BaseController {
 					if (!isStreamStarted) {
 						LOGGER.info("URL Stream was null at : {} ", System.currentTimeMillis());
 						deviceSpecificationFactory.init();
+						streamer.setUrlStream(null);
 						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
 						return;
 					}
@@ -516,12 +517,12 @@ public class GenericBiometricsController extends BaseController {
 					streamer.startStream(urlStream, biometricImage, biometricImage);
 
 				} catch (RegBaseCheckedException | IOException exception) {
-
 					LOGGER.error("Error while streaming : " + currentModality,  exception);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
 
 					// Enable Auto-Logout
 					SessionContext.setAutoLogout(true);
+					streamer.setUrlStream(null);
 				}
 			}
 		});
@@ -530,6 +531,7 @@ public class GenericBiometricsController extends BaseController {
 			@Override
 			public void handle(WorkerStateEvent t) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
+				streamer.setUrlStream(null);
 			}
 		});
 
@@ -590,9 +592,6 @@ public class GenericBiometricsController extends BaseController {
 			public void handle(WorkerStateEvent t) {
 				LOGGER.debug("RCapture task failed");
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
-
-				LOGGER.debug("closing popup stage");
-				//scanPopUpViewController.getPopupStage().close();
 
 				LOGGER.debug("Enabling LogOut");
 				// Enable Auto-Logout
@@ -664,9 +663,10 @@ public class GenericBiometricsController extends BaseController {
 				} catch (Exception e) {
 					LOGGER.error("Exception while getting the scanned biometrics for user registration",e);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
+				} finally {
+					SessionContext.setAutoLogout(true);	// Enable Auto-Logout
+					streamer.setUrlStream(null);
 				}
-				SessionContext.setAutoLogout(true);	// Enable Auto-Logout
-				streamer.setUrlStream(null);
 			}
 		});
 		LOGGER.info("Scan process ended for capturing biometrics");
