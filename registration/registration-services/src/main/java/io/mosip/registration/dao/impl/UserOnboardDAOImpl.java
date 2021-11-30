@@ -11,6 +11,9 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import io.mosip.registration.entity.UserMachineMapping;
+import io.mosip.registration.entity.id.UserMachineMappingID;
+import io.mosip.registration.repositories.UserMachineMappingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -30,15 +33,11 @@ import io.mosip.registration.dto.biometric.FingerprintDetailsDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.entity.UserBiometric;
 import io.mosip.registration.entity.UserDetail;
-import io.mosip.registration.entity.UserMachineMapping;
 import io.mosip.registration.entity.id.UserBiometricId;
-import io.mosip.registration.entity.id.UserMachineMappingID;
 import io.mosip.registration.exception.RegBaseUncheckedException;
-import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.repositories.UserBiometricRepository;
 import io.mosip.registration.repositories.UserDetailRepository;
-import io.mosip.registration.repositories.UserMachineMappingRepository;
 
 /**
  * The implementation class of {@link UserOnboardDAO}
@@ -53,12 +52,6 @@ public class UserOnboardDAOImpl implements UserOnboardDAO {
 
 	@Autowired
 	private UserBiometricRepository userBiometricRepository;
-
-	/**
-	 * centerMachineRepository instance creation using autowired annotation
-	 */
-	@Autowired
-	private CenterMachineRepository centerMachineRepository;
 
 	/**
 	 * machineMasterRepository instance creation using autowired annotation

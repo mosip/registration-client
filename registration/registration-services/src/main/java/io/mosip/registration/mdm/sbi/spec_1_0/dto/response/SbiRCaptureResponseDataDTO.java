@@ -2,6 +2,7 @@ package io.mosip.registration.mdm.sbi.spec_1_0.dto.response;
 
 import java.util.Base64;
 
+import io.mosip.kernel.core.util.CryptoUtil;
 import lombok.Data;
 
 @Data
@@ -22,7 +23,7 @@ public class SbiRCaptureResponseDataDTO {
 	private String qualityScore;
 
 	public byte[] getDecodedBioValue() {
-		return Base64.getUrlDecoder().decode(bioValue);
+		return CryptoUtil.decodeURLSafeBase64(bioValue);
 	}
 
 }

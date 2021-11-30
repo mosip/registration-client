@@ -1,6 +1,5 @@
 package io.mosip.registration.service.sync.impl;
 
-import java.io.File;
 import java.util.*;
 
 import io.micrometer.core.annotation.Timed;
@@ -12,8 +11,6 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
@@ -31,7 +28,6 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.sync.PolicySyncService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 
 import javax.annotation.PostConstruct;
 
@@ -97,7 +93,7 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 		proceedWithMasterAndKeySync(null);
 
 		String stationId = getStationId();
-		String centerId = stationId != null ? getCenterId(stationId) : null;
+		String centerId = stationId != null ? getCenterId() : null;
 		validate(centerId, stationId);
 		String centerMachineId = centerId.concat(RegistrationConstants.UNDER_SCORE).concat(stationId);
 
@@ -188,7 +184,7 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 		ResponseDTO responseDTO = new ResponseDTO();
 		try {
 			String stationId = getStationId();
-			String centerId = stationId != null ? getCenterId(stationId) : null;
+			String centerId = stationId != null ? getCenterId() : null;
 			validate(centerId, stationId);
 			String centerMachineId = centerId.concat(RegistrationConstants.UNDER_SCORE).concat(stationId);
 

@@ -23,6 +23,7 @@ public class UserDetailDto extends MasterSyncBaseDto {
 	private List<String> roles;
 	private Boolean isActive;
 	private String salt;
+	private String regCenterId;
 
 	/**
 	 * @return the salt
@@ -150,4 +151,11 @@ public class UserDetailDto extends MasterSyncBaseDto {
 		this.roles = roles;
 	}
 
+	public String getRegCenterId() {
+		return regCenterId;
+	}
+
+	public void setRegCenterId(String regCenterId) {
+		this.regCenterId = regCenterId;
+	}
 }

@@ -135,7 +135,7 @@ public class SessionContext {
 	 * @return boolean - Returns whether the Session context is getting created or
 	 *         not.
 	 * @throws IOException
-	 * @throws RegBaseCheckedException
+	 * @thuserDtlsrows RegBaseCheckedException
 	 */
 	public static boolean create(UserDTO userDTO, String loginMethod, boolean isInitialSetUp,
 			boolean isUserNewToMachine, AuthenticationValidatorDTO authenticationValidatorDTO)
@@ -510,7 +510,7 @@ public class SessionContext {
 		LoginService loginService = applicationContext.getBean(LoginService.class);
 
 		userContext.setRegistrationCenterDetailDTO(
-				loginService.getRegistrationCenterDetails(userDTO.getRegCenterUser().getRegcntrId(),
+				loginService.getRegistrationCenterDetails(userDTO.getRegCenterId(),
 						io.mosip.registration.context.ApplicationContext.applicationLanguage()));
 		userContext.setAuthorizationDTO(loginService.getScreenAuthorizationDetails(roleList));
 		userContext.setUserMap(new HashMap<String, Object>());
@@ -532,7 +532,7 @@ public class SessionContext {
 
 		/* user onboard skipped for the user with role Default */
 		if ((machineList.contains(RegistrationSystemPropertiesChecker.getMachineId().toLowerCase())
-				&& centerList.contains(userDTO.getRegCenterUser().getRegcntrId()))
+				&& centerList.contains(userDTO.getRegCenterId()))
 				|| Role.isDefaultUser(SessionContext.userContext().getRoles())) {
 			sessionContext.mapObject.put(RegistrationConstants.ONBOARD_USER, false);
 			sessionContext.mapObject.put(RegistrationConstants.ONBOARD_USER_UPDATE, false);

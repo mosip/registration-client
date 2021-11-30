@@ -27,7 +27,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.crypto.spi.CryptoCoreSpec;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.keygenerator.bouncycastle.KeyGenerator;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.sync.MasterSyncService;
@@ -287,7 +289,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 
 		PreRegistrationDTO preRegistrationDTO = new PreRegistrationDTO();
 		preRegistrationDTO.setPacketPath(filePath);
-		preRegistrationDTO.setSymmetricKey(Base64.getEncoder().encodeToString(symmetricKey.getEncoded()));
+		preRegistrationDTO.setSymmetricKey(CryptoUtil.encodeToURLSafeBase64(symmetricKey.getEncoded()));
 		preRegistrationDTO.setEncryptedPacket(encryptedData);
 		preRegistrationDTO.setPreRegId(preRegistrationId);
 		return preRegistrationDTO;
@@ -334,7 +336,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 	 */
 	@Override
 	public byte[] decryptPreRegPacket(String symmetricKey, byte[] encryptedPacket) {
-		byte[] secret = Base64.getDecoder().decode(symmetricKey);
+		byte[] secret = ClientCryptoUtils.decodeBase64Data(symmetricKey);
 		SecretKey secretKey = new SecretKeySpec(secret, 0 , secret.length, "AES");
 		return cryptoCore.symmetricDecrypt(secretKey, encryptedPacket, null);
 	}

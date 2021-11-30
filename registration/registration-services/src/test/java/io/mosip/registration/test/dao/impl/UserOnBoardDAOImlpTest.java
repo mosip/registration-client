@@ -8,17 +8,18 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import io.mosip.registration.dao.RegistrationCenterDAO;
+import io.mosip.registration.entity.RegistrationCenter;
+import io.mosip.registration.entity.UserMachineMapping;
+import io.mosip.registration.entity.id.RegistartionCenterId;
+import io.mosip.registration.repositories.RegistrationCenterRepository;
+import io.mosip.registration.repositories.UserMachineMappingRepository;
 import io.mosip.registration.service.BaseService;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,18 +43,12 @@ import io.mosip.registration.dto.biometric.BiometricInfoDTO;
 import io.mosip.registration.dto.biometric.FaceDetailsDTO;
 import io.mosip.registration.dto.biometric.FingerprintDetailsDTO;
 import io.mosip.registration.dto.biometric.IrisDetailsDTO;
-import io.mosip.registration.entity.CenterMachine;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.UserBiometric;
-import io.mosip.registration.entity.UserMachineMapping;
-import io.mosip.registration.entity.id.CenterMachineId;
-import io.mosip.registration.entity.id.RegMachineSpecId;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
-import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.repositories.UserBiometricRepository;
-import io.mosip.registration.repositories.UserMachineMappingRepository;
 
 /**
  * @author Sreekar Chukka
@@ -75,9 +70,6 @@ public class UserOnBoardDAOImlpTest {
 	private UserBiometricRepository userBiometricRepository;
 
 	@Mock
-	private CenterMachineRepository centerMachineRepository;
-
-	@Mock
 	private MachineMasterRepository machineMasterRepository;
 
 	@InjectMocks
@@ -88,6 +80,9 @@ public class UserOnBoardDAOImlpTest {
 
 	@Mock
 	private RegistrationCenterDAO registrationCenterDAO;
+
+	@Mock
+	private RegistrationCenterRepository registrationCenterRepository;
 
 	@Before
 	public void initialize() throws Exception {
@@ -365,25 +360,31 @@ public class UserOnBoardDAOImlpTest {
 
 	@Test(expected = RegBaseUncheckedException.class)
 	public void getCenterIDRunExceptionTest() throws RegBaseCheckedException {
-		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString()))
+		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString()))
 				.thenThrow(new RegBaseUncheckedException());
-		baseService.getCenterId("StationID1947");
+		baseService.getCenterId();
 	}
 
 	@Test
 	public void getCenterID() throws RegBaseCheckedException {
-		CenterMachineId centerMachineId = new CenterMachineId();
-		centerMachineId.setMachineId("StationID1947");
-		centerMachineId.setRegCenterId("CenterID1947");
+		MachineMaster machineMaster = new MachineMaster();
+		machineMaster.setId("StationID1947");
+		machineMaster.setRegCenterId("CenterID1947");
+		machineMaster.setIsActive(true);
 
-		CenterMachine centerMachine = new CenterMachine();
-		centerMachine.setCenterMachineId(centerMachineId);
+		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString()))
+				.thenReturn(machineMaster);
+		Mockito.when(registrationCenterDAO.isMachineCenterActive()).thenReturn(true);
 
-		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString()))
-				.thenReturn(centerMachine);
-		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
-		String stationId = baseService.getCenterId("StationID1947");
-		Assert.assertSame("CenterID1947", stationId);
+		RegistrationCenter registrationCenter = new RegistrationCenter();
+		registrationCenter.setRegistartionCenterId(new RegistartionCenterId());
+		registrationCenter.getRegistartionCenterId().setId(machineMaster.getRegCenterId());
+		registrationCenter.getRegistartionCenterId().setLangCode("eng");
+		Optional<RegistrationCenter> mockedCenter = Optional.of(registrationCenter);
+		Mockito.when(registrationCenterRepository.findByIsActiveTrueAndRegistartionCenterIdIdAndRegistartionCenterIdLangCode(Mockito.anyString(),
+				Mockito.anyString())).thenReturn(mockedCenter);
+
+		Assert.assertSame("CenterID1947", baseService.getCenterId());
 	}
 
 	@Test
