@@ -747,8 +747,9 @@ public class RegistrationConstants {
 	public static final String PACKET_STATUS_CODE_REREGISTER = "REREGISTER";
 	public static final String RE_REGISTER_STATUS_COMEMNTS = "Re-Register";
 	public static final String PACKET_STATUS_CODE_REJECTED = "REJECTED";
+	public static final String PACKET_STATUS_CODE_PROCESSED_2 = "Packet has reached Packet Receiver";
 	public static final List<String> PACKET_STATUS_CODES_FOR_REMAPDELETE = Arrays.asList(PACKET_STATUS_CODE_REREGISTER,
-			PACKET_STATUS_CODE_PROCESSING, PACKET_STATUS_CODE_PROCESSED, PACKET_STATUS_CODE_REJECTED);
+			PACKET_STATUS_CODE_PROCESSING, PACKET_STATUS_CODE_PROCESSED, PACKET_STATUS_CODE_REJECTED, PACKET_STATUS_CODE_PROCESSED_2);
 	public static final String MACHINE_CENTER_REMAP_FLAG = "mosip.registration.machinecenterchanged";
 	public static final String MACHINE_CENTER_REMAP_MSG = "Machine Center Remap process started";
 	public static final String PACKET_STATUS_READER_ID = "mosip.registration.status";
