@@ -31,9 +31,8 @@ public interface RegistrationCenterDAO {
 
 	/**
 	 * checks if center is active for the provided machine id
-	 * @param machineId
 	 * @return
 	 */
-	boolean isMachineCenterActive(String machineId);
+	boolean isMachineCenterActive();
 
 }

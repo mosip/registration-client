@@ -3,6 +3,7 @@ package io.mosip.registration.mdm.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.signature.constant.SignatureConstant;
 import io.mosip.kernel.signature.dto.JWTSignatureVerifyRequestDto;
@@ -97,7 +98,7 @@ public class MosipDeviceSpecificationHelper {
 	public DeviceInfo getDeviceInfoDecoded(String deviceInfo, Class<?> classType) {
 		try {
 			validateJWTResponse(deviceInfo, deviceInfoTrustDomain);
-			String result = new String(Base64.getUrlDecoder().decode(getPayLoad(deviceInfo)));
+			String result = new String(CryptoUtil.decodeURLSafeBase64(getPayLoad(deviceInfo)));
 			if(classType.getName().equals("io.mosip.registration.mdm.sbi.spec_1_0.service.impl.MosipDeviceSpecification_SBI_1_0_ProviderImpl")) {
 				return mapper.readValue(result, MdmSbiDeviceInfoWrapper.class);
 			} else {
@@ -122,7 +123,7 @@ public class MosipDeviceSpecificationHelper {
 				throw new DeviceException(MDMError.MDM_INVALID_SIGNATURE.getErrorCode(), MDMError.MDM_INVALID_SIGNATURE.getErrorMessage());
 		
 		if (jwtSignatureVerifyRequestDto.getValidateTrust() && !jwtSignatureVerifyResponseDto.getTrustValid().equals(SignatureConstant.TRUST_VALID)) {
-		        throw new DeviceException(MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorCode(), MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorMessage());
+		      throw new DeviceException(MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorCode(), MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorMessage());
 		}
 	}
 

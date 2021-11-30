@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import io.micrometer.core.annotation.Timed;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -373,7 +374,7 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 
 	private Map<String, Object> getParams(String encodedCipher) {
 		try {
-			byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(encodedCipher));
+			byte[] data = clientCryptoFacade.decrypt(ClientCryptoUtils.decodeBase64Data(encodedCipher));
 			Map<String, Object> paramMap = objectMapper.readValue(data, HashMap.class);
 			return paramMap;
 		} catch (IOException e) {

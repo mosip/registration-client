@@ -72,6 +72,10 @@ public class MachineMaster extends RegistrationCommonFields implements Serializa
 	@Column(name = "key_index")
 	private String keyIndex;
 
+	@Column(name = "reg_cntr_id")
+	private String regCenterId;
+
+
 	public String getId() {
 		return id;
 	}
@@ -178,6 +182,14 @@ public class MachineMaster extends RegistrationCommonFields implements Serializa
 
 	public void setKeyIndex(String keyIndex) {
 		this.keyIndex = keyIndex;
+	}
+
+	public String getRegCenterId() {
+		return regCenterId;
+	}
+
+	public void setRegCenterId(String regCenterId) {
+		this.regCenterId = regCenterId;
 	}
 
 }

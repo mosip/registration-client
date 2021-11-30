@@ -50,7 +50,6 @@ public class Initialization extends Application {
 			setPrimaryStage(primaryStage);
 			LoginController loginController = applicationContext.getBean(LoginController.class);
 			loginController.loadInitialScreen(primaryStage);
-			//loginController.loadUIElementsFromSchema();
 			SessionContext.setApplicationContext(applicationContext);
 
 			LOGGER.info("REGISTRATION - LOGIN SCREEN INITILIZATION - REGISTRATIONAPPINITILIZATION", APPLICATION_NAME,
@@ -95,11 +94,6 @@ public class Initialization extends Application {
 	 * @return Spring Application context 
 	 */
 	public static ApplicationContext createApplicationContext() {
-
-		if(System.getenv(RegistrationConstants.MOSIP_HOSTNAME)!=null) {
-			System.setProperty(RegistrationConstants.MOSIP_HOSTNAME, System.getenv(RegistrationConstants.MOSIP_HOSTNAME));
-		}
-		
 		return new AnnotationConfigApplicationContext(AppConfig.class);
 	}
 

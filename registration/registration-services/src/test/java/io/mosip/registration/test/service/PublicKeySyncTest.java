@@ -106,10 +106,10 @@ public class PublicKeySyncTest {
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
 
-		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn("10011");
+		Mockito.when(baseService.getCenterId()).thenReturn("10011");
 		Mockito.when(baseService.getStationId()).thenReturn("11002");
 		Mockito.when(baseService.isInitialSync()).thenReturn(false);
-		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
+		Mockito.when(registrationCenterDAO.isMachineCenterActive()).thenReturn(true);
 
 		//Mockito.when(baseService.getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP)).thenReturn(RegistrationConstants.DISABLE);
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);

@@ -2,28 +2,21 @@ package io.mosip.registration.test.service;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.net.SocketTimeoutException;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.impl.RegistrationCenterDAOImpl;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.entity.CenterMachine;
 import io.mosip.registration.entity.MachineMaster;
-import io.mosip.registration.entity.id.CenterMachineId;
-import io.mosip.registration.entity.id.RegMachineSpecId;
+import io.mosip.registration.entity.RegistrationCenter;
+import io.mosip.registration.entity.id.RegistartionCenterId;
 import io.mosip.registration.exception.ConnectionException;
-import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
+import io.mosip.registration.repositories.RegistrationCenterRepository;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.config.LocalConfigService;
@@ -91,11 +84,13 @@ public class PolicySyncServiceTest {
 	private MachineMasterRepository machineMasterRepository;
 
 	@Mock
-	private CenterMachineRepository centerMachineRepository;
-
-	@Mock
 	private LocalConfigService localConfigService;
 
+	@Mock
+	private RegistrationCenterRepository registrationCenterRepository;
+
+	private String machineId = "machineId";
+	private String centerId = "centerId";
 
 	@Before
 	public void initialize() {
@@ -109,10 +104,10 @@ public class PolicySyncServiceTest {
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
 
-		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn("10011");
+		Mockito.when(baseService.getCenterId()).thenReturn("10011");
 		Mockito.when(baseService.getStationId()).thenReturn("11002");
 		Mockito.when(baseService.isInitialSync()).thenReturn(false);
-		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
+		Mockito.when(registrationCenterDAO.isMachineCenterActive()).thenReturn(true);
 
 		//Mockito.when(baseService.getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP)).thenReturn(RegistrationConstants.DISABLE);
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);
@@ -120,20 +115,23 @@ public class PolicySyncServiceTest {
 
 		MachineMaster machine = new MachineMaster();
 		machine.setId("11002");
+		machine.setRegCenterId("10011");
 		machine.setIsActive(true);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
 
-		CenterMachine centerMachine = new CenterMachine();
-		CenterMachineId centerMachineId = new CenterMachineId();
-		centerMachineId.setMachineId("11002");
-		centerMachineId.setRegCenterId("10011");
-		centerMachine.setCenterMachineId(centerMachineId);
-		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString())).thenReturn(centerMachine);
+		String centerId = "centerId";
+		RegistrationCenter registrationCenter = new RegistrationCenter();
+		registrationCenter.setRegistartionCenterId(new RegistartionCenterId());
+		registrationCenter.getRegistartionCenterId().setId(centerId);
+		registrationCenter.getRegistartionCenterId().setLangCode("eng");
+		Optional<RegistrationCenter> mockedCenter = Optional.of(registrationCenter);
+		Mockito.when(registrationCenterRepository.findByIsActiveTrueAndRegistartionCenterIdIdAndRegistartionCenterIdLangCode(Mockito.anyString(),
+				Mockito.anyString())).thenReturn(mockedCenter);
+
 	}
 
 	@Test
 	public void fetch() throws RegBaseCheckedException, ConnectionException {
-
 		Map<String, Object> responseMap = new LinkedHashMap<>();
 		LinkedHashMap<String, Object> valuesMap = new LinkedHashMap<>();
 		valuesMap.put("publicKey",
@@ -141,8 +139,6 @@ public class PolicySyncServiceTest {
 		valuesMap.put("issuedAt", "2020-04-09T05:51:17.334");
 		valuesMap.put("expiryAt", "2020-04-09T05:51:17.334");
 		responseMap.put(RegistrationConstants.RESPONSE, valuesMap);
-		String machineId = "machineId";
-		String centerId = "centerId";
 
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
 				Mockito.anyString())).thenReturn(responseMap);
@@ -176,13 +172,6 @@ public class PolicySyncServiceTest {
 		valuesMap.put("issuedAt", "2020-04-09T05:51:17.334");
 		valuesMap.put("expiryAt", "2020-04-09T05:51:17.334");
 		responseMap.put(RegistrationConstants.RESPONSE, valuesMap);
-		
-
-		String machineId = "machineId";
-		String centerId = "centerId";
-		String refId = centerId + "_" + machineId;
-
-
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
 				Mockito.anyString())).thenReturn(responseMap);
 
@@ -205,11 +194,6 @@ public class PolicySyncServiceTest {
 		valuesMap.add(errorMap);
 		responseMap.put(RegistrationConstants.RESPONSE, null);
 		responseMap.put(RegistrationConstants.ERRORS, valuesMap);
-		
-
-		String machineId = "machineId";
-		String centerId = "centerId";
-		String refId = centerId + "_" + machineId;
 
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
 				Mockito.anyString())).thenReturn(responseMap);
@@ -230,8 +214,7 @@ public class PolicySyncServiceTest {
 	public void failureTest() throws RegBaseCheckedException, ConnectionException {
 		Mockito.when(serviceDelegateUtil.get(Mockito.any(), Mockito.any(), Mockito.anyBoolean(),
 				Mockito.any())).thenThrow(RegBaseCheckedException.class);
-
-		//assertNotNull(policySyncServiceImpl.fetchPolicy());
+		assertNotNull(policySyncServiceImpl.fetchPolicy());
 	}
 
 	@Test
@@ -240,38 +223,7 @@ public class PolicySyncServiceTest {
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
 				Mockito.anyString())).thenThrow(HttpClientErrorException.class);
 
-		//assertNotNull(policySyncServiceImpl.fetchPolicy());
-	}
-
-	@Test
-	public void checkKeyValidationExpiryTest() throws RegBaseCheckedException {
-
-		String machineId = "machineId";
-		String centerId = "centerId";
-		String refId = centerId + "_" + machineId;
-
-		policySyncServiceImpl.checkKeyValidation();
-	}
-	
-	@SuppressWarnings("unchecked")
-	@Test
-	public void checkKeyValidationExpiryException() throws RegBaseCheckedException {
-		policySyncServiceImpl.checkKeyValidation();
-	}
-
-	@Test
-	public void checkKeyValidationTest() throws RegBaseCheckedException {
-
-		String machineId = "machineId";
-		String centerId = "centerId";
-		String refId = centerId + "_" + machineId;
-
-		policySyncServiceImpl.checkKeyValidation();
-	}
-
-	@Test
-	public void checkKeyValidationTestFailure() {
-		policySyncServiceImpl.checkKeyValidation();
+		assertNotNull(policySyncServiceImpl.fetchPolicy());
 	}
 
 }

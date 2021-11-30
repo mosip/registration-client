@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -159,7 +160,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			if (null != userDTO && null != userDTO.getSalt() && HMACUtils2
 							.digestAsPlainTextWithSalt(authenticationValidatorDTO.getPassword().getBytes(),
-									CryptoUtil.decodeURLSafeBase64(userDTO.getSalt()))
+									ClientCryptoUtils.decodeBase64Data(userDTO.getSalt()))
 							.equals(userDTO.getUserPassword().getPwd())) {
 				return  true;
 			}
