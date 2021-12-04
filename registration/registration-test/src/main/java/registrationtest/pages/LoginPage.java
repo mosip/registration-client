@@ -127,7 +127,12 @@ public class LoginPage {
             userIdTextField.setText(userIdText);
 
             System.out.println("User id Entered ");
+            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait6")));
+
             waitsUtil.clickNodeAssert("#sub1");
+            
+            
+
             assertEquals(userIdText, userIdTextField.getText(), "User id is not as same as entered");
 
         } catch (Exception e) {
