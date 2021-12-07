@@ -92,6 +92,7 @@ public class NewReg {
             result = false;
 
             // Load Login screen
+            buttons.clickcancelBtn();
             loginPage.loadLoginScene(applicationPrimaryStage1);
             ExtentReportUtil.test1.info("RegclientScreen Loaded");
 

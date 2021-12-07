@@ -127,7 +127,7 @@ public class LoginPage {
             userIdTextField.setText(userIdText);
 
             System.out.println("User id Entered ");
-            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait6")));
+            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait2")));
 
             waitsUtil.clickNodeAssert("#sub1");
             
@@ -191,6 +191,8 @@ public class LoginPage {
             waitsUtil.clickNodeAssert("#sub2");
 
             Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
+            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
+            
             waitsUtil.clickNodeAssert(success);
 
             flag = true;
