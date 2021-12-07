@@ -400,26 +400,24 @@ public class Validations extends BaseController {
 		
 		if (node.getText()!=null && blockListedWords != null && !id.contains(RegistrationConstants.ON_TYPE)) {
 			if (getRegistrationDTOFromSession().BLOCKLISTED_CHECK.containsKey(fieldId)
-					&& getRegistrationDTOFromSession().BLOCKLISTED_CHECK.get(fieldId).getWords()
-							.stream().filter(word -> node.getText().contains(word)).findAny().isPresent() && Stream.of(node.getText().split(" "))
-                            .collect(Collectors.toList())
-							.stream().filter(word -> blockListedWords.contains(word) && !getRegistrationDTOFromSession().BLOCKLISTED_CHECK.get(fieldId).getWords().contains(word)).findAny().isEmpty()) {
+					&& getRegistrationDTOFromSession().BLOCKLISTED_CHECK.get(fieldId).getWords().stream()
+							.anyMatch(word -> node.getText().contains(word))
+					&& Stream.of(node.getText().split(" ")).collect(Collectors.toList()).stream()
+							.filter(word -> blockListedWords.contains(word)
+									&& !getRegistrationDTOFromSession().BLOCKLISTED_CHECK.get(fieldId).getWords()
+											.contains(word))
+							.findAny().isEmpty()) {
 				return true;
 			}
-			if (blockListedWords.contains(node.getText())) {
+			List<String> bwords = blockListedWords.stream().filter(word -> node.getText().contains(word)).collect(Collectors.toList());
+			if (!bwords.isEmpty() && bwords.size() < 2) {
 				isInputValid = false;
-				generateInvalidValueAlert(parentPane, id, MessageFormat.format(messageBundle.getString("BLOCKLISTED_ERROR"), node.getText()),
+				generateInvalidValueAlert(parentPane, id, MessageFormat.format(messageBundle.getString("BLOCKLISTED_ERROR"), bwords.get(0)),
 						showAlert);
 			} else {
-				Set<String> invalidWorlds = blockListedWords.stream().flatMap(l1 -> Stream
-						.of(node.getText().split("\\s+")).collect(Collectors.toList()).stream().filter(l2 -> {
-							return l1.equalsIgnoreCase(l2);
-						})).collect(Collectors.toSet());
-
-				String bWords = String.join(", ", invalidWorlds);
-				if (bWords.length() > 0) {
+				if (bwords.size() > 1) {
 					generateInvalidValueAlert(parentPane, id,
-							MessageFormat.format(messageBundle.getString("BLOCKLISTED_ERROR"), invalidWorlds.toString()),
+							MessageFormat.format(messageBundle.getString("BLOCKLISTED_ERROR"), bwords.toString()),
 							showAlert);
 					isInputValid = false;
 				} else {
