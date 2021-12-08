@@ -9,21 +9,23 @@ import java.util.ResourceBundle;
 
 import org.springframework.context.ApplicationContext;
 
-
-import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.controller.FXUtils;
 import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.controller.reg.DateValidation;
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.util.control.FxControl;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 /**
@@ -102,6 +104,12 @@ public class DOBAgeFxControl extends FxControl {
 //						resourceBundle.getString("ageOrDOBField"), RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, true,
 //						ageVBox.getWidth()));
 
+		Label label = getLabel(uiFieldDTO.getId() + "OR" + RegistrationConstants.LABEL,
+				resourceBundle.getString("ageOrDOBField"), RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, true, dobHBox.getWidth());
+		label.setMinWidth(Region.USE_PREF_SIZE);
+		label.setAlignment(Pos.CENTER);
+		dobHBox.getChildren().add(label);
+		
 		/** Add Age Field */
 		dobHBox.getChildren().add(addDateTextField(uiFieldDTO, RegistrationConstants.AGE_FIELD,
 				resourceBundle.getString(RegistrationConstants.AGE_FIELD)));
