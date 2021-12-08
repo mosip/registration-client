@@ -102,8 +102,11 @@ public class BioCorrectionReg {
             loginPage.loadLoginScene(applicationPrimaryStage1);
 
             // Enter userid and password
-
+            if (PropertiesUtil.getKeyValue("multilang").equals("Y"))
+            {
             loginPage.selectAppLang();
+            buttons.clickcancelBtn();
+            }
 
             loginPage.setUserId(loginUserid);
 

@@ -219,7 +219,7 @@ public class DemographicPage {
 
             processSchema = JsonUtil.convertJsonintoJava(jsonFromSchema, Root.class);
 
-            logger.info("Automaiton Script - Printing Input file Json" + JsonIdentity);
+           // logger.info("Automaiton Script - Printing Input file Json" + JsonIdentity);
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -249,6 +249,7 @@ public class DemographicPage {
             nameTab = screens.getName();
             try {
                 Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SetTextTimeWait")));
+                logger.info("SetTextTimeWait Done");
             } catch (Exception e) {
 
                 logger.error("", e);
