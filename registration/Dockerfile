@@ -61,10 +61,6 @@ ENV work_dir=/home/${container_user}
 
 ADD registration-client/target ./registration-client/target
 
-ADD registration-libs/target ./registration-libs/target
-
-ADD registration-libs/src/main/resources ./registration-libs/resources
-
 ADD registration-test/target ./registration-test/target
 
 ADD registration-test/src/main/resources ./registration-test/resources
@@ -73,9 +69,7 @@ ADD configure.sh configure.sh
 
 RUN chmod a+x configure.sh \
  && rm -f ./registration-client/target/registration-client-*-javadoc.jar \
- && rm -f ./registration-client/target/registration-client-*-sources.jar \
- && rm -f ./registration-libs/target/registration-libs-*-javadoc.jar \
- && rm -f ./registration-libs/target/registration-libs-*-sources.jar
+ && rm -f ./registration-client/target/registration-client-*-sources.jar
 
 # change permissions of file inside working dir
 RUN chown -R ${container_user}:${container_user} /home/${container_user}

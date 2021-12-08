@@ -14,6 +14,7 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.controller.ClientApplication;
 import io.mosip.registration.controller.GenericController;
 import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.dto.RegistrationDTO;
@@ -168,7 +169,7 @@ public abstract class FxControl  {
 	 */
 	public void refreshFields() {
 		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Refreshing fields from fx control");
-		GenericController genericController = Initialization.getApplicationContext().getBean(GenericController.class);
+		GenericController genericController = ClientApplication.getApplicationContext().getBean(GenericController.class);
 		genericController.refreshFields();
 	}
 
@@ -183,7 +184,7 @@ public abstract class FxControl  {
 		}
 
 		if (requiredFieldValidator == null) {
-			requiredFieldValidator = Initialization.getApplicationContext().getBean(RequiredFieldValidator.class);
+			requiredFieldValidator = ClientApplication.getApplicationContext().getBean(RequiredFieldValidator.class);
 		}
 
 		try {
@@ -259,7 +260,7 @@ public abstract class FxControl  {
 
 	protected boolean isFieldVisible(UiFieldDTO schemaDTO) {
 		if (requiredFieldValidator == null) {
-			requiredFieldValidator = Initialization.getApplicationContext().getBean(RequiredFieldValidator.class);
+			requiredFieldValidator = ClientApplication.getApplicationContext().getBean(RequiredFieldValidator.class);
 		}
 		try {
 			boolean isVisibleAccordingToSpec = requiredFieldValidator.isFieldVisible(schemaDTO, getRegistrationDTo());

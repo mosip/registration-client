@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import io.mosip.registration.controller.ClientApplication;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -45,7 +46,7 @@ public class DOBAgeFxControl extends FxControl {
 
 	public DOBAgeFxControl() {
 		fxUtils = FXUtils.getInstance();
-		ApplicationContext applicationContext = Initialization.getApplicationContext();
+		ApplicationContext applicationContext = ClientApplication.getApplicationContext();
 		this.dateValidation = applicationContext.getBean(DateValidation.class);
 	}
 

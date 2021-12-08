@@ -153,46 +153,30 @@ public class MosipDeviceSpecificationFactory {
 				"Exit init method for preparing device registry");
 	}
 
-	private int getPortTo() {
-		if (ApplicationContext.map().get(RegistrationConstants.MDM_END_PORT_RANGE) != null) {
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Found port To configuration in application context map");
-			try {
-				return Integer
-						.parseInt((String) ApplicationContext.map().get(RegistrationConstants.MDM_END_PORT_RANGE));
-			} catch (RuntimeException runtimeException) {
-				LOGGER.error(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-						"Exception while parsing  MDM_END_PORT_RANGE : "
-								+ ExceptionUtils.getStackTrace(runtimeException));
-				return defaultMDSPortTo;
-			}
-		} else {
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Not Found port To configuration in application context map so intializing default  value");
-
-			return defaultMDSPortTo;
-		}
+	public Map<String, List<MdmBioDevice>> getAvailableDeviceInfoMap() {
+		return availableDeviceInfoMap;
 	}
 
-	private int getPortFrom() {
-		if (ApplicationContext.map().get(RegistrationConstants.MDM_START_PORT_RANGE) != null) {
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Found port from configuration in application context map");
-			try {
-				return Integer
-						.parseInt((String) ApplicationContext.map().get(RegistrationConstants.MDM_START_PORT_RANGE));
-			} catch (RuntimeException runtimeException) {
-				LOGGER.error(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-						"Exception while parsing  MDM_START_PORT_RANGE : "
-								+ ExceptionUtils.getStackTrace(runtimeException));
-				return defaultMDSPortFrom;
-			}
-		} else {
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Not Found port from configuration in application context map so initializing with default  value");
-
-			return defaultMDSPortFrom;
+	public int getPortTo() {
+		try {
+			Integer port = ApplicationContext.getIntValueFromApplicationMap(RegistrationConstants.MDM_END_PORT_RANGE);
+			if(port != null) { return port; }
+		} catch (RuntimeException runtimeException) {
+			LOGGER.error("Exception while parsing  MDM_END_PORT_RANGE", runtimeException);
 		}
+		LOGGER.error("initializing default value for MDM_END_PORT_RANGE: {}", defaultMDSPortTo);
+		return defaultMDSPortTo;
+	}
+
+	public int getPortFrom() {
+		try {
+			Integer port = ApplicationContext.getIntValueFromApplicationMap(RegistrationConstants.MDM_START_PORT_RANGE);
+			if(port != null) { return port; }
+		} catch (RuntimeException runtimeException) {
+			LOGGER.error("Exception while parsing  MDM_START_PORT_RANGE", runtimeException);
+		}
+		LOGGER.error("initializing default value for MDM_START_PORT_RANGE: {}", defaultMDSPortFrom);
+		return defaultMDSPortFrom;
 	}
 
 	/*

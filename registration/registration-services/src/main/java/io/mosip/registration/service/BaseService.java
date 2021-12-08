@@ -846,4 +846,11 @@ public class BaseService {
 		return null;
 	}
 
+	public List<String> getConfiguredLangCodes() throws PreConditionCheckException {
+		try {
+			return ListUtils.union(getMandatoryLanguages(), getOptionalLanguages());
+		} catch (PreConditionCheckException e) {
+			throw e;
+		}
+	}
 }

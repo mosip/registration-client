@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import com.neovisionaries.i18n.LanguageCode;
 
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
@@ -17,8 +16,6 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.AuthTokenDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
-import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 /**
  * This class will load all the property files as bundles All application level
@@ -157,7 +154,7 @@ public class ApplicationContext {
 	 * @param bundleType messages or labels
 	 * @return Resource Bundle
 	 */
-	public ResourceBundle getBundle(String langCode, String bundleType) {
+	public static ResourceBundle getBundle(String langCode, String bundleType) {
 
 		return resourceBundleMap.get(String.format("%s_%s", langCode, bundleType));
 

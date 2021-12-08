@@ -27,7 +27,6 @@ import io.mosip.kernel.core.idvalidator.spi.VidValidator;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.schema.UiFieldDTO;
@@ -54,13 +53,9 @@ public class Validations extends BaseController {
 	 * Instance of {@link Logger}
 	 */
 	private static final Logger LOGGER = AppConfig.getLogger(Validations.class);
-	private boolean isChild;
-	private ResourceBundle applicationMessageBundle;
-//	private ResourceBundle applicationLabelBundle;
+	private static ResourceBundle applicationMessageBundle;
 	private StringBuilder validationMessage;
-	private List<String> applicationLanguageblockListedWords;
 	private List<String> noAlert;
-	private boolean isLostUIN = false;
 
 	@Autowired
 	private RequiredFieldValidator requiredFieldValidator;
@@ -98,23 +93,9 @@ public class Validations extends BaseController {
 	 * Sets the resource bundles for Validations, Messages in Application and
 	 * Secondary Languages and Labels in Application and Secondary Languages
 	 */
-	public void setResourceBundle() {
-		// validationBundle = ApplicationContext.applicationLanguageValidationBundle();
-		applicationMessageBundle = applicationContext.getBundle(ApplicationContext.applicationLanguage(),
-				RegistrationConstants.MESSAGES);
-		// applicationLabelBundle =
-		// applicationContext.getBundle(ApplicationContext.applicationLanguage(),
-		// RegistrationConstants.LABELS);
+	public static void setResourceBundle(ResourceBundle resourceBundle) {
+		applicationMessageBundle = resourceBundle;
 	}
-
-
-	/*public void updateAsLostUIN(boolean isLostUIN) {
-		this.isLostUIN = isLostUIN;
-	}
-
-	public boolean isLostUIN() {
-		return this.isLostUIN;
-	}*/
 
 	private List<String> getBlockListedWords() {
 		try {
@@ -127,41 +108,6 @@ public class Validations extends BaseController {
 		}
 		return null;
 	}
-
-	/*private boolean validateButtons(Pane parentPane, Button node, String id) {
-		AtomicReference<Boolean> buttonSelected = new AtomicReference<>(false);
-		try {
-			VBox parent = (VBox) parentPane.getParent();
-			String label = parentPane.getId();
-
-			if (node.isDisabled() || isLostUIN) {
-				LOGGER.debug(RegistrationConstants.VALIDATION_LOGGER, APPLICATION_NAME, APPLICATION_ID,
-						"Ignoring validations as its lostUIN or disabled for field >> " + label);
-				return true;
-			}
-
-			boolean isMandatory = requiredFieldValidator.isRequiredField(getValidationMap().get(label),
-					getRegistrationDTOFromSession());
-
-			if (isMandatory && (node.getId().contains("gender") || node.getId().contains("residence"))) {
-				node.getParent().getChildrenUnmodifiable().forEach(child -> {
-					if (child instanceof Button && child.getStyleClass().contains("selectedResidence")) {
-						buttonSelected.set(true);
-					}
-				});
-			} else {
-				buttonSelected.set(true);
-			}
-			if (!buttonSelected.get()) {
-				generateAlert(parent, label, getFromLabelMap(label).concat(RegistrationConstants.SPACE)
-						.concat(applicationMessageBundle.getString(RegistrationConstants.REG_LGN_001)));
-			}
-		} catch (RuntimeException runtimeException) {
-			LOGGER.error(RegistrationConstants.VALIDATION_LOGGER, APPLICATION_NAME, APPLICATION_ID,
-					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
-		}
-		return buttonSelected.get();
-	}*/
 
 	/**
 	 * Validate for the TextField.
@@ -386,14 +332,6 @@ public class Validations extends BaseController {
 		return true;
 	}
 
-	private String getAgeDateFieldId(String nodeId) {
-		String[] parts = nodeId.split("__");
-		if (parts.length > 1 && parts[1].matches(RegistrationConstants.DTAE_MONTH_YEAR_REGEX)) {
-			return parts[0];
-		}
-		return null;
-	}
-
 	private boolean validateBlockListedWords(Pane parentPane, TextField node, String id, String fieldId, List<String> blockListedWords,
 			boolean showAlert, ResourceBundle messageBundle) {
 		boolean isInputValid = true;
@@ -444,74 +382,6 @@ public class Validations extends BaseController {
 
 	}
 
-	/**
-	 * Validate for the ComboBox type of node
-	 */
-	/*private boolean validateComboBox(Pane parentPane, ComboBox<?> node, String id, boolean isPreviousValid) {
-		{
-			boolean isComboBoxValueValid = false;
-			try {
-
-				String label = id.replaceAll(RegistrationConstants.ON_TYPE, RegistrationConstants.EMPTY)
-						.replaceAll(RegistrationConstants.LOCAL_LANGUAGE, RegistrationConstants.EMPTY);
-
-				if (node.isDisabled() || isLostUIN) {
-					LOGGER.debug(RegistrationConstants.VALIDATION_LOGGER, APPLICATION_NAME, APPLICATION_ID,
-							"Ignoring validations as its lostUIN or disabled for field >> " + label);
-					return true;
-				}
-
-				boolean isMandatory = requiredFieldValidator.isRequiredField(getValidationMap().get(label),
-						getRegistrationDTOFromSession());
-
-				if (isMandatory) {
-					if (node.getValue() == null) {
-						generateAlert(parentPane, id, getFromLabelMap(label).concat(RegistrationConstants.SPACE)
-								.concat(applicationMessageBundle.getString(RegistrationConstants.REG_LGN_001)));
-						if (isPreviousValid) {
-							node.requestFocus();
-							node.getStyleClass().removeIf((s) -> {
-								return s.equals("demographicCombobox");
-							});
-							node.getStyleClass().add("demographicComboboxFocused");
-						} else {
-							node.getStyleClass().add("demographicCombobox");
-						}
-					} else {
-						node.getStyleClass().removeIf((s) -> {
-							return s.equals("demographicComboboxFocused");
-						});
-						node.getStyleClass().add("demographicCombobox");
-						if (node.getValue().getClass().getSimpleName().equalsIgnoreCase("DocumentCategoryDto")) {
-							DocumentCategoryDto doc = (DocumentCategoryDto) node.getValue();
-							if (doc.isScanned()) {
-								isComboBoxValueValid = true;
-							} else {
-								isComboBoxValueValid = false;
-							}
-
-						} else {
-							isComboBoxValueValid = true;
-						}
-
-					}
-				} else {
-					node.getStyleClass().removeIf((s) -> {
-						return s.equals("demographicComboboxFocused");
-					});
-					node.getStyleClass().add("demographicCombobox");
-
-					isComboBoxValueValid = true;
-				}
-			} catch (RuntimeException runtimeException) {
-				LOGGER.error(RegistrationConstants.VALIDATION_LOGGER, APPLICATION_NAME, APPLICATION_ID,
-						runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
-			}
-
-			return isComboBoxValueValid;
-		}
-	}*/
-
 	private boolean validateUinOrRidField(String inputText, RegistrationDTO registrationDto, UiFieldDTO schemaField) {
 		boolean isValid = true;
 		try {
@@ -554,23 +424,6 @@ public class Validations extends BaseController {
 	 */
 	public Validator validateSingleString(String id, String langCode) {
 		return getRegex(id, RegistrationConstants.REGEX_TYPE, langCode);
-	}
-
-
-	/**
-	 * Gets the validation message.
-	 *
-	 * @return the validation message
-	 */
-	public StringBuilder getValidationMessage() {
-		return validationMessage;
-	}
-
-	/**
-	 * Sets the validation message.
-	 */
-	public void setValidationMessage() {
-		validationMessage.delete(0, validationMessage.length());
 	}
 
 	private Validator getRegex(String fieldId, String regexType, String langCode) {

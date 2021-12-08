@@ -11,6 +11,7 @@ import java.util.*;
 import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.controller.ClientApplication;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
@@ -51,7 +52,7 @@ public class HtmlFxControl extends FxControl {
     private Map<String, String> contentHash = null;
 
     public HtmlFxControl() {
-        org.springframework.context.ApplicationContext applicationContext = Initialization.getApplicationContext();
+        org.springframework.context.ApplicationContext applicationContext = ClientApplication.getApplicationContext();
         auditFactory = applicationContext.getBean(AuditManagerService.class);
         templateManagerBuilder = applicationContext.getBean(TemplateManagerBuilder.class);
         templateService = applicationContext.getBean(TemplateService.class);

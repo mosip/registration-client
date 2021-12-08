@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import io.mosip.registration.controller.ClientApplication;
 import org.springframework.context.ApplicationContext;
 
 
@@ -37,7 +38,7 @@ public class DOBFxControl extends FxControl {
 
 	public DOBFxControl() {
 		fxUtils = FXUtils.getInstance();
-		ApplicationContext applicationContext = Initialization.getApplicationContext();
+		ApplicationContext applicationContext = ClientApplication.getApplicationContext();
 		this.dateValidation = applicationContext.getBean(DateValidation.class);
 	}
 
