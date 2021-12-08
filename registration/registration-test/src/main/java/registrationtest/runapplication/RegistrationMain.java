@@ -42,14 +42,14 @@ public class RegistrationMain {
 
                     Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait")));
 
-                    logger.info("thread inside calling testcase");
+                    logger.info("ApplicationLaunchTimeWait is Done");
 
                     robot = new FxRobot();
                     ExtentReportUtil.ExtentSetting();
 
                     LinkedHashMap<String, String> map = readJsonFileText(
                             readFolderJsonList(PropertiesUtil.getKeyValue("datadir")));
-                    System.out.println(map);
+                    
 
                     String manualFlag = PropertiesUtil.getKeyValue("manual");
                     if (manualFlag.equalsIgnoreCase("Y")) {

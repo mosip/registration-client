@@ -92,6 +92,7 @@ public class NewReg {
             result = false;
 
             // Load Login screen
+            buttons.clickcancelBtn();
             loginPage.loadLoginScene(applicationPrimaryStage1);
             ExtentReportUtil.test1.info("RegclientScreen Loaded");
 
@@ -153,6 +154,7 @@ public class NewReg {
             alerts = new Alerts(robot);
             result = false;
 
+            buttons.clickcancelBtn();
             // Load Login screen
             loginPage.loadLoginScene(applicationPrimaryStage1);
             ExtentReportUtil.test1.info("RegclientScreen Loaded");
@@ -242,7 +244,11 @@ public class NewReg {
 
             // Enter userid and password
 
+            if (PropertiesUtil.getKeyValue("multilang").equals("Y"))
+            {
             loginPage.selectAppLang();
+            buttons.clickcancelBtn();
+            }
 
             loginPage.setUserId(loginUserid);
 

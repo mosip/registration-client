@@ -98,7 +98,11 @@ public class LostReg {
 
             // Enter userid and password
 
+            if (PropertiesUtil.getKeyValue("multilang").equals("Y"))
+            {
             loginPage.selectAppLang();
+            buttons.clickcancelBtn();
+            }
             loginPage.setUserId(loginUserid);
             homePage = loginPage.setPassword(loginPwd);
             // New Registration
