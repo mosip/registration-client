@@ -80,8 +80,9 @@ public class ServiceDelegateUtilTest {
 		globalParams.put(RegistrationConstants.REGISTRATION_CLIENT, "registrationclient");
 		globalParams.put(RegistrationConstants.HTTP_API_READ_TIMEOUT, "60000");
 		globalParams.put(RegistrationConstants.HTTP_API_WRITE_TIMEOUT, "60000");
-		
+		globalParams.put(RegistrationConstants.MOSIP_HOSTNAME, "test.mosip.net");
 		PowerMockito.when(ApplicationContext.map()).thenReturn(globalParams);
+		PowerMockito.when(ApplicationContext.getStringValueFromApplicationMap(Mockito.anyString())).thenReturn("test");
 	}
 
 	/*

@@ -6,7 +6,6 @@ echo "Started with args"
 
 work_dir="$work_dir"
 
-host_name_env="$host_name_env"
 client_version_env="$client_version_env" #We should pick this from the jar not as an argument.
 client_upgrade_server="$client_upgrade_server_env" #docker hosted url
 reg_client_sdk_url="$reg_client_sdk_url_env"
@@ -14,18 +13,15 @@ artifactory_url="$artifactory_url_env"
 
 echo "initalized variables"
 
-echo "environment=${host_name_env}" > "${work_dir}"/mosip-application.properties
-echo "mosip.reg.app.key=${crypto_key_env}" > "${work_dir}"/mosip-application.properties
+echo "environment=PRODUCTION" > "${work_dir}"/mosip-application.properties
 echo "mosip.reg.version=${client_version_env}" >> "${work_dir}"/mosip-application.properties
 echo "mosip.reg.client.url=${client_upgrade_server}/registration-client/" >> "${work_dir}"/mosip-application.properties
 echo "mosip.reg.healthcheck.url=${healthcheck_url_env}" >> "${work_dir}"/mosip-application.properties
 echo "mosip.reg.rollback.path=../BackUp" >> "${work_dir}"/mosip-application.properties
-echo "mosip.reg.cerpath=/cer/mosip_cer.cer" >> "${work_dir}"/mosip-application.properties
-echo "mosip.reg.dbpath=db/reg" >> "${work_dir}"/mosip-application.properties
 echo "mosip.reg.xml.file.url=${client_upgrade_server}/registration-client/maven-metadata.xml" >> "${work_dir}"/mosip-application.properties
 echo "mosip.reg.client.tpm.availability=Y" >> "${work_dir}"/mosip-application.properties
 echo "mosip.client.upgrade.server.url=${client_upgrade_server}" >> "${work_dir}"/mosip-application.properties
-echo "mosip.hostname=${host_name_env}"  >> "${work_dir}"/mosip-application.properties
+echo "mosip.hostname=${client_upgrade_server/https:\/\/}"  >> "${work_dir}"/mosip-application.properties
 
 echo "created mosip-application.properties"
 
@@ -86,7 +82,7 @@ echo "Started to create the registration client zip"
 ls -ltr lib | grep bc
 
 echo "@echo OFF" > run.bat
-echo "start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" > run.bat
+echo "start jre\bin\javaw -Xmx2048m -Xms2048m -Dlogging.config=file:./logback.xml -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" > run.bat
 
 /usr/bin/zip -r reg-client.zip jre
 /usr/bin/zip -r reg-client.zip lib
@@ -101,10 +97,13 @@ mkdir -p "${work_dir}"/registration-test-utility/logs
 cp "${work_dir}"/registration-test/target/registration-test-${client_version_env}.jar "${work_dir}"/registration-test-utility/registration-test.jar
 cp -r "${work_dir}"/registration-test/target/lib/* "${work_dir}"/registration-test-utility/lib
 ## override with updated jars
-cp -r "${work_dir}"/registration-client/target/lib/* "${work_dir}"/registration-test-utility/lib
+cp -r "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar  "${work_dir}"/registration-test-utility/lib
+cp -r "${work_dir}"/registration-client/target/lib/registration-services-${client_version_env}.jar  "${work_dir}"/registration-test-utility/lib
+
 cp -r "${work_dir}"/registration-test/resources/*  "${work_dir}"/registration-test-utility/
 cp -r "${work_dir}"/registration-client/target/jre "${work_dir}"/registration-test-utility/
 cp "${work_dir}"/registration-client/target/MANIFEST.MF "${work_dir}"/registration-test-utility/
+cp "${work_dir}"/registration-client/target/logback.xml "${work_dir}"/registration-test-utility/
 
 cd "${work_dir}"
 /usr/bin/zip -r ./registration-test-utility.zip ./registration-test-utility/*

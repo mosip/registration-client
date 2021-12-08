@@ -77,14 +77,28 @@ public class ClientSetupValidator {
         try {
 
             if("LOCAL".equals(environment)) {
-                logger.info("NOTE :: IGNORING LOCAL REGISTRATION CLIENT SETUP VALIDATION AS ITS LOCAL ENVIRONMENT");
+                logger.warn("NOTE :: IGNORING LOCAL REGISTRATION CLIENT SETUP VALIDATION AS ITS LOCAL ENVIRONMENT");
                 return;
             }
 
             setServerManifest();
-            serverManifest.write(new FileOutputStream(manifestFile));
-            setLocalManifest();
+
+            //When machine is offline / not reachable to server, serverManifest might be null
+            String serverVersion = serverManifest == null ? null : serverManifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
+            String localVersion = localManifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
+
+            //only if the version is same then rewrite local manifest with server manifest.
+            //if the version is different, then upgrade should handle it, and only checksum validation will be
+            //done based on the local manifest file.
+            if(localVersion.equals(serverVersion)) {
+                serverManifest.write(new FileOutputStream(manifestFile));
+                //reset the local manifest, as it's overwritten
+                setLocalManifest();
+            }
+
             latestVersion = localManifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
+            logger.info("Checksum validation started with manifest version : {}", latestVersion);
+
             deleteUnknownJars();
 
             //executorService = Executors.newFixedThreadPool(5);
@@ -130,16 +144,12 @@ public class ClientSetupValidator {
         }
     }
 
-    private void setServerManifest() throws RegBaseCheckedException {
+    private void setServerManifest() {
         String url = serverRegClientURL + latestVersion + SLASH + manifestFile;
         try {
             serverManifest = new Manifest(download(url));
-            Objects.requireNonNull(serverManifest, "Failed to download manifest from server");
-            latestVersion = serverManifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
-            logger.info("Completed Downloading manifest of version : {}", latestVersion);
-        } catch (IOException e) {
+        } catch (IOException | RegBaseCheckedException e) {
             logger.error("Failed to load server manifest file", e);
-            throw new RegBaseCheckedException("REG-BUILD-006", "Server Manifest not found");
         }
     }
 

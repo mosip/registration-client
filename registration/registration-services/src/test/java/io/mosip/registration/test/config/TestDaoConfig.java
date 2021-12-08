@@ -64,16 +64,25 @@ public class TestDaoConfig extends DaoConfig {
 	private static DataSource dataSource;
 	private static JdbcTemplate jdbcTemplate;
 	private static Properties keys = new Properties();
+	private static ApplicationContext applicationContext;
 
 	@Autowired
 	private ConfigurableEnvironment environment;
 	
 	static {
 		ApplicationContext.getInstance();
-		
-		try (InputStream keyStream = TestDaoConfig.class.getClassLoader().getResourceAsStream("spring-test.properties")) {		
-			
-			keys.load(keyStream);
+
+		try (InputStream configKeys = DaoConfig.class.getClassLoader().getResourceAsStream("spring-test.properties");
+			 InputStream buildKeys = DaoConfig.class.getClassLoader().getResourceAsStream("props/mosip-application.properties")) {
+
+			applicationContext = io.mosip.registration.context.ApplicationContext.getInstance();
+
+			keys = new Properties();
+			keys.load(configKeys);
+			keys.load(buildKeys);
+			keys.keySet().forEach( k -> {
+				applicationContext.getApplicationMap().put((String) k, keys.get(k));
+			});
 			
 		} catch (Exception e) {
 			e.printStackTrace();
