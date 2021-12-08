@@ -1534,7 +1534,6 @@ public class RegistrationConstants {
 	public static final String RESPONSE_SIGNATURE = "response-signature";
 	public static final String ON_BOARD_FACE = "FACE";
 	public static final String AUTH_SERVICE_URL = "authmanager/authenticate";
-	public static final String REG_HEALTH_CHECK_URL_PROPERTY = "mosip.reg.healthcheck.url";
 
 	public static final int DAYS = 31;
 	public static final int MONTH = 12;
@@ -1901,7 +1900,8 @@ public class RegistrationConstants {
 	public static final String IMAGES = "images";
 	
 	public static final String MOSIP_HOSTNAME = "mosip.hostname";
-	public static final String MOSIP_HOSTNAME_DEF_VAL = "dev.mosip.net";
+	public static final String MOSIP_UPGRADE_SERVER_URL = "mosip.client.upgrade.server.url";
+	public static final String HEALTH_CHECK_URL = "mosip.reg.healthcheck.url";
 	
 	/** Moved To Here from UiConstants file */
 	public static final String REGEX_TYPE = "REGEX";

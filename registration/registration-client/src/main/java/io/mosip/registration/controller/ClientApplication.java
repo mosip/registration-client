@@ -80,10 +80,10 @@ public class ClientApplication extends Application {
 			notifyPreloader(new ClientPreLoaderNotification("Properties with local preferences loaded."));
 			setupResourceBundleBasedOnDefaultAppLang();
 
-			notifyPreloader(new ClientPreLoaderNotification("ENV mosip.hostname : " +
-					io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap("mosip.hostname")));
-			notifyPreloader(new ClientPreLoaderNotification("client.upgrade.server.url : " +
-					io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap("client.upgrade.server.url")));
+			notifyPreloader(new ClientPreLoaderNotification(RegistrationConstants.MOSIP_HOSTNAME + " : " +
+					io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.MOSIP_HOSTNAME)));
+			notifyPreloader(new ClientPreLoaderNotification(RegistrationConstants.MOSIP_UPGRADE_SERVER_URL + " : " +
+					io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.MOSIP_UPGRADE_SERVER_URL)));
 
 			handleInitialSync();
 

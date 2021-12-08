@@ -19,7 +19,6 @@ echo "mosip.reg.client.url=${client_upgrade_server}/registration-client/" >> "${
 echo "mosip.reg.healthcheck.url=${healthcheck_url_env}" >> "${work_dir}"/mosip-application.properties
 echo "mosip.reg.rollback.path=../BackUp" >> "${work_dir}"/mosip-application.properties
 echo "mosip.reg.xml.file.url=${client_upgrade_server}/registration-client/maven-metadata.xml" >> "${work_dir}"/mosip-application.properties
-echo "mosip.reg.client.tpm.availability=Y" >> "${work_dir}"/mosip-application.properties
 echo "mosip.client.upgrade.server.url=${client_upgrade_server}" >> "${work_dir}"/mosip-application.properties
 echo "mosip.hostname=${client_upgrade_server/https:\/\/}"  >> "${work_dir}"/mosip-application.properties
 
