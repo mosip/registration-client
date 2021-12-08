@@ -335,7 +335,7 @@ public class BaseController {
 	public static <T> T load(URL url) throws IOException {
 		FXMLLoader loader = new FXMLLoader(url, ApplicationContext.getInstance()
 				.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS));
-		loader.setControllerFactory(Initialization.getApplicationContext()::getBean);
+		loader.setControllerFactory(ClientApplication.getApplicationContext()::getBean);
 		return loader.load();
 	}
 
@@ -365,7 +365,7 @@ public class BaseController {
 	 */
 	public static <T> T load(URL url, ResourceBundle resource) throws IOException {
 		FXMLLoader loader = new FXMLLoader(url, resource);
-		loader.setControllerFactory(Initialization.getApplicationContext()::getBean);
+		loader.setControllerFactory(ClientApplication.getApplicationContext()::getBean);
 		return loader.load();
 	}
 
@@ -722,7 +722,7 @@ public class BaseController {
 	public static FXMLLoader loadChild(URL url) {
 		FXMLLoader loader = new FXMLLoader(url, ApplicationContext.getInstance()
 				.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS));
-		loader.setControllerFactory(Initialization.getApplicationContext()::getBean);
+		loader.setControllerFactory(ClientApplication.getApplicationContext()::getBean);
 		return loader;
 	}
 
@@ -1207,13 +1207,8 @@ public class BaseController {
 	 * @return the value from application context
 	 */
 	public String getValueFromApplicationContext(String key) {
-
-		LOGGER.info(LoggerConstants.LOG_REG_BASE, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Fetching value from application Context");
-
-		return applicationContext.getApplicationMap().containsKey(key)
-				? (String) applicationContext.getApplicationMap().get(key)
-				: null;
+		LOGGER.debug("Fetching value from application Context {}", key);
+		return ApplicationContext.getStringValueFromApplicationMap(key);
 	}
 
 	/**
@@ -1233,9 +1228,7 @@ public class BaseController {
 	 * @param val    value to be set
 	 */
 	protected void updatePageFlow(String pageId, boolean val) {
-
-		LOGGER.info(LoggerConstants.LOG_REG_BASE, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Updating page flow to navigate next or previous");
+		LOGGER.info("Updating page flow to navigate next or previous, pageId:{}, {}", pageId, val);
 		pageFlow.updateRegMap(pageId, RegistrationConstants.VISIBILITY, val);
 	}
 
@@ -1518,7 +1511,7 @@ public class BaseController {
 
 	protected List<String> getConfiguredLangCodes() {
 		try {
-			return ListUtils.union(baseService.getMandatoryLanguages(), baseService.getOptionalLanguages());
+			return baseService.getConfiguredLangCodes();
 		} catch (PreConditionCheckException e) {
 			generateAlert(RegistrationConstants.ERROR, "Both Mandatory and Optional languages not configured");
 		}

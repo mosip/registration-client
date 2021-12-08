@@ -5,8 +5,6 @@ import static io.mosip.registration.constants.RegistrationConstants.ACKNOWLEDGEM
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URL;
@@ -18,14 +16,13 @@ import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.mosip.registration.controller.ClientApplication;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.templatemanager.spi.TemplateManagerBuilder;
-import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
@@ -37,7 +34,6 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.GenericController;
-import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.PacketStatusDTO;
@@ -699,7 +695,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 			ResponseDTO templateResponse = templateGenerator.generateDashboardTemplate(dashboardTemplateText,
 					templateManagerBuilder, RegistrationConstants.DASHBOARD_TEMPLATE,
-					Initialization.getApplicationStartTime());
+					ClientApplication.getApplicationStartTime());
 
 			if (templateResponse != null && templateResponse.getSuccessResponseDTO() != null) {
 				Writer stringWriter = (Writer) templateResponse.getSuccessResponseDTO().getOtherAttributes()

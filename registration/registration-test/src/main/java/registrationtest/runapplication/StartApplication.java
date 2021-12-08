@@ -1,5 +1,7 @@
 package registrationtest.runapplication;
 
+import com.hazelcast.client.impl.protocol.codec.CacheAddEntryListenerCodec;
+import io.mosip.registration.controller.ClientApplication;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
@@ -35,13 +37,14 @@ public class StartApplication extends Application {
             System.out.println(System.getProperty("mosip.hostname"));
 
             // applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
-            applicationContext = Initialization.createApplicationContext();
+
+            ClientApplication clientApplication = new ClientApplication();
+            clientApplication.init();
+            applicationContext = ClientApplication.getApplicationContext();
             logger.info("Automaiton Script - ApplicationContext has taken");
 
-            Initialization initialization = new Initialization();
-            Initialization.setApplicationContext(applicationContext);
             StartApplication.primaryStage = primaryStage;
-            initialization.start(primaryStage);
+            clientApplication.start(primaryStage);
             this.primaryStage = primaryStage;
 
         } catch (Exception e) {

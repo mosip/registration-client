@@ -2,6 +2,7 @@ package io.mosip.registration.util.control.impl;
 
 import java.util.*;
 
+import io.mosip.registration.controller.ClientApplication;
 import javafx.scene.control.Tooltip;
 import org.springframework.context.ApplicationContext;
 
@@ -43,7 +44,7 @@ public class ButtonFxControl extends FxControl {
 	private MasterSyncService masterSyncService;
 
 	public ButtonFxControl() {
-		ApplicationContext applicationContext = Initialization.getApplicationContext();
+		ApplicationContext applicationContext = ClientApplication.getApplicationContext();
 		fxUtils = FXUtils.getInstance();
 		regApplicationContext = io.mosip.registration.context.ApplicationContext.getInstance();
 		masterSyncService = applicationContext.getBean(MasterSyncService.class);

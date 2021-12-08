@@ -17,18 +17,10 @@ public class RegistrationUIConstants {
 
 	public static ResourceBundle bundle = ApplicationContext.getInstance().getApplicationLanguageMessagesBundle();
 
-	public static void setBundle() {
-
-		ApplicationContext applicationContext = ApplicationContext.getInstance();
-		bundle = applicationContext.getBundle(applicationContext.getApplicationLanguage(),
-				RegistrationConstants.MESSAGES);
-
+	public static void setBundle(ResourceBundle messageBundle) {
+		bundle = messageBundle;
 	}
 
-	/*
-	 * public static final String OTP_VALIDITY = bundle.getString("OTP_VALIDITY");
-	 * public static final String MINUTES = bundle.getString("MINUTES");
-	 */
 
 	public static String getMessageLanguageSpecific(String key) {
 		try {
