@@ -58,7 +58,7 @@ public class StartApplication extends Application {
             System.setProperty("java.net.useSystemProxies", "true");
             System.setProperty("file.encoding", "UTF-8");
             System.setProperty("derby.ui.codeset", "UTF-8");
-            System.setProperty("client.upgrade.server.url", PropertiesUtil.getKeyValue("mosip.upgradeserver"));
+            System.setProperty("mosip.client.upgrade.server.url", PropertiesUtil.getKeyValue("mosip.upgradeserver"));
             System.setProperty("mosip.hostname", PropertiesUtil.getKeyValue("mosip.hostname"));
 
             launch(args);

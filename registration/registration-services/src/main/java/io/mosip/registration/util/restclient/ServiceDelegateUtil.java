@@ -74,7 +74,7 @@ public class ServiceDelegateUtil {
 	public boolean isNetworkAvailable() {
 		LOGGER.info("Registration Network Checker had been called.");
 		try {
-			String healthCheckUrl = io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap("client.upgrade.server.url");
+			String healthCheckUrl = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.HEALTH_CHECK_URL);
 			Assert.notNull(healthCheckUrl, "Property mosip.reg.healthcheck.url missing");
 			String serviceUrl = prepareURLByHostName(healthCheckUrl);
 			return restClientUtil.isConnectedToSyncServer(serviceUrl);
