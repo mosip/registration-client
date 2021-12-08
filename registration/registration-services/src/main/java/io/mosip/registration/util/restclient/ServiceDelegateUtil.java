@@ -1,31 +1,21 @@
 package io.mosip.registration.util.restclient;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.SocketTimeoutException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.*;
 
 import io.micrometer.core.annotation.Timed;
-import io.mosip.registration.config.DaoConfig;
 import io.mosip.registration.exception.ConnectionException;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -55,25 +45,15 @@ public class ServiceDelegateUtil {
 	@Autowired
 	private Environment environment;
 
-	@Value("${mosip.hostname}")
-	private String mosipHostName;
-
-	@Value("${mosip.reg.healthcheck.url}")
-	private String healthCheckURL;
-
 
 	public String getHostName() {
-		String hostname = System.getProperty(RegistrationConstants.MOSIP_HOSTNAME);
-		if(hostname == null || hostname.isEmpty()) {
-			hostname = mosipHostName == null ? RegistrationConstants.MOSIP_HOSTNAME_DEF_VAL : mosipHostName ;
-		}
-		LOGGER.debug("MOSIP Host name : {} " , hostname);
-		return hostname;
+		return io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.MOSIP_HOSTNAME);
 	}
 
 	public String prepareURLByHostName(String url) {
 		String mosipHostNameVal = getHostName();
-		return (url != null && mosipHostNameVal != null) ? url.replace(MOSIP_HOSTNAME_PLACEHOLDER, mosipHostNameVal)
+		Assert.notNull(mosipHostNameVal, "mosip.hostname is missing");
+		return (url != null) ? url.replace(MOSIP_HOSTNAME_PLACEHOLDER, mosipHostNameVal)
 				: url;
 	}
 
@@ -94,8 +74,9 @@ public class ServiceDelegateUtil {
 	public boolean isNetworkAvailable() {
 		LOGGER.info("Registration Network Checker had been called.");
 		try {
-			Assert.notNull(healthCheckURL, "Property mosip.reg.healthcheck.url missing");
-			String serviceUrl = prepareURLByHostName(healthCheckURL);
+			String healthCheckUrl = io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap("client.upgrade.server.url");
+			Assert.notNull(healthCheckUrl, "Property mosip.reg.healthcheck.url missing");
+			String serviceUrl = prepareURLByHostName(healthCheckUrl);
 			return restClientUtil.isConnectedToSyncServer(serviceUrl);
 		} catch (Exception exception) {
 			LOGGER.error("No Internet Access" , exception);

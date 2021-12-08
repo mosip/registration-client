@@ -6,9 +6,8 @@ echo "Started with args"
 
 work_dir="$work_dir"
 
+host_name_env="$host_name_env"
 client_version_env="$client_version_env" #We should pick this from the jar not as an argument.
-crypto_key_env="$crypto_key_env" #key to encrypt the jar files
-client_certificate="$client_certificate_env" # Not used as of now
 client_upgrade_server="$client_upgrade_server_env" #docker hosted url
 reg_client_sdk_url="$reg_client_sdk_url_env"
 artifactory_url="$artifactory_url_env"
@@ -76,6 +75,7 @@ mv "${work_dir}"/zulu11.41.23-ca-fx-jre11.0.8-win_x64/* "${work_dir}"/registrati
 chmod -R a+x "${work_dir}"/registration-client/target/jre
 
 cp "${work_dir}"/build_files/logback.xml "${work_dir}"/registration-client/target/lib/logback.xml
+cp "${work_dir}"/build_files/logback.xml "${work_dir}"/registration-client/target/logback.xml
 cp "${work_dir}"/registration-client/target/registration-client-${client_version_env}.jar "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar
 /usr/local/openjdk-11/bin/java -cp "${work_dir}"/registration-client/target/registration-client-${client_version_env}.jar:"${work_dir}"/registration-client/target/lib/* io.mosip.registration.update.ManifestCreator "${client_version_env}" "${work_dir}/registration-client/target/lib" "${work_dir}/registration-client/target"
 
@@ -85,17 +85,19 @@ echo "Started to create the registration client zip"
 
 ls -ltr lib | grep bc
 
-echo "@echo OFF" >> run.bat
-echo "start jre\jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > logs/startup.log 2>&1" > run.bat
+echo "@echo OFF" > run.bat
+echo "start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" > run.bat
 
 /usr/bin/zip -r reg-client.zip jre
 /usr/bin/zip -r reg-client.zip lib
 /usr/bin/zip -r reg-client.zip MANIFEST.MF
 /usr/bin/zip -r reg-client.zip run.bat
+/usr/bin/zip -r reg-client.zip logback.xml
 
 #Creating client testing utility
 mkdir -p "${work_dir}"/registration-test-utility
 mkdir -p "${work_dir}"/registration-test-utility/lib
+mkdir -p "${work_dir}"/registration-test-utility/logs
 cp "${work_dir}"/registration-test/target/registration-test-${client_version_env}.jar "${work_dir}"/registration-test-utility/registration-test.jar
 cp -r "${work_dir}"/registration-test/target/lib/* "${work_dir}"/registration-test-utility/lib
 ## override with updated jars

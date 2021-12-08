@@ -587,17 +587,6 @@ public class BaseController {
 		delay.play();
 	}
 
-	/**
-	 * {@code globalParams} is to retrieve required global config parameters for
-	 * login from config table.
-	 *
-	 */
-	protected void getGlobalParams() {
-		Map<String, Object> globalProps = globalParamService.getGlobalParams();
-		globalProps.putAll(localConfigService.getLocalConfigurations());
-		ApplicationContext.setApplicationMap(globalProps);
-	}
-
 
 	/**
 	 * Opens the home page screen.
