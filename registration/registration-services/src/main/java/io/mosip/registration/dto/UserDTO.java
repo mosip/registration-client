@@ -29,10 +29,10 @@ public class UserDTO {
 	private Boolean isActive;
 	private Boolean isDeleted;
 	private Timestamp delDtimes;
+	private String regCenterId;
 
 	private Set<UserRoleDTO> userRole;	
 	private Set<UserMachineMappingDTO> userMachineMapping;	
 	private Set<UserBiometricDTO> userBiometric;	
-	private UserPasswordDTO userPassword;	
-	private RegCenterUserDTO regCenterUser;	
+	private UserPasswordDTO userPassword;
 }

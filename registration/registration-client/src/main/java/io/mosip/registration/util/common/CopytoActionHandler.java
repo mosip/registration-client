@@ -2,6 +2,7 @@ package io.mosip.registration.util.common;
 
 import io.mosip.registration.constants.RegistrationConstants;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
@@ -18,48 +19,46 @@ public class CopytoActionHandler extends ChangeActionHandler {
 
     @Override
     public void handle(Pane parentPane, String source, String[] args) {
-        boolean copyEnabled = false;
+        Scene scene = parentPane.getScene();
 
-        if(args.length == 3) {
-           Node flagNode = parentPane.lookup(HASH.concat(args[2]));
-           if(flagNode != null && flagNode instanceof CheckBox) {
-               copyEnabled = ((CheckBox) flagNode).isSelected();
-               if(!copyEnabled) { return; }
-           }
-        }
+        for(int i=0; i<args.length; i++) {
+            boolean copyEnabled = false;
+            String[] parts = args[i].split("\\?|=");
 
-        if(args.length > 1) {
-            Node fromNode = parentPane.lookup(HASH.concat(args[0]));
-            Node toNode = parentPane.lookup(HASH.concat(args[1]));
-
-            //Handle based on langCode, required in case of TextField control
-            if(fromNode == null) {
-                fromNode = parentPane.lookup(HASH.concat(args[0] +
-                        source.substring(source.length()-RegistrationConstants.LANGCODE_LENGTH)));
+            if(parts.length == 3) {
+                Node flagNode = scene.lookup(HASH.concat(parts[0]));
+                if(flagNode != null && flagNode instanceof CheckBox) {
+                    copyEnabled = ((CheckBox) flagNode).isSelected();
+                    if(!copyEnabled) { continue; }
+                }
             }
 
-            if(toNode == null) {
-                toNode = parentPane.lookup(HASH.concat(args[0] +
-                        source.substring(source.length()- RegistrationConstants.LANGCODE_LENGTH)));
-            }
+            String sourceId = (parts.length == 3) ? parts[1] : ((parts.length == 2) ? parts[0] : null);
+            String targetId = (parts.length == 3) ? parts[2] : ((parts.length == 2) ? parts[1] : null);
 
-            if(!isValidNode(fromNode) || !isValidNode(toNode))
-                return;
+            if(sourceId != null && targetId != null) {
 
-            if(fromNode instanceof TextField) {
-                copy(parentPane, (TextField) fromNode, (TextField) toNode);
-            }
-            else if(fromNode instanceof ComboBox) {
-                copy((ComboBox) fromNode, (ComboBox) toNode);
-            }
+                Node fromNode = scene.lookup(HASH.concat(sourceId));
+                Node toNode = scene.lookup(HASH.concat(targetId));
 
-            if(copyEnabled) { toNode.setDisable(true); }
+                if(!isValidNode(fromNode) || !isValidNode(toNode))
+                    continue;
+
+                if(fromNode instanceof TextField) {
+                    copy(scene, (TextField) fromNode, (TextField) toNode);
+                }
+                else if(fromNode instanceof ComboBox) {
+                    copy((ComboBox) fromNode, (ComboBox) toNode);
+                }
+
+                if(copyEnabled) { toNode.setDisable(true); }
+            }
         }
     }
 
-    private void copy(Pane parentPane, TextField fromNode, TextField toNode) {
+    private void copy(Scene scene, TextField fromNode, TextField toNode) {
         toNode.setText(fromNode.getText());
-        Node localLangNode = parentPane.lookup(HASH.concat(toNode.getId()).concat("LocalLanguage"));
+        Node localLangNode = scene.lookup(HASH.concat(toNode.getId()).concat("LocalLanguage"));
         if(isValidNode(localLangNode) && localLangNode instanceof TextField) {
             ((TextField)localLangNode).setText(fromNode.getText());
         }

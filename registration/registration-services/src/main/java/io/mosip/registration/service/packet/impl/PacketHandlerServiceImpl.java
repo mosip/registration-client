@@ -19,10 +19,12 @@ import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.mosip.commons.packet.dto.PacketInfo;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.dto.schema.ProcessSpecDto;
+import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
@@ -298,15 +300,17 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		metaData.put(PacketManagerConstants.META_REGISTRATION_TYPE,
 				registrationDTO.getFlowType().getCategory().toUpperCase());
 		metaData.put(PacketManagerConstants.META_PRE_REGISTRATION_ID, registrationDTO.getPreRegistrationId());
-		metaData.put(PacketManagerConstants.META_MACHINE_ID,
-				(String) ApplicationContext.map().get(RegistrationConstants.USER_STATION_ID));
-		metaData.put(PacketManagerConstants.META_CENTER_ID,
-				(String) ApplicationContext.map().get(RegistrationConstants.USER_CENTER_ID));
-		metaData.put(PacketManagerConstants.META_DONGLE_ID,
-				(String) ApplicationContext.map().get(RegistrationConstants.DONGLE_SERIAL_NUMBER));
-		metaData.put("langCodes", String.join(RegistrationConstants.COMMA, registrationDTO.getSelectedLanguagesByApplicant()));
 
-		metaData.put(PacketManagerConstants.META_KEYINDEX, machineMappingDAO.getKeyIndexByMachineName(RegistrationSystemPropertiesChecker.getMachineId()));
+		MachineMaster machineMaster = machineMappingDAO.getMachine();
+		if(machineMaster == null || machineMaster.getRegCenterId() == null)
+			throwRegBaseCheckedException(RegistrationExceptionConstants.REG_PKT_INVALID_MACHINE_ID_EXCEPTION);
+
+		metaData.put(PacketManagerConstants.META_MACHINE_ID, machineMaster.getId());
+		metaData.put(PacketManagerConstants.META_CENTER_ID, machineMaster.getRegCenterId());
+		metaData.put(PacketManagerConstants.META_DONGLE_ID, machineMaster.getSerialNum());
+		metaData.put(PacketManagerConstants.META_KEYINDEX, machineMaster.getKeyIndex());
+
+		metaData.put("langCodes", String.join(RegistrationConstants.COMMA, registrationDTO.getSelectedLanguagesByApplicant()));
 		metaData.put(PacketManagerConstants.META_APPLICANT_CONSENT,
 				registrationDTO.getRegistrationMetaDataDTO().getConsentOfApplicant());
 
@@ -648,7 +652,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 		byte[] decryptedContent = clientCryptoFacade.decrypt(FileUtils.readFileToByteArray(new File(filepath)));
 		boolean isSignatureValid = clientCryptoFacade.getClientSecurity()
-				.validateSignature(CryptoUtil.decodeURLSafeBase64(registration.getAckSignature()), decryptedContent);
+				.validateSignature(ClientCryptoUtils.decodeBase64Data(registration.getAckSignature()), decryptedContent);
 		if(isSignatureValid)
 			return new String(decryptedContent);
 

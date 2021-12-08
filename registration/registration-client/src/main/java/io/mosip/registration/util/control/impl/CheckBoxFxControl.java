@@ -3,6 +3,7 @@ package io.mosip.registration.util.control.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.mosip.registration.controller.ClientApplication;
 import io.mosip.registration.util.common.DemographicChangeActionHandler;
 import org.springframework.context.ApplicationContext;
 
@@ -34,7 +35,7 @@ public class CheckBoxFxControl extends FxControl {
 	private DemographicChangeActionHandler demographicChangeActionHandler;
 
 	public CheckBoxFxControl() {
-		ApplicationContext applicationContext = Initialization.getApplicationContext();
+		ApplicationContext applicationContext = ClientApplication.getApplicationContext();
 		auditFactory = applicationContext.getBean(AuditManagerService.class);
 		demographicChangeActionHandler = applicationContext.getBean(DemographicChangeActionHandler.class);
 	}
@@ -128,6 +129,7 @@ public class CheckBoxFxControl extends FxControl {
 	public void setListener(Node node) {
 		CheckBox checkBox = (CheckBox) node;
 		checkBox.selectedProperty().addListener((options, oldValue, newValue) -> {
+			getRegistrationDTo().addDemographicField(uiFieldDTO.getId(), newValue ? "Y" : "N");
 			// handling other handlers
 			demographicChangeActionHandler.actionHandle((Pane) getNode(), node.getId(),
 					uiFieldDTO.getChangeAction());

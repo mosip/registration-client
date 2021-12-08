@@ -16,6 +16,7 @@ import java.util.List;
 
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
+import io.mosip.kernel.core.util.CryptoUtil;
 import org.apache.http.Consts;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -254,7 +255,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 				String payLoad = mosipDeviceSpecificationHelper.getPayLoad(sbiRCaptureResponseBiometricsDTO.getData());
 				String signature = mosipDeviceSpecificationHelper.getSignature(sbiRCaptureResponseBiometricsDTO.getData());
 
-				String decodedPayLoad = new String(Base64.getUrlDecoder().decode(payLoad));
+				String decodedPayLoad = new String(CryptoUtil.decodeURLSafeBase64(payLoad));
 				SbiRCaptureResponseDataDTO dataDTO = mapper.readValue(decodedPayLoad, SbiRCaptureResponseDataDTO.class);
 
 				LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
@@ -359,7 +360,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 	private SbiDigitalId getSbiDigitalId(String digitalId) throws IOException, RegBaseCheckedException, DeviceException {
 		mosipDeviceSpecificationHelper.validateJWTResponse(digitalId, digitalIdTrustDomain);
 		return mosipDeviceSpecificationHelper.getMapper().readValue(
-				new String(Base64.getUrlDecoder().decode(mosipDeviceSpecificationHelper.getPayLoad(digitalId))),
+				new String(CryptoUtil.decodeURLSafeBase64(mosipDeviceSpecificationHelper.getPayLoad(digitalId))),
 				SbiDigitalId.class);
 	}
 

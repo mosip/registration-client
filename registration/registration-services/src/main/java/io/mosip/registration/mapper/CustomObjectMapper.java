@@ -9,12 +9,7 @@ import io.mosip.registration.dto.UserBiometricDTO;
 import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.dto.UserMachineMappingDTO;
 import io.mosip.registration.dto.UserRoleDTO;
-import io.mosip.registration.entity.MachineMaster;
-import io.mosip.registration.entity.RegCenterUser;
-import io.mosip.registration.entity.UserBiometric;
-import io.mosip.registration.entity.UserDetail;
-import io.mosip.registration.entity.UserMachineMapping;
-import io.mosip.registration.entity.UserRole;
+import io.mosip.registration.entity.*;
 import ma.glasnost.orika.CustomMapper;
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
@@ -110,16 +105,6 @@ public class CustomObjectMapper extends ConfigurableMapper {
 				b.setBioTypeCode(a.getUserBiometricId().getBioTypeCode());
 			}
 		}).byDefault().register();
-		
-		mapperFactory.classMap(RegCenterUser.class, RegCenterUserDTO.class)
-		.customize(new CustomMapper<RegCenterUser, RegCenterUserDTO>() {
-			@Override
-			public void mapAtoB(RegCenterUser a, RegCenterUserDTO b, MappingContext context) {
-				b.setRegcntrId(a.getRegCenterUserId().getRegCenterId());
-				b.setUsrId(a.getRegCenterUserId().getUserId());
-			}
-		}).byDefault().register();
-		
 		
 		mapperFactory.classMap(UserDetail.class, UserDTO.class).byDefault().register();
 		mapperFactory.classMap(UserDTO.class, UserDetail.class).byDefault().register();

@@ -127,12 +127,6 @@ public class ClientSettingsHelperTest {
 	private UserMachineMappingRepository userMachineMappingRepository;
 
 	@Mock
-	private RegistrationCenterUserRepository registrationCenterUserRepository;
-
-	@Mock
-	private CenterMachineRepository centerMachineRepository;
-
-	@Mock
 	private RegistrationCenterRepository registrationCenterRepository;
 
 	@Mock

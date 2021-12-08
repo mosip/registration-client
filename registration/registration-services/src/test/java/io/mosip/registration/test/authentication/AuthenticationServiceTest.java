@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
@@ -86,7 +87,7 @@ public class AuthenticationServiceTest {
 		authenticationValidatorDTO.setPassword("mosip");
 		PowerMockito.mockStatic(CryptoUtil.class, HMACUtils2.class);
 		Mockito.when(loginService.getUserDetail("mosip")).thenReturn(userDTO);		
-		Mockito.when(CryptoUtil.decodeURLSafeBase64("salt")).thenReturn("salt".getBytes());
+		Mockito.when(ClientCryptoUtils.decodeBase64Data("salt")).thenReturn("salt".getBytes());
 		Mockito.when(HMACUtils2.digestAsPlainTextWithSalt("mosip".getBytes(), "salt".getBytes())).thenReturn("mosip");
 		
 		assertEquals(true, authenticationServiceImpl.validatePassword(authenticationValidatorDTO));
@@ -106,7 +107,7 @@ public class AuthenticationServiceTest {
 		authenticationValidatorDTO.setPassword("mosip");
 		
 		Mockito.when(loginService.getUserDetail("mosip")).thenReturn(userDTO);		
-		Mockito.when(CryptoUtil.decodeBase64("salt")).thenReturn("salt".getBytes());		
+		Mockito.when(ClientCryptoUtils.decodeBase64Data("salt")).thenReturn("salt".getBytes());
 		Mockito.when(HMACUtils2.digestAsPlainTextWithSalt("mosip1".getBytes(), "salt".getBytes())).thenReturn("mosip1");
 
 		String errorCode = null;

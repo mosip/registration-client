@@ -7,7 +7,6 @@ import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.registration.dto.biometric.BiometricDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.entity.UserBiometric;
-import io.mosip.registration.entity.UserMachineMapping;
 
 /**
  * This class is used to save the biometric details of the registration officer.

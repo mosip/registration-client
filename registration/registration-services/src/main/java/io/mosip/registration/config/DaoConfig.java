@@ -21,19 +21,15 @@ import java.util.WeakHashMap;
 
 import javax.sql.DataSource;
 
+import io.mosip.registration.context.ApplicationContext;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertiesPropertySource;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -99,16 +95,22 @@ public class DaoConfig extends HibernateDaoConfig {
 	private ConfigurableEnvironment environment;
 
 	private static boolean isPPCUpdated = false;
-	private static PropertySourcesPlaceholderConfigurer ppc = null;
-
 	private DriverManagerDataSource driverManagerDataSource = null;
+	private static ApplicationContext applicationContext;
 
 	static {
+		try (InputStream configKeys = DaoConfig.class.getClassLoader().getResourceAsStream("spring.properties");
+			 InputStream buildKeys = DaoConfig.class.getClassLoader().getResourceAsStream("props/mosip-application.properties")) {
 
-		try (InputStream keyStream = DaoConfig.class.getClassLoader().getResourceAsStream("spring.properties")) {
+			applicationContext = io.mosip.registration.context.ApplicationContext.getInstance();
 
 			keys = new Properties();
-			keys.load(keyStream);
+			keys.load(configKeys);
+			keys.load(buildKeys);
+
+			keys.keySet().forEach( k -> {
+				applicationContext.getApplicationMap().put((String) k, keys.get(k));
+			});
 
 		} catch (Exception e) {
 			LOGGER.error(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID,
@@ -417,9 +419,11 @@ public class DaoConfig extends HibernateDaoConfig {
 		if (!isPPCUpdated) {
 			Properties properties = new Properties();
 			Map<String, Object> globalProps = getDBProps(jdbcTemplate);
+			properties.putAll(keys);
 			properties.putAll(getLocalProps(jdbcTemplate, globalProps));
 			PropertiesPropertySource propertiesPropertySource = new PropertiesPropertySource("globalparams", properties);
 			environment.getPropertySources().addFirst(propertiesPropertySource);
+			applicationContext.getApplicationMap().putAll(globalProps);
 			isPPCUpdated = true;
 		}
 	}
