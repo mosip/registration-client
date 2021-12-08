@@ -65,7 +65,7 @@ public class ClientApplication extends Application {
 			applicationStartTime = String.valueOf(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 			System.setProperty("java.net.useSystemProxies", "true");
 			System.setProperty("file.encoding", "UTF-8");
-			io.mosip.registration.context.ApplicationContext.getInstance();
+
 			notifyPreloader(new ClientPreLoaderNotification("Creating application context..."));
 			applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
 			SessionContext.setApplicationContext(applicationContext);
@@ -81,9 +81,9 @@ public class ClientApplication extends Application {
 			setupResourceBundleBasedOnDefaultAppLang();
 
 			notifyPreloader(new ClientPreLoaderNotification("ENV mosip.hostname : " +
-					applicationContext.getEnvironment().getProperty("mosip.hostname")));
+					io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap("mosip.hostname")));
 			notifyPreloader(new ClientPreLoaderNotification("client.upgrade.server.url : " +
-					applicationContext.getEnvironment().getProperty("client.upgrade.server.url")));
+					io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap("client.upgrade.server.url")));
 
 			handleInitialSync();
 
