@@ -33,19 +33,19 @@ public class StartApplication extends Application {
     public void start(Stage primaryStage) {
 
         try {
-            io.mosip.registration.context.ApplicationContext.getInstance();
+            //io.mosip.registration.context.ApplicationContext.getInstance();
             System.out.println(System.getProperty("mosip.hostname"));
-
-            // applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
-
             ClientApplication clientApplication = new ClientApplication();
+            logger.info("Started with clientApplication.init()");
             clientApplication.init();
+            logger.info("completed clientApplication.init()");
             applicationContext = ClientApplication.getApplicationContext();
             logger.info("Automaiton Script - ApplicationContext has taken");
 
             StartApplication.primaryStage = primaryStage;
             clientApplication.start(primaryStage);
             this.primaryStage = primaryStage;
+            RegistrationMain.initDone = true;
 
         } catch (Exception e) {
             logger.error("", e);

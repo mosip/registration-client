@@ -25,6 +25,7 @@ public class RegistrationMain {
     static String[] Strinrid;
     static RID rid1, rid2, rid3, rid4, rid5, rid6;
     static String process, ageGroup;
+    protected static boolean initDone = false;
 
     public static void invokeRegClient(String operatorId, String operatorPwd, String supervisorId, String supervisorPwd,
         String reviewerUserid, String reviewerpwd) {
@@ -40,7 +41,7 @@ public class RegistrationMain {
             public void run() {
                 try {
 
-                    Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait")));
+                    while (!initDone) {}
 
                     logger.info("ApplicationLaunchTimeWait is Done");
 
@@ -175,7 +176,7 @@ public class RegistrationMain {
             System.setProperty("file.encoding", "UTF-8");
             System.setProperty("derby.ui.codeset", "UTF-8");
             System.setProperty("jdbc.drivers", "org.apache.derby.jdbc.EmbeddedDriver");
-            System.setProperty("mosip.hostname", PropertiesUtil.getKeyValue("mosip.hostname"));
+           // System.setProperty("mosip.hostname", PropertiesUtil.getKeyValue("mosip.hostname"));
 
 //				//if (Boolean.getBoolean("headless")) {
 //				    System.setProperty("testfx.robot", "glass");
