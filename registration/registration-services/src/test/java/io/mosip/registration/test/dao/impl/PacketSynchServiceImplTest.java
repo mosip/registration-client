@@ -35,9 +35,12 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.retry.support.RetryTemplate;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -63,10 +66,13 @@ import io.mosip.registration.entity.Registration;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.service.packet.impl.PacketSynchServiceImpl;
+import io.mosip.registration.test.config.TestDaoConfig;
 import io.mosip.registration.util.restclient.RequestHTTPDTO;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
-@RunWith(PowerMockRunner.class)
+//@RunWith(PowerMockRunner.class)
+@RunWith(SpringRunner.class)
+@ContextConfiguration(classes = { TestDaoConfig.class })
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
 @PrepareForTest({ HMACUtils2.class, SessionContext.class, FileUtils.class, JsonUtils.class, BigInteger.class })
 public class PacketSynchServiceImplTest {
@@ -90,7 +96,7 @@ public class PacketSynchServiceImplTest {
 	@Mock
 	private RegistrationDAOImpl registrationDAOImpl;
 	
-	@Mock
+	@Autowired
 	private PacketSynchServiceImpl packetSynchServiceImpl;
 
 
@@ -99,6 +105,7 @@ public class PacketSynchServiceImplTest {
 		
 		PowerMockito.mockStatic(HMACUtils2.class);
 		PowerMockito.mockStatic(SessionContext.class);
+		PowerMockito.mockStatic(ApplicationContext.class);
 				
 		doNothing().when(auditFactory).audit(Mockito.any(AuditEvent.class), Mockito.any(Components.class),
 				Mockito.anyString(), Mockito.anyString());
@@ -107,9 +114,10 @@ public class PacketSynchServiceImplTest {
 		PowerMockito.doReturn(userContext).when(SessionContext.class, "userContext");
 		PowerMockito.when(SessionContext.userContext().getUserId()).thenReturn("mosip1214");
 		
+		
 		Map<String, Object> maplastTime = new HashMap<>();
 		maplastTime.put("PRIMARY_LANGUAGE", "ENG");
-		ApplicationContext.getInstance().setApplicationMap(maplastTime);
+		ApplicationContext.setApplicationMap(maplastTime);
 
 		packetSynchServiceImpl.init();
 	}
