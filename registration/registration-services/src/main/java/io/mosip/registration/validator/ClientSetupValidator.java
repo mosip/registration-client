@@ -40,7 +40,7 @@ public class ClientSetupValidator {
 
 
     public ClientSetupValidator() throws RegBaseCheckedException {
-        try (InputStream keyStream = getClass().getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
+        try (InputStream keyStream = getClass().getResourceAsStream(PROPERTIES_FILE)) {
             Properties properties = new Properties();
             properties.load(keyStream);
             logger.info("Loading {} completed", PROPERTIES_FILE);
