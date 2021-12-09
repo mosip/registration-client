@@ -45,7 +45,6 @@ public class StartApplication extends Application {
             StartApplication.primaryStage = primaryStage;
             clientApplication.start(primaryStage);
             this.primaryStage = primaryStage;
-            RegistrationMain.initDone = true;
 
         } catch (Exception e) {
             logger.error("", e);
