@@ -366,9 +366,6 @@ public class GenericController extends BaseController {
 					RegistrationExceptionConstants.PRE_REG_SYNC_FAIL.getErrorMessage());
 		}
 
-		RegistrationDTO preRegistrationDTO = (RegistrationDTO) successResponseDTO.getOtherAttributes()
-				.get(RegistrationConstants.REGISTRATION_DTO);
-
 		for (UiScreenDTO screenDTO : orderedScreens.values()) {
 			for (UiFieldDTO field : screenDTO.getFields()) {
 				FxControl fxControl = getFxControl(field.getId());
@@ -377,10 +374,13 @@ public class GenericController extends BaseController {
 						case "biometricsType":
 							break;
 						case "documentType":
-							fxControl.selectAndSet(preRegistrationDTO.getDocuments().get(field.getId()));
+							fxControl.selectAndSet(getRegistrationDTOFromSession().getDocuments().get(field.getId()));
 							break;
 						default:
-							fxControl.selectAndSet(preRegistrationDTO.getDemographics().get(field.getId()));
+							fxControl.selectAndSet(getRegistrationDTOFromSession().getDemographics().get(field.getId()));
+							//it will read data from field components and set it in registrationDTO along with selectedCodes and ageGroups
+							//kind of supporting data
+							fxControl.setData(getRegistrationDTOFromSession().getDemographics().get(field.getId()));
 							break;
 					}
 				}
@@ -682,7 +682,7 @@ public class GenericController extends BaseController {
 				result.get().getStyleClass().add(TAB_LABEL_ERROR_CLASS);
 				break;
 			}
-			else
+			else if (result.isPresent())
 				result.get().getStyleClass().remove(TAB_LABEL_ERROR_CLASS);
 		}
 		return errorScreen;

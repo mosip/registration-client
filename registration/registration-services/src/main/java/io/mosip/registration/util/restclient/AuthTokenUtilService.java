@@ -4,7 +4,7 @@ package io.mosip.registration.util.restclient;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.kernel.core.exception.ExceptionUtils;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
@@ -21,7 +21,6 @@ import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.repositories.UserTokenRepository;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import lombok.SneakyThrows;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -33,8 +32,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
@@ -44,14 +41,10 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
-
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 
 /**
@@ -167,8 +160,8 @@ public class AuthTokenUtilService {
             String payload = String.format("{\"refreshToken\" : \"%s\", \"authType\":\"%s\", \"timestamp\" : \"%s\"}",
                     refreshToken, "REFRESH", timestamp);
             byte[] signature = clientCryptoFacade.getClientSecurity().signData(payload.getBytes());
-            String data = String.format("%s.%s.%s", Base64.getUrlEncoder().encodeToString(header.getBytes()),
-                    Base64.getUrlEncoder().encodeToString(payload.getBytes()), Base64.getUrlEncoder().encodeToString(signature));
+            String data = String.format("%s.%s.%s", CryptoUtil.encodeToURLSafeBase64(header.getBytes()),
+                    CryptoUtil.encodeToURLSafeBase64(payload.getBytes()), CryptoUtil.encodeToURLSafeBase64(signature));
 
             RequestHTTPDTO requestHTTPDTO = getRequestHTTPDTO(data, timestamp);
             setTimeout(requestHTTPDTO);
@@ -214,8 +207,8 @@ public class AuthTokenUtilService {
             }
 
             byte[] signature = clientCryptoFacade.getClientSecurity().signData(payload.getBytes());
-            String data = String.format("%s.%s.%s", Base64.getUrlEncoder().encodeToString(header.getBytes()),
-                    Base64.getUrlEncoder().encodeToString(payload.getBytes()), Base64.getUrlEncoder().encodeToString(signature));
+            String data = String.format("%s.%s.%s", CryptoUtil.encodeToURLSafeBase64(header.getBytes()),
+                    CryptoUtil.encodeToURLSafeBase64(payload.getBytes()), CryptoUtil.encodeToURLSafeBase64(signature));
 
             RequestHTTPDTO requestHTTPDTO = getRequestHTTPDTO(data, timestamp);
             setTimeout(requestHTTPDTO);
@@ -277,8 +270,8 @@ public class AuthTokenUtilService {
             String payload = jsonObject.toString();
 
             byte[] signature = clientCryptoFacade.getClientSecurity().signData(payload.getBytes());
-            String data = String.format("%s.%s.%s", Base64.getUrlEncoder().encodeToString(header.getBytes()),
-                    Base64.getUrlEncoder().encodeToString(payload.getBytes()), Base64.getUrlEncoder().encodeToString(signature));
+            String data = String.format("%s.%s.%s", CryptoUtil.encodeToURLSafeBase64(header.getBytes()),
+                    CryptoUtil.encodeToURLSafeBase64(payload.getBytes()), CryptoUtil.encodeToURLSafeBase64(signature));
 
             RequestHTTPDTO requestHTTPDTO = getRequestHTTPDTO(data, timestamp);
             setTimeout(requestHTTPDTO);
@@ -309,7 +302,7 @@ public class AuthTokenUtilService {
         if(responseMap.get(RegistrationConstants.REST_RESPONSE_BODY) != null) {
             Map<String, Object> respBody = (Map<String, Object>) responseMap.get(RegistrationConstants.REST_RESPONSE_BODY);
             if (respBody.get("response") != null) {
-                byte[] decryptedData = clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64((String)respBody.get("response")));
+                byte[] decryptedData = clientCryptoFacade.decrypt(ClientCryptoUtils.decodeBase64Data((String)respBody.get("response")));
                 return new JSONObject(new String(decryptedData));
             }
 

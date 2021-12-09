@@ -1,8 +1,6 @@
 package io.mosip.registration.util.mastersync;
 
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.SyncFailedException;
 import java.nio.charset.StandardCharsets;
@@ -18,9 +16,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.registration.dto.schema.ProcessSpecDto;
-import io.mosip.registration.exception.ConnectionException;
-import io.mosip.registration.exception.RegBaseCheckedException;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -48,7 +45,6 @@ import io.mosip.registration.repositories.ApplicantValidDocumentRepository;
 import io.mosip.registration.repositories.BiometricAttributeRepository;
 import io.mosip.registration.repositories.BiometricTypeRepository;
 import io.mosip.registration.repositories.BlocklistedWordsRepository;
-import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.DocumentCategoryRepository;
 import io.mosip.registration.repositories.DocumentTypeRepository;
 import io.mosip.registration.repositories.DynamicFieldRepository;
@@ -64,7 +60,6 @@ import io.mosip.registration.repositories.ReasonCategoryRepository;
 import io.mosip.registration.repositories.ReasonListRepository;
 import io.mosip.registration.repositories.RegistrationCenterRepository;
 import io.mosip.registration.repositories.RegistrationCenterTypeRepository;
-import io.mosip.registration.repositories.RegistrationCenterUserRepository;
 import io.mosip.registration.repositories.ScreenAuthorizationRepository;
 import io.mosip.registration.repositories.ScreenDetailRepository;
 import io.mosip.registration.repositories.SyncJobDefRepository;
@@ -141,14 +136,6 @@ public class ClientSettingSyncHelper {
 
 	/** Object for Sync language Repository. */
 	@Autowired
-	private RegistrationCenterUserRepository registrationCenterUserRepository;
-
-	/** Object for Sync language Repository. */
-	@Autowired
-	private CenterMachineRepository centerMachineRepository;
-
-	/** Object for Sync language Repository. */
-	@Autowired
 	private RegistrationCenterRepository registrationCenterRepository;
 
 	/** Object for Sync language Repository. */
@@ -205,10 +192,7 @@ public class ClientSettingSyncHelper {
 	
 	static {
 		ENTITY_CLASS_NAMES.put("MachineSpecification", ENTITY_PACKAGE_NAME + "RegMachineSpec");
-		ENTITY_CLASS_NAMES.put("RegistrationCenterUser", ENTITY_PACKAGE_NAME + "RegCenterUser");
-		ENTITY_CLASS_NAMES.put("RegistrationCenterMachine", ENTITY_PACKAGE_NAME + "CenterMachine");
 		ENTITY_CLASS_NAMES.put("Machine", ENTITY_PACKAGE_NAME + "MachineMaster");
-		ENTITY_CLASS_NAMES.put("RegistrationCenterUserMachine", ENTITY_PACKAGE_NAME + "UserMachineMapping");
 	}
 	
 
@@ -270,14 +254,14 @@ public class ClientSettingSyncHelper {
 
 			LOGGER.info("Building entity of type : {} : {}", syncDataBaseDto.getEntityName(), syncDataBaseDto.getEntityType());
 			JSONArray jsonArray = null;
-			byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(syncDataBaseDto.getData()));
+			byte[] data = clientCryptoFacade.decrypt(ClientCryptoUtils.decodeBase64Data(syncDataBaseDto.getData()));
 			switch (syncDataBaseDto.getEntityType()) {
 				case "structured-url":
 					Path path = Paths.get(System.getProperty("user.dir"), syncDataBaseDto.getEntityName());
 					JSONObject jsonObject = new JSONObject(new String(data));
 					downloadUrlData(path, jsonObject);
 					jsonArray = new JSONArray(jsonObject.getBoolean("encrypted") ?
-							new String(clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(FileUtils.readFileToString(path.toFile(),
+							new String(clientCryptoFacade.decrypt(ClientCryptoUtils.decodeBase64Data(FileUtils.readFileToString(path.toFile(),
 									StandardCharsets.UTF_8)))) :
 							FileUtils.readFileToString(path.toFile(), StandardCharsets.UTF_8));
 					path.toFile().delete();
@@ -372,8 +356,6 @@ public class ClientSettingSyncHelper {
 		try {
 			registrationCenterTypeRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "RegistrationCenterType")));
 			registrationCenterRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "RegistrationCenter")));			
-			centerMachineRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "RegistrationCenterMachine")));
-			registrationCenterUserRepository.saveAll(buildEntities(getSyncDataBaseDto(syncDataResponseDto, "RegistrationCenterUser")));
 		} catch (Exception e ) {
 			LOGGER.error("RegistrationCenter Data sync failed", e);
 			throw new SyncFailedException("RegistrationCenter data sync failed due to " +  e.getMessage());
@@ -498,13 +480,13 @@ public class ClientSettingSyncHelper {
 
 			while(iterator.hasNext()) {
 				SyncDataBaseDto syncDataBaseDto = iterator.next();
-				byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(syncDataBaseDto.getData()));
+				byte[] data = clientCryptoFacade.decrypt(ClientCryptoUtils.decodeBase64Data(syncDataBaseDto.getData()));
 				Path path = Paths.get(System.getProperty("user.dir"), syncDataBaseDto.getEntityName());
 				JSONObject jsonObject = new JSONObject(new String(data));
 				downloadUrlData(path, jsonObject);
 
 				String downloadedData = jsonObject.getBoolean("encrypted") ?
-						new String(clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(FileUtils.readFileToString(path.toFile(),
+						new String(clientCryptoFacade.decrypt(ClientCryptoUtils.decodeBase64Data(FileUtils.readFileToString(path.toFile(),
 								StandardCharsets.UTF_8)))) :
 						FileUtils.readFileToString(path.toFile(), StandardCharsets.UTF_8);
 
@@ -543,7 +525,7 @@ public class ClientSettingSyncHelper {
 			while(iterator.hasNext()) {
 				SyncDataBaseDto syncDataBaseDto = iterator.next();
 				if(syncDataBaseDto != null && syncDataBaseDto.getData() != null && !syncDataBaseDto.getData().isEmpty()) {
-					byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(syncDataBaseDto.getData()));
+					byte[] data = clientCryptoFacade.decrypt(ClientCryptoUtils.decodeBase64Data(syncDataBaseDto.getData()));
 					saveDynamicFieldData(new String(data));
 				}
 			}
@@ -560,7 +542,7 @@ public class ClientSettingSyncHelper {
 			return;
 
 		JSONArray jsonArray = new JSONArray(data);
-		List<DynamicField> fields = new ArrayList<DynamicField>();
+		Map<String, DynamicField> fields = new HashMap<>();
 		for(int i=0; i< jsonArray.length(); i++) {
 			DynamicFieldDto dynamicFieldDto = MapperUtils.convertJSONStringToDto(jsonArray.getJSONObject(i).toString(),
 					new TypeReference<DynamicFieldDto>() {});
@@ -572,11 +554,11 @@ public class ClientSettingSyncHelper {
 			dynamicField.setValueJson(dynamicFieldDto.getFieldVal() == null ?
 					"[]" : MapperUtils.convertObjectToJsonString(dynamicFieldDto.getFieldVal()));
 			dynamicField.setActive(dynamicFieldDto.isActive());
-			fields.add(dynamicField);
+			fields.put(dynamicFieldDto.getName()+dynamicFieldDto.getLangCode(), dynamicField);
 		}
 
 		if (!fields.isEmpty()) {
-			dynamicFieldRepository.saveAll(fields);
+			dynamicFieldRepository.saveAll(fields.values());
 		}
 	}
 
@@ -616,7 +598,9 @@ public class ClientSettingSyncHelper {
 	//saves processes and subprocess as separate schema
 	private void saveProcessSpec(SchemaDto schemaDto, String jsonString) {
 		JSONObject jsonObject = new JSONObject(jsonString);
-		jsonObject.keySet().forEach( key -> {
+		Iterator<String> keys = jsonObject.keys();
+		while (keys.hasNext()) {
+			String key = keys.next();
 			if(key.toLowerCase().endsWith("process")) {
 				try {
 					ProcessSpecDto processSpecDto = MapperUtils.convertJSONStringToDto(jsonObject.get(key).toString(),
@@ -626,7 +610,7 @@ public class ClientSettingSyncHelper {
 					LOGGER.error(e.getMessage(), e);
 				}
 			}
-		});
+		}
 	}
 	
 	@Async
@@ -648,7 +632,7 @@ public class ClientSettingSyncHelper {
 					.collect(Collectors.toList());
 
 				for (SyncDataBaseDto syncDataBaseDto : scriptToDownload) {
-					byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(syncDataBaseDto.getData()));
+					byte[] data = clientCryptoFacade.decrypt(ClientCryptoUtils.decodeBase64Data(syncDataBaseDto.getData()));
 					downloadUrlData(Paths.get(System.getProperty("user.dir"), syncDataBaseDto.getEntityName()), new JSONObject(new String(data)));
 				}
 			} catch (Exception e) {

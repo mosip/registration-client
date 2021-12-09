@@ -105,6 +105,9 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 	private void setContent() {
 		try {
+			SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+					RegistrationConstants.ENABLE);
+			
 			List<SyncJobDef> syncJobs = jobConfigurationService.getSyncJobs();
 			GridPane gridPane = createGridPane(syncJobs.size());
 			addContentToGridPane(gridPane, syncJobs);
@@ -215,6 +218,10 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 				modifyCronExpression(syncJob, cronTextField.getText());
 			});
 
+			cronTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+				SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+						RegistrationConstants.DISABLE);
+			});
 			cronTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
 				if (newValue) {
 					Platform.runLater(() -> {

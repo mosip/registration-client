@@ -873,9 +873,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 		auditFactory.audit(getAuditEventForScan(currentModality), Components.REG_BIOMETRICS, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-		//scanPopUpViewController.setDocumentScan(false);
-		//scanPopUpViewController.init(this, "Biometrics");
-
 		deviceSearchTask = new Service<MdmBioDevice>() {
 			@Override
 			protected Task<MdmBioDevice> createTask() {
@@ -918,13 +915,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 				try {
 
-					/*if (isExceptionPhoto(currentModality) && (mdmBioDevice == null || mdmBioDevice.getSpecVersion()
-							.equalsIgnoreCase(RegistrationConstants.SPEC_VERSION_092))) {
-
-						streamLocalCamera();
-						return;
-
-					}*/
 
 						// Disable Auto-Logout
 						SessionContext.setAutoLogout(false);
@@ -943,44 +933,26 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 						boolean isStreamStarted = urlStream != null && urlStream.read() != -1;
 						if (!isStreamStarted) {
-
 							LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 									"URL Stream was null for : " + System.currentTimeMillis());
-
 							deviceSpecificationFactory.init();
-
+							streamer.setUrlStream(null);
 							generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
-							//scanPopUpViewController.getPopupStage().close();
 
 							return;
 						}
-
-						//setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_INIT_MESSAGE));
 
 						rCaptureTaskService();
 
 						streamer.startStream(urlStream, biometricImage, biometricImage);
 
 				} catch (RegBaseCheckedException | IOException exception) {
-
-					LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-							"Error while streaming : " + ExceptionUtils.getStackTrace(exception));
-
-					LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-							"Checking if exception photo");
-
-					/*if (isExceptionPhoto(currentModality)) {
-
-						streamLocalCamera();
-
-						return;
-
-					}*/
+					LOGGER.error("Error while streaming : ", exception);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
-					//scanPopUpViewController.getPopupStage().close();
 
 					// Enable Auto-Logout
 					SessionContext.setAutoLogout(true);
+					streamer.setUrlStream(null);
 				}
 
 			}
@@ -994,14 +966,8 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 				LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 						"Exception while finding bio device");
-
-				/*if (isExceptionPhoto(currentModality)) {
-
-					streamLocalCamera();
-					return;
-
-				}*/
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
+				streamer.setUrlStream(null);
 
 			}
 		});
@@ -1082,9 +1048,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 				LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "RCapture task failed");
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
-
-				LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "closing popup stage");
-				//scanPopUpViewController.getPopupStage().close();
 
 				LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Enabling LogOut");
 				// Enable Auto-Logout
@@ -1172,13 +1135,11 @@ public class BiometricsController extends BaseController /* implements Initializ
 				} catch (Exception exception) {
 					LOGGER.error("Exception while getting the scanned biometrics for operator onboarding", exception);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
+				} finally {
+					// Enable Auto-Logout
+					SessionContext.setAutoLogout(true);
+					streamer.setUrlStream(null);
 				}
-
-				//scanPopUpViewController.getPopupStage().close();
-				// Enable Auto-Logout
-				SessionContext.setAutoLogout(true);
-
-				streamer.setUrlStream(null);
 			}
 		});
 		LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,

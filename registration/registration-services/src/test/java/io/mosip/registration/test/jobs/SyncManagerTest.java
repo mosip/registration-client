@@ -2,7 +2,6 @@ package io.mosip.registration.test.jobs;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
-import static org.mockito.Mockito.times;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,22 +10,13 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 import io.mosip.kernel.core.util.DateUtils;
-import io.mosip.kernel.core.util.HMACUtils2;
-import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.*;
 import io.mosip.registration.entity.*;
-import io.mosip.registration.entity.id.CenterMachineId;
-import io.mosip.registration.entity.id.RegMachineSpecId;
-import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.service.BaseService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,7 +45,6 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.impl.SyncManagerImpl;
 import io.mosip.registration.repositories.SyncTransactionRepository;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
@@ -113,9 +102,6 @@ public class SyncManagerTest {
 	@Mock
 	private MachineMasterRepository machineMasterRepository;
 
-	@Mock
-	private CenterMachineRepository centerMachineRepository;
-
 	private Map<String, Object> applicationMap = new HashMap<>();
 
 	@Before
@@ -146,10 +132,10 @@ public class SyncManagerTest {
 		applicationMap.put(RegistrationConstants.REG_DELETION_CONFIGURED_DAYS, "5");
 		io.mosip.registration.context.ApplicationContext.setApplicationMap(applicationMap);
 
-		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn("10011");
+		Mockito.when(baseService.getCenterId()).thenReturn("10011");
 		Mockito.when(baseService.getStationId()).thenReturn("11002");
 		Mockito.when(baseService.isInitialSync()).thenReturn(false);
-		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
+		Mockito.when(registrationCenterDAO.isMachineCenterActive()).thenReturn(true);
 
 		MachineMaster machine = new MachineMaster();
 
@@ -157,13 +143,6 @@ public class SyncManagerTest {
 		machine.setIsActive(true);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
 
-		CenterMachine centerMachine = new CenterMachine();
-		CenterMachineId centerMachineId = new CenterMachineId();
-		centerMachineId.setMachineId("11002");
-		centerMachineId.setRegCenterId("10011");
-		centerMachine.setCenterMachineId(centerMachineId);
-		centerMachine.setIsActive(true);
-		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString())).thenReturn(centerMachine);
 	}
 
 	private SyncTransaction prepareSyncTransaction() {

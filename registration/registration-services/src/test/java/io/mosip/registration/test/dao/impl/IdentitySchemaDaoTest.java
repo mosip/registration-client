@@ -39,15 +39,10 @@ public class IdentitySchemaDaoTest {
 	@Autowired
 	private IdentitySchemaRepository identitySchemaRepository;
 
-	private ObjectMapper mapper = new ObjectMapper();
+	@Autowired
+	private ObjectMapper mapper;
 
-	@Before
-	public void setup() {
-		mapper.registerModule(new JavaTimeModule());
-		mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-	}
 
-	@Ignore
 	@Test
 	public void testSuccessSchemaSync() throws IOException {
 		SchemaDto dto = getSchemaDto("response_1587846312621.json");

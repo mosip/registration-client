@@ -332,12 +332,12 @@ public class TemplateGenerator extends BaseService {
 	}
 
 	private Object getFieldLabel(UiFieldDTO field) {
-		String label = RegistrationConstants.EMPTY;
+		List<String> labels = new ArrayList<>();
 		List<String> selectedLanguages = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant();
 		for (String selectedLanguage : selectedLanguages) {
-			label = !label.isBlank() ? label.concat(RegistrationConstants.SLASH).concat(field.getLabel().get(selectedLanguage)) : field.getLabel().get(selectedLanguage);
+			labels.add(field.getLabel().get(selectedLanguage));
 		}
-		return label;
+		return String.join(RegistrationConstants.SLASH, labels);
 	}
 
 	private Map<String, Object> getDemographicData(RegistrationDTO registration, UiFieldDTO field) {
@@ -480,13 +480,13 @@ public class TemplateGenerator extends BaseService {
 	}
 
 	private String getLabel(String key) {
-		String label = RegistrationConstants.EMPTY;
+		List<String> labels = new ArrayList<>();
 		List<String> selectedLanguages = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant();
 		for (String selectedLanguage : selectedLanguages) {
 			ResourceBundle resourceBundle = ApplicationContext.getInstance().getBundle(selectedLanguage, RegistrationConstants.LABELS);
-			label = !label.isBlank() ? (resourceBundle.containsKey(key) ? label.concat(RegistrationConstants.SLASH).concat(resourceBundle.getString(key)) : RegistrationConstants.EMPTY) : resourceBundle.getString(key);
+			labels.add(resourceBundle.containsKey(key) ? resourceBundle.getString(key) : RegistrationConstants.EMPTY);
 		}
-		return label;
+		return String.join(RegistrationConstants.SLASH, labels);
 	}
 
 	private String getEncodedImage(String imagePath, String encoding) throws RegBaseCheckedException {
@@ -546,15 +546,15 @@ public class TemplateGenerator extends BaseService {
 
 	private String getFieldValue(UiFieldDTO field) {
 		Object fieldValue = getRegistrationDTOFromSession().getDemographics().get(((UiFieldDTO) field).getId());
-		String value = RegistrationConstants.EMPTY;
+		List<String> values = new ArrayList<>();
 		List<String> selectedLanguages = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant();
 		for (String selectedLanguage : selectedLanguages) {
-			value = value.isBlank() ? value.concat(getValue(fieldValue, selectedLanguage)) : value.concat(RegistrationConstants.SLASH).concat(getValue(fieldValue, selectedLanguage));
+			values.add(getValue(fieldValue, selectedLanguage));
 			if (!field.getType().equalsIgnoreCase(RegistrationConstants.SIMPLE_TYPE)) {
-				return value;
+				return String.join(RegistrationConstants.SLASH, values);
 			}
 		}
-		return value;
+		return String.join(RegistrationConstants.SLASH, values);
 	}
 
 	private String getValue(Object fieldValue) {

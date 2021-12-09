@@ -19,16 +19,14 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.device.BiometricsController;
 import io.mosip.registration.service.operator.UserOnboardService;
-import io.mosip.registration.util.restclient.AuthTokenUtilService;
-
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 
@@ -87,9 +85,6 @@ public class UserOnboardController extends BaseController implements Initializab
 	@Autowired
 	private UserOnboardService userOnboardService;
 
-	@Autowired
-	private AuthTokenUtilService authTokenUtilService;
-
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		setImagesOnHover();
@@ -135,7 +130,8 @@ public class UserOnboardController extends BaseController implements Initializab
 		onboardGridPane.setOnMouseClicked(e -> {
 			if (Desktop.isDesktopSupported()) {
 				try {
-					Desktop.getDesktop().browse(new URI(RegistrationConstants.MOSIP_URL));
+					Desktop.getDesktop().browse(new URI(ApplicationContext
+							.getStringValueFromApplicationMap(RegistrationConstants.ONBOARD_YOURSELF_URL)));
 				} catch (IOException ioException) {
 					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 							ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
@@ -152,7 +148,8 @@ public class UserOnboardController extends BaseController implements Initializab
 		registerGridPane.setOnMouseClicked(e -> {
 			if (Desktop.isDesktopSupported()) {
 				try {
-					Desktop.getDesktop().browse(new URI(RegistrationConstants.MOSIP_URL));
+					Desktop.getDesktop().browse(new URI(ApplicationContext
+							.getStringValueFromApplicationMap(RegistrationConstants.REGISTERING_INDIVIDUAL_URL)));
 				} catch (IOException ioException) {
 					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 							ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
@@ -169,7 +166,8 @@ public class UserOnboardController extends BaseController implements Initializab
 		syncDataGridPane.setOnMouseClicked(e -> {
 			if (Desktop.isDesktopSupported()) {
 				try {
-					Desktop.getDesktop().browse(new URI(RegistrationConstants.MOSIP_URL));
+					Desktop.getDesktop().browse(new URI(ApplicationContext
+							.getStringValueFromApplicationMap(RegistrationConstants.SYNC_DATA_URL)));
 				} catch (IOException ioException) {
 					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 							ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
@@ -186,7 +184,8 @@ public class UserOnboardController extends BaseController implements Initializab
 		mapDevicesGridPane.setOnMouseClicked(e -> {
 			if (Desktop.isDesktopSupported()) {
 				try {
-					Desktop.getDesktop().browse(new URI(RegistrationConstants.MOSIP_URL));
+					Desktop.getDesktop().browse(new URI(ApplicationContext
+							.getStringValueFromApplicationMap(RegistrationConstants.MAPPING_DEVICES_URL)));
 				} catch (IOException ioException) {
 					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 							ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
@@ -203,7 +202,8 @@ public class UserOnboardController extends BaseController implements Initializab
 		uploadDataGridPane.setOnMouseClicked(e -> {
 			if (Desktop.isDesktopSupported()) {
 				try {
-					Desktop.getDesktop().browse(new URI(RegistrationConstants.MOSIP_URL));
+					Desktop.getDesktop().browse(new URI(ApplicationContext
+							.getStringValueFromApplicationMap(RegistrationConstants.UPLOADING_DATA_URL)));
 				} catch (IOException ioException) {
 					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 							ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
@@ -220,7 +220,8 @@ public class UserOnboardController extends BaseController implements Initializab
 		updateBiometricsGridPane.setOnMouseClicked(e -> {
 			if (Desktop.isDesktopSupported()) {
 				try {
-					Desktop.getDesktop().browse(new URI(RegistrationConstants.MOSIP_URL));
+					Desktop.getDesktop().browse(new URI(ApplicationContext
+							.getStringValueFromApplicationMap(RegistrationConstants.UPDATING_BIOMETRICS_URL)));
 				} catch (IOException ioException) {
 					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 							ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));

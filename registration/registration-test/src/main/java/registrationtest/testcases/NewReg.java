@@ -92,6 +92,7 @@ public class NewReg {
             result = false;
 
             // Load Login screen
+            buttons.clickcancelBtn();
             loginPage.loadLoginScene(applicationPrimaryStage1);
             ExtentReportUtil.test1.info("RegclientScreen Loaded");
 
@@ -153,6 +154,7 @@ public class NewReg {
             alerts = new Alerts(robot);
             result = false;
 
+            buttons.clickcancelBtn();
             // Load Login screen
             loginPage.loadLoginScene(applicationPrimaryStage1);
             ExtentReportUtil.test1.info("RegclientScreen Loaded");
@@ -242,7 +244,11 @@ public class NewReg {
 
             // Enter userid and password
 
+            if (PropertiesUtil.getKeyValue("multilang").equals("Y"))
+            {
             loginPage.selectAppLang();
+            buttons.clickcancelBtn();
+            }
 
             loginPage.setUserId(loginUserid);
 
@@ -268,7 +274,7 @@ public class NewReg {
             rid1 = webViewDocument.acceptPreview(process);
 
             buttons.clicknextBtn();
-
+            
             if (!rid1.rid.trim().isEmpty()) {
                 ExtentReportUtil.test1.info("Demo, Doc, Bio - Done");
                 ExtentReportUtil.test1.info("Preview done");
@@ -310,7 +316,7 @@ public class NewReg {
 
             eodApprovalPage = homePage.clickeodApprovalImageView(applicationPrimaryStage, scene);
             eodApprovalPage.clickOnfilterField();
-            eodApprovalPage.enterFilterDetails(rid1.getRid());
+            eodApprovalPage.enterFilterDetails(rid1.getRid().trim());
             eodApprovalPage.clickOnApprovalBtn();
             authenticationPage = eodApprovalPage.clickOnAuthenticateBtn();
             authenticationPage.enterUserName(supervisorUserid);
@@ -335,12 +341,12 @@ public class NewReg {
             if (PropertiesUtil.getKeyValue("upload").equals("Y")) {
 
                 uploadPacketPage = homePage.clickuploadPacketImageView(applicationPrimaryStage, scene);
-                uploadPacketPage.selectPacket(rid1.getRid());
+                uploadPacketPage.selectPacket(rid1.getRid().trim());
                 buttons.clickuploadBtn();
                 /**
                  * Verify Success Upload
                  */
-                result = uploadPacketPage.verifyPacketUpload(rid1.getRid());
+                result = uploadPacketPage.verifyPacketUpload(rid1.getRid().trim());
                 ExtentReportUtil.test1.info("Upload Packet done");
             } else if (PropertiesUtil.getKeyValue("upload").equals("N")) {
                 result = true;

@@ -104,7 +104,11 @@ public class UpdateReg {
 
             // Enter userid and password
 
+            if (PropertiesUtil.getKeyValue("multilang").equals("Y"))
+            {
             loginPage.selectAppLang();
+            buttons.clickcancelBtn();
+            }
 
             loginPage.setUserId(loginUserid);
 
@@ -171,7 +175,7 @@ public class UpdateReg {
 
             eodApprovalPage = homePage.clickeodApprovalImageView(applicationPrimaryStage, scene);
             eodApprovalPage.clickOnfilterField();
-            eodApprovalPage.enterFilterDetails(rid1.getRid());
+            eodApprovalPage.enterFilterDetails(rid1.getRid().trim());
             eodApprovalPage.clickOnApprovalBtn();
             authenticationPage = eodApprovalPage.clickOnAuthenticateBtn();
             authenticationPage.enterUserName(supervisorUserid);
@@ -194,12 +198,12 @@ public class UpdateReg {
             if (PropertiesUtil.getKeyValue("upload").equals("Y")) {
 
                 uploadPacketPage = homePage.clickuploadPacketImageView(applicationPrimaryStage, scene);
-                uploadPacketPage.selectPacket(rid1.getRid());
+                uploadPacketPage.selectPacket(rid1.getRid().trim());
                 buttons.clickuploadBtn();
                 /**
                  * Verify Success Upload
                  */
-                result = uploadPacketPage.verifyPacketUpload(rid1.getRid());
+                result = uploadPacketPage.verifyPacketUpload(rid1.getRid().trim());
                 ExtentReportUtil.test1.info("Upload Packet done");
             } else if (PropertiesUtil.getKeyValue("upload").equals("N")) {
                 result = true;

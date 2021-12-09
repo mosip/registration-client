@@ -13,6 +13,7 @@ import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
 import io.mosip.registration.constants.Components;
 import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.controller.ClientApplication;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
@@ -63,7 +64,7 @@ public class BiometricFxControl extends FxControl {
 
 
 	public BiometricFxControl(List<UiFieldDTO> biometricExceptionProofFields) {
-		org.springframework.context.ApplicationContext applicationContext = Initialization.getApplicationContext();
+		org.springframework.context.ApplicationContext applicationContext = ClientApplication.getApplicationContext();
 		this.biometricsController = applicationContext.getBean(GenericBiometricsController.class);
 		this.identitySchemaService = applicationContext.getBean(IdentitySchemaService.class);
 		this.bioService = applicationContext.getBean(BioService.class);

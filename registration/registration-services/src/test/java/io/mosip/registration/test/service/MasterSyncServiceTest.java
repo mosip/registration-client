@@ -61,19 +61,16 @@ import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.mastersync.MasterDataResponseDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.BlocklistedWords;
-import io.mosip.registration.entity.CenterMachine;
 import io.mosip.registration.entity.Location;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.ReasonCategory;
 import io.mosip.registration.entity.ReasonList;
 import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.entity.SyncTransaction;
-import io.mosip.registration.entity.id.CenterMachineId;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.SyncManager;
-import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
@@ -155,9 +152,6 @@ public class MasterSyncServiceTest {
 	private MachineMasterRepository machineMasterRepository;
 
 	@Mock
-	private CenterMachineRepository centerMachineRepository;
-
-	@Mock
 	private ClientCryptoService clientCryptoService;
 
 	@Mock
@@ -192,10 +186,10 @@ public class MasterSyncServiceTest {
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
 
-		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn("10011");
+		Mockito.when(baseService.getCenterId()).thenReturn("10011");
 		Mockito.when(baseService.getStationId()).thenReturn("11002");
 		Mockito.when(baseService.isInitialSync()).thenReturn(false);
-		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
+		Mockito.when(registrationCenterDAO.isMachineCenterActive()).thenReturn(true);
 
 		//Mockito.when(baseService.getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP)).thenReturn(RegistrationConstants.DISABLE);
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);
@@ -205,14 +199,6 @@ public class MasterSyncServiceTest {
 		machine.setId("11002");
 		machine.setIsActive(true);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
-
-		CenterMachine centerMachine = new CenterMachine();
-		CenterMachineId centerMachineId = new CenterMachineId();
-		centerMachineId.setMachineId("11002");
-		centerMachineId.setRegCenterId("10011");
-		centerMachine.setCenterMachineId(centerMachineId);
-		centerMachine.setIsActive(true);
-		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString())).thenReturn(centerMachine);
 
 		Mockito.when(CryptoUtil.computeFingerPrint(Mockito.anyString(), Mockito.any())).thenReturn("testsetsetes");
 		Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);

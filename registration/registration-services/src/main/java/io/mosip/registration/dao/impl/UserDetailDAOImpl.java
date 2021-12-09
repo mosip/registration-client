@@ -9,6 +9,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -174,6 +175,8 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 		userDetail.setLangCode(ApplicationContext.applicationLanguage());
 		userDetail.setCrDtime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 		userDetail.setIsActive(userStatus);
+		userDetail.setRegCenterId(userDetailDto.getRegCenterId());
+		userDetail.setIsDeleted(userDetailDto.getIsDeleted());
 		userDetail.setCrBy(SessionContext.isSessionContextAvailable() ? SessionContext.userContext().getUserId() :
 				RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
 		userDetail.setStatusCode("00");
@@ -261,7 +264,7 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 						.setSalt(CryptoUtil.encodeToURLSafeBase64(DateUtils.formatToISOString(LocalDateTime.now()).getBytes()));
 
 			userDetail.getUserPassword().setPwd(HMACUtils2.digestAsPlainTextWithSalt(password.getBytes(),
-					CryptoUtil.decodeURLSafeBase64(userDetail.getSalt())));
+					ClientCryptoUtils.decodeBase64Data(userDetail.getSalt())));
 			userDetail.getUserPassword().setUpdDtimes(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 			userPwdRepository.save(userDetail.getUserPassword());

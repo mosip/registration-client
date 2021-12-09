@@ -73,7 +73,4 @@ public class RegistrationCenter extends RegistrationCommonFields {
 	@Column(name = "del_dtimes")
 	private Timestamp delDtimes;
 
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "registrationCenter")
-	private List<RegCenterUser> regCenterUser;
-
 }

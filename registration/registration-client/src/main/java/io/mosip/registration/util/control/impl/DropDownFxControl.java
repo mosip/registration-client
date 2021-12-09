@@ -3,6 +3,7 @@ package io.mosip.registration.util.control.impl;
 import java.util.*;
 import java.util.Map.Entry;
 
+import io.mosip.registration.controller.ClientApplication;
 import io.mosip.registration.dao.MasterSyncDao;
 import org.springframework.context.ApplicationContext;
 
@@ -43,7 +44,7 @@ public class DropDownFxControl extends FxControl {
 	private MasterSyncDao masterSyncDao;
 
 	public DropDownFxControl() {
-		ApplicationContext applicationContext = Initialization.getApplicationContext();
+		ApplicationContext applicationContext = ClientApplication.getApplicationContext();
 		validation = applicationContext.getBean(Validations.class);
 		demographicChangeActionHandler = applicationContext.getBean(DemographicChangeActionHandler.class);
 		masterSyncService = applicationContext.getBean(MasterSyncService.class);
@@ -183,8 +184,11 @@ public class DropDownFxControl extends FxControl {
 	@Override
 	public void setData(Object data) {
 		ComboBox<GenericDto> appComboBox = (ComboBox<GenericDto>) getField(uiFieldDTO.getId());
-		String selectedCode = appComboBox.getSelectionModel().getSelectedItem().getCode();
+		if(appComboBox.getSelectionModel().getSelectedItem() == null) {
+			return;
+		}
 
+		String selectedCode = appComboBox.getSelectionModel().getSelectedItem().getCode();
 		switch (this.uiFieldDTO.getType()) {
 			case RegistrationConstants.SIMPLE_TYPE:
 				List<SimpleDto> values = new ArrayList<SimpleDto>();

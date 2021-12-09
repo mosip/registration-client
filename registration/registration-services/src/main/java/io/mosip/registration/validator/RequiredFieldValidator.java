@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.exception.IOException;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.CryptoUtil;
@@ -159,7 +160,7 @@ public class RequiredFieldValidator {
 
 			Path path = Paths.get(System.getProperty("user.dir"), scriptName);
 			byte[] bytes = fileSignature.get().getEncrypted() ?
-					clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(
+					clientCryptoFacade.decrypt(ClientCryptoUtils.decodeBase64Data(
 							FileUtils.readFileToString(path.toFile(), StandardCharsets.UTF_8))) :
 					FileUtils.readFileToByteArray(path.toFile());
 			String actualData = String.format("{\"hash\":\"%s\"}", HMACUtils2.digestAsPlainText(bytes));

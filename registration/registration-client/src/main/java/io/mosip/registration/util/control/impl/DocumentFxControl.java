@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.*;
 
 
+import io.mosip.registration.controller.ClientApplication;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.api.docscanner.DocScannerUtil;
@@ -66,7 +67,7 @@ public class DocumentFxControl extends FxControl {
 	private String CLEAR_ID = "clear";
 
 	public DocumentFxControl() {
-		org.springframework.context.ApplicationContext applicationContext = Initialization.getApplicationContext();
+		org.springframework.context.ApplicationContext applicationContext = ClientApplication.getApplicationContext();
 		auditFactory = applicationContext.getBean(AuditManagerService.class);
 		documentScanController = applicationContext.getBean(DocumentScanController.class);
 		masterSyncService = applicationContext.getBean(MasterSyncService.class);
@@ -519,7 +520,7 @@ public class DocumentFxControl extends FxControl {
 	public boolean canContinue() {
 
 		if (requiredFieldValidator == null) {
-			requiredFieldValidator = Initialization.getApplicationContext().getBean(RequiredFieldValidator.class);
+			requiredFieldValidator = ClientApplication.getApplicationContext().getBean(RequiredFieldValidator.class);
 		}
 
 		boolean isRequired = requiredFieldValidator.isRequiredField(this.uiFieldDTO, getRegistrationDTo());
