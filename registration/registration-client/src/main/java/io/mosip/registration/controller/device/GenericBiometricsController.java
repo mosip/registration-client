@@ -452,10 +452,10 @@ public class GenericBiometricsController extends BaseController {
 	@FXML
 	private void scan(ActionEvent event) {
 		LOGGER.info("Displaying Scan popup for capturing biometrics");
-
 		auditFactory.audit(getAuditEventForScan(currentModality.name()), Components.REG_BIOMETRICS, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
+		scanBtn.setDisable(true);
 		deviceSearchTask = new Service<MdmBioDevice>() {
 			@Override
 			protected Task<MdmBioDevice> createTask() {
@@ -467,7 +467,6 @@ public class GenericBiometricsController extends BaseController {
 					 */
 					@Override
 					protected MdmBioDevice call() throws RegBaseCheckedException {
-
 						LOGGER.info("device search request started {}", System.currentTimeMillis());
 						
 						String modality = isFace(currentModality) || isExceptionPhoto(currentModality) ?
@@ -481,7 +480,6 @@ public class GenericBiometricsController extends BaseController {
 	                                    RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
 	                                    RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
 	                        }
-
 					}
 				};
 			}
@@ -509,6 +507,7 @@ public class GenericBiometricsController extends BaseController {
 					if (!isStreamStarted) {
 						LOGGER.info("URL Stream was null at : {} ", System.currentTimeMillis());
 						deviceSpecificationFactory.init();
+						streamer.setUrlStream(null);
 						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
 						return;
 					}
@@ -516,12 +515,13 @@ public class GenericBiometricsController extends BaseController {
 					streamer.startStream(urlStream, biometricImage, biometricImage);
 
 				} catch (RegBaseCheckedException | IOException exception) {
-
 					LOGGER.error("Error while streaming : " + currentModality,  exception);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
 
 					// Enable Auto-Logout
 					SessionContext.setAutoLogout(true);
+					streamer.setUrlStream(null);
+					scanBtn.setDisable(false);
 				}
 			}
 		});
@@ -530,6 +530,8 @@ public class GenericBiometricsController extends BaseController {
 			@Override
 			public void handle(WorkerStateEvent t) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
+				streamer.setUrlStream(null);
+				scanBtn.setDisable(false);
 			}
 		});
 
@@ -591,15 +593,13 @@ public class GenericBiometricsController extends BaseController {
 				LOGGER.debug("RCapture task failed");
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
 
-				LOGGER.debug("closing popup stage");
-				//scanPopUpViewController.getPopupStage().close();
-
 				LOGGER.debug("Enabling LogOut");
 				// Enable Auto-Logout
 				SessionContext.setAutoLogout(true);
 
 				LOGGER.debug("Setting URL Stream as null");
 				streamer.setUrlStream(null);
+				scanBtn.setDisable(false);
 			}
 		});
 
@@ -661,12 +661,15 @@ public class GenericBiometricsController extends BaseController {
 					displayBiometric(currentModality);
 					// if all the above check success show alert capture success
 					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
+					scanBtn.setDisable(false);
 				} catch (Exception e) {
 					LOGGER.error("Exception while getting the scanned biometrics for user registration",e);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
+				} finally {
+					SessionContext.setAutoLogout(true);	// Enable Auto-Logout
+					streamer.setUrlStream(null);
+					scanBtn.setDisable(false);
 				}
-				SessionContext.setAutoLogout(true);	// Enable Auto-Logout
-				streamer.setUrlStream(null);
 			}
 		});
 		LOGGER.info("Scan process ended for capturing biometrics");

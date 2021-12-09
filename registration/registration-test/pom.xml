@@ -105,6 +105,38 @@
       <plugins>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>2.4</version>
+            <executions>
+               <execution>
+                  <id>copy</id>
+                  <phase>prepare-package</phase>
+                  <goals>
+                     <goal>copy-dependencies</goal>
+                  </goals>
+                  <configuration>
+                     <outputDirectory>
+                        ${project.build.directory}/lib
+                     </outputDirectory>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <version>2.4</version>
+            <configuration>
+               <archive>
+                  <manifest>
+                     <addClasspath>true</addClasspath>
+                     <mainClass>registrationtest.runapplication.RegistrationMain</mainClass>
+                  </manifest>
+               </archive>
+            </configuration>
+         </plugin>
+         <!--<plugin>
+            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-assembly-plugin</artifactId>
             <version>3.1.1</version>
             <configuration>
@@ -127,7 +159,7 @@
                   </goals>
                </execution>
             </executions>
-         </plugin>
+         </plugin>-->
       </plugins>
    </build>
 </project>

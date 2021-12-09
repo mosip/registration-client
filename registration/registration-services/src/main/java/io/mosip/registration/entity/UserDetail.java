@@ -65,6 +65,9 @@ public class UserDetail extends RegistrationCommonFields implements Serializable
 	@Column(name = "del_dtimes")
 	private Timestamp delDtimes;
 
+	@Column(name = "reg_cntr_id")
+	private String regCenterId;
+
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "userDetail", orphanRemoval = true, cascade = CascadeType.ALL)
 	private Set<UserRole> userRole;
 
@@ -76,9 +79,6 @@ public class UserDetail extends RegistrationCommonFields implements Serializable
 
 	@OneToOne(fetch = FetchType.EAGER, mappedBy = "userDetail", cascade = CascadeType.ALL)
 	private UserPassword userPassword;
-
-	@OneToOne(fetch = FetchType.EAGER, mappedBy = "userDetail", cascade = CascadeType.ALL)
-	private RegCenterUser regCenterUser;
 
 	@OneToOne(fetch = FetchType.EAGER, mappedBy = "userDetail", optional = true, cascade = CascadeType.ALL)
 	private UserToken userToken;

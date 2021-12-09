@@ -1,6 +1,8 @@
 package io.mosip.registration.util.common;
 
+import io.mosip.registration.constants.RegistrationConstants;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
@@ -17,20 +19,21 @@ public class NonEditableCopyActionHandler extends ChangeActionHandler {
 
     @Override
     public void handle(Pane parentPane, String source, String[] args) {
-        Node copyEnabledFlagNode = parentPane.lookup(HASH.concat(source));
+        Scene scene = parentPane.getScene();
+        Node copyEnabledFlagNode = scene.lookup(HASH.concat(source));
         boolean enabled = ((CheckBox)copyEnabledFlagNode).isSelected() ? true : false;
 
         for(String arg : args) {
             String[] parts = arg.split("=");
             if(parts.length == 2) {
-                Node fromNode = parentPane.lookup(HASH.concat(parts[0]));
-                Node toNode = parentPane.lookup(HASH.concat(parts[1]));
+                Node fromNode = scene.lookup(HASH.concat(parts[0]));
+                Node toNode = scene.lookup(HASH.concat(parts[1]));
 
                 if(!isValidNode(fromNode) || !isValidNode(toNode))
                     continue;
 
                 if(fromNode instanceof TextField) {
-                    copy(parentPane, (TextField) fromNode, (TextField) toNode, enabled);
+                    copy(scene, (TextField) fromNode, (TextField) toNode, enabled);
                 }
                 else if(fromNode instanceof ComboBox) {
                     copy((ComboBox) fromNode, (ComboBox) toNode, enabled);
@@ -39,11 +42,11 @@ public class NonEditableCopyActionHandler extends ChangeActionHandler {
         }
     }
 
-    private void copy(Pane parentPane, TextField fromNode, TextField toNode, boolean isEnabled) {
+    private void copy(Scene scene, TextField fromNode, TextField toNode, boolean isEnabled) {
         if(isEnabled) {
             toNode.setText(fromNode.getText());
             toNode.setDisable(true);
-            Node localLangNode = parentPane.lookup(HASH.concat(toNode.getId()).concat("LocalLanguage"));
+            Node localLangNode = scene.lookup(HASH.concat(toNode.getId()).concat("LocalLanguage"));
             if(isValidNode(localLangNode) && localLangNode instanceof TextField) {
                 ((TextField)localLangNode).setText(fromNode.getText());
                 localLangNode.setDisable(true);
@@ -51,7 +54,7 @@ public class NonEditableCopyActionHandler extends ChangeActionHandler {
         }
         else {
             toNode.setDisable(false);
-            Node localLangNode = parentPane.lookup(HASH.concat(toNode.getId()).concat("LocalLanguage"));
+            Node localLangNode = scene.lookup(HASH.concat(toNode.getId()).concat("LocalLanguage"));
             if(isValidNode(localLangNode) && localLangNode instanceof TextField) {
                 localLangNode.setDisable(false);
             }

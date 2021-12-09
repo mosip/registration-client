@@ -63,6 +63,8 @@ public class RegistrationPacketVirusScanServiceImpl extends BaseService implemen
 				String.valueOf(ApplicationContext.map().get(RegistrationConstants.DB_PATH)),
 				String.valueOf(ApplicationContext.map().get(RegistrationConstants.CLIENT_PATH)));
 
+		LOGGER.info("Registration-Client virus scanning, identified paths to scan {}", pathList);
+
 		List<File> filesList = new ArrayList<>();
 		List<String> infectedFiles = new ArrayList<>();
 		List<ErrorResponseDTO> errorList = new ArrayList<>();
@@ -81,10 +83,10 @@ public class RegistrationPacketVirusScanServiceImpl extends BaseService implemen
 			successResponseDTO.setMessage(infectedFiles.isEmpty() ? RegistrationConstants.SUCCESS :
 					String.join(";", infectedFiles));
 			responseDTO.setSuccessResponseDTO(successResponseDTO);
+
 		} catch (VirusScannerException virusScannerException) {
 			LOGGER.error(virusScannerException.getMessage(), virusScannerException);
-			setSuccessResponse(responseDTO, RegistrationConstants.ANTIVIRUS_SERVICE_NOT_ACCESSIBLE, null);
-			
+			setErrorResponse(responseDTO, RegistrationConstants.ANTIVIRUS_SERVICE_NOT_ACCESSIBLE, null);
 		} catch (IOException ioException) {
 			LOGGER.error(ioException.getMessage(), ioException);
 			ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO();

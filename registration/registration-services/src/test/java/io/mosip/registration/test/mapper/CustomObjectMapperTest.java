@@ -6,6 +6,8 @@ import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.mosip.registration.entity.*;
+import io.mosip.registration.entity.id.UserMachineMappingID;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -13,15 +15,7 @@ import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.UserDTO;
 /*import io.mosip.registration.dto.demographic.DemographicDTO;
 import io.mosip.registration.dto.demographic.DemographicInfoDTO;*/
-import io.mosip.registration.entity.MachineMaster;
-import io.mosip.registration.entity.RegCenterUser;
-import io.mosip.registration.entity.UserBiometric;
-import io.mosip.registration.entity.UserDetail;
-import io.mosip.registration.entity.UserMachineMapping;
-import io.mosip.registration.entity.UserRole;
-import io.mosip.registration.entity.id.RegCenterUserId;
 import io.mosip.registration.entity.id.UserBiometricId;
-import io.mosip.registration.entity.id.UserMachineMappingID;
 import io.mosip.registration.entity.id.UserRoleId;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.mapper.CustomObjectMapper;
@@ -56,12 +50,6 @@ public class CustomObjectMapperTest {
 		OffsetDateTime convertedTime = mapperFacade.map(time, OffsetDateTime.class);
 		assertEquals(time, convertedTime);
 	}
-
-	@Test
-	public void testUserDetailConversion() {		
-		UserDTO user = mapperFacade.map(assertUserDetailInfo(), UserDTO.class);		
-		assertEquals("mosip", user.getRegCenterUser().getUsrId());		
-	}
 	
 	private UserDetail assertUserDetailInfo() {
 		UserDetail userDetail = new UserDetail();
@@ -89,6 +77,7 @@ public class CustomObjectMapperTest {
 		MachineMaster machineMaster = new MachineMaster();
 		machineMaster.setMacAddress("test");
 		machineMaster.setName("name");
+		machineMaster.setRegCenterId("10001");
 		machineMaster.setSerialNum("serialnum");
 		userMachineMapping.setMachineMaster(machineMaster);
 		userMachineMappings.add(userMachineMapping);
@@ -103,13 +92,7 @@ public class CustomObjectMapperTest {
 		userBiometric.setUserBiometricId(userBiometricId);
 		userBiometrics.add(userBiometric);
 		userDetail.setUserBiometric(userBiometrics);
-		
-		RegCenterUser regCenterUser = new RegCenterUser();
-		RegCenterUserId regCenterUserId = new RegCenterUserId();
-		regCenterUserId.setRegCenterId("10001");
-		regCenterUserId.setUserId("mosip");
-		regCenterUser.setRegCenterUserId(regCenterUserId);
-		userDetail.setRegCenterUser(regCenterUser);
+		userDetail.setRegCenterId("10001");
 		return userDetail;
 	}
 

@@ -18,18 +18,12 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
+import io.mosip.registration.entity.RegistrationCenter;
+import io.mosip.registration.repositories.RegistrationCenterRepository;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,23 +63,19 @@ import io.mosip.registration.dto.RegistrationDataDto;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
-import io.mosip.registration.entity.CenterMachine;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
-import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.operator.UserDetailService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.PolicySyncService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
-import lombok.NonNull;
 
 import javax.imageio.ImageIO;
 
@@ -129,13 +119,13 @@ public class BaseService {
 	private MachineMasterRepository machineMasterRepository;
 
 	@Autowired
-	private CenterMachineRepository centerMachineRepository;
-	
-	@Autowired
 	private LocalConfigService localConfigService;
 
 	@Autowired
 	private PolicySyncService policySyncService;
+
+	@Autowired
+	private RegistrationCenterRepository registrationCenterRepository;
 	
 	@Value("#{'${mosip.mandatory-languages:}'.split('[,]')}")
 	private List<String> mandatoryLanguages;
@@ -314,31 +304,25 @@ public class BaseService {
 		return null;
 	}
 
+
 	/**
 	 * Gets the center id.
-	 *
-	 * @return the center id
+	 * @return
 	 */
 	public String getCenterId() {
-		String stationId = getStationId();
-		if (stationId != null) {
-			return getCenterId(stationId);
+		String machineName = RegistrationSystemPropertiesChecker.getMachineId();
+		MachineMaster machineMaster = machineMasterRepository.findByNameIgnoreCase(machineName.toLowerCase());
+
+		if(machineMaster != null && machineMaster.getRegCenterId() != null) {
+			Optional<RegistrationCenter> result = registrationCenterRepository.findByIsActiveTrueAndRegistartionCenterIdIdAndRegistartionCenterIdLangCode(
+					machineMaster.getRegCenterId(),	ApplicationContext.applicationLanguage());
+
+			LOGGER.debug("Active Reg center entry present {}", result.isPresent());
+			return result.isPresent() ? result.get().getRegistartionCenterId().getId() : null;
 		}
 
-		LOGGER.error("stationId fetched {}", stationId);
+		LOGGER.error("Reg centerId fetched from machine entry {}", machineMaster);
 		return null;
-	}
-
-	/**
-	 * Gets the center id.
-	 *
-	 * @param stationId the station id
-	 * @return the center id
-	 */
-	public String getCenterId(String stationId) {
-		CenterMachine centerMachine = centerMachineRepository.findByCenterMachineIdMachineId(stationId);
-		return centerMachine != null && registrationCenterDAO.isMachineCenterActive(stationId) ?
-				centerMachine.getCenterMachineId().getRegCenterId() : null;
 	}
 
 	/**
@@ -697,7 +681,7 @@ public class BaseService {
 
 		//check regcenter table for center status
 		//if center is inactive, sync is not allowed
-		if(!registrationCenterDAO.isMachineCenterActive(machineId))
+		if(!registrationCenterDAO.isMachineCenterActive())
 			throw new PreConditionCheckException(PreConditionChecks.CENTER_INACTIVE.name(),
 					"Sync action forbidden as center is inactive");
 	}
@@ -734,7 +718,7 @@ public class BaseService {
 					"Onboarding action forbidden as machine is inactive");
 
 
-		if(!registrationCenterDAO.isMachineCenterActive(machineId))
+		if(!registrationCenterDAO.isMachineCenterActive())
 			throw new PreConditionCheckException(PreConditionChecks.CENTER_INACTIVE.name(),
 					"Onboarding action forbidden as center is inactive");
 	}
@@ -759,7 +743,7 @@ public class BaseService {
 			throw new PreConditionCheckException(PreConditionChecks.MACHINE_INACTIVE.name(),
 					"Registration forbidden as machine is inactive");
 
-		if(!registrationCenterDAO.isMachineCenterActive(machineId))
+		if(!registrationCenterDAO.isMachineCenterActive())
 			throw new PreConditionCheckException(PreConditionChecks.CENTER_INACTIVE.name(),
 					"Registration forbidden as center is inactive");
 
@@ -781,7 +765,7 @@ public class BaseService {
 			throw new PreConditionCheckException(PreConditionChecks.MACHINE_INACTIVE.name(),
 					"Registration forbidden as machine is inactive");
 
-		if(!registrationCenterDAO.isMachineCenterActive(machineId))
+		if(!registrationCenterDAO.isMachineCenterActive())
 			throw new PreConditionCheckException(PreConditionChecks.CENTER_INACTIVE.name(),
 					"Registration forbidden as center is inactive");
 
@@ -862,4 +846,11 @@ public class BaseService {
 		return null;
 	}
 
+	public List<String> getConfiguredLangCodes() throws PreConditionCheckException {
+		try {
+			return ListUtils.union(getMandatoryLanguages(), getOptionalLanguages());
+		} catch (PreConditionCheckException e) {
+			throw e;
+		}
+	}
 }

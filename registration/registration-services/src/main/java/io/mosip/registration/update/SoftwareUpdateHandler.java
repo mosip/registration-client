@@ -768,7 +768,7 @@ public class SoftwareUpdateHandler extends BaseService {
 	}
 
 	private String getURL(String urlPostFix) {
-		String upgradeServerURL = environment.getProperty("client.upgrade.server.url", "https://${mosip.hostname}");
+		String upgradeServerURL = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.MOSIP_UPGRADE_SERVER_URL);
 		String url = String.format(urlPostFix, upgradeServerURL);
 		url = serviceDelegateUtil.prepareURLByHostName(url);
 		LOGGER.info("Upgrade server : {}", url);

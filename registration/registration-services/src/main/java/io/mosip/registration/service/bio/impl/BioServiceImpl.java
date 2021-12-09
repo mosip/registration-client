@@ -80,31 +80,40 @@ public class BioServiceImpl extends BaseService implements BioService {
 	public List<BiometricsDto> captureModality(MDMRequestDto mdmRequestDto) throws RegBaseCheckedException {
 		LOGGER.info("Entering into captureModality method.. {}", System.currentTimeMillis());
 		List<BiometricsDto> list = new ArrayList<BiometricsDto>();
-		MdmBioDevice bioDevice = deviceSpecificationFactory.getDeviceInfoByModality(mdmRequestDto.getModality());
-		MosipDeviceSpecificationProvider deviceSpecificationProvider = deviceSpecificationFactory
-				.getMdsProvider(bioDevice.getSpecVersion());
-		List<BiometricsDto> biometricsDtos = deviceSpecificationProvider.rCapture(bioDevice, mdmRequestDto);
 
-		for (BiometricsDto biometricsDto : biometricsDtos) {
-			if(biometricsDto == null) {
-				continue;
-			}
+		try {
+			MdmBioDevice bioDevice = deviceSpecificationFactory.getDeviceInfoByModality(mdmRequestDto.getModality());
+			MosipDeviceSpecificationProvider deviceSpecificationProvider = deviceSpecificationFactory
+					.getMdsProvider(bioDevice.getSpecVersion());
+			List<BiometricsDto> biometricsDtos = deviceSpecificationProvider.rCapture(bioDevice, mdmRequestDto);
 
-			if(!ValueRange.of(0, RegistrationConstants.MAX_BIO_QUALITY_SCORE).isValidValue((long) biometricsDto.getQualityScore()))
-				throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_SCORE_RANGE_ERROR.getErrorCode(),
-						RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_SCORE_RANGE_ERROR.getErrorMessage());
-
-			if(RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map()
-					.getOrDefault(RegistrationConstants.QUALITY_CHECK_WITH_SDK, RegistrationConstants.DISABLE))) {
-				try {
-					biometricsDto.setSdkScore(getSDKScore(biometricsDto));
-				} catch (BiometricException e) {
-					LOGGER.error("Unable to fetch SDK Score ", e);
-					throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorCode(),
-							RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorMessage());
+			for (BiometricsDto biometricsDto : biometricsDtos) {
+				if (biometricsDto == null) {
+					continue;
 				}
+
+				if (!ValueRange.of(0, RegistrationConstants.MAX_BIO_QUALITY_SCORE).isValidValue((long) biometricsDto.getQualityScore()))
+					throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_SCORE_RANGE_ERROR.getErrorCode(),
+							RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_SCORE_RANGE_ERROR.getErrorMessage());
+
+				if (RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map()
+						.getOrDefault(RegistrationConstants.QUALITY_CHECK_WITH_SDK, RegistrationConstants.DISABLE))) {
+					try {
+						biometricsDto.setSdkScore(getSDKScore(biometricsDto));
+					} catch (BiometricException e) {
+						LOGGER.error("Unable to fetch SDK Score ", e);
+						throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorCode(),
+								RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorMessage());
+					}
+				}
+				list.add(biometricsDto);
 			}
-			list.add(biometricsDto);
+		} catch (RegBaseCheckedException e) {
+			throw e;
+		} catch (Throwable t) {
+			LOGGER.error("Failed in rcapture", t);
+			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
+					RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage());
 		}
 		LOGGER.info("Ended captureModality method.. {}" , System.currentTimeMillis());
 		return list;
@@ -138,7 +147,14 @@ public class BioServiceImpl extends BaseService implements BioService {
 					.getMdsProvider(mdmBioDevice.getSpecVersion());
 			LOGGER.info("{} found for spec version {} at {}",deviceSpecificationProvider,
 					mdmBioDevice.getSpecVersion(), System.currentTimeMillis());
-			return deviceSpecificationProvider.stream(mdmBioDevice, modality);
+
+			try {
+				return deviceSpecificationProvider.stream(mdmBioDevice, modality);
+			} catch (Throwable t) {
+				LOGGER.error("Failed to stream / streaming interrupted", t);
+			}
+			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorCode(),
+					RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorMessage());
 		}
 		throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
 				RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());

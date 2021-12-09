@@ -20,6 +20,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.crypto.spi.CryptoCoreSpec;
 import io.mosip.kernel.keygenerator.bouncycastle.util.KeyGeneratorUtils;
 import org.junit.Before;
@@ -230,7 +231,7 @@ public class PreRegZipHandlingServiceTest {
 	}
 
 	private void mockSecretKey() {
-		byte[] decodedKey = Base64.getDecoder().decode("0E8BAAEB3CED73CBC9BF4964F321824A");
+		byte[] decodedKey = ClientCryptoUtils.decodeBase64Data("0E8BAAEB3CED73CBC9BF4964F321824A");
 		SecretKey secretKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
 		Mockito.when(keyGenerator.getSymmetricKey()).thenReturn(secretKey);
 		Mockito.when(clientCryptoFacade.decrypt(Mockito.any())).thenReturn(new byte[0]);

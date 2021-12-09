@@ -69,7 +69,7 @@ public class UserMachineMappingServiceTest {
 		String machineId = "machineId";
 		String centerId = "centerId";
 		Mockito.when(baseService.getStationId()).thenReturn(machineId);
-		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn(centerId);
+		Mockito.when(baseService.getCenterId()).thenReturn(centerId);
 		Mockito.when(machineMappingDAO.getUserMappingDetails(Mockito.anyString())).thenReturn(list);
 		//new code
 		Map<String,Object> myMap=new HashMap<>();
@@ -149,7 +149,7 @@ public class UserMachineMappingServiceTest {
 		String machineId = "machineId";
 		String centerId = "centerId";
 		Mockito.when(baseService.getStationId()).thenReturn(machineId);
-		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn(centerId);
+		Mockito.when(baseService.getCenterId()).thenReturn(centerId);
 		Mockito.when(machineMappingDAO.getUserMappingDetails(Mockito.anyString())).thenReturn(list);
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.any(), Mockito.anyString())).thenReturn(responseMap);
 		Map<String, Object> map1 = new HashMap<>();

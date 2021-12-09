@@ -747,8 +747,9 @@ public class RegistrationConstants {
 	public static final String PACKET_STATUS_CODE_REREGISTER = "REREGISTER";
 	public static final String RE_REGISTER_STATUS_COMEMNTS = "Re-Register";
 	public static final String PACKET_STATUS_CODE_REJECTED = "REJECTED";
+	public static final String PACKET_STATUS_CODE_PROCESSED_2 = "Packet has reached Packet Receiver";
 	public static final List<String> PACKET_STATUS_CODES_FOR_REMAPDELETE = Arrays.asList(PACKET_STATUS_CODE_REREGISTER,
-			PACKET_STATUS_CODE_PROCESSING, PACKET_STATUS_CODE_PROCESSED, PACKET_STATUS_CODE_REJECTED);
+			PACKET_STATUS_CODE_PROCESSING, PACKET_STATUS_CODE_PROCESSED, PACKET_STATUS_CODE_REJECTED, PACKET_STATUS_CODE_PROCESSED_2);
 	public static final String MACHINE_CENTER_REMAP_FLAG = "mosip.registration.machinecenterchanged";
 	public static final String MACHINE_CENTER_REMAP_MSG = "Machine Center Remap process started";
 	public static final String PACKET_STATUS_READER_ID = "mosip.registration.status";
@@ -1533,7 +1534,6 @@ public class RegistrationConstants {
 	public static final String RESPONSE_SIGNATURE = "response-signature";
 	public static final String ON_BOARD_FACE = "FACE";
 	public static final String AUTH_SERVICE_URL = "authmanager/authenticate";
-	public static final String REG_HEALTH_CHECK_URL_PROPERTY = "mosip.reg.healthcheck.url";
 
 	public static final int DAYS = 31;
 	public static final int MONTH = 12;
@@ -1746,6 +1746,12 @@ public class RegistrationConstants {
 	public static final String FORGOT_PWORD_URL = "mosip.registration.forgot_password_url";
 	public static final String RESET_PWORD_URL = "mosip.registration.reset_password_url";
 	public static final String EMAIL_PLACEHOLDER = "{EMAIL}";
+	public static final String ONBOARD_YOURSELF_URL = "mosip.registration.onboard_yourself_url";
+	public static final String REGISTERING_INDIVIDUAL_URL = "mosip.registration.registering_individual_url";
+	public static final String SYNC_DATA_URL = "mosip.registration.sync_data_url";
+	public static final String MAPPING_DEVICES_URL = "mosip.registration.mapping_devices_url";
+	public static final String UPLOADING_DATA_URL = "mosip.registration.uploading_data_url";
+	public static final String UPDATING_BIOMETRICS_URL = "mosip.registration.updating_biometrics_url";
 
 	// Dashboard Constants
 	public static final String DASHBOARD_TITLE = "dashBoard";
@@ -1894,7 +1900,8 @@ public class RegistrationConstants {
 	public static final String IMAGES = "images";
 	
 	public static final String MOSIP_HOSTNAME = "mosip.hostname";
-	public static final String MOSIP_HOSTNAME_DEF_VAL = "dev.mosip.net";
+	public static final String MOSIP_UPGRADE_SERVER_URL = "mosip.client.upgrade.server.url";
+	public static final String HEALTH_CHECK_URL = "mosip.reg.healthcheck.url";
 	
 	/** Moved To Here from UiConstants file */
 	public static final String REGEX_TYPE = "REGEX";
@@ -1964,4 +1971,5 @@ public class RegistrationConstants {
 
 	public static final String JPG_COMPRESSION_QUALITY = "mosip.registration.doc.jpg.compression";
 	public static final String APPLICANT_TYPE_MVEL_SCRIPT = "mosip.kernel.applicantType.mvel.file";
+	public static final String FIELDS_TO_RETAIN_ON_PRID_FETCH = "mosip.registration.fields.to.retain.post.prid.fetch";
 }

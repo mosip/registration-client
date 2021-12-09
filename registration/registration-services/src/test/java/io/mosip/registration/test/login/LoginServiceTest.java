@@ -17,6 +17,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.mosip.registration.entity.*;
+import io.mosip.registration.entity.id.RegistartionCenterId;
+import io.mosip.registration.entity.id.UserMachineMappingID;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.junit.Assert;
 import org.junit.Before;
@@ -56,20 +59,9 @@ import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.UserDTO;
-import io.mosip.registration.entity.CenterMachine;
-import io.mosip.registration.entity.MachineMaster;
-import io.mosip.registration.entity.RegCenterUser;
-import io.mosip.registration.entity.RegistrationCenter;
-import io.mosip.registration.entity.UserDetail;
-import io.mosip.registration.entity.UserMachineMapping;
-import io.mosip.registration.entity.UserRole;
-import io.mosip.registration.entity.id.CenterMachineId;
-import io.mosip.registration.entity.id.RegCenterUserId;
-import io.mosip.registration.entity.id.UserMachineMappingID;
 import io.mosip.registration.entity.id.UserRoleId;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.repositories.AppAuthenticationRepository;
-import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.repositories.RegistrationCenterRepository;
 import io.mosip.registration.repositories.ScreenAuthorizationRepository;
@@ -158,9 +150,6 @@ public class LoginServiceTest {
 	@Mock
 	private CenterMachineReMapService centerMachineReMapService;
 
-	@Mock
-	private CenterMachineRepository centerMachineRepository;
-
 	private Map<String, Object> applicationMap = new HashMap<>();
 
 	@Mock
@@ -203,10 +192,10 @@ public class LoginServiceTest {
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
 
-		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn("10011");
+		Mockito.when(baseService.getCenterId()).thenReturn("10011");
 		Mockito.when(baseService.getStationId()).thenReturn("11002");
 		Mockito.when(baseService.isInitialSync()).thenReturn(false);
-		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
+		Mockito.when(registrationCenterDAO.isMachineCenterActive()).thenReturn(true);
 
 		//Mockito.when(baseService.getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP)).thenReturn(RegistrationConstants.DISABLE);
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);
@@ -215,18 +204,21 @@ public class LoginServiceTest {
 		MachineMaster machine = new MachineMaster();
 		machine.setId("11002");
 		machine.setIsActive(true);
+		machine.setRegCenterId("10011");
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
-
-		CenterMachine centerMachine = new CenterMachine();
-		CenterMachineId centerMachineId = new CenterMachineId();
-		centerMachineId.setMachineId("11002");
-		centerMachineId.setRegCenterId("10011");
-		centerMachine.setCenterMachineId(centerMachineId);
-		centerMachine.setIsActive(true);
-		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString())).thenReturn(centerMachine);
 
 		Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
 		Mockito.when(clientCryptoService.getEncryptionPublicPart()).thenReturn("testststststs".getBytes(StandardCharsets.UTF_8));
+
+		RegistrationCenter registrationCenter = new RegistrationCenter();
+		registrationCenter.setRegistartionCenterId(new RegistartionCenterId());
+		registrationCenter.getRegistartionCenterId().setId("10011");
+		registrationCenter.getRegistartionCenterId().setLangCode("eng");
+		registrationCenter.setIsActive(true);
+		Optional<RegistrationCenter> mockedCenter = Optional.of(registrationCenter);
+		Mockito.when(registrationCenterRepository.findByIsActiveTrueAndRegistartionCenterIdIdAndRegistartionCenterIdLangCode(Mockito.anyString(),
+				Mockito.anyString())).thenReturn(mockedCenter);
+
 	}
 
 	@Test
@@ -472,16 +464,14 @@ public class LoginServiceTest {
 	public void validateUserTest() throws Exception {
 		ResponseDTO responseDTO = new ResponseDTO();
 		UserDetail userDetail = new UserDetail();
-		RegCenterUser regCenterUser = new RegCenterUser();
-		RegCenterUserId regCenterUserId = new RegCenterUserId();
-		regCenterUserId.setRegCenterId("10011");
-		regCenterUser.setRegCenterUserId(regCenterUserId);
-		userDetail.setRegCenterUser(regCenterUser);
 		userDetail.setStatusCode("ACTIVE");
 		Set<UserMachineMapping> userMachineMappings = new HashSet<>();
 		UserMachineMapping userMachineMapping = new UserMachineMapping();
 		MachineMaster machineMaster = new MachineMaster();
+		machineMaster.setId("11002");
 		machineMaster.setSerialNum("12345");
+		machineMaster.setRegCenterId("10011");
+		machineMaster.setIsActive(true);
 		userMachineMapping.setMachineMaster(machineMaster);
 		UserMachineMappingID userMachineMappingId = new UserMachineMappingID();
 		userMachineMapping.setUserMachineMappingId(userMachineMappingId);
@@ -496,15 +486,17 @@ public class LoginServiceTest {
 		userRole.setUserRoleId(userRoleID);
 		userRole.setIsActive(true);
 		userRoles.add(userRole);
+		userDetail.setRegCenterId("10011");
+		userDetail.setIsActive(true);
+		userDetail.setIsDeleted(false);
+		userDetail.setId("mosip");
 		userDetail.setUserRole(userRoles);
 		Mockito.when(userDetailDAO.getUserDetail(Mockito.anyString())).thenReturn(userDetail);
 
-		Mockito.when(baseService.getStationId()).thenReturn("11002");
-		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn("10011");
+		//Mockito.when(baseService.getStationId()).thenReturn("11002");
+		//Mockito.when(baseService.getCenterId()).thenReturn("10011");
+		//Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machineMaster);
 
-		
-		loginServiceImpl.getUserDetail("mosip");
-		
 		Map<String, String> map = new HashMap<>();
 		map.put(RegistrationConstants.USER_CENTER_ID, "10011");
 		map.put(RegistrationConstants.USER_STATION_ID,"10011");
@@ -514,10 +506,7 @@ public class LoginServiceTest {
 		
 		PowerMockito.mockStatic(ApplicationContext.class);
 		PowerMockito.doReturn(sessionMap).when(ApplicationContext.class, "map");
-		
-		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
-		successResponseDTO.setMessage(RegistrationConstants.SUCCESS);
-		responseDTO.setSuccessResponseDTO(successResponseDTO);
+		PowerMockito.doReturn("eng").when(ApplicationContext.class, "applicationLanguage");
 		assertNotNull(loginServiceImpl.validateUser("mosip").getSuccessResponseDTO());
 	}
 	
@@ -546,11 +535,6 @@ public class LoginServiceTest {
 	public void validateUserStatusTest() throws Exception {
 		ResponseDTO responseDTO = new ResponseDTO();
 		UserDetail userDetail = new UserDetail();
-		RegCenterUser regCenterUser = new RegCenterUser();
-		RegCenterUserId regCenterUserId = new RegCenterUserId();
-		regCenterUserId.setRegCenterId("10011");
-		regCenterUser.setRegCenterUserId(regCenterUserId);
-		userDetail.setRegCenterUser(regCenterUser);
 		userDetail.setStatusCode("BLOCKED");
 		Mockito.when(userDetailDAO.getUserDetail(Mockito.anyString())).thenReturn(userDetail);
 		
@@ -577,11 +561,10 @@ public class LoginServiceTest {
 	public void validateUserCenterTest() throws Exception {
 		ResponseDTO responseDTO = new ResponseDTO();
 		UserDetail userDetail = new UserDetail();
-		RegCenterUser regCenterUser = new RegCenterUser();
-		RegCenterUserId regCenterUserId = new RegCenterUserId();
-		regCenterUserId.setRegCenterId("11234");
-		regCenterUser.setRegCenterUserId(regCenterUserId);
-		userDetail.setRegCenterUser(regCenterUser);
+		userDetail.setId("mosip");
+		userDetail.setStatusCode("ACTIVE");
+		userDetail.setRegCenterId("10011");
+		userDetail.setIsActive(true);
 		Mockito.when(userDetailDAO.getUserDetail(Mockito.anyString())).thenReturn(userDetail);
 		
 		loginServiceImpl.getUserDetail("mosip");
@@ -601,11 +584,6 @@ public class LoginServiceTest {
 	public void validateRoleTest() throws Exception {
 		ResponseDTO responseDTO = new ResponseDTO();
 		UserDetail userDetail = new UserDetail();
-		RegCenterUser regCenterUser = new RegCenterUser();
-		RegCenterUserId regCenterUserId = new RegCenterUserId();
-		regCenterUserId.setRegCenterId("10011");
-		regCenterUser.setRegCenterUserId(regCenterUserId);
-		userDetail.setRegCenterUser(regCenterUser);
 		userDetail.setStatusCode("ACTIVE");
 		Set<UserMachineMapping> userMachineMappings = new HashSet<>();
 		UserMachineMapping userMachineMapping = new UserMachineMapping();
@@ -652,11 +630,6 @@ public class LoginServiceTest {
 	public void validateRoleActiveTest() throws Exception {
 		ResponseDTO responseDTO = new ResponseDTO();
 		UserDetail userDetail = new UserDetail();
-		RegCenterUser regCenterUser = new RegCenterUser();
-		RegCenterUserId regCenterUserId = new RegCenterUserId();
-		regCenterUserId.setRegCenterId("10011");
-		regCenterUser.setRegCenterUserId(regCenterUserId);
-		userDetail.setRegCenterUser(regCenterUser);
 		userDetail.setStatusCode("ACTIVE");
 		Set<UserMachineMapping> userMachineMappings = new HashSet<>();
 		UserMachineMapping userMachineMapping = new UserMachineMapping();

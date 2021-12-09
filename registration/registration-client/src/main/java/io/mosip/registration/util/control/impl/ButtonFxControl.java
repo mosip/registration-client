@@ -2,6 +2,7 @@ package io.mosip.registration.util.control.impl;
 
 import java.util.*;
 
+import io.mosip.registration.controller.ClientApplication;
 import javafx.scene.control.Tooltip;
 import org.springframework.context.ApplicationContext;
 
@@ -43,7 +44,7 @@ public class ButtonFxControl extends FxControl {
 	private MasterSyncService masterSyncService;
 
 	public ButtonFxControl() {
-		ApplicationContext applicationContext = Initialization.getApplicationContext();
+		ApplicationContext applicationContext = ClientApplication.getApplicationContext();
 		fxUtils = FXUtils.getInstance();
 		regApplicationContext = io.mosip.registration.context.ApplicationContext.getInstance();
 		masterSyncService = applicationContext.getBean(MasterSyncService.class);
@@ -97,8 +98,12 @@ public class ButtonFxControl extends FxControl {
 
 		Button selectedButton = getSelectedButton(primaryHbox);
 
+		if(selectedButton == null) {
+			return;
+		}
+
 		String code = selectedButton.getId().replaceAll(uiFieldDTO.getId(), "");
-		
+
 		switch (this.uiFieldDTO.getType()) {
 		case RegistrationConstants.SIMPLE_TYPE:
 			List<SimpleDto> values = new ArrayList<SimpleDto>();
@@ -122,7 +127,7 @@ public class ButtonFxControl extends FxControl {
 				getRegistrationDTo().addDemographicField(uiFieldDTO.getId(), result.get().getName());
 				getRegistrationDTo().SELECTED_CODES.put(uiFieldDTO.getId()+"Code", code);
 			}
-	}
+		}
 	}
 
 	private Button getSelectedButton(HBox hBox) {

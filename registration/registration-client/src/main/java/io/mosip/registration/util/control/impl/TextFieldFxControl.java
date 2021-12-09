@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.mosip.registration.controller.*;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.commons.packet.dto.packet.SimpleDto;
@@ -25,11 +26,6 @@ import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.SessionContext;
-import io.mosip.registration.controller.FXComponents;
-import io.mosip.registration.controller.FXUtils;
-import io.mosip.registration.controller.GenericController;
-import io.mosip.registration.controller.Initialization;
-import io.mosip.registration.controller.VirtualKeyboard;
 import io.mosip.registration.controller.reg.Validations;
 import io.mosip.registration.dto.BlocklistedConsentDto;
 import io.mosip.registration.dto.RegistrationDTO;
@@ -84,7 +80,7 @@ public class TextFieldFxControl extends FxControl {
 	private GenericController genericController;
 	
 	public TextFieldFxControl() {
-		ApplicationContext applicationContext = Initialization.getApplicationContext();
+		ApplicationContext applicationContext = ClientApplication.getApplicationContext();
 		validation = applicationContext.getBean(Validations.class);
 		fxComponents = applicationContext.getBean(FXComponents.class);
 		demographicChangeActionHandler = applicationContext.getBean(DemographicChangeActionHandler.class);

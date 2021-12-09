@@ -77,7 +77,7 @@ public class UserMachineMappingServiceImpl extends BaseService implements UserMa
 
 			try {				
 				stationId = getStationId();
-				centerId = getCenterId(stationId);
+				centerId = getCenterId();
 				userMachineMappingList = machineMappingDAO.getUserMappingDetails(stationId);
 				Map<String, Object> requestMap = new LinkedHashMap<>();
 				requestMap.put(RegistrationConstants.ID, RegistrationConstants.APPLICATION_NAME);

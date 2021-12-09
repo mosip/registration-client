@@ -12,8 +12,6 @@ LABEL build_time=${BUILD_TIME}
 
 ARG client_version
 
-ARG crypto_key
-
 ARG healthcheck_url
 
 ARG client_upgrade_server
@@ -22,15 +20,11 @@ ARG cert_server_URL
 
 ENV client_version_env=${client_version}
 
-ENV crypto_key_env=${crypto_key}
-
 ENV healthcheck_url_env=${healthcheck_url}
 
 ENV client_upgrade_server_env=${client_upgrade_server}
 
 ENV client_repo_env=${client_repo_url}
-
-ENV client_certificate_env=${client_certificate}
 
 ENV artifactory_url_env=${artifactory_url}
 
@@ -61,10 +55,6 @@ ENV work_dir=/home/${container_user}
 
 ADD registration-client/target ./registration-client/target
 
-ADD registration-libs/target ./registration-libs/target
-
-ADD registration-libs/src/main/resources ./registration-libs/resources
-
 ADD registration-test/target ./registration-test/target
 
 ADD registration-test/src/main/resources ./registration-test/resources
@@ -73,9 +63,7 @@ ADD configure.sh configure.sh
 
 RUN chmod a+x configure.sh \
  && rm -f ./registration-client/target/registration-client-*-javadoc.jar \
- && rm -f ./registration-client/target/registration-client-*-sources.jar \
- && rm -f ./registration-libs/target/registration-libs-*-javadoc.jar \
- && rm -f ./registration-libs/target/registration-libs-*-sources.jar
+ && rm -f ./registration-client/target/registration-client-*-sources.jar
 
 # change permissions of file inside working dir
 RUN chown -R ${container_user}:${container_user} /home/${container_user}

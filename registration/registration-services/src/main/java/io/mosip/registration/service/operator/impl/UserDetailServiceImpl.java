@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.registration.context.SessionContext;
 import lombok.NonNull;
 import org.json.JSONObject;
@@ -91,7 +92,7 @@ public class UserDetailServiceImpl extends BaseService implements UserDetailServ
 
 			if (jsonObject.has("userDetails")) {
 				byte[] data = clientCryptoFacade
-						.decrypt(CryptoUtil.decodeURLSafeBase64((String) jsonObject.get("userDetails")));
+						.decrypt(ClientCryptoUtils.decodeBase64Data((String) jsonObject.get("userDetails")));
 				jsonString = new String(data);
 			}
 

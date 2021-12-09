@@ -11,6 +11,7 @@ import java.util.*;
 
 import io.mosip.kernel.clientcrypto.constant.ClientCryptoManagerConstant;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.exception.IOException;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.FileUtils;
@@ -170,7 +171,7 @@ public class ResponseSignatureAdvice {
 		try {
 			if(result.isPresent()) {
 				byte[] data = requestHTTPDTO.isFileEncrypted() ?
-						clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(
+						clientCryptoFacade.decrypt(ClientCryptoUtils.decodeBase64Data(
 								FileUtils.readFileToString(requestHTTPDTO.getFilePath().toFile(), StandardCharsets.UTF_8))) :
 						FileUtils.readFileToByteArray(requestHTTPDTO.getFilePath().toFile());
 				String actualData = String.format("{\"hash\":\"%s\"}", HMACUtils2.digestAsPlainText(data));

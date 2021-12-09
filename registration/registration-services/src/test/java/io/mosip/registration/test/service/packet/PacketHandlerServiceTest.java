@@ -151,7 +151,7 @@ public class PacketHandlerServiceTest {
 		when(baseService.getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP)).thenReturn(RegistrationConstants.DISABLE);
 
 		
-		when(registrationCenterDAO.isMachineCenterActive("123")).thenReturn(true);
+		when(registrationCenterDAO.isMachineCenterActive()).thenReturn(true);
 
 		ResponseDTO responseDTO = new ResponseDTO();
 		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();

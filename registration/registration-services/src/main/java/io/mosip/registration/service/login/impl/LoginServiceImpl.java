@@ -6,14 +6,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.mapper.CustomObjectMapper.MAPPER_FACADE;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import io.micrometer.core.annotation.Counted;
@@ -507,63 +500,61 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	@Counted
 	public ResponseDTO validateUser(String userId) {
 		ResponseDTO responseDTO = new ResponseDTO();
-		
 		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Validating User");
 		
 		try {
 			getUserDetailValidation(userId);
-			
 			UserDTO userDTO = getUserDetail(userId);
 			if (userDTO == null) {
 				setErrorResponse(responseDTO, RegistrationConstants.USER_NAME_VALIDATION, null);
-			} else {
-				String stationId = getStationId();
-				String centerId = getCenterId(stationId);
-
-				//excluding the case where center is inactive, in which case centerId is null
-				//We will need user to login when center is inactive to finish pending tasks
-				if(centerId != null && !userDTO.getRegCenterUser().getRegcntrId().equals(centerId)) {
-					setErrorResponse(responseDTO, RegistrationConstants.USER_MACHINE_VALIDATION_MSG, null);
-					return responseDTO;
-				}
-
-				ApplicationContext.map().put(RegistrationConstants.USER_CENTER_ID, centerId);
-				if (userDTO.getStatusCode().equalsIgnoreCase(RegistrationConstants.BLOCKED)) {
-					setErrorResponse(responseDTO, RegistrationConstants.BLOCKED_USER_ERROR, null);
-				} else {
-					for (UserMachineMappingDTO userMachineMapping : userDTO.getUserMachineMapping()) {
-						ApplicationContext.map().put(RegistrationConstants.DONGLE_SERIAL_NUMBER,
-								userMachineMapping.getMachineMaster().getSerialNum());
-					}
-
-					Set<String> roleList = new LinkedHashSet<>();
-					userDTO.getUserRole().forEach(roleCode -> {
-						if (roleCode.isActive()) {
-							roleList.add(String.valueOf(roleCode.getRoleCode()));
-						}
-					});
-
-					LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Validating roles");
-					// Checking roles
-					if (!Role.hasAnyRegistrationRoles(roleList)) {
-						setErrorResponse(responseDTO, RegistrationConstants.ROLES_EMPTY_ERROR, null);
-					} else {
-						ApplicationContext.map().put(RegistrationConstants.USER_STATION_ID, stationId);
-
-						Map<String, Object> params = new LinkedHashMap<>();
-						params.put(RegistrationConstants.ROLES_LIST, roleList);
-						params.put(RegistrationConstants.USER_DTO, userDTO);
-						setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, params);
-					}
-				}
+				return responseDTO;
 			}
 
-			LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "completed validating user");
+			String stationId = getStationId();
+			String centerId = getCenterId();
+
+			//excluding the case where center is inactive, in which case centerId is null
+			//We will need user to login when center is inactive to finish pending tasks
+			if(centerId == null || userDTO.getRegCenterId() == null || !userDTO.getRegCenterId().equals(centerId)) {
+				setErrorResponse(responseDTO, RegistrationConstants.USER_MACHINE_VALIDATION_MSG, null);
+				return responseDTO;
+			}
+
+			if (userDTO.getStatusCode().equalsIgnoreCase(RegistrationConstants.BLOCKED) || !userDTO.getIsActive() || userDTO.getIsDeleted()) {
+				setErrorResponse(responseDTO, RegistrationConstants.BLOCKED_USER_ERROR, null);
+				return responseDTO;
+			}
+
+			if(userDTO.getUserRole() == null || userDTO.getUserRole().isEmpty()) {
+				setErrorResponse(responseDTO, RegistrationConstants.ROLES_EMPTY_ERROR, null);
+				return responseDTO;
+			}
+
+			Set<String> roleList = new LinkedHashSet<>();
+			userDTO.getUserRole().forEach(roleCode -> {
+				if (roleCode.isActive()) {
+					roleList.add(String.valueOf(roleCode.getRoleCode()));
+				}
+			});
+
+			LOGGER.info("Validating roles for the provided userid {}", roleList);
+
+			// Checking roles
+			if (!Role.hasAnyRegistrationRoles(roleList)) {
+				setErrorResponse(responseDTO, RegistrationConstants.ROLES_EMPTY_ERROR, null);
+			} else {
+				ApplicationContext.map().put(RegistrationConstants.USER_STATION_ID, stationId);
+				ApplicationContext.map().put(RegistrationConstants.USER_CENTER_ID, centerId);
+
+				Map<String, Object> params = new LinkedHashMap<>();
+				params.put(RegistrationConstants.ROLES_LIST, roleList);
+				params.put(RegistrationConstants.USER_DTO, userDTO);
+				setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, params);
+			}
+			LOGGER.info("completed validating user successfully");
 			
-		} catch(RegBaseCheckedException regBaseCheckedException) {
-			LOGGER.error(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-					ExceptionUtils.getStackTrace(regBaseCheckedException));
-			
+		} catch(Throwable t) {
+			LOGGER.error("Failed validating user {}", userId, t);
 			setErrorResponse(responseDTO, RegistrationConstants.USER_NAME_VALIDATION, null);
 		}
 		return responseDTO;
