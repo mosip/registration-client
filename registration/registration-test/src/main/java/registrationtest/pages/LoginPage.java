@@ -75,7 +75,8 @@ public class LoginPage {
 
     public void selectAppLang() {
         try {
-            String str = PropertiesUtil.getKeyValue("appLanguage");
+            String str="français";
+           // String str = PropertiesUtil.getKeyValue("appLanguage");
             Platform.runLater(new Runnable() {
                 public void run() {
 

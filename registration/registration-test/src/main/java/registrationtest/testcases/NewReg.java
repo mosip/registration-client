@@ -130,8 +130,9 @@ public class NewReg {
             }
 
         } catch (Exception e) {
-
+            ExtentReportUtil.test1.log(Status.FAIL, "FAIL Operator Onboards");
             logger.error(e.getMessage());
+
         }
 
         return flag;
@@ -216,6 +217,8 @@ public class NewReg {
         } catch (Exception e) {
 
             logger.error(e.getMessage());
+            ExtentReportUtil.test1.log(Status.FAIL, "FAIL Operator Onboards");
+            
         }
 
     }

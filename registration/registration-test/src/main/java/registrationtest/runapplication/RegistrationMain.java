@@ -14,6 +14,7 @@ import org.testfx.api.FxRobot;
 import com.aventstack.extentreports.Status;
 import registrationtest.pojo.output.RID;
 import registrationtest.testcases.*;
+import registrationtest.utility.DateUtil;
 import registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.JsonUtil;
 import registrationtest.utility.PropertiesUtil;
@@ -45,9 +46,10 @@ public class RegistrationMain {
                 try {
 
                     //loop until application primary stage is not loaded
-                    while (ClientApplication.getPrimaryStage() == null) {}
+                    while (ClientApplication.getPrimaryStage() == null) {Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait")));
+}
 
-                    System.out.println("Application primary stage setup completed");
+                    System.out.println("Application primary stage setup completed "+DateUtil.getDateTime());
                     Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait")));
 
                     robot = new FxRobot();
@@ -231,7 +233,7 @@ public class RegistrationMain {
                 if (f.exists()) {
                     InputStream is = new FileInputStream(f);
                     jsonTxt = IOUtils.toString(is, "UTF-8");
-                    System.out.println(jsonTxt);
+                    //System.out.println(jsonTxt);
                     logger.info("readJsonFileText");
 
                     map.put(doc, jsonTxt);
