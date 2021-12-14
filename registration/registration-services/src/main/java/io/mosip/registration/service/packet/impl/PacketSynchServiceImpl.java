@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -199,19 +200,23 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 		proceedWithPacketSync();
 
 		List<Registration> registrations = (packetIDs != null) ? registrationDAO.get(packetIDs) :
-				registrationDAO.getPacketsToBeSynched(RegistrationConstants.CLIENT_STATUS_TO_BE_SYNCED, batchCount);
+				registrationDAO.getPacketsToBeSynched(RegistrationConstants.CLIENT_STATUS_TO_BE_SYNCED);
 
-		List<SyncRegistrationDTO> syncDtoList = getPacketSyncDtoList(registrations);
+		List<List<Registration>> partitionedList = ListUtils.partition(registrations, batchCount);
 		
-		//This filtering is done for backward compatibility. For older version packets, registrationId will be copied to packetId column
-		List<SyncRegistrationDTO> syncDtoWithPacketId = syncDtoList.stream().filter(dto -> !dto.getRegistrationId().equals(dto.getPacketId())).collect(Collectors.toList());
-		List<SyncRegistrationDTO> syncDtoWithoutPacketId = syncDtoList.stream().filter(dto -> dto.getRegistrationId().equals(dto.getPacketId())).collect(Collectors.toList());
-		
-		if(syncDtoList == null || syncDtoList.isEmpty())
-			return;
-		
-		syncRID(syncDtoWithoutPacketId, triggerPoint, false);
-		syncRID(syncDtoWithPacketId, triggerPoint, true);
+		for (List<Registration> partition : partitionedList) {
+			List<SyncRegistrationDTO> syncDtoList = getPacketSyncDtoList(partition);
+			
+			//This filtering is done for backward compatibility. For older version packets, registrationId will be copied to packetId column
+			List<SyncRegistrationDTO> syncDtoWithPacketId = syncDtoList.stream().filter(dto -> !dto.getRegistrationId().equals(dto.getPacketId())).collect(Collectors.toList());
+			List<SyncRegistrationDTO> syncDtoWithoutPacketId = syncDtoList.stream().filter(dto -> dto.getRegistrationId().equals(dto.getPacketId())).collect(Collectors.toList());
+			
+			if(syncDtoList == null || syncDtoList.isEmpty())
+				break;
+			
+			syncRID(syncDtoWithoutPacketId, triggerPoint, false);
+			syncRID(syncDtoWithPacketId, triggerPoint, true);
+		}
 		
 		LOGGER.debug("Sync the packets to the server ending");
 	}

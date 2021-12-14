@@ -137,8 +137,6 @@ public interface RegistrationDAO {
 	 * @return List of {@link Registration} entities
 	 */
 	List<Registration> getPacketsToBeSynched(List<String> statusCodes);
-	
-	List<Registration> getPacketsToBeSynched(List<String> statusCodes, int count);
 
 	/**
 	 * This method is used to update the Packet sync status in the database.
@@ -201,8 +199,6 @@ public interface RegistrationDAO {
 	List<Registration> fetchReRegisterPendingPackets();
 
 	List<Registration> getAllRegistrations();
-
-	List<Registration> getRegistrationByStatus(List<String> packetStatus, int limit);
 
 	List<Object[]> getStatusBasedCount();
 

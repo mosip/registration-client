@@ -1,4 +1,4 @@
-package io.mosip.registration.test.dao.impl;
+package io.mosip.registration.test.service.packet;
 
 
 import static org.junit.Assert.assertEquals;

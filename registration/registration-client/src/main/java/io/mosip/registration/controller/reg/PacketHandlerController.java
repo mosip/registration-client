@@ -16,7 +16,6 @@ import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import io.mosip.registration.controller.ClientApplication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -33,6 +32,7 @@ import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
+import io.mosip.registration.controller.ClientApplication;
 import io.mosip.registration.controller.GenericController;
 import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dto.ErrorResponseDTO;
@@ -66,6 +66,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.ColumnConstraints;
@@ -101,6 +102,9 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 	@FXML
 	private Label lastPreRegPacketDownloadedTime;
+	
+	@FXML
+	private ImageView inProgressImage;
 
 	@FXML
 	private Label lastSyncTime;
@@ -739,6 +743,14 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 	public ProgressIndicator getProgressIndicator() {
 		return progressIndicator;
+	}
+	
+	public GridPane getPreRegDataPane() {
+		return downloadPreRegDataPane;
+	}
+	
+	public void setInProgressImage(Image image) {
+		inProgressImage.setImage(image);
 	}
 
 	public void setLastPreRegPacketDownloadedTime() {

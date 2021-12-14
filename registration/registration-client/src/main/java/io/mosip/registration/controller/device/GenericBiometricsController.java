@@ -506,7 +506,7 @@ public class GenericBiometricsController extends BaseController {
 					boolean isStreamStarted = urlStream != null && urlStream.read() != -1;
 					if (!isStreamStarted) {
 						LOGGER.info("URL Stream was null at : {} ", System.currentTimeMillis());
-						deviceSpecificationFactory.init();
+						deviceSpecificationFactory.initializeDeviceMap(true);
 						streamer.setUrlStream(null);
 						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
 						return;

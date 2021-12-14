@@ -145,7 +145,12 @@
                               </VBox>
                               <VBox alignment="CENTER_LEFT" prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1">
                                  <children>
-                                    <Label fx:id="lastPreRegPacketDownloadedTime" styleClass="operationalDetails" wrapText="true" />
+                                    <HBox alignment="CENTER_LEFT" spacing="3.0">
+                                       <children>
+                                          <Label fx:id="lastPreRegPacketDownloadedTime" styleClass="operationalDetails" wrapText="true" />
+                                          <ImageView fx:id="inProgressImage" fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true" />
+                                       </children>
+                                    </HBox>
                                     <Label styleClass="operationalTitle" text="%downloadPreregistrationData" wrapText="true" />
                                  </children>
                               </VBox>
