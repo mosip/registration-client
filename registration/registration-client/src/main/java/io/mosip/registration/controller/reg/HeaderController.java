@@ -561,7 +561,7 @@ public class HeaderController extends BaseController {
 	private String softwareUpdate() {
 		try {
 
-			softwareUpdateHandler.update();
+			softwareUpdateHandler.doSoftwareUpgrade();
 			return RegistrationConstants.ALERT_INFORMATION;
 
 		} catch (Exception exception) {
@@ -788,12 +788,7 @@ public class HeaderController extends BaseController {
 			}
 		} else {
 			pane.setDisable(false);
-			if (!isPreLaunchTaskToBeStopped) {
-				loginController.executePreLaunchTask(pane, progressIndicator);
-				jobConfigurationService.startScheduler();
-			}
 		}
-
 	}
 
 	private void softwareUpdateInitiate(Pane pane, ProgressIndicator progressIndicator, String context,

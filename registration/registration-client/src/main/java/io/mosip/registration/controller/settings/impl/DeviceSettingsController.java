@@ -219,7 +219,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 					@Override
 					protected Boolean call() {
 						try {
-							mosipDeviceSpecificationFactory.initializeDeviceMap();
+							mosipDeviceSpecificationFactory.initializeDeviceMap(false);
 							return true;
 						} catch (Exception exception) {
 							LOGGER.error("Exception while scanning for devices", exception);
