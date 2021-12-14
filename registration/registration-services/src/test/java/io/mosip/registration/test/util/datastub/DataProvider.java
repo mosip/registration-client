@@ -12,6 +12,7 @@ import io.mosip.registration.dto.OSIDataDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
 import io.mosip.registration.dto.schema.UiFieldDTO;
+import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.dto.biometric.BiometricDTO;
 import io.mosip.registration.dto.biometric.BiometricExceptionDTO;
 import io.mosip.registration.dto.biometric.BiometricInfoDTO;
@@ -71,6 +72,9 @@ public class DataProvider {
 		registrationDTO.setRegistrationMetaDataDTO(DataProvider.getRegistrationMetaDataDTO());
 		registrationDTO.setPreRegistrationId("PEN1345T");
 		registrationDTO.setRegistrationId("10011100110016320190307151917");
+		registrationDTO.setFlowType(FlowType.NEW);
+		registrationDTO.setAppId("10011100110016320190307151917");
+		registrationDTO.setProcessId("NEW");
 
 		registrationDTO.setDemographics(getDemographicData(selectedLanguages));
 //		registrationDTO.setBiometricDTO(DataProvider.getBiometricDTO());

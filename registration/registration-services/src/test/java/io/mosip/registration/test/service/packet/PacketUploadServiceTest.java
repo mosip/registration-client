@@ -1,6 +1,7 @@
-package io.mosip.registration.test.service.packet.encryption;
+package io.mosip.registration.test.service.packet;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.doNothing;
 
 import java.io.File;
 import java.net.URI;
@@ -8,14 +9,13 @@ import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-import io.mosip.kernel.core.util.HMACUtils2;
-import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.context.SessionContext;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,23 +35,39 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.retry.RetryCallback;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 
+import io.mosip.kernel.core.util.FileUtils;
+import io.mosip.kernel.core.util.HMACUtils2;
+import io.mosip.registration.audit.AuditManagerService;
+import io.mosip.registration.constants.AuditEvent;
+import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
+import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.context.SessionContext.UserContext;
+import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dao.RegistrationDAO;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.repositories.RegistrationRepository;
+import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.packet.impl.PacketUploadServiceImpl;
+import io.mosip.registration.service.remap.CenterMachineReMapService;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.RequestHTTPDTO;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@PrepareForTest({ RegistrationAppHealthCheckUtil.class, ApplicationContext.class, SessionContext.class ,
-		RegistrationSystemPropertiesChecker.class })
+@PrepareForTest({ HMACUtils2.class, RegistrationAppHealthCheckUtil.class, RegistrationSystemPropertiesChecker.class, ApplicationContext.class, SessionContext.class, FileUtils.class })
 public class PacketUploadServiceTest {
 
 	@Rule
@@ -75,7 +91,54 @@ public class PacketUploadServiceTest {
 	@InjectMocks
 	private PacketUploadServiceImpl packetUploadServiceImpl;
 
+	@Mock
+    private RetryTemplate retryTemplate;
+	
+	@Mock
+	private AuditManagerService auditFactory;
+	
+	@Mock
+	private BaseService baseService;
 
+	@Mock
+	private MachineMasterRepository machineMasterRepository;
+
+	@Mock
+	private RegistrationCenterDAO registrationCenterDAO;
+
+	@Mock
+	private CenterMachineReMapService centerMachineReMapService;
+	
+	private Map<String, Object> applicationMap = new HashMap<>();
+	
+	@Before
+	public void initialize() throws Exception {		
+		PowerMockito.mockStatic(HMACUtils2.class);
+		PowerMockito.mockStatic(SessionContext.class);
+				
+		doNothing().when(auditFactory).audit(Mockito.any(AuditEvent.class), Mockito.any(Components.class),
+				Mockito.anyString(), Mockito.anyString());
+		
+		Map<String,Object> appMap = new HashMap<>();
+		appMap.put(RegistrationConstants.REG_DELETION_CONFIGURED_DAYS, "5");
+		PowerMockito.mockStatic(ApplicationContext.class, RegistrationSystemPropertiesChecker.class);
+		PowerMockito.doReturn(appMap).when(ApplicationContext.class, "map");
+		PowerMockito.doReturn("eng").when(ApplicationContext.class, "applicationLanguage");
+		PowerMockito.doReturn("test").when(RegistrationSystemPropertiesChecker.class, "getMachineId");
+
+		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
+		applicationMap.put(RegistrationConstants.REG_DELETION_CONFIGURED_DAYS, "5");
+		applicationMap.put(RegistrationConstants.USER_CENTER_ID, "10011");
+		applicationMap.put(RegistrationConstants.USER_STATION_ID, "10011");
+		applicationMap.put(RegistrationConstants.REG_DELETION_CONFIGURED_DAYS, "5");
+		ApplicationContext.setApplicationMap(applicationMap);
+		Mockito.when(ApplicationContext.map()).thenReturn(applicationMap);
+		UserContext userContext = Mockito.mock(SessionContext.UserContext.class);
+		PowerMockito.doReturn(userContext).when(SessionContext.class, "userContext");
+
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);		
+		packetUploadServiceImpl.init();
+	}
 
 	@Test(expected = RegBaseCheckedException.class)
 	public void testPushPacket() throws RegBaseCheckedException, ConnectionException, URISyntaxException {
@@ -101,7 +164,7 @@ public class PacketUploadServiceTest {
 				packetUploadServiceImpl.uploadPacket("test").getUploadStatus());
 	}
 
-	@Test(expected = RegBaseCheckedException.class)
+	@Test
 	public void testPushPacketNegativeCase() throws URISyntaxException, RegBaseCheckedException, ConnectionException {
 		LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
 		LinkedHashMap<String, Object> respObj1 = new LinkedHashMap<>();
@@ -123,9 +186,19 @@ public class PacketUploadServiceTest {
 		requestHTTPDTO.setUri(
 				new URI("http://104.211.209.102:8080/v0.1/registration-processor/packet-receiver/registrationpackets"));
 		requestHTTPDTO.setHttpMethod(HttpMethod.POST);
+		
+		Registration registration = new Registration();
+		registration.setId("123456789");
+		registration.setAckFilename("..//registration-services/src/test/resources/123456789_Ack.png");
+		registration.setUploadCount((short) 0);
+		registration.setClientStatusCode("APPROVED");
+		registration.setFileUploadStatus("S");
+		registration.setCrDtime(Timestamp.from(Instant.now()));
+		Mockito.when(registrationDAO.getRegistrationByPacketId(Mockito.anyString())).thenReturn(registration);
+		
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(),Mockito.anyString())).thenReturn(respObj1);
 
-		assertEquals(RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode(), packetUploadServiceImpl.uploadPacket("test").getUploadStatus());
+		Assert.assertNotNull(packetUploadServiceImpl.uploadPacket("test").getUploadStatus());
 	}
 
 	/*@Test
@@ -144,6 +217,7 @@ public class PacketUploadServiceTest {
 		Object respObj = new Object();
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(),Mockito.anyString()))
 				.thenThrow(new HttpClientErrorException(HttpStatus.ACCEPTED));
+		
 		assertEquals(respObj, packetUploadServiceImpl.uploadPacket("test"));
 	}
 	
@@ -165,38 +239,101 @@ public class PacketUploadServiceTest {
 	}
 
 	@Test
-	public void testUploadPacket() throws Exception {
+	public void testUploadPacket() throws Throwable {
+		Mockito.when(retryTemplate.execute(Mockito.any(), Mockito.any(), Mockito.any())).thenAnswer(invocation -> {
+            RetryCallback retry = invocation.getArgument(0);
+            return retry.doWithRetry(null);
+        });
+		
 		Registration registration = new Registration();
 		List<Registration> regList = new ArrayList<>();
 		registration.setId("123456789");
 		registration.setAckFilename("..//registration-services/src/test/resources/123456789_Ack.png");
 		registration.setUploadCount((short) 0);
-		registration.setClientStatusCode("PUSHED");
+		registration.setClientStatusCode("SYNCED");
 		registration.setFileUploadStatus("S");
 		registration.setCrDtime(Timestamp.from(Instant.now()));
 		regList.add(registration);
 
 		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class,
-				RegistrationSystemPropertiesChecker.class);
+				RegistrationSystemPropertiesChecker.class, FileUtils.class);
+		Mockito.when(FileUtils.getFile(Mockito.anyString())).thenReturn(new File("../pom.xml"));
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 
 		LinkedHashMap<String, Object> respObj = new LinkedHashMap<>();
-		respObj.put("response", "Success");
+		LinkedHashMap<String, Object> responseMap = new LinkedHashMap<>();
+		responseMap.put("status", "PUSHED");
+		respObj.put("response", responseMap);
 		respObj.put("error", null);
 		//respObj = "PACKET_UPLOADED_TO_VIRUS_SCAN";
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(),Mockito.anyString())).thenReturn(respObj);
 		List<Registration> packetList = new ArrayList<>();
 		Registration registration1 = new Registration();
+		registration1.setId("123456789");
+		registration1.setAckFilename("..//registration-services/src/test/resources/123456789_Ack.png");
+		registration1.setUploadCount((short) 1);
+		registration1.setCrDtime(Timestamp.from(Instant.now()));
+		registration1.setClientStatusCode("PUSHED");
 		packetList.add(registration);
 		Mockito.when(registrationDAO.getRegistrationByPacketId(Mockito.anyString())).thenReturn(registration);
-		Mockito.when(registrationDAO.updateRegStatus(Mockito.anyObject())).thenReturn(registration1);
-		packetUploadServiceImpl.uploadPacket("123456789");
-		assertEquals("PUSHED", registration.getClientStatusCode());
-		assertEquals("S", registration.getFileUploadStatus());
-
+		Mockito.when(registrationDAO.updateRegStatus(Mockito.any())).thenReturn(registration1);
+		assertEquals("PUSHED", packetUploadServiceImpl.uploadPacket("123456789").getPacketClientStatus());
 	}
 
+	@Test
+	public void testUploadAllSyncedPackets() throws Throwable {
+		Mockito.when(retryTemplate.execute(Mockito.any(), Mockito.any(), Mockito.any())).thenAnswer(invocation -> {
+            RetryCallback retry = invocation.getArgument(0);
+            return retry.doWithRetry(null);
+        });
+		
+		Registration registration = new Registration();
+		List<Registration> regList = new ArrayList<>();
+		registration.setId("123456789");
+		registration.setAckFilename("..//registration-services/src/test/resources/123456789_Ack.png");
+		registration.setUploadCount((short) 0);
+		registration.setClientStatusCode("SYNCED");
+		registration.setFileUploadStatus("S");
+		registration.setCrDtime(Timestamp.from(Instant.now()));
+		
+		Registration reg1 = new Registration();
+		reg1.setId("909090");
+		reg1.setServerStatusCode(RegistrationConstants.PACKET_STATUS_CODE_REREGISTER);
+		
+		regList.add(registration);
+		regList.add(reg1);
+		Mockito.when(registrationDAO.getRegistrationByStatus(Mockito.anyList())).thenReturn(regList);
+
+		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class,
+				RegistrationSystemPropertiesChecker.class, FileUtils.class);
+		Mockito.when(FileUtils.getFile(Mockito.anyString())).thenReturn(new File("../pom.xml"));
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
+
+		LinkedHashMap<String, Object> respObj = new LinkedHashMap<>();
+		LinkedHashMap<String, Object> responseMap = new LinkedHashMap<>();
+		List<LinkedHashMap<String, Object>> respList = new ArrayList<>();
+		responseMap.put("errorCode", "RPR-UPD-001");
+		responseMap.put("message", "duplicate packet");
+		respList.add(responseMap);
+		respObj.put(RegistrationConstants.ERRORS, respList);
+		
+		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(),Mockito.anyString())).thenReturn(respObj);
+		
+		Registration registration1 = new Registration();
+		registration1.setId("123456789");
+		registration1.setAckFilename("..//registration-services/src/test/resources/123456789_Ack.png");
+		registration1.setUploadCount((short) 1);
+		registration1.setCrDtime(Timestamp.from(Instant.now()));
+		registration1.setClientStatusCode("PUSHED");
+		registration1.setFileUploadStatus("E");
+		
+		Mockito.when(registrationDAO.updateRegStatus(Mockito.any())).thenReturn(registration1);
+		
+		Assert.assertNotNull(packetUploadServiceImpl.uploadAllSyncedPackets().getErrorResponseDTOs());
+	}
+	
 	@Test
 	public void testUploadPacket1() throws Exception {
 		Registration registration = new Registration();
@@ -231,6 +368,7 @@ public class PacketUploadServiceTest {
 		Registration registration = new Registration();
 		List<Registration> regList = new ArrayList<>();
 		registration.setId("123456789");
+		registration.setClientStatusCode("APPROVED");
 		registration.setAckFilename("..//registration-services/src/test/resources/1234567895_Ack.png");
 		registration.setUploadCount((short) 0);
 		regList.add(registration);
@@ -242,8 +380,7 @@ public class PacketUploadServiceTest {
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 
 		Mockito.when(registrationDAO.getRegistrationByPacketId(Mockito.anyString())).thenReturn(registration);
-		packetUploadServiceImpl.uploadPacket("123456789");
-		assertEquals(null, registration.getFileUploadStatus());
+		assertEquals(null, packetUploadServiceImpl.uploadPacket("123456789").getUploadStatus());
 
 	}
 
