@@ -321,8 +321,6 @@ public class LoginController extends BaseController implements Initializable {
 	public void loadInitialScreen(Stage primaryStage) {
 		try {
 			showUserNameScreen(primaryStage);
-			// Execute SQL file (Script files on update)
-			executeSQLFile();
 
 			hasUpdate = RegistrationConstants.ENABLE.equalsIgnoreCase(
 					getValueFromApplicationContext(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE));
@@ -364,56 +362,6 @@ public class LoginController extends BaseController implements Initializable {
 		primaryStage.setScene(scene);
 		primaryStage.getIcons().add(new Image(getClass().getResource(RegistrationConstants.LOGO).toExternalForm()));
 		primaryStage.show();
-	}
-
-	private void executeSQLFile() {
-
-		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Started Execute SQL file check");
-
-		String version = getValueFromApplicationContext(RegistrationConstants.SERVICES_VERSION_KEY);
-
-		try {
-			if (!version.equals("0") && !softwareUpdateHandler.getCurrentVersion().equalsIgnoreCase(version)) {
-
-				LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Software Update found");
-
-				loginRoot.setDisable(true);
-				ResponseDTO responseDTO = softwareUpdateHandler
-						.executeSqlFile(softwareUpdateHandler.getCurrentVersion(), version);
-				loginRoot.setDisable(false);
-
-				if (responseDTO.getErrorResponseDTOs() != null) {
-
-					ErrorResponseDTO errorResponseDTO = responseDTO.getErrorResponseDTOs().get(0);
-
-					if (RegistrationConstants.BACKUP_PREVIOUS_SUCCESS.equalsIgnoreCase(errorResponseDTO.getMessage())) {
-						generateAlert(RegistrationConstants.ERROR,
-								RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SQL_EXECUTION_FAILED_AND_REPLACED)
-										+ RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.RESTART_APPLICATION));
-						SessionContext.destroySession();
-					} else {
-						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_DISABLE_SCREEN_2));
-
-						new ClientApplication().stop();
-
-					}
-
-					restartApplication();
-				}
-			}
-		} catch (RuntimeException | IOException runtimeException) {
-			LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
-					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
-
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_DISABLE_SCREEN_2));
-
-			new ClientApplication().stop();
-
-		}
-
-		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
-				"Completed Execute SQL file check");
-
 	}
 
 	/**
