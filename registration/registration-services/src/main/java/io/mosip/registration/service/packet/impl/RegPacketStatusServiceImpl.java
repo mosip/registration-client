@@ -13,6 +13,7 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -173,12 +174,10 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 	 * @return List<String> list of registrationId's required for packet status sync
 	 *         with server
 	 */
-	private HashMap<String, List<String>> getPacketIds() {
+	private HashMap<String, List<String>> getPacketIds(List<Registration> registrationList) {
 		LOGGER.debug("getting packetIds to sync server status started");
 		
 		HashMap<String, List<String>> packets = new HashMap<>();
-
-		List<Registration> registrationList = regPacketStatusDAO.getPacketIdsByStatusUploadedOrExported(batchCount);
 
 		List<String> registrationIds = new ArrayList<>();
 		List<String> packetIds = new ArrayList<>();
@@ -254,20 +253,27 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 	public synchronized ResponseDTO syncServerPacketStatus(@NonNull String triggerPoint) throws RegBaseCheckedException,
 			ConnectionException {
 		LOGGER.info("packet status sync called");
-
+		
 		//Precondition check, proceed only if met, otherwise throws exception
 		proceedWithPacketSync();
 
 		/* Create Response to Return to UI layer */
 		ResponseDTO response = new ResponseDTO();
 		
+		List<Registration> registrationList = regPacketStatusDAO.getPacketIdsByStatusUploadedOrExported();
+		
 		//if (validateTriggerPoint(triggerPoint)) {
-		HashMap<String, List<String>> packetIds = getPacketIds();
-
-		response = syncServerStatus(packetIds.get("packetIds"), triggerPoint, true)
-				&& syncServerStatus(packetIds.get("registrationIds"), triggerPoint, false)
-						? setSuccessResponse(response, RegistrationConstants.PACKET_STATUS_SYNC_SUCCESS_MESSAGE, null)
-						: setErrorResponse(response, RegistrationConstants.PACKET_STATUS_SYNC_ERROR_RESPONSE, null);
+		List<List<Registration>> partitionedList = ListUtils.partition(registrationList, batchCount);
+		
+		boolean isSuccess = true;
+		
+		for (List<Registration> partition : partitionedList) {
+			HashMap<String, List<String>> packetIds = getPacketIds(partition);
+			isSuccess = isSuccess ? (syncServerStatus(packetIds.get("packetIds"), triggerPoint, true) && syncServerStatus(packetIds.get("registrationIds"), triggerPoint, false)) : false;
+		}
+		
+		response = isSuccess ? setSuccessResponse(response, RegistrationConstants.PACKET_STATUS_SYNC_SUCCESS_MESSAGE, null)
+				: setErrorResponse(response, RegistrationConstants.PACKET_STATUS_SYNC_ERROR_RESPONSE, null);
 						
 		LOGGER.info("Packet status sync - Response Created");
 		

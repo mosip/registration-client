@@ -76,7 +76,7 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 	private RetryTemplate retryTemplate;
 
 	@PostConstruct
-	private void init() {
+	public void init() {
 		FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
 		backOffPolicy.setBackOffPeriod((Long) ApplicationContext.map().getOrDefault("mosip.registration.retry.delay.packet.upload", 1000l));
 
@@ -136,8 +136,7 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 	public ResponseDTO uploadSyncedPackets() {
 		LOGGER.info("Started uploading specific number of packets with count {}", batchCount);
 		ResponseDTO responseDTO = new ResponseDTO();
-		List<Registration> syncedPackets = registrationDAO.getRegistrationByStatus(RegistrationConstants.PACKET_UPLOAD_STATUS,
-				batchCount);
+		List<Registration> syncedPackets = registrationDAO.getRegistrationByStatus(RegistrationConstants.PACKET_UPLOAD_STATUS);
 		if (syncedPackets != null && !syncedPackets.isEmpty()) {
 			for(Registration registration : syncedPackets) {
 				if (RegistrationConstants.PACKET_STATUS_CODE_REREGISTER.equalsIgnoreCase(registration.getServerStatusCode()))

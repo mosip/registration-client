@@ -42,6 +42,9 @@ public class RegistrationPacketVirusScanTest {
 
 	@Mock
 	private org.springframework.context.ApplicationContext applicationContext;
+	
+	@Mock
+    private File f;
 
 	@Mock
 	private VirusScanner mockScanner = new VirusScanner<Boolean, InputStream>() {
@@ -82,28 +85,28 @@ public class RegistrationPacketVirusScanTest {
 
 		Mockito.when(applicationContext.getBean(VirusScanner.class)).thenReturn(mockScanner);
 		PowerMockito.mockStatic(FileUtils.class);
-		Mockito.when(FileUtils.getFile(Mockito.any())).thenReturn(new File("../pom.xml"));
+		Mockito.when(FileUtils.getFile(Mockito.any())).thenReturn(f);
+		File[] arr = { new File("../pom.xml") };
+		Mockito.when(f.listFiles()).thenReturn(arr);
 	}
 
 	
 	@Test
 	public void scanPacket() throws IOException {
-		byte[] bytes = new byte[0];
-		Mockito.when(mockScanner.scanDocument(bytes)).thenReturn(true);
+		Mockito.when(mockScanner.scanDocument(Mockito.any(File.class))).thenReturn(true);
 		assertEquals("Success",registrationPacketVirusScanServiceImpl.scanPacket().getSuccessResponseDTO().getMessage());
 	}
 	
 	@Test
 	public void scanPacketNegative() throws IOException {
-		byte[] bytes = new byte[0];
-		Mockito.when(mockScanner.scanDocument(bytes)).thenReturn(false);
+		Mockito.when(mockScanner.scanDocument(Mockito.any(File.class))).thenReturn(false);
 		assertNotNull(registrationPacketVirusScanServiceImpl.scanPacket().getSuccessResponseDTO().getMessage());
 	}
 	
 	@Test
 	public void scanPacketVirusScannerException() throws IOException {
-		Mockito.when(mockScanner.scanDocument(new File("test"))).thenThrow(new VirusScannerException());
-		assertNotNull(registrationPacketVirusScanServiceImpl.scanPacket().getSuccessResponseDTO());
+		Mockito.when(mockScanner.scanDocument(Mockito.any(File.class))).thenThrow(new VirusScannerException());
+		assertNotNull(registrationPacketVirusScanServiceImpl.scanPacket().getErrorResponseDTOs());
 	}
 	
 	@Test

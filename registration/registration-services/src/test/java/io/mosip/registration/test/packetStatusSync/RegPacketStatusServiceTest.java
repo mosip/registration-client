@@ -26,6 +26,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 
 import io.mosip.kernel.core.util.HMACUtils2;
@@ -91,6 +92,8 @@ public class RegPacketStatusServiceTest {
 
 	@Before
 	public void initiate() throws Exception {
+		int batchCount = 10;
+		ReflectionTestUtils.setField(packetStatusService, "batchCount", batchCount);
 		Map<String,Object> appMap = new HashMap<>();
 		appMap.put(RegistrationConstants.REG_DELETION_CONFIGURED_DAYS, "5");
 		PowerMockito.mockStatic(ApplicationContext.class, SessionContext.class, RegistrationSystemPropertiesChecker.class);
@@ -156,7 +159,7 @@ public class RegPacketStatusServiceTest {
 		regis.setClientStatusCode(RegistrationConstants.PACKET_STATUS_CODE_PROCESSED);
 		list.add(regis);
 
-		when(packetStatusDao.getPacketIdsByStatusUploadedOrExported(Mockito.anyInt())).thenReturn(list);
+		when(packetStatusDao.getPacketIdsByStatusUploadedOrExported()).thenReturn(list);
 
 		when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.any(), Mockito.anyString())).thenReturn(response);
 		Assert.assertNotNull(packetStatusService.syncServerPacketStatus("System").getSuccessResponseDTO());
@@ -185,7 +188,7 @@ public class RegPacketStatusServiceTest {
 		registrations.add(registration12);
 
 		List<Registration> list = new LinkedList<>();
-		when(packetStatusDao.getPacketIdsByStatusUploadedOrExported(Mockito.anyInt())).thenReturn(list);
+		when(packetStatusDao.getPacketIdsByStatusUploadedOrExported()).thenReturn(list);
 
 		when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString())).thenReturn(response);
 		Assert.assertNotNull(packetStatusService.syncServerPacketStatus("System").getSuccessResponseDTO());
@@ -204,7 +207,7 @@ public class RegPacketStatusServiceTest {
 		regis.setAckFilename("..//PacketStore/02-Jan-2019/2018782130000102012019115112_Ack.png");
 		regis.setClientStatusCode(RegistrationConstants.PACKET_STATUS_CODE_PROCESSED);
 		list.add(regis);
-		when(packetStatusDao.getPacketIdsByStatusUploadedOrExported(Mockito.anyInt())).thenReturn(list);
+		when(packetStatusDao.getPacketIdsByStatusUploadedOrExported()).thenReturn(list);
 
 		when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString()))
 				.thenThrow(ConnectionException.class);
@@ -223,7 +226,7 @@ public class RegPacketStatusServiceTest {
 		regis.setAckFilename("..//PacketStore/02-Jan-2019/2018782130000102012019115112_Ack.png");
 		regis.setClientStatusCode(RegistrationConstants.PACKET_STATUS_CODE_PROCESSED);
 		list.add(regis);
-		when(packetStatusDao.getPacketIdsByStatusUploadedOrExported(Mockito.anyInt())).thenReturn(list);
+		when(packetStatusDao.getPacketIdsByStatusUploadedOrExported()).thenReturn(list);
 
 		when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString()))
 				.thenThrow(RuntimeException.class);
@@ -242,7 +245,7 @@ public class RegPacketStatusServiceTest {
 		regis.setClientStatusCode(RegistrationConstants.PACKET_STATUS_CODE_PROCESSED);
 		list.add(regis);
 
-		when(packetStatusDao.getPacketIdsByStatusUploadedOrExported(Mockito.anyInt())).thenReturn(list);
+		when(packetStatusDao.getPacketIdsByStatusUploadedOrExported()).thenReturn(list);
 
 		List<LinkedHashMap<String, String>> registrations = new ArrayList<>();
 

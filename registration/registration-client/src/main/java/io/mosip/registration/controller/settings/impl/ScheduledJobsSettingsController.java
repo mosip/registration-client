@@ -160,9 +160,7 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 			ImageView imageView = new ImageView(getImage(RegistrationConstants.SYNC_IMG, true));
 			imageView.setFitWidth(45);
 			imageView.setFitHeight(45);
-			imageVbox.setOnMouseClicked(event -> {
-				executeJob(syncJob);
-			});
+			
 			Tooltip tooltip = new Tooltip(applicationContext.getApplicationLanguageLabelBundle()
 					.getString(RegistrationConstants.RUN_NOW_LABEL));
 			Tooltip.install(imageVbox, tooltip);
@@ -173,10 +171,20 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 			VBox jobVbox = new VBox();
 			jobVbox.setAlignment(Pos.CENTER_LEFT);
+			
+			HBox labelHBox = new HBox();
+			labelHBox.setSpacing(5);
+			
 			Label jobNameLabel = new Label(syncJob.getName());
 			jobNameLabel.getStyleClass().add(RegistrationConstants.OPERATIONAL_TITLE);
 			jobNameLabel.setWrapText(true);
+			
+			ImageView runningImage = new ImageView();
+			runningImage.setFitWidth(25);
+			runningImage.setFitHeight(25);
 
+			labelHBox.getChildren().addAll(jobNameLabel, runningImage);
+			
 			String nextSyncTime = RegistrationConstants.HYPHEN;
 			if (syncJob.getSyncFreq() != null) {
 				nextSyncTime = getLocalZoneTime(jobConfigurationService.getNextRestartTime(
@@ -197,6 +205,10 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 			lastRunLabel.getStyleClass().add(RegistrationConstants.OPERATIONAL_DETAILS);
 			lastRunLabel.setWrapText(true);
 
+			imageVbox.setOnMouseClicked(event -> {
+				executeJob(syncJob, imageVbox, runningImage);
+			});
+			
 			HBox hBox = new HBox();
 			hBox.setSpacing(5);
 			Label cronLabel = new Label(applicationContext.getApplicationLanguageLabelBundle()
@@ -240,7 +252,7 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 			hBox.getChildren().addAll(cronLabel, cronTextField, submit);
 
-			jobVbox.getChildren().addAll(jobNameLabel, nextRunLabel, lastRunLabel, hBox);
+			jobVbox.getChildren().addAll(labelHBox, nextRunLabel, lastRunLabel, hBox);
 
 			subGridPane.add(jobVbox, 1, 0);
 
@@ -254,12 +266,16 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 		}
 	}
 
-	private void executeJob(SyncJobDef syncJob) {
-		ResourceBundle resourceBundle = applicationContext.getBundle(ApplicationContext.applicationLanguage(),
+	private void executeJob(SyncJobDef syncJob, VBox imageVbox, ImageView runningImage) {
+		ResourceBundle resourceBundle = ApplicationContext.getBundle(ApplicationContext.applicationLanguage(),
 				RegistrationConstants.MESSAGES);
-		progressIndicatorPane.setVisible(true);
-		getStage().getScene().getRoot().setDisable(true);
+		
+		if (!RegistrationConstants.PACKET_JOBS.contains(syncJob.getId())) {
+			progressIndicatorPane.setVisible(true);
+			getStage().getScene().getRoot().setDisable(true);
+		}
 
+		imageVbox.setDisable(true);
 		Service<ResponseDTO> taskService = new Service<ResponseDTO>() {
 			@Override
 			protected Task<ResponseDTO> createTask() {
@@ -273,6 +289,13 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 					protected ResponseDTO call() {
 						LOGGER.info("Started execution of job {}", syncJob.getName());
 
+						Platform.runLater(() -> {
+							try {
+								runningImage.setImage(getImage("in-progress.png", true));
+							} catch (RegBaseCheckedException e) {
+								LOGGER.error("Error in getting imageview: " + e);
+							}
+						});
 						return jobConfigurationService.executeJob(syncJob.getId(),
 								RegistrationConstants.JOB_TRIGGER_POINT_USER);
 					}
@@ -286,14 +309,19 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 		taskService.setOnSucceeded(event -> {
 			getStage().getScene().getRoot().setDisable(false);
 			progressIndicatorPane.setVisible(false);
+			imageVbox.setDisable(false);
+			runningImage.setImage(null);
 
 			ResponseDTO responseDTO = taskService.getValue();
 
 			if (responseDTO.getSuccessResponseDTO() != null) {
 				LOGGER.info("Execution is successful for the job {}", syncJob.getName());
 
-				generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION, MessageFormat
-						.format(resourceBundle.getString("JOB_EXECUTION_SUCCESS_MSG"), syncJob.getName()));
+				if (!RegistrationConstants.PACKET_JOBS.contains(syncJob.getId())) {
+					generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION, MessageFormat
+							.format(resourceBundle.getString("JOB_EXECUTION_SUCCESS_MSG"), syncJob.getName()));
+				}
+				
 				if (responseDTO.getSuccessResponseDTO().getOtherAttributes() != null) {
 					if (responseDTO.getSuccessResponseDTO().getOtherAttributes().containsKey(RegistrationConstants.RESTART) && configUpdateAlert("RESTART_MSG")) {
 						restartController.restart();
@@ -315,6 +343,8 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 			getStage().getScene().getRoot().setDisable(false);
 			progressIndicatorPane.setVisible(false);
+			imageVbox.setDisable(false);
+			runningImage.setImage(null);
 
 			generateAlertLanguageSpecific(RegistrationConstants.ALERT_INFORMATION,
 					MessageFormat.format(resourceBundle.getString("JOB_EXECUTION_FAILURE_MSG"), syncJob.getName()));

@@ -18,11 +18,10 @@ public interface RegPacketStatusDAO {
 	 * as EXPORTED
 	 * The fetched data will be returned in the ascending order of created time
 	 * 
-	 * @param limit 
 	 * @return {@link Registration}
 	 * 				returns the list of registrationIds which are uploaded successfully
 	 */
-	List<Registration> getPacketIdsByStatusUploadedOrExported(int limit);
+	List<Registration> getPacketIdsByStatusUploadedOrExported();
 	
 	/**
 	 * Update the details in the {@link Registration} to the Registration as well as Registration Transaction table.

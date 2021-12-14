@@ -138,7 +138,38 @@ public class RegistrationApprovalServiceTest {
 
 	}
 	
-	@SuppressWarnings("unchecked")
+	@Test
+	public void testUpdateStatusWithPacketId() throws RegBaseCheckedException {
+		Registration regobject = new Registration();
+		UserDetail regUserDetail = new UserDetail();
+
+		regUserDetail.setId("Mosip1214");
+		regUserDetail.setName("RegistrationOfficerName");
+
+		regobject.setId("123456");
+		regobject.setPacketId("123456");
+		regobject.setClientStatusCode("A");
+		regobject.setCrBy("Mosip123");
+		regobject.setUpdBy(SessionContext.userContext().getUserId());
+		regobject.setApproverRoleCode(SessionContext.userContext().getRoles().get(0));
+		regobject.setAckFilename("file1");
+
+		regobject.setUserdetail(regUserDetail);
+
+		Mockito.when(registrationDAO.updateRegistrationWithPacketId("123456", "", "R")).thenReturn(regobject);
+
+		ReflectionTestUtils.setField(registrationApprovalServiceImpl, "registrationDAO", registrationDAO);
+
+		Registration updateStatus = registrationApprovalServiceImpl.updateRegistrationWithPacketId("123456", "", "R");
+
+		assertTrue(updateStatus.getPacketId().equals("123456"));
+		assertTrue(updateStatus.getClientStatusCode().equals("A"));
+		assertTrue(updateStatus.getUpdBy().equals("mosip1214"));
+		assertTrue(updateStatus.getApproverRoleCode().equals("SUPERADMIN"));
+		assertTrue(updateStatus.getAckFilename().equals("file1"));
+
+	}
+	
 	@Test(expected = RegBaseUncheckedException.class)
 	public void testValidateException() throws RegBaseCheckedException {
 		when( registrationDAO.getEnrollmentByStatus(Mockito.anyString())).thenThrow(RegBaseUncheckedException.class);
@@ -157,6 +188,6 @@ public class RegistrationApprovalServiceTest {
 	
 	@Test(expected = RegBaseCheckedException.class)
 	public void testValidateException3() throws RegBaseCheckedException {
-		registrationApprovalServiceImpl.updateRegistration("","","REGISTERED");
+		registrationApprovalServiceImpl.updateRegistrationWithPacketId("","","REGISTERED");
 	}
 }

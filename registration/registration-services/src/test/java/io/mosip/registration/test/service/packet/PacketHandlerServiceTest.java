@@ -1,21 +1,22 @@
 package io.mosip.registration.test.service.packet;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
-import java.sql.Timestamp;
-import java.time.LocalDate;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
-import io.mosip.kernel.core.util.FileUtils;
-import io.mosip.registration.dto.schema.ProcessSpecDto;
-import io.mosip.registration.enums.FlowType;
-import io.mosip.registration.enums.Role;
-import io.mosip.registration.service.config.LocalConfigService;
-import io.mosip.registration.service.sync.PolicySyncService;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -26,46 +27,65 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.core.env.Environment;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.mosip.commons.packet.dto.PacketInfo;
+import io.mosip.commons.packet.facade.PacketWriter;
+import io.mosip.kernel.auditmanager.entity.Audit;
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
+import io.mosip.kernel.core.exception.IOException;
 import io.mosip.kernel.core.idgenerator.spi.PridGenerator;
 import io.mosip.kernel.core.idgenerator.spi.RidGenerator;
+import io.mosip.kernel.core.util.CryptoUtil;
+import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.kernel.core.util.JsonUtils;
 import io.mosip.registration.audit.AuditManagerSerivceImpl;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.dao.AuditDAO;
+import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dao.RegistrationDAO;
-import io.mosip.registration.dao.impl.RegistrationDAOImpl;
-import io.mosip.registration.dto.PacketStatusDTO;
+import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
+import io.mosip.registration.dto.schema.ProcessSpecDto;
+import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.Registration;
+import io.mosip.registration.enums.FlowType;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.config.GlobalParamService;
+import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.operator.UserDetailService;
 import io.mosip.registration.service.packet.impl.PacketHandlerServiceImpl;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
+import io.mosip.registration.service.sync.PolicySyncService;
+import io.mosip.registration.test.util.datastub.DataProvider;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*" })
-@PrepareForTest({ JsonUtils.class, ApplicationContext.class, SessionContext.class, Role.class, FileUtils.class })
+@PrepareForTest({ JsonUtils.class, ApplicationContext.class, SessionContext.class, Role.class, FileUtils.class, Paths.class, CryptoUtil.class, ClientCryptoUtils.class })
 public class PacketHandlerServiceTest {
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
-	
-	@Mock
-	private RegistrationDAOImpl registrationDAOImpl;
-	
 	@InjectMocks
 	private PacketHandlerServiceImpl packetHandlerServiceImpl;
 	
@@ -74,6 +94,12 @@ public class PacketHandlerServiceTest {
 	
 	@Mock
 	private RegistrationCenterDAO registrationCenterDAO;
+	
+	@Mock
+	private RegistrationDAO registrationDAO;
+	
+	@Mock
+	private PacketWriter packetWriter;
 	
 	@Mock
 	private GlobalParamService globalParamService;
@@ -105,32 +131,70 @@ public class PacketHandlerServiceTest {
 
 	@Mock
 	private PolicySyncService policySyncService;
+	
+	@Mock
+	private AuditDAO auditDAO;
+	
+	@Mock
+	private Environment environment;
+	
+	@Mock
+	private ObjectMapper objectMapper;
+	
+	@Mock
+	private SoftwareUpdateHandler softwareUpdateHandler;	
+	
+	@Mock
+	private ClientCryptoFacade clientCryptoFacade;
+	
+	@Mock
+	private ClientCryptoService clientCryptoService;
+	
+	@Mock
+	private MachineMappingDAO machineMappingDAO;
+	
+	@Mock
+	private Path pMock;
+	
+	@Mock
+	private File file;
+	
+	private RegistrationDTO registrationDTO;
 
 	@Before
-	public void initialize() {
+	public void initialize() throws Exception {
 		mockedSuccessResponse = new ResponseDTO();
 		mockedSuccessResponse.setSuccessResponseDTO(new SuccessResponseDTO());
 		PowerMockito.mockStatic(SessionContext.class);
 		PowerMockito.mockStatic(ApplicationContext.class);
 		PowerMockito.mockStatic(Role.class);
-		PowerMockito.mockStatic(FileUtils.class);
 
 		SessionContext.UserContext userContext = Mockito.mock(SessionContext.UserContext.class);
 		userContext.setRoles(Arrays.asList("SUPERADMIN", "SUPERVISOR"));
+		
+		RegistrationCenterDetailDTO registrationCenterDetailDTO = new RegistrationCenterDetailDTO();
+		registrationCenterDetailDTO.setRegistrationCenterLatitude("101.11");
+		registrationCenterDetailDTO.setRegistrationCenterLongitude("102.11");
+		userContext.setRegistrationCenterDetailDTO(registrationCenterDetailDTO);
+		
 		PowerMockito.when(SessionContext.userContext()).thenReturn(userContext);
 		
 		Map<String, Object> applicationMap = new HashMap<>();
 		applicationMap.put(RegistrationConstants.INITIAL_SETUP, "N");
-	
+		applicationMap.put(RegistrationConstants.USER_CENTER_ID, "10011");
+		applicationMap.put(RegistrationConstants.USER_STATION_ID, "10011");
+		applicationMap.put(RegistrationConstants.AUDIT_TIMESTAMP, "2021-12-13 16:09:14");
+		
+		PowerMockito.doReturn(applicationMap).when(ApplicationContext.class, "map");
 
 		io.mosip.registration.context.ApplicationContext.setApplicationMap(applicationMap);
-		
+		ReflectionTestUtils.setField(packetHandlerServiceImpl, "source", "REGISTRATION_CLIENT");
+		Mockito.when(environment.getProperty(RegistrationConstants.GPS_DEVICE_DISABLE_FLAG)).thenReturn("N");
 	}
 
 
 	@Test
 	public void startRegistration() throws RegBaseCheckedException {
-
 		List<UiFieldDTO> defaultFields = new LinkedList<>();
 
 		UiFieldDTO uiFieldDTO = new UiFieldDTO();
@@ -179,55 +243,163 @@ public class PacketHandlerServiceTest {
 	}
 
 	@Test
+	public void testPacketHandle() throws RegBaseCheckedException, JsonProcessingException {
+		registrationDTO = DataProvider.getFilledPacketDTO(Arrays.asList("eng", "fra"));
+		
+		List<PacketInfo> packetInfo = new ArrayList<>();
+		PacketInfo pInfo = new PacketInfo();
+		pInfo.setId("test-packet-id");
+		packetInfo.add(pInfo);
+		
+		SchemaDto schema = new SchemaDto();
+		schema.setSchemaJson("test-json");
+		Mockito.when(identitySchemaService.getIdentitySchema(Mockito.anyDouble())).thenReturn(schema);
+		Mockito.doNothing().when(packetWriter).setField(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+		
+		List<Audit> audits = new ArrayList<>();
+		Audit audit = new Audit();
+		audit.setId("TEST");
+		audit.setCreatedAt(LocalDateTime.now());
+		audit.setActionTimeStamp(LocalDateTime.now());
+		audits.add(audit);
+		Mockito.when(auditDAO.getAudits(Mockito.anyString(), Mockito.anyString())).thenReturn(audits);
+		
+		Map<String, String> checkSumMap = new HashMap<>();
+		checkSumMap.put("test key", "test val");
+		Mockito.when(softwareUpdateHandler.getJarChecksum()).thenReturn(checkSumMap);
+		Mockito.when(objectMapper.writeValueAsString(checkSumMap)).thenReturn("checksum");
+		
+		MachineMaster machineMaster = new MachineMaster();
+		machineMaster.setId("10011");
+		machineMaster.setRegCenterId("10012");
+		Mockito.when(machineMappingDAO.getMachine()).thenReturn(machineMaster);
+		
+		Mockito.doNothing().when(packetWriter).addAudits(Mockito.anyString(), Mockito.anyList(), Mockito.anyString(), Mockito.anyString());
+		Mockito.doNothing().when(packetWriter).addMetaInfo(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString(), Mockito.anyString());
+		when(packetWriter.persistPacket(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), 
+				Mockito.anyString(), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(packetInfo);
+		Mockito.doNothing().when(registrationDAO).save(Mockito.anyString(), Mockito.any(RegistrationDTO.class));
+		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
+		
+		ResponseDTO response = packetHandlerServiceImpl.handle(registrationDTO);
+		Assert.assertNotNull(response.getSuccessResponseDTO());
+	}
+	
+	@Test
+	public void testPacketHandleException() throws RegBaseCheckedException {
+		registrationDTO = DataProvider.getFilledPacketDTO(Arrays.asList("eng", "fra"));
+		RegBaseCheckedException exception = new RegBaseCheckedException("REG-PAC-001", "Exception while packet creation");
+		Mockito.when(identitySchemaService.getIdentitySchema(Mockito.anyDouble())).thenThrow(exception);
+		Assert.assertNotNull(packetHandlerServiceImpl.handle(registrationDTO).getErrorResponseDTOs());
+	}
+	
+	@Test
 	public void testCreationException() throws RegBaseCheckedException {
-
 		ResponseDTO actualResponse = packetHandlerServiceImpl.handle(new RegistrationDTO());
-
 		Assert.assertEquals(RegistrationExceptionConstants.REG_PACKET_CREATION_ERROR_CODE.getErrorCode(),
 				actualResponse.getErrorResponseDTOs().get(0).getCode());
 	}
 
 	@Test
 	public void testHandlerChkException() throws RegBaseCheckedException {
-		RegBaseCheckedException exception = new RegBaseCheckedException("errorCode", "errorMsg");
 		Assert.assertNotNull(packetHandlerServiceImpl.handle(null).getErrorResponseDTOs());
 	}
 
 	@Test
 	public void testHandlerAuthenticationException() throws RegBaseCheckedException {
-		RegBaseCheckedException exception = new RegBaseCheckedException(
-				RegistrationExceptionConstants.AUTH_ADVICE_USR_ERROR.getErrorCode(),
-				RegistrationExceptionConstants.AUTH_ADVICE_USR_ERROR.getErrorMessage());
-
 		Assert.assertNotNull(packetHandlerServiceImpl.handle(null).getErrorResponseDTOs());
 	}
 	
 	@Test
-	public void rejectedAndApprovedPacketsStatusCheck() {
-		List<Registration> listOfRegs = new ArrayList<>();
-		Registration reg1 = new Registration();
-		reg1.setClientStatusCode(RegistrationClientStatusCode.APPROVED.getCode());
-		reg1.setCrDtime(Timestamp.valueOf(LocalDateTime.now()));
-		reg1.setAckFilename("mosip1");
-		Registration reg2 = new Registration();
-		reg2.setClientStatusCode(RegistrationClientStatusCode.CREATED.getCode());
-		reg2.setCrDtime(Timestamp.valueOf(LocalDateTime.now()));
-		reg2.setAckFilename("mosip1");
-		Registration reg3 = new Registration();
-		reg3.setClientStatusCode(RegistrationClientStatusCode.REJECTED.getCode());
-		reg3.setCrDtime(Timestamp.valueOf(LocalDateTime.now()));
-		reg3.setAckFilename("mosip1");
+	public void getAcknowledgementReceiptTest() throws Exception {
+		Registration registration = new Registration();
+		registration.setPacketId("1234");
+		registration.setId("1234");
+		//registration.setAckSignature("test");
+		Mockito.when(registrationDAO.getRegistrationByPacketId(Mockito.anyString())).thenReturn(registration);
 		
-		listOfRegs.add(reg1);
-		listOfRegs.add(reg2);
-		listOfRegs.add(reg3);
-
-		Mockito.when(registrationDAOImpl.getAllRegistrations()).thenReturn(listOfRegs);
-		File file = new File("metaInfo.txt");
-		PowerMockito.when(FileUtils.getFile(Mockito.anyString())).thenReturn(file);
-		List<PacketStatusDTO> actualRegs = packetHandlerServiceImpl.getAllPackets();
+		byte[] testBytes = "test_byte".getBytes();
+		Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
+		Mockito.when(clientCryptoService.signData(Mockito.any())).thenReturn(testBytes);
+		Mockito.when(clientCryptoService.getEncryptionPublicPart()).thenReturn(testBytes);
+		Mockito.when(clientCryptoFacade.encrypt(Mockito.any(), Mockito.any())).thenReturn(testBytes);
 		
-		assertEquals(2, actualRegs.size());
+		ReflectionTestUtils.setField(packetHandlerServiceImpl, "baseLocation", "//logs");
+		ReflectionTestUtils.setField(packetHandlerServiceImpl, "packetManagerAccount", "//registration");
+		PowerMockito.mockStatic(Paths.class);
+		Mockito.when(Paths.get(Mockito.any(String.class))).thenReturn(pMock);
+		Mockito.when(pMock.toFile()).thenReturn(file);
+		
+		PowerMockito.mockStatic(FileUtils.class);
+		PowerMockito.doNothing().when(FileUtils.class, "copyToFile", Mockito.any(), Mockito.any());
+		
+		PowerMockito.mockStatic(CryptoUtil.class);
+		Mockito.when(CryptoUtil.encodeToURLSafeBase64(Mockito.any())).thenReturn("test");
+		Mockito.when(registrationDAO.updateAckReceiptSignature(Mockito.anyString(), Mockito.anyString())).thenReturn(registration);
+		
+		Mockito.when(clientCryptoFacade.decrypt(Mockito.any())).thenReturn(testBytes);
+		Mockito.when(FileUtils.readFileToByteArray(Mockito.any())).thenReturn(testBytes);
+		
+		PowerMockito.mockStatic(ClientCryptoUtils.class);
+		Mockito.when(ClientCryptoUtils.decodeBase64Data(Mockito.anyString())).thenReturn(testBytes);
+		Mockito.when(clientCryptoService.validateSignature(Mockito.any(), Mockito.any())).thenReturn(true);
+		
+		Assert.assertNotNull(packetHandlerServiceImpl.getAcknowledgmentReceipt("1234", "../packets"));
+	}
+	
+	@Test(expected = RegBaseCheckedException.class)
+	public void getAcknowledgementReceiptExceptionTest() throws Exception {
+		Registration registration = new Registration();
+		registration.setPacketId("1234");
+		registration.setId("1234");
+		//registration.setAckSignature("test");
+		Mockito.when(registrationDAO.getRegistrationByPacketId(Mockito.anyString())).thenReturn(registration);
+		
+		byte[] testBytes = "test_byte".getBytes();
+		Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
+		Mockito.when(clientCryptoService.signData(Mockito.any())).thenReturn(testBytes);
+		Mockito.when(clientCryptoService.getEncryptionPublicPart()).thenReturn(testBytes);
+		Mockito.when(clientCryptoFacade.encrypt(Mockito.any(), Mockito.any())).thenReturn(testBytes);
+		
+		ReflectionTestUtils.setField(packetHandlerServiceImpl, "baseLocation", "//logs");
+		ReflectionTestUtils.setField(packetHandlerServiceImpl, "packetManagerAccount", "//registration");
+		
+		PowerMockito.mockStatic(FileUtils.class);
+		IOException exception = new IOException("EXP-001", "Failed to sign and encrypt existing ack receipt");
+		PowerMockito.doThrow(exception).when(FileUtils.class, "copyToFile", Mockito.any(), Mockito.any());
+		
+		PowerMockito.mockStatic(CryptoUtil.class);
+		Mockito.when(CryptoUtil.encodeToURLSafeBase64(Mockito.any())).thenReturn("test");
+		Mockito.when(registrationDAO.updateAckReceiptSignature(Mockito.anyString(), Mockito.anyString())).thenReturn(registration);
+		
+		Mockito.when(clientCryptoFacade.decrypt(Mockito.any())).thenReturn(testBytes);
+		Mockito.when(FileUtils.readFileToByteArray(Mockito.any())).thenReturn(testBytes);
+		
+		PowerMockito.mockStatic(ClientCryptoUtils.class);
+		Mockito.when(ClientCryptoUtils.decodeBase64Data(Mockito.anyString())).thenReturn(testBytes);
+		Mockito.when(clientCryptoService.validateSignature(Mockito.any(), Mockito.any())).thenReturn(false);
+		
+		packetHandlerServiceImpl.getAcknowledgmentReceipt("1234", "../packets");
+	}
+	
+	@Test
+	public void getAllPacketsTest() {
+		List<Registration> registeredPackets = new ArrayList<>();
+		Registration reg = new Registration();
+		reg.setClientStatusCode(RegistrationClientStatusCode.CREATED.getCode());
+		registeredPackets.add(reg);
+		Mockito.when(registrationDAO.getAllRegistrations()).thenReturn(registeredPackets);
+		Assert.assertNotNull(packetHandlerServiceImpl.getAllPackets());
+	}
+	
+	@Test
+	public void getAllRegistrationsTest() {
+		List<Registration> registeredPackets = new ArrayList<>();
+		Registration reg = new Registration();
+		reg.setClientStatusCode(RegistrationClientStatusCode.CREATED.getCode());
+		registeredPackets.add(reg);
+		Mockito.when(registrationDAO.getAllRegistrations()).thenReturn(registeredPackets);
+		Assert.assertNotNull(packetHandlerServiceImpl.getAllRegistrations());
 	}
 
 }
