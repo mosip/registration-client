@@ -235,14 +235,17 @@ public class DocumentFxControl extends FxControl {
 				RegistrationConstants.DEMOGRAPHIC_TEXTFIELD, prefWidth, false);
 
 		textField.textProperty().addListener((observable, oldValue, newValue) -> {
-
 			Label label = (Label) getField(
 					uiFieldDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD + RegistrationConstants.LABEL);
 			if (textField.getText().isEmpty()) {
 				label.setVisible(false);
 			} else {
-
 				label.setVisible(true);
+			}
+
+			if(newValue != null &&
+					getRegistrationDTo().getDocuments().containsKey(uiFieldDTO.getId())) {
+				getRegistrationDTo().getDocuments().get(uiFieldDTO.getId()).setRefNumber(newValue);
 			}
 		});
 
