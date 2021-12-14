@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import io.mosip.registration.service.BaseService;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
@@ -71,6 +72,9 @@ public class MosipDeviceSpecificationFactory {
 	@Autowired
 	private MosipDeviceSpecificationHelper mosipDeviceSpecificationHelper;
 
+	@Autowired
+	private BaseService baseService;
+
 	private int portFrom;
 	private int portTo;
 
@@ -95,6 +99,11 @@ public class MosipDeviceSpecificationFactory {
 	 */
 	public void initializeDeviceMap(boolean async) {
 		LOGGER.debug("Entering initializeDeviceMap method for preparing device registry");
+
+		if(baseService.isInitialSync()) {
+			LOGGER.warn("DO nothing as it is still initial launch");
+			return;
+		}
 
 		portFrom = getPortFrom();
 		portTo = getPortTo();

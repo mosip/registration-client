@@ -501,6 +501,11 @@ public class LoginController extends BaseController implements Initializable {
 			if (SessionContext.create(userDTO, RegistrationConstants.PWORD, baseService.isInitialSync(), isUserNewToMachine,
 					authenticationValidatorDTO)) {
 				pwdValidationStatus = validateInvalidLogin(userDTO, "");
+
+				if(authTokenUtilService.hasAnyValidToken() && !ClientApplication.isSyncCompleted()) {
+					LOGGER.info("As the sync was not handled in pre-loader, performing the sync now with valid token");
+					executePreLaunchTask(credentialsPane, passwordProgressIndicator);
+				}
 			} else {
 				pwdValidationStatus = validateInvalidLogin(userDTO, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.INCORRECT_PWORD));
 			}

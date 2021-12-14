@@ -24,6 +24,7 @@ import io.mosip.registration.service.config.JobConfigurationService;
 import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
+import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -58,6 +59,7 @@ public class ClientApplication extends Application {
 	private static ApplicationContext applicationContext;
 	private static Stage applicationPrimaryStage;
 	private static String applicationStartTime;
+	private static boolean syncCompleted = false;
 
 	@Override
 	public void init() throws Exception {
@@ -90,7 +92,6 @@ public class ClientApplication extends Application {
 
 			handleInitialSync();
 
-			notifyPreloader(new ClientPreLoaderNotification("Biometric device scanning started..."));
 			discoverDevices();
 
 			upgradeLocalDatabase();
@@ -171,6 +172,12 @@ public class ClientApplication extends Application {
 	}
 
 	private void discoverDevices() {
+		BaseService baseService = applicationContext.getBean("baseService", BaseService.class);
+		if(baseService.isInitialSync()) {
+			return;
+		}
+
+		notifyPreloader(new ClientPreLoaderNotification("Biometric device scanning started..."));
 		MosipDeviceSpecificationFactory deviceSpecificationFactory = applicationContext.getBean(MosipDeviceSpecificationFactory.class);
 		notifyPreloader(new ClientPreLoaderNotification("Scanning port "+
 				deviceSpecificationFactory.getPortFrom()+" - "+deviceSpecificationFactory.getPortTo()));
@@ -181,29 +188,33 @@ public class ClientApplication extends Application {
 
 	private void handleInitialSync() {
 		BaseService baseService = applicationContext.getBean("baseService", BaseService.class);
-
-		if(baseService.isInitialSync())  {
-			return;
-		}
-
 		ServiceDelegateUtil serviceDelegateUtil = applicationContext.getBean(ServiceDelegateUtil.class);
 		LoginService loginService = applicationContext.getBean(LoginService.class);
 
 		notifyPreloader(new ClientPreLoaderNotification("Checking server connectivity..."));
-		if(serviceDelegateUtil.isNetworkAvailable()) {
-			notifyPreloader(new ClientPreLoaderNotification("Machine is ONLINE."));
+		boolean status = serviceDelegateUtil.isNetworkAvailable();
+		notifyPreloader(new ClientPreLoaderNotification("Machine is "+ ( status ? "ONLINE" : "OFFLINE")));
+
+		if(!status || baseService.isInitialSync())  {
+			return;
+		}
+
+		AuthTokenUtilService authTokenUtilService = applicationContext.getBean(AuthTokenUtilService.class);
+
+		if(authTokenUtilService.hasAnyValidToken()) {
 			long start = System.currentTimeMillis();
 			notifyPreloader(new ClientPreLoaderNotification("Client settings startup sync started..."));
 			loginService.initialSync(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
+			syncCompleted = true;
 			notifyPreloader(new ClientPreLoaderNotification("Client setting startup sync completed in " +
 					((System.currentTimeMillis() - start)/1000) + " seconds." ));
 		}
 		else {
-			notifyPreloader(new ClientPreLoaderNotification("Warning : Machine is OFFLINE"));
+			notifyPreloader(new ClientPreLoaderNotification("Warning : ** NO VALID AUTH-TOKEN TO SYNC **"));
 		}
 
 		JobConfigurationService jobConfigurationService = applicationContext.getBean(JobConfigurationService.class);
-		jobConfigurationService.startScheduler();
+		jobConfigurationService.initiateJobs();
 		notifyPreloader(new ClientPreLoaderNotification("Job scheduler started."));
 	}
 
@@ -250,5 +261,9 @@ public class ClientApplication extends Application {
 	
 	public static String getApplicationStartTime() {
 		return applicationStartTime;
+	}
+
+	public static boolean isSyncCompleted() {
+		return syncCompleted;
 	}
 }
