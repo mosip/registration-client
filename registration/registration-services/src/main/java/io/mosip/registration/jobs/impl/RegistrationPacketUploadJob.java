@@ -4,7 +4,6 @@ import java.sql.Timestamp;
 
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
-import org.quartz.PersistJobDataAfterExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -37,7 +36,6 @@ import io.mosip.registration.service.packet.PacketUploadService;
  * @since 1.0.0
  *
  */
-@PersistJobDataAfterExecution
 @DisallowConcurrentExecution
 @Component(value = "registrationPacketUploadJob")
 public class RegistrationPacketUploadJob extends BaseJob {
