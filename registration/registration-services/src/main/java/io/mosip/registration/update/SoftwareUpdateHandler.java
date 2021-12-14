@@ -20,6 +20,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -29,6 +30,7 @@ import io.micrometer.core.annotation.Counted;
 import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.kernel.logger.logback.util.MetricTag;
 import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.exception.RegBaseCheckedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -67,16 +69,15 @@ public class SoftwareUpdateHandler extends BaseService {
 	private static final Logger LOGGER = AppConfig.getLogger(SoftwareUpdateHandler.class);
 	private static final String SLASH = "/";
 	private static final String manifestFile = "MANIFEST.MF";
-	private static final String libFolder = "lib/";
-	private static final String binFolder = "bin/";
+	private static final String libFolder = "lib";
+	private static final String binFolder = "bin";
 	private static final String lastUpdatedTag = "lastUpdated";
 	private static final String SQL = "sql";
 	private static final String exectionSqlFile = "initial_db_scripts.sql";
 	private static final String rollBackSqlFile = "rollback_scripts.sql";
-	private static final String mosip = "mosip";
 	private static final String versionTag = "version";
-	private static final String MOSIP_SERVICES = "mosip-services.jar";
-	private static final String MOSIP_CLIENT = "mosip-client.jar";
+	private static final String MOSIP_SERVICES = "registration-services";
+	private static final String MOSIP_CLIENT = "registration-client";
 
 	private static Map<String, String> CHECKSUM_MAP;
 	private String currentVersion;
@@ -104,6 +105,17 @@ public class SoftwareUpdateHandler extends BaseService {
 	private Environment environment;
 
 
+	public ResponseDTO updateDerbyDB() {
+		String version = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SERVICES_VERSION_KEY);
+		LOGGER.info("Inside updateDerbyDB currentVersion : {} and {} : {}", currentVersion,
+				RegistrationConstants.SERVICES_VERSION_KEY, version);
+		if(version != null && currentVersion != null && !currentVersion.equalsIgnoreCase(version)) {
+			return executeSqlFile(currentVersion, version);
+		}
+		return null;
+	}
+
+
 	/**
 	 * It will check whether any software updates are available or not.
 	 * <p>
@@ -116,16 +128,13 @@ public class SoftwareUpdateHandler extends BaseService {
 	 */
 	@Counted(recordFailuresOnly = true)
 	public boolean hasUpdate() {
-
 		LOGGER.info("Checking for any new updates");
 		try {
 			return !getCurrentVersion().equals(getLatestVersion());
-		} catch (IOException | ParserConfigurationException | SAXException | RuntimeException exception) {
-			LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
-					exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+		} catch (Throwable exception) {
+			LOGGER.error("Failed to check if update is available or not", exception);
 			return false;
 		}
-
 	}
 
 	/**
@@ -136,19 +145,15 @@ public class SoftwareUpdateHandler extends BaseService {
 	 * @throws ParserConfigurationException
 	 * @throws SAXException
 	 */
-	private String getLatestVersion() throws IOException, ParserConfigurationException, SAXException {
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Checking for latest version started");
+	private String getLatestVersion() throws IOException, ParserConfigurationException, SAXException, RegBaseCheckedException {
+		LOGGER.info("Checking for latest version started");
 		// Get latest version using meta-inf.xml
 		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = documentBuilderFactory.newDocumentBuilder();
-		org.w3c.dom.Document metaInfXmlDocument = db.parse(getInputStreamOf(getURL(serverMosipXmlFileUrl)));
-
+		org.w3c.dom.Document metaInfXmlDocument = db.parse(SoftwareUpdateUtil.download(getURL(serverMosipXmlFileUrl)));
 		setLatestVersion(getElementValue(metaInfXmlDocument, versionTag));
 		setLatestVersionReleaseTimestamp(getElementValue(metaInfXmlDocument, lastUpdatedTag));
-
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Checking for latest version completed");
+		LOGGER.info("Checking for latest version completed");
 		return latestVersion;
 	}
 
@@ -163,9 +168,7 @@ public class SoftwareUpdateHandler extends BaseService {
 				val = subList.item(0).getNodeValue();
 			}
 		}
-
 		return val;
-
 	}
 
 	/**
@@ -175,19 +178,39 @@ public class SoftwareUpdateHandler extends BaseService {
 	 */
 	public String getCurrentVersion() {
 		LOGGER.info("Checking for current version started...");
-
 		// Get Local manifest file
 		try {
 			if (getLocalManifest() != null) {
 				setCurrentVersion((String) localManifest.getMainAttributes().get(Attributes.Name.MANIFEST_VERSION));
 			}
-		} catch (IOException exception) {
+		} catch (RegBaseCheckedException exception) {
 			LOGGER.error(exception.getMessage(), exception);
-
 		}
-
 		LOGGER.info("Checking for current version completed : {}", currentVersion);
 		return currentVersion;
+	}
+
+	public void doSoftwareUpgrade() {
+		LOGGER.info("Updating latest version started");
+		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+		String date = timestamp.toString().replace(":", "-") + "Z";
+		File backupFolder = new File(backUpPath + SLASH + getCurrentVersion() + "_" + date);
+
+		try {
+			// Back Current Application
+			backUpSetup(backupFolder);
+			update();
+			LOGGER.info("Updating to latest version completed.");
+			return;
+		} catch (Throwable t) {
+			LOGGER.error("Failed with software upgrade", t);
+		}
+
+		try {
+			rollBackSetup(backupFolder);
+		} catch (io.mosip.kernel.core.exception.IOException e) {
+			LOGGER.error("Failed to rollback setup", e);
+		}
 	}
 
 	/**
@@ -220,101 +243,38 @@ public class SoftwareUpdateHandler extends BaseService {
 	 *             - IOException
 	 */
 	@Counted(recordFailuresOnly = true)
-	public void update() throws Exception {
+	private void update() throws Exception {
+		// fetch server manifest && replace local manifest with Server manifest
+		setServerManifest();
+		serverManifest.write(new FileOutputStream(manifestFile));
+		setLocalManifest();
+		SoftwareUpdateUtil.deleteUnknownJars(localManifest);
 
-		LOGGER.info("Updating latest version started");
-		Path backUp = null;
-
-		try {
-			// Get Server Manifest
-			getServerManifest();
-
-			// Back Current Application
-			backUp = backUpSetup();
-			// replace local manifest with Server manifest
-			serverManifest.write(new FileOutputStream(new File(manifestFile)));
-
-			List<String> downloadJars = new LinkedList<>();
-			List<String> deletableJars = new LinkedList<>();
-			List<String> checkableJars = new LinkedList<>();
-
-			Map<String, Attributes> localAttributes = localManifest.getEntries();
-			Map<String, Attributes> serverAttributes = serverManifest.getEntries();
-
-			// Compare local and server Manifest
-			for (Entry<String, Attributes> jar : localAttributes.entrySet()) {
-				checkableJars.add(jar.getKey());
-				if (!serverAttributes.containsKey(jar.getKey())) {
-
-					/* unnecessary jar after update */
-					deletableJars.add(jar.getKey());
-
-				} else {
-					Attributes localAttribute = jar.getValue();
-					Attributes serverAttribute = serverAttributes.get(jar.getKey());
-					if (!localAttribute.getValue(Attributes.Name.CONTENT_TYPE)
-							.equals(serverAttribute.getValue(Attributes.Name.CONTENT_TYPE))) {
-
-						/* Jar to be downloaded */
-						downloadJars.add(jar.getKey());
-
-					}
-
-					serverManifest.getEntries().remove(jar.getKey());
-
+		Map<String, Attributes> localAttributes = localManifest.getEntries();
+		for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
+			File file = new File(libFolder + SLASH + entry.getKey());
+			if(!file.exists() || !SoftwareUpdateUtil.validateJarChecksum(file, entry.getValue())) {
+				String url = serverRegClientURL + latestVersion + SLASH + libFolder + SLASH + entry.getKey();
+				try {
+					Files.copy(SoftwareUpdateUtil.download(url), file.toPath());
+				} catch (IOException | RegBaseCheckedException e) {
+					LOGGER.error("Failed to download {}", url, e);
 				}
 			}
-
-			for (Entry<String, Attributes> jar : serverAttributes.entrySet()) {
-				downloadJars.add(jar.getKey());
-			}
-
-			deleteJars(deletableJars);
-
-			// Un-Modified jars exist or not
-			checkableJars.removeAll(deletableJars);
-			checkableJars.removeAll(downloadJars);
-
-			getServerManifest();
-
-			// Download latest jars if not in local
-			checkJars(getLatestVersion(), downloadJars);
-			checkJars(getLatestVersion(), checkableJars);
-
-			setLocalManifest(serverManifest);
-			setServerManifest(null);
-			setLatestVersion(null);
-
-			// Update global param of software update flag as false
-			globalParamService.update(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE,
-					RegistrationConstants.DISABLE);
-			
-			Timestamp time = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());			
-			globalParamService.update(RegistrationConstants.LAST_SOFTWARE_UPDATE,
-					String.valueOf(time));
-
-		} catch (RuntimeException | IOException | ParserConfigurationException | SAXException exception) {
-			LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					exception.getMessage() + ExceptionUtils.getStackTrace(exception));
-			// Rollback setup
-			File backUpFolder = backUp.toFile();
-
-			rollBackSetup(backUpFolder);
-
-			throw exception;
 		}
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Updating latest version started");
+
+		setServerManifest(null);
+		setLatestVersion(null);
+
+		// Update global param of software update flag as false
+		globalParamService.update(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE,
+				RegistrationConstants.DISABLE);
+		globalParamService.update(RegistrationConstants.LAST_SOFTWARE_UPDATE,
+				String.valueOf(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime())));
 	}
 
-	private Path backUpSetup() throws io.mosip.kernel.core.exception.IOException {
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Backup of current version started");
-		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-		String date = timestamp.toString().replace(":", "-") + "Z";
-
-		File backUpFolder = new File(backUpPath + SLASH + getCurrentVersion() + "_" + date);
-
+	private void backUpSetup(File backUpFolder) throws io.mosip.kernel.core.exception.IOException {
+		LOGGER.info("Backup of current version started {}", backUpFolder);
 		// bin backup folder
 		File bin = new File(backUpFolder.getAbsolutePath() + SLASH + binFolder);
 		bin.mkdirs();
@@ -328,7 +288,6 @@ public class SoftwareUpdateHandler extends BaseService {
 
 		FileUtils.copyDirectory(new File(binFolder), bin);
 		FileUtils.copyDirectory(new File(libFolder), lib);
-
 		FileUtils.copyFile(new File(manifestFile), manifest);
 
 		for (File backUpFile : new File(backUpPath).listFiles()) {
@@ -336,168 +295,31 @@ public class SoftwareUpdateHandler extends BaseService {
 				FileUtils.deleteDirectory(backUpFile);
 			}
 		}
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Backup of current version completed");
 
-		return backUpFolder.toPath();
-
+		globalParamService.update(RegistrationConstants.SOFTWARE_BACKUP_FOLDER,
+				backUpFolder.getAbsolutePath());
+		LOGGER.info("Backup of current version completed at {}", backUpFolder.getAbsolutePath());
 	}
 
-	private void checkJars(String version, List<String> checkableJars)
-			throws IOException, io.mosip.kernel.core.exception.IOException {
-
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Checking of jars started");
-		for (String jarFile : checkableJars) {
-
-			String folder = jarFile.contains(mosip) ? binFolder : libFolder;
-
-			File jarInFolder = new File(folder + jarFile);
-
-			if (!jarInFolder.exists()) {
-
-				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Downloading jar : " + jarFile + " started");
-				// Download Jar
-				Files.copy(getInputStreamOfJar(version, jarFile), jarInFolder.toPath());
-
-			} else if ((!isCheckSumValid(jarInFolder,
-					(currentVersion.equals(version)) ? localManifest : serverManifest))) {
-
-				FileUtils.forceDelete(jarInFolder);
-
-				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Downloading jar : " + jarFile + " started");
-
-				// Download Jar
-				Files.copy(getInputStreamOfJar(version, jarFile), jarInFolder.toPath());
-			}
-
-		}
-
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Checking of jars completed");
-	}
-
-	private InputStream getInputStreamOfJar(String version, String jarName) throws IOException {
-		return getInputStreamOf(getURL(serverRegClientURL) + version + SLASH + libFolder + jarName);
-
-	}
-
-	private void deleteJars(List<String> deletableJars) throws io.mosip.kernel.core.exception.IOException {
-
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Deletion of jars started");
-		for (String jarName : deletableJars) {
-			File deleteFile = null;
-
-			String deleteFolder = jarName.contains(mosip) ? binFolder : libFolder;
-
-			deleteFile = new File(deleteFolder + jarName);
-
-			if (deleteFile.exists()) {
-				// Delete Jar
-				FileUtils.forceDelete(deleteFile);
-
-			}
-		}
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Deletion of jars completed");
-
-	}
-
-	private Manifest getLocalManifest() throws IOException {
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Getting  of local manifest started");
-
-		File localManifestFile = new File(manifestFile);
-
-		if (localManifestFile.exists()) {
-
-			// Set Local Manifest
-			setLocalManifest(new Manifest(new FileInputStream(localManifestFile)));
-
-		}
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Getting  of local manifest completed");
-		return localManifest;
-	}
-
-	private Manifest getServerManifest() throws IOException, ParserConfigurationException, SAXException {
-
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Geting  of server manifest started");
-		// Get latest Manifest from server
-		setServerManifest(
-				new Manifest(getInputStreamOf(getURL(serverRegClientURL) + getLatestVersion() + SLASH + manifestFile)));
-		setLatestVersion(serverManifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION));
-
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Geting  of server manifest completed");
-		return serverManifest;
-
-	}
-
-	private void setLocalManifest(Manifest localManifest) {
-		this.localManifest = localManifest;
-	}
-
-	private void setServerManifest(Manifest serverManifest) {
-		this.serverManifest = serverManifest;
-	}
-
-	private void setCurrentVersion(String currentVersion) {
-		this.currentVersion = currentVersion;
-	}
-
-	private void setLatestVersion(String latestVersion) {
-		this.latestVersion = latestVersion;
-	}
-
-	@Counted(recordFailuresOnly = true)
-	private boolean isCheckSumValid(@MetricTag(value = "name", extractor = "arg.getName()") File jarFile, Manifest manifest) {
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Checking of checksum started for jar :" + jarFile.getName());
-		String checkSum;
+	private void setLocalManifest() throws RegBaseCheckedException {
 		try {
-			checkSum = HMACUtils2.digestAsPlainText(Files.readAllBytes(jarFile.toPath()));
-
-			// Get Check sum
-			String manifestCheckSum = getCheckSum(jarFile.getName(), manifest);
-
-			LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					"Checking of checksum completed for jar :" + jarFile.getName());
-			return checkSum.equals(manifestCheckSum);
-
-		} catch (IOException | NoSuchAlgorithmException ioException) {
-			LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
-			return false;
+			File localManifestFile = new File(manifestFile);
+			if (localManifestFile.exists()) {
+				localManifest = new Manifest(new FileInputStream(localManifestFile));
+			}
+		} catch (IOException e) {
+			LOGGER.error("Failed to load local manifest file", e);
+			throw new RegBaseCheckedException("REG-BUILD-003", "Local Manifest not found");
 		}
-
 	}
 
-	@Counted(recordFailuresOnly = true)
-	private boolean hasSpace(int bytes) {
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Checking of space in machine");
-		return bytes < new File("/").getFreeSpace();
-	}
-
-	private InputStream getInputStreamOf(String url) throws IOException {
-		URLConnection connection = new URL(url).openConnection();
-
-		connection.setConnectTimeout(
-				Integer.valueOf(getGlobalConfigValueOf(RegistrationConstants.HTTP_API_WRITE_TIMEOUT)));
-
-		connection.setReadTimeout(Integer.valueOf(getGlobalConfigValueOf(RegistrationConstants.HTTP_API_READ_TIMEOUT)));
-
-		// Space Check
-		if (hasSpace(connection.getContentLength())) {
-			return connection.getInputStream();
-		} else {
-			throw new IOException("No Disk Space");
+	private void setServerManifest() {
+		String url = serverRegClientURL + latestVersion + SLASH + manifestFile;
+		try {
+			serverManifest = new Manifest(SoftwareUpdateUtil.download(url));
+		} catch (IOException | RegBaseCheckedException e) {
+			LOGGER.error("Failed to load server manifest file", e);
 		}
-
-	}
-
-	public void setLatestVersionReleaseTimestamp(String latestVersionReleaseTimestamp) {
-		this.latestVersionReleaseTimestamp = latestVersionReleaseTimestamp;
 	}
 
 	/**
@@ -552,68 +374,41 @@ public class SoftwareUpdateHandler extends BaseService {
 	 */
 	@Counted(recordFailuresOnly = true)
 	public ResponseDTO executeSqlFile(@MetricTag("newversion") String actualLatestVersion,
-									  @MetricTag("oldversion") String previousVersion) throws IOException {
+									  @MetricTag("oldversion") String previousVersion) {
 
 		LOGGER.info("DB-Script files execution started from previous version : {} , To Current Version : {}",previousVersion, currentVersion);
-
 		String newVersion = actualLatestVersion.split("-")[0];
 		previousVersion = previousVersion.split("-")[0];
 
-
 		ResponseDTO responseDTO = new ResponseDTO();
-
-		// execute sql file
-
 		try {
-
 			LOGGER.info("Checking Started : " + newVersion + SLASH + exectionSqlFile);
-
 			execute(SQL + SLASH + newVersion + SLASH + exectionSqlFile);
-
 			LOGGER.info("Checking completed : " + newVersion + SLASH + exectionSqlFile);
-
-		}
-
-		catch (RuntimeException | IOException runtimeException) {
-
-			LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
-
-			// ROLL BACK QUERIES
-			try {
-
-				LOGGER.info("Checking started : " + newVersion + SLASH + rollBackSqlFile);
-
-				execute(SQL + SLASH + newVersion + SLASH + rollBackSqlFile);
-
-				LOGGER.info("Checking completed : " + newVersion + SLASH + rollBackSqlFile);
-
-			} catch (RuntimeException | IOException exception) {
-
-				LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						exception.getMessage() + ExceptionUtils.getStackTrace(exception));
-
-			}
-			// Prepare Error Response
-			setErrorResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_FAILURE, null);
-
-			// Replace with backup
-			rollback(responseDTO, previousVersion);
-
+			// Update global param with current version
+			globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, actualLatestVersion);
+			setSuccessResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_SUCCESS, null);
+			LOGGER.info("DB-Script files execution completed");
 			return responseDTO;
-
+		} catch (Throwable exception) {
+			LOGGER.error("Failed to execute db upgrade scripts", exception);
 		}
 
-		// Update global param with current version
-		globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, actualLatestVersion);
+		// ROLL BACK QUERIES
+		try {
+			LOGGER.info("Rollback started : " + newVersion + SLASH + rollBackSqlFile);
+			execute(SQL + SLASH + newVersion + SLASH + rollBackSqlFile);
+			LOGGER.info("Rollback completed : " + newVersion + SLASH + rollBackSqlFile);
+			String backupPath = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SOFTWARE_BACKUP_FOLDER);
+			if(backupPath != null) {
+				rollBackSetup(new File(backupPath));
+				globalParamService.update(RegistrationConstants.SOFTWARE_BACKUP_FOLDER, null);
+			}
+		} catch (Throwable exception) {
+			LOGGER.error("Failed to execute db rollback scripts", exception);
+		}
 
-		//addProperties(latestVersion);
-
-		setSuccessResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_SUCCESS, null);
-
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"DB-Script files execution completed");
-
+		setErrorResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_FAILURE, null);
 		return responseDTO;
 	}
 
@@ -630,7 +425,6 @@ public class SoftwareUpdateHandler extends BaseService {
 	}
 
 	private void runSqlFile(InputStream inputStream) throws IOException {
-
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Execution started sql file");
 
 		try (InputStreamReader inputStreamReader = new InputStreamReader(inputStream)) {
@@ -646,125 +440,36 @@ public class SoftwareUpdateHandler extends BaseService {
 
 				for (String stat : statments) {
 					if (!stat.trim().equals("")) {
-
 						LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 								"Executing Statment : " + stat);
-
 						jdbcTemplate.execute(stat);
-
 					}
 				}
 			}
-
 		}
-
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Execution completed sql file");
-
 	}
 
 	private void rollBackSetup(File backUpFolder) throws io.mosip.kernel.core.exception.IOException {
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Replacing Backup of current version started");
-		// TODO Working in Ecllipse but not in zip
-		/*
-		 * FileUtils.copyDirectory( FileUtils.getFile(backUpFolder.getAbsolutePath() +
-		 * SLASH + FilenameUtils.getName(binFolder)),
-		 * FileUtils.getFile(FilenameUtils.getName(binFolder)));
-		 * FileUtils.copyDirectory( FileUtils.getFile(backUpFolder.getAbsolutePath() +
-		 * SLASH + FilenameUtils.getName(libFolder)),
-		 * FileUtils.getFile(FilenameUtils.getName(libFolder)));
-		 * FileUtils.copyFile(FileUtils.getFile(backUpFolder.getAbsolutePath()+SLASH+
-		 * FilenameUtils.getName(manifestFile)),
-		 * FileUtils.getFile(FilenameUtils.getName(manifestFile)));
-		 */
-
-		FileUtils.copyDirectory(new File(backUpFolder.getAbsolutePath() + SLASH + binFolder), new File(binFolder));
-		FileUtils.copyDirectory(new File(backUpFolder.getAbsolutePath() + SLASH + libFolder), new File(libFolder));
-
-		FileUtils.copyFile(new File(backUpFolder.getAbsolutePath() + SLASH + manifestFile), new File(manifestFile));
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Replacing Backup of current version completed");
-	}
-
-	private void rollback(ResponseDTO responseDTO, String previousVersion) {
-
-		File file = FileUtils.getFile(backUpPath);
-
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Backup Path found : " + file.exists());
-
-		boolean isBackUpCompleted = false;
-
-		if (file.exists()) {
-			for (File backUpFolder : file.listFiles()) {
-				if (backUpFolder.getName().contains(previousVersion)) {
-
-					try {
-						rollBackSetup(backUpFolder);
-
-						isBackUpCompleted = true;
-						setErrorResponse(responseDTO, RegistrationConstants.BACKUP_PREVIOUS_SUCCESS, null);
-					} catch (io.mosip.kernel.core.exception.IOException exception) {
-						LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-								exception.getMessage() + ExceptionUtils.getStackTrace(exception));
-
-						setErrorResponse(responseDTO, RegistrationConstants.BACKUP_PREVIOUS_FAILURE, null);
-					}
-					break;
-
-				}
-			}
+		LOGGER.info("Replacing Backup of current version started");
+		if(backUpFolder.exists()) {
+			FileUtils.copyDirectory(new File(backUpFolder.getAbsolutePath() + SLASH + binFolder), new File(binFolder));
+			FileUtils.copyDirectory(new File(backUpFolder.getAbsolutePath() + SLASH + libFolder), new File(libFolder));
+			FileUtils.copyFile(new File(backUpFolder.getAbsolutePath() + SLASH + manifestFile), new File(manifestFile));
 		}
-
-		if (!isBackUpCompleted) {
-			setErrorResponse(responseDTO, RegistrationConstants.BACKUP_PREVIOUS_FAILURE, null);
-		}
-	}
-
-	/**
-	 * This method will return the checksum of the jars by reading it from the
-	 * Manifest file.
-	 * 
-	 * @param jarName
-	 *            jarName
-	 * @param manifest
-	 *            localManifestFile
-	 * @return String - the checksum
-	 */
-	public String getCheckSum(String jarName, Manifest manifest) {
-
-		// Get Local manifest
-		manifest = manifest != null ? manifest : localManifest;
-
-		String checksum = null;
-
-		if (manifest == null) {
-
-			try {
-				manifest = getLocalManifest();
-
-			} catch (IOException exception) {
-				LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						exception.getMessage() + ExceptionUtils.getStackTrace(exception));
-
-			}
-		}
-
-		if (manifest != null) {
-			checksum = (String) manifest.getEntries().get(jarName).get(Attributes.Name.CONTENT_TYPE);
-		}
-
-		// checksum (content-type)
-		return checksum;
+		LOGGER.info("Replacing Backup of current version completed");
 	}
 
 	public Map<String, String> getJarChecksum() {
-		if(CHECKSUM_MAP == null) {
-			CHECKSUM_MAP = new HashMap<>();
-			CHECKSUM_MAP.put(MOSIP_CLIENT, getCheckSum(MOSIP_CLIENT, null));
-			CHECKSUM_MAP.put(MOSIP_SERVICES, getCheckSum(MOSIP_SERVICES, null));
+		Map<String, String> checksumMap = new HashMap<>();
+		if(localManifest != null) {
+			Map<String, java.util.jar.Attributes> localEntries = localManifest.getEntries();
+			List<String> keys = localEntries.keySet().stream().filter( k -> k.contains(MOSIP_CLIENT) || k.contains(MOSIP_SERVICES)).collect(Collectors.toList());
+			for(String key : keys) {
+				checksumMap.put(key, localEntries.get(key).getValue(Attributes.Name.CONTENT_TYPE));
+			}
 		}
-		return CHECKSUM_MAP;
+		return checksumMap;
 	}
 
 	private String getURL(String urlPostFix) {
@@ -773,5 +478,25 @@ public class SoftwareUpdateHandler extends BaseService {
 		url = serviceDelegateUtil.prepareURLByHostName(url);
 		LOGGER.info("Upgrade server : {}", url);
 		return url;
+	}
+
+	private void setServerManifest(Manifest serverManifest) {
+		this.serverManifest = serverManifest;
+	}
+
+	private void setCurrentVersion(String currentVersion) {
+		this.currentVersion = currentVersion;
+	}
+
+	private void setLatestVersion(String latestVersion) {
+		this.latestVersion = latestVersion;
+	}
+
+	public void setLatestVersionReleaseTimestamp(String latestVersionReleaseTimestamp) {
+		this.latestVersionReleaseTimestamp = latestVersionReleaseTimestamp;
+	}
+
+	private Manifest getLocalManifest() throws RegBaseCheckedException {
+		return localManifest;
 	}
 }

@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.enums.Role;
@@ -115,6 +116,7 @@ public class PacketHandlerServiceTest {
 		PowerMockito.mockStatic(SessionContext.class);
 		PowerMockito.mockStatic(ApplicationContext.class);
 		PowerMockito.mockStatic(Role.class);
+		PowerMockito.mockStatic(FileUtils.class);
 
 		SessionContext.UserContext userContext = Mockito.mock(SessionContext.UserContext.class);
 		userContext.setRoles(Arrays.asList("SUPERADMIN", "SUPERVISOR"));
@@ -211,11 +213,10 @@ public class PacketHandlerServiceTest {
 	}
 	
 	@Test
-	public void getAllPacketsPositive() {
-		
+	public void rejectedAndApprovedPacketsStatusCheck() {
 		List<Registration> listOfRegs = new ArrayList<>();
 		Registration reg1 = new Registration();
-		reg1.setClientStatusCode(RegistrationClientStatusCode.CORRECTION.getCode());
+		reg1.setClientStatusCode(RegistrationClientStatusCode.APPROVED.getCode());
 		reg1.setCrDtime(Timestamp.valueOf(LocalDateTime.now()));
 		reg1.setAckFilename("123456789_Ack.html");
 		Registration reg2 = new Registration();
@@ -223,7 +224,7 @@ public class PacketHandlerServiceTest {
 		reg2.setCrDtime(Timestamp.valueOf(LocalDateTime.now()));
 		reg2.setAckFilename("123456789_Ack.html");
 		Registration reg3 = new Registration();
-		reg3.setClientStatusCode(RegistrationClientStatusCode.CORRECTION.getCode());
+		reg3.setClientStatusCode(RegistrationClientStatusCode.REJECTED.getCode());
 		reg3.setCrDtime(Timestamp.valueOf(LocalDateTime.now()));
 		reg3.setAckFilename("123456789_Ack.html");
 		
@@ -246,7 +247,7 @@ public class PacketHandlerServiceTest {
 		
 		List<PacketStatusDTO> actualRegs = packetHandlerServiceImpl.getAllPackets();
 		
-		assertEquals(actualRegs.get(0).getPacketClientStatus(), expectedPack1.getPacketClientStatus());
+		assertEquals(2, actualRegs.size());
 	}
 
 }

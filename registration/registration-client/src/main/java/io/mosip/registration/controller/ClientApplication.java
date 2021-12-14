@@ -10,6 +10,8 @@ import java.util.ResourceBundle;
 
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.controller.reg.Validations;
+import io.mosip.registration.dto.ErrorResponseDTO;
+import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
@@ -21,6 +23,7 @@ import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.config.JobConfigurationService;
 import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.login.LoginService;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -90,6 +93,8 @@ public class ClientApplication extends Application {
 			notifyPreloader(new ClientPreLoaderNotification("Biometric device scanning started..."));
 			discoverDevices();
 
+			upgradeLocalDatabase();
+
 		} catch (Throwable t) {
 			ClientPreLoader.errorsFound = true;
 			LOGGER.error("Application Initialization Error", t);
@@ -135,11 +140,41 @@ public class ClientApplication extends Application {
 		}
 	}
 
+	// Execute SQL file (Script files on update)
+	private void upgradeLocalDatabase() {
+		notifyPreloader(new ClientPreLoaderNotification("Checking for any DB upgrades started..."));
+		SoftwareUpdateHandler softwareUpdateHandler = applicationContext.getBean(SoftwareUpdateHandler.class);
+		ResponseDTO responseDTO = softwareUpdateHandler.updateDerbyDB();
+		if(responseDTO == null) {
+			notifyPreloader(new ClientPreLoaderNotification("Nothing to be upgraded."));
+			return;
+		}
+
+		if(responseDTO.getErrorResponseDTOs() != null) {
+			ErrorResponseDTO errorResponseDTO = responseDTO.getErrorResponseDTOs().get(0);
+			if (RegistrationConstants.BACKUP_PREVIOUS_SUCCESS.equalsIgnoreCase(errorResponseDTO.getMessage())) {
+				notifyPreloader(new ClientPreLoaderErrorNotification(new RegBaseCheckedException(
+						RegistrationConstants.BACKUP_PREVIOUS_SUCCESS,
+						RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SQL_EXECUTION_FAILED_AND_REPLACED)
+								+ RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.RESTART_APPLICATION)
+				)));
+			} else {
+				notifyPreloader(new ClientPreLoaderErrorNotification(new RegBaseCheckedException(
+						errorResponseDTO.getCode(), errorResponseDTO.getMessage()
+				)));
+			}
+		}
+
+		if(responseDTO.getSuccessResponseDTO() != null) {
+			notifyPreloader(new ClientPreLoaderNotification(responseDTO.getSuccessResponseDTO().getMessage()));
+		}
+	}
+
 	private void discoverDevices() {
 		MosipDeviceSpecificationFactory deviceSpecificationFactory = applicationContext.getBean(MosipDeviceSpecificationFactory.class);
 		notifyPreloader(new ClientPreLoaderNotification("Scanning port "+
 				deviceSpecificationFactory.getPortFrom()+" - "+deviceSpecificationFactory.getPortTo()));
-		deviceSpecificationFactory.initializeDeviceMap();
+		deviceSpecificationFactory.initializeDeviceMap(false);
 		notifyPreloader(new ClientPreLoaderNotification(deviceSpecificationFactory.getAvailableDeviceInfoMap().size() + " devices discovered."));
 	}
 

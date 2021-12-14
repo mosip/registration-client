@@ -935,7 +935,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 						if (!isStreamStarted) {
 							LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 									"URL Stream was null for : " + System.currentTimeMillis());
-							deviceSpecificationFactory.init();
+							deviceSpecificationFactory.initializeDeviceMap(true);
 							streamer.setUrlStream(null);
 							generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
 

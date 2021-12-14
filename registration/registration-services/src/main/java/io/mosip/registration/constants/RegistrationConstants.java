@@ -838,6 +838,7 @@ public class RegistrationConstants {
 	public static final String GPS_DEVICE_DISABLE_FLAG = "mosip.registration.gps_device_enable_flag";
 	public static final String PRE_REG_PACKET_LOCATION = "mosip.registration.registration_pre_reg_packet_location";
 	public static final String IS_SOFTWARE_UPDATE_AVAILABLE = "mosip.registration.is_software_update_available";
+	public static final String SOFTWARE_BACKUP_FOLDER = "mosip.registration.software_backup_folder";
 	public static final String PROVIDER_NAME = "mosip.registration.provider_name";
 	public static final String DISK_SPACE = "mosip.registration.disk_space_size";
 	public static final String LAST_SOFTWARE_UPDATE = "mosip.registration.last_software_update";

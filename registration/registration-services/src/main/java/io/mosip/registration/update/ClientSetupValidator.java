@@ -1,4 +1,4 @@
-package io.mosip.registration.validator;
+package io.mosip.registration.update;
 
 import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -40,7 +40,7 @@ public class ClientSetupValidator {
 
 
     public ClientSetupValidator() throws RegBaseCheckedException {
-        try (InputStream keyStream = getClass().getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
+        try (InputStream keyStream = ClientSetupValidator.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
             Properties properties = new Properties();
             properties.load(keyStream);
             logger.info("Loading {} completed", PROPERTIES_FILE);
@@ -59,7 +59,7 @@ public class ClientSetupValidator {
             }
 
             Objects.requireNonNull(localManifest, manifestFile + " - Not found");
-            deleteUnknownJars();
+            SoftwareUpdateUtil.deleteUnknownJars(localManifest);
 
         } catch (RegBaseCheckedException e) {
             throw e;
@@ -99,27 +99,27 @@ public class ClientSetupValidator {
             latestVersion = localManifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
             logger.info("Checksum validation started with manifest version : {}", latestVersion);
 
-            deleteUnknownJars();
+            SoftwareUpdateUtil.deleteUnknownJars(localManifest);
 
-            //executorService = Executors.newFixedThreadPool(5);
+            executorService = Executors.newFixedThreadPool(5);
             Map<String, Attributes> localAttributes = localManifest.getEntries();
             for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
-                //executorService.execute(new Runnable() {
-                //    @Override
-                //    public void run() {
+                executorService.execute(new Runnable() {
+                    @Override
+                    public void run() {
                         File file = new File(libFolder + SLASH + entry.getKey());
-                        if(!file.exists() || !validateJarChecksum(file, entry.getValue())) {
+                        if(!file.exists() || !SoftwareUpdateUtil.validateJarChecksum(file, entry.getValue())) {
                             logger.info("{} file checksum validation failed, downloading it", entry.getKey());
                             String url = serverRegClientURL + latestVersion + SLASH + libFolder + entry.getKey();
                             try {
-                                Files.copy(download(url), file.toPath());
+                                Files.copy(SoftwareUpdateUtil.download(url), file.toPath());
                             } catch (IOException | RegBaseCheckedException e) {
                                 logger.error("Failed to download {}", url, e);
                                 validation_failed = true;
                             }
                         }
-                //    }
-                //});
+                    }
+                });
             }
         } catch (IOException e) {
             logger.error("Failed to validate build setup", e);
@@ -147,60 +147,12 @@ public class ClientSetupValidator {
     private void setServerManifest() {
         String url = serverRegClientURL + latestVersion + SLASH + manifestFile;
         try {
-            serverManifest = new Manifest(download(url));
+            serverManifest = new Manifest(SoftwareUpdateUtil.download(url));
         } catch (IOException | RegBaseCheckedException e) {
             logger.error("Failed to load server manifest file", e);
         }
     }
 
-    private boolean validateJarChecksum(File file, Attributes entryAttributes) {
-        try {
-            if(entryAttributes != null) {
-                String checkSum = HMACUtils2.digestAsPlainText(Files.readAllBytes(file.toPath()));
-                String manifestCheckSum = entryAttributes.getValue(Attributes.Name.CONTENT_TYPE);
-                return manifestCheckSum.equals(checkSum);
-            }
-        } catch (Exception e) {
-            logger.error("Failed to check the file {} validity", file.getName(), e);
-        }
-        return false;
-    }
-
-    private void deleteUnknownJars() throws IOException {
-        File dir = new File(libFolder);
-        Objects.requireNonNull(dir.listFiles(), "No files found in libs");
-        File[] libraries = dir.listFiles();
-        Map<String, Attributes> entries = localManifest.getEntries();
-        for (File file : libraries) {
-            if(!entries.containsKey(file.getName())) {
-                FileUtils.forceDelete(file);
-                messages.push("Unknown file deleted : " + file.getName());
-                logger.error("Unknown file found {}, removed it", file.getName());
-            }
-        }
-    }
-
-    private InputStream download(String url) throws RegBaseCheckedException {
-        logger.info("invoking url : {}", url);
-        try {
-            messages.push("Downloading : " + url);
-            URLConnection connection = new URL(url).openConnection();
-            connection.setConnectTimeout(50000);
-            if (hasSpace(connection.getContentLength())) { // Space Check
-                return connection.getInputStream();
-            }
-        } catch (IOException e) {
-            logger.error("Failed to download {}", url, e);
-        }
-        throw new RegBaseCheckedException("REG-BUILD-005", "Failed to download " + url);
-    }
-
-    private boolean hasSpace(int bytes) throws RegBaseCheckedException {
-        boolean hasSpace = bytes < new File(File.separator).getFreeSpace();
-        if(!hasSpace)
-            throw new RegBaseCheckedException("REG-BUILD-004", "Not enough space available");
-        return true;
-    }
 
     //From https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/ExecutorService.html
     private void shutdownAndAwaitTermination(ExecutorService pool) {

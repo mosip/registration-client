@@ -5,11 +5,16 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.Set;
+
+import com.sun.javafx.application.LauncherImpl;
+import io.mosip.registration.controller.ClientApplication;
+import io.mosip.registration.preloader.ClientPreLoader;
 import org.apache.commons.io.IOUtils;
 import org.testfx.api.FxRobot;
 import com.aventstack.extentreports.Status;
 import registrationtest.pojo.output.RID;
 import registrationtest.testcases.*;
+import registrationtest.utility.DateUtil;
 import registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.JsonUtil;
 import registrationtest.utility.PropertiesUtil;
@@ -40,9 +45,12 @@ public class RegistrationMain {
             public void run() {
                 try {
 
-                    Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait")));
+                    //loop until application primary stage is not loaded
+                    while (ClientApplication.getPrimaryStage() == null) {Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait")));
+}
 
-                    logger.info("ApplicationLaunchTimeWait is Done");
+                    System.out.println("Application primary stage setup completed "+DateUtil.getDateTime());
+                    Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait")));
 
                     robot = new FxRobot();
                     ExtentReportUtil.ExtentSetting();
@@ -54,7 +62,7 @@ public class RegistrationMain {
                     String manualFlag = PropertiesUtil.getKeyValue("manual");
                     if (manualFlag.equalsIgnoreCase("Y")) {
                         manualReg.manualRegistration(robot, operatorId, operatorPwd, supervisorId, supervisorPwd,
-                                StartApplication.primaryStage, StartApplication.applicationContext);
+                                ClientApplication.getPrimaryStage(), ClientApplication.getApplicationContext());
                     }
 
                     Set<String> fileNameSet = map.keySet();
@@ -71,8 +79,8 @@ public class RegistrationMain {
                                 rid1 = null;
                                 ageGroup = JsonUtil.JsonObjParsing(jsonContent, "ageGroup");
                                 rid1 = loginNewRegLogout.newRegistration(robot, operatorId, operatorPwd, supervisorId,
-                                        supervisorPwd, StartApplication.primaryStage, jsonContent, process, ageGroup,
-                                        fileName, StartApplication.applicationContext);
+                                        supervisorPwd, ClientApplication.getPrimaryStage(), jsonContent, process, ageGroup,
+                                        fileName, ClientApplication.getApplicationContext());
                                 logger.info("RID RESULTS-" + rid1.result + "\t" + rid1.ridDateTime + "\t" + rid1.rid);
                                 ExtentReportUtil.reports.flush();
                                 break;
@@ -80,8 +88,8 @@ public class RegistrationMain {
                                 rid2 = null;
                                 ageGroup = JsonUtil.JsonObjParsing(jsonContent, "ageGroup");
                                 rid2 = lostUINLogout.lostRegistration(robot, operatorId, operatorPwd, supervisorId,
-                                        supervisorPwd, StartApplication.primaryStage, jsonContent, process, ageGroup,
-                                        fileName, StartApplication.applicationContext);
+                                        supervisorPwd, ClientApplication.getPrimaryStage(), jsonContent, process, ageGroup,
+                                        fileName, ClientApplication.getApplicationContext());
                                 logger.info("RID RESULTS-" + rid2.result + "\t" + rid2.ridDateTime + "\t" + rid2.rid);
                                 ExtentReportUtil.reports.flush();
                                 break;
@@ -89,8 +97,8 @@ public class RegistrationMain {
                                 rid5 = null;
                                 ageGroup = JsonUtil.JsonObjParsing(jsonContent, "ageGroup");
                                 rid5 = updatereg.updateRegistration(robot, operatorId, operatorPwd, supervisorId,
-                                        supervisorPwd, StartApplication.primaryStage, jsonContent, process, ageGroup,
-                                        fileName, StartApplication.applicationContext);
+                                        supervisorPwd, ClientApplication.getPrimaryStage(), jsonContent, process, ageGroup,
+                                        fileName, ClientApplication.getApplicationContext());
                                 logger.info("RID RESULTS-" + rid5.result + "\t" + rid5.ridDateTime + "\t" + rid5.rid);
                                 ExtentReportUtil.reports.flush();
                                 break;
@@ -98,28 +106,28 @@ public class RegistrationMain {
                                 rid1 = null;
                                 ageGroup = JsonUtil.JsonObjParsing(jsonContent, "ageGroup");
                                 rid1 = bioCorrection.bioCorrection(robot, operatorId, operatorPwd, supervisorId,
-                                        supervisorPwd, StartApplication.primaryStage, jsonContent, process, ageGroup,
-                                        fileName, StartApplication.applicationContext);
+                                        supervisorPwd, ClientApplication.getPrimaryStage(), jsonContent, process, ageGroup,
+                                        fileName, ClientApplication.getApplicationContext());
                                 logger.info("RID RESULTS-" + rid1.result + "\t" + rid1.ridDateTime + "\t" + rid1.rid);
                                 ExtentReportUtil.reports.flush();
 
                             case "InitialLaunch":
                                 Boolean flag = false;
                                 flag = loginNewRegLogout.initialRegclientSet(robot, operatorId, operatorPwd,fileName,
-                                        StartApplication.primaryStage);
+                                        ClientApplication.getPrimaryStage());
                                 logger.info("Operator Onboarding status=" + flag);
                                 ExtentReportUtil.reports.flush();
                                 break;
                             case "OperatorOnboard":
                                  loginNewRegLogout.operatorOnboard(robot, operatorId, operatorPwd,jsonContent,fileName,
-                                        StartApplication.primaryStage);
+                                         ClientApplication.getPrimaryStage());
                                 logger.info("Operator Onboarding");
                                 ExtentReportUtil.reports.flush();
                                 break;
                             case "ReviewerOnboard":
                                 
                                 loginNewRegLogout.operatorOnboard(robot, reviewerUserid,
-                                        reviewerpwd, jsonContent,fileName,StartApplication.primaryStage);
+                                        reviewerpwd, jsonContent,fileName,ClientApplication.getPrimaryStage());
                                 logger.info("Operator Onboarding ");
                                 ExtentReportUtil.reports.flush();
                                 break;
@@ -163,9 +171,9 @@ public class RegistrationMain {
 //		    System.setProperty("java.awt.headless", "true");
 //		    System.setProperty("glass.platform","Monocle");
 //		    System.setProperty("monocle.platform","Headless");
-    
-        
-        Application.launch(StartApplication.class, args);
+
+
+        LauncherImpl.launchApplication(ClientApplication.class, ClientPreLoader.class, args);
     }
 
 
@@ -175,7 +183,7 @@ public class RegistrationMain {
             System.setProperty("file.encoding", "UTF-8");
             System.setProperty("derby.ui.codeset", "UTF-8");
             System.setProperty("jdbc.drivers", "org.apache.derby.jdbc.EmbeddedDriver");
-            System.setProperty("mosip.hostname", PropertiesUtil.getKeyValue("mosip.hostname"));
+           // System.setProperty("mosip.hostname", PropertiesUtil.getKeyValue("mosip.hostname"));
 
 //				//if (Boolean.getBoolean("headless")) {
 //				    System.setProperty("testfx.robot", "glass");
@@ -225,7 +233,7 @@ public class RegistrationMain {
                 if (f.exists()) {
                     InputStream is = new FileInputStream(f);
                     jsonTxt = IOUtils.toString(is, "UTF-8");
-                    System.out.println(jsonTxt);
+                    //System.out.println(jsonTxt);
                     logger.info("readJsonFileText");
 
                     map.put(doc, jsonTxt);

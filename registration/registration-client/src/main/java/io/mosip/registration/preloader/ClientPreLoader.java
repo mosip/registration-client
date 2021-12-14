@@ -1,8 +1,7 @@
 package io.mosip.registration.preloader;
 
-import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.validator.ClientSetupValidator;
+import io.mosip.registration.update.ClientSetupValidator;
 import javafx.application.Preloader;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;

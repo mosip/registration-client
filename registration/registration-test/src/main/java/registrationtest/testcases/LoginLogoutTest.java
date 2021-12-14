@@ -2,6 +2,9 @@ package registrationtest.testcases;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.sun.javafx.application.LauncherImpl;
+import io.mosip.registration.controller.ClientApplication;
+import io.mosip.registration.preloader.ClientPreLoader;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import org.testfx.api.FxRobot;
@@ -16,7 +19,6 @@ import registrationtest.pages.HomePage;
 import registrationtest.pages.LoginPage;
 import registrationtest.pojo.schema.Root;
 import registrationtest.pojo.schema.Schema;
-import registrationtest.runapplication.StartApplication;
 import registrationtest.utility.PropertiesUtil;
 
 /***
@@ -99,7 +101,7 @@ public class LoginLogoutTest {
         };
 
         thread4.start();
-        Application.launch(StartApplication.class, args);// 2 infine loop never yeild
+        LauncherImpl.launchApplication(ClientApplication.class, ClientPreLoader.class, args);// 2 infine loop never yeild
 
     }
 }
