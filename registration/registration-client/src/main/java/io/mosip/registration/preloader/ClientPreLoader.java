@@ -26,7 +26,7 @@ public class ClientPreLoader extends Preloader {
     private ProgressBar progressBar = new ProgressBar();
     private TextArea textArea = new TextArea();
     private Label label = new Label("Please wait...");
-    private Button exit = new Button("Exit");
+    private Button exit = new Button("Stop Client");
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -41,7 +41,7 @@ public class ClientPreLoader extends Preloader {
         textArea.setPrefWidth(500);
         textArea.setPrefHeight(300);
 
-        exit.setVisible(false);
+        exit.setVisible(true);
         loading.getChildren().add(exit);
         exit.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -56,6 +56,7 @@ public class ClientPreLoader extends Preloader {
 
         primaryStage.setWidth(800);
         primaryStage.setHeight(600);
+        primaryStage.setResizable(true);
         primaryStage.setTitle("Client Pre-Loader");
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -72,7 +73,6 @@ public class ClientPreLoader extends Preloader {
             errorsFound = true;
             Throwable t = ((ClientPreLoaderErrorNotification)info).getCause();
             textArea.appendText(t.getMessage()+"\n");
-            exit.setVisible(true);
             logger.error(t.getMessage(), t);
             return;
         }
@@ -89,7 +89,7 @@ public class ClientPreLoader extends Preloader {
         if (stateChangeNotification.getType() == StateChangeNotification.Type.BEFORE_LOAD) {
             textArea.appendText("Started to validate the build setup...\n");
             try {
-                progressBar.setProgress(10);
+                progressBar.setProgress(0.1);
                 ClientSetupValidator clientSetupValidator = new ClientSetupValidator();
                 clientSetupValidator.validateBuildSetup();
                 errorsFound = clientSetupValidator.isValidationFailed();
@@ -102,7 +102,7 @@ public class ClientPreLoader extends Preloader {
         if (stateChangeNotification.getType() == StateChangeNotification.Type.BEFORE_INIT) {
             if(!errorsFound) {
                 textArea.appendText("Started to initialize application...\n");
-                progressBar.setProgress(30);
+                progressBar.setProgress(0.3);
             }
         }
         if (stateChangeNotification.getType() == StateChangeNotification.Type.BEFORE_START) {
