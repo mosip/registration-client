@@ -677,6 +677,8 @@ public class RegistrationConstants {
 
 	public static final String UPLOAD_STATUS = "status";
 	public static final List<String> PACKET_UPLOAD_STATUS = Arrays.asList("SYNCED", "EXPORTED", "RESEND", "E");
+	
+	public static final List<String> PACKET_JOBS = Arrays.asList("RPS_J00006", "RSJ_J00014", "PUJ_J00017");
 
 	public static final String PACKET_UPLOAD = "packet_upload";
 	public static final String DUPLICATE = "Duplicate";

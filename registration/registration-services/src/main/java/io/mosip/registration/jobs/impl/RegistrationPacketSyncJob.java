@@ -1,23 +1,23 @@
 package io.mosip.registration.jobs.impl;
 
-import io.mosip.kernel.core.util.DateUtils;
-import io.mosip.registration.service.sync.PacketSynchService;
+import java.sql.Timestamp;
+
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
+import org.quartz.PersistJobDataAfterExecution;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
-import io.mosip.registration.service.packet.RegPacketStatusService;
-
-import java.sql.Timestamp;
+import io.mosip.registration.service.sync.PacketSynchService;
 
 /**
  * The {@code RegistrationPacketSyncJob} is a job to sync the packet status
@@ -37,6 +37,8 @@ import java.sql.Timestamp;
  * @since 1.0.0
  *
  */
+@PersistJobDataAfterExecution
+@DisallowConcurrentExecution
 @Component(value = "registrationPacketSyncJob")
 public class RegistrationPacketSyncJob extends BaseJob {
 

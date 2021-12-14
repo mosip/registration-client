@@ -38,9 +38,9 @@ import io.mosip.registration.controller.auth.LoginController;
 import io.mosip.registration.controller.device.Streamer;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.schema.SettingsSchema;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.dto.schema.SettingsSchema;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.jobs.BaseJob;
@@ -55,8 +55,8 @@ import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.SyncStatusValidatorService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
+import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -444,7 +444,7 @@ public class HeaderController extends BaseController {
 			auditFactory.audit(AuditEvent.SYNC_PRE_REGISTRATION_PACKET, Components.SYNC_SERVER_TO_CLIENT,
 					SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-			executeDownloadPreRegDataTask(homeController.getMainBox(), packetHandlerController.getProgressIndicator());
+			executeDownloadPreRegDataTask(packetHandlerController.getPreRegDataPane());
 
 		} catch (RuntimeException exception) {
 			LOGGER.error("REGISTRATION - REDIRECTHOME - HEADER_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
@@ -808,9 +808,7 @@ public class HeaderController extends BaseController {
 		// webCameraController.closeWebcam();
 	}
 
-	public void executeDownloadPreRegDataTask(Pane pane, ProgressIndicator progressIndicator) {
-
-		progressIndicator.setVisible(true);
+	public void executeDownloadPreRegDataTask(GridPane pane) {
 		pane.setDisable(true);
 
 		/**
@@ -833,32 +831,34 @@ public class HeaderController extends BaseController {
 					 */
 					@Override
 					protected ResponseDTO call() {
-
 						LOGGER.info("REGISTRATION - HEADER_CONTROLLER - DOWNLOAD_PRE_REG_DATA_TASK", APPLICATION_NAME,
 								APPLICATION_ID, "Started pre reg download task");
 
-						progressIndicator.setVisible(true);
+						Platform.runLater(() -> {
+							try {
+								packetHandlerController.setInProgressImage(getImage("in-progress.png", true));
+							} catch (RegBaseCheckedException e) {
+								LOGGER.error("Error in getting imageview: " + e);
+							}
+						});
+						
 						pane.setDisable(true);
 						return jobConfigurationService.executeJob(RegistrationConstants.OPT_TO_REG_PDS_J00003,
 								RegistrationConstants.JOB_TRIGGER_POINT_USER);
-
 					}
 				};
 			}
 		};
 
-		progressIndicator.progressProperty().bind(taskService.progressProperty());
 		taskService.start();
 
 		taskService.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
 			@Override
 			public void handle(WorkerStateEvent workerStateEvent) {
-
 				LOGGER.info("REGISTRATION - HEADER_CONTROLLER - DOWNLOAD_PRE_REG_DATA_TASK", APPLICATION_NAME,
 						APPLICATION_ID, "Completed pre reg download task");
 
 				pane.setDisable(false);
-				progressIndicator.setVisible(false);
 
 				ResponseDTO responseDTO = taskService.getValue();
 
@@ -867,17 +867,18 @@ public class HeaderController extends BaseController {
 					generateAlertLanguageSpecific(successResponseDTO.getCode(), successResponseDTO.getMessage());
 
 					packetHandlerController.setLastPreRegPacketDownloadedTime();
-
+					packetHandlerController.setInProgressImage(null);
 				} else if (responseDTO.getErrorResponseDTOs() != null) {
-
 					ErrorResponseDTO errorresponse = responseDTO.getErrorResponseDTOs().get(0);
 					generateAlertLanguageSpecific(errorresponse.getCode(), errorresponse.getMessage());
-
 				}
 			}
-
 		});
-
+		
+		taskService.setOnFailed(event -> {
+			pane.setDisable(false);
+			packetHandlerController.setInProgressImage(null);
+		});
 	}
 
 	/**

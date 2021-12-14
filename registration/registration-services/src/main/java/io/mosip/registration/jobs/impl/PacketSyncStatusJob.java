@@ -5,7 +5,10 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.exception.ConnectionException;
+
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
+import org.quartz.PersistJobDataAfterExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -46,6 +49,8 @@ import java.sql.Timestamp;
  * @since 1.0.0
  *
  */
+@PersistJobDataAfterExecution
+@DisallowConcurrentExecution
 @Component(value = "packetSyncStatusJob")
 public class PacketSyncStatusJob extends BaseJob {
 
