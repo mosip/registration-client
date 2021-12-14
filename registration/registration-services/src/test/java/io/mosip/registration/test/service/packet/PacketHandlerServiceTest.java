@@ -1,7 +1,11 @@
 package io.mosip.registration.test.service.packet;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import io.mosip.registration.dto.schema.ProcessSpecDto;
@@ -25,15 +29,20 @@ import io.mosip.kernel.core.idgenerator.spi.PridGenerator;
 import io.mosip.kernel.core.idgenerator.spi.RidGenerator;
 import io.mosip.kernel.core.util.JsonUtils;
 import io.mosip.registration.audit.AuditManagerSerivceImpl;
+import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.RegistrationCenterDAO;
+import io.mosip.registration.dao.RegistrationDAO;
+import io.mosip.registration.dao.impl.RegistrationDAOImpl;
+import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.entity.MachineMaster;
+import io.mosip.registration.entity.Registration;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.repositories.MachineMasterRepository;
@@ -51,6 +60,10 @@ import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecke
 public class PacketHandlerServiceTest {
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
+	
+	@Mock
+	private RegistrationDAOImpl registrationDAOImpl;
+	
 	@InjectMocks
 	private PacketHandlerServiceImpl packetHandlerServiceImpl;
 	
@@ -184,6 +197,41 @@ public class PacketHandlerServiceTest {
 				RegistrationExceptionConstants.AUTH_ADVICE_USR_ERROR.getErrorMessage());
 
 		Assert.assertNotNull(packetHandlerServiceImpl.handle(null).getErrorResponseDTOs());
+	}
+	
+	@Test
+	public void getAllPacketsPositive() {
+		
+		List<Registration> listOfRegs = new ArrayList<>();
+		Registration reg1 = new Registration();
+		reg1.setClientStatusCode(RegistrationClientStatusCode.CORRECTION.getCode());
+		reg1.setCrDtime(Timestamp.valueOf(LocalDateTime.now()));
+		reg1.setAckFilename("mosip1");
+		Registration reg2 = new Registration();
+		reg2.setClientStatusCode(RegistrationClientStatusCode.CREATED.getCode());
+		reg2.setCrDtime(Timestamp.valueOf(LocalDateTime.now()));
+		reg1.setAckFilename("mosip1");
+		Registration reg3 = new Registration();
+		reg3.setClientStatusCode(RegistrationClientStatusCode.CORRECTION.getCode());
+		reg3.setCrDtime(Timestamp.valueOf(LocalDateTime.now()));
+		reg1.setAckFilename("mosip1");
+		
+		listOfRegs.add(reg1);
+		listOfRegs.add(reg2);
+		listOfRegs.add(reg3);
+		
+		PacketStatusDTO expectedPack1 = new PacketStatusDTO();
+		expectedPack1.setPacketId("10101");
+		expectedPack1.setPacketClientStatus("Success");
+		expectedPack1.setPacketServerStatus("InProgress");
+		
+		
+		Mockito.when(registrationDAOImpl.getAllRegistrations()).thenReturn(listOfRegs);
+		//Mockito.doNothing().when(baseService.preparePacketStatusDto(Mockito.any(Registration.class)));
+		
+		List<PacketStatusDTO> actualRegs = packetHandlerServiceImpl.getAllPackets();
+		
+		assertEquals(actualRegs.get(0).getPacketClientStatus(), expectedPack1.getPacketClientStatus());
 	}
 
 }
