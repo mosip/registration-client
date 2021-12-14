@@ -3,6 +3,8 @@ package io.mosip.registration.test.service.packet;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,6 +18,7 @@ import io.mosip.registration.service.sync.PolicySyncService;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
@@ -27,6 +30,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import io.mosip.kernel.core.idgenerator.spi.PridGenerator;
 import io.mosip.kernel.core.idgenerator.spi.RidGenerator;
+import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.kernel.core.util.JsonUtils;
 import io.mosip.registration.audit.AuditManagerSerivceImpl;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
@@ -56,7 +60,7 @@ import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecke
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*" })
-@PrepareForTest({ JsonUtils.class, ApplicationContext.class, SessionContext.class, Role.class })
+@PrepareForTest({ JsonUtils.class, ApplicationContext.class, SessionContext.class, Role.class, FileUtils.class })
 public class PacketHandlerServiceTest {
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -105,7 +109,7 @@ public class PacketHandlerServiceTest {
 	private PolicySyncService policySyncService;
 
 	@Before
-	public void initialize() {
+	public void initialize() throws Exception {
 		mockedSuccessResponse = new ResponseDTO();
 		mockedSuccessResponse.setSuccessResponseDTO(new SuccessResponseDTO());
 		PowerMockito.mockStatic(SessionContext.class);
@@ -118,6 +122,13 @@ public class PacketHandlerServiceTest {
 		
 		Map<String, Object> applicationMap = new HashMap<>();
 		applicationMap.put(RegistrationConstants.INITIAL_SETUP, "N");
+		
+		/*
+		 * final FileInputStream fileInputStreamMock =
+		 * PowerMockito.mock(FileInputStream.class);
+		 * PowerMockito.whenNew(FileInputStream.class).withArguments(Matchers.anyString(
+		 * )) .thenReturn(fileInputStreamMock);
+		 */
 	
 
 		io.mosip.registration.context.ApplicationContext.setApplicationMap(applicationMap);
@@ -206,15 +217,15 @@ public class PacketHandlerServiceTest {
 		Registration reg1 = new Registration();
 		reg1.setClientStatusCode(RegistrationClientStatusCode.CORRECTION.getCode());
 		reg1.setCrDtime(Timestamp.valueOf(LocalDateTime.now()));
-		reg1.setAckFilename("mosip1");
+		reg1.setAckFilename("123456789_Ack.html");
 		Registration reg2 = new Registration();
 		reg2.setClientStatusCode(RegistrationClientStatusCode.CREATED.getCode());
 		reg2.setCrDtime(Timestamp.valueOf(LocalDateTime.now()));
-		reg1.setAckFilename("mosip1");
+		reg2.setAckFilename("123456789_Ack.html");
 		Registration reg3 = new Registration();
 		reg3.setClientStatusCode(RegistrationClientStatusCode.CORRECTION.getCode());
 		reg3.setCrDtime(Timestamp.valueOf(LocalDateTime.now()));
-		reg1.setAckFilename("mosip1");
+		reg3.setAckFilename("123456789_Ack.html");
 		
 		listOfRegs.add(reg1);
 		listOfRegs.add(reg2);
@@ -222,12 +233,16 @@ public class PacketHandlerServiceTest {
 		
 		PacketStatusDTO expectedPack1 = new PacketStatusDTO();
 		expectedPack1.setPacketId("10101");
-		expectedPack1.setPacketClientStatus("Success");
+		expectedPack1.setPacketClientStatus("CORRECTION");
 		expectedPack1.setPacketServerStatus("InProgress");
 		
+		String path = "src/test/resources/123456789.zip";
+		File file = new File(path);
 		
 		Mockito.when(registrationDAOImpl.getAllRegistrations()).thenReturn(listOfRegs);
-		//Mockito.doNothing().when(baseService.preparePacketStatusDto(Mockito.any(Registration.class)));
+		Mockito.doReturn(expectedPack1).when(baseService).preparePacketStatusDto(Mockito.any(Registration.class));
+		PowerMockito.mockStatic(FileUtils.class);
+		PowerMockito.when(FileUtils.getFile(Mockito.anyString())).thenReturn(file);
 		
 		List<PacketStatusDTO> actualRegs = packetHandlerServiceImpl.getAllPackets();
 		
