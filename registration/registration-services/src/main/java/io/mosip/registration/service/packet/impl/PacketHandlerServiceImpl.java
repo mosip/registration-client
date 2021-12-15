@@ -315,7 +315,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 				registrationDTO.getRegistrationMetaDataDTO().getConsentOfApplicant());
 
 		metaInfoMap.put("metaData", getJsonString(getLabelValueDTOListString(metaData)));
-		metaInfoMap.put("blockListedWords", getJsonString(getRegistrationDTOFromSession().BLOCKLISTED_CHECK));
+		metaInfoMap.put("blockListedWords", getJsonString(registrationDTO.BLOCKLISTED_CHECK));
 	}
 
 	private void setOperationsData(Map<String, String> metaInfoMap, RegistrationDTO registrationDTO)

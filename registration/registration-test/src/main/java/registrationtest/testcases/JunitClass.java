@@ -2,13 +2,13 @@ package registrationtest.testcases;
 
 import java.io.IOException;
 
-import org.json.JSONException;
+import com.sun.javafx.application.LauncherImpl;
+import io.mosip.registration.controller.ClientApplication;
+import io.mosip.registration.preloader.ClientPreLoader;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javafx.application.Application;
-import registrationtest.runapplication.RegistrationMain;
-import registrationtest.runapplication.StartApplication;
 import registrationtest.utility.PropertiesUtil;
 
 public class JunitClass {
@@ -17,7 +17,7 @@ public class JunitClass {
     public void testcase() {
         String args[] = {};
 
-        Application.launch(StartApplication.class, args);
+        LauncherImpl.launchApplication(ClientApplication.class, ClientPreLoader.class, args);
     }
 
     @Test

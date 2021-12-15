@@ -173,7 +173,8 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 	 * 
 	 * @see io.mosip.registration.service.JobConfigurationService#initiateJobs()
 	 */
-	@PostConstruct
+	//@PostConstruct -- should be explicitly invoked, currently invoked from pre-loader
+	// because, when jobs are triggered before proper sync, it starts failing in sync precondition checks
 	public void initiateJobs() {
 		LOGGER.info(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Jobs initiation was started");
