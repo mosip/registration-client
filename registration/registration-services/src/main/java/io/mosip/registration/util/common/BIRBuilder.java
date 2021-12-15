@@ -58,7 +58,6 @@ public class BIRBuilder {
 			int bioValueEndIndex = bioDto.getPayLoad().indexOf('"', (bioValueStartIndex + 1));
 			String bioValue = bioDto.getPayLoad().substring(bioValueStartIndex, (bioValueEndIndex + 1));
 			payLoad = bioDto.getPayLoad().replace(bioValue, RegistrationConstants.BIOVALUE_PLACEHOLDER);
-			LOGGER.info("PAYLOAD AFTER bioValue placeholder replacement : {}", payLoad);
 		}
 
 		List<Entry> otherEntries = new ArrayList<>();
