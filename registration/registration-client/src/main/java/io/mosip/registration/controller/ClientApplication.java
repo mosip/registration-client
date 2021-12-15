@@ -68,8 +68,6 @@ public class ClientApplication extends Application {
 				return;
 
 			applicationStartTime = String.valueOf(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
-			System.setProperty("java.net.useSystemProxies", "true");
-			System.setProperty("file.encoding", "UTF-8");
 
 			notifyPreloader(new ClientPreLoaderNotification("Creating application context..."));
 			applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);

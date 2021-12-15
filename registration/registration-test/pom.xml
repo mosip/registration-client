@@ -65,6 +65,7 @@
          <groupId>io.mosip.registration</groupId>
          <artifactId>registration-client</artifactId>
          <version>1.2.0-rc2-SNAPSHOT</version>
+         <scope>provided</scope>
       </dependency>
       <dependency>
          <groupId>org.testfx</groupId>
@@ -79,13 +80,12 @@
     <version>15</version>
 </dependency>
 
-     <!-- https://mvnrepository.com/artifact/io.rest-assured/rest-assured -->
-
+<!-- https://mvnrepository.com/artifact/io.rest-assured/rest-assured -->
 <dependency>
     <groupId>io.rest-assured</groupId>
     <artifactId>rest-assured</artifactId>
     <version>4.3.3</version>
-
+    
 </dependency>
 
 
