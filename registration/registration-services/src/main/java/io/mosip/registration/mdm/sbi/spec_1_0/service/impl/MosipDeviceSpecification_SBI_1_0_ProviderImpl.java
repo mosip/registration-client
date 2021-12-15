@@ -270,9 +270,6 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 				biometricDTO.setCaptured(true);
 				biometricDTO.setModalityName(mdmRequestDto.getModality());
 				biometricDTOs.add(biometricDTO);
-
-				LOGGER.info("signature : {}", signature);
-				LOGGER.info("DECODED payload : {}", decodedPayLoad);
 			}
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
