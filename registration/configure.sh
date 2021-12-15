@@ -80,7 +80,7 @@ echo "Started to create the registration client zip"
 
 ls -ltr lib | grep bc
 
-echo "start jre\bin\javaw -Xmx2048m -Xms2048m -Dlogback.configurationFile=.\logback.xml -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" > run.bat
+echo "start jre\bin\javaw -Xmx2048m -Xms2048m -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" > run.bat
 
 /usr/bin/zip -r reg-client.zip jre
 /usr/bin/zip -r reg-client.zip lib
@@ -90,14 +90,11 @@ echo "start jre\bin\javaw -Xmx2048m -Xms2048m -Dlogback.configurationFile=.\logb
 
 #Creating client testing utility
 mkdir -p "${work_dir}"/registration-test-utility
+mkdir -p "${work_dir}"/registration-test-utility/testlib
 mkdir -p "${work_dir}"/registration-test-utility/lib
-mkdir -p "${work_dir}"/registration-test-utility/logs
 cp "${work_dir}"/registration-test/target/registration-test-${client_version_env}.jar "${work_dir}"/registration-test-utility/registration-test.jar
-cp -r "${work_dir}"/registration-test/target/lib/* "${work_dir}"/registration-test-utility/lib
-## override with updated jars
-cp -r "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar  "${work_dir}"/registration-test-utility/lib
-cp -r "${work_dir}"/registration-client/target/lib/registration-services-${client_version_env}.jar  "${work_dir}"/registration-test-utility/lib
-
+cp -r "${work_dir}"/registration-test/target/lib/* "${work_dir}"/registration-test-utility/testlib
+cp -r "${work_dir}"/registration-client/target/lib/*  "${work_dir}"/registration-test-utility/lib
 cp -r "${work_dir}"/registration-test/resources/*  "${work_dir}"/registration-test-utility/
 cp -r "${work_dir}"/registration-client/target/jre "${work_dir}"/registration-test-utility/
 cp "${work_dir}"/registration-client/target/MANIFEST.MF "${work_dir}"/registration-test-utility/
