@@ -65,6 +65,7 @@
          <groupId>io.mosip.registration</groupId>
          <artifactId>registration-client</artifactId>
          <version>1.2.0-rc2-SNAPSHOT</version>
+         <scope>provided</scope>
       </dependency>
       <dependency>
          <groupId>org.testfx</groupId>
@@ -118,6 +119,7 @@
                      <outputDirectory>
                         ${project.build.directory}/lib
                      </outputDirectory>
+                     <excludeScope>provided</excludeScope>
                   </configuration>
                </execution>
             </executions>
