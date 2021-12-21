@@ -1353,10 +1353,10 @@ public class GenericBiometricsController extends BaseController {
 		pane.setId(modality.name());
 		pane.setPrefHeight(200);
 		pane.setPrefWidth(200);
-		ImageView topImageView = getImageView(null, RegistrationConstants.DOUBLE_IRIS_IMG, 144, 189.0, 7, 4, true,
+		ImageView topImageView = getImageView(null, RegistrationConstants.DOUBLE_IRIS_WITH_INDICATORS_IMG, 144, 189.0, 7, 4, true,
 				true, false);
 
-		ImageView rightImageView = getImageView("rightEye", RegistrationConstants.RIGHTEYE_IMG, 43, 48, 118, 54,
+		ImageView rightImageView = getImageView("rightEye", RegistrationConstants.RIGHTEYE_IMG, 43, 48, 127, 54,
 				true, true, true);
 		ImageView leftImageView = getImageView("leftEye", RegistrationConstants.LEFTEYE_IMG, 43, 48, 35, 54, true,
 				true, true);

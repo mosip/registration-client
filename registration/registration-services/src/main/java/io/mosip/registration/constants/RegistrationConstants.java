@@ -1884,6 +1884,7 @@ public class RegistrationConstants {
 	public static final String BACK_FOCUSED_IMG = "backInWhite.png";
 	public static final String WRONG_IMG = "wrong.png";
 	public static final String DOUBLE_IRIS_IMG = "Eyes.png";
+	public static final String DOUBLE_IRIS_WITH_INDICATORS_IMG = "EyesWithIndicators.png";
 	public static final String FACE_IMG = "Photo.png";
 	public static final String LEFTPALM_IMG= "leftHand.png";
 	public static final String RIGHTPALM_IMG = "rightHand.png";
