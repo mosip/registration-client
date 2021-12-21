@@ -26,6 +26,8 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import io.mosip.registration.constants.RegistrationClientStatusCode;
+import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.dao.impl.RegistrationDAOImpl;
@@ -33,12 +35,16 @@ import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.schema.ValuesDTO;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.entity.UserDetail;
+import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.RegistrationRepository;
+import io.mosip.registration.service.IdentitySchemaService;
+import io.mosip.registration.service.impl.IdentitySchemaServiceImpl;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
@@ -52,6 +58,12 @@ public class RegistrationDAOTest {
 	@Mock
 	private RegistrationRepository registrationRepository;
 
+	@Mock
+	private IdentitySchemaService identitySchemaService;
+	
+	@Mock
+	private IdentitySchemaServiceImpl identitySchemaServiceImpl;
+	
 	Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
 	@Before
@@ -90,7 +102,6 @@ public class RegistrationDAOTest {
 		registrationDAOImpl.save("../PacketStore/28-Sep-2018/111111", registrationDTO);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test(expected = RegBaseUncheckedException.class)
 	public void testTransactionException() throws RegBaseCheckedException {
 		when(registrationRepository.create(Mockito.any(Registration.class))).thenThrow(RegBaseUncheckedException.class);
@@ -100,7 +111,6 @@ public class RegistrationDAOTest {
 
 	@Test
 	public void getRegistrationByStatusTest() {
-
 		List<Registration> packetLists = new ArrayList<>();
 		Registration reg = new Registration();
 		packetLists.add(reg);
@@ -183,10 +193,9 @@ public class RegistrationDAOTest {
 		assertEquals("file1", enrollmentsByStatus.get(0).getAckFilename());
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test(expected = RegBaseUncheckedException.class)
 	public void testValidateException() throws RegBaseCheckedException {
-		when(registrationRepository.update(Mockito.anyObject())).thenThrow(RegBaseUncheckedException.class);
+		when(registrationRepository.update(Mockito.any())).thenThrow(RegBaseUncheckedException.class);
 		registrationDAOImpl.updateRegistration(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
 	}
 
@@ -334,7 +343,138 @@ public class RegistrationDAOTest {
 		Mockito.when(registrationRepository.findByClientStatusCodeInOrServerStatusCodeOrderByUpdDtimesDesc(codes,"S")).thenReturn(registrations);
 		assertSame("Approved",registrationDAOImpl.fetchPacketsToUpload(codes, "S").get(0).getClientStatusCode());
 		assertSame("Rejected",registrationDAOImpl.fetchPacketsToUpload(codes, "S").get(1).getClientStatusCode());
-
 	}
 
+	@Test
+	public void saveRegistration() throws RegBaseCheckedException {
+		RegistrationDTO registrationDTO = getRegistrationDTO();
+		RegistrationMetaDataDTO registrationMetaDataDTO=new RegistrationMetaDataDTO();		
+		List<ValuesDTO> fullNames = new ArrayList<>();
+		ValuesDTO valuesDTO = new ValuesDTO();
+		valuesDTO.setLanguage("eng");
+		valuesDTO.setValue("Individual Name");
+		fullNames.add(valuesDTO);		
+		registrationDTO.getDemographics().put("fullName", fullNames);		
+		registrationDTO.setRegistrationMetaDataDTO(registrationMetaDataDTO);
+		//registrationDTO.getRegistrationMetaDataDTO().setRegistrationCategory("New");
+		when(identitySchemaServiceImpl.getAllFieldSpec(Mockito.anyString(),Mockito.anyDouble())).thenReturn(getDocumentTypeTestData());
+		when(registrationRepository.create(Mockito.any(Registration.class))).thenReturn(new Registration());
+		registrationDAOImpl.save("test", registrationDTO);
+	}
+	@Test
+	public void getRegistrationByStatusWithListTest() {
+		List<Registration> packetLists = getRegistrationsList();
+		List<String> packetNames = Arrays.asList("PUSHED", "EXPORTED", "resend", "E");
+		Mockito.when(registrationRepository.findByStatusCodes("PUSHED", "EXPORTED", "resend", "E"))
+				.thenReturn(packetLists);
+		assertEquals(2, registrationDAOImpl.getRegistrationByStatus(packetNames).size());
+	}
+	
+	@Test
+	public void updateRegistrationWithPacketIdTest() {
+		Registration registration = new Registration();
+		Mockito.when(registrationRepository.findByPacketId(Mockito.anyString())).thenReturn(registration);
+		Mockito.when(registrationRepository.update(registration)).thenReturn(registration);
+		assertEquals(registration, registrationDAOImpl.updateRegistrationWithPacketId("packetId","statusComments", "clientStatusCode"));
+	}
+	
+	@Test
+	public void getRegistrationByPacketIdTest() {
+		Registration updatedPacket = new Registration();
+		updatedPacket.setUploadCount((short)0);
+		Mockito.when(registrationRepository.findByPacketId(Mockito.any())).thenReturn(updatedPacket);
+		assertEquals(updatedPacket, registrationDAOImpl.getRegistrationByPacketId(Mockito.anyString()));
+	}
+	
+	@Test
+	public void getPacketsToBeSynchedWithListTest() {
+		List<Registration> registrations = getRegistrationsList();
+		List<String> statusCodes = new LinkedList<>();
+		when(registrationRepository.findByClientStatusCodeInOrderByUpdDtimesDesc(Mockito.anyList())).thenReturn(registrations);
+		assertEquals(2,registrationDAOImpl.getPacketsToBeSynched(statusCodes).size());
+	}
+	
+	@Test
+	public void getAllRegistrationsTest() {
+		List<Registration> registrations = getRegistrationsList();
+		when(registrationRepository.findAll()).thenReturn(registrations);
+		assertEquals(2,registrationDAOImpl.getAllRegistrations().size());
+	}
+	
+	@Test
+	public void updateAckReceiptSignatureTest() {
+		Registration registration = getRegistration();
+		when(registrationRepository.findByPacketId(Mockito.anyString())).thenReturn(registration);
+		when(registrationRepository.update(registration)).thenReturn(registration);
+		assertEquals(registration,registrationDAOImpl.updateAckReceiptSignature("packetId","signature"));
+	}
+	
+	@Test
+	public void fetchReRegisterPendingPacketsTest() {
+		List<Registration> registrations = getRegistrationsList();
+		when(registrationRepository.findByClientStatusCodeNotInAndServerStatusCodeIn(
+				Arrays.asList(RegistrationClientStatusCode.RE_REGISTER.getCode()),
+				Arrays.asList(RegistrationConstants.PACKET_STATUS_CODE_REREGISTER))).thenReturn(registrations);
+		assertEquals(2,registrationDAOImpl.fetchReRegisterPendingPackets().size());
+	}
+	
+	@Test
+	public void getRegistrationIdsTest() {
+		List<String> regIds=getRegistrationIds();
+		when(registrationRepository.getRIDByAppId(Mockito.anyString())).thenReturn("regId");
+		assertEquals(2,registrationDAOImpl.getRegistrationIds(regIds).size());
+	}
+	
+	List<Registration> getRegistrationsList(){                  		
+		List<Registration> registrations =new ArrayList<>();
+		Registration registration1 = new Registration();
+		registration1.setId("12345");
+		registration1.setClientStatusCode("Approved");
+		registration1.setServerStatusCode("S");
+		registrations.add(registration1);
+		Registration registration2 = new Registration();
+		registration2.setId("23456");
+		registration2.setClientStatusCode("Rejected");
+		registration2.setServerStatusCode("S");
+		registrations.add(registration2);
+		return registrations;
+	}
+	
+	Registration getRegistration() {
+		Registration registration1 = new Registration();
+		registration1.setId("12345");
+		registration1.setClientStatusCode("Approved");
+		registration1.setServerStatusCode("S");
+		return registration1;
+	}
+	List<String> getRegistrationIds(){		
+		List<String> regIds = new ArrayList<>();
+		regIds.add("id1");
+		regIds.add("id2");
+		return regIds;
+	}
+	
+	RegistrationDTO getRegistrationDTO() {		
+		RegistrationDTO registrationDTO = new RegistrationDTO();
+		registrationDTO.setRegistrationId("123");
+		registrationDTO.setFlowType(FlowType.NEW);
+		System.out.println(registrationDTO.getFlowType().getRegistrationTypeCode());
+		registrationDTO.setProcessId("1234");
+		registrationDTO.setPreRegistrationId("123");
+		registrationDTO.setAppId("123");
+		registrationDTO.setPacketId("324");
+		registrationDTO.setAdditionalInfoReqId("1234");
+		return registrationDTO;
+		
+	}
+	List<UiFieldDTO> getDocumentTypeTestData() {
+
+		List<UiFieldDTO> fields = new ArrayList<>();
+		UiFieldDTO fullname = new UiFieldDTO();
+		fullname.setId("fullName");
+		fullname.setType("documentType");
+		fullname.setSubType(RegistrationConstants.UI_SCHEMA_SUBTYPE_FULL_NAME);
+		fields.add(fullname);
+		return fields;
+	}
 }
