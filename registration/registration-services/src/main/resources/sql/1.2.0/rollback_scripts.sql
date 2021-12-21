@@ -102,3 +102,4 @@ delete from "REG"."GLOBAL_PARAM" where code='mosip.kernel.vid.length.repeating-l
 delete from "REG"."GLOBAL_PARAM" where code='mosip.kernel.vid.length.repeating-block-limit';
 delete from "REG"."GLOBAL_PARAM" where code='mosip.kernel.vid.length.sequence-limit';
 delete from "REG"."GLOBAL_PARAM" where code='mosip.kernel.vid.length','mosip.kernel.vid.length';
+delete from "REG"."GLOBAL_PARAM" where code='mosip.registration.audit_timestamp';
