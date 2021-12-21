@@ -26,6 +26,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -175,6 +176,10 @@ public class AuthTokenUtilService {
                     currentTimeInSeconds + jsonObject.getLong("expiryTime"),
                     currentTimeInSeconds + jsonObject.getLong("refreshExpiryTime"));
             return jsonObject.getString("token");
+        } catch (DataIntegrityViolationException e) {
+            LOGGER.error(e.getMessage(), e);
+            throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_SAVE_FAILED.getErrorCode(),
+                    RegistrationExceptionConstants.AUTH_TOKEN_SAVE_FAILED.getErrorMessage());
         } catch (Exception exception) {
             LOGGER.error(exception.getMessage(), exception);
             throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(),
@@ -235,6 +240,10 @@ public class AuthTokenUtilService {
 
             return authTokenDTO;
 
+        } catch (DataIntegrityViolationException e) {
+            LOGGER.error(e.getMessage(), e);
+            throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_SAVE_FAILED.getErrorCode(),
+                    RegistrationExceptionConstants.AUTH_TOKEN_SAVE_FAILED.getErrorMessage());
         } catch (Exception exception) {
             LOGGER.error(exception.getMessage(), exception);
             throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(),

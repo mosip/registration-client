@@ -507,7 +507,7 @@ public class LoginController extends BaseController implements Initializable {
 					executePreLaunchTask(credentialsPane, passwordProgressIndicator);
 				}
 			} else {
-				pwdValidationStatus = validateInvalidLogin(userDTO, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.INCORRECT_PWORD));
+				pwdValidationStatus = validateInvalidLogin(userDTO, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHENTICATION_FAILURE));
 			}
 		} catch (RegBaseCheckedException | IOException exception) {
 			LOGGER.error("", exception);

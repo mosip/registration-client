@@ -99,6 +99,7 @@ public enum RegistrationExceptionConstants {
 	INVALID_RESPONSE_HEADER("REG-SDU-004", "Response header received from the web-service is not as expected"),
 	AUTHZ_ADDING_REQUEST_SIGN("REG-RCA-002", "Exception while generating the signature of resquest body"),
 	AUTH_TOKEN_COOKIE_NOT_FOUND("REG-SDU-005", "Auth token received from the authentication web-service is either null or empty"),
+	AUTH_TOKEN_SAVE_FAILED("REG-SDU-006", "Failed to save auth token (invalid / too large)"),
 	
 	//Template Service
 	TEMPLATE_CHECK_EXCEPTION(PACKET_CREATION_EXP_CODE + "TSI-001", "Template Type Code / Language Code cannot be null"),

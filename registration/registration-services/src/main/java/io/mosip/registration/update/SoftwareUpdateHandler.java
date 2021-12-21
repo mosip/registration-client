@@ -256,7 +256,10 @@ public class SoftwareUpdateHandler extends BaseService {
 			if(!file.exists() || !SoftwareUpdateUtil.validateJarChecksum(file, entry.getValue())) {
 				String url = serverRegClientURL + latestVersion + SLASH + libFolder + SLASH + entry.getKey();
 				try {
-					Files.copy(SoftwareUpdateUtil.download(url), file.toPath());
+					if(file.delete()) {
+						Files.copy(SoftwareUpdateUtil.download(url), file.toPath());
+						LOGGER.info("Successfully deleted and downloaded the file : {}", entry.getKey());
+					}
 				} catch (IOException | RegBaseCheckedException e) {
 					LOGGER.error("Failed to download {}", url, e);
 				}
