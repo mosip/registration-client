@@ -949,11 +949,11 @@ public class GenericBiometricsController extends BaseController {
 					node.getStyleClass().add(RegistrationConstants.QUALITY_LABEL_BLUE_BORDER);
 
 					double qualityScoreVal = getBioScores(fxControl.getUiSchemaDTO().getId(), currentModality, attempt);
-					if (qualityScoreVal != 0) {
+					//if (qualityScoreVal != 0) {
 						updateByAttempt(qualityScoreVal, getBioStreamImage(fxControl.getUiSchemaDTO().getId(), currentModality, attempt),
 								bioService.getMDMQualityThreshold(currentModality), biometricImage,
 								qualityText, bioProgress, qualityScore);
-					}
+					//}
 
 					LOGGER.info("Mouse Event by attempt Ended. modality : {}", currentModality);
 
