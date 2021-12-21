@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
+import io.mosip.registration.exception.RegistrationExceptionConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -303,16 +304,21 @@ public class AuthenticationController extends BaseController implements Initiali
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
 		if (validateInput(username, password)) {
-			String status = RegistrationConstants.EMPTY;
-			status = validatePwd(username.getText(), password.getText());
-			if (RegistrationConstants.SUCCESS.equals(status)) {
-				userAuthenticationTypeListValidation.remove(0);
-				addOSIData(username.getText(), RegistrationConstants.PWORD);
-				loadNextScreen();
-			} else if (RegistrationConstants.FAILURE.equals(status)) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHENTICATION_FAILURE));
-			} else if(RegistrationConstants.CREDS_NOT_FOUND.equals(status)) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.CREDENTIALS_NOT_FOUND));
+			String status = validatePwd(username.getText(), password.getText());
+			switch (status){
+				case RegistrationConstants.SUCCESS:
+					userAuthenticationTypeListValidation.remove(0);
+					addOSIData(username.getText(), RegistrationConstants.PWORD);
+					loadNextScreen();
+					break;
+				case RegistrationConstants.CREDS_NOT_FOUND:
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.CREDENTIALS_NOT_FOUND));
+					break;
+				case "REG-SDU-006":
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.TOKEN_SAVE_FAILED));
+					break;
+				default :
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHENTICATION_FAILURE));
 			}
 		}
 	}
