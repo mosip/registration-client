@@ -242,7 +242,17 @@ public class RegistrationDTO {
 						this.biometricExceptions.remove(k);
 					});
 		}
-		this.ATTEMPTS.remove(String.format("%s_%s", fieldId, modality.name()));
+
+		String key = String.format("%s_%s", fieldId, modality.name());
+		this.ATTEMPTS.remove(key);
+
+		keys.clear();
+		keys.addAll(this.BIO_SCORES.keySet());
+		keys.stream()
+				.filter( k -> k.startsWith(key))
+				.forEach( k -> {
+					this.BIO_SCORES.remove(k);
+				});
 	}
 
 	public void addSupervisorBiometrics(List<BiometricsDto> biometrics) {
