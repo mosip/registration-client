@@ -797,10 +797,8 @@ public class BaseController {
 					RegistrationConstants.FAILURE;
 		} catch (RegBaseCheckedException e) {
 			LOGGER.error("PWD login failed due to : ", e.getErrorCode());
-			if(RegistrationConstants.CREDS_NOT_FOUND.equalsIgnoreCase(e.getErrorCode()))
-				return RegistrationConstants.CREDS_NOT_FOUND;
+			return e.getErrorCode();
 		}
-		return RegistrationConstants.FAILURE;
 	}
 
 	/**
