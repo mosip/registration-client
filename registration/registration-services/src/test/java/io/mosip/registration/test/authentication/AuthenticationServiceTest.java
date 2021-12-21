@@ -160,7 +160,7 @@ public class AuthenticationServiceTest {
 		} catch (RegBaseCheckedException e) {
 			errorCode =  e.getErrorCode();
 		}
-		assertEquals(RegistrationConstants.PWD_MISMATCH, errorCode);
+		assertEquals(RegistrationConstants.CREDS_NOT_FOUND, errorCode);
 	}
 	
 	@Test

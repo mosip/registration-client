@@ -112,7 +112,10 @@ public class ClientSetupValidator {
                             logger.info("{} file checksum validation failed, downloading it", entry.getKey());
                             String url = serverRegClientURL + latestVersion + SLASH + libFolder + entry.getKey();
                             try {
-                                Files.copy(SoftwareUpdateUtil.download(url), file.toPath());
+                                if(file.delete()) {
+                                    Files.copy(SoftwareUpdateUtil.download(url), file.toPath());
+                                    logger.info("Successfully deleted and downloaded the latest file : {}", entry.getKey());
+                                }
                             } catch (IOException | RegBaseCheckedException e) {
                                 logger.error("Failed to download {}", url, e);
                                 validation_failed = true;
