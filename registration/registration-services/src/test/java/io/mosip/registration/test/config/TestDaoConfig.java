@@ -60,6 +60,7 @@ public class TestDaoConfig extends DaoConfig {
 	private static final String VALUE = "VAL";
 	private static final String LOCAL_PREFERENCES = "SELECT NAME, VAL FROM REG.LOCAL_PREFERENCES WHERE IS_DELETED=FALSE AND CONFIG_TYPE='CONFIGURATION' AND VAL IS NOT NULL";
 	private static final String NAME = "NAME";
+	private static final String SCHEMA_NAME = "REG";
 
 	private static DataSource dataSource;
 	private static JdbcTemplate jdbcTemplate;
@@ -166,6 +167,7 @@ public class TestDaoConfig extends DaoConfig {
 	private static DriverManagerDataSource setupDatasource() {
 		DriverManagerDataSource driverManagerDataSource = new DriverManagerDataSource();
 		driverManagerDataSource.setDriverClassName(DRIVER_CLASS_NAME);
+		driverManagerDataSource.setSchema(SCHEMA_NAME);
 		driverManagerDataSource.setUrl(URL);
 		return driverManagerDataSource;
 	}
