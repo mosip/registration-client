@@ -71,7 +71,6 @@
          <groupId>org.testfx</groupId>
          <artifactId>openjfx-monocle</artifactId>
          <version>jdk-11+26</version> <!-- jdk-11+26 for Java 11, jdk-9+181 for Java 9, 8u76-b04 for Java 8 -->
-         
       </dependency>
       <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-graphics -->
 <dependency>
@@ -80,13 +79,12 @@
     <version>15</version>
 </dependency>
 
-     <!-- https://mvnrepository.com/artifact/io.rest-assured/rest-assured -->
-
+<!-- https://mvnrepository.com/artifact/io.rest-assured/rest-assured -->
 <dependency>
     <groupId>io.rest-assured</groupId>
     <artifactId>rest-assured</artifactId>
     <version>4.3.3</version>
-
+    
 </dependency>
 
 

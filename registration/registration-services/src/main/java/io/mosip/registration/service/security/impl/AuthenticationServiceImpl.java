@@ -170,7 +170,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 						RegistrationConstants.CREDS_NOT_FOUND);
 			}
 
-		} catch (RuntimeException | RegBaseCheckedException | NoSuchAlgorithmException runtimeException) {
+		} catch (RegBaseCheckedException e) {
+			throw e;
+		} catch (RuntimeException | NoSuchAlgorithmException runtimeException) {
 			LOGGER.error("Pwd validation failed", runtimeException);
 		}
 		throw new RegBaseCheckedException(RegistrationConstants.PWD_MISMATCH, RegistrationConstants.PWD_MISMATCH);

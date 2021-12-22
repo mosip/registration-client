@@ -125,6 +125,9 @@ public class GenericBiometricsController extends BaseController {
 
 	@FXML
 	private GridPane biometricPane;
+	
+	@FXML
+	private GridPane biometric;
 
 	@FXML
 	private Button scanBtn;
@@ -455,7 +458,7 @@ public class GenericBiometricsController extends BaseController {
 		auditFactory.audit(getAuditEventForScan(currentModality.name()), Components.REG_BIOMETRICS, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-		scanBtn.setDisable(true);
+		biometric.setDisable(true);
 		deviceSearchTask = new Service<MdmBioDevice>() {
 			@Override
 			protected Task<MdmBioDevice> createTask() {
@@ -521,7 +524,7 @@ public class GenericBiometricsController extends BaseController {
 					// Enable Auto-Logout
 					SessionContext.setAutoLogout(true);
 					streamer.setUrlStream(null);
-					scanBtn.setDisable(false);
+					biometric.setDisable(false);
 				}
 			}
 		});
@@ -531,7 +534,7 @@ public class GenericBiometricsController extends BaseController {
 			public void handle(WorkerStateEvent t) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
 				streamer.setUrlStream(null);
-				scanBtn.setDisable(false);
+				biometric.setDisable(false);
 			}
 		});
 
@@ -599,7 +602,7 @@ public class GenericBiometricsController extends BaseController {
 
 				LOGGER.debug("Setting URL Stream as null");
 				streamer.setUrlStream(null);
-				scanBtn.setDisable(false);
+				biometric.setDisable(false);
 			}
 		});
 
@@ -661,14 +664,14 @@ public class GenericBiometricsController extends BaseController {
 					displayBiometric(currentModality);
 					// if all the above check success show alert capture success
 					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
-					scanBtn.setDisable(false);
+					biometric.setDisable(false);
 				} catch (Exception e) {
 					LOGGER.error("Exception while getting the scanned biometrics for user registration",e);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
 				} finally {
 					SessionContext.setAutoLogout(true);	// Enable Auto-Logout
 					streamer.setUrlStream(null);
-					scanBtn.setDisable(false);
+					biometric.setDisable(false);
 				}
 			}
 		});
@@ -845,10 +848,14 @@ public class GenericBiometricsController extends BaseController {
 		createQualityBox(retryCount, biometricThreshold);
 
 		clearBioLabels();
-		setScanButtonVisibility((!isFace(currentModality) && !isExceptionPhoto(currentModality)) ?
-				fxControl.isAllExceptions(currentModality) : false);
+		setScanButtonVisibility(isAllExceptions());
 
 		LOGGER.info("Updated biometrics and cleared previous data");
+	}
+
+	private boolean isAllExceptions() {
+		return (!isFace(currentModality) && !isExceptionPhoto(currentModality)) ?
+				fxControl.isAllExceptions(currentModality) : false;
 	}
 
 	private void clearBioLabels() {
@@ -903,7 +910,7 @@ public class GenericBiometricsController extends BaseController {
 			qualityText.getStyleClass().add(RegistrationConstants.LABEL_RED);
 		}
 
-		scanBtn.setDisable(retry == bioService.getRetryCount(currentModality));
+		scanBtn.setDisable(isAllExceptions() ? true : (retry == bioService.getRetryCount(currentModality)));
 		LOGGER.info("Updated captured values of biometrics");
 	}
 
@@ -942,11 +949,11 @@ public class GenericBiometricsController extends BaseController {
 					node.getStyleClass().add(RegistrationConstants.QUALITY_LABEL_BLUE_BORDER);
 
 					double qualityScoreVal = getBioScores(fxControl.getUiSchemaDTO().getId(), currentModality, attempt);
-					if (qualityScoreVal != 0) {
+					//if (qualityScoreVal != 0) {
 						updateByAttempt(qualityScoreVal, getBioStreamImage(fxControl.getUiSchemaDTO().getId(), currentModality, attempt),
 								bioService.getMDMQualityThreshold(currentModality), biometricImage,
 								qualityText, bioProgress, qualityScore);
-					}
+					//}
 
 					LOGGER.info("Mouse Event by attempt Ended. modality : {}", currentModality);
 
@@ -1346,10 +1353,10 @@ public class GenericBiometricsController extends BaseController {
 		pane.setId(modality.name());
 		pane.setPrefHeight(200);
 		pane.setPrefWidth(200);
-		ImageView topImageView = getImageView(null, RegistrationConstants.DOUBLE_IRIS_IMG, 144, 189.0, 7, 4, true,
+		ImageView topImageView = getImageView(null, RegistrationConstants.DOUBLE_IRIS_WITH_INDICATORS_IMG, 144, 189.0, 7, 4, true,
 				true, false);
 
-		ImageView rightImageView = getImageView("rightEye", RegistrationConstants.RIGHTEYE_IMG, 43, 48, 118, 54,
+		ImageView rightImageView = getImageView("rightEye", RegistrationConstants.RIGHTEYE_IMG, 43, 48, 127, 54,
 				true, true, true);
 		ImageView leftImageView = getImageView("leftEye", RegistrationConstants.LEFTEYE_IMG, 43, 48, 35, 54, true,
 				true, true);
