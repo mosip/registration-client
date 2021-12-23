@@ -110,7 +110,7 @@ public class RegistrationMain {
                                         fileName, ClientApplication.getApplicationContext());
                                 logger.info("RID RESULTS-" + rid1.result + "\t" + rid1.ridDateTime + "\t" + rid1.rid);
                                 ExtentReportUtil.reports.flush();
-
+                                break;
                             case "InitialLaunch":
                                 Boolean flag = false;
                                 flag = loginNewRegLogout.initialRegclientSet(robot, operatorId, operatorPwd,fileName,
