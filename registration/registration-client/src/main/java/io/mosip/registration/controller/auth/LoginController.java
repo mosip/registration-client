@@ -467,7 +467,7 @@ public class LoginController extends BaseController implements Initializable {
 
 		try {
 			if (SessionContext.create(userDTO, RegistrationConstants.PWORD, isInitialSetUp, isUserNewToMachine,	null)) {
-				executePreLaunchTask(credentialsPane, passwordProgressIndicator);
+				executePreLaunchTask(credentialsPane, passwordProgressIndicator, userDTO);
 				return;
 			}
 
@@ -482,7 +482,6 @@ public class LoginController extends BaseController implements Initializable {
 	}
 
 	private void validateUserCredentialsInLocal(UserDTO userDTO) {
-		boolean pwdValidationStatus = false;
 		if (password.getText().isEmpty()) {
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PWORD_FIELD_EMPTY));
 			return;
@@ -500,26 +499,25 @@ public class LoginController extends BaseController implements Initializable {
 		try {
 			if (SessionContext.create(userDTO, RegistrationConstants.PWORD, baseService.isInitialSync(), isUserNewToMachine,
 					authenticationValidatorDTO)) {
-				pwdValidationStatus = validateInvalidLogin(userDTO, "");
+				//In this case, only update of last login method and last login time is applicable
+				validateInvalidLogin(userDTO, "");
 
 				if(authTokenUtilService.hasAnyValidToken() && !ClientApplication.isSyncCompleted()) {
 					LOGGER.info("As the sync was not handled in pre-loader, performing the sync now with valid token");
-					executePreLaunchTask(credentialsPane, passwordProgressIndicator);
+					executePreLaunchTask(credentialsPane, passwordProgressIndicator, userDTO);
+				} else {
+					credentialsPane.setVisible(false);
+					loadNextScreen(userDTO, RegistrationConstants.PWORD);
 				}
 			} else {
-				pwdValidationStatus = validateInvalidLogin(userDTO, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHENTICATION_FAILURE));
+				//In this case, as the session creation has failed, validation of login attempts and update of login failures count is handled
+				validateInvalidLogin(userDTO, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHENTICATION_FAILURE));
 			}
 		} catch (RegBaseCheckedException | IOException exception) {
 			LOGGER.error("", exception);
 			generateAlert(RegistrationConstants.ALERT_INFORMATION,
 							RegistrationUIConstants.getMessageLanguageSpecific(exception.getMessage().substring(0, 3)
 							+ RegistrationConstants.UNDER_SCORE + RegistrationConstants.MESSAGE.toUpperCase()));
-		}
-
-		if (pwdValidationStatus) {
-			LOGGER.info("Loading next login screen");
-			credentialsPane.setVisible(false);
-			loadNextScreen(userDTO, RegistrationConstants.PWORD);
 		}
 	}
 
@@ -890,7 +888,7 @@ public class LoginController extends BaseController implements Initializable {
 		}
 	}
 
-	public void executePreLaunchTask(Pane pane, ProgressIndicator progressIndicator) {
+	public void executePreLaunchTask(Pane pane, ProgressIndicator progressIndicator, UserDTO userDTO) {
 		boolean isInitialSetUp = baseService.isInitialSync();
 		progressIndicator.setVisible(true);
 		pane.setDisable(true);
@@ -948,17 +946,18 @@ public class LoginController extends BaseController implements Initializable {
 						loadInitialScreen(ClientApplication.getPrimaryStage());
 						return;
 					}
-				} else if (taskService.getValue().contains(RegistrationConstants.SUCCESS) && isInitialSetUp) {
-
-					// update initial set up flag
-
-					globalParamService.update(RegistrationConstants.INITIAL_SETUP, RegistrationConstants.DISABLE);
+				} else if (taskService.getValue().contains(RegistrationConstants.RESTART)) {
 					restartApplication();
-
-				}
-
-				if (taskService.getValue().contains(RegistrationConstants.RESTART)) {
-					restartApplication();
+				} else if (taskService.getValue().contains(RegistrationConstants.SUCCESS)) {
+					if (isInitialSetUp) {
+						// update initial set up flag
+						globalParamService.update(RegistrationConstants.INITIAL_SETUP, RegistrationConstants.DISABLE);
+						restartApplication();
+					} else {
+						//As the sync is successful, navigating the user to the next screen						
+						pane.setVisible(false);
+						loadNextScreen(userDTO, RegistrationConstants.PWORD);
+					}					
 				}
 				pane.setDisable(false);
 				progressIndicator.setVisible(false);
