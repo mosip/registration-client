@@ -38,6 +38,7 @@ import io.mosip.kernel.core.util.JsonUtils;
 import io.mosip.kernel.core.util.exception.JsonMappingException;
 import io.mosip.kernel.core.util.exception.JsonParseException;
 import io.mosip.kernel.core.util.exception.JsonProcessingException;
+import io.mosip.kernel.keymanagerservice.exception.KeymanagerServiceException;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
@@ -167,7 +168,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 			syncRIDToServerWithRetryWrapper(triggerPoint, packetIDs);
 			setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, null);
 
-		} catch (ConnectionException | RegBaseCheckedException | JsonProcessingException exception) {
+		} catch (ConnectionException | RegBaseCheckedException | JsonProcessingException | KeymanagerServiceException exception) {
 			LOGGER.error("Exception in RID sync", exception);
 			setErrorResponse(responseDTO, exception.getMessage(), null);
 		}
@@ -180,7 +181,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 	}
 
 	private void syncRIDToServerWithRetryWrapper(String triggerPoint, List<String> packetIDs)
-			throws RegBaseCheckedException, JsonProcessingException, ConnectionException {
+			throws KeymanagerServiceException, RegBaseCheckedException, JsonProcessingException, ConnectionException {
 		RetryCallback<Boolean, ConnectionException> retryCallback = new RetryCallback<Boolean, ConnectionException>() {
 			@SneakyThrows
 			@Override
@@ -195,7 +196,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 
 	@VisibleForTesting
 	private synchronized void syncRIDToServer(String triggerPoint, List<String> packetIDs)
-			throws RegBaseCheckedException, JsonProcessingException, ConnectionException {
+			throws KeymanagerServiceException, RegBaseCheckedException, JsonProcessingException, ConnectionException {
 		//Precondition check, proceed only if met, otherwise throws exception
 		proceedWithPacketSync();
 
@@ -222,7 +223,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 	}
 
 
-	private void syncRID(List<SyncRegistrationDTO> syncDtoList, String triggerPoint, boolean packetIdExists) throws RegBaseCheckedException, ConnectionException, JsonProcessingException {
+	private void syncRID(List<SyncRegistrationDTO> syncDtoList, String triggerPoint, boolean packetIdExists) throws KeymanagerServiceException, RegBaseCheckedException, ConnectionException, JsonProcessingException {
 		if (!syncDtoList.isEmpty()) {
 			RegistrationPacketSyncDTO registrationPacketSyncDTO = new RegistrationPacketSyncDTO();
 			registrationPacketSyncDTO

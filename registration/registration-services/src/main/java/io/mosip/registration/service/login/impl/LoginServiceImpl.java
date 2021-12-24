@@ -515,7 +515,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 
 			//excluding the case where center is inactive, in which case centerId is null
 			//We will need user to login when center is inactive to finish pending tasks
-			if(centerId == null || userDTO.getRegCenterId() == null || !userDTO.getRegCenterId().equals(centerId)) {
+			if(centerId != null && !centerId.equals(userDTO.getRegCenterId())) {
 				setErrorResponse(responseDTO, RegistrationConstants.USER_MACHINE_VALIDATION_MSG, null);
 				return responseDTO;
 			}
