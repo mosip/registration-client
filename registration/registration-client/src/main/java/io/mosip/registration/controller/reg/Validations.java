@@ -137,7 +137,7 @@ public class Validations extends BaseController {
 	}
 
 	public List<String> getBlockListedWordsList(TextField textField) {
-		return getBlockListedWords().stream().filter(bWord -> textField.getText().contains(bWord)).collect(Collectors.toList());
+		return getBlockListedWords().stream().filter(bWord -> textField.getText().toLowerCase().contains(bWord.toLowerCase())).collect(Collectors.toList());
 	}
 
 	private ResourceBundle getMessagesBundle(String langCode) {
@@ -339,15 +339,15 @@ public class Validations extends BaseController {
 		if (node.getText()!=null && blockListedWords != null && !id.contains(RegistrationConstants.ON_TYPE)) {
 			if (getRegistrationDTOFromSession().BLOCKLISTED_CHECK.containsKey(fieldId)
 					&& getRegistrationDTOFromSession().BLOCKLISTED_CHECK.get(fieldId).getWords().stream()
-							.anyMatch(word -> node.getText().contains(word))
+							.anyMatch(word -> node.getText().toLowerCase().contains(word.toLowerCase()))
 					&& Stream.of(node.getText().split(" ")).collect(Collectors.toList()).stream()
-							.filter(word -> blockListedWords.contains(word)
+							.filter(word -> blockListedWords.stream().anyMatch(word :: equalsIgnoreCase)
 									&& !getRegistrationDTOFromSession().BLOCKLISTED_CHECK.get(fieldId).getWords()
-											.contains(word))
+											.stream().anyMatch(word :: equalsIgnoreCase))
 							.findAny().isEmpty()) {
 				return true;
 			}
-			List<String> bwords = blockListedWords.stream().filter(word -> node.getText().contains(word)).collect(Collectors.toList());
+			List<String> bwords = blockListedWords.stream().filter(word -> node.getText().toLowerCase().contains(word.toLowerCase())).collect(Collectors.toList());
 			if (!bwords.isEmpty() && bwords.size() < 2) {
 				isInputValid = false;
 				generateInvalidValueAlert(parentPane, id, MessageFormat.format(messageBundle.getString("BLOCKLISTED_ERROR"), bwords.get(0)),
