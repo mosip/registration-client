@@ -6,13 +6,20 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.mapper.CustomObjectMapper.MAPPER_FACADE;
 
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import io.micrometer.core.annotation.Counted;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -37,7 +44,7 @@ import io.mosip.registration.dto.LoginUserDTO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.UserDTO;
-import io.mosip.registration.dto.UserMachineMappingDTO;
+import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.UserDetail;
 import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -510,7 +517,6 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 				return responseDTO;
 			}
 
-			String stationId = getStationId();
 			String centerId = getCenterId();
 
 			//excluding the case where center is inactive, in which case centerId is null
@@ -543,8 +549,10 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 			if (!Role.hasAnyRegistrationRoles(roleList)) {
 				setErrorResponse(responseDTO, RegistrationConstants.ROLES_EMPTY_ERROR, null);
 			} else {
-				ApplicationContext.map().put(RegistrationConstants.USER_STATION_ID, stationId);
-				ApplicationContext.map().put(RegistrationConstants.USER_CENTER_ID, centerId);
+				MachineMaster machineMaster = getMachine();
+				
+				ApplicationContext.map().put(RegistrationConstants.USER_STATION_ID, machineMaster.getId());
+				ApplicationContext.map().put(RegistrationConstants.USER_CENTER_ID, machineMaster.getRegCenterId());
 
 				Map<String, Object> params = new LinkedHashMap<>();
 				params.put(RegistrationConstants.ROLES_LIST, roleList);
