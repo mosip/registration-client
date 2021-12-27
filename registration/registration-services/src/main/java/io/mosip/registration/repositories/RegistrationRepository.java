@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -165,4 +166,17 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	List<Registration> findByPacketIdIn(List<String> packetIds);
 
 	List<Registration> findByClientStatusCommentsOrderByCrDtime(String statusComment);
+	
+	Slice<Registration> findByClientStatusCodeInAndUpdDtimesLessThanEqual(List<String> statusCodes, Timestamp updatedDtimes,
+            Pageable pageable);
+	
+	Slice<Registration> findByPacketIdIn(List<String> packetIds, Pageable pageable);
+	
+	Registration findTopByOrderByUpdDtimesDesc();
+	
+	Slice<Registration> findByClientStatusCodeOrClientStatusCommentsAndUpdDtimesLessThanEqual(String statusCode, String statusComments, Timestamp updatedDtimes,
+            Pageable pageable);
+	
+	Slice<Registration> findByClientStatusCodeOrServerStatusCodeOrFileUploadStatusAndUpdDtimesLessThanEqual(String clientstatusCode, String serverStatusCode, String fileUploadStatus, Timestamp updatedDtimes,
+            Pageable pageable);
 }

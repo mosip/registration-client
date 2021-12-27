@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,10 +15,13 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
@@ -56,6 +60,7 @@ import io.mosip.registration.entity.Registration;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
+import io.mosip.registration.repositories.RegistrationRepository;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.sync.PacketSynchService;
 import lombok.NonNull;
@@ -87,7 +92,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 	private IPacketCryptoService offlinePacketCryptoServiceImpl;
 
 	@Autowired
-	private RegistrationDAO registrationDAO;
+	private RegistrationRepository registrationRepository;
 
 	@Value("${mosip.registration.rid_sync_batch_size:10}")
 	private int batchCount;
@@ -196,31 +201,38 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 
 	@VisibleForTesting
 	private synchronized void syncRIDToServer(String triggerPoint, List<String> packetIDs)
-			throws KeymanagerServiceException, RegBaseCheckedException, JsonProcessingException, ConnectionException {
-		//Precondition check, proceed only if met, otherwise throws exception
-		proceedWithPacketSync();
+		      throws KeymanagerServiceException, RegBaseCheckedException, JsonProcessingException, ConnectionException {
+		   //Precondition check, proceed only if met, otherwise throws exception
+		   proceedWithPacketSync();
 
-		List<Registration> registrations = (packetIDs != null) ? registrationDAO.get(packetIDs) :
-				registrationDAO.getPacketsToBeSynched(RegistrationConstants.CLIENT_STATUS_TO_BE_SYNCED);
+		   Timestamp currentTimeLimit = null;
+		   if (packetIDs == null) {
+		      Registration registration = registrationRepository.findTopByOrderByUpdDtimesDesc();
+		      currentTimeLimit = registration.getUpdDtimes();
+		   }
 
-		List<List<Registration>> partitionedList = ListUtils.partition(registrations, batchCount);
-		
-		for (List<Registration> partition : partitionedList) {
-			List<SyncRegistrationDTO> syncDtoList = getPacketSyncDtoList(partition);
-			
-			//This filtering is done for backward compatibility. For older version packets, registrationId will be copied to packetId column
-			List<SyncRegistrationDTO> syncDtoWithPacketId = syncDtoList.stream().filter(dto -> !dto.getRegistrationId().equals(dto.getPacketId())).collect(Collectors.toList());
-			List<SyncRegistrationDTO> syncDtoWithoutPacketId = syncDtoList.stream().filter(dto -> dto.getRegistrationId().equals(dto.getPacketId())).collect(Collectors.toList());
-			
-			if(syncDtoList == null || syncDtoList.isEmpty())
-				break;
-			
-			syncRID(syncDtoWithoutPacketId, triggerPoint, false);
-			syncRID(syncDtoWithPacketId, triggerPoint, true);
+		   Pageable pageable = PageRequest.of(0, batchCount, Sort.by(Sort.Direction.ASC, "updDtimes"));
+		   Slice<Registration> registrationSlice = null;
+
+		   do {
+		      registrationSlice = (packetIDs != null) ? registrationRepository.findByPacketIdIn(packetIDs, pageable) :
+		            registrationRepository.findByClientStatusCodeInAndUpdDtimesLessThanEqual(RegistrationConstants.CLIENT_STATUS_TO_BE_SYNCED,
+		                  currentTimeLimit, pageable);
+
+		      List<SyncRegistrationDTO> syncDtoList = getPacketSyncDtoList(registrationSlice.getContent());
+		      //This filtering is done for backward compatibility. For older version packets, registrationId will be copied to packetId column
+		      List<SyncRegistrationDTO> syncDtoWithPacketId = syncDtoList.stream().filter(dto -> !dto.getRegistrationId().equals(dto.getPacketId())).collect(Collectors.toList());
+		      List<SyncRegistrationDTO> syncDtoWithoutPacketId = syncDtoList.stream().filter(dto -> dto.getRegistrationId().equals(dto.getPacketId())).collect(Collectors.toList());
+
+		      if(syncDtoList != null && !syncDtoList.isEmpty()) {
+		         syncRID(syncDtoWithoutPacketId, triggerPoint, false);
+		         syncRID(syncDtoWithPacketId, triggerPoint, true);
+		      }
+
+		   } while(registrationSlice != null && registrationSlice.hasNext());
+		   
+		   LOGGER.debug("Sync the packets to the server ending");
 		}
-		
-		LOGGER.debug("Sync the packets to the server ending");
-	}
 
 
 	private void syncRID(List<SyncRegistrationDTO> syncDtoList, String triggerPoint, boolean packetIdExists) throws KeymanagerServiceException, RegBaseCheckedException, ConnectionException, JsonProcessingException {
