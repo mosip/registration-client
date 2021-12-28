@@ -1,6 +1,7 @@
 package io.mosip.registration.service.packet.impl;
 
 import java.io.File;
+import java.sql.Timestamp;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -10,6 +11,10 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
@@ -39,6 +44,7 @@ import io.mosip.registration.entity.Registration;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
+import io.mosip.registration.repositories.RegistrationRepository;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.packet.PacketUploadService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
@@ -72,6 +78,9 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 
 	@Value("${mosip.registration.packet_upload_batch_size:10}")
 	private int batchCount;
+	
+	@Autowired
+	private RegistrationRepository registrationRepository;
 
 	private RetryTemplate retryTemplate;
 
@@ -136,24 +145,35 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 	public ResponseDTO uploadSyncedPackets() {
 		LOGGER.info("Started uploading specific number of packets with count {}", batchCount);
 		ResponseDTO responseDTO = new ResponseDTO();
-		List<Registration> syncedPackets = registrationDAO.getRegistrationByStatus(RegistrationConstants.PACKET_UPLOAD_STATUS);
-		if (syncedPackets != null && !syncedPackets.isEmpty()) {
-			for(Registration registration : syncedPackets) {
-				if (RegistrationConstants.PACKET_STATUS_CODE_REREGISTER.equalsIgnoreCase(registration.getServerStatusCode()))
-					continue;
+		
+		Registration reg = registrationRepository.findTopByOrderByUpdDtimesDesc();
+		Timestamp currentTimeLimit = reg.getUpdDtimes();
 
-				Registration updatedRegDetail = uploadSyncedPacket(preparePacketStatusDto(registration));
-				if(updatedRegDetail.getFileUploadStatus().equals(RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode())) {
-					setErrorResponse(responseDTO, RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.name(), null);
-				} else {
-					setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, null);
+		Pageable pageable = PageRequest.of(0, batchCount, Sort.by(Sort.Direction.ASC, "updDtimes"));
+		Slice<Registration> registrationSlice = null;
+
+		do {
+		    registrationSlice = registrationRepository.findByClientStatusCodeOrServerStatusCodeOrFileUploadStatusAndUpdDtimesLessThanEqual(
+					RegistrationConstants.SYNCED_STATUS, RegistrationConstants.SERVER_STATUS_RESEND, "E", currentTimeLimit, pageable);
+		    		    
+		    if (!registrationSlice.getContent().isEmpty()) {
+				for(Registration registration : registrationSlice.getContent()) {
+					if (RegistrationConstants.PACKET_STATUS_CODE_REREGISTER.equalsIgnoreCase(registration.getServerStatusCode()))
+						continue;
+
+					Registration updatedRegDetail = uploadSyncedPacket(preparePacketStatusDto(registration));
+					if(updatedRegDetail.getFileUploadStatus().equals(RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.getCode())) {
+						setErrorResponse(responseDTO, RegistrationClientStatusCode.UPLOAD_ERROR_STATUS.name(), null);
+					} else {
+						setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, null);
+					}
 				}
+			} else {
+				SuccessResponseDTO successResponseDTO =new SuccessResponseDTO();
+				successResponseDTO.setMessage(RegistrationConstants.SUCCESS);
+				responseDTO.setSuccessResponseDTO(successResponseDTO);
 			}
-		} else {
-			SuccessResponseDTO successResponseDTO =new SuccessResponseDTO();
-			successResponseDTO.setMessage(RegistrationConstants.SUCCESS);
-			responseDTO.setSuccessResponseDTO(successResponseDTO);
-		}
+		} while (registrationSlice != null && registrationSlice.hasNext());
 		return responseDTO;
 	}
 
