@@ -24,6 +24,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -438,6 +439,7 @@ public class ClientSettingSyncHelper {
 	 * @param syncDataResponseDto
 	 * @throws SyncFailedException
 	 */
+	@CacheEvict(cacheNames = "blocklisted-words")
 	@Async
 	private CompletableFuture handleMisellaneousSync1(SyncDataResponseDto syncDataResponseDto) throws SyncFailedException  {
 		try {
