@@ -182,7 +182,7 @@ public class DocumentScannerSaneServiceImpl extends DocumentScannerService {
 		} catch (IOException | SaneException | NullPointerException exception) {
 			LOGGER.error(LOG_REG_DOC_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 					"Exception in getScannerDevices of " + getClass().getName() + " - "
-							+ ExceptionUtils.getStackTrace(exception));
+							+ exception.getMessage());
 		}
 		return saneDevices;
 	}

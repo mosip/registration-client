@@ -18,9 +18,11 @@ import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
+import com.github.sarxos.webcam.Webcam;
 import io.mosip.biometrics.util.ConvertRequestDto;
 import io.mosip.biometrics.util.face.FaceDecoder;
 import io.mosip.biometrics.util.iris.IrisDecoder;
+import io.mosip.registration.device.webcam.impl.WebcamSarxosServiceImpl;
 import org.mvel2.MVEL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -194,17 +196,12 @@ public class BiometricsController extends BaseController /* implements Initializ
 	@Autowired
 	private RegistrationController registrationController;
 
-	/** The face capture controller. */
-	// @Autowired
-	// private FaceCaptureController faceCaptureController;
-
-	/** The finger print capture service impl. */
-	// @Autowired
-	// private AuthenticationService authenticationService;
-
 	/** The iris facade. */
 	@Autowired
 	private BioService bioService;
+
+	@Autowired
+	private ScanPopUpViewController photoScanPopViewController;
 
 	private String bioValue;
 
@@ -216,9 +213,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	private static Map<String, Integer> ATTEMPTS = new HashMap<String, Integer>();
 
-	/** The face capture controller. */
-	// @Autowired
-	// private IrisCaptureController irisCaptureController;
 
 	public ImageView getBiometricImage() {
 		return biometricImage;
@@ -303,7 +297,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 	private GridPane parentProgressPane;
 
 	@Autowired
-	private DocumentScanController documentScanController;
+	private WebcamSarxosServiceImpl webcamSarxosServiceImpl;
 
 	private Service<List<BiometricsDto>> rCaptureTaskService;
 
@@ -980,22 +974,31 @@ public class BiometricsController extends BaseController /* implements Initializ
 	public void scan(Stage popupStage) {
 		if (isExceptionPhoto(currentModality)) {
 			try {
-				byte[] byteArray = documentScanController.captureAndConvertBufferedImage();
-
-				saveProofOfExceptionDocument(byteArray);
+				Webcam webcam = photoScanPopViewController.getWebcam();
+				BufferedImage bufferedImage = webcamSarxosServiceImpl.captureImage(webcam);
+				saveProofOfExceptionDocument(getImageBytesFromBufferedImage(bufferedImage));
 				generateAlert(RegistrationConstants.ALERT_INFORMATION,
 						RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS);
-
-				scanPopUpViewController.getPopupStage().close();
+				// Enable Auto-Logout
+				SessionContext.setAutoLogout(true);
 
 			} catch (RuntimeException | IOException exception) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR);
-
 				LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 						"Error while capturing exception photo : " + ExceptionUtils.getStackTrace(exception));
 
+			} finally {
+				photoScanPopViewController.stopStreaming();
+				photoScanPopViewController.setDefaultImageGridPaneVisibility();
+				photoScanPopViewController.getPopupStage().close();
 			}
+		}
+	}
 
+	private byte[] getImageBytesFromBufferedImage(BufferedImage bufferedImage) throws IOException {
+		try(ByteArrayOutputStream imagebyteArray = new ByteArrayOutputStream()) {
+			ImageIO.write(bufferedImage, RegistrationConstants.SCANNER_IMG_TYPE, imagebyteArray);
+			return imagebyteArray.toByteArray();
 		}
 	}
 
@@ -1078,7 +1081,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 					if (isExceptionPhoto(currentModality) && (mdmBioDevice == null || mdmBioDevice.getSpecVersion()
 							.equalsIgnoreCase(RegistrationConstants.SPEC_VERSION_092))) {
-
 						streamLocalCamera();
 						return;
 
@@ -3076,7 +3078,43 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 		LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Capturing with local camera");
 
-		documentScanController.startStream(this);
+		streamExceptionPhoto();
+	}
+
+	public void streamExceptionPhoto() {
+		LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "Searching for webcams");
+		List<Webcam> webcams = webcamSarxosServiceImpl.getWebCams();
+
+		LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "Found webcams: " + webcams);
+
+		if (webcams != null && !webcams.isEmpty()) {
+			LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+					RegistrationConstants.APPLICATION_ID, "Initializing scan window to capture Exception photo");
+
+			photoScanPopViewController.setDocumentScan(false);
+			photoScanPopViewController.init(this, RegistrationUIConstants.SCAN_DOC_TITLE, webcams.get(0));
+
+			LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+					RegistrationConstants.APPLICATION_ID, "Checking webcam connectivity");
+
+			if (!webcamSarxosServiceImpl.isWebcamConnected(webcams.get(0))) {
+				LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+						RegistrationConstants.APPLICATION_ID, "Opening webcam");
+				photoScanPopViewController.startStream(webcams.get(0));
+				// Enable Auto-Logout
+				SessionContext.setAutoLogout(false);
+				LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+						RegistrationConstants.APPLICATION_ID, "Webcam stream started");
+				return;
+			}
+		}
+
+		generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.NO_DEVICE_FOUND);
+		photoScanPopViewController.setDefaultImageGridPaneVisibility();
+		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "No webcam found");
 	}
 
 }

@@ -184,7 +184,7 @@ public class DocumentScanController extends BaseController {
 
 	private String cropDocumentKey;
 
-	private Webcam webcam;
+	/*private Webcam webcam;
 
 	public Webcam getWebcam() {
 		return webcam;
@@ -192,7 +192,7 @@ public class DocumentScanController extends BaseController {
 
 	public void setWebcam(Webcam webcam) {
 		this.webcam = webcam;
-	}
+	}*/
 
 	final DoubleProperty zoomProperty = new SimpleDoubleProperty(200);
 
@@ -663,27 +663,18 @@ public class DocumentScanController extends BaseController {
 			}
 
 		}
-		String poeDocValue = getValueFromApplicationContext(RegistrationConstants.POE_DOCUMENT_VALUE);
-		if (poeDocValue != null && selectedComboBox.getValue().getCode().matches(poeDocValue)) {
 
-			startStream(this);
-		} else {
-			scanPopUpViewController.setDocumentScan(true);
-
-			scanPopUpViewController.init(this, RegistrationUIConstants.SCAN_DOC_TITLE);
-
-			if (webcam != null) {
-				documentScanFacade.setStubScannerFactory();
-				startStream(webcam);
-			}
-
+		scanPopUpViewController.setDocumentScan(true);
+		scanPopUpViewController.init(this, RegistrationUIConstants.SCAN_DOC_TITLE, webcam);
+		if (webcam != null) {
+			documentScanFacade.setStubScannerFactory();
+			//scanPopUpViewController.startStream(webcam);
 		}
-
 		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Scan window displayed to scan and upload documents");
 	}
 
-	public void startStream(BaseController baseController) {
+	/*public void startStream(BaseController baseController) {
 		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Searching for webcams");
 
@@ -696,17 +687,17 @@ public class DocumentScanController extends BaseController {
 			LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 					RegistrationConstants.APPLICATION_ID, "Initializing scan window to capture Exception photo");
 
-			scanPopUpViewController.init(baseController, RegistrationUIConstants.SCAN_DOC_TITLE);
-			webcam = webcams.get(0);
+			scanPopUpViewController.init(baseController, RegistrationUIConstants.SCAN_DOC_TITLE, webcams.get(0));
+			//webcam = webcams.get(0);
 
 			LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 					RegistrationConstants.APPLICATION_ID, "Checking webcam connectivity");
 
-			if (!webcamSarxosServiceImpl.isWebcamConnected(webcam)) {
+			if (!webcamSarxosServiceImpl.isWebcamConnected(webcams.get(0))) {
 				LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 						RegistrationConstants.APPLICATION_ID, "Opening webcam");
 
-				startStream(webcam);
+				scanPopUpViewController.startStream(webcams.get(0));
 				// Enable Auto-Logout
 				SessionContext.setAutoLogout(false);
 				LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
@@ -723,35 +714,7 @@ public class DocumentScanController extends BaseController {
 			scanPopUpViewController.setDefaultImageGridPaneVisibility();
 			return;
 		}
-	}
-
-	private void startStream(Webcam webcam) {
-		webcamSarxosServiceImpl.openWebCam(webcam, webcamSarxosServiceImpl.getWidth(),
-				webcamSarxosServiceImpl.getHeight());
-		scanPopUpViewController.setWebCamStream(true);
-		Thread streamer_thread = new Thread(new Runnable() {
-
-			public void run() {
-				while (scanPopUpViewController.isWebCamStream()) {
-
-					try {
-						if (!scanPopUpViewController.isStreamPaused()) {
-							scanPopUpViewController.getScanImage().setImage(
-									SwingFXUtils.toFXImage(webcamSarxosServiceImpl.captureImage(webcam), null));
-						}
-					} catch (Throwable t) {
-						LOGGER.error(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, APPLICATION_NAME,
-								RegistrationConstants.APPLICATION_ID, ExceptionUtils.getStackTrace(t));
-					} finally {
-						scanPopUpViewController.stopStreaming();
-					}
-				}
-			}
-
-		});
-
-		streamer_thread.start();
-	}
+	}*/
 
 	/**
 	 * This method will allow to scan and upload documents
@@ -806,16 +769,6 @@ public class DocumentScanController extends BaseController {
 		scanPopUpViewController.getScanningMsg().setVisible(false);
 	}
 
-	public byte[] captureAndConvertBufferedImage() throws IOException {
-
-		BufferedImage bufferedImage = webcamSarxosServiceImpl.captureImage(webcam);
-		byte[] byteArray = getImageBytesFromBufferedImage(bufferedImage);
-		webcamSarxosServiceImpl.close(webcam);
-		scanPopUpViewController.setDefaultImageGridPaneVisibility();
-		// Enable Auto-Logout
-		SessionContext.setAutoLogout(true);
-		return byteArray;
-	}
 
 	/**
 	 * This method is to scan from the scanner
@@ -845,26 +798,10 @@ public class DocumentScanController extends BaseController {
 
 		scanPopUpViewController.getScanningMsg().setVisible(true);
 
-		BufferedImage bufferedImage;
-
 		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "checking for POE value");
 
-		if (selectedComboBox.getValue().getCode()
-				.equalsIgnoreCase(getValueFromApplicationContext(RegistrationConstants.POE_DOCUMENT_VALUE))) {
-			LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-					RegistrationConstants.APPLICATION_ID, "capturing POE document using native library webcam");
-
-			bufferedImage = webcamSarxosServiceImpl.captureImage(webcam);
-
-			LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
-					RegistrationConstants.APPLICATION_ID, "closing web cam");
-
-			webcamSarxosServiceImpl.close(webcam);
-			scanPopUpViewController.setDefaultImageGridPaneVisibility();
-		} else {
-			bufferedImage = documentScanFacade.getScannedDocumentFromScanner(selectedScanDeviceName);
-		}
+		BufferedImage bufferedImage = documentScanFacade.getScannedDocumentFromScanner(selectedScanDeviceName);
 
 		if (bufferedImage == null) {
 			LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
@@ -1459,25 +1396,6 @@ public class DocumentScanController extends BaseController {
 				.filter(map -> map.getValue().getType().equalsIgnoreCase("documentType")).map(m -> m.getValue())
 				.collect(Collectors.toList());
 
-	}
-
-	/**
-	 * This method converts the BufferedImage to byte[]
-	 *
-	 * @param bufferedImage - holds the scanned image from the scanner
-	 * @return byte[] - scanned document Content
-	 * @throws IOException - holds the IOExcepion
-	 */
-	private byte[] getImageBytesFromBufferedImage(BufferedImage bufferedImage) throws IOException {
-		byte[] imageInByte;
-
-		ByteArrayOutputStream imagebyteArray = new ByteArrayOutputStream();
-		ImageIO.write(bufferedImage, RegistrationConstants.SCANNER_IMG_TYPE, imagebyteArray);
-		imagebyteArray.flush();
-		imageInByte = imagebyteArray.toByteArray();
-		imagebyteArray.close();
-
-		return imageInByte;
 	}
 
 	public BufferedImage getScannedImage(int docPageNumber) {
