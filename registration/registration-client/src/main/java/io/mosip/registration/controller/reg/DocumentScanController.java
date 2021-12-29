@@ -742,6 +742,7 @@ public class DocumentScanController extends BaseController {
 					} catch (Throwable t) {
 						LOGGER.error(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, APPLICATION_NAME,
 								RegistrationConstants.APPLICATION_ID, ExceptionUtils.getStackTrace(t));
+					} finally {
 						scanPopUpViewController.stopStreaming();
 					}
 				}
