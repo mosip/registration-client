@@ -122,7 +122,7 @@ public class WebcamSarxosServiceImpl extends MosipWebcamServiceImpl {
 
 	@Override
 	public BufferedImage captureImage() {
-		LOGGER.info("REGISTRATION - WEBCAMDEVICE", APPLICATION_NAME, APPLICATION_ID, "capturing the image from webcam");
+		LOGGER.debug("REGISTRATION - WEBCAMDEVICE", APPLICATION_NAME, APPLICATION_ID, "capturing the image from webcam");
 		return webcam != null ? webcam.getImage() : null;
 	}
 
@@ -144,6 +144,7 @@ public class WebcamSarxosServiceImpl extends MosipWebcamServiceImpl {
 		if (webcam != null && webcam.isOpen()) {
 			jPanelWindow = null;
 			webcam.close();
+			webcam = null;
 		}
 	}
 
