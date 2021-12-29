@@ -732,7 +732,6 @@ public class DocumentScanController extends BaseController {
 		Thread streamer_thread = new Thread(new Runnable() {
 
 			public void run() {
-
 				while (scanPopUpViewController.isWebCamStream()) {
 
 					try {
@@ -740,12 +739,10 @@ public class DocumentScanController extends BaseController {
 							scanPopUpViewController.getScanImage().setImage(
 									SwingFXUtils.toFXImage(webcamSarxosServiceImpl.captureImage(webcam), null));
 						}
-					} catch (NullPointerException nullPointerException) {
+					} catch (Throwable t) {
 						LOGGER.error(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, APPLICATION_NAME,
-								RegistrationConstants.APPLICATION_ID,
-								ExceptionUtils.getStackTrace(nullPointerException));
-
-						scanPopUpViewController.setWebCamStream(false);
+								RegistrationConstants.APPLICATION_ID, ExceptionUtils.getStackTrace(t));
+						scanPopUpViewController.stopStreaming();
 					}
 				}
 			}
