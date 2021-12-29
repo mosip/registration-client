@@ -439,7 +439,6 @@ public class ClientSettingSyncHelper {
 	 * @param syncDataResponseDto
 	 * @throws SyncFailedException
 	 */
-	@CacheEvict(cacheNames = "blocklisted-words")
 	@Async
 	private CompletableFuture handleMisellaneousSync1(SyncDataResponseDto syncDataResponseDto) throws SyncFailedException  {
 		try {
