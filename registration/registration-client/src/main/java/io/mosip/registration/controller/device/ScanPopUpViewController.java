@@ -206,8 +206,7 @@ public class ScanPopUpViewController extends BaseController {
 			scanImage.setPreserveRatio(true);
 			//scanImage.fitWidthProperty().bind(imageViewGridPane.widthProperty());
 			//scanImage.fitHeightProperty().bind(imageViewGridPane.heightProperty());
-			
-			setDefaultImageGridPaneVisibility();
+
 			popupStage.setResizable(false);
 			popupTitle.setText(title);
 
@@ -271,6 +270,7 @@ public class ScanPopUpViewController extends BaseController {
 
 			rectangleSelection = null;
 			clearSelection();
+			stopStreaming();
 
 			LOGGER.info(LOG_REG_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 					"Opening pop-up screen to scan for user registration");
@@ -342,7 +342,7 @@ public class ScanPopUpViewController extends BaseController {
 
 		LOGGER.info(LOG_REG_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"Calling exit window to close the popup");
-
+		stopStreaming();
 		biometricsController.stopRCaptureService();
 		biometricsController.stopDeviceSearchService();
 		streamer.stop();
@@ -373,10 +373,11 @@ public class ScanPopUpViewController extends BaseController {
 
 	@FXML
 	private void save() {
-		webcamSarxosServiceImpl.close();
-		setDefaultImageGridPaneVisibility();
+		stopStreaming();
+
 		// Enable Auto-Logout
 		SessionContext.setAutoLogout(true);
+
 		if (baseController instanceof DocumentScanController) {
 			DocumentScanController documentScanController = (DocumentScanController) baseController;
 			try {
@@ -521,13 +522,10 @@ public class ScanPopUpViewController extends BaseController {
 
 	@FXML
 	public void crop() {
-
 		LOGGER.debug("REGISTRATION - DOCUMENT_SCAN_CONTROLLER", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 				"crop has been selected");
-		isStreamPaused = true;
+		stopStreaming();
 		scanImage.setVisible(true);
-		//RubberBandSelection rubberBandSelection = new RubberBandSelection(imageGroup);
-		//rubberBandSelection.setscanPopUpViewController(this);
 		rectangleSelection = new RectangleSelection(imageGroup);
 
 		LOGGER.debug("REGISTRATION - DOCUMENT_SCAN_CONTROLLER", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
@@ -561,14 +559,7 @@ public class ScanPopUpViewController extends BaseController {
 
 		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.CROP_DOC_SUCCESS);
 
-//		if (webcamSarxosServiceImpl.isWebcamConnected()) {
-//			scanImage.setVisible(false);
-//			webcamNode.setVisible(true);
-//		}
-
 		showPreview(true);
-
-//		cropStage.close();
 
 		LOGGER.debug("REGISTRATION - DOCUMENT_SCAN_CONTROLLER", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 				"Saving cropped image completed");
@@ -577,6 +568,7 @@ public class ScanPopUpViewController extends BaseController {
 
 	@FXML
 	public void cancel() {
+		stopStreaming();
 
 		int currentDocPageNumber = Integer.valueOf(docCurrentPageNumber.getText());
 		int pageNumberIndex = currentDocPageNumber - 1;
@@ -674,9 +666,8 @@ public class ScanPopUpViewController extends BaseController {
 
 	@FXML
 	public void stream() {
-
+		stopStreaming();
 		showPreview(false);
-		showStream(true);
 
 		cancelBtn.setDisable(true);
 		cropButton.setDisable(true);
@@ -686,7 +677,7 @@ public class ScanPopUpViewController extends BaseController {
 
 	@FXML
 	public void preview() {
-		isStreamPaused = true;
+		stopStreaming();
 		showPreview(true);
 
 		if(documentScanController.getScannedPages() != null && !documentScanController.getScannedPages().isEmpty()) {
@@ -705,9 +696,9 @@ public class ScanPopUpViewController extends BaseController {
 		cropButton.setDisable(false);
 	}
 
-	private void showStream(boolean isVisible) {
-
-		isStreamPaused = false;
-
+	public void stopStreaming() {
+		isStreamPaused = true;
+		setWebCamStream(false);
+		webcamSarxosServiceImpl.close();
 	}
 }

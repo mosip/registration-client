@@ -90,7 +90,7 @@ public class DocumentScannerServiceImpl extends DocumentScannerService {
 				scanDevice.setWIA(true);
 				scanDevices.add(scanDevice);
 			}
-		} catch (Exception ex) {
+		} catch (Throwable ex) {
 			LOGGER.error(LOG_REG_DOC_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(ex));
 		} finally {
