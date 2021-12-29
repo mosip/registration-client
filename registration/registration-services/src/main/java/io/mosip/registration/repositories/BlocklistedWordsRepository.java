@@ -18,7 +18,6 @@ public interface BlocklistedWordsRepository extends BaseRepository<BlocklistedWo
 	List<BlocklistedWords> findBlockListedWordsByIsActiveTrueAndLangCode(String langCode);
 	List<BlocklistedWords> findBlockListedWordsByIsActiveTrue();
 
-	@Cacheable(cacheNames = "blocklisted-words")
-	@Query("select word from BlocklistedWords where isActive = true")
+	@Query("select lower(word) from BlocklistedWords where isActive = true")
 	List<String> findAllActiveBlockListedWords();
 }

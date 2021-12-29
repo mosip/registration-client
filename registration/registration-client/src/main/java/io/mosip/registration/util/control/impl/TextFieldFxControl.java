@@ -5,10 +5,7 @@ package io.mosip.registration.util.control.impl;
 
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import io.mosip.registration.controller.*;
@@ -365,7 +362,7 @@ public class TextFieldFxControl extends FxControl {
 	@Override
 	public boolean isValid() {
 		boolean isValid = true;
-
+		removeNonExistentBlockListedWords();
 		for (String langCode : getRegistrationDTo().getSelectedLanguagesByApplicant()) {
 			TextField textField = (TextField) getField(uiFieldDTO.getId() + langCode);
 			if (textField == null)  {
@@ -397,22 +394,24 @@ public class TextFieldFxControl extends FxControl {
 				break; //not required to iterate further
 			}
 		}
-		
-		checkForBlocklistedWords();
-		
 		return isValid;
 	}
 
-	private void checkForBlocklistedWords() {
-		if (getRegistrationDTo().BLOCKLISTED_CHECK.containsKey(uiFieldDTO.getId()) && !getRegistrationDTo().BLOCKLISTED_CHECK.get(uiFieldDTO.getId()).getWords().isEmpty()) {
-			List<TextField> textFields = new ArrayList<>();
+	private void removeNonExistentBlockListedWords() {
+		if (getRegistrationDTo().BLOCKLISTED_CHECK.containsKey(uiFieldDTO.getId()) &&
+				!getRegistrationDTo().BLOCKLISTED_CHECK.get(uiFieldDTO.getId()).getWords().isEmpty()) {
+			StringBuilder content = new StringBuilder();
 			getRegistrationDTo().getSelectedLanguagesByApplicant().stream().forEach(langCode -> {
 				TextField textField = (TextField) getField(uiFieldDTO.getId() + langCode);
 				if (textField != null && textField.getText() != null) {
-					textFields.add(textField);
+					content.append(textField.getText()).append(RegistrationConstants.SPACE);
 				}
 			});
-			getRegistrationDTo().BLOCKLISTED_CHECK.get(uiFieldDTO.getId()).getWords().removeIf(word -> textFields.stream().filter(textField -> textField.getText().contains(word)).findAny().isEmpty());
+
+			String[] tokens = content.toString().split(RegistrationConstants.SPACE);
+			getRegistrationDTo().BLOCKLISTED_CHECK.get(uiFieldDTO.getId())
+					.getWords()
+					.removeIf(word -> Arrays.stream(tokens).noneMatch(t -> t.toLowerCase().contains(word)));
 		}
 	}
 

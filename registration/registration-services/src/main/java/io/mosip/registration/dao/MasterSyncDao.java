@@ -73,7 +73,7 @@ public interface MasterSyncDao {
 	 * 
 	 * @return the block listed words
 	 */
-	List<BlocklistedWords> getBlockListedWords();
+	List<String> getBlockListedWords();
 
 	/**
 	 * Gets the Document Categories.
