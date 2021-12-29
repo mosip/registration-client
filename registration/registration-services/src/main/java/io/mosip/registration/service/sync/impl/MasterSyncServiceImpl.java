@@ -252,18 +252,8 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	 * @throws RegBaseCheckedException
 	 */
 	@Override
-	public List<BlocklistedWordsDto> getAllBlockListedWords() throws RegBaseCheckedException {
-		List<BlocklistedWordsDto> blockWords = new ArrayList<>();
-		List<BlocklistedWords> blockListedWords = masterSyncDao.getBlockListedWords();
-
-		blockListedWords.forEach(blockList -> {
-			BlocklistedWordsDto words = new BlocklistedWordsDto();
-			words.setDescription(blockList.getDescription());
-			words.setLangCode(blockList.getLangCode());
-			words.setWord(blockList.getWord());
-			blockWords.add(words);
-		});
-		return blockWords;
+	public List<String> getAllBlockListedWords() {
+		return masterSyncDao.getBlockListedWords();
 	}
 
 
