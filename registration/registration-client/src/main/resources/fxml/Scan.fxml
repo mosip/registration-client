@@ -118,7 +118,7 @@
                      <children>
                         <GridPane alignment="CENTER_RIGHT" hgap="20.0" vgap="20.0" GridPane.rowIndex="2">
                            <children>
-                              <Button fx:id="streamBtn" graphicTextGap="10.0" mnemonicParsing="false" onAction="#stream" styleClass="scanButton" text="%stream">
+                              <!--<Button fx:id="streamBtn" graphicTextGap="10.0" mnemonicParsing="false" onAction="#stream" styleClass="scanButton" text="%stream">
                                  <graphic>
                                     <ImageView fx:id="streamImageView" fitHeight="14.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
                                        <image>
@@ -126,7 +126,7 @@
                                        </image>
                                     </ImageView>
                                  </graphic>
-                              </Button>
+                              </Button>-->
                               <Button fx:id="captureBtn" graphicTextGap="10.0" mnemonicParsing="false" onAction="#scan" styleClass="scanButton" text="%capture" GridPane.rowIndex="1">
                                  <graphic>
                                     <ImageView fx:id="captureImageView" fitHeight="24.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">

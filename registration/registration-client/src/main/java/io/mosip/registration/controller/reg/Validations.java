@@ -4,12 +4,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -97,17 +92,6 @@ public class Validations extends BaseController {
 		applicationMessageBundle = resourceBundle;
 	}
 
-	private List<String> getBlockListedWords() {
-		try {
-			return masterSync.getAllBlockListedWords().stream()
-					.map(BlocklistedWordsDto::getWord).collect(Collectors.toList());
-		} catch (RegBaseCheckedException regBaseCheckedException) {
-			LOGGER.error(RegistrationConstants.VALIDATION_LOGGER, APPLICATION_NAME,
-					RegistrationConstants.APPLICATION_ID,
-					regBaseCheckedException.getMessage() + ExceptionUtils.getStackTrace(regBaseCheckedException));
-		}
-		return null;
-	}
 
 	/**
 	 * Validate for the TextField.
@@ -129,15 +113,11 @@ public class Validations extends BaseController {
 		
 		ResourceBundle messageBundle = getMessagesBundle(langCode);
 		boolean showAlert = (noAlert.contains(node.getId()) && fieldId.contains(RegistrationConstants.ON_TYPE));
-		if (validateBlockListedWords(parentPane, node, node.getId(), fieldId, getBlockListedWords(), showAlert, messageBundle)) {
+		if (validateBlockListedWords(parentPane, node, node.getId(), fieldId, showAlert, messageBundle)) {
 			return true;
 		}
 
 		return false;
-	}
-
-	public List<String> getBlockListedWordsList(TextField textField) {
-		return getBlockListedWords().stream().filter(bWord -> textField.getText().contains(bWord)).collect(Collectors.toList());
 	}
 
 	private ResourceBundle getMessagesBundle(String langCode) {
@@ -332,38 +312,43 @@ public class Validations extends BaseController {
 		return true;
 	}
 
-	private boolean validateBlockListedWords(Pane parentPane, TextField node, String id, String fieldId, List<String> blockListedWords,
+	public List<String> getBlockListedWordsList(TextField textField) {
+		List<String> blockListedWords = getRegistrationDTOFromSession().getConfiguredBlockListedWords();
+		return Arrays.stream(textField.getText().split(RegistrationConstants.SPACE))
+				.map(String::toLowerCase)
+				.distinct()
+				.filter( token -> blockListedWords.stream().anyMatch(bw -> bw.equalsIgnoreCase(token) ||
+						token.contains(bw.toLowerCase())))
+				.collect(Collectors.toList());
+	}
+
+	private boolean validateBlockListedWords(Pane parentPane, TextField node, String id, String fieldId,
 			boolean showAlert, ResourceBundle messageBundle) {
-		boolean isInputValid = true;
-		
-		if (node.getText()!=null && blockListedWords != null && !id.contains(RegistrationConstants.ON_TYPE)) {
-			if (getRegistrationDTOFromSession().BLOCKLISTED_CHECK.containsKey(fieldId)
-					&& getRegistrationDTOFromSession().BLOCKLISTED_CHECK.get(fieldId).getWords().stream()
-							.anyMatch(word -> node.getText().contains(word))
-					&& Stream.of(node.getText().split(" ")).collect(Collectors.toList()).stream()
-							.filter(word -> blockListedWords.contains(word)
-									&& !getRegistrationDTOFromSession().BLOCKLISTED_CHECK.get(fieldId).getWords()
-											.contains(word))
-							.findAny().isEmpty()) {
-				return true;
-			}
-			List<String> bwords = blockListedWords.stream().filter(word -> node.getText().contains(word)).collect(Collectors.toList());
-			if (!bwords.isEmpty() && bwords.size() < 2) {
-				isInputValid = false;
-				generateInvalidValueAlert(parentPane, id, MessageFormat.format(messageBundle.getString("BLOCKLISTED_ERROR"), bwords.get(0)),
-						showAlert);
-			} else {
-				if (bwords.size() > 1) {
-					generateInvalidValueAlert(parentPane, id,
-							MessageFormat.format(messageBundle.getString("BLOCKLISTED_ERROR"), bwords.toString()),
-							showAlert);
-					isInputValid = false;
-				} else {
-					isInputValid = true;
-				}
-			}
+
+		if (node.getText()==null || id.contains(RegistrationConstants.ON_TYPE))
+			return true;
+
+		List<String> identifiedBlockListedWords = getBlockListedWordsList(node);
+		if(identifiedBlockListedWords.isEmpty())
+			return true;
+
+		List<String> acceptedWords = getRegistrationDTOFromSession().BLOCKLISTED_CHECK.containsKey(fieldId) ?
+				getRegistrationDTOFromSession().BLOCKLISTED_CHECK.get(fieldId).getWords() : Collections.EMPTY_LIST;
+		if(acceptedWords.isEmpty()) {
+			generateInvalidValueAlert(parentPane, id, MessageFormat.format(messageBundle.getString("BLOCKLISTED_ERROR"),
+					identifiedBlockListedWords.toString()), showAlert);
+			return false;
 		}
-		return isInputValid;
+
+		List<String> unAcceptedWords = identifiedBlockListedWords.stream()
+				.filter(w -> acceptedWords.stream().noneMatch(bw ->
+						bw.equalsIgnoreCase(w) || w.contains(bw))).collect(Collectors.toList());
+		if (unAcceptedWords.isEmpty())
+			return true;
+
+		generateInvalidValueAlert(parentPane, id, MessageFormat.format(messageBundle.getString("BLOCKLISTED_ERROR"),
+				unAcceptedWords.toString()), showAlert);
+		return false;
 	}
 
 	private void generateInvalidValueAlert(Pane parentPane, String id, String message, boolean showAlert) {

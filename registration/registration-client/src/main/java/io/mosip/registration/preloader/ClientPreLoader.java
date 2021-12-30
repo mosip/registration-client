@@ -10,10 +10,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,8 +24,9 @@ public class ClientPreLoader extends Preloader {
     private Stage preloaderStage;
     private ProgressBar progressBar = new ProgressBar();
     private TextArea textArea = new TextArea();
-    private Label label = new Label("Please wait...");
-    private Button exit = new Button("Stop Client");
+    private Label label = new Label("Starting Registration Client : Please wait...");
+    private Button stopClient = new Button("Stop Client");
+    private Button hidePreLoader = new Button("Exit");
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -35,15 +35,23 @@ public class ClientPreLoader extends Preloader {
         VBox loading = new VBox(20);
         loading.setMaxWidth(Region.USE_PREF_SIZE);
         loading.setMaxHeight(Region.USE_PREF_SIZE);
-        loading.getChildren().add(progressBar);
         loading.getChildren().add(label);
+        loading.getChildren().add(progressBar);
         loading.getChildren().add(textArea);
         textArea.setPrefWidth(500);
         textArea.setPrefHeight(300);
 
-        exit.setVisible(true);
-        loading.getChildren().add(exit);
-        exit.setOnAction(new EventHandler<ActionEvent>() {
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox buttons = new HBox();
+        buttons.getChildren().add(hidePreLoader);
+        buttons.getChildren().add(spacer);
+        buttons.getChildren().add(stopClient);
+        loading.getChildren().add(buttons);
+
+        stopClient.setVisible(false);
+        stopClient.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 textArea.appendText("Exiting from application...\n");
@@ -51,9 +59,17 @@ public class ClientPreLoader extends Preloader {
             }
         });
 
+        hidePreLoader.setVisible(false);
+        hidePreLoader.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                preloaderStage.hide();
+            }
+        });
+
         BorderPane root = new BorderPane(loading);
         Scene scene = new Scene(root);
-
+        primaryStage.initStyle(StageStyle.UNDECORATED);
         primaryStage.setWidth(800);
         primaryStage.setHeight(600);
         primaryStage.setResizable(true);
@@ -73,6 +89,8 @@ public class ClientPreLoader extends Preloader {
             errorsFound = true;
             Throwable t = ((ClientPreLoaderErrorNotification)info).getCause();
             textArea.appendText(t.getMessage()+"\n");
+            hidePreLoader.setVisible(false);
+            stopClient.setVisible(true);
             logger.error(t.getMessage(), t);
             return;
         }
@@ -107,14 +125,15 @@ public class ClientPreLoader extends Preloader {
         }
         if (stateChangeNotification.getType() == StateChangeNotification.Type.BEFORE_START) {
             if(errorsFound) {
-                label.setText("Failed!");
+                label.setText("Starting Registration Client : Failed!");
             }
             else {
                 textArea.appendText("Setting up application stage...\n");
                 progressBar.setProgress(100);
-                label.setText("Success.");
+                label.setText("Starting Registration Client : Success.");
                 textArea.appendText("Registration client started :)\n");
-                //preloaderStage.hide();
+                hidePreLoader.setVisible(true);
+                stopClient.setVisible(true);
             }
         }
     }

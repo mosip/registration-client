@@ -94,7 +94,7 @@
                                        <children>
                                           <Label styleClass="qualityLabel" text="%quality" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
                                           <ProgressBar fx:id="bioProgress" prefWidth="${parentProgressPane.width}" progress="0.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                          <Label styleClass="attemptsLabel" text="%attempts" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
+                                          <Label fx:id="attemptsLabel" styleClass="attemptsLabel" text="%attempts" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
                                           <HBox fx:id="bioRetryBox" prefHeight="100.0" prefWidth="200.0" spacing="30.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                           <Label fx:id="qualityText" alignment="CENTER" prefHeight="12.0" prefWidth="60.0" GridPane.columnIndex="2" GridPane.rowIndex="1" />
                                           <Label fx:id="thresholdLabel" prefWidth="${parentProgressPane.width}" text="%threshold" GridPane.columnIndex="1" />
@@ -207,8 +207,8 @@
                                              <children>
                                                 <Label styleClass="threshHoldLabel" text="%threshold" GridPane.halignment="LEFT" />
                                                 <Label styleClass="qualityLabel" text="%quality" GridPane.columnIndex="1" GridPane.halignment="LEFT" />
-                                                <Label styleClass="attemptsLabel" text="%attempts" GridPane.halignment="LEFT" GridPane.rowIndex="2" />
-                                                <Label styleClass="exceptionLabel" text="%exceptions" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="2" />
+                                                <Label fx:id="attemptsLabel1" styleClass="attemptsLabel" text="%attempts" GridPane.halignment="LEFT" GridPane.rowIndex="2" />
+                                                <Label fx:id="exceptionsLabel" styleClass="exceptionLabel" text="%exceptions" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="2" />
                                                 <Label fx:id="thresholdScoreLabel" GridPane.halignment="LEFT" GridPane.rowIndex="1" />
                                                 <Label fx:id="qualityScore" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="1" />
                                                 <Label fx:id="attemptSlap" GridPane.halignment="LEFT" GridPane.rowIndex="3" />

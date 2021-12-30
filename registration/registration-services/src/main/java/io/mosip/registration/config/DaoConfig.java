@@ -30,6 +30,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertiesPropertySource;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -449,15 +450,20 @@ public class DaoConfig extends HibernateDaoConfig {
 	 * @return Collection of Global param values
 	 */
 	private static Map<String, Object> getLocalProps(JdbcTemplate jdbcTemplate, Map<String, Object> globalProps) {
-		return jdbcTemplate.query(LOCAL_PREFERENCES, new ResultSetExtractor<Map<String, Object>>() {
-			@Override
-			public Map<String, Object> extractData(ResultSet localParamResultset) throws SQLException {
-				while (localParamResultset.next()) {
-					globalProps.put(localParamResultset.getString(NAME), localParamResultset.getString(VALUE));
+		try {
+			return jdbcTemplate.query(LOCAL_PREFERENCES, new ResultSetExtractor<Map<String, Object>>() {
+				@Override
+				public Map<String, Object> extractData(ResultSet localParamResultset) throws SQLException {
+					while (localParamResultset.next()) {
+						globalProps.put(localParamResultset.getString(NAME), localParamResultset.getString(VALUE));
+					}
+					return globalProps;
 				}
-				return globalProps;
-			}
-		});
+			});
+		} catch (DataAccessException exception) {
+			LOGGER.error("Failed to fetch data from local_preferences table", exception);
+		}
+		return globalProps;
 	}
 
 	private boolean isDBInitializeRequired() {

@@ -303,6 +303,16 @@ public class BaseService {
 		LOGGER.error("Machine fetched {}", machineMaster);
 		return null;
 	}
+	
+	public MachineMaster getMachine() throws RegBaseCheckedException {
+		String machineName = RegistrationSystemPropertiesChecker.getMachineId();
+		MachineMaster machineMaster = machineMasterRepository.findByNameIgnoreCase(machineName.toLowerCase());
+		
+		if (machineMaster == null) {
+			throw new RegBaseCheckedException("REG-AUTH-001", "Machine not found");
+		}
+		return machineMaster;
+	}
 
 
 	/**
