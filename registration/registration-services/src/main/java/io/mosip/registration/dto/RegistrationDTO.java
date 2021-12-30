@@ -88,6 +88,8 @@ public class RegistrationDTO {
 	public Map<String, String> SELECTED_CODES = new HashMap<>();
 	public Map<String, BlocklistedConsentDto> BLOCKLISTED_CHECK = new HashMap<>();
 
+	private List<String> configuredBlockListedWords = new ArrayList<>();
+
 	public void clearRegistrationDto() {
 		this.AGE_GROUPS.clear();
 		this.biometrics.clear();

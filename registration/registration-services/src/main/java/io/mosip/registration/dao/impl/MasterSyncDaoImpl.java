@@ -180,8 +180,8 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	 * io.mosip.registration.dao.MasterSyncDao#getBlockListedWords(java.lang.String)
 	 */
 	@Override
-	public List<BlocklistedWords> getBlockListedWords() {
-		return blocklistedWordsRepository.findBlockListedWordsByIsActiveTrue();
+	public List<String> getBlockListedWords() {
+		return blocklistedWordsRepository.findAllActiveBlockListedWords();
 	}
 
 	/*

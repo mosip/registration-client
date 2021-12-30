@@ -106,10 +106,11 @@ public class SoftwareUpdateHandler extends BaseService {
 
 
 	public ResponseDTO updateDerbyDB() {
+		getCurrentVersion();
 		String version = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SERVICES_VERSION_KEY);
 		LOGGER.info("Inside updateDerbyDB currentVersion : {} and {} : {}", currentVersion,
 				RegistrationConstants.SERVICES_VERSION_KEY, version);
-		if(version != null && currentVersion != null && !currentVersion.equalsIgnoreCase(version)) {
+		if(version != null && !version.trim().equals("0") && currentVersion != null && !currentVersion.equalsIgnoreCase(version)) {
 			return executeSqlFile(currentVersion, version);
 		}
 		return null;
@@ -500,6 +501,7 @@ public class SoftwareUpdateHandler extends BaseService {
 	}
 
 	private Manifest getLocalManifest() throws RegBaseCheckedException {
+		if(localManifest == null) { setLocalManifest(); }
 		return localManifest;
 	}
 }

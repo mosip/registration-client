@@ -19,6 +19,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.scene.control.*;
 import javafx.scene.input.ScrollEvent;
@@ -79,8 +80,8 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	private Button cancelBtn;
 	@FXML
 	private Button cropButton;
-	@FXML
-	private Button streamBtn;
+	//@FXML
+	//private Button streamBtn;
 	@FXML
 	private Button previewBtn;
 	@FXML
@@ -254,6 +255,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 			rectangleSelection = null;
 			clearSelection();
+			stopStreaming();
 			setScanImageViewZoomable();
 
 			LOGGER.info("Opening pop-up screen to scan for user registration");
@@ -303,17 +305,18 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	}
 
 
-	@FXML
+	/*@FXML
 	public void stream() {
 		clearSelection();
+		stopStreaming();
+
 		showPreview(false);
 		showStream(true);
-
 		cancelBtn.setDisable(true);
 		cropButton.setDisable(true);
 
 		startStream();
-	}
+	}*/
 
 	/**
 	 * This method will allow to scan
@@ -491,8 +494,8 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		LOGGER.info(LOG_REG_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"Calling exit window to close the popup");
 
-		//biometricsController.stopRCaptureService();
-		//biometricsController.stopDeviceSearchService();
+		stopStreaming();
+		clearSelection();
 		streamer.stop();
 
 		popupStage = (Stage) ((Node) event.getSource()).getParent().getScene().getWindow();
@@ -632,8 +635,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		LOGGER.debug("Saving cropped image completed");
 	}
 
-
-	public void startStream() {
+	/*public void startStream() {
 		isStreamPaused = false;
 		setWebCamStream(true);
 		Thread streamer_thread = new Thread(new Runnable() {
@@ -652,7 +654,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 			}
 		});
 		streamer_thread.start();
-	}
+	}*/
 
 	public void showPreview(boolean isVisible) {
 		previewOption.setVisible(isVisible);
@@ -686,7 +688,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		cancelBtn.setDisable(true);
 		captureBtn.setDisable(true);
 
-		streamBtn.setDisable(true);
+		//streamBtn.setDisable(true);
 		previewBtn.setDisable(false);
 		previewOption.setVisible(true);
 		preview();

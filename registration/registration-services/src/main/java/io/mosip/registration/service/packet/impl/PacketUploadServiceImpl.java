@@ -8,6 +8,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
 
+import io.mosip.kernel.core.util.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
@@ -147,16 +148,20 @@ public class PacketUploadServiceImpl extends BaseService implements PacketUpload
 		ResponseDTO responseDTO = new ResponseDTO();
 		
 		Registration reg = registrationRepository.findTopByOrderByUpdDtimesDesc();
-		Timestamp currentTimeLimit = reg.getUpdDtimes();
+		Timestamp currentTimeLimit = reg == null ? Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()) : reg.getUpdDtimes();
 
 		Pageable pageable = PageRequest.of(0, batchCount, Sort.by(Sort.Direction.ASC, "updDtimes"));
 		Slice<Registration> registrationSlice = null;
 
 		do {
+			if(registrationSlice != null)
+				pageable = registrationSlice.nextPageable();
+
 		    registrationSlice = registrationRepository.findByClientStatusCodeOrServerStatusCodeOrFileUploadStatusAndUpdDtimesLessThanEqual(
 					RegistrationConstants.SYNCED_STATUS, RegistrationConstants.SERVER_STATUS_RESEND, "E", currentTimeLimit, pageable);
 		    		    
 		    if (!registrationSlice.getContent().isEmpty()) {
+				LOGGER.debug("current batch count {}", registrationSlice.getContent().size());
 				for(Registration registration : registrationSlice.getContent()) {
 					if (RegistrationConstants.PACKET_STATUS_CODE_REREGISTER.equalsIgnoreCase(registration.getServerStatusCode()))
 						continue;

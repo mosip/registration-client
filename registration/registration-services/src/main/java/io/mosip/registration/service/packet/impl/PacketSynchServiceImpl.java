@@ -208,14 +208,17 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 		   Timestamp currentTimeLimit = null;
 		   if (packetIDs == null) {
 		      Registration registration = registrationRepository.findTopByOrderByUpdDtimesDesc();
-		      currentTimeLimit = registration.getUpdDtimes();
+		      currentTimeLimit = registration == null ? Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()) : registration.getUpdDtimes();
 		   }
 
 		   Pageable pageable = PageRequest.of(0, batchCount, Sort.by(Sort.Direction.ASC, "updDtimes"));
 		   Slice<Registration> registrationSlice = null;
 
 		   do {
-		      registrationSlice = (packetIDs != null) ? registrationRepository.findByPacketIdIn(packetIDs, pageable) :
+			   if(registrationSlice != null)
+				   pageable = registrationSlice.nextPageable();
+
+			   registrationSlice = (packetIDs != null) ? registrationRepository.findByPacketIdIn(packetIDs, pageable) :
 		            registrationRepository.findByClientStatusCodeInAndUpdDtimesLessThanEqual(RegistrationConstants.CLIENT_STATUS_TO_BE_SYNCED,
 		                  currentTimeLimit, pageable);
 
@@ -270,6 +273,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 
 
 	private List<SyncRegistrationDTO> getPacketSyncDtoList(@NonNull List<Registration> registrations) {
+		LOGGER.debug("RID Sync current batch count {}", registrations.size());
 		List<SyncRegistrationDTO> syncDtoList = new ArrayList<>();
 		for(Registration registration : registrations) {
 			if(registration.getClientStatusCode().equals(RegistrationConstants.SYNCED_STATUS))

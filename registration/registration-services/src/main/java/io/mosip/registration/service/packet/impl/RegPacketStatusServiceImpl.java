@@ -182,7 +182,7 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 	 *         with server
 	 */
 	private HashMap<String, List<String>> getPacketIds(List<Registration> registrationList) {
-		LOGGER.debug("getting packetIds to sync server status started");
+		LOGGER.debug("getting packetIds to sync server status started {}", registrationList.size());
 		
 		HashMap<String, List<String>> packets = new HashMap<>();
 
@@ -268,7 +268,7 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 		ResponseDTO response = new ResponseDTO();
 		
 		Registration registration = registrationRepository.findTopByOrderByUpdDtimesDesc();
-		Timestamp currentTimeLimit = registration.getUpdDtimes();
+		Timestamp currentTimeLimit = registration == null ? Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()) : registration.getUpdDtimes();
 
 		Pageable pageable = PageRequest.of(0, batchCount, Sort.by(Sort.Direction.ASC, "updDtimes"));
 		Slice<Registration> registrationSlice = null;
