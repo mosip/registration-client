@@ -74,11 +74,11 @@ public class ClientApplication extends Application {
 			SessionContext.setApplicationContext(applicationContext);
 			notifyPreloader(new ClientPreLoaderNotification("Created application context."));
 
+			upgradeLocalDatabase();
+
 			setupLanguages();
 			notifyPreloader(new ClientPreLoaderNotification("Language setup complete."));
-
 			setupResourceBundleBasedOnDefaultAppLang();
-
 			setupAppProperties();
 			notifyPreloader(new ClientPreLoaderNotification("Properties with local preferences loaded."));
 			setupResourceBundleBasedOnDefaultAppLang();
@@ -89,10 +89,7 @@ public class ClientApplication extends Application {
 					io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.MOSIP_UPGRADE_SERVER_URL)));
 
 			handleInitialSync();
-
 			discoverDevices();
-
-			upgradeLocalDatabase();
 
 		} catch (Throwable t) {
 			ClientPreLoader.errorsFound = true;

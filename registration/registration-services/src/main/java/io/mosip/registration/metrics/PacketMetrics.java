@@ -6,6 +6,7 @@ import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.binder.MeterBinder;
 import io.mosip.registration.dao.RegistrationDAO;
 import org.springframework.context.ApplicationContext;
+import org.springframework.dao.DataAccessException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +35,13 @@ public class PacketMetrics implements MeterBinder {
         if(registrationDAO == null)
             return;
 
-        List<Object[]> result = registrationDAO.getStatusBasedCount();
+        List<Object[]> result = null;
+
+        try {
+            result = registrationDAO.getStatusBasedCount();
+        } catch (DataAccessException exception) {
+            //This will fail during upgrade process
+        }
 
         if(result != null) {
             for (Object[] entry : result) {
