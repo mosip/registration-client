@@ -767,6 +767,7 @@ public class DocumentScanController extends BaseController {
 		/* show the scanned page in the preview */
 		scanPopUpViewController.getScanImage().setImage(getImage(bufferedImage));
 		scanPopUpViewController.getScanningMsg().setVisible(false);
+		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.DOC_CAPTURE_SUCCESS);
 	}
 
 
@@ -820,6 +821,7 @@ public class DocumentScanController extends BaseController {
 		scanPopUpViewController.getImageGroup().getChildren().add(new ImageView(getImage(bufferedImage)));
 		//scanPopUpViewController.getScanImage().setImage(getImage(bufferedImage));
 		scanPopUpViewController.getScanningMsg().setVisible(false);
+		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.DOC_CAPTURE_SUCCESS);
 	}
 
 

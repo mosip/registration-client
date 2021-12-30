@@ -329,7 +329,6 @@ public class ScanPopUpViewController extends BaseController {
 		}
 		else {
 			baseController.scan(popupStage);
-			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.DOC_CAPTURE_SUCCESS);
 			currentPage =  documentScanController.getScannedPages() == null ? 0 : documentScanController.getScannedPages().size();
 		}
 
@@ -582,7 +581,7 @@ public class ScanPopUpViewController extends BaseController {
 
 	@FXML
 	public void cancel() {
-		stopStreaming();
+		setWebCamStream(false);
 
 		int currentDocPageNumber = Integer.valueOf(docCurrentPageNumber.getText());
 		int pageNumberIndex = currentDocPageNumber - 1;
@@ -686,6 +685,8 @@ public class ScanPopUpViewController extends BaseController {
 		cropButton.setDisable(true);
 
 		if(this.webcam != null) {
+			if(getImageGroup().getChildren().isEmpty())
+				getImageGroup().getChildren().add(new ImageView());
 			this.scanImage = (ImageView)getImageGroup().getChildren().get(0);
 			startStream(this.webcam);
 		}
