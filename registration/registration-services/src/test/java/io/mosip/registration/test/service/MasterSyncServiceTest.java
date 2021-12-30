@@ -7,12 +7,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
@@ -757,19 +752,8 @@ public class MasterSyncServiceTest {
 
 	@Test
 	public void findAllBlockWords() throws RegBaseCheckedException {
-
-		List<BlocklistedWords> allBlockWords = new ArrayList<>();
-		BlocklistedWords blockWord = new BlocklistedWords();
-		blockWord.setWord("asdfg");
-		blockWord.setDescription("asdfg");
-		blockWord.setLangCode("ENG");
-		allBlockWords.add(blockWord);
-		allBlockWords.add(blockWord);
-
-		Mockito.when(masterSyncDao.getBlockListedWords()).thenReturn(allBlockWords);
-
+		Mockito.when(masterSyncDao.getBlockListedWords()).thenReturn(Collections.singletonList("asdfg"));
 		masterSyncServiceImpl.getAllBlockListedWords();
-
 	}
 
 	

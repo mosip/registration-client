@@ -6,13 +6,9 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import io.mosip.registration.service.sync.MasterSyncService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -158,6 +154,9 @@ public class PacketHandlerServiceTest {
 	
 	@Mock
 	private File file;
+
+	@Mock
+	private MasterSyncService masterSyncService;
 	
 	private RegistrationDTO registrationDTO;
 
@@ -190,6 +189,7 @@ public class PacketHandlerServiceTest {
 		io.mosip.registration.context.ApplicationContext.setApplicationMap(applicationMap);
 		ReflectionTestUtils.setField(packetHandlerServiceImpl, "source", "REGISTRATION_CLIENT");
 		Mockito.when(environment.getProperty(RegistrationConstants.GPS_DEVICE_DISABLE_FLAG)).thenReturn("N");
+		when(masterSyncService.getAllBlockListedWords()).thenReturn(Collections.emptyList());
 	}
 
 
@@ -238,7 +238,6 @@ public class PacketHandlerServiceTest {
 		successResponseDTO.setMessage(RegistrationConstants.VALID_KEY);
 		responseDTO.setSuccessResponseDTO(successResponseDTO);
 		when(policySyncService.checkKeyValidation()).thenReturn(responseDTO);
-		
 		packetHandlerServiceImpl.startRegistration(null, FlowType.NEW.getCategory());
 	}
 
