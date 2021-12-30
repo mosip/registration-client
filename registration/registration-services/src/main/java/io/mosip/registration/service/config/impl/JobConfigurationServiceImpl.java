@@ -860,7 +860,7 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 
 		ResponseDTO responseDTO = new ResponseDTO();
 
-		String syncDataFreq = getGlobalConfigValueOf(RegistrationConstants.SYNC_DATA_FREQ);
+		String syncDataFreq = io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SYNC_DATA_FREQ);
 		if (syncDataFreq != null) {
 			ExecutionTime executionTime = getExecutionTime(syncDataFreq);
 			Instant last = getLast(executionTime);

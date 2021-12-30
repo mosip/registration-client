@@ -91,7 +91,8 @@ public class DateValidation extends BaseController {
 			}
 		}
 
-		resetFieldStyleClass(parentPane, fieldId, isValid ? null : getErrorMessage(validator, RegistrationConstants.INVALID_DATE,
+		String defaultErrorMessage = dd.getText().isEmpty() && mm.getText().isEmpty() && yyyy.getText().isEmpty() ? RegistrationConstants.DOB_REQUIRED : RegistrationConstants.INVALID_DATE;
+		resetFieldStyleClass(parentPane, fieldId, isValid ? null : getErrorMessage(validator, defaultErrorMessage,
 				RegistrationConstants.EMPTY));
 		return isValid;
 	}
@@ -158,7 +159,7 @@ public class DateValidation extends BaseController {
 	}
 
 	private String getErrorMessage(Validator validator, String defaultMessageKey, Object... args) {
-		ResourceBundle rb = ApplicationContext.getInstance().getBundle(
+		ResourceBundle rb = ApplicationContext.getBundle(
 				getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0),
 				RegistrationConstants.MESSAGES);
 		return validator != null && validator.getErrorCode() != null

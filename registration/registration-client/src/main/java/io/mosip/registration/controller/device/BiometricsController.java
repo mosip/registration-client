@@ -116,6 +116,15 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	@FXML
 	private Label attemptSlap;
+	
+	@FXML
+	private Label attemptsLabel;
+	
+	@FXML
+	private Label attemptsLabel1;
+	
+	@FXML
+	private Label exceptionsLabel;
 
 	@FXML
 	private Label thresholdScoreLabel;
@@ -309,6 +318,14 @@ public class BiometricsController extends BaseController /* implements Initializ
 		LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"populateBiometricPage invoked, isUserOnboard : " + isUserOnboard);
 
+		if(isUserOnboard) {
+			attemptsLabel.setVisible(false);
+			bioRetryBox.setVisible(false);
+			attemptsLabel1.setVisible(false);
+			exceptionsLabel.setVisible(false);
+			attemptSlap.setVisible(false);
+		}
+		
 		isUserOnboardFlag = isUserOnboard;
 
 		Map<Entry<String, String>, Map<String, List<List<String>>>> mapToProcess = getOnboardUserMap();

@@ -207,7 +207,7 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 		try {
 			/* Check in Database whether required record already exists or not */
 			preRegistration = preRegistrationDAO.get(preRegistrationId);
-			if(preRegistration == null) {
+			if(preRegistration == null || (preRegistration != null && !FileUtils.getFile(preRegistration.getPacketPath()).exists())) {
 				LOGGER.info("Pre-Registration ID is not present downloading {}", preRegistrationId);
 				return downloadAndSavePacket(preRegistration, preRegistrationId, lastUpdatedTimeStamp);
 			}

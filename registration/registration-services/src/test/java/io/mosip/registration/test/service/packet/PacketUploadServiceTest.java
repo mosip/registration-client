@@ -2,6 +2,7 @@ package io.mosip.registration.test.service.packet;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.net.URI;
@@ -10,9 +11,11 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,6 +33,9 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -37,6 +43,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.support.RetryTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 
@@ -112,7 +119,10 @@ public class PacketUploadServiceTest {
 	private Map<String, Object> applicationMap = new HashMap<>();
 	
 	@Before
-	public void initialize() throws Exception {		
+	public void initialize() throws Exception {
+		int batchCount = 10;
+		ReflectionTestUtils.setField(packetUploadServiceImpl, "batchCount", batchCount);
+		
 		PowerMockito.mockStatic(HMACUtils2.class);
 		PowerMockito.mockStatic(SessionContext.class);
 				
@@ -296,6 +306,9 @@ public class PacketUploadServiceTest {
 		registration.setClientStatusCode("SYNCED");
 		registration.setFileUploadStatus("S");
 		registration.setCrDtime(Timestamp.from(Instant.now()));
+		registration.setUpdDtimes(Timestamp.from(Instant.now()));
+		
+		when(registrationRepository.findTopByOrderByUpdDtimesDesc()).thenReturn(registration);
 		
 		Registration reg1 = new Registration();
 		reg1.setId("909090");
@@ -303,6 +316,11 @@ public class PacketUploadServiceTest {
 		
 		regList.add(registration);
 		regList.add(reg1);
+		
+		Slice<Registration> slice = getSlice(regList);
+		Mockito.when(registrationRepository.findByClientStatusCodeOrServerStatusCodeOrFileUploadStatusAndUpdDtimesLessThanEqual(Mockito.anyString(), Mockito.anyString(), 
+				Mockito.anyString(), Mockito.any(), Mockito.any())).thenReturn(slice);
+		
 		Mockito.when(registrationDAO.getRegistrationByStatus(Mockito.anyList())).thenReturn(regList);
 
 		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class,
@@ -521,4 +539,94 @@ public class PacketUploadServiceTest {
 				.thenThrow(new HttpServerErrorException(HttpStatus.ACCEPTED));
 		assertEquals(respObj, packetUploadServiceImpl.pushPacket(f));
 	}*/
+	
+	private Slice<Registration> getSlice(List<Registration> list) {
+		// TODO Auto-generated method stub
+		return new Slice<Registration>() {
+			
+			@Override
+			public Iterator<Registration> iterator() {
+				// TODO Auto-generated method stub
+				return list.iterator();
+			}
+			
+			@Override
+			public Pageable previousPageable() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+			
+			@Override
+			public Pageable nextPageable() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+			
+			@Override
+			public <U> Slice<U> map(Function<? super Registration, ? extends U> converter) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+			
+			@Override
+			public boolean isLast() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public boolean isFirst() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public boolean hasPrevious() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public boolean hasNext() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public boolean hasContent() {
+				// TODO Auto-generated method stub
+				return true;
+			}
+			
+			@Override
+			public Sort getSort() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+			
+			@Override
+			public int getSize() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+			
+			@Override
+			public int getNumberOfElements() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+			
+			@Override
+			public int getNumber() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+			
+			@Override
+			public List<Registration> getContent() {
+				// TODO Auto-generated method stub
+				return list;
+			}
+		};
+	}
 }

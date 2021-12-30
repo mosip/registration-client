@@ -13,10 +13,13 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
@@ -41,6 +44,7 @@ import io.mosip.registration.entity.Registration;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
+import io.mosip.registration.repositories.RegistrationRepository;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.packet.RegPacketStatusService;
 import lombok.NonNull;
@@ -62,6 +66,9 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 
 	@Autowired
 	private RegistrationDAO registrationDAO;
+	
+	@Autowired
+	private RegistrationRepository registrationRepository;
 
 	@Autowired
     @Qualifier("OfflinePacketCryptoServiceImpl")
@@ -175,7 +182,7 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 	 *         with server
 	 */
 	private HashMap<String, List<String>> getPacketIds(List<Registration> registrationList) {
-		LOGGER.debug("getting packetIds to sync server status started");
+		LOGGER.debug("getting packetIds to sync server status started {}", registrationList.size());
 		
 		HashMap<String, List<String>> packets = new HashMap<>();
 
@@ -260,17 +267,27 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 		/* Create Response to Return to UI layer */
 		ResponseDTO response = new ResponseDTO();
 		
-		List<Registration> registrationList = regPacketStatusDAO.getPacketIdsByStatusUploadedOrExported();
-		
-		//if (validateTriggerPoint(triggerPoint)) {
-		List<List<Registration>> partitionedList = ListUtils.partition(registrationList, batchCount);
+		Registration registration = registrationRepository.findTopByOrderByUpdDtimesDesc();
+		Timestamp currentTimeLimit = registration == null ? Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()) : registration.getUpdDtimes();
+
+		Pageable pageable = PageRequest.of(0, batchCount, Sort.by(Sort.Direction.ASC, "updDtimes"));
+		Slice<Registration> registrationSlice = null;
 		
 		boolean isSuccess = true;
-		
-		for (List<Registration> partition : partitionedList) {
-			HashMap<String, List<String>> packetIds = getPacketIds(partition);
-			isSuccess = isSuccess ? (syncServerStatus(packetIds.get("packetIds"), triggerPoint, true) && syncServerStatus(packetIds.get("registrationIds"), triggerPoint, false)) : false;
-		}
+
+		do {
+			if(registrationSlice != null)
+		         pageable = registrationSlice.nextPageable();
+			
+			registrationSlice = registrationRepository.findByClientStatusCodeOrClientStatusCommentsAndUpdDtimesLessThanEqual(
+					RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode(),
+					RegistrationClientStatusCode.EXPORT.getCode(), currentTimeLimit, pageable);
+
+			if (!registrationSlice.getContent().isEmpty()) {
+				HashMap<String, List<String>> packetIds = getPacketIds(registrationSlice.getContent());
+				isSuccess = isSuccess ? (syncServerStatus(packetIds.get("packetIds"), triggerPoint, true) && syncServerStatus(packetIds.get("registrationIds"), triggerPoint, false)) : false;
+			}
+		} while (registrationSlice != null && registrationSlice.hasNext());
 		
 		response = isSuccess ? setSuccessResponse(response, RegistrationConstants.PACKET_STATUS_SYNC_SUCCESS_MESSAGE, null)
 				: setErrorResponse(response, RegistrationConstants.PACKET_STATUS_SYNC_ERROR_RESPONSE, null);
@@ -310,6 +327,8 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 						.get(RegistrationConstants.RESPONSE);
 
 				if (registrations == null || registrations.isEmpty()) {
+					LOGGER.error("Packet status search failed with response {}", (List<LinkedHashMap<String, String>>) packetStatusResponse
+							.get(RegistrationConstants.ERRORS));
 					return false;
 				}
 				/* update the status of packets after sync with server */
