@@ -155,6 +155,10 @@ public class DocumentScanController extends BaseController {
 	@Autowired
 	private DemographicDetailController demographicDetailController;
 
+	public List<BufferedImage> getDocPages() {
+		return docPages;
+	}
+
 	private List<BufferedImage> docPages;
 
 	@FXML

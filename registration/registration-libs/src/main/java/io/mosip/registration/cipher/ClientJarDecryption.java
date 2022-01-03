@@ -103,8 +103,11 @@ public class ClientJarDecryption extends Application {
 
 	private String UNABLE_TO_DOWNLOAD_JARS = "Unable to Download Jars Due To Slow or No Internet";
 
-	private String MIN_HEAP_SIZE = "-Xms2048m";
-	private String MAX_HEAP_SIZE = "-Xmx2048m";
+	private static String MIN_HEAP_SIZE = "-Xms2048m";
+	private static String MAX_HEAP_SIZE = "-Xmx2048m";
+
+	private static String MN_HEAPSIZE= "-Xms%sm";
+	private static String MX_HEAPSIZE= "-Xmx%sm";
 
 	/**
 	 * Decrypt the bytes
@@ -143,6 +146,11 @@ public class ClientJarDecryption extends Application {
 
 		LOGGER.info(LoggerConstants.CLIENT_JAR_DECRYPTION, LoggerConstants.APPLICATION_NAME,
 				LoggerConstants.APPLICATION_ID, "Started run.jar");
+
+		if(args.length == 2) {
+			MIN_HEAP_SIZE = String.format(MN_HEAPSIZE, args[0]);
+			MAX_HEAP_SIZE = String.format(MX_HEAPSIZE, args[1]);
+		}
 
 		// Launch Reg-Client and perform necessary actions
 		launch(args);
@@ -341,15 +349,16 @@ public class ClientJarDecryption extends Application {
 
 	private void launchRegClient(Properties properties) throws IOException, InterruptedException {
 		FileUtils.copyDirectory(new File("lib"), new File(tempPath));
-		LOGGER.info(LoggerConstants.CLIENT_JAR_DECRYPTION, LoggerConstants.APPLICATION_NAME,
-				LoggerConstants.APPLICATION_ID, "Preparing command to launch the reg-client");
 		String jrePath = new File(System.getProperty("user.dir")) + SLASH + "jre/jre/bin/java";
 
-		Process process = Runtime.getRuntime()
-				.exec(String.format(getCommandTemplate(), jrePath, System.getProperty("mosip.max.mem", MAX_HEAP_SIZE),
-						System.getProperty("mosip.min.mem", MIN_HEAP_SIZE), tempPath,
-						properties.getProperty("mosip.client.upgrade.server.url"),
-						properties.getProperty(MOSIP_CLIENT_TPM_AVAILABILITY)));
+		String command = String.format(getCommandTemplate(), jrePath, MAX_HEAP_SIZE, MIN_HEAP_SIZE, tempPath,
+				properties.getProperty("mosip.client.upgrade.server.url"),
+				properties.getProperty(MOSIP_CLIENT_TPM_AVAILABILITY));
+
+		LOGGER.info(LoggerConstants.CLIENT_JAR_DECRYPTION, LoggerConstants.APPLICATION_NAME,
+				LoggerConstants.APPLICATION_ID, "launching reg-client with command : " + command);
+
+		Process process = Runtime.getRuntime().exec(command);
 
 		LOGGER.info(LoggerConstants.CLIENT_JAR_DECRYPTION, LoggerConstants.APPLICATION_NAME,
 				LoggerConstants.APPLICATION_ID, "Proccess Initiated");
