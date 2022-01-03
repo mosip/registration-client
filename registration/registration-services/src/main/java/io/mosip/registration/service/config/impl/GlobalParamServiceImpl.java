@@ -147,7 +147,8 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 				LinkedHashMap<String, Object> globalParamJsonMap = (LinkedHashMap<String, Object>) serviceDelegateUtil
 						.get(RegistrationConstants.GET_GLOBAL_CONFIG, requestParamMap, true, triggerPoinnt);
 
-				if (null == globalParamJsonMap.get(RegistrationConstants.RESPONSE)) {
+				if (null == globalParamJsonMap.get(RegistrationConstants.RESPONSE) ||
+						null != globalParamJsonMap.get(RegistrationConstants.ERRORS))  {
 					setErrorResponse(responseDTO, RegistrationConstants.POLICY_SYNC_ERROR_MESSAGE, null);
 					LOGGER.error("Failed in configuration sync {}", globalParamJsonMap);
 					return;
