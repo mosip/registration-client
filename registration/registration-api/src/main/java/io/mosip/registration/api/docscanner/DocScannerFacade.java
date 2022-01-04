@@ -102,4 +102,19 @@ public class DocScannerFacade {
         }
         return docScanDevice;
     }
+
+    public void stopDevice(@NonNull DocScanDevice docScanDevice) {
+        try {
+            if(docScannerServiceList == null || docScannerServiceList.isEmpty())
+                return;
+
+            Optional<DocScannerService> result = docScannerServiceList.stream()
+                    .filter(s -> s.getServiceName().equals(docScanDevice.getServiceName())).findFirst();
+
+            if(result.isPresent())
+                result.get().stop(docScanDevice);
+        } catch (Exception e) {
+            LOGGER.error("Error while stopping device {}", docScanDevice.getId(), e);
+        }
+    }
 }
