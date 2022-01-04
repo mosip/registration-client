@@ -1,15 +1,18 @@
 package io.mosip.registration.test.dao.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -18,6 +21,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.GlobalParamName;
 import io.mosip.registration.dao.impl.GlobalParamDAOImpl;
@@ -137,4 +141,110 @@ public class GlobalParamDAOTest {
 		
 		assertEquals(globalContextParamDAOImpl.update(globalParam),globalParam);
 	}
+	@Test
+	public void upsertServerProfileTest() {
+		GlobalParam gParam = null;
+		GlobalParamId globalParamId = new GlobalParamId();
+		globalParamId.setCode("code");
+		GlobalParam globalParam1 = new GlobalParam();
+		globalParam1.setName(RegistrationConstants.SERVER_ACTIVE_PROFILE);
+		Mockito.when(globalParamRepository.findById(Mockito.any(),Mockito.any())).thenReturn(gParam);
+		Mockito.when(globalParamRepository.save(Mockito.any())).thenReturn(globalParam1);
+		assertNotNull(globalContextParamDAOImpl.upsertServerProfile(RegistrationConstants.SERVER_ACTIVE_PROFILE));		
+	}
+	
+	@Test
+	public void upsertServerProfileGParamNotNullTest() {
+		GlobalParamId globalParamId = new GlobalParamId();
+		globalParamId.setCode("code");
+		GlobalParam globalParam1 = new GlobalParam();
+		globalParam1.setName(RegistrationConstants.SERVER_ACTIVE_PROFILE);
+		Mockito.when(globalParamRepository.findById(Mockito.any(),Mockito.any())).thenReturn(globalParam1);
+		Mockito.when(globalParamRepository.update(globalParam1)).thenReturn(globalParam1);
+		assertNotNull(globalContextParamDAOImpl.upsertServerProfile(RegistrationConstants.SERVER_ACTIVE_PROFILE));		
+	}
+	
+	@Test
+	@Ignore
+	public void upsertServerProfileNotNullTest() {
+		GlobalParamId globalParamId = new GlobalParamId();
+		globalParamId.setCode("code");
+		GlobalParam globalParam1 = new GlobalParam();
+		globalParam1.setName(RegistrationConstants.SERVER_ACTIVE_PROFILE);
+		Mockito.when(globalContextParamDAOImpl.get(globalParamId)).thenReturn(globalParam1);
+		Mockito.when(globalParamRepository.save(globalParam1)).thenReturn(globalParam1);
+		globalParam1=globalContextParamDAOImpl.upsertServerProfile(RegistrationConstants.SERVER_ACTIVE_PROFILE);		
+	}
+	
+	@Test
+	public void updateSoftwareUpdateStatusDisableTest() {	
+		GlobalParam gParam = new GlobalParam();
+		gParam.setVal(RegistrationConstants.DISABLE);
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
+		Timestamp req = new Timestamp(cal.getTimeInMillis());
+		GlobalParamId globalParamId = new GlobalParamId();
+		globalParamId.setCode("code");
+		Mockito.when(globalParamRepository.findById(Mockito.any(),Mockito.any())).thenReturn(gParam);
+		Mockito.when(globalParamRepository.update(gParam)).thenReturn(gParam);
+		Mockito.when(globalContextParamDAOImpl.get(globalParamId)).thenReturn(gParam);		
+		assertNotNull(globalContextParamDAOImpl.updateSoftwareUpdateStatus(Boolean.TRUE,req));
+	}
+	
+	@Test
+	public void updateSoftwareIsUpdateAvaileTrueTest() {	
+		GlobalParam gParam = new GlobalParam();
+		gParam.setVal(RegistrationConstants.DISABLE);
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
+		Timestamp req = new Timestamp(cal.getTimeInMillis());
+		GlobalParamId globalParamId = new GlobalParamId();
+		globalParamId.setCode("code");
+		Mockito.when(globalParamRepository.findById(Mockito.any(),Mockito.any())).thenReturn(gParam);
+		Mockito.when(globalParamRepository.update(gParam)).thenReturn(gParam);
+		Mockito.when(globalContextParamDAOImpl.get(globalParamId)).thenReturn(gParam);		
+		assertNotNull(globalContextParamDAOImpl.updateSoftwareUpdateStatus(Boolean.TRUE,req));
+	}
+	
+	@Test
+	public void updateSoftwareIsUpdateAvaileFalseTest() {	
+		GlobalParam gParam = new GlobalParam();
+		gParam.setVal(RegistrationConstants.DISABLE);
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
+		Timestamp req = new Timestamp(cal.getTimeInMillis());
+		GlobalParamId globalParamId = new GlobalParamId();
+		globalParamId.setCode("code");
+		Mockito.when(globalParamRepository.findById(Mockito.any(),Mockito.any())).thenReturn(gParam);
+		Mockito.when(globalParamRepository.update(gParam)).thenReturn(gParam);
+		Mockito.when(globalContextParamDAOImpl.get(globalParamId)).thenReturn(gParam);		
+		assertNotNull(globalContextParamDAOImpl.updateSoftwareUpdateStatus(Boolean.FALSE,req));
+	}
+	
+	@Test
+	public void updateSoftwareUpdateStatusEnableTest() {	
+		GlobalParam gParam = new GlobalParam();
+		gParam.setVal(RegistrationConstants.ENABLE);
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
+		Timestamp req = new Timestamp(cal.getTimeInMillis());
+		GlobalParamId globalParamId = new GlobalParamId();
+		globalParamId.setCode("code");
+		Mockito.when(globalParamRepository.findById(Mockito.any(),Mockito.any())).thenReturn(gParam);
+		Mockito.when(globalParamRepository.update(gParam)).thenReturn(gParam);
+		Mockito.when(globalContextParamDAOImpl.get(globalParamId)).thenReturn(gParam);		
+		assertNotNull(globalContextParamDAOImpl.updateSoftwareUpdateStatus(Boolean.TRUE,req));
+	}
+	
+	
+	private List<GlobalParam> getGlobalParamIterableList() {
+		List<GlobalParam> globalParamIterableList = new ArrayList<GlobalParam>();
+		GlobalParamId globalParamId = new GlobalParamId();
+		globalParamId.setCode("code");
+		GlobalParam gparam = new GlobalParam();
+		gparam.setGlobalParamId(globalParamId);		
+		globalParamIterableList.add(gparam);		
+		return globalParamIterableList;
+	}
+
 }
