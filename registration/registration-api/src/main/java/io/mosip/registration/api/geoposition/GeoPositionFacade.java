@@ -14,6 +14,7 @@ import java.util.List;
 public class GeoPositionFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GeoPositionFacade.class);
+    private static final String ENABLED = "Y";
 
     @Autowired
     private List<GeoPositionService> geoPositionServiceList;
@@ -32,6 +33,10 @@ public class GeoPositionFacade {
 
     @Value("${mosip.registration.serial_port.baudrate:9600}")
     private int baudRate;
+
+    @Value("${mosip.registration.gps_device_enable_flag}")
+    private String forceGPSDevice;
+
     
     /**
      *
@@ -39,12 +44,21 @@ public class GeoPositionFacade {
      * @return
      */
     public GeoPosition getMachineGeoPosition(@NonNull GeoPosition geoPosition) {
+        if(!ENABLED.equalsIgnoreCase(forceGPSDevice))
+            return geoPosition;
+
+        if(geoPositionServiceList == null || geoPositionServiceList.isEmpty()) {
+            LOGGER.error("** NO GeoPositionService IMPLEMENTATIONS FOUND to capture co-ordinates!! **");
+            geoPosition.setError("GeoPositionService IMPLEMENTATIONS NOT FOUND");
+            return geoPosition;
+        }
+
         LOGGER.info("Found {} GeoPositionService", geoPositionServiceList.size());
         for(GeoPositionService geoPositionService : geoPositionServiceList) {
-            geoPosition = geoPositionService.getGeoPosition(geoPosition);
+            GeoPosition result = geoPositionService.getGeoPosition(geoPosition);
 
-            if(geoPosition != null)
-                return geoPosition;
+            if(result != null)
+                return result;
         }
         return geoPosition;
     }
@@ -58,12 +72,14 @@ public class GeoPositionFacade {
      * @param centerLatitude
      * @return
      */
-    //TODO - validate this logic once again
     public double getDistance(double machineLongitude, double machineLatitude,
                               double centerLongitude, double centerLatitude) {
-        double a = (machineLatitude - centerLatitude) * GeoPositionUtil.distPerLat(machineLatitude);
-        double b = (machineLongitude - centerLongitude) * GeoPositionUtil.distPerLng(machineLongitude);
-        return Math.sqrt(a * a + b * b);
-    }
+        double earthRadiusInKM = 6371;
+        double longitudeDiff = Math.toRadians(centerLongitude - machineLongitude);
+        double latitudeDiff = Math.toRadians(centerLatitude - machineLatitude);
 
+        double var = Math.sin(latitudeDiff / 2) * Math.sin(latitudeDiff / 2) +
+                Math.sin(longitudeDiff / 2) * Math.sin(longitudeDiff / 2) * Math.cos(Math.toRadians(machineLatitude)) * Math.cos(Math.toRadians(centerLatitude));
+        return earthRadiusInKM * ( 2 * Math.atan2(Math.sqrt(var), Math.sqrt(1-var)));
+    }
 }
