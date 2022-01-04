@@ -131,6 +131,30 @@ public class DocScannerFacadeTest {
         Assert.assertEquals(0, device.getDpi());
     }
 
+    @Test
+    public void stopDeviceTest() {
+        DocScannerFacade facade = new DocScannerFacade();
+        DocScannerService serviceImpl = getMockDocScannerService();
+        ReflectionTestUtils.setField(facade, "docScannerServiceList", Collections.singletonList(serviceImpl));
+        DocScanDevice device = new DocScanDevice();
+        device.setDeviceType(DeviceType.SCANNER);
+        device.setId("SCANNER_001");
+        device.setName("SCANNER_001");
+        device.setServiceName("Test-Scanner");
+        facade.stopDevice(device);
+    }
+
+    @Test
+    public void stopDeviceTest2() {
+        DocScannerFacade facade = new DocScannerFacade();
+        DocScanDevice device = new DocScanDevice();
+        device.setDeviceType(DeviceType.SCANNER);
+        device.setId("SCANNER_001");
+        device.setName("SCANNER_001");
+        device.setServiceName("Test-Scanner");
+        facade.stopDevice(device);
+    }
+
     private DocScannerService getMockDocScannerService() {
         return new DocScannerService() {
             @Override
@@ -162,6 +186,11 @@ public class DocScannerFacadeTest {
                 device2.setServiceName(getServiceName());
                 devices.add(device2);
                 return devices;
+            }
+
+            @Override
+            public void stop(DocScanDevice docScanDevice) {
+                //Do nothing
             }
         };
     }
