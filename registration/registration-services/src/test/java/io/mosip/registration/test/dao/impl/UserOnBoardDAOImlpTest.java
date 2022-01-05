@@ -540,6 +540,10 @@ public class UserOnBoardDAOImlpTest {
 		return biometrics;
 	}
 	
+	/**
+	 * return template list data
+	 * @return
+	 */
 	List<BIR> getTemplates(){
 		List<BIR> templates = new ArrayList<BIR>();
 		List<String> subTypes = new ArrayList<String>();

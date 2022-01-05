@@ -236,7 +236,10 @@ public class GlobalParamDAOTest {
 		assertNotNull(globalContextParamDAOImpl.updateSoftwareUpdateStatus(Boolean.TRUE,req));
 	}
 	
-	
+	/**
+	 * return the GlobalParam list
+	 * @return
+	 */
 	private List<GlobalParam> getGlobalParamIterableList() {
 		List<GlobalParam> globalParamIterableList = new ArrayList<GlobalParam>();
 		GlobalParamId globalParamId = new GlobalParamId();

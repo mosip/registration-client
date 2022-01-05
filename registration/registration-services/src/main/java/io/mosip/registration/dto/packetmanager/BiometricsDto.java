@@ -23,6 +23,7 @@ public class BiometricsDto {
 	private String payLoad;
 	private String signature;
 	private String specVersion;
+	
 
 		
 	public BiometricsDto(String bioAttribute, byte[] attributeISO, double qualityScore) {
