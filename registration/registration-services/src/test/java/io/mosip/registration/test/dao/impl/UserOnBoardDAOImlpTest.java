@@ -1,25 +1,26 @@
 package io.mosip.registration.test.dao.impl;
 
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.anyObject;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.Mockito.doNothing;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
-import io.mosip.registration.dao.RegistrationCenterDAO;
-import io.mosip.registration.entity.RegistrationCenter;
-import io.mosip.registration.entity.UserMachineMapping;
-import io.mosip.registration.entity.id.RegistartionCenterId;
-import io.mosip.registration.repositories.RegistrationCenterRepository;
-import io.mosip.registration.repositories.UserMachineMappingRepository;
-import io.mosip.registration.service.BaseService;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,22 +34,35 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import io.mosip.kernel.biometrics.constant.QualityType;
+import io.mosip.kernel.biometrics.entities.BDBInfo;
+import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
+import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dao.impl.UserOnboardDAOImpl;
 import io.mosip.registration.dto.biometric.BiometricDTO;
 import io.mosip.registration.dto.biometric.BiometricInfoDTO;
 import io.mosip.registration.dto.biometric.FaceDetailsDTO;
 import io.mosip.registration.dto.biometric.FingerprintDetailsDTO;
 import io.mosip.registration.dto.biometric.IrisDetailsDTO;
+import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.entity.MachineMaster;
+import io.mosip.registration.entity.RegistrationCenter;
 import io.mosip.registration.entity.UserBiometric;
+import io.mosip.registration.entity.UserDetail;
+import io.mosip.registration.entity.UserMachineMapping;
+import io.mosip.registration.entity.id.RegistartionCenterId;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.MachineMasterRepository;
+import io.mosip.registration.repositories.RegistrationCenterRepository;
 import io.mosip.registration.repositories.UserBiometricRepository;
+import io.mosip.registration.repositories.UserDetailRepository;
+import io.mosip.registration.repositories.UserMachineMappingRepository;
+import io.mosip.registration.service.BaseService;
 
 /**
  * @author Sreekar Chukka
@@ -83,6 +97,9 @@ public class UserOnBoardDAOImlpTest {
 
 	@Mock
 	private RegistrationCenterRepository registrationCenterRepository;
+	
+	@Mock
+	private UserDetailRepository userDetailRepository;
 
 	@Before
 	public void initialize() throws Exception {
@@ -400,5 +417,151 @@ public class UserOnBoardDAOImlpTest {
 		Mockito.when(userMachineMappingRepository.findByUserMachineMappingIdUsrIdIgnoreCase(Mockito.anyString())).thenThrow(RuntimeException.class);
 		Assert.assertNotNull(userOnboardDAOImpl.getLastUpdatedTime("Usr123"));
 	}
+	
+	@Test
+	public void insertTest() {
+		List<FingerprintDetailsDTO> fingerPrints = getFingerPrintDataList();
+		BiometricDTO biometricDTO = new BiometricDTO();
+		List<UserBiometric> bioMetricsList = getUserBiometrics();
+		BiometricInfoDTO biometInfo = new BiometricInfoDTO();
+		biometInfo.setFingerprintDetailsDTO(fingerPrints);
+		biometricDTO.setOperatorBiometricDTO(biometInfo);
+		Mockito.when(userBiometricRepository.saveAll(bioMetricsList)).thenReturn(bioMetricsList);
+		assertEquals(RegistrationConstants.SUCCESS,userOnboardDAOImpl.insert(biometricDTO));
+	}
+	
+	
+	@Test
+	@Ignore
+	public void insertListBiometricsTest() {
+		List<BiometricsDto> biometrics = getBioMetricsDTOList();		
+		assertNotNull(userOnboardDAOImpl.insert(biometrics));
+	}
+	
+	@Test
+	public void insertExtractedTemplatesTest() {
+		List<BIR> templates = getTemplates();
+		List<UserBiometric> bioMetricsList = getUserBiometrics();
+		UserDetail userDetail = getUserDetails();
+		Mockito.when(userBiometricRepository.findByUserBiometricIdUsrId(Mockito.anyString())).thenReturn(bioMetricsList);
+		Mockito.when(userDetailRepository.findByIdIgnoreCaseAndIsActiveTrue(Mockito.anyString())).thenReturn(userDetail);
+		assertEquals(RegistrationConstants.SUCCESS,userOnboardDAOImpl.insertExtractedTemplates(templates));
+	};
+
+		
+	@Test
+	public void saveTest() {
+		assertEquals(RegistrationConstants.SUCCESS,userOnboardDAOImpl.save());
+	}
+	
+
+	@Test
+	public void getBioAttributeCodeTest() {
+	/*	Mockito.when(userBiometricRepository.saveAll(bioMetricsList)).thenReturn(bioMetricsList);
+		assertEquals(RegistrationConstants.SUCCESS,userOnboardDAOImpl.insert(biometricDTO));*/
+	}
+	
+	UserDetail getUserDetails() {		
+		UserDetail userdtl = new UserDetail();
+		Set<UserBiometric> userBiometrics = new HashSet<UserBiometric>();
+		UserBiometric userBio = new UserBiometric();
+		userBiometrics.add(userBio);
+		userdtl.setUserBiometric(userBiometrics);
+		return userdtl;
+		
+	}
+	List<UserBiometric> getUserBiometrics(){		
+		List<UserBiometric> biometrics = new ArrayList<UserBiometric>();
+		UserBiometric ubio = new UserBiometric();
+		UserDetail udtl = new UserDetail();
+		ubio.setUserDetail(udtl);
+		biometrics.add(ubio);
+		return biometrics;
+		
+	}
+	
+	List<FingerprintDetailsDTO> getFingerPrintDataList() {
+		List<FingerprintDetailsDTO> fingerprints = new ArrayList<FingerprintDetailsDTO>();
+		FingerprintDetailsDTO fingerPrintData = new FingerprintDetailsDTO();
+		byte[] fingerPrintISOImag = {1,2,3,4};
+		fingerPrintData.setFingerprintImageName("image");
+		fingerPrintData.setFingerPrintISOImage(fingerPrintISOImag);
+		fingerPrintData.setNumRetry(12);
+		fingerPrintData.setQualityScore(20.0);		
+		fingerprints.add(fingerPrintData);
+		fingerPrintData.setSegmentedFingerprints(fingerprints);
+		return fingerprints;
+	}
+	
+	List<IrisDetailsDTO> getIrisDataList() {		
+		List<IrisDetailsDTO> irisDtlsDataList = new ArrayList<IrisDetailsDTO>();
+		IrisDetailsDTO iries = new IrisDetailsDTO();
+		byte[] irisISOImag = {1,2,3,4};
+		iries.setIrisImageName("image");		
+		iries.setIrisIso(irisISOImag);
+		iries.setNumOfIrisRetry(2);
+		iries.setQualityScore(2);
+		irisDtlsDataList.add(iries);
+		return irisDtlsDataList;
+	}
+	
+	List<BiometricDTO> getBioMetricDTOList(){		
+		byte[] faceISO = {1,2,3,4};
+		List<BiometricDTO> biometrics = new ArrayList<BiometricDTO>();
+		BiometricDTO biometricDTO = new BiometricDTO();
+		BiometricInfoDTO bometricInfoDTO = new BiometricInfoDTO();
+		FaceDetailsDTO faceDtlsDTO = new FaceDetailsDTO();
+		faceDtlsDTO.setFaceISO(faceISO);
+		faceDtlsDTO.setNumOfRetries(2);
+		faceDtlsDTO.setQualityScore(2);
+		bometricInfoDTO.setFace(faceDtlsDTO);
+		biometricDTO.setOperatorBiometricDTO(bometricInfoDTO);		
+		biometricDTO.getOperatorBiometricDTO().getFace().getQualityScore();
+		biometrics.add(biometricDTO);
+		return biometrics;
+	}
+	
+	List<BiometricsDto> getBioMetricsDTOList(){		
+		byte[] faceISO = {1,2,3,4};
+		List<BiometricsDto> biometrics = new ArrayList<BiometricsDto>();
+		BiometricsDto dto = new BiometricsDto();		
+		dto.setBioAttribute("LEFT_LITTLE");
+		dto.setAttributeISO(faceISO);
+		dto.setNumOfRetries(2);
+		dto.setQualityScore(new Double(2));
+		biometrics.add(dto);
+		
+		BiometricsDto dto1 = new BiometricsDto();		
+		dto1.setBioAttribute("LEFT_LITTLE");
+		dto1.setAttributeISO(faceISO);
+		dto1.setNumOfRetries(2);
+		dto1.setQualityScore(new Double(2));
+		biometrics.add(dto1);
+		return biometrics;
+	}
+	
+	/**
+	 * return template list data
+	 * @return
+	 */
+	List<BIR> getTemplates(){
+		List<BIR> templates = new ArrayList<BIR>();
+		List<String> subTypes = new ArrayList<String>();
+		byte[] bdbInfoImg = {1,2,3,4};
+		subTypes.add("LeftIndexFinger");
+		BIR temp1 = new BIR();
+		BDBInfo bdbInfo = new BDBInfo();
+		bdbInfo.setSubtype(subTypes);
+		QualityType quaType = new QualityType();
+		quaType.setScore(new Long(2));
+		bdbInfo.setQuality(quaType);
+		temp1.setBdbInfo(bdbInfo);
+		temp1.setBdb(bdbInfoImg);
+		templates.add(temp1);
+		
+		templates.forEach( temp -> System.out.println(temp.getBdbInfo().getSubtype()));
+		return templates;
+	}
 
 }
+
