@@ -143,10 +143,12 @@
 		<openjfx.version>11.0.2</openjfx.version>
 		
 		<sonar.coverage.exclusions>
-			src/main/java/io/mosip/registration/util/**/*,
 			src/main/java/io/mosip/registration/repositories/**/*,
 			src/main/java/io/mosip/registration/context/**/*,
 			src/main/java/io/mosip/registration/controller/**/*,
+			src/main/java/io/mosip/registration/preloader/**/*,
+			src/main/java/io/mosip/registration/util/common/**/*,
+			src/main/java/io/mosip/registration/util/control/**/*,
 			src/main/java/io/mosip/registration/ui/constants/**/*,
 			src/main/java/io/mosip/registration/scheduler/**/*,
 			src/main/java/io/mosip/registration/dto/**/*,
@@ -154,13 +156,11 @@
 			src/main/java/io/mosip/registration/entity/**/*,
 			src/main/java/io/mosip/registration/exception/**/*,
 			src/main/java/io/mosip/registration/config/**/*,
-			src/main/java/io/mosip/registration/device/**/*,
 			src/main/java/io/mosip/registration/cipher/**/*,
 			src/main/java/io/mosip/registration/update/**/*,
-			src/main/java/io/mosip/registration/config/**/*,
 			src/main/java/io/mosip/registration/mdm/dto/**/*,
 			src/main/java/io/mosip/registration/mdm/constants/**/*,
-			src/main/java/io/mosip/registration/mdm/util/**/*,
+			src/main/java/registrationtest/**/*
 		</sonar.coverage.exclusions>
 	</properties>
 
