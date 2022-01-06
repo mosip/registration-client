@@ -143,24 +143,20 @@
 		<openjfx.version>11.0.2</openjfx.version>
 		
 		<sonar.coverage.exclusions>
-			src/main/java/io/mosip/registration/repositories/**/*,
+			**/dto/**,
+			**/entity/**,
+			**/repositories/**,
+			**/controller/**,
+			**/constants/**,
+			**/exception/**,
+			**/registrationtest/**,
+			**/enums/**,
 			src/main/java/io/mosip/registration/context/**/*,
-			src/main/java/io/mosip/registration/controller/**/*,
 			src/main/java/io/mosip/registration/preloader/**/*,
 			src/main/java/io/mosip/registration/util/common/**/*,
 			src/main/java/io/mosip/registration/util/control/**/*,
-			src/main/java/io/mosip/registration/ui/constants/**/*,
 			src/main/java/io/mosip/registration/scheduler/**/*,
-			src/main/java/io/mosip/registration/dto/**/*,
-			src/main/java/io/mosip/registration/constants/**/*,
-			src/main/java/io/mosip/registration/entity/**/*,
-			src/main/java/io/mosip/registration/exception/**/*,
-			src/main/java/io/mosip/registration/config/**/*,
-			src/main/java/io/mosip/registration/cipher/**/*,
-			src/main/java/io/mosip/registration/update/**/*,
-			src/main/java/io/mosip/registration/mdm/dto/**/*,
-			src/main/java/io/mosip/registration/mdm/constants/**/*,
-			src/main/java/registrationtest/**/*
+			src/main/java/io/mosip/registration/config/**/*
 		</sonar.coverage.exclusions>
 	</properties>
 
@@ -169,7 +165,8 @@
 		<module>registration-api-default-impl</module>
 		<module>registration-services</module>
 		<module>registration-client</module>
-		<!--<module>registration-libs</module>-->
+		<!--<module>ref-impl/document-scanner</module>
+		<module>ref-impl/geoposition-rxtx</module>-->
 		<module>registration-test</module>
 		
 	</modules>
