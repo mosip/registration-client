@@ -1,4 +1,4 @@
-package io.mosip.scanner.morena;
+package io.mosip.ref.morena;
 
 import eu.gnome.morena.Camera;
 import eu.gnome.morena.Device;
@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-//@Component
+@Component
 public class MorenaDocScanServiceImpl implements DocScannerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MorenaDocScanServiceImpl.class);
@@ -74,5 +74,10 @@ public class MorenaDocScanServiceImpl implements DocScannerService {
         });
 
         return devices;
+    }
+
+    @Override
+    public void stop(DocScanDevice docScanDevice) {
+
     }
 }
