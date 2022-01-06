@@ -12,6 +12,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class DocScannerFacadeTest {
@@ -43,7 +44,8 @@ public class DocScannerFacadeTest {
     @Test
     public void getConnectedCameraDevicesNoImplTest() {
         DocScannerFacade facade = new DocScannerFacade();
-        facade.getConnectedCameraDevices();
+        List<DocScanDevice> identifiedDevices = facade.getConnectedCameraDevices();
+        Assert.assertEquals(0, identifiedDevices.size());
     }
 
     @Test
@@ -57,6 +59,7 @@ public class DocScannerFacadeTest {
         device.setName("SCANNER_001");
         device.setServiceName("Test-Scanner");
         BufferedImage image = facade.scanDocument(device);
+        Assert.assertNotNull(image);
     }
 
     @Test
@@ -142,6 +145,7 @@ public class DocScannerFacadeTest {
         device.setName("SCANNER_001");
         device.setServiceName("Test-Scanner");
         facade.stopDevice(device);
+        Assert.assertTrue(true);
     }
 
     @Test
@@ -153,6 +157,7 @@ public class DocScannerFacadeTest {
         device.setName("SCANNER_001");
         device.setServiceName("Test-Scanner");
         facade.stopDevice(device);
+        Assert.assertTrue(true);
     }
 
     private DocScannerService getMockDocScannerService() {
@@ -165,8 +170,8 @@ public class DocScannerFacadeTest {
             @Override
             public BufferedImage scan(DocScanDevice docScanDevice) {
                 try {
-                    return ImageIO.read(new ByteArrayInputStream(new byte[0]));
-                } catch (IOException e) {}
+                    return ImageIO.read(this.getClass().getResourceAsStream("/images/stubdoc.png"));
+                } catch (IOException e) { }
                 return null;
             }
 

@@ -151,6 +151,8 @@
 			**/exception/**,
 			**/registrationtest/**,
 			**/enums/**,
+			**/*StubImpl.java,
+			**/builder/**,
 			src/main/java/io/mosip/registration/context/**/*,
 			src/main/java/io/mosip/registration/preloader/**/*,
 			src/main/java/io/mosip/registration/util/common/**/*,
