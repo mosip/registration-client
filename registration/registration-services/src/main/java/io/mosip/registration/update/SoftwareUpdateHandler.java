@@ -10,14 +10,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
-import java.util.*;
-import java.util.Map.Entry;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
@@ -26,11 +24,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import io.micrometer.core.annotation.Counted;
-import io.mosip.kernel.core.util.HMACUtils2;
-import io.mosip.kernel.logger.logback.util.MetricTag;
-import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.exception.RegBaseCheckedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -40,14 +33,17 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import io.mosip.kernel.core.exception.ExceptionUtils;
+import io.micrometer.core.annotation.Counted;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.FileUtils;
+import io.mosip.kernel.logger.logback.util.MetricTag;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dto.ResponseDTO;
+import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
 
@@ -78,6 +74,8 @@ public class SoftwareUpdateHandler extends BaseService {
 	private static final String versionTag = "version";
 	private static final String MOSIP_SERVICES = "registration-services";
 	private static final String MOSIP_CLIENT = "registration-client";
+	private static final String FEATURE = "http://apache.org/xml/features/disallow-doctype-decl";
+	private static final String EXTERNAL_DTD_FEATURE = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
 
 	private static Map<String, String> CHECKSUM_MAP;
 	private String currentVersion;
@@ -150,6 +148,10 @@ public class SoftwareUpdateHandler extends BaseService {
 		LOGGER.info("Checking for latest version started");
 		// Get latest version using meta-inf.xml
 		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+		documentBuilderFactory.setFeature(FEATURE, true);
+		documentBuilderFactory.setFeature(EXTERNAL_DTD_FEATURE, false);
+		documentBuilderFactory.setXIncludeAware(false);
+		documentBuilderFactory.setExpandEntityReferences(false);
 		DocumentBuilder db = documentBuilderFactory.newDocumentBuilder();
 		org.w3c.dom.Document metaInfXmlDocument = db.parse(SoftwareUpdateUtil.download(getURL(serverMosipXmlFileUrl)));
 		setLatestVersion(getElementValue(metaInfXmlDocument, versionTag));
