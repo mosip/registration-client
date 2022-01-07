@@ -17,6 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import io.mosip.registration.service.BaseService;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
@@ -65,6 +66,9 @@ public class MosipDeviceSpecificationFactory {
 
 	@Value("${mosip.registration.mdm.threadpool.size:5}")
 	private int threadPoolSize;
+
+	@Value("${mosip.registration.mdm.connection.timeout:5}")
+	private int connectionTimeout;
 
 	@Autowired
 	private List<MosipDeviceSpecificationProvider> deviceSpecificationProviders;
@@ -168,7 +172,15 @@ public class MosipDeviceSpecificationFactory {
 	 * Testing the network with method
 	 */
 	public static boolean checkServiceAvailability(String serviceUrl, String method) {
-		HttpUriRequest request = RequestBuilder.create(method).setUri(serviceUrl).build();
+		RequestConfig requestConfig = RequestConfig.custom()
+				.setConnectTimeout(2 * 1000)
+				.setSocketTimeout(2 * 1000)
+				.setConnectionRequestTimeout(2 * 1000)
+				.build();
+		HttpUriRequest request = RequestBuilder.create(method)
+				.setUri(serviceUrl)
+				.setConfig(requestConfig)
+				.build();
 
 		CloseableHttpClient client = HttpClients.createDefault();
 		try {
@@ -266,7 +278,15 @@ public class MosipDeviceSpecificationFactory {
 	}
 
 	private String getDeviceInfoResponse(String url) {
-		HttpUriRequest request = RequestBuilder.create("MOSIPDINFO").setUri(url).build();
+		RequestConfig requestConfig = RequestConfig.custom()
+				.setConnectTimeout(connectionTimeout * 1000)
+				.setSocketTimeout(connectionTimeout * 1000)
+				.setConnectionRequestTimeout(connectionTimeout * 1000)
+				.build();
+		HttpUriRequest request = RequestBuilder.create("MOSIPDINFO")
+				.setUri(url)
+				.setConfig(requestConfig)
+				.build();
 		CloseableHttpClient client = HttpClients.createDefault();
 		CloseableHttpResponse clientResponse = null;
 		String response = null;
