@@ -448,18 +448,32 @@ public class UserOnBoardDAOImlpTest {
 		assertEquals(RegistrationConstants.SUCCESS,userOnboardDAOImpl.insertExtractedTemplates(templates));
 	};
 
+	@Test
+	@Ignore
+	public void insertExtractedTemplatesFalseTest() {
+		List<BIR> templates = getTemplates();
+		List<UserBiometric> existingBiometrics = null;
+		UserDetail userDetail = null;
+		Mockito.when(userBiometricRepository.findByUserBiometricIdUsrId(Mockito.any())).thenReturn(existingBiometrics);
+		Mockito.when(userDetailRepository.findByIdIgnoreCaseAndIsActiveTrue(Mockito.anyString())).thenReturn(userDetail);
+		assertEquals(RegistrationConstants.SUCCESS,userOnboardDAOImpl.insertExtractedTemplates(templates));
+	};
+
 		
 	@Test
 	public void saveTest() {
 		assertEquals(RegistrationConstants.SUCCESS,userOnboardDAOImpl.save());
 	}
-	
 
 	@Test
-	public void getBioAttributeCodeTest() {
-	/*	Mockito.when(userBiometricRepository.saveAll(bioMetricsList)).thenReturn(bioMetricsList);
-		assertEquals(RegistrationConstants.SUCCESS,userOnboardDAOImpl.insert(biometricDTO));*/
+	@Ignore
+	public void insertWithBioMetricsListTest() {
+		List<BiometricsDto> biometrics = getBioMetricsDTOList();
+		List<UserBiometric> existingBiometrics = getUserBiometrics();
+		Mockito.when(userBiometricRepository.findByUserBiometricIdUsrId(Mockito.anyString())).thenReturn(existingBiometrics);
+		assertEquals(RegistrationConstants.SUCCESS,userOnboardDAOImpl.insert(biometrics));
 	}
+	
 	
 	UserDetail getUserDetails() {		
 		UserDetail userdtl = new UserDetail();
@@ -521,19 +535,22 @@ public class UserOnBoardDAOImlpTest {
 		return biometrics;
 	}
 	
-	List<BiometricsDto> getBioMetricsDTOList(){		
-		byte[] faceISO = {1,2,3,4};
+	List<BiometricsDto> getBioMetricsDTOList(){	
+		String str1 = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAoHCBUVFRgWFRISERgYHBUYGBIS";
+		byte[] byteData1 = new byte[str1.length()];
 		List<BiometricsDto> biometrics = new ArrayList<BiometricsDto>();
-		BiometricsDto dto = new BiometricsDto();		
+		BiometricsDto dto = new BiometricsDto("rightIndex", byteData1, 80.0);		
 		dto.setBioAttribute("LEFT_LITTLE");
-		dto.setAttributeISO(faceISO);
+		dto.setAttributeISO(byteData1);
 		dto.setNumOfRetries(2);
 		dto.setQualityScore(new Double(2));
 		biometrics.add(dto);
 		
-		BiometricsDto dto1 = new BiometricsDto();		
+		String str2 = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAoHCBUVFRgWFRISERgYHBUYGBIS";
+		byte[] byteData2 = new byte[str2.length()];
+		BiometricsDto dto1 = new BiometricsDto("rightIndex", byteData2, 80.0);		
 		dto1.setBioAttribute("LEFT_LITTLE");
-		dto1.setAttributeISO(faceISO);
+		dto1.setAttributeISO(byteData2);
 		dto1.setNumOfRetries(2);
 		dto1.setQualityScore(new Double(2));
 		biometrics.add(dto1);
