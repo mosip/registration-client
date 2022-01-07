@@ -84,7 +84,7 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 	private RetryTemplate retryTemplate;
 
 	@PostConstruct
-	private void init() {
+	public void init() {
 		FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
 		backOffPolicy.setBackOffPeriod((Long) ApplicationContext.map().getOrDefault("mosip.registration.retry.delay.packet.statussync", 1000l));
 

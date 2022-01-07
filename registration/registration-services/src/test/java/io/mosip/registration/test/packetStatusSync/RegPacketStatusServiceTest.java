@@ -137,6 +137,8 @@ public class RegPacketStatusServiceTest {
 		machine.setId("11002");
 		machine.setIsActive(true);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
+		
+		packetStatusService.init();
 	}
 
 	@AfterClass
