@@ -3,13 +3,14 @@ package io.mosip.registration.test.service;
 import static org.junit.Assert.assertNotNull;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.crypto.SecretKey;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,9 +31,13 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.dao.IdentitySchemaDao;
+import io.mosip.registration.dto.schema.ProcessSpecDto;
+import io.mosip.registration.dto.schema.SchemaDto;
+import io.mosip.registration.dto.schema.SettingsSchema;
+import io.mosip.registration.dto.schema.UiFieldDTO;
+import io.mosip.registration.dto.schema.UiScreenDTO;
 import io.mosip.registration.entity.IdentitySchema;
 import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.IdentitySchemaRepository;
 import io.mosip.registration.service.impl.IdentitySchemaServiceImpl;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
@@ -76,7 +81,6 @@ public class IdentitySchemaServiceImplTest {
 		PowerMockito.mockStatic(SessionContext.class);
 		PowerMockito.doReturn(userContext).when(SessionContext.class, "userContext");
 		PowerMockito.when(SessionContext.userContext().getUserId()).thenReturn("mosip");
-		;
 	}
 
 	@Test
@@ -84,10 +88,9 @@ public class IdentitySchemaServiceImplTest {
 		Double idVersion = 2.0;
 		Mockito.when(identitySchemaDao.getLatestEffectiveSchemaVersion()).thenReturn(idVersion);
 		assertNotNull(identitySchemaServiceImpl.getLatestEffectiveSchemaVersion());
-	}
-
+	}	
+	
 	@Test
-	@Ignore
 	public void getLatestEffectiveIDSchemaTest() throws RegBaseCheckedException {
 		String schemaJson = "schemaJson";
 		IdentitySchema idnSchema = new IdentitySchema();
@@ -96,17 +99,59 @@ public class IdentitySchemaServiceImplTest {
 				.thenReturn(idnSchema);
 
 		Mockito.when(identitySchemaDao.getLatestEffectiveIDSchema()).thenReturn(schemaJson);
-		assertNotNull(identitySchemaServiceImpl.getLatestEffectiveSchemaVersion());
+		assertNotNull(identitySchemaServiceImpl.getLatestEffectiveIDSchema());
 	}
-
-	@Test(expected = RegBaseUncheckedException.class)
-	@Ignore
-	public void getLatestEffectiveSchemaVersionFalseTest() throws RegBaseCheckedException {
-		Double idVersion = null;
-		Mockito.when(identitySchemaDao.getLatestEffectiveSchemaVersion()).thenReturn(idVersion);
-		Mockito.when(Mockito.when(identitySchemaDao.getLatestEffectiveSchemaVersion()))
-				.thenThrow(new RegBaseUncheckedException());
-		assertNotNull(identitySchemaServiceImpl.getLatestEffectiveSchemaVersion());
+	
+	@Test
+	public void getIDSchemaTest() throws RegBaseCheckedException {
+		Double idVersion = 2.0;
+		String success="success";
+		Mockito.when(identitySchemaDao.getIDSchema(idVersion)).thenReturn(success);
+		assertNotNull(identitySchemaServiceImpl.getIDSchema(idVersion));
 	}
+	@Test
+	public void getIdentitySchemaTest() throws RegBaseCheckedException {
+		Double idVersion = 2.0;
+		SchemaDto schemaDto = new SchemaDto();;
+		Mockito.when(identitySchemaDao.getIdentitySchema(idVersion)).thenReturn(schemaDto);
+		assertNotNull(identitySchemaServiceImpl.getIdentitySchema(idVersion));
+	}	
+	
+	@Test
+	public void getSettingsSchemaTest() throws RegBaseCheckedException {
+		Double idVersion = 2.0;
+		List<SettingsSchema> schemas  = new ArrayList<SettingsSchema>();
+		Mockito.when(identitySchemaDao.getSettingsSchema(idVersion)).thenReturn(schemas);
+		assertNotNull(identitySchemaServiceImpl.getSettingsSchema(idVersion));
+	}	
+	
+	@Test
+	public void getProcessSpecDtoTest() throws RegBaseCheckedException {
+		Double idVersion = 2.0;
+		ProcessSpecDto processDto = new ProcessSpecDto();
+		Mockito.when(identitySchemaDao.getProcessSpec("processId", idVersion)).thenReturn(processDto);
+		assertNotNull(identitySchemaServiceImpl.getSettingsSchema(idVersion));
+	}	
 
+	@Test
+	public void getAllFieldSpecTest() throws RegBaseCheckedException {
+		Double idVersion = 2.0;
+		ProcessSpecDto processDto = new ProcessSpecDto();
+		List<UiScreenDTO> screens = getUiScreens();
+		processDto.setScreens(screens);
+		Mockito.when(identitySchemaDao.getProcessSpec("processId", idVersion)).thenReturn(processDto);
+		assertNotNull(identitySchemaServiceImpl.getAllFieldSpec("processId", idVersion));
+	}
+	
+	private List<UiScreenDTO> getUiScreens(){
+		List<UiScreenDTO> uiScreens = new ArrayList<UiScreenDTO>();
+		List<UiFieldDTO> fields = new ArrayList<UiFieldDTO>();
+		UiFieldDTO uiFieldDto = new UiFieldDTO();
+		fields.add(uiFieldDto);
+		UiScreenDTO screen1 = new UiScreenDTO();
+		screen1.setFields(fields);
+		uiScreens.add(screen1);
+		return uiScreens;
+	}
+	
 }
