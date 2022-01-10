@@ -75,7 +75,7 @@ public class WaitsUtil {
         node = lookupById(id);
 
         assertThat(robot.lookup(id).tryQuery()).isNotNull();
-       // robot.moveTo(node);
+        robot.moveTo(node);
         robot.clickOn(node);
         
         
