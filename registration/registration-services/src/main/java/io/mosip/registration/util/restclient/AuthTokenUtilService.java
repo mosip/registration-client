@@ -78,7 +78,7 @@ public class AuthTokenUtilService {
     private RetryTemplate retryTemplate;
 
     @PostConstruct
-    private void init() {
+    public void init() {
         FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
         backOffPolicy.setBackOffPeriod((Long) ApplicationContext.map().getOrDefault("mosip.registration.retry.delay.auth", 1000l));
 

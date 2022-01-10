@@ -19,6 +19,7 @@ import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.core.util.CryptoUtil;
 import org.apache.http.Consts;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
@@ -82,10 +83,13 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 	@Autowired
 	private MosipDeviceSpecificationFactory deviceSpecificationFactory;
 
+	@Autowired
+	private ObjectMapper objectMapper;
+
 	@Value("${mosip.registration.mdm.trust.domain.rcapture:DEVICE}")
 	private String rCaptureTrustDomain;
 
-	@Value("${mosip.registration.mdm.trust.domain.digitalId:FTM}")
+	@Value("${mosip.registration.mdm.trust.domain.digitalId:DEVICE}")
 	private String digitalIdTrustDomain;
 
 	@Override
@@ -139,25 +143,14 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Started Strema for modality : " + modality);
 
-			String url = bioDevice.getCallbackId() + MosipBioDeviceConstants.STREAM_ENDPOINT;
-
 			String timeout = (String) ApplicationContext.getInstance().getApplicationMap()
 					.getOrDefault(RegistrationConstants.CAPTURE_TIME_OUT, "60000");
 			StreamRequestDTO streamRequestDTO = new StreamRequestDTO(bioDevice.getDeviceId(), getDeviceSubId(modality),
 					timeout);
 
-			String request = new ObjectMapper().writeValueAsString(streamRequestDTO);
-
-			CloseableHttpClient client = HttpClients.createDefault();
-			StringEntity requestEntity = new StringEntity(request, ContentType.create("Content-Type", Consts.UTF_8));
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Building Stream url...." + System.currentTimeMillis());
-			HttpUriRequest httpUriRequest = RequestBuilder.create("STREAM").setUri(url).setEntity(requestEntity)
-					.build();
-
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Requesting Stream url...." + System.currentTimeMillis());
-			CloseableHttpResponse response = client.execute(httpUriRequest);
+			String request = objectMapper.writeValueAsString(streamRequestDTO);
+			CloseableHttpResponse response = mosipDeviceSpecificationHelper.getHttpClientResponse(
+					bioDevice.getCallbackId() + MosipBioDeviceConstants.STREAM_ENDPOINT, "STREAM", request);
 
 			InputStream urlStream = null;
 			if (response.getEntity() != null) {
@@ -211,33 +204,19 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 			mdmRequestDto.setCount(count);
 
 			RCaptureRequestDTO rCaptureRequestDTO = getRCaptureRequest(bioDevice, mdmRequestDto);
+			String requestBody = objectMapper.writeValueAsString(rCaptureRequestDTO);
+			LOGGER.debug("Request for RCapture....{}", requestBody);
 
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Entering into Capture method....." + System.currentTimeMillis());
+			CloseableHttpResponse response = mosipDeviceSpecificationHelper.getHttpClientResponse(
+					bioDevice.getCallbackId() + MosipBioDeviceConstants.CAPTURE_ENDPOINT,
+					"RCAPTURE", requestBody);
 
-			String requestBody = null;
-			ObjectMapper mapper = new ObjectMapper();
-			requestBody = mapper.writeValueAsString(rCaptureRequestDTO);
-
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for RCapture...." + requestBody);
-
-			CloseableHttpClient client = HttpClients.createDefault();
-			StringEntity requestEntity = new StringEntity(requestBody,
-					ContentType.create("Content-Type", Consts.UTF_8));
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Bulding capture url...." + System.currentTimeMillis());
-			HttpUriRequest request = RequestBuilder.create("RCAPTURE")
-					.setUri(bioDevice.getCallbackId() + MosipBioDeviceConstants.CAPTURE_ENDPOINT)
-					.setEntity(requestEntity).build();
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Requesting capture url...." + System.currentTimeMillis());
-			CloseableHttpResponse response = client.execute(request);
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 					"Request completed.... " + System.currentTimeMillis());
 
 			String val = EntityUtils.toString(response.getEntity());
 
-			RCaptureResponseDTO captureResponse = mapper.readValue(val.getBytes(StandardCharsets.UTF_8),
+			RCaptureResponseDTO captureResponse = objectMapper.readValue(val.getBytes(StandardCharsets.UTF_8),
 					RCaptureResponseDTO.class);
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
@@ -266,7 +245,7 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 					String signature = mosipDeviceSpecificationHelper.getSignature(rCaptureResponseBiometricsDTO.getData());
 
 					String decodedPayLoad = new String(CryptoUtil.decodeURLSafeBase64(payLoad));
-					RCaptureResponseDataDTO dataDTO = mapper.readValue(decodedPayLoad, RCaptureResponseDataDTO.class);
+					RCaptureResponseDataDTO dataDTO = objectMapper.readValue(decodedPayLoad, RCaptureResponseDataDTO.class);
 
 					LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 							"Parsed decoded payload" + System.currentTimeMillis());
@@ -358,7 +337,7 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 			rCaptureRequestDTO = new RCaptureRequestDTO(mdmRequestDto.getEnvironment(), "Registration", "0.9.5",
 					String.valueOf(mdmRequestDto.getTimeout()),
 					LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-					String.valueOf(mosipDeviceSpecificationHelper.generateMDMTransactionId()), captureRequestBioDTOs,
+					mosipDeviceSpecificationHelper.generateMDMTransactionId(), captureRequestBioDTOs,
 					null);
 		}
 
@@ -457,22 +436,15 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 					"Entering into Device availbale check....." + System.currentTimeMillis());
 
-			ObjectMapper mapper = new ObjectMapper();
-			String requestBody = mapper.writeValueAsString(deviceDiscoveryRequest);
+			String requestBody = objectMapper.writeValueAsString(deviceDiscoveryRequest);
 
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for RCapture...." + requestBody);
+			LOGGER.debug(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for device discovery...." + requestBody);
 
-			CloseableHttpClient client = HttpClients.createDefault();
-			StringEntity requestEntity = new StringEntity(requestBody,
-					ContentType.create("Content-Type", Consts.UTF_8));
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Bulding Device availbale check url...." + System.currentTimeMillis());
+			CloseableHttpResponse response = mosipDeviceSpecificationHelper.getHttpClientResponse(
+					mosipDeviceSpecificationHelper.buildUrl(mdmBioDevice.getPort(), "device"),
+					"MOSIPDISC",
+					requestBody);
 
-			HttpUriRequest request = RequestBuilder.create("MOSIPDISC")
-					.setUri(mosipDeviceSpecificationHelper.buildUrl(mdmBioDevice.getPort(), "device"))
-					.setEntity(requestEntity).build();
-
-			CloseableHttpResponse response = client.execute(request);
 			LOGGER.info("Request completed {}. parsing device discovery response to 095 dto", System.currentTimeMillis());
 			List<DeviceDiscoveryMDSResponse> deviceList = (mosipDeviceSpecificationHelper.getMapper().readValue(EntityUtils.toString(response.getEntity()),
 					new TypeReference<List<DeviceDiscoveryMDSResponse>>() {}));

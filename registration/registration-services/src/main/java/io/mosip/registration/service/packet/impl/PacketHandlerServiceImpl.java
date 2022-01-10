@@ -27,6 +27,7 @@ import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.service.config.GlobalParamService;
+import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -141,6 +142,9 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	@Autowired
 	private ClientCryptoFacade clientCryptoFacade;
 
+	@Autowired
+	private MasterSyncService masterSyncService;
+
 	@Value("${objectstore.packet.source:REGISTRATION_CLIENT}")
 	private String source;
 
@@ -253,6 +257,9 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			errorResponseDTO.setCode(exception.getMessage());
 			errorResponseDTO.setMessage(exception.getMessage());
 			responseDTO.getErrorResponseDTOs().add(errorResponseDTO);
+		} finally {
+			LOGGER.info("Finally clearing all the captured data from registration DTO");
+			registrationDTO.clearRegistrationDto();
 		}
 		LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Registration Handler had been ended");
 		return responseDTO;
@@ -618,6 +625,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 				defaultFieldGroups.addAll(processSpecDto.getAutoSelectedGroups());
 
 		registrationDTO.setDefaultUpdatableFieldGroups(defaultFieldGroups);
+		registrationDTO.setConfiguredBlockListedWords(masterSyncService.getAllBlockListedWords());
 		return registrationDTO;
 	}
 

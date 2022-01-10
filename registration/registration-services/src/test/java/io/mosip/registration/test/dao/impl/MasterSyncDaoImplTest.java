@@ -2,6 +2,7 @@ package io.mosip.registration.test.dao.impl;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.sql.Timestamp;
@@ -10,7 +11,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -36,12 +36,16 @@ import io.mosip.registration.dao.impl.MasterSyncDaoImpl;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.BiometricAttribute;
 import io.mosip.registration.entity.BlocklistedWords;
+import io.mosip.registration.entity.DocumentCategory;
 import io.mosip.registration.entity.DocumentType;
+import io.mosip.registration.entity.Language;
 import io.mosip.registration.entity.Location;
+import io.mosip.registration.entity.LocationHierarchy;
 import io.mosip.registration.entity.ReasonCategory;
 import io.mosip.registration.entity.ReasonList;
 import io.mosip.registration.entity.RegistrationCenterType;
 import io.mosip.registration.entity.SyncControl;
+import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.BiometricAttributeRepository;
@@ -58,6 +62,7 @@ import io.mosip.registration.repositories.SyncJobDefRepository;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import io.mosip.registration.util.mastersync.MetaDataUtils;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 /**
  * @author Sreekar Chukka
@@ -357,7 +362,76 @@ public class MasterSyncDaoImplTest {
 		assertNotNull(masterSyncDaoImpl.getBiometricType("eng", biometricType));
 		
 	}
+	
+	@Test
+	public void getLocationDetailsTest() {
+		List<Location> locations = new ArrayList<Location>();
+		locations.add(new Location());
+		Mockito.when(locationRepository.findAllByIsActiveTrue()).thenReturn(locations);
+		assertEquals(locations.size(), masterSyncDaoImpl.getLocationDetails().size());
+	}
+	
+	@Test
+	public void getLocationDetailsBasedOnLangCodeTest() {
+		List<Location> locations = new ArrayList<Location>();
+		locations.add(new Location());
+		Mockito.when(locationRepository.findByIsActiveTrueAndLangCode(Mockito.anyString())).thenReturn(locations);
+		assertEquals(locations.size(), masterSyncDaoImpl.getLocationDetails("lanCode").size());
+	}
 
+	@Test
+	public void getLocationDetailsBasedOnLangCodeandHierarchyTest() {
+		List<Location> locations = new ArrayList<Location>();
+		locations.add(new Location());
+		Mockito.when(locationRepository.findByIsActiveTrueAndHierarchyNameAndLangCode(Mockito.anyString(), Mockito.anyString())).thenReturn(locations);
+		assertEquals(locations.size(), masterSyncDaoImpl.getLocationDetails("hierarchyName", "langCode").size());
+	}
+	
+	@Test
+	public void getLocationDetailsBasedOnLangCodeandCodeTest() {
+		Location location = new Location();
+		Mockito.when(locationRepository.findByCodeAndLangCode("code", "langCode")).thenReturn(location);
+		assertNotNull(masterSyncDaoImpl.getLocation("code", "langCode"));
+	}
+
+	@Test
+	public void getDocumentCategoryTest() {
+		List<DocumentCategory> docCategories = new ArrayList<DocumentCategory>();
+		docCategories.add(new DocumentCategory());
+		Mockito.when(documentCategoryRepository.findAllByIsActiveTrue()).thenReturn(docCategories);
+		assertEquals(docCategories.size(), masterSyncDaoImpl.getDocumentCategory().size());
+	}
+
+	@Test
+	public void getActiveLanguagesTest() {
+		List<Language> languages = new ArrayList<Language>();
+		languages.add(new Language());
+		Mockito.when(languageRepository.findAllByIsActiveTrue()).thenReturn(languages);
+		assertEquals(languages.size(), masterSyncDaoImpl.getActiveLanguages().size());
+	}
+	
+	@Test
+	public void getAllLocationHierarchyTest() {
+		List<LocationHierarchy> locationHierarcies = new ArrayList<LocationHierarchy>();
+		locationHierarcies.add(new LocationHierarchy());
+		Mockito.when(locationHierarchyRepository.findAllByIsActiveTrueAndLangCode("langCode")).thenReturn(locationHierarcies);
+		assertEquals(locationHierarcies.size(), masterSyncDaoImpl.getAllLocationHierarchy("langCode").size());
+	}
+
+	@Test
+	public void getSyncJobsTest() {
+		List<SyncJobDef> syncJobs = new ArrayList<SyncJobDef>();
+		syncJobs.add(new SyncJobDef());
+		Mockito.when(syncJobDefRepository.findAllByIsActiveTrue()).thenReturn(syncJobs);
+		assertEquals(syncJobs.size(), masterSyncDaoImpl.getSyncJobs().size());
+	}
+	@Test
+	public void getDocumentTypeTest() {
+		DocumentType docType = new DocumentType();
+		Mockito.when(documentTypeRepository.findByIsActiveTrueAndLangCodeAndCode("langCode","docCode")).thenReturn(docType);
+		assertNotNull(masterSyncDaoImpl.getDocumentType("docCode", "langCode"));
+	}
+	
 	/*@Test()
 	public void testSingleEntity() {
 		String response=null;
@@ -409,5 +483,8 @@ public class MasterSyncDaoImplTest {
 		
 		return syncDataResponseDto;
 	}
+	
+	
+	
 
 }

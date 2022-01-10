@@ -73,7 +73,7 @@ public interface MasterSyncService {
 	 * @return the all block listed words
 	 * @throws RegBaseCheckedException
 	 */
-	List<BlocklistedWordsDto> getAllBlockListedWords() throws RegBaseCheckedException;
+	List<String> getAllBlockListedWords();
 
 	/**
 	 * Gets all the document categories from db that to be displayed in the UI

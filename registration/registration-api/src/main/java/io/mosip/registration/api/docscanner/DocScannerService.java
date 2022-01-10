@@ -12,4 +12,6 @@ public interface DocScannerService {
     BufferedImage scan(DocScanDevice docScanDevice);
 
     List<DocScanDevice> getConnectedDevices();
+
+    void stop(DocScanDevice docScanDevice);
 }

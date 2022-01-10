@@ -20,6 +20,15 @@ import io.mosip.registration.mdm.dto.MDMError;
 import io.mosip.registration.mdm.dto.MdmDeviceInfo;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.MdmSbiDeviceInfoWrapper;
 
+import org.apache.http.Consts;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -62,6 +71,9 @@ public class MosipDeviceSpecificationHelper {
 
 	@Value("${mosip.registration.mdm.trust.domain.deviceinfo:DEVICE}")
 	private String deviceInfoTrustDomain;
+
+	@Value("${mosip.registration.mdm.connection.timeout:5}")
+	private int connectionTimeout;
 
 	private final String CONTENT_LENGTH = "Content-Length:";
 
@@ -237,5 +249,21 @@ public class MosipDeviceSpecificationHelper {
 					RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage()
 							+ " Identified Quality Score for capture biometrics is null or Empty");
 		}
+	}
+
+	public CloseableHttpResponse getHttpClientResponse(String url, String method, String body) throws IOException {
+		RequestConfig requestConfig = RequestConfig.custom()
+				.setConnectTimeout(connectionTimeout * 1000)
+				.setSocketTimeout(connectionTimeout * 1000)
+				.setConnectionRequestTimeout(connectionTimeout * 1000)
+				.build();
+		CloseableHttpClient client = HttpClients.createDefault();
+		StringEntity requestEntity = new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8));
+		HttpUriRequest httpUriRequest = RequestBuilder.create(method)
+				.setConfig(requestConfig)
+				.setUri(url)
+				.setEntity(requestEntity)
+				.build();
+		return client.execute(httpUriRequest);
 	}
 }
