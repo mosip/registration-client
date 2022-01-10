@@ -1,13 +1,13 @@
 package registrationtest.utility;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+
 import org.testfx.api.FxRobot;
 
 import javafx.scene.input.KeyCode;
 
 public class RobotActions {
-    private static final Logger logger = LogManager.getLogger(RobotActions.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(RobotActions.class);
 
     FxRobot robot;
 

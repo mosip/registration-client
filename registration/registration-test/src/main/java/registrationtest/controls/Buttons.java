@@ -2,8 +2,6 @@ package registrationtest.controls;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.testfx.api.FxRobot;
 
 import javafx.scene.control.Button;
@@ -11,7 +9,7 @@ import registrationtest.utility.WaitsUtil;
 
 public class Buttons {
 
-    private static final Logger logger = LogManager.getLogger(Buttons.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(Buttons.class);
     String continueBtn = "#continueBtn", backBtn = "#backBtn", confirm = "#confirm", uploadBtn = "#uploadBtn",
             cancel = "#cancel", submit = "#submit", next = "#next", authenticate = "#authenticate", print = "#print";
 

@@ -1,7 +1,7 @@
 package registrationtest.pages;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+
 import org.testfx.api.FxRobot;
 
 import javafx.scene.control.TextField;
@@ -14,7 +14,7 @@ import registrationtest.utility.RobotActions;
 import registrationtest.utility.WaitsUtil;
 
 public class UploadPacketPage {
-    private static final Logger logger = LogManager.getLogger(UploadPacketPage.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(UploadPacketPage.class);
 
     FxRobot robot;
     WaitsUtil waitsUtil;

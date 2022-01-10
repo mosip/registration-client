@@ -37,12 +37,12 @@ import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.RobotActions;
 import registrationtest.utility.WaitsUtil;
 
-import org.apache.log4j.LogManager;
 
-import org.apache.log4j.Logger;
+
+
 
 public class BioCorrectionReg {
-    private static final Logger logger = LogManager.getLogger(BioCorrectionReg.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(BioCorrectionReg.class);
     FxRobot robot;
     Schema schema;
     Root root;

@@ -2,8 +2,7 @@ package registrationtest.controls;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
 import org.testfx.api.FxRobot;
 
 import javafx.scene.control.Button;
@@ -11,8 +10,7 @@ import registrationtest.runapplication.RegistrationMain;
 import registrationtest.utility.WaitsUtil;
 
 public class Alerts {
-
-    private static final Logger logger = LogManager.getLogger(Alerts.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(Alerts.class);
     String alertImage = "#alertImage";
     String exit = "#exit";
     String success = "#context";

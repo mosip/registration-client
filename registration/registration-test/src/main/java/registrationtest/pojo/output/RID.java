@@ -5,15 +5,15 @@ package registrationtest.pojo.output;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.registration.dao.RegistrationDAO;
 
 public class RID {
-    private static final Logger logger = LogManager.getLogger(RID.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(RID.class);
     @Autowired
     private RegistrationDAO registrationDAO;
     public String rid;
