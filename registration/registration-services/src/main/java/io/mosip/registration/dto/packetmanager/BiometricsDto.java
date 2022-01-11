@@ -1,9 +1,13 @@
 package io.mosip.registration.dto.packetmanager;
 
 import io.mosip.commons.packet.constants.Biometric;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class BiometricsDto {
 	
 	private byte[] attributeISO;
@@ -19,6 +23,7 @@ public class BiometricsDto {
 	private String payLoad;
 	private String signature;
 	private String specVersion;
+	
 
 		
 	public BiometricsDto(String bioAttribute, byte[] attributeISO, double qualityScore) {

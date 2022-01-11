@@ -80,8 +80,8 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	private Button cancelBtn;
 	@FXML
 	private Button cropButton;
-	//@FXML
-	//private Button streamBtn;
+	@FXML
+	private Button streamBtn;
 	@FXML
 	private Button previewBtn;
 	@FXML
@@ -124,6 +124,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	@Value("${mosip.doc.stage.height:620}")
 	private int height;
 
+	private Thread streamer_thread = null;
 	private Stage popupStage;
 	public TextField streamerValue;
 	private FxControl fxControl;
@@ -255,7 +256,6 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 			rectangleSelection = null;
 			clearSelection();
-			stopStreaming();
 			setScanImageViewZoomable();
 
 			LOGGER.info("Opening pop-up screen to scan for user registration");
@@ -293,8 +293,8 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 	@FXML
 	public void preview() {
+		setWebCamStream(false);
 		clearSelection();
-		stopStreaming();
 		showPreview(true);
 
 		if(documentScanController.getScannedPages() != null && !documentScanController.getScannedPages().isEmpty()) {
@@ -305,18 +305,20 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	}
 
 
-	/*@FXML
+	@FXML
 	public void stream() {
 		clearSelection();
-		stopStreaming();
 
 		showPreview(false);
 		showStream(true);
 		cancelBtn.setDisable(true);
 		cropButton.setDisable(true);
 
+		if(getImageGroup().getChildren().isEmpty())
+			getImageGroup().getChildren().add(new ImageView());
+		this.scanImage = (ImageView)getImageGroup().getChildren().get(0);
 		startStream();
-	}*/
+	}
 
 	/**
 	 * This method will allow to scan
@@ -326,8 +328,9 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	 */
 	@FXML
 	public void scan() throws MalformedURLException, IOException {
-		scanningMsg.setVisible(true);
 		LOGGER.info("Invoke scan method for the passed controller");
+		scanningMsg.setVisible(true);
+		setWebCamStream(false);
 		String docNumber = docCurrentPageNumber.getText();
 		int currentPage = (docNumber == null || docNumber.isEmpty() || docNumber.equals("0")) ? 1 : Integer.valueOf(docNumber);
 
@@ -375,8 +378,8 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 	@FXML
 	public void crop() {
+		setWebCamStream(false);
 		clearSelection();
-		stopStreaming();
 		scanImage.setVisible(true);
 		rectangleSelection = new RectangleSelection(imageGroup);
 		LOGGER.debug("Shown stage for crop");
@@ -386,7 +389,8 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	@FXML
 	public void cancel() {
 		clearSelection();
-		stopStreaming();
+		setWebCamStream(false);
+
 		int currentDocPageNumber = Integer.valueOf(docCurrentPageNumber.getText());
 		int pageNumberIndex = currentDocPageNumber - 1;
 
@@ -462,8 +466,14 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	}
 
 	private void stopStreaming() {
-		isStreamPaused = true;
-		setWebCamStream(false);
+		try {
+			setWebCamStream(false);
+			isStreamPaused = true;
+			if(streamer_thread != null)
+				streamer_thread.interrupt();
+		} finally {
+			docScannerFacade.stopDevice(this.docScanDevice);
+		}
 	}
 
 
@@ -490,10 +500,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	 * @param event
 	 */
 	public void exitWindow(ActionEvent event) {
-
-		LOGGER.info(LOG_REG_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-				"Calling exit window to close the popup");
-
+		LOGGER.info("Calling exit window to close the popup");
 		stopStreaming();
 		clearSelection();
 		streamer.stop();
@@ -505,7 +512,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 			documentScanController.getScannedPages().clear();
 		}
 
-		LOGGER.info(LOG_REG_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Popup is closed");
+		LOGGER.info("Scan Popup is closed");
 
 	}
 
@@ -635,28 +642,33 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		LOGGER.debug("Saving cropped image completed");
 	}
 
-	/*public void startStream() {
-		isStreamPaused = false;
+	private void startStream() {
+		if(streamer_thread != null) {
+			streamer_thread.interrupt();
+			streamer_thread = null;
+		}
+
 		setWebCamStream(true);
-		Thread streamer_thread = new Thread(new Runnable() {
+		isStreamPaused = false;
+		streamer_thread = new Thread(new Runnable() {
 			public void run() {
 				while (isWebCamStream()) {
 					try {
 						if (!isStreamPaused()) {
-							getImageGroup().getChildren().clear();
-							getImageGroup().getChildren().add(new ImageView(DocScannerUtil.getImage(docScannerFacade.scanDocument(docScanDevice))));
+							getScanImage().setImage(DocScannerUtil.getImage(docScannerFacade.scanDocument(docScanDevice)));
 						}
-					} catch (NullPointerException exception) {
-						LOGGER.error("Error while streaming the captured photo", exception);
+					} catch (Throwable t) {
+						LOGGER.error("Error while streaming the captured photo", t);
 						setWebCamStream(false);
 					}
 				}
 			}
 		});
 		streamer_thread.start();
-	}*/
+	}
 
 	public void showPreview(boolean isVisible) {
+		isStreamPaused = true;
 		previewOption.setVisible(isVisible);
 		scanImage.setVisible(true);
 		cancelBtn.setDisable(false);
@@ -675,20 +687,13 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		imageGroup.getChildren().remove(1,imageGroup.getChildren().size());
 	}
 
-	/*private void setupImageView() {
-		scanImage.setVisible(true);
-		scanImage.setPreserveRatio(true);
-		scanImage.fitWidthProperty().bind(scanImage.getImage().widthProperty());
-		scanImage.fitHeightProperty().bind(scanImage.getImage().heightProperty());
-	}*/
-
 	public void setUpPreview() {
 		saveBtn.setDisable(true);
 		cropButton.setDisable(true);
-		cancelBtn.setDisable(true);
+		cancelBtn.setDisable(false);
 		captureBtn.setDisable(true);
 
-		//streamBtn.setDisable(true);
+		streamBtn.setDisable(true);
 		previewBtn.setDisable(false);
 		previewOption.setVisible(true);
 		preview();

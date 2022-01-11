@@ -61,6 +61,11 @@ public class ScannerStubImpl implements DocScannerService {
         return Arrays.asList(docScanDevice);
     }
 
+    @Override
+    public void stop(DocScanDevice docScanDevice) {
+        //Do nothing
+    }
+
     private String getStubPath() {
         index = index % DOC_STUB_PATHS.size();
         return DOC_STUB_PATHS.get(index++);

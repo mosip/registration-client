@@ -1,7 +1,5 @@
 package registrationtest.pages;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.testfx.api.FxRobot;
 
 import javafx.scene.control.TextField;
@@ -10,7 +8,7 @@ import registrationtest.utility.WaitsUtil;
 
 public class AuthenticationPage {
 
-    private static final Logger logger = LogManager.getLogger(AuthenticationPage.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(AuthenticationPage.class);
     FxRobot robot;
     WaitsUtil waitsUtil;
     String AuthenticationImg = "#AuthenticationImg";

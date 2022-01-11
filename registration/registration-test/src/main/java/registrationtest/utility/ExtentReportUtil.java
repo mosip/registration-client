@@ -4,15 +4,15 @@ package registrationtest.utility;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+
 
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.reporter.ExtentHtmlReporter;
 
 public class ExtentReportUtil {
-    private static final Logger logger = LogManager.getLogger(ExtentReportUtil.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(ExtentReportUtil.class);
 
     public static Path REPORTPATH = Paths.get(System.getProperty("user.dir"), "report",
             "extentReport" + DateUtil.getDateTime() + ".html");

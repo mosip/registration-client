@@ -1,14 +1,14 @@
 package registrationtest.pages;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+
 import org.testfx.api.FxRobot;
 
 import registrationtest.utility.WaitsUtil;
 
 public class EodApprovalPage {
 
-    private static final Logger logger = LogManager.getLogger(EodApprovalPage.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(EodApprovalPage.class);
     FxRobot robot;
     WaitsUtil waitsUtil;
     String filterField = "#filterField";

@@ -1,15 +1,15 @@
 package registrationtest.pages;
 
 import java.io.IOException;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+
 import org.testfx.api.FxRobot;
 
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;
 
 public class SelectLanguagePage {
-    private static final Logger logger = LogManager.getLogger(SelectLanguagePage.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(SelectLanguagePage.class);
 
     FxRobot robot;
     String code;

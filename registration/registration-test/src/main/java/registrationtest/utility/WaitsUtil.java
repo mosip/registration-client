@@ -23,8 +23,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+
 import org.testfx.util.WaitForAsyncUtils;
 
 import static org.testfx.assertions.api.Assertions.assertThat;
@@ -35,7 +35,7 @@ import static org.testfx.assertions.api.Assertions.assertThat;
  * @References https://www.codota.com/code/java/classes/org.awaitility.Awaitility
  */
 public class WaitsUtil {
-    private static final Logger logger = LogManager.getLogger(WaitsUtil.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(WaitsUtil.class);
 
     Node node;
     FxRobot robot;
