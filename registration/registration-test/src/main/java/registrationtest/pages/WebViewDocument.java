@@ -1,7 +1,7 @@
 package registrationtest.pages;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+
 import org.testfx.api.FxRobot;
 
 import javafx.application.Platform;
@@ -16,7 +16,7 @@ import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;
 
 public class WebViewDocument {
-    private static final Logger logger = LogManager.getLogger(WebViewDocument.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(WebViewDocument.class);
 
     FxRobot robot;
     Stage applicationPrimaryStage;

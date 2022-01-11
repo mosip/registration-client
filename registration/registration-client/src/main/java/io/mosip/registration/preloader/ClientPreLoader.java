@@ -1,5 +1,6 @@
 package io.mosip.registration.preloader;
 
+import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.update.ClientSetupValidator;
 import javafx.application.Preloader;
@@ -10,6 +11,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
+import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -75,6 +77,7 @@ public class ClientPreLoader extends Preloader {
         primaryStage.setResizable(true);
         primaryStage.setTitle("Client Pre-Loader");
         primaryStage.setScene(scene);
+        primaryStage.getIcons().add(new Image(getClass().getResource(RegistrationConstants.LOGO).toExternalForm()));
         primaryStage.show();
     }
 

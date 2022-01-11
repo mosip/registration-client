@@ -19,8 +19,6 @@ import java.util.TreeMap;
 
 import io.mosip.registration.dto.mastersync.GenericDto;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.testfx.api.FxRobot;
 
 import javafx.application.Platform;
@@ -44,7 +42,7 @@ import registrationtest.utility.WaitsUtil;
 
 public class DemographicPage {
 
-    private static final Logger logger = LogManager.getLogger(DemographicPage.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(DemographicPage.class);
     FxRobot robot;
     Stage applicationPrimaryStage;
     Scene scene;

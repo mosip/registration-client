@@ -257,6 +257,9 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			errorResponseDTO.setCode(exception.getMessage());
 			errorResponseDTO.setMessage(exception.getMessage());
 			responseDTO.getErrorResponseDTOs().add(errorResponseDTO);
+		} finally {
+			LOGGER.info("Finally clearing all the captured data from registration DTO");
+			registrationDTO.clearRegistrationDto();
 		}
 		LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Registration Handler had been ended");
 		return responseDTO;

@@ -81,5 +81,15 @@ public class DocumentCategoryDAOImplTest {
 		assertEquals(Arrays.asList(documentCategory), registrationDocumentCategoryDAOImpl.getDocumentCategoriesByLangCode("languageCode"));
 
 	}
+	
+	
+	@Test
+	public void getDocumentCategoryByCodeAndByLangCodeTest() {
+		DocumentCategory documentCategory = new DocumentCategory();
+		Mockito.when(registrationDocumentCategoryRepository.findByIsActiveTrueAndCodeAndLangCode(Mockito.anyString(), Mockito.anyString()))
+				.thenReturn(documentCategory);
+		assertNotNull(registrationDocumentCategoryDAOImpl.getDocumentCategoryByCodeAndByLangCode(Mockito.anyString(), Mockito.anyString()));
+
+	}
 
 }

@@ -10,7 +10,12 @@ import java.util.WeakHashMap;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
+import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
+import io.mosip.kernel.signature.service.SignatureService;
+import io.mosip.kernel.signature.service.impl.SignatureServiceImpl;
 import io.mosip.registration.config.DaoConfig;
+import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationHelper;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -171,4 +176,18 @@ public class TestDaoConfig extends DaoConfig {
 		driverManagerDataSource.setUrl(URL);
 		return driverManagerDataSource;
 	}
+
+	@Primary
+	@Bean
+	public SignatureService signatureService() {
+		return Mockito.mock(SignatureServiceImpl.class);
+	}
+
+	@Primary
+	@Bean
+	public BioAPIFactory bioAPIFactory() {
+		return Mockito.mock(BioAPIFactory.class);
+	}
+
+
 }

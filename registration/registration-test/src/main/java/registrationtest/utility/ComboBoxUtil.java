@@ -5,14 +5,14 @@ import io.mosip.registration.dto.mastersync.GenericDto;
 
 import java.util.Optional;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+
 
 import javafx.application.Platform;
 import javafx.scene.control.ComboBox;
 
 public class ComboBoxUtil {
-    private static final Logger logger = LogManager.getLogger(ComboBoxUtil.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(ComboBoxUtil.class);
     static WaitsUtil waitsUtil = new WaitsUtil();
 
     public void user_selects_combo_item2(String comboBoxId, String val) {

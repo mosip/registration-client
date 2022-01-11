@@ -37,12 +37,12 @@ import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.RobotActions;
 import registrationtest.utility.WaitsUtil;
 
-import org.apache.log4j.LogManager;
 
-import org.apache.log4j.Logger;
+
+
 
 public class UpdateReg {
-    private static final Logger logger = LogManager.getLogger(UpdateReg.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(UpdateReg.class);
     @Autowired
     private RegistrationDAO registrationDAO;
     FxRobot robot;

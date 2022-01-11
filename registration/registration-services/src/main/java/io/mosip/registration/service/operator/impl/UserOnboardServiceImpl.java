@@ -1,7 +1,8 @@
 package io.mosip.registration.service.operator.impl;
 
 import static io.mosip.registration.constants.LoggerConstants.LOG_REG_USER_ONBOARD;
-import static io.mosip.registration.constants.RegistrationConstants.*;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -27,14 +28,13 @@ import java.util.stream.Stream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
-import io.micrometer.core.annotation.Counted;
-import io.micrometer.core.annotation.Timed;
-import io.mosip.kernel.logger.logback.util.MetricTag;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import io.mosip.commons.packet.constants.Biometric;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
@@ -59,13 +59,13 @@ import io.mosip.kernel.keymanagerservice.exception.InvalidApplicationIdException
 import io.mosip.kernel.keymanagerservice.exception.KeymanagerServiceException;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import io.mosip.kernel.keymanagerservice.util.KeymanagerUtil;
+import io.mosip.kernel.logger.logback.util.MetricTag;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.UserOnboardDAO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.biometric.BiometricDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -332,39 +332,39 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 	 * @param previousHashArray the previous hash array
 	 * @param responseDTO       the response DTO
 	 */
-	private void addFaceData(List<Map<String, Object>> listOfBiometric, byte[] faceISO, String[] previousHashArray,
-			ResponseDTO responseDTO) throws NoSuchAlgorithmException {
-		if (null != faceISO) {
-			LinkedHashMap<String, Object> faceData = new LinkedHashMap<>();
-			Map<String, Object> data = new HashMap<>();
-			data.put(RegistrationConstants.ON_BOARD_TIME_STAMP, DateUtils.getUTCCurrentDateTimeString());
-			data.put(RegistrationConstants.ON_BOARD_BIO_TYPE, RegistrationConstants.ON_BOARD_FACE);
-			data.put(RegistrationConstants.ON_BOARD_BIO_SUB_TYPE, RegistrationConstants.ON_BOARD_FACE);
-			SplittedEncryptedData responseMap = getSessionKey(data, faceISO);
-			if (null != responseMap && null != responseMap.getEncryptedData()) {
-				data.put(RegistrationConstants.ON_BOARD_BIO_VALUE, responseMap.getEncryptedData());
-				faceData.put(RegistrationConstants.SESSION_KEY, responseMap.getEncryptedSessionKey());
-			}
-			String dataBlockJsonString = RegistrationConstants.EMPTY;
-			try {
-				dataBlockJsonString = new ObjectMapper().writeValueAsString(data);
-				faceData.put(RegistrationConstants.ON_BOARD_BIO_DATA,
-						CryptoUtil.encodeToURLSafeBase64(dataBlockJsonString.getBytes()));
-			} catch (IOException exIoException) {
-				LOGGER.error(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID,
-						ExceptionUtils.getStackTrace(exIoException));
-				setErrorResponse(responseDTO, RegistrationConstants.USER_ON_BOARDING_EXCEPTION, null);
-			}
-
-			String presentHash = HMACUtils2.digestAsPlainText(dataBlockJsonString.getBytes());
-
-			String concatenatedHash = previousHashArray[0] + presentHash;
-			String finalHash = HMACUtils2.digestAsPlainText(concatenatedHash.getBytes());
-			faceData.put(RegistrationConstants.AUTH_HASH, finalHash);
-			faceData.put(RegistrationConstants.SIGNATURE, "");
-			listOfBiometric.add(faceData);
-		}
-	}
+//	private void addFaceData(List<Map<String, Object>> listOfBiometric, byte[] faceISO, String[] previousHashArray,
+//			ResponseDTO responseDTO) throws NoSuchAlgorithmException {
+//		if (null != faceISO) {
+//			LinkedHashMap<String, Object> faceData = new LinkedHashMap<>();
+//			Map<String, Object> data = new HashMap<>();
+//			data.put(RegistrationConstants.ON_BOARD_TIME_STAMP, DateUtils.getUTCCurrentDateTimeString());
+//			data.put(RegistrationConstants.ON_BOARD_BIO_TYPE, RegistrationConstants.ON_BOARD_FACE);
+//			data.put(RegistrationConstants.ON_BOARD_BIO_SUB_TYPE, RegistrationConstants.ON_BOARD_FACE);
+//			SplittedEncryptedData responseMap = getSessionKey(data, faceISO);
+//			if (null != responseMap && null != responseMap.getEncryptedData()) {
+//				data.put(RegistrationConstants.ON_BOARD_BIO_VALUE, responseMap.getEncryptedData());
+//				faceData.put(RegistrationConstants.SESSION_KEY, responseMap.getEncryptedSessionKey());
+//			}
+//			String dataBlockJsonString = RegistrationConstants.EMPTY;
+//			try {
+//				dataBlockJsonString = new ObjectMapper().writeValueAsString(data);
+//				faceData.put(RegistrationConstants.ON_BOARD_BIO_DATA,
+//						CryptoUtil.encodeToURLSafeBase64(dataBlockJsonString.getBytes()));
+//			} catch (IOException exIoException) {
+//				LOGGER.error(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID,
+//						ExceptionUtils.getStackTrace(exIoException));
+//				setErrorResponse(responseDTO, RegistrationConstants.USER_ON_BOARDING_EXCEPTION, null);
+//			}
+//
+//			String presentHash = HMACUtils2.digestAsPlainText(dataBlockJsonString.getBytes());
+//
+//			String concatenatedHash = previousHashArray[0] + presentHash;
+//			String finalHash = HMACUtils2.digestAsPlainText(concatenatedHash.getBytes());
+//			faceData.put(RegistrationConstants.AUTH_HASH, finalHash);
+//			faceData.put(RegistrationConstants.SIGNATURE, "");
+//			listOfBiometric.add(faceData);
+//		}
+//	}
 
 	/**
 	 * Save.
@@ -484,15 +484,15 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 	 * @param biometricDTO the biometric DTO
 	 * @return true, if successful
 	 */
-	private boolean dtoNullCheck(BiometricDTO biometricDTO) {
-		if (null != biometricDTO && null != biometricDTO.getOperatorBiometricDTO()) {
-			LOGGER.info(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID,
-					"biometricDTO/operator bio metrics are mandatroy");
-			return true;
-		} else {
-			return false;
-		}
-	}
+//	private boolean dtoNullCheck(BiometricDTO biometricDTO) {
+//		if (null != biometricDTO && null != biometricDTO.getOperatorBiometricDTO()) {
+//			LOGGER.info(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID,
+//					"biometricDTO/operator bio metrics are mandatroy");
+//			return true;
+//		} else {
+//			return false;
+//		}
+//	}
 
 	@SuppressWarnings("unchecked")
 	private Map<String, Object> getIdaAuthResponse(Map<String, Object> idaRequestMap, Map<String, Object> requestMap,

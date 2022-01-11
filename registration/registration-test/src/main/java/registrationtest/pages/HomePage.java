@@ -1,7 +1,7 @@
 package registrationtest.pages;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+
 import org.testfx.api.FxRobot;
 
 import javafx.scene.Node;
@@ -15,7 +15,7 @@ import registrationtest.utility.WaitsUtil;
 
 public class HomePage {
 
-    private static final Logger logger = LogManager.getLogger(HomePage.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(HomePage.class);
     FxRobot robot;
     Stage applicationPrimaryStage;
     Scene scene;

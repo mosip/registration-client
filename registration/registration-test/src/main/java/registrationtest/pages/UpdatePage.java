@@ -2,8 +2,8 @@ package registrationtest.pages;
 
 import java.util.List;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+
 import org.testfx.api.FxRobot;
 
 import javafx.scene.control.TextField;
@@ -12,7 +12,7 @@ import registrationtest.utility.JsonUtil;
 import registrationtest.utility.WaitsUtil;
 
 public class UpdatePage {
-    private static final Logger logger = LogManager.getLogger(UpdatePage.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(UpdatePage.class);
     String alertImage = "#alertImage";
     String exit = "#exit";
     String success = "#context";

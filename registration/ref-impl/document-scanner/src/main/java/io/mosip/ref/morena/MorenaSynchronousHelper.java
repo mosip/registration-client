@@ -1,4 +1,4 @@
-package io.mosip.scanner.morena;
+package io.mosip.ref.morena;
 
 import eu.gnome.morena.Device;
 import eu.gnome.morena.DeviceBase;
