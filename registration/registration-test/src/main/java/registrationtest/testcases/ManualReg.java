@@ -1,8 +1,8 @@
 
 package registrationtest.testcases;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.testfx.api.FxRobot;
@@ -30,7 +30,7 @@ import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.RobotActions;
 
 public class ManualReg {
-    private final Logger logger = LogManager.getLogger(ManualReg.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(ManualReg.class);
 
     @Autowired
     FxRobot robot;

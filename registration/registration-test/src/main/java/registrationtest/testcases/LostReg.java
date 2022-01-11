@@ -34,12 +34,12 @@ import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.RobotActions;
 import registrationtest.utility.WaitsUtil;
 
-import org.apache.log4j.LogManager;
 
-import org.apache.log4j.Logger;
+
+
 
 public class LostReg {
-    private static final Logger logger = LogManager.getLogger(LostReg.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(LostReg.class);
 
     FxRobot robot;
     Schema schema;

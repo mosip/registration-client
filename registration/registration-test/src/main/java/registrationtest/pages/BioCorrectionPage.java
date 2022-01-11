@@ -3,8 +3,7 @@ package registrationtest.pages;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
 import org.json.JSONObject;
 import org.testfx.api.FxRobot;
 
@@ -23,7 +22,7 @@ import io.restassured.http.ContentType;
 
 public class BioCorrectionPage {
 
-    private static final Logger logger = LogManager.getLogger(BioCorrectionPage.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(BioCorrectionPage.class);
     FxRobot robot;
     TextField additionalInfoTextBox;
     String additionalInfoRequestId = "#additionalInfoRequestId";

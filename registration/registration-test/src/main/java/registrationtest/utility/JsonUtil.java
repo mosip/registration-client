@@ -10,13 +10,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class JsonUtil {
-    private static final Logger logger = LogManager.getLogger(JsonUtil.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(JsonUtil.class);
 
     private static ObjectMapper mapper;
 

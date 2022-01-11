@@ -20,12 +20,12 @@ import registrationtest.utility.JsonUtil;
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;
 import javafx.application.Application;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+
 
 public class RegistrationMain {
 
-    private static final Logger logger = LogManager.getLogger(RegistrationMain.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(RegistrationMain.class);
     static FxRobot robot;
     static String[] Strinrid;
     static RID rid1, rid2, rid3, rid4, rid5, rid6;

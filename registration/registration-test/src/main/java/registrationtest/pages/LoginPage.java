@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.io.IOException;
 
 import io.mosip.registration.dto.mastersync.GenericDto;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+
 import org.testfx.api.FxRobot;
 
 import javafx.application.Platform;
@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class LoginPage {
-    private static final Logger logger = LogManager.getLogger(LoginPage.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(LoginPage.class);
 
     FxRobot robot;
     Stage applicationPrimaryStage;

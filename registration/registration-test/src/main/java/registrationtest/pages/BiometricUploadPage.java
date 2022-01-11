@@ -5,8 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
 import org.testfx.api.FxRobot;
 
 import javafx.application.Platform;
@@ -22,7 +21,7 @@ import registrationtest.utility.WaitsUtil;
 
 public class BiometricUploadPage {
 
-    private static final Logger logger = LogManager.getLogger(BiometricUploadPage.class);
+    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(BiometricUploadPage.class);
     FxRobot robot;
     WaitsUtil waitsUtil;
     String BiometricDetail = "#BiometricDetail";
@@ -398,7 +397,7 @@ public class BiometricUploadPage {
                     if(!idBioType.equals("#"))
                     {
                 Button button = waitsUtil.lookupById(idModality+"Button");
-                robot.moveTo(button);
+                //robot.moveTo(button);
                 button.fire();
                     }
                     else
