@@ -179,6 +179,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	@FXML
 	private Label captureTimeValue;
+	
+	@FXML
+	private GridPane biometric;
 
 	/** The iris facade. */
 	@Autowired
@@ -883,12 +886,13 @@ public class BiometricsController extends BaseController /* implements Initializ
 	 */
 	@FXML
 	private void scan(ActionEvent event) {
-
 		LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"Displaying Scan popup for capturing biometrics");
 
 		auditFactory.audit(getAuditEventForScan(currentModality), Components.REG_BIOMETRICS, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
+		
+		biometric.setDisable(true);
 
 		deviceSearchTask = new Service<MdmBioDevice>() {
 			@Override
@@ -962,7 +966,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 						rCaptureTaskService();
 
 						streamer.startStream(urlStream, biometricImage, biometricImage);
-
+						
 				} catch (RegBaseCheckedException | IOException exception) {
 					LOGGER.error("Error while streaming : ", exception);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
@@ -970,6 +974,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 					// Enable Auto-Logout
 					SessionContext.setAutoLogout(true);
 					streamer.setUrlStream(null);
+					biometric.setDisable(false);
 				}
 
 			}
@@ -985,7 +990,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 						"Exception while finding bio device");
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
 				streamer.setUrlStream(null);
-
+				biometric.setDisable(false);
 			}
 		});
 
@@ -1073,6 +1078,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 				LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 						"Setting URL Stream as null");
 				streamer.setUrlStream(null);
+				biometric.setDisable(false);
 			}
 		});
 		rCaptureTaskService.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
@@ -1149,6 +1155,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 					
 					generateAlert(RegistrationConstants.ALERT_INFORMATION,
 							RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
+					biometric.setDisable(false);
 				} catch (Exception exception) {
 					LOGGER.error("Exception while getting the scanned biometrics for operator onboarding", exception);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
@@ -1156,6 +1163,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 					// Enable Auto-Logout
 					SessionContext.setAutoLogout(true);
 					streamer.setUrlStream(null);
+					biometric.setDisable(false);
 				}
 			}
 		});
