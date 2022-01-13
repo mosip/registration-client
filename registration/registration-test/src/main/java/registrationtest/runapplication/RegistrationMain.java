@@ -49,7 +49,7 @@ public class RegistrationMain {
                     while (ClientApplication.getPrimaryStage() == null) {Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait")));
 }
 
-                    System.out.println("Application primary stage setup completed "+DateUtil.getDateTime());
+                    logger.info("Application primary stage setup completed "+DateUtil.getDateTime());
                     Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait")));
 
                     robot = new FxRobot();
