@@ -16,8 +16,6 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-import io.mosip.registration.controller.ClientApplication;
-import io.mosip.registration.dto.mastersync.GenericDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -36,6 +34,7 @@ import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
+import io.mosip.registration.controller.ClientApplication;
 import io.mosip.registration.controller.FXUtils;
 import io.mosip.registration.controller.device.Streamer;
 import io.mosip.registration.controller.reg.HeaderController;
@@ -45,13 +44,12 @@ import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.LoginUserDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
-import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.scheduler.SchedulerUtil;
 import io.mosip.registration.service.bio.BioService;
-import io.mosip.registration.service.config.JobConfigurationService;
 import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.operator.UserMachineMappingService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
@@ -206,9 +204,6 @@ public class LoginController extends BaseController implements Initializable {
 	private BioService bioService;
 
 	@Autowired
-	private MosipDeviceSpecificationFactory deviceSpecificationFactory;
-
-	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
 
 	@Autowired
@@ -216,9 +211,6 @@ public class LoginController extends BaseController implements Initializable {
 
 	@Autowired
 	private HeaderController headerController;
-
-	@Autowired
-	private JobConfigurationService jobConfigurationService;
 
 	@Autowired
 	private SoftwareUpdateHandler softwareUpdateHandler;
@@ -995,7 +987,7 @@ public class LoginController extends BaseController implements Initializable {
 
 		String val = loginService.validateInvalidLogin(userDTO, errorMessage, invalidLoginCount, invalidLoginTime);
 
-		if ("" != val) {
+		if (RegistrationConstants.EMPTY.equalsIgnoreCase(val)) {
 			if (val.equalsIgnoreCase(RegistrationConstants.ERROR)) {
 				generateAlert(RegistrationConstants.ERROR, unlockMessage);
 				loadLoginScreen();

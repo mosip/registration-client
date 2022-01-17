@@ -175,8 +175,10 @@ public class SettingsController extends BaseController {
 	public void createShortCut(SettingsSchema schema) {
 		String controllerName = schema.getFxml().replace(".fxml", "Controller");
 		HBox shortCutHBox = getShortCut(controllerName, schema.getShortcutIcon());
-		shortCutHBox.setId(schema.getName());
-		headerController.addShortCut(shortCutHBox);
+		if (shortCutHBox != null) {
+			shortCutHBox.setId(schema.getName());
+			headerController.addShortCut(shortCutHBox);
+		}
 	}
 
 	private HBox getShortCut(String controllerName, String shortcutIcon) {
