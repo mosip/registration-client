@@ -182,8 +182,7 @@ public class MosipDeviceSpecificationFactory {
 				.setConfig(requestConfig)
 				.build();
 
-		CloseableHttpClient client = HttpClients.createDefault();
-		try {
+		try (CloseableHttpClient client = HttpClients.createDefault()) {
 			client.execute(request);
 		} catch (Exception exception) {
 			return false;
@@ -287,11 +286,11 @@ public class MosipDeviceSpecificationFactory {
 				.setUri(url)
 				.setConfig(requestConfig)
 				.build();
-		CloseableHttpClient client = HttpClients.createDefault();
+		
 		CloseableHttpResponse clientResponse = null;
 		String response = null;
 
-		try {
+		try (CloseableHttpClient client = HttpClients.createDefault()) {
 			clientResponse = client.execute(request);
 			response = EntityUtils.toString(clientResponse.getEntity());
 		} catch (IOException exception) {

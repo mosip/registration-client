@@ -36,11 +36,8 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -257,13 +254,14 @@ public class MosipDeviceSpecificationHelper {
 				.setSocketTimeout(connectionTimeout * 1000)
 				.setConnectionRequestTimeout(connectionTimeout * 1000)
 				.build();
-		CloseableHttpClient client = HttpClients.createDefault();
-		StringEntity requestEntity = new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8));
-		HttpUriRequest httpUriRequest = RequestBuilder.create(method)
-				.setConfig(requestConfig)
-				.setUri(url)
-				.setEntity(requestEntity)
-				.build();
-		return client.execute(httpUriRequest);
+		try (CloseableHttpClient client = HttpClients.createDefault()) {
+			StringEntity requestEntity = new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8));
+			HttpUriRequest httpUriRequest = RequestBuilder.create(method)
+					.setConfig(requestConfig)
+					.setUri(url)
+					.setEntity(requestEntity)
+					.build();
+			return client.execute(httpUriRequest);
+		}
 	}
 }
