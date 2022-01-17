@@ -60,13 +60,13 @@ public class BIRBuilder {
 			payLoad = bioDto.getPayLoad().replace(bioValue, RegistrationConstants.BIOVALUE_PLACEHOLDER);
 		}
 
-		List<Entry> otherEntries = new ArrayList<>();
+		/*List<Entry> otherEntries = new ArrayList<>();
 		otherEntries.add(new Entry(OtherKey.EXCEPTION, bioDto.getAttributeISO()==null ? "true" : "false"));
 		otherEntries.add(new Entry(OtherKey.RETRIES, bioDto.getNumOfRetries()+RegistrationConstants.EMPTY));
 		otherEntries.add(new Entry(OtherKey.SDK_SCORE, bioDto.getSdkScore()+RegistrationConstants.EMPTY));
 		otherEntries.add(new Entry(OtherKey.FORCE_CAPTURED, bioDto.isForceCaptured()+RegistrationConstants.EMPTY));
 		otherEntries.add(new Entry(OtherKey.PAYLOAD, payLoad == null ? RegistrationConstants.EMPTY : payLoad));
-		otherEntries.add(new Entry(OtherKey.SPEC_VERSION, bioDto.getSpecVersion() == null ? RegistrationConstants.EMPTY : bioDto.getSpecVersion()));
+		otherEntries.add(new Entry(OtherKey.SPEC_VERSION, bioDto.getSpecVersion() == null ? RegistrationConstants.EMPTY : bioDto.getSpecVersion()));*/
 
 		return new BIR.BIRBuilder().withBdb(bioDto.getAttributeISO() == null ? new byte[0] : bioDto.getAttributeISO())
 				.withVersion(versionType)
@@ -78,7 +78,12 @@ public class BIRBuilder {
 						.withCreationDate(LocalDateTime.now(ZoneId.of("UTC"))).withIndex(UUID.randomUUID().toString())
 						.build())
 				.withSb(bioDto.getSignature() == null ? new byte[0] : bioDto.getSignature().getBytes(StandardCharsets.UTF_8))
-				.withOthers(otherEntries)
+				.withOthers(OtherKey.EXCEPTION, bioDto.getAttributeISO()==null ? "true" : "false")
+				.withOthers(OtherKey.RETRIES, bioDto.getNumOfRetries()+RegistrationConstants.EMPTY)
+				.withOthers(OtherKey.SDK_SCORE, bioDto.getSdkScore()+RegistrationConstants.EMPTY)
+				.withOthers(OtherKey.FORCE_CAPTURED, bioDto.isForceCaptured()+RegistrationConstants.EMPTY)
+				.withOthers(OtherKey.PAYLOAD, payLoad == null ? RegistrationConstants.EMPTY : payLoad)
+				.withOthers(OtherKey.SPEC_VERSION, bioDto.getSpecVersion() == null ? RegistrationConstants.EMPTY : bioDto.getSpecVersion())
 				.build();
 	}
 
