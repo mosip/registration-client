@@ -1069,6 +1069,17 @@ public class MasterSyncServiceTest {
 	}
 	
 	@Test
+	public void testGetFieldValuesHierarchialEmpty() {
+		List<Location> locations = new ArrayList<>();
+		Location loc = new Location();
+		loc.setCode("RBT");
+		loc.setName("Rabat");
+		loc.setLangCode("eng");
+		locations.add(loc);
+		assertNotNull(masterSyncServiceImpl.getFieldValues("region", null, true).size());
+	}
+	
+	@Test
 	public void testGetFieldValuesDynamic() {
 		List<DynamicFieldValueDto> dynamicFieldValues = getDynamicFieldValues();
 		Mockito.when(dynamicFieldDAO.getDynamicFieldValues(Mockito.anyString(), Mockito.anyString())).thenReturn(dynamicFieldValues);
