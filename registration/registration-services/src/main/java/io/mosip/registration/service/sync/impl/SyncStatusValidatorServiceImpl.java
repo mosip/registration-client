@@ -347,24 +347,23 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 			
 			if (geoPosition == null || geoPosition.getError() != null) {
 				getErrorResponse(RegistrationConstants.ICS_CODE_FOUR,
-						geoPosition.getError(), RegistrationConstants.ERROR,
+						geoPosition != null ? geoPosition.getError() : RegistrationConstants.UNKNOWN, RegistrationConstants.ERROR,
 						errorResponseDTOList);
 				return;
 			}
 
-			if (geoPosition.getError() == null) {
-				double distance = geoPositionFacade.getDistance(geoPosition.getLongitude(), geoPosition.getLatitude(),
-						centerLongitude, centerLatitude);
+			double distance = geoPositionFacade.getDistance(geoPosition.getLongitude(), geoPosition.getLatitude(),
+					centerLongitude, centerLatitude);
 
-				if (distance > Double.parseDouble(String.valueOf(
-						ApplicationContext.map().get(RegistrationConstants.DIST_FRM_MACHN_TO_CENTER)))) {
-					getErrorResponse(RegistrationConstants.ICS_CODE_FOUR,
-							RegistrationConstants.OPT_TO_REG_OUTSIDE_LOCATION, RegistrationConstants.ERROR,
-							errorResponseDTOList);
-					return;
-				}
-				ApplicationContext.map().put(RegistrationConstants.OPT_TO_REG_LAST_CAPTURED_TIME, Instant.now());
+			if (distance > Double.parseDouble(String.valueOf(
+					ApplicationContext.map().get(RegistrationConstants.DIST_FRM_MACHN_TO_CENTER)))) {
+				getErrorResponse(RegistrationConstants.ICS_CODE_FOUR,
+						RegistrationConstants.OPT_TO_REG_OUTSIDE_LOCATION, RegistrationConstants.ERROR,
+						errorResponseDTOList);
+				return;
 			}
+			ApplicationContext.map().put(RegistrationConstants.OPT_TO_REG_LAST_CAPTURED_TIME, Instant.now());
+			
 			auditFactory.audit(AuditEvent.SYNC_GEO_VALIDATE, Components.SYNC_VALIDATE,
 					RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
 		}
