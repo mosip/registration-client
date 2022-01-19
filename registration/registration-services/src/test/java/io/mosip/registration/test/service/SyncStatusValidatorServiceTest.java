@@ -248,7 +248,6 @@ public class SyncStatusValidatorServiceTest {
 		when(ApplicationContext.applicationLanguage()).thenReturn("eng");
 				
 		GeoPosition geoPosition = new GeoPosition();
-		geoPosition.setError("Error");
 		geoPosition.setLatitude(12.90194);
 		geoPosition.setLongitude(89.7009);
 		

@@ -344,8 +344,15 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 			geoPosition.setTimeout(Integer.parseInt((String) ApplicationContext.map().getOrDefault(RegistrationConstants.GPS_PORT_TIMEOUT,
 					"3000")));
 			geoPosition = geoPositionFacade.getMachineGeoPosition(geoPosition);
-
+			
 			if (geoPosition != null && geoPosition.getError() != null) {
+				getErrorResponse(RegistrationConstants.ICS_CODE_FOUR,
+						geoPosition.getError(), RegistrationConstants.ERROR,
+						errorResponseDTOList);
+				return;
+			}
+
+			if (geoPosition != null && geoPosition.getError() == null) {
 				double distance = geoPositionFacade.getDistance(geoPosition.getLongitude(), geoPosition.getLatitude(),
 						centerLongitude, centerLatitude);
 
