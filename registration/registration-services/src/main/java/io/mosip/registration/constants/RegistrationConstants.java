@@ -223,6 +223,7 @@ public class RegistrationConstants {
 	public static final int PARAM_ZERO = 0;
 	public static final String PREVIOUS = "PREVIOUS";
 	public static final String NEXT = "NEXT";
+	public static final String UNKNOWN = "UNKNOWN";
 
 	// UI Registration Validations
 	public static final String ADDRESS_KEY = "PrevAddress";

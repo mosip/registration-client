@@ -29,6 +29,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -248,7 +249,7 @@ public class MosipDeviceSpecificationHelper {
 		}
 	}
 
-	public CloseableHttpResponse getHttpClientResponse(String url, String method, String body) throws IOException {
+	public String getHttpClientResponseEntity(String url, String method, String body) throws IOException {
 		RequestConfig requestConfig = RequestConfig.custom()
 				.setConnectTimeout(connectionTimeout * 1000)
 				.setSocketTimeout(connectionTimeout * 1000)
@@ -261,7 +262,24 @@ public class MosipDeviceSpecificationHelper {
 					.setUri(url)
 					.setEntity(requestEntity)
 					.build();
-			return client.execute(httpUriRequest);
+			CloseableHttpResponse response = client.execute(httpUriRequest);
+			return EntityUtils.toString(response.getEntity());
 		}
+	}
+	
+	public CloseableHttpResponse getHttpClientResponse(String url, String method, String body) throws IOException {
+		RequestConfig requestConfig = RequestConfig.custom()
+				.setConnectTimeout(connectionTimeout * 1000)
+				.setSocketTimeout(connectionTimeout * 1000)
+				.setConnectionRequestTimeout(connectionTimeout * 1000)
+				.build();
+		CloseableHttpClient client = HttpClients.createDefault();
+		StringEntity requestEntity = new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8));
+		HttpUriRequest httpUriRequest = RequestBuilder.create(method)
+				.setConfig(requestConfig)
+				.setUri(url)
+				.setEntity(requestEntity)
+				.build();
+		return client.execute(httpUriRequest);
 	}
 }

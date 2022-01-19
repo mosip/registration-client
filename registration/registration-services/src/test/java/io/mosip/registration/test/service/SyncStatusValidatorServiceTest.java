@@ -26,6 +26,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import io.mosip.registration.api.geoposition.GeoPositionFacade;
+import io.mosip.registration.api.geoposition.dto.GeoPosition;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.Components;
@@ -53,7 +55,7 @@ import io.mosip.registration.service.sync.impl.SyncStatusValidatorServiceImpl;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@PrepareForTest({ io.mosip.registration.context.ApplicationContext.class, SessionContext.class })
+@PrepareForTest({ ApplicationContext.class, SessionContext.class })
 public class SyncStatusValidatorServiceTest {
 
 	@Rule
@@ -68,16 +70,16 @@ public class SyncStatusValidatorServiceTest {
 	private GlobalParamDAO globalParamDAO;
 	@Mock
 	private SyncJobConfigDAO jobConfigDAO;
-
 	@Mock
 	private GlobalParamService globalParamService;
 	@Mock
 	io.mosip.registration.context.ApplicationContext context;
 	@Mock
-	private AuditManagerService auditFactory;
-	
+	private AuditManagerService auditFactory;	
 	@Mock
-	RegistrationCenterDAO registration;
+	private RegistrationCenterDAO registrationCenterDAO;
+	@Mock
+	private GeoPositionFacade geoPositionFacade;
 
 	@BeforeClass
 	public static void beforeClass() {
@@ -87,13 +89,16 @@ public class SyncStatusValidatorServiceTest {
 	@Before
 	public void initialize() throws Exception {
 		RegistrationCenterDetailDTO centerDetailDTO = new RegistrationCenterDetailDTO();
+		centerDetailDTO.setRegistrationCenterId("110012");
 		centerDetailDTO.setRegistrationCenterLatitude("12.991276");
 		centerDetailDTO.setRegistrationCenterLongitude("80.2461");
-		Mockito.when(registration.getRegistrationCenterDetails(Mockito.anyString(), Mockito.anyString()))
-				.thenReturn(centerDetailDTO);
+		Mockito.when(registrationCenterDAO.getRegistrationCenterDetails(Mockito.anyString(), Mockito.anyString())).thenReturn(centerDetailDTO);
+		
 		UserContext userContext = Mockito.mock(SessionContext.UserContext.class);
+		userContext.setRegistrationCenterDetailDTO(centerDetailDTO);
 		PowerMockito.mockStatic(SessionContext.class);
-		PowerMockito.doReturn(userContext).when(SessionContext.class, "userContext");
+		PowerMockito.when(SessionContext.userContext()).thenReturn(userContext);
+		PowerMockito.when(userContext.getRegistrationCenterDetailDTO()).thenReturn(centerDetailDTO);
 		PowerMockito.when(SessionContext.userContext().getRegistrationCenterDetailDTO()).thenReturn(centerDetailDTO);
 		SessionContext.map().put("lastCapturedTime", null);
 
@@ -152,7 +157,7 @@ public class SyncStatusValidatorServiceTest {
 		applicationMap.put(RegistrationConstants.GPS_DEVICE_DISABLE_FLAG, "Y");
 		applicationMap.put(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE, "Y");
 		applicationMap.put(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ, "0");
-		when(context.map()).thenReturn(applicationMap);
+		when(ApplicationContext.map()).thenReturn(applicationMap);
 
 		Mockito.when(globalParamDAO.get(globalParamId)).thenReturn(globalParam);
 
@@ -183,7 +188,6 @@ public class SyncStatusValidatorServiceTest {
 		//TODO - not sure why this error is not thrown now -- need to check
 		//assertEquals("REG-REC‌-007", errorResponseDTOs.get(4).getCode());
 		//assertEquals("OPT_TO_REG_LAST_SOFTWAREUPDATE_CHECK", errorResponseDTOs.get(4).getMessage());
-
 	}
 
 	@Test
@@ -231,10 +235,24 @@ public class SyncStatusValidatorServiceTest {
 		applicationMap.put("mosip.registration.last_export_registration_config_time", "20");
 		applicationMap.put("mosip.registration.reg_pak_max_cnt_apprv_limit", "5");
 		applicationMap.put("mosip.registration.reg_pak_max_time_apprv_limit", "5");
-		applicationMap.put(RegistrationConstants.GPS_DEVICE_DISABLE_FLAG, "N");
+		applicationMap.put(RegistrationConstants.GPS_DEVICE_DISABLE_FLAG, "Y");
 		applicationMap.put(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE, "N");
 		applicationMap.put(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ, "5");
+		applicationMap.put(RegistrationConstants.GEO_CAP_FREQ, RegistrationConstants.ENABLE);
+		applicationMap.put(RegistrationConstants.OPT_TO_REG_LAST_CAPTURED_TIME, null);
+		applicationMap.put(RegistrationConstants.DIST_FRM_MACHN_TO_CENTER, "95.0090");
+		applicationMap.put(RegistrationConstants.DISK_SPACE, "1");
+		applicationMap.put(RegistrationConstants.PACKET_STORE_LOCATION, "../");
+		applicationMap.put(RegistrationConstants.REG_PAK_MAX_TIME_APPRV_LIMIT, "3");
 		when(ApplicationContext.map()).thenReturn(applicationMap);
+		when(ApplicationContext.applicationLanguage()).thenReturn("eng");
+				
+		GeoPosition geoPosition = new GeoPosition();
+		geoPosition.setLatitude(12.90194);
+		geoPosition.setLongitude(89.7009);
+		
+		Mockito.when(geoPositionFacade.getMachineGeoPosition(Mockito.any())).thenReturn(geoPosition);
+		Mockito.when(geoPositionFacade.getDistance(Mockito.anyDouble(),Mockito.anyDouble(),Mockito.anyDouble(),Mockito.anyDouble())).thenReturn(90.9089);
 
 		Mockito.when(globalParamDAO.get(globalParamId)).thenReturn(globalParam);
 
@@ -245,11 +263,14 @@ public class SyncStatusValidatorServiceTest {
 		Mockito.when(syncJobInfo.getSyncControlList()).thenReturn(listSync);
 		Mockito.when(syncJobInfo.getLastExportRegistration()).thenReturn(registration);
 		Mockito.when(syncJobInfo.getYetToExportCount()).thenReturn((double) 20);
+		
+		Mockito.when(jobConfigDAO.getActiveJobs()).thenReturn(listSyncJob);
+		
+		Mockito.when(syncJobDAO.getFirstRegistration()).thenReturn(registration);
 
 		ResponseDTO responseDTO = syncStatusValidatorServiceImpl.validateSyncStatus();
 		List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
 		assertTrue(errorResponseDTOs.isEmpty());
-
 	}
 	
 	//Needs to be corrected
@@ -302,7 +323,7 @@ public class SyncStatusValidatorServiceTest {
 		applicationMap.put(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE, "N");
 		applicationMap.put(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ, "5");
 
-		when(context.map()).thenReturn(applicationMap);
+		when(ApplicationContext.map()).thenReturn(applicationMap);
 
 		Mockito.when(jobConfigDAO.getAll()).thenReturn(listSyncJob);
 		Mockito.when(syncJobDAO.getRegistrationDetails()).thenReturn(registrationList);
@@ -324,7 +345,6 @@ public class SyncStatusValidatorServiceTest {
 		assertEquals("OPT_TO_REG_REACH_MAX_LIMIT", errorResponseDTOs.get(2).getMessage());
 		assertEquals("REG-ICS‌-006", errorResponseDTOs.get(3).getCode());
 		assertEquals("OPT_TO_REG_WEAK_GPS", errorResponseDTOs.get(3).getMessage());
-
 	}
 
 	//Needs to be corrected
@@ -377,7 +397,7 @@ public class SyncStatusValidatorServiceTest {
 		applicationMap.put(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE, "N");
 		applicationMap.put(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ, "5");
 
-		when(context.map()).thenReturn(applicationMap);
+		when(ApplicationContext.map()).thenReturn(applicationMap);
 
 		Mockito.when(globalParamDAO.get(globalParamId)).thenReturn(globalParam);
 
@@ -400,7 +420,6 @@ public class SyncStatusValidatorServiceTest {
 		assertEquals("OPT_TO_REG_REACH_MAX_LIMIT", errorResponseDTOs.get(2).getMessage());
 		assertEquals("REG-ICS‌-005", errorResponseDTOs.get(3).getCode());
 		assertEquals("OPT_TO_REG_INSERT_GPS", errorResponseDTOs.get(3).getMessage());
-
 	}
 
 	//Needs to be corrected
@@ -456,7 +475,7 @@ public class SyncStatusValidatorServiceTest {
 		applicationMap.put(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE, "N");
 		applicationMap.put(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ, "5");
 
-		when(context.map()).thenReturn(applicationMap);
+		when(ApplicationContext.map()).thenReturn(applicationMap);
 
 		Mockito.when(globalParamDAO.get(globalParamId)).thenReturn(globalParam);
 
@@ -478,7 +497,6 @@ public class SyncStatusValidatorServiceTest {
 		assertEquals("OPT_TO_REG_REACH_MAX_LIMIT", errorResponseDTOs.get(2).getMessage());
 		assertEquals("REG-ICS‌-005", errorResponseDTOs.get(3).getCode());
 		assertEquals("OPT_TO_REG_INSERT_GPS", errorResponseDTOs.get(3).getMessage());
-
 	}
 
 	//Needs to be corrected
@@ -531,7 +549,7 @@ public class SyncStatusValidatorServiceTest {
 		applicationMap.put(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE, "N");
 		applicationMap.put(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ, "5");
 
-		when(context.map()).thenReturn(applicationMap);
+		when(ApplicationContext.map()).thenReturn(applicationMap);
 
 		Mockito.when(globalParamDAO.get(globalParamId)).thenReturn(globalParam);
 
@@ -554,7 +572,6 @@ public class SyncStatusValidatorServiceTest {
 		assertEquals("OPT_TO_REG_REACH_MAX_LIMIT", errorResponseDTOs.get(2).getMessage());
 		assertEquals("REG-ICS‌-007", errorResponseDTOs.get(3).getCode());
 		assertEquals(RegistrationConstants.OPT_TO_REG_GPS_PORT_MISMATCH, errorResponseDTOs.get(3).getMessage());
-
 	}
 
 	@Test
@@ -609,7 +626,7 @@ public class SyncStatusValidatorServiceTest {
 		applicationMap.put(RegistrationConstants.GPS_DEVICE_DISABLE_FLAG, "N");
 		applicationMap.put(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE, "N");
 		applicationMap.put(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ, "5");
-		when(context.map()).thenReturn(applicationMap);
+		when(ApplicationContext.map()).thenReturn(applicationMap);
 
 		Mockito.when(globalParamDAO.get(globalParamId)).thenReturn(globalParam);
 
@@ -626,7 +643,6 @@ public class SyncStatusValidatorServiceTest {
 		List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
 		assertEquals("REG-ICS‌-008", errorResponseDTOs.get(0).getCode());
 		assertEquals("REG_PKT_APPRVL_CNT_EXCEED", errorResponseDTOs.get(0).getMessage());
-
 	}
 
 	@Ignore
@@ -679,7 +695,7 @@ public class SyncStatusValidatorServiceTest {
 		applicationMap.put(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE, "N");
 		applicationMap.put(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ, "5");
 
-		when(context.map()).thenReturn(applicationMap);
+		when(ApplicationContext.map()).thenReturn(applicationMap);
 
 		Mockito.when(globalParamDAO.get(globalParamId)).thenReturn(globalParam);
 
@@ -697,10 +713,8 @@ public class SyncStatusValidatorServiceTest {
 		List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
 		assertEquals("REG-ICS‌-009", errorResponseDTOs.get(1).getCode());
 		assertEquals("REG_PKT_APPRVL_TIME_EXCEED", errorResponseDTOs.get(1).getMessage());
-
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test(expected = RegBaseUncheckedException.class)
 	public void testValidateException() throws RegBaseCheckedException {
 
@@ -765,7 +779,7 @@ public class SyncStatusValidatorServiceTest {
 		applicationMap.put(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE, "N");
 		applicationMap.put(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ, "5");
 		applicationMap.put("lastCapturedTime", Instant.now());
-		when(context.map()).thenReturn(applicationMap);
+		when(ApplicationContext.map()).thenReturn(applicationMap);
 
 		Mockito.when(globalParamDAO.get(globalParamId)).thenReturn(globalParam);
 
