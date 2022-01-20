@@ -70,9 +70,6 @@ public class MosipDeviceSpecificationHelper {
 	@Value("${mosip.registration.mdm.trust.domain.deviceinfo:DEVICE}")
 	private String deviceInfoTrustDomain;
 
-	@Value("${mosip.registration.mdm.connection.timeout:5}")
-	private int connectionTimeout;
-
 	private final String CONTENT_LENGTH = "Content-Length:";
 
 	public String getPayLoad(String data) throws RegBaseCheckedException {
@@ -249,11 +246,22 @@ public class MosipDeviceSpecificationHelper {
 		}
 	}
 
+	public static int getMDMConnectionTimeout(String method) {
+		Integer timeout = ApplicationContext.getIntValueFromApplicationMap(
+				String.format(RegistrationConstants.METHOD_BASED_MDM_CONNECTION_TIMEOUT, method.toUpperCase()));
+		if(timeout == null || timeout == 0) {
+			timeout = ApplicationContext.getIntValueFromApplicationMap(RegistrationConstants.MDM_CONNECTION_TIMEOUT);
+		}
+		return (timeout == null || timeout == 0) ? 10000 : timeout;
+	}
+
 	public String getHttpClientResponseEntity(String url, String method, String body) throws IOException {
+		int timeout = getMDMConnectionTimeout(method);
+		LOGGER.debug("MDM HTTP CALL method : {}  with timeout {}", method, timeout);
 		RequestConfig requestConfig = RequestConfig.custom()
-				.setConnectTimeout(connectionTimeout * 1000)
-				.setSocketTimeout(connectionTimeout * 1000)
-				.setConnectionRequestTimeout(connectionTimeout * 1000)
+				.setConnectTimeout(timeout)
+				.setSocketTimeout(timeout)
+				.setConnectionRequestTimeout(timeout)
 				.build();
 		try (CloseableHttpClient client = HttpClients.createDefault()) {
 			StringEntity requestEntity = new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8));
@@ -268,10 +276,12 @@ public class MosipDeviceSpecificationHelper {
 	}
 	
 	public CloseableHttpResponse getHttpClientResponse(String url, String method, String body) throws IOException {
+		int timeout = getMDMConnectionTimeout(method);
+		LOGGER.debug("MDM HTTP CALL method : {}  with timeout {}", method, timeout);
 		RequestConfig requestConfig = RequestConfig.custom()
-				.setConnectTimeout(connectionTimeout * 1000)
-				.setSocketTimeout(connectionTimeout * 1000)
-				.setConnectionRequestTimeout(connectionTimeout * 1000)
+				.setConnectTimeout(timeout)
+				.setSocketTimeout(timeout)
+				.setConnectionRequestTimeout(timeout)
 				.build();
 		CloseableHttpClient client = HttpClients.createDefault();
 		StringEntity requestEntity = new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8));
