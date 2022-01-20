@@ -1691,6 +1691,7 @@ public class RegistrationConstants {
 	public static final String MDM_END_PORT_RANGE = "mosip.registration.mdm.portRangeTo";
 	public static final String MDM_CONTEXT_PATH = "mosip.registration.mdm.contextPath";
 	public static final String MDM_HOST_PROTOCOL = "mosip.registration.mdm.hostProtocol";
+	public static final String MDM_CONNECTION_TIMEOUT = "mosip.registration.mdm.connection.timeout";
 
 	// #Proof Of Exception Documents
 	public static final String POE_DOCUMENT_VALUE = "mosip.registration.doc_value";
