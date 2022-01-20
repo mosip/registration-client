@@ -172,18 +172,19 @@ public class MosipDeviceSpecificationFactory {
 	 * Testing the network with method
 	 */
 	public static boolean checkServiceAvailability(String serviceUrl, String method) {
+		int timeout = MosipDeviceSpecificationHelper.getMDMConnectionTimeout(method);
+		LOGGER.debug("checkServiceAvailability serviceUrl : {}  with timeout {}",serviceUrl, timeout);
 		RequestConfig requestConfig = RequestConfig.custom()
-				.setConnectTimeout(2 * 1000)
-				.setSocketTimeout(2 * 1000)
-				.setConnectionRequestTimeout(2 * 1000)
+				.setConnectTimeout(timeout)
+				.setSocketTimeout(timeout)
+				.setConnectionRequestTimeout(timeout)
 				.build();
 		HttpUriRequest request = RequestBuilder.create(method)
 				.setUri(serviceUrl)
 				.setConfig(requestConfig)
 				.build();
 
-		CloseableHttpClient client = HttpClients.createDefault();
-		try {
+		try (CloseableHttpClient client = HttpClients.createDefault()) {
 			client.execute(request);
 		} catch (Exception exception) {
 			return false;
@@ -287,11 +288,11 @@ public class MosipDeviceSpecificationFactory {
 				.setUri(url)
 				.setConfig(requestConfig)
 				.build();
-		CloseableHttpClient client = HttpClients.createDefault();
+		
 		CloseableHttpResponse clientResponse = null;
 		String response = null;
 
-		try {
+		try (CloseableHttpClient client = HttpClients.createDefault()) {
 			clientResponse = client.execute(request);
 			response = EntityUtils.toString(clientResponse.getEntity());
 		} catch (IOException exception) {

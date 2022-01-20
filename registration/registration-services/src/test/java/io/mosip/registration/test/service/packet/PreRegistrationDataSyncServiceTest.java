@@ -2,22 +2,23 @@ package io.mosip.registration.test.service.packet;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-
 import static org.mockito.Mockito.doThrow;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import io.mosip.registration.exception.ConnectionException;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -34,31 +35,37 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.ResourceAccessException;
 
 import io.mosip.kernel.core.exception.IOException;
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.dao.PreRegistrationDataSyncDAO;
-import io.mosip.registration.dto.MainResponseDTO;
+import io.mosip.registration.dao.impl.RegistrationCenterDAOImpl;
 import io.mosip.registration.dto.PreRegistrationDTO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
+import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.PreRegistrationList;
 import io.mosip.registration.entity.SyncTransaction;
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.jobs.SyncManager;
+import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.service.external.PreRegZipHandlingService;
+import io.mosip.registration.service.operator.UserDetailService;
+import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.impl.PreRegistrationDataSyncServiceImpl;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@PrepareForTest({ RegistrationAppHealthCheckUtil.class, SessionContext.class })
+@PrepareForTest({ RegistrationAppHealthCheckUtil.class, SessionContext.class, ApplicationContext.class, RegistrationSystemPropertiesChecker.class, FileUtils.class })
 public class PreRegistrationDataSyncServiceTest {
 
 	@Rule
@@ -84,11 +91,25 @@ public class PreRegistrationDataSyncServiceTest {
 
 	@Mock
 	PreRegZipHandlingService preRegZipHandlingService;
+	
+	@Mock
+	private UserDetailService userDetailService;
+	
+	@Mock
+	private CenterMachineReMapService centerMachineReMapService;
+	
+	@Mock
+	private MachineMasterRepository machineMasterRepository;
+	
+	@Mock
+	private RegistrationCenterDAOImpl registrationCenterDAO;
 
 	static byte[] preRegPacket;
 
 	static Map<String, Object> preRegData = new HashMap<>();
-
+	
+	private ExecutorService executorServiceForPreReg;
+	
 	@Before
 	public void dtoInitalization() {
 		PreRegistrationDTO preRegistrationDTO = new PreRegistrationDTO();
@@ -100,7 +121,6 @@ public class PreRegistrationDataSyncServiceTest {
 
 	@BeforeClass
 	public static void initialize() throws IOException, UnsupportedEncodingException {
-
 		URL url = PreRegistrationDataSyncServiceImpl.class.getResource("/preRegSample.zip");
 		File packetZipFile = new File(URLDecoder.decode(url.getFile(), "UTF-8"));
 		preRegPacket = FileUtils.readFileToByteArray(packetZipFile);
@@ -111,17 +131,16 @@ public class PreRegistrationDataSyncServiceTest {
 
 	@Before
 	public void initiate() throws Exception {
+		executorServiceForPreReg = Executors.newFixedThreadPool(2);
 		Map<String, Object> applicationMap = new HashMap<>();
 		applicationMap.put(RegistrationConstants.PRE_REG_DELETION_CONFIGURED_DAYS, "45");
 		applicationMap.put(RegistrationConstants.PRE_REG_DAYS_LIMIT, "5");
+		applicationMap.put(RegistrationConstants.INITIAL_SETUP, RegistrationConstants.DISABLE);
 
-		Map<String, Object> map = new HashMap<>();
-		map.put(RegistrationConstants.PRE_REG_DELETION_CONFIGURED_DAYS, "5");
-
-		io.mosip.registration.context.ApplicationContext.setApplicationMap(applicationMap);
+		PowerMockito.mockStatic(SessionContext.class, ApplicationContext.class, RegistrationSystemPropertiesChecker.class);
+		Mockito.when(ApplicationContext.map()).thenReturn(applicationMap);
 
 		UserContext userContext = Mockito.mock(SessionContext.UserContext.class);
-		PowerMockito.mockStatic(SessionContext.class);
 		PowerMockito.doReturn(userContext).when(SessionContext.class, "userContext");
 		RegistrationCenterDetailDTO registrationCenterDetailDTO = new RegistrationCenterDetailDTO();
 		registrationCenterDetailDTO.setRegistrationCenterId("10031");
@@ -129,20 +148,32 @@ public class PreRegistrationDataSyncServiceTest {
 				.thenReturn(registrationCenterDetailDTO);
 		PowerMockito.when(SessionContext.isSessionContextAvailable()).thenReturn(true);
 		PowerMockito.when(SessionContext.userId()).thenReturn("mosip");
-
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(userDetailService.isValidUser(Mockito.anyString())).thenReturn(true);
+		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);
+		Mockito.when(registrationCenterDAO.isMachineCenterActive()).thenReturn(true);
+		
+		Mockito.when(RegistrationSystemPropertiesChecker.getMachineId()).thenReturn("11002");
+		MachineMaster machine = new MachineMaster();
+		machine.setId("11002");
+		machine.setRegCenterId("10011");
+		machine.setIsActive(true);
+		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
 	}
 
 	@AfterClass
-	public static void destroy() {
+	public static void destroySession() {
 		SessionContext.destroySession();
 	}
 
+	@After
+	public void destroy() {
+		preRegistrationDataSyncServiceImpl.destroy();
+	}
+	
 	@Test
-	public void getPreRegistrationsTest()
-			throws RegBaseCheckedException, ConnectionException {
-
+	public void getPreRegistrationsTest() throws RegBaseCheckedException, ConnectionException {
 		LinkedHashMap<String, Object> postResponse = new LinkedHashMap<>();
-
 		LinkedHashMap<String, Object> responseData = new LinkedHashMap<>();
 
 		HashMap<String, String> map = new HashMap<>();
@@ -158,18 +189,21 @@ public class PreRegistrationDataSyncServiceTest {
 		preRegistrationDTO.setSymmetricKey("0E8BAAEB3CED73CBC9BF4964F321824A");
 		preRegistrationDTO.setEncryptedPacket(preRegPacket);
 		preRegistrationDTO.setPreRegId("70694681371453");
-		Mockito.when(preRegZipHandlingService
-		.encryptAndSavePreRegPacket(Mockito.anyString(), Mockito.any())).thenReturn(preRegistrationDTO);
-		Mockito.when(preRegZipHandlingService.extractPreRegZipFile(Mockito.any())).thenReturn(new RegistrationDTO());
+		Mockito.when(preRegZipHandlingService.encryptAndSavePreRegPacket(Mockito.anyString(), Mockito.any())).thenReturn(preRegistrationDTO);
+		RegistrationDTO reg = new RegistrationDTO();
+		Mockito.when(preRegZipHandlingService.extractPreRegZipFile(Mockito.any())).thenReturn(reg);
+		
+		PreRegistrationList preRegList = new PreRegistrationList();
+		preRegList.setPacketPath("/preRegSample.zip");
+		preRegList.setLastUpdatedPreRegTimeStamp(Timestamp.from(Instant.now()));
+		Mockito.when(preRegistrationDAO.get(Mockito.anyString())).thenReturn(preRegList);
+		Mockito.when(preRegistrationDAO.update(Mockito.any())).thenReturn(preRegList);
 
 		preRegistrationDataSyncServiceImpl.getPreRegistrationIds("System");
-
 	}
 
-	protected void mockPreRegServices(LinkedHashMap<String, Object> postResponse)
-			throws RegBaseCheckedException, ConnectionException {
-		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.any(), Mockito.anyString()))
-				.thenReturn(postResponse);
+	protected void mockPreRegServices(LinkedHashMap<String, Object> postResponse) throws RegBaseCheckedException, ConnectionException {
+		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.any(), Mockito.anyString())).thenReturn(postResponse);
 		// Mockito.when(preRegistrationResponseDTO.getResponse()).thenReturn(list);
 
 		Map<String, Object> responseMap = new LinkedHashMap<>();
@@ -194,32 +228,17 @@ public class PreRegistrationDataSyncServiceTest {
 	}
 
 	@Test
-	public void getPreRegistrationsAlternateFlowTest()
-			throws RegBaseCheckedException, ConnectionException {
-
+	public void getPreRegistrationsAlternateFlowTest() throws RegBaseCheckedException, ConnectionException {
 		LinkedHashMap<String, Object> postResponse = new LinkedHashMap<>();
 
 		mockPreRegServices(postResponse);
-
 		mockEncryptedPacket();
 
 		preRegistrationDataSyncServiceImpl.getPreRegistrationIds("System");
-
-	}
-
-	private MainResponseDTO<LinkedHashMap<String, Object>> getTestPacketData() {
-		MainResponseDTO<LinkedHashMap<String, Object>> testData = new MainResponseDTO<>();
-		LinkedHashMap<String, Object> linkedHashMap = new LinkedHashMap<>();
-		linkedHashMap.put("appointment-date", "2019-01-12");
-		linkedHashMap.put("zip-bytes", preRegPacket);
-		testData.setResponse(linkedHashMap);
-		return testData;
 	}
 
 	@Test
-	public void getPreRegistrationTest()
-			throws RegBaseCheckedException, ConnectionException  {
-
+	public void getPreRegistrationTest() throws RegBaseCheckedException, ConnectionException {
 		mockData();
 
 		mockEncryptedPacket();
@@ -230,11 +249,20 @@ public class PreRegistrationDataSyncServiceTest {
 		preRegistrationDTO.setPreRegId("70694681371453");
 		Mockito.when(preRegZipHandlingService
 		.encryptAndSavePreRegPacket(Mockito.anyString(), Mockito.any())).thenReturn(preRegistrationDTO);
-		Mockito.when(preRegZipHandlingService.extractPreRegZipFile(Mockito.any())).thenReturn(new RegistrationDTO());
+		RegistrationDTO reg = new RegistrationDTO();
+		Mockito.when(preRegZipHandlingService.extractPreRegZipFile(Mockito.any())).thenReturn(reg);
+		
+		PreRegistrationList preRegList = new PreRegistrationList();
+		preRegList.setPacketPath("/preRegSample.zip");
+		preRegList.setLastUpdatedPreRegTimeStamp(Timestamp.from(Instant.now()));
+		Mockito.when(preRegistrationDAO.get(Mockito.anyString())).thenReturn(preRegList);
+		Mockito.when(preRegistrationDAO.update(Mockito.any())).thenReturn(preRegList);
+		
+		PowerMockito.mockStatic(FileUtils.class);
+		Mockito.when(FileUtils.getFile(Mockito.anyString())).thenReturn(new File("/preRegSample.zip"));
 
 		ResponseDTO responseDTO = preRegistrationDataSyncServiceImpl.getPreRegistration("70694681371453", false);
 		assertNotNull(responseDTO);
-
 	}
 
 	protected void mockData() throws RegBaseCheckedException, ConnectionException {
@@ -258,9 +286,7 @@ public class PreRegistrationDataSyncServiceTest {
 	}
 
 	@Test
-	public void getPreRegistrationAlternateTest()
-			throws RegBaseCheckedException, ConnectionException {
-
+	public void getPreRegistrationAlternateTest() throws RegBaseCheckedException, ConnectionException {
 		Mockito.when(
 				serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(), Mockito.anyString()))
 				.thenReturn(223233223);
@@ -274,14 +300,10 @@ public class PreRegistrationDataSyncServiceTest {
 
 		ResponseDTO responseDTO = preRegistrationDataSyncServiceImpl.getPreRegistration("70694681371453", false);
 		assertNotNull(responseDTO);
-
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
-	public void getPreRegistrationNegativeTest()
-			throws RegBaseCheckedException, ConnectionException {
-
+	public void getPreRegistrationNegativeTest() throws RegBaseCheckedException, ConnectionException {
 		Mockito.when(
 				serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(), Mockito.anyString()))
 				.thenThrow(HttpClientErrorException.class);
@@ -289,13 +311,10 @@ public class PreRegistrationDataSyncServiceTest {
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		preRegistrationDataSyncServiceImpl.getPreRegistration("70694681371453", false);
-
 	}
 
 	@Test
-	public void getPreRegistrationExceptionTest()
-			throws RegBaseCheckedException, ConnectionException {
-
+	public void getPreRegistrationExceptionTest() throws RegBaseCheckedException, ConnectionException {
 		mockData();
 
 		mockEncryptedPacket();
@@ -310,10 +329,8 @@ public class PreRegistrationDataSyncServiceTest {
 		doThrow(new RegBaseCheckedException()).when(preRegZipHandlingService).extractPreRegZipFile(Mockito.any());
 
 		preRegistrationDataSyncServiceImpl.getPreRegistration("70694681371453", false);
-
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void getPreRegistrationsTestNegative()
 			throws RegBaseCheckedException, ConnectionException { // Test-2
@@ -326,9 +343,8 @@ public class PreRegistrationDataSyncServiceTest {
 
 	private void mockEncryptedPacket() throws RegBaseCheckedException {
 		mockEncryptedData();
-
-		Mockito.when(preRegZipHandlingService.extractPreRegZipFile(preRegPacket)).thenReturn(new RegistrationDTO());
-
+		RegistrationDTO reg = new RegistrationDTO();
+		Mockito.when(preRegZipHandlingService.extractPreRegZipFile(preRegPacket)).thenReturn(reg);
 	}
 
 	protected void mockEncryptedData() throws RegBaseCheckedException {
@@ -374,7 +390,7 @@ public class PreRegistrationDataSyncServiceTest {
 		preRegistrationList.setPacketPath(file.getAbsolutePath());
 		preRegList.add(preRegistrationList);
 		Mockito.when(preRegistrationDAO.fetchRecordsToBeDeleted(Mockito.any())).thenReturn(preRegList);
-		Mockito.when(preRegistrationDAO.update(Mockito.anyObject())).thenReturn(preRegistrationList);
+		Mockito.when(preRegistrationDAO.update(Mockito.any())).thenReturn(preRegistrationList);
 		return file;
 	}
 
@@ -387,7 +403,7 @@ public class PreRegistrationDataSyncServiceTest {
 		preRegistrationList.setPacketPath(file.getAbsolutePath());
 		preRegList.add(preRegistrationList);
 		Mockito.when(preRegistrationDAO.fetchRecordsToBeDeleted(Mockito.any())).thenReturn(null);
-		Mockito.when(preRegistrationDAO.update(Mockito.anyObject())).thenReturn(preRegistrationList);
+		Mockito.when(preRegistrationDAO.update(Mockito.any())).thenReturn(preRegistrationList);
 		preRegistrationDataSyncServiceImpl.fetchAndDeleteRecords();
 
 		if (file.exists()) {
@@ -397,7 +413,6 @@ public class PreRegistrationDataSyncServiceTest {
 
 	@Test
 	public void getPreRegistrationRecordForDeletionTest() throws java.io.IOException {
-
 		PreRegistrationList preRegistrationList = new PreRegistrationList();
 		preRegistrationList.setId("123456789");
 		preRegistrationList.setPreRegId("987654321");
@@ -407,7 +422,6 @@ public class PreRegistrationDataSyncServiceTest {
 
 		assertTrue(preRegistration.getId().equals("123456789"));
 		assertTrue(preRegistration.getPreRegId().equals("987654321"));
-
 	}
 	
 	@Test

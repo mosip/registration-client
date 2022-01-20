@@ -510,7 +510,6 @@ public class GenericController extends BaseController {
 			@Override
 			public void handle(ActionEvent event) {
 				TabPane tabPane = (TabPane) anchorPane.lookup(HASH+getRegistrationDTOFromSession().getRegistrationId());
-				tabPane.getTabs().size();
 				int selectedIndex = tabPane.getSelectionModel().getSelectedIndex();
 				while(selectedIndex < tabPane.getTabs().size()) {
 					selectedIndex++;
@@ -676,7 +675,7 @@ public class GenericController extends BaseController {
 			Optional<Tab> result = tabPane.getTabs().stream()
 					.filter(t -> t.getId().equalsIgnoreCase(screen.getName()+"_tab"))
 					.findFirst();
-			if(anyInvalidField) {
+			if (anyInvalidField && result.isPresent()) {
 				LOGGER.error("Screen validation failed {}", screen.getName());
 				errorScreen = screen.getName();
 				result.get().getStyleClass().add(TAB_LABEL_ERROR_CLASS);

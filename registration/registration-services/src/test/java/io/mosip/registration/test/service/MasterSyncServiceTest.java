@@ -1,5 +1,6 @@
 package io.mosip.registration.test.service;
 
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
@@ -7,10 +8,14 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
-import io.mosip.registration.update.SoftwareUpdateHandler;
-import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,6 +49,7 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.dao.DocumentCategoryDAO;
+import io.mosip.registration.dao.DynamicFieldDAO;
 import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dao.MasterSyncDao;
@@ -53,9 +59,9 @@ import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
+import io.mosip.registration.dto.mastersync.DynamicFieldValueDto;
 import io.mosip.registration.dto.mastersync.MasterDataResponseDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
-import io.mosip.registration.entity.BlocklistedWords;
 import io.mosip.registration.entity.Location;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.ReasonCategory;
@@ -73,8 +79,10 @@ import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.impl.MasterSyncServiceImpl;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
+import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 /**
@@ -161,6 +169,9 @@ public class MasterSyncServiceTest {
 	@Mock
 	private SoftwareUpdateHandler softwareUpdateHandler;
 
+	@Mock
+	private DynamicFieldDAO dynamicFieldDAO;
+	
 	@Before
 	public void beforeClass() throws Exception {
 		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class,
@@ -288,10 +299,10 @@ public class MasterSyncServiceTest {
 
 		responseDTO.setErrorResponseDTOs(errorResponses);
 
-		ResponseDTO responseDto = masterSyncServiceImpl.getMasterSync("MDS_J00001","System");
+		masterSyncServiceImpl.getMasterSync("MDS_J00001","System");
 	}
 
-	@SuppressWarnings({ "unchecked", "unused" })
+	@SuppressWarnings({ "unused" })
 	@Test
 	public void testExpectedIOException() throws Exception {
 
@@ -388,7 +399,6 @@ public class MasterSyncServiceTest {
 		masterSyncServiceImpl.getMasterSync("MDS_J00001","System");
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testExpectedRegBaseUncheckedException() throws Exception {
 
@@ -437,7 +447,6 @@ public class MasterSyncServiceTest {
 		masterSyncServiceImpl.getMasterSync("MDS_J00001","System");
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testExpectedRunException() throws Exception {
 
@@ -487,7 +496,6 @@ public class MasterSyncServiceTest {
 		masterSyncServiceImpl.getMasterSync("MDS_J00001","System");
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testExpectedRegBasecheckedException() throws Exception {
 
@@ -587,7 +595,7 @@ public class MasterSyncServiceTest {
 		// responseDto.getSuccessResponseDTO().getMessage());
 	}
 
-	@SuppressWarnings({ "unchecked", "unused" })
+	@SuppressWarnings({ "unused" })
 	@Test
 	public void testMasterSyncHttpCaseJson()
 			throws RegBaseCheckedException, ConnectionException, IOException {
@@ -636,7 +644,7 @@ public class MasterSyncServiceTest {
 
 	}
 
-	@SuppressWarnings({ "unchecked", "unused" })
+	@SuppressWarnings({ "unused" })
 	@Test
 	public void testMasterSyncSocketCaseJson()
 			throws RegBaseCheckedException, ConnectionException, IOException {
@@ -725,7 +733,6 @@ public class MasterSyncServiceTest {
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void findAllReasons() throws RegBaseCheckedException {
 
@@ -939,7 +946,6 @@ public class MasterSyncServiceTest {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		PowerMockito.mockStatic(UriComponentsBuilder.class);
 		PowerMockito.mockStatic(URI.class);
-		MasterDataResponseDto masterSyncDto = new MasterDataResponseDto();
 		MasterDataResponseDto masterSyncDt = new MasterDataResponseDto();
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
 		ResponseDTO responseDTO = new ResponseDTO();
@@ -1026,6 +1032,58 @@ public class MasterSyncServiceTest {
 	@Test(expected=RegBaseCheckedException.class)
 	public void codeNotNullAllLangCode() throws RegBaseCheckedException {
 		masterSyncServiceImpl.getAllReasonsList(null);
+	}
+	
+	private List<DynamicFieldValueDto> getDynamicFieldValues() {
+		List<DynamicFieldValueDto> dynamicFieldValues = new ArrayList<>();
+		DynamicFieldValueDto dynamicField = new DynamicFieldValueDto();
+		dynamicField.setCode("FLE");
+		dynamicField.setValue("Female");
+		dynamicField.setActive(true);
+		DynamicFieldValueDto dynamicField2 = new DynamicFieldValueDto();
+		dynamicField2.setCode("MLE");
+		dynamicField2.setValue("Male");
+		dynamicField2.setActive(true);
+		dynamicFieldValues.add(dynamicField);
+		dynamicFieldValues.add(dynamicField2);
+		return dynamicFieldValues;
+	}
+	
+	@Test
+	public void testGetDynamicField() throws RegBaseCheckedException {
+		List<DynamicFieldValueDto> dynamicFieldValues = getDynamicFieldValues();
+		Mockito.when(dynamicFieldDAO.getDynamicFieldValues(Mockito.anyString(), Mockito.anyString())).thenReturn(dynamicFieldValues);
+		assertNotNull(masterSyncServiceImpl.getDynamicField("gender", "eng").size());
+	}
+	
+	@Test
+	public void testGetFieldValuesHierarchial() {
+		List<Location> locations = new ArrayList<>();
+		Location loc = new Location();
+		loc.setCode("RBT");
+		loc.setName("Rabat");
+		loc.setLangCode("eng");
+		locations.add(loc);
+		Mockito.when(masterSyncDao.findLocationByParentLocCode(Mockito.anyString(), Mockito.anyString())).thenReturn(locations);
+		assertNotNull(masterSyncServiceImpl.getFieldValues("region", "eng", true).size());
+	}
+	
+	@Test
+	public void testGetFieldValuesHierarchialEmpty() {
+		List<Location> locations = new ArrayList<>();
+		Location loc = new Location();
+		loc.setCode("RBT");
+		loc.setName("Rabat");
+		loc.setLangCode("eng");
+		locations.add(loc);
+		assertNotNull(masterSyncServiceImpl.getFieldValues("region", null, true).size());
+	}
+	
+	@Test
+	public void testGetFieldValuesDynamic() {
+		List<DynamicFieldValueDto> dynamicFieldValues = getDynamicFieldValues();
+		Mockito.when(dynamicFieldDAO.getDynamicFieldValues(Mockito.anyString(), Mockito.anyString())).thenReturn(dynamicFieldValues);
+		assertNotNull(masterSyncServiceImpl.getFieldValues("region", "eng", false).size());
 	}
 
 }
