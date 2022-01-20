@@ -1,4 +1,3 @@
-
 package io.mosip.registration.controller.auth;
 
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
@@ -967,9 +966,6 @@ public class LoginController extends BaseController implements Initializable {
 	 * @return boolean
 	 */
 	private boolean validateInvalidLogin(UserDTO userDTO, String errorMessage) {
-
-		boolean validate = false;
-
 		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Fetching invalid login params");
 
 		int invalidLoginCount = Integer
@@ -982,27 +978,23 @@ public class LoginController extends BaseController implements Initializable {
 				String.valueOf(invalidLoginCount), RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USER_ACCOUNT_LOCK_MESSAGE),
 				String.valueOf(invalidLoginTime), RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USER_ACCOUNT_LOCK_MESSAGE_MINUTES));
 
-		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
-				"Invoking validation of login attempts");
+		LOGGER.info("Invoking validation of login attempts");
 
 		String val = loginService.validateInvalidLogin(userDTO, errorMessage, invalidLoginCount, invalidLoginTime);
 
-		if (!RegistrationConstants.EMPTY.equalsIgnoreCase(val)) {
-			if (val.equalsIgnoreCase(RegistrationConstants.ERROR)) {
+		switch (val.toLowerCase()){
+			case "error":
 				generateAlert(RegistrationConstants.ERROR, unlockMessage);
 				loadLoginScreen();
-			} else if (val.equalsIgnoreCase(errorMessage)) {
+				break;
+			case "true":
+				return true;
+			default:
 				generateAlert(RegistrationConstants.ERROR, errorMessage);
-			} else {
-				validate = Boolean.valueOf(val);
-			}
 		}
 
-		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
-				"Validated number of login attempts");
-
-		return validate;
-
+		LOGGER.info("Validated number of login attempts, failed!");
+		return false;
 	}
 
 	/**
