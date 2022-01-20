@@ -60,7 +60,7 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 	private RetryTemplate retryTemplate;
 
 	@PostConstruct
-	private void init() {
+	public void init() {
 		FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
 		backOffPolicy.setBackOffPeriod((Long) ApplicationContext.map().getOrDefault("mosip.registration.retry.delay.policy.sync", 1000l));
 
@@ -116,7 +116,7 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 			LOGGER.debug("Policy Sync saved in local DB successfully");
 			return setSuccessResponse(responseDTO, RegistrationConstants.POLICY_SYNC_SUCCESS_MESSAGE, null);
 
-		} catch (ConnectionException | RuntimeException t) {
+		} catch (ConnectionException | RuntimeException | RegBaseCheckedException t) {
 			LOGGER.error("", t);
 		}
 		return setErrorResponse(responseDTO, RegistrationExceptionConstants.REG_POLICY_SYNC_FAILED.getErrorMessage(), null);

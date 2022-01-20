@@ -11,24 +11,10 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.micrometer.core.annotation.Counted;
-import io.micrometer.core.annotation.Timed;
-import io.mosip.kernel.core.util.CryptoUtil;
-import org.apache.http.Consts;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.RequestBuilder;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -38,8 +24,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
@@ -207,15 +196,13 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 			String requestBody = objectMapper.writeValueAsString(rCaptureRequestDTO);
 			LOGGER.debug("Request for RCapture....{}", requestBody);
 
-			CloseableHttpResponse response = mosipDeviceSpecificationHelper.getHttpClientResponse(
+			String val = mosipDeviceSpecificationHelper.getHttpClientResponseEntity(
 					bioDevice.getCallbackId() + MosipBioDeviceConstants.CAPTURE_ENDPOINT,
 					"RCAPTURE", requestBody);
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 					"Request completed.... " + System.currentTimeMillis());
-
-			String val = EntityUtils.toString(response.getEntity());
-
+			
 			RCaptureResponseDTO captureResponse = objectMapper.readValue(val.getBytes(StandardCharsets.UTF_8),
 					RCaptureResponseDTO.class);
 
@@ -440,13 +427,13 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 
 			LOGGER.debug(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for device discovery...." + requestBody);
 
-			CloseableHttpResponse response = mosipDeviceSpecificationHelper.getHttpClientResponse(
+			String response = mosipDeviceSpecificationHelper.getHttpClientResponseEntity(
 					mosipDeviceSpecificationHelper.buildUrl(mdmBioDevice.getPort(), "device"),
 					"MOSIPDISC",
 					requestBody);
 
 			LOGGER.info("Request completed {}. parsing device discovery response to 095 dto", System.currentTimeMillis());
-			List<DeviceDiscoveryMDSResponse> deviceList = (mosipDeviceSpecificationHelper.getMapper().readValue(EntityUtils.toString(response.getEntity()),
+			List<DeviceDiscoveryMDSResponse> deviceList = (mosipDeviceSpecificationHelper.getMapper().readValue(response,
 					new TypeReference<List<DeviceDiscoveryMDSResponse>>() {}));
 
 			isDeviceAvailable = deviceList.stream().anyMatch(device ->

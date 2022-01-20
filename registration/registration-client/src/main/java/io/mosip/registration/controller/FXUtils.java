@@ -403,7 +403,7 @@ public class FXUtils {
 	 * @param field      the {@link TextField}
 	 */
 	public void hideLabel(Pane parentPane, TextField field) {
-		if (field == null || field.getText().isEmpty()) {
+		if (field != null && field.getText().isEmpty()) {
 			try {
 				Label label = ((Label) parentPane
 						.lookup(RegistrationConstants.HASH + field.getId() + RegistrationConstants.LABEL));

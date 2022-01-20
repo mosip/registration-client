@@ -12,8 +12,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import io.mosip.registration.update.SoftwareUpdateHandler;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,15 +27,12 @@ import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.DynamicFieldDAO;
-import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.mastersync.BlocklistedWordsDto;
 import io.mosip.registration.dto.mastersync.DynamicFieldValueDto;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.mastersync.ReasonListDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
-import io.mosip.registration.entity.BlocklistedWords;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.entity.Location;
 import io.mosip.registration.entity.ReasonCategory;
@@ -52,6 +47,7 @@ import io.mosip.registration.jobs.SyncManager;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.sync.MasterSyncService;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import io.mosip.registration.util.mastersync.MapperUtils;
 
@@ -85,9 +81,6 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	/** The global param service. */
 	@Autowired
 	private GlobalParamService globalParamService;
-
-	@Autowired
-	private IdentitySchemaDao identitySchemaDao;
 
 	@Autowired
 	private DynamicFieldDAO dynamicFieldDAO;
@@ -312,34 +305,6 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	}
 
 	/**
-	 * Master sync fields validate with index.
-	 *
-	 * @param masterSyncDtls the master sync dtls
-	 * @param triggerPoint   the trigger point
-	 * @param keyIndex       the key index
-	 * @return true, if successful
-	 */
-	private boolean masterSyncFieldsValidateWithIndex(String masterSyncDtls, String triggerPoint, String keyIndex) {
-
-		if (StringUtils.isEmpty(masterSyncDtls)) {
-			LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID,
-					"masterSyncDtls is missing it is a mandatory field.");
-			return false;
-		} else if (StringUtils.isEmpty(triggerPoint)) {
-			LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID,
-					"triggerPoint is missing it is a mandatory field.");
-			return false;
-		} else if (StringUtils.isEmpty(keyIndex)) {
-			LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID,
-					"keyIndex is missing it is a mandatory field.");
-			return false;
-		} else {
-			return true;
-		}
-
-	}
-
-	/**
 	 * Master sync fields validate.
 	 *
 	 * @param masterSyncDtls the master sync dtls
@@ -516,19 +481,6 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 		return errorList != null && errorList.get(0) != null
 				? (String) errorList.get(0).get(RegistrationConstants.ERROR_CODE)
 				: null;
-
-	}
-
-	private boolean isMachineActiveWithCenter(String responseErrorCode, String errorCode) {
-
-		boolean isMatch = false;
-		if (responseErrorCode != null) {
-			isMatch = responseErrorCode.equalsIgnoreCase(errorCode);
-		}
-
-		return isMatch;
-
-
 
 	}
 
