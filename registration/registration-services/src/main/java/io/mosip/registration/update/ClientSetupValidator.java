@@ -10,10 +10,10 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Stack;
+import java.nio.file.attribute.PosixFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -184,7 +184,12 @@ public class ClientSetupValidator {
 
     private String setClassPath() throws RegBaseCheckedException {
         try {
-            Path tempDir = Files.createTempDirectory(null, null);
+            Set<PosixFilePermission> permissions = new HashSet<PosixFilePermission>();
+            permissions.add(PosixFilePermission.OWNER_EXECUTE);
+            permissions.add(PosixFilePermission.OWNER_READ);
+            permissions.add(PosixFilePermission.OWNER_WRITE);
+            PosixFilePermissions.asFileAttribute(permissions);
+            Path tempDir = Files.createTempDirectory(null, PosixFilePermissions.asFileAttribute(permissions));
             FileUtils.copyDirectory(new File(libFolder),tempDir.toFile());
             ClassLoader currentThreadClassLoader = Thread.currentThread().getContextClassLoader();
             URLClassLoader urlClassLoader = new URLClassLoader(new URL[]{tempDir.toUri().toURL()},
