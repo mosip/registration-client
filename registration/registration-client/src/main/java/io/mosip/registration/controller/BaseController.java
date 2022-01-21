@@ -929,7 +929,7 @@ public class BaseController {
 	}
 
 	private String saveDetails(String currentPage, String returnPage) {
-		if (returnPage.equalsIgnoreCase(RegistrationConstants.REGISTRATION_PREVIEW)) {
+		if (RegistrationConstants.REGISTRATION_PREVIEW.equalsIgnoreCase(returnPage)) {
 
 			LOGGER.info(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
 					"Invoking Save Detail before redirecting to Preview");
@@ -938,7 +938,7 @@ public class BaseController {
 
 			LOGGER.info(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
 					"Details saved and content of preview is set");
-		} else if (returnPage.equalsIgnoreCase(RegistrationConstants.ONBOARD_USER_SUCCESS)) {
+		} else if (RegistrationConstants.ONBOARD_USER_SUCCESS.equalsIgnoreCase(returnPage)) {
 
 			LOGGER.info(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID, "Validating User Onboard data");
 
@@ -1032,13 +1032,16 @@ public class BaseController {
 	protected void getCurrentPage(Pane pageId, String notTosShow, String show) {
 		LOGGER.info("Pane : {}, Navigating from current page {} to show : {}",
 				pageId == null ? "null" : pageId.getId(), notTosShow, show);
-
-		if (notTosShow != null) {
-			((Pane) pageId.lookup(RegistrationConstants.HASH + notTosShow)).setVisible(false);
+		
+		if (pageId != null) {
+			if (notTosShow != null) {
+				((Pane) pageId.lookup(RegistrationConstants.HASH + notTosShow)).setVisible(false);
+			}
+			if (show != null) {
+				((Pane) pageId.lookup(RegistrationConstants.HASH + show)).setVisible(true);
+			}
 		}
-		if (show != null) {
-			((Pane) pageId.lookup(RegistrationConstants.HASH + show)).setVisible(true);
-		}
+		
 		LOGGER.info("Navigated to next page >> {}", show);
 	}
 

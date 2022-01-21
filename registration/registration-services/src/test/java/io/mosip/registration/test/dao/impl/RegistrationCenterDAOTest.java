@@ -1,11 +1,10 @@
 package io.mosip.registration.test.dao.impl;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -25,9 +24,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
-import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.dao.impl.RegistrationCenterDAOImpl;
-import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.RegistrationCenter;
 import io.mosip.registration.entity.id.RegistartionCenterId;
@@ -86,7 +83,7 @@ public class RegistrationCenterDAOTest {
 		Optional<RegistrationCenter> registrationCenterList = Optional.of(registrationCenter);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase("machineName")).thenReturn(machineMaster);
 		assertTrue(registrationCenterList.isPresent());
-		assertNotNull(registrationCenterDAOImpl.isMachineCenterActive());
+		assertFalse(registrationCenterDAOImpl.isMachineCenterActive());
 	}
 	
 	@Test
@@ -98,6 +95,6 @@ public class RegistrationCenterDAOTest {
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.any())).thenReturn(machineMaster);
 		Mockito.when(registrationCenterRepository.findByIsActiveTrueAndRegistartionCenterIdIdAndRegistartionCenterIdLangCode("mosip","eng")).thenReturn(registrationCenterList);
 		assertTrue(registrationCenterList.isPresent());
-		assertNotNull(registrationCenterDAOImpl.isMachineCenterActive());
+		assertFalse(registrationCenterDAOImpl.isMachineCenterActive());
 	}
 }

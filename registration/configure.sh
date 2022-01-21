@@ -43,6 +43,17 @@ else
   echo "No separate resources found !!"
 fi
 
+if wget "${artifactory_url}/artifactory/libs-release-local/reg-client/custom-impl.zip"
+then
+  echo "Successfully downloaded custom-implementations zip, Adding it to reg-client jar"
+  mkdir customimpls
+  /usr/bin/unzip ./custom-impl.zip -d ./customimpls/
+  cd ./customimpls
+  cp "${work_dir}"/customimpls/*.jar "${work_dir}"/registration-client/target/lib/
+else
+  echo "No Custom(scanner & geo-position) implementations found !!"
+fi
+
 cd "${work_dir}"
 mkdir -p "${work_dir}"/sdkjars
 

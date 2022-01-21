@@ -13,15 +13,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import io.micrometer.core.annotation.Counted;
-import io.micrometer.core.annotation.Timed;
-import io.mosip.registration.api.geoposition.GeoPositionFacade;
-import io.mosip.registration.api.geoposition.dto.GeoPosition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.registration.api.geoposition.GeoPositionFacade;
+import io.mosip.registration.api.geoposition.dto.GeoPosition;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
@@ -75,7 +74,7 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 	private GlobalParamDAO globalParamDAO;
 	
 	@Autowired
-	private RegistrationCenterDAO registration;
+	private RegistrationCenterDAO registrationCenterDAO;
 
 	private static final Logger LOGGER = AppConfig.getLogger(SyncStatusValidatorServiceImpl.class);
 
@@ -327,13 +326,13 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 			LOGGER.debug("Validating the geo location of machine w.r.t registration center started");
 
 			double centerLatitude = Double
-					.parseDouble(registration
+					.parseDouble(registrationCenterDAO
 							.getRegistrationCenterDetails(SessionContext.userContext().getRegistrationCenterDetailDTO()
 									.getRegistrationCenterId(), ApplicationContext.applicationLanguage())
 							.getRegistrationCenterLatitude());
 
 			double centerLongitude = Double
-					.parseDouble(registration
+					.parseDouble(registrationCenterDAO
 							.getRegistrationCenterDetails(SessionContext.userContext().getRegistrationCenterDetailDTO()
 									.getRegistrationCenterId(), ApplicationContext.applicationLanguage())
 							.getRegistrationCenterLongitude());
@@ -345,27 +344,26 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 			geoPosition.setTimeout(Integer.parseInt((String) ApplicationContext.map().getOrDefault(RegistrationConstants.GPS_PORT_TIMEOUT,
 					"3000")));
 			geoPosition = geoPositionFacade.getMachineGeoPosition(geoPosition);
-
-			if(geoPosition.getError() != null) {
+			
+			if (geoPosition == null || geoPosition.getError() != null) {
 				getErrorResponse(RegistrationConstants.ICS_CODE_FOUR,
-						geoPosition.getError(), RegistrationConstants.ERROR,
+						geoPosition != null ? geoPosition.getError() : RegistrationConstants.UNKNOWN, RegistrationConstants.ERROR,
 						errorResponseDTOList);
 				return;
 			}
 
-			if (geoPosition != null && geoPosition.getError() != null) {
-				double distance = geoPositionFacade.getDistance(geoPosition.getLongitude(), geoPosition.getLatitude(),
-						centerLongitude, centerLatitude);
+			double distance = geoPositionFacade.getDistance(geoPosition.getLongitude(), geoPosition.getLatitude(),
+					centerLongitude, centerLatitude);
 
-				if (distance > Double.parseDouble(String.valueOf(
-						ApplicationContext.map().get(RegistrationConstants.DIST_FRM_MACHN_TO_CENTER)))) {
-					getErrorResponse(RegistrationConstants.ICS_CODE_FOUR,
-							RegistrationConstants.OPT_TO_REG_OUTSIDE_LOCATION, RegistrationConstants.ERROR,
-							errorResponseDTOList);
-					return;
-				}
-				ApplicationContext.map().put(RegistrationConstants.OPT_TO_REG_LAST_CAPTURED_TIME, Instant.now());
+			if (distance > Double.parseDouble(String.valueOf(
+					ApplicationContext.map().get(RegistrationConstants.DIST_FRM_MACHN_TO_CENTER)))) {
+				getErrorResponse(RegistrationConstants.ICS_CODE_FOUR,
+						RegistrationConstants.OPT_TO_REG_OUTSIDE_LOCATION, RegistrationConstants.ERROR,
+						errorResponseDTOList);
+				return;
 			}
+			ApplicationContext.map().put(RegistrationConstants.OPT_TO_REG_LAST_CAPTURED_TIME, Instant.now());
+			
 			auditFactory.audit(AuditEvent.SYNC_GEO_VALIDATE, Components.SYNC_VALIDATE,
 					RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
 		}

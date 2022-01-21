@@ -38,6 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Configuration
 @EnableScheduling
@@ -254,15 +255,16 @@ public class MetricsConfig {
     }
 
     private File getFile() throws Exception {
-        Optional<Path> result = Files.list(Path.of(System.getProperty("user.dir"), "logs"))
-                    .filter(s -> s.toFile().getName().startsWith("metrics-archive"))
+    	try (Stream<Path> stream = Files.list(Path.of(System.getProperty("user.dir"), "logs"))) {
+    		Optional<Path> result = stream.filter(s -> s.toFile().getName().startsWith("metrics-archive"))
                     .sorted()
                     .findFirst();
 
-        if(result.isPresent())
-            return result.get().toFile();
+    		if(result.isPresent())
+    			return result.get().toFile();
 
-        throw new Exception("*** No metrics archive files to sync ***");
+    		throw new Exception("*** No metrics archive files to sync ***");
+    	}
     }
 
 }
