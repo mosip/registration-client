@@ -1,15 +1,15 @@
 package io.mosip.registration.update;
 
-import io.mosip.kernel.core.util.HMACUtils2;
+import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.exception.RegBaseCheckedException;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URL;
-import java.net.URLConnection;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -127,8 +127,14 @@ public class ClientSetupValidator {
         } catch (IOException e) {
             logger.error("Failed to validate build setup", e);
             if(executorService != null) { shutdownAndAwaitTermination(executorService); }
-            throw new RegBaseCheckedException("REG-BUILD-002", "Failed to check client setup validation");
+            validation_failed = true;
         }
+
+        if(validation_failed)
+            throw new RegBaseCheckedException("REG-BUILD-002", "Failed to check client setup validation");
+
+        String classpath = setClassPath();
+        logger.info("New classpath >>>>>>>>>>> {}", classpath);
     }
 
     public boolean isValidationFailed() {
@@ -166,13 +172,28 @@ public class ClientSetupValidator {
                 pool.shutdownNow(); // Cancel currently executing tasks
                 // Wait a while for tasks to respond to being cancelled
                 if (!pool.awaitTermination(60, TimeUnit.SECONDS))
-                    System.err.println("Pool did not terminate");
+                    logger.error("Pool did not terminate");
             }
         } catch (InterruptedException ie) {
             // (Re-)Cancel if current thread also interrupted
             pool.shutdownNow();
             // Preserve interrupt status
             Thread.currentThread().interrupt();
+        }
+    }
+
+    private String setClassPath() throws RegBaseCheckedException {
+        try {
+            Path tempDir = Files.createTempDirectory(null, null);
+            FileUtils.copyDirectory(new File(libFolder),tempDir.toFile());
+            ClassLoader currentThreadClassLoader = Thread.currentThread().getContextClassLoader();
+            URLClassLoader urlClassLoader = new URLClassLoader(new URL[]{tempDir.toUri().toURL()},
+                    currentThreadClassLoader);
+            Thread.currentThread().setContextClassLoader(urlClassLoader);
+            return tempDir.toFile().getCanonicalPath();
+        } catch (Exception e) {
+            logger.error("Failed to set classpath", e);
+            throw new RegBaseCheckedException("REG-BUILD-003", "Setting classpath failed");
         }
     }
 }
