@@ -1559,7 +1559,6 @@ public class BaseController {
         try {
 			return  new Image(getClass().getResourceAsStream(uri));
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			LOGGER.error("Exception while Getting Image "+ uri, exception);
 			throw new RegBaseCheckedException();
 		}
