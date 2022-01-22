@@ -6,14 +6,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.mapper.CustomObjectMapper.MAPPER_FACADE;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -145,45 +138,30 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	 */
 	@Override
 	public List<String> getModesOfLogin(String authType, Set<String> roleList) {
-		// Retrieve Login information
+		LOGGER.info("Fetching list of login modes");
 
-		LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "Fetching list of login modes");
+		boolean mandatePwdLogin = !authTokenUtilService.hasAnyValidToken() && serviceDelegateUtil.isNetworkAvailable();
 
-		List<String> loginModes = new ArrayList<>();
+		LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "PWD LOGIN MANDATED ? " + mandatePwdLogin);
 
-		try {
-			getModesOfLoginValidation(authType, roleList);
+		auditFactory.audit(AuditEvent.LOGIN_MODES_FETCH, Components.LOGIN_MODES,
+				RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
 
-			boolean mandatePwdLogin = !authTokenUtilService.hasAnyValidToken() && serviceDelegateUtil.isNetworkAvailable();
+		List<String> loginModes = appAuthenticationDAO.getModesOfLogin(authType, roleList);
 
-			LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "PWD LOGIN MANDATED ? " + mandatePwdLogin);
+		if(mandatePwdLogin) {
+			Optional<String> pwdMode = loginModes.stream().filter(loginMode ->
+					loginMode.equalsIgnoreCase(LoginMode.OTP.getCode()) ||
+							loginMode.equalsIgnoreCase(LoginMode.PASSWORD.getCode()) ||
+							loginMode.equalsIgnoreCase(RegistrationConstants.PWORD)).findFirst();
 
-			auditFactory.audit(AuditEvent.LOGIN_MODES_FETCH, Components.LOGIN_MODES,
-					RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
-			
-			loginModes = appAuthenticationDAO.getModesOfLogin(authType, roleList);
+			LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "PWD LOGIN mode already present ? " + pwdMode.isPresent());
 
-			if(mandatePwdLogin) {
-				Optional<String> pwdMode = loginModes.stream().filter(loginMode ->
-						loginMode.equalsIgnoreCase(LoginMode.OTP.getCode()) ||
-								loginMode.equalsIgnoreCase(LoginMode.PASSWORD.getCode()) ||
-								loginMode.equalsIgnoreCase(RegistrationConstants.PWORD)).findFirst();
-
-				LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "PWD LOGIN mode already present ? " + pwdMode.isPresent());
-				if(!pwdMode.isPresent())
-					loginModes.add(RegistrationConstants.PWORD);
-
-				return loginModes;
-			}
-			
-			LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-					"Completed fetching list of login modes");
-			
-		} catch (RegBaseCheckedException regBaseCheckedException) {
-			LOGGER.error(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-					ExceptionUtils.getStackTrace(regBaseCheckedException));
-
+			if(!pwdMode.isPresent())
+				loginModes.add(RegistrationConstants.PWORD);
 		}
+
+		LOGGER.info("Completed fetching list of login modes, {}", loginModes);
 		return loginModes;
 	}
 
@@ -197,7 +175,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	@Override
 	public UserDTO getUserDetail(String userId) {
 		// Retrieving Officer details
-		LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "Fetching User details");
+		LOGGER.info( "Fetching User details");
 
 		UserDTO userDTO = null;
 
@@ -209,8 +187,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 
 			userDTO = MAPPER_FACADE.map(userDetailDAO.getUserDetail(userId), UserDTO.class);
 			
-			LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-					"Completed fetching User details, user found : " + (userDTO == null ? false : true));
+			LOGGER.info("Completed fetching User details, user found : " + (userDTO == null ? false : true));
 			
 		} catch (RegBaseCheckedException regBaseCheckedException) {
 			LOGGER.error(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
@@ -531,24 +508,19 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 				return responseDTO;
 			}
 
-			if(userDTO.getUserRole() == null || userDTO.getUserRole().isEmpty()) {
-				setErrorResponse(responseDTO, RegistrationConstants.ROLES_EMPTY_ERROR, null);
-				return responseDTO;
-			}
-
 			Set<String> roleList = new LinkedHashSet<>();
-			userDTO.getUserRole().forEach(roleCode -> {
-				if (roleCode.isActive()) {
+			Objects.requireNonNull(userDTO.getUserRole()).forEach(roleCode -> {
+				//if (roleCode.isActive()) {
 					roleList.add(String.valueOf(roleCode.getRoleCode()));
-				}
+				//}
 			});
 
 			LOGGER.info("Validating roles for the provided userid {}", roleList);
 
 			// Checking roles
-			if (!Role.hasAnyRegistrationRoles(roleList)) {
-				setErrorResponse(responseDTO, RegistrationConstants.ROLES_EMPTY_ERROR, null);
-			} else {
+			//if (!Role.hasAnyRegistrationRoles(roleList)) {
+			//		setErrorResponse(responseDTO, RegistrationConstants.ROLES_EMPTY_ERROR, null);
+			//} else {
 				MachineMaster machineMaster = getMachine();
 				
 				ApplicationContext.map().put(RegistrationConstants.USER_STATION_ID, machineMaster.getId());
@@ -558,7 +530,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 				params.put(RegistrationConstants.ROLES_LIST, roleList);
 				params.put(RegistrationConstants.USER_DTO, userDTO);
 				setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, params);
-			}
+			//}
 			LOGGER.info("completed validating user successfully");
 			
 		} catch(Throwable t) {

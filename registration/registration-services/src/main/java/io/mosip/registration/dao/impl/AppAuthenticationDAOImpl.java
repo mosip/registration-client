@@ -1,10 +1,9 @@
 package io.mosip.registration.dao.impl;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import io.mosip.registration.enums.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -32,6 +31,8 @@ public class AppAuthenticationDAOImpl implements AppAuthenticationDAO {
 	 */
 	private static final Logger LOGGER = AppConfig.getLogger(AppAuthenticationDAOImpl.class);
 
+	private static final String DEFAULT_LOGIN_METHOD = "PWD";
+
 	/** The AppAuthentication repository. */
 	@Autowired
 	private AppAuthenticationRepository appAuthenticationRepository;
@@ -46,29 +47,35 @@ public class AppAuthenticationDAOImpl implements AppAuthenticationDAO {
 	 * @see org.mosip.registration.dao.RegistrationAppLoginDAO#getModesOfLogin()
 	 */
 	public List<String> getModesOfLogin(String authType, Set<String> roleList) {
+		LOGGER.info("Fetching list of login modes");
 
-		LOGGER.info("REGISTRATION - LOGINMODES - REGISTRATION_APP_LOGIN_DAO_IMPL", RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Fetching list of login modes");
-		
-		Set<String> role = new HashSet<>();
-		
-		if(roleList.size() == RegistrationConstants.PARAM_ONE) {
-			role.add(roleList.iterator().next());
-		} else if(roleList.size() > RegistrationConstants.PARAM_ONE){
-			List<AppRolePriorityDetails> appRolePriorityDetails = appRolePriorityRepository.findByAppRolePriorityIdProcessIdAndAppRolePriorityIdRoleCodeInOrderByPriority(authType, roleList);
-			role.add(!appRolePriorityDetails.isEmpty() ? String.valueOf(appRolePriorityDetails.get(RegistrationConstants.PARAM_ZERO).getAppRolePriorityId().getRoleCode()) : "");
-		}
-		
-		if(!authType.equalsIgnoreCase(ProcessNames.LOGIN.getType())) {
-			role.add("*");
+		List<String> loginModes = new ArrayList<>();
+
+		if(roleList == null || roleList.isEmpty()) {
+			LOGGER.info("Role list is empty for logged in user, returning back {} as default login method", DEFAULT_LOGIN_METHOD);
+			loginModes.add(DEFAULT_LOGIN_METHOD);
+			return loginModes;
 		}
 
-		List<AppAuthenticationDetails> loginList = appAuthenticationRepository
-				.findByIsActiveTrueAndAppAuthenticationMethodIdProcessIdAndAppAuthenticationMethodIdRoleCodeInOrderByMethodSequence(authType, role);
-		
-		LOGGER.info("REGISTRATION - LOGINMODES - REGISTRATION_APP_LOGIN_DAO_IMPL", RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "List of login modes fetched successfully");
-		
-		return loginList.stream().map(loginMethod -> loginMethod.getAppAuthenticationMethodId().getAuthMethodCode()).collect(Collectors.toList());
+		//get role priorities based on auth-type
+		List<AppRolePriorityDetails> appRolePriorityDetails = appRolePriorityRepository.findByAppRolePriorityIdProcessIdAndAppRolePriorityIdRoleCodeInOrderByPriority(authType, roleList);
+
+		Role role = Role.getHighestRankingRole(roleList);
+		//if no app_role_priority entry is found, simply follow default role rankings
+		String highPriorityRoleConsidered = (appRolePriorityDetails != null && !appRolePriorityDetails.isEmpty()) ?
+				appRolePriorityDetails.get(0).getAppRolePriorityId().getRoleCode() : (role != null ? role.name() : null);
+
+
+		if(highPriorityRoleConsidered != null) {
+			List<AppAuthenticationDetails> loginList = appAuthenticationRepository
+					.findByIsActiveTrueAndAppAuthenticationMethodIdProcessIdAndAppAuthenticationMethodIdRoleCodeOrderByMethodSequence(authType,
+							highPriorityRoleConsidered);
+
+			if(loginList != null && !loginList.isEmpty()) {
+				LOGGER.info("List of login modes fetched successfully, {}", loginList);
+				return loginList.stream().map(loginMethod -> loginMethod.getAppAuthenticationMethodId().getAuthMethodCode()).collect(Collectors.toList());
+			}
+		}
+		return loginModes;
 	}
 }
