@@ -101,9 +101,17 @@ public class ClientSetupValidator {
             Map<String, Attributes> localAttributes = localManifest.getEntries();
             for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
                 File file = new File(libFolder + File.separator + entry.getKey());
-                if(!file.exists() || !SoftwareUpdateUtil.validateJarChecksum(file, entry.getValue())) {
+                String url = serverRegClientURL + latestVersion + SLASH + libFolder + SLASH + entry.getKey();
+                if(!file.exists()) {
+                    logger.info("{} file doesn't exists, downloading it", entry.getKey());
+                    Files.copy(SoftwareUpdateUtil.download(url), file.toPath());
+                    logger.info("Successfully downloaded the file : {}", entry.getKey());
+                    patch_downloaded = true;
+                    continue;
+                }
+
+                if(!SoftwareUpdateUtil.validateJarChecksum(file, entry.getValue())) {
                     logger.info("{} file checksum validation failed, downloading it", entry.getKey());
-                    String url = serverRegClientURL + latestVersion + SLASH + libFolder + SLASH + entry.getKey();
                     try {
                         if(file.delete()) {
                             Files.copy(SoftwareUpdateUtil.download(url), file.toPath());
