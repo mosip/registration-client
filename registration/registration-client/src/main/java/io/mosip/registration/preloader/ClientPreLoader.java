@@ -23,6 +23,7 @@ public class ClientPreLoader extends Preloader {
     private static final Logger logger = LoggerFactory.getLogger(ClientPreLoader.class);
 
     public static boolean errorsFound = false;
+    public static boolean restartRequired = false;
     private Stage preloaderStage;
     private ProgressBar progressBar = new ProgressBar();
     private TextArea textArea = new TextArea();
@@ -113,7 +114,13 @@ public class ClientPreLoader extends Preloader {
                 progressBar.setProgress(0.1);
                 ClientSetupValidator clientSetupValidator = new ClientSetupValidator();
                 clientSetupValidator.validateBuildSetup();
-                errorsFound = clientSetupValidator.isValidationFailed();
+                if(clientSetupValidator.isPatch_downloaded()) {
+                    restartRequired = true;
+                    throw new RegBaseCheckedException("","New patches downloaded, Kindly restart the client");
+                }
+                else
+                    errorsFound = clientSetupValidator.isValidationFailed();
+
             } catch (RegBaseCheckedException e) {
                 errorsFound = true;
                 notifyPreloader(new ClientPreLoaderErrorNotification(e));
@@ -127,7 +134,10 @@ public class ClientPreLoader extends Preloader {
             }
         }
         if (stateChangeNotification.getType() == StateChangeNotification.Type.BEFORE_START) {
-            if(errorsFound) {
+            if(restartRequired) {
+                label.setText("Starting Registration Client : Restart Required");
+            }
+            else if(errorsFound) {
                 label.setText("Starting Registration Client : Failed!");
             }
             else {
