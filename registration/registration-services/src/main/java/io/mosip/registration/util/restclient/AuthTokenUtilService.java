@@ -1,6 +1,10 @@
 package io.mosip.registration.util.restclient;
 
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.impl.JWTParser;
+import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
@@ -42,6 +46,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.annotation.PostConstruct;
+import javax.validation.constraints.NotNull;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -56,6 +61,9 @@ import java.util.*;
 public class AuthTokenUtilService {
 
     private static final Logger LOGGER = AppConfig.getLogger(AuthTokenUtilService.class);
+    private static final String REALM_ACCESS = "realm_access";
+    private static final String ROLES = "roles";
+    private static final String USERNAME = "name";
 
     @Autowired
     private ClientCryptoFacade clientCryptoFacade;
@@ -220,23 +228,17 @@ public class AuthTokenUtilService {
             setURI(requestHTTPDTO, new HashMap<>(), getEnvironmentProperty("auth_by_password", RegistrationConstants.SERVICE_URL));
             Map<String, Object> responseMap = restClientUtil.invokeForToken(requestHTTPDTO);
 
-            long currentTimeInSeconds = System.currentTimeMillis()/1000;
             JSONObject jsonObject = getAuthTokenResponse(responseMap);
             AuthTokenDTO authTokenDTO = new AuthTokenDTO();
             authTokenDTO.setCookie(String.format("Authorization=%s", jsonObject.getString("token")));
             authTokenDTO.setLoginMode(loginMode.getCode());
 
+            updateUserDetails(loginUserDTO.getUserId(), loginUserDTO.getPassword(), jsonObject.getString("token"),
+                    jsonObject.getString("refreshToken"));
+
             ApplicationContext.setAuthTokenDTO(authTokenDTO);
             if(SessionContext.isSessionContextAvailable())
                 SessionContext.setAuthTokenDTO(authTokenDTO);
-
-            if(loginUserDTO.getPassword() != null)
-                userDetailDAO.updateUserPwd(loginUserDTO.getUserId(), loginUserDTO.getPassword());
-
-            userDetailDAO.updateAuthTokens(loginUserDTO.getUserId(), jsonObject.getString("token"),
-                    jsonObject.getString("refreshToken"),
-                    currentTimeInSeconds + jsonObject.getLong("expiryTime"),
-                    currentTimeInSeconds + jsonObject.getLong("refreshExpiryTime"));
 
             return authTokenDTO;
 
@@ -311,7 +313,7 @@ public class AuthTokenUtilService {
         if(responseMap.get(RegistrationConstants.REST_RESPONSE_BODY) != null) {
             Map<String, Object> respBody = (Map<String, Object>) responseMap.get(RegistrationConstants.REST_RESPONSE_BODY);
             if (respBody.get("response") != null) {
-                byte[] decryptedData = clientCryptoFacade.decrypt(ClientCryptoUtils.decodeBase64Data((String)respBody.get("response")));
+                byte[] decryptedData = clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64((String)respBody.get("response")));
                 return new JSONObject(new String(decryptedData));
             }
 
@@ -375,5 +377,36 @@ public class AuthTokenUtilService {
         requestFactory.setConnectTimeout(
                 Integer.parseInt((String) ApplicationContext.map().get(RegistrationConstants.HTTP_API_WRITE_TIMEOUT)));
         requestHTTPDTO.setSimpleClientHttpRequestFactory(requestFactory);
+    }
+
+
+    private void updateUserDetails(@NotNull String userId, String password, String token, String refreshToken) throws Exception {
+        if(password != null)
+            userDetailDAO.updateUserPwd(userId, password);
+
+        Date now = Calendar.getInstance().getTime();
+        DecodedJWT decodedJWT = JWT.decode(token);
+        if(decodedJWT.getExpiresAt() == null || decodedJWT.getExpiresAt().before(now)) {
+            throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(),
+                   "Auth token received is expired : " + decodedJWT.getExpiresAt());
+        }
+
+        userDetailDAO.updateUserRolesAndUsername(userId, getUsername(decodedJWT), getRoles(decodedJWT));
+
+        DecodedJWT decodedRefreshJWT = JWT.decode(refreshToken);
+        userDetailDAO.updateAuthTokens(userId, token, refreshToken, decodedJWT.getExpiresAt().getTime(),
+                decodedRefreshJWT.getExpiresAt().getTime());
+    }
+
+    private List<String> getRoles(@NotNull DecodedJWT decodedJWT) {
+        Claim realmAccess = decodedJWT.getClaim(REALM_ACCESS);
+        if (!realmAccess.isNull()) {
+            return (List<String>) realmAccess.asMap().get("roles");
+        }
+        return new ArrayList<>();
+    }
+
+    private String getUsername(@NotNull DecodedJWT decodedJWT) {
+        return decodedJWT.getClaim(USERNAME) == null ? null : decodedJWT.getClaim(USERNAME).asString().trim();
     }
 }

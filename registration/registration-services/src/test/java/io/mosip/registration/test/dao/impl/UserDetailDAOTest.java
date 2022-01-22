@@ -135,16 +135,16 @@ public class UserDetailDAOTest {
 		List<UserDetailDto> userDetails = new ArrayList<>();
 
 		UserDetailDto user = new UserDetailDto();
-		user.setUserName("110011");
-		user.setUserPassword("test".getBytes());
-		user.setRoles(Arrays.asList("SUPERADMIN"));
-		user.setMobile("9894589435");
+		user.setUserId("110011");
+		//user.setUserPassword("test".getBytes());
+		//user.setRoles(Arrays.asList("SUPERADMIN"));
+		//user.setMobile("9894589435");
 		user.setLangCode("eng");
 		UserDetailDto user1 = new UserDetailDto();
-		user1.setUserName("110011");
-		user1.setUserPassword("test".getBytes());
-		user1.setRoles(Arrays.asList("SUPERADMIN"));
-		user1.setMobile("9894589435");
+		user1.setUserId("110011");
+		//user1.setUserPassword("test".getBytes());
+		//user1.setRoles(Arrays.asList("SUPERADMIN"));
+		//user1.setMobile("9894589435");
 		user1.setLangCode("eng");
 		userDetails.add(user);
 		userDetails.add(user1);
