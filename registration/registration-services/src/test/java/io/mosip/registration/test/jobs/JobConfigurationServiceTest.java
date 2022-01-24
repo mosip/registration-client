@@ -12,10 +12,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import io.mosip.registration.service.config.LocalConfigService;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,7 +41,6 @@ import io.mosip.registration.dao.GlobalParamDAO;
 import io.mosip.registration.dao.SyncJobConfigDAO;
 import io.mosip.registration.dao.SyncJobControlDAO;
 import io.mosip.registration.dao.SyncTransactionDAO;
-import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.entity.GlobalParam;
@@ -52,7 +49,9 @@ import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.entity.SyncTransaction;
 import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.jobs.impl.PacketSyncStatusJob;
+import io.mosip.registration.repositories.SyncJobDefRepository;
 import io.mosip.registration.service.config.GlobalParamService;
+import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.config.impl.JobConfigurationServiceImpl;
 
 @RunWith(PowerMockRunner.class)
@@ -98,6 +97,9 @@ public class JobConfigurationServiceTest {
 
 	@Mock
 	GlobalParamDAO globalParamDAO;
+	
+	@Mock
+	private SyncJobDefRepository syncJobDefRepository;
 
 	@Mock
 	GlobalParamService globalParamService;
@@ -118,11 +120,12 @@ public class JobConfigurationServiceTest {
 		syncJob.setApiName("packetSyncStatusJob");
 		syncJob.setSyncFreq("0/5 * * * * ?");
 		syncJob.setIsActive(true);
+		syncJob.setParentSyncJobId("TEST_001");
 		syncJobList.add(syncJob);
 
 		SyncJobDef mdsJob = new SyncJobDef();
 		mdsJob.setId("RCS_J00005");
-
+		mdsJob.setParentSyncJobId("1234");
 		mdsJob.setApiName("packetSyncStatusJob");
 		mdsJob.setSyncFreq("0/5 * * * * ?");
 		mdsJob.setIsActive(true);
@@ -207,7 +210,6 @@ public class JobConfigurationServiceTest {
 		Mockito.when(jobConfigDAO.updateAll(Mockito.anyList())).thenReturn(updatedJobs);
 
 		jobConfigurationService.initiateJobs();
-
 	}
 
 	@Test
@@ -256,7 +258,6 @@ public class JobConfigurationServiceTest {
 
 	}
 
-	@Ignore
 	@Test
 	public void getCurrentRunningJobDetailsTest() throws SchedulerException {
 		startJobs();
@@ -273,17 +274,22 @@ public class JobConfigurationServiceTest {
 
 	@Test
 	public void getCurrentRunningJobDetailsEmptyTest() throws SchedulerException {
+		startJobs();
 		List<JobExecutionContext> jobExecutionContexts = new ArrayList<>();
 
 		Mockito.when(schedulerFactoryBean.getScheduler()).thenReturn(scheduler);
 		Mockito.when(scheduler.getCurrentlyExecutingJobs()).thenReturn(jobExecutionContexts);
 		Assert.assertNotNull(jobConfigurationService.getCurrentRunningJobDetails().getErrorResponseDTOs());
-
+	}
+	
+	@Test
+	public void getCurrentRunningJobDetailsEmptySchedulerTest() throws SchedulerException {
+		Mockito.when(schedulerFactoryBean.getScheduler()).thenReturn(scheduler);
+		Assert.assertNotNull(jobConfigurationService.getCurrentRunningJobDetails().getErrorResponseDTOs());
 	}
 
 	@Test
 	public void getCurrentRunningJobDetailsExceptionTest() throws SchedulerException {
-
 		startJobs();
 		Mockito.when(schedulerFactoryBean.getScheduler().getCurrentlyExecutingJobs()).thenThrow(SchedulerException.class);
 		Assert.assertSame(RegistrationConstants.CURRENT_JOB_DETAILS_ERROR_MESSAGE,
@@ -293,10 +299,22 @@ public class JobConfigurationServiceTest {
 	@Test
 	public void executeJobTest() throws SchedulerException {
 		initiateJobTest();
-		//Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(packetSyncJob);
+		SyncJobDef syncJobDef = new SyncJobDef();
+		syncJobDef.setId("1234");
+		syncJobDef.setApiName("test job");
+		syncJobDef.setIsActive(true);
+		Mockito.when(jobConfigDAO.getSyncJob(Mockito.anyString())).thenReturn(syncJobDef);
+		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(packetSyncJob);
 		Mockito.when(packetSyncJob.executeJob(Mockito.anyString(), Mockito.anyString())).thenReturn(new ResponseDTO());
 		Assert.assertNotNull(
 				jobConfigurationService.executeJob("1234", RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM));
+	}
+	
+	@Test
+	public void executeJobExceptionTest() throws SchedulerException {
+		initiateJobTest();
+		Mockito.when(jobConfigDAO.getSyncJob(Mockito.anyString())).thenThrow(RuntimeException.class);
+		Assert.assertNotNull(jobConfigurationService.executeJob("1234", RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM).getErrorResponseDTOs());
 	}
 
 	@Test
@@ -338,12 +356,10 @@ public class JobConfigurationServiceTest {
 
 		Mockito.when(syncJobDAO.findAll()).thenReturn(syncControls);
 		Assert.assertNotNull(jobConfigurationService.getLastCompletedSyncJobs().getErrorResponseDTOs());
-
 	}
 
 	@Test
 	public void getSyncTransactionTest() {
-
 		initiateJobTest();
 		List<SyncTransaction> syncTransactions = new LinkedList<>();
 		SyncTransaction syncTransaction = new SyncTransaction();
@@ -359,7 +375,6 @@ public class JobConfigurationServiceTest {
 				.thenReturn(syncTransactions);
 
 		Assert.assertNotNull(jobConfigurationService.getSyncJobsTransaction().getSuccessResponseDTO());
-
 	}
 
 	@Test
@@ -373,7 +388,6 @@ public class JobConfigurationServiceTest {
 		Mockito.when(BaseJob.getCompletedJobMap()).thenReturn(completedJobMap);
 		
 		Assert.assertNotNull(jobConfigurationService.isRestart().getSuccessResponseDTO());
-
 	}
 
 	/*@Test //TODO - check why this is failing
@@ -390,12 +404,19 @@ public class JobConfigurationServiceTest {
 
 	@Test
 	public void executeAllJobsTest() throws SchedulerException {
-
 		ResponseDTO responseDTO = new ResponseDTO();
-		List<ErrorResponseDTO> errorResponseDTOs = new LinkedList<>();
-		responseDTO.setErrorResponseDTOs(errorResponseDTOs);
+		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
+		Map<String, Object> otherAttributes = new HashMap<>();
+		otherAttributes.put(RegistrationConstants.ROLES_MODIFIED, "Y");
+		successResponseDTO.setOtherAttributes(otherAttributes );
+		responseDTO.setSuccessResponseDTO(successResponseDTO);
 		initiateJobTest();
 
+		SyncJobDef syncJobDef = new SyncJobDef();
+		syncJobDef.setId("1234");
+		syncJobDef.setApiName("test job");
+		syncJobDef.setIsActive(true);
+		Mockito.when(jobConfigDAO.getSyncJob(Mockito.anyString())).thenReturn(syncJobDef);
 		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(packetSyncJob);
 		Mockito.when(packetSyncJob.executeJob(Mockito.anyString(), Mockito.anyString())).thenReturn(responseDTO);
 
@@ -426,7 +447,6 @@ public class JobConfigurationServiceTest {
 
 	@Test
 	public void startSchedulerExcepTest() {
-
 		initiateJobTest();
 		Mockito.doThrow(RuntimeException.class).when(schedulerFactoryBean).start();
 
@@ -437,12 +457,26 @@ public class JobConfigurationServiceTest {
 
 	@Test
 	public void getSyncControlOfJobTest() {
-
 		SyncControl syncControl = new SyncControl();
 		Mockito.when(syncJobDAO.findBySyncJobId(Mockito.anyString())).thenReturn(syncControl);
 
 		Assert.assertSame(syncControl, jobConfigurationService.getSyncControlOfJob(Mockito.anyString()));
 	}
 
+	@Test
+	public void getNextRestartTimeTest() {
+		Assert.assertNotNull(jobConfigurationService.getNextRestartTime("0 0 11 * * ?"));
+	}
+	
+	@Test
+	public void isValidCronExpressionTest() {
+		Assert.assertTrue(jobConfigurationService.isValidCronExpression("0 0 11 * * ?"));
+	}
+	
+	@Test
+	public void getSyncJobsTest() {
+		Mockito.when(syncJobDefRepository.findAllByIsActiveTrue()).thenReturn(new ArrayList<SyncJobDef>());
+		Assert.assertNotNull(jobConfigurationService.getSyncJobs());
+	}
 	
 }

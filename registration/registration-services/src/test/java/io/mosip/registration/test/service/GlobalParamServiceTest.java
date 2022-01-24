@@ -1,9 +1,9 @@
 package io.mosip.registration.test.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.doNothing;
 
-import java.net.SocketTimeoutException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import io.mosip.registration.exception.ConnectionException;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,6 +26,13 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.web.client.HttpClientErrorException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.audit.AuditManagerSerivceImpl;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.Components;
@@ -35,6 +42,7 @@ import io.mosip.registration.dao.impl.GlobalParamDAOImpl;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.entity.GlobalParam;
 import io.mosip.registration.entity.id.GlobalParamId;
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.config.impl.GlobalParamServiceImpl;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
@@ -43,7 +51,7 @@ import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@PrepareForTest({ RegistrationAppHealthCheckUtil.class })
+@PrepareForTest({ RegistrationAppHealthCheckUtil.class, CryptoUtil.class, ClientCryptoUtils.class })
 public class GlobalParamServiceTest {
 
 	@Rule
@@ -70,14 +78,23 @@ public class GlobalParamServiceTest {
 	@Mock
 	ServiceDelegateUtil serviceDelegateUtil;
 	
+	@Mock
+	private ClientCryptoFacade clientCryptoFacade;
+	
+	@Mock
+	private ClientCryptoService clientCryptoService;
+	
+	@Before
+	public void initialize() {
+		PowerMockito.mockStatic(CryptoUtil.class);
+		Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
+		Mockito.when(clientCryptoService.getEncryptionPublicPart()).thenReturn("test".getBytes());
+	}
 
 	@Test
 	public void getGlobalParamsTest() {
-
 		doNothing().when(auditFactory).audit(Mockito.any(AuditEvent.class), Mockito.any(Components.class),
 				Mockito.anyString(), Mockito.anyString());
-		
-//		doNothing().when(pageFlow).getInitialPageDetails();
 
 		Map<String, Object> globalParamMap = new LinkedHashMap<>();
 		Mockito.when(globalParamDAOImpl.getGlobalParams()).thenReturn(globalParamMap);
@@ -86,10 +103,9 @@ public class GlobalParamServiceTest {
 
 	@Test
 	public void syncConfigDataTestError() throws RegBaseCheckedException, ConnectionException {
-
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
-//		doNothing().when(pageFlow).getInitialPageDetails();
+		
 		HashMap<String, Object> globalParamJsonMap = new HashMap<>();
 		globalParamJsonMap.put("retryAttempts", "3");
 		globalParamJsonMap.put("kernel", "5");
@@ -118,24 +134,33 @@ public class GlobalParamServiceTest {
 	}
 
 	@Test
-	public void syncConfigData() throws RegBaseCheckedException, ConnectionException {
-
-		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
+	public void syncConfigData() throws RegBaseCheckedException, ConnectionException, JsonProcessingException {
+		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class, ClientCryptoUtils.class);
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
-//		doNothing().when(pageFlow).getInitialPageDetails();
+		Mockito.when(ClientCryptoUtils.decodeBase64Data(Mockito.anyString())).thenReturn("test".getBytes());
+		
+		Map<String, Object> paramMap = new HashMap<>();
+		Map<String, Object> nestedMap = new HashMap<>();
+		nestedMap.put("mosip.ida.ref-id", "INTERNAL");
+		paramMap.put("mosip.registration.iris_threshold", "60");
+		paramMap.put("mosip.kernel.transliteration.arabic-language-code", "ara");
+		paramMap.put("mosip.registration.document_enable_flag", "y");
+		paramMap.put("mosip.registration.otp_channels", "email");
+		paramMap.put("mosip.registration.packet_upload_batch_size", "5");
+		paramMap.put("mosip.kernel.machineid.length", "5");
+		paramMap.put("mosip.ida.ref-id", nestedMap);
+		paramMap.put("Retry", 3);
+		
+		Mockito.when(clientCryptoFacade.decrypt(Mockito.any(byte[].class))).thenReturn(new ObjectMapper().writeValueAsBytes(paramMap));
+		
 		HashMap<String, Object> globalParamJsonMap = new LinkedHashMap<>();
 		HashMap<String, Object> globalParamJsonMap1 = new LinkedHashMap<>();
-		globalParamJsonMap1.put("Retry", 3);
-		globalParamJsonMap1.put("threshold", 3);
-
-		globalParamJsonMap1.put("kernel", "5");
+		globalParamJsonMap1.put("globalConfiguration", "testEncodedCipher");
+		globalParamJsonMap1.put("registrationConfiguration", "testEncodedCipher");	
 		HashMap<String, Object> globalParamJsonMap2 = new LinkedHashMap<>();
-		globalParamJsonMap2.put("loginSequence1", "OTP");
+		globalParamJsonMap2.put("configDetail", globalParamJsonMap1);
 		globalParamJsonMap.put("response", globalParamJsonMap2);
-        globalParamJsonMap2.put("configDetail",globalParamJsonMap1);
-		globalParamJsonMap.put("map", globalParamJsonMap2);
 		
-
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
 				Mockito.anyString())).thenReturn(globalParamJsonMap);
 		Mockito.doNothing().when(globalParamDAOImpl).saveAll(Mockito.anyList());
@@ -150,15 +175,36 @@ public class GlobalParamServiceTest {
 		globalParamId.setCode("Retry");
 		globalParam.setGlobalParamId(globalParamId);
 		globalParamList.add(globalParam);
+		
+		GlobalParam globalParam2 = new GlobalParam();
+		globalParam2.setVal("5");
+		GlobalParamId globalParamId2 = new GlobalParamId();
+		globalParamId2.setCode("mosip.kernel.machineid.length");
+		globalParam2.setIsActive(false);
+		globalParam2.setGlobalParamId(globalParamId2);
+		globalParamList.add(globalParam2);
 		Mockito.when(globalParamDAOImpl.getAllEntries()).thenReturn(globalParamList);
 
-		gloablContextParamServiceImpl.synchConfigData(false);
+		assertNotNull(gloablContextParamServiceImpl.synchConfigData(false).getSuccessResponseDTO());
+	}
+	
+	@Test
+	public void syncConfigDataInternetFailureTest() {
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(false);
+		assertNotNull(gloablContextParamServiceImpl.synchConfigData(true).getErrorResponseDTOs());
+	}
+	
+	@Test
+	public void syncConfigDataFailureTest() throws RegBaseCheckedException, ConnectionException {
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
+		HashMap<String, Object> globalParamJsonMap = new LinkedHashMap<>();
+		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
+				Mockito.anyString())).thenReturn(globalParamJsonMap);
+		assertNotNull(gloablContextParamServiceImpl.synchConfigData(false).getErrorResponseDTOs());
 	}
 
 	@Test
-	public void syncConfigDataExceptionTest()
-			throws RegBaseCheckedException, ConnectionException {
-
+	public void syncConfigDataExceptionTest() throws RegBaseCheckedException, ConnectionException {
 		Map<String, Object> globalParamMap = new LinkedHashMap<>();
 		globalParamMap.put("ANY", "ANY");
 		Mockito.when(globalParamDAOImpl.getGlobalParams()).thenReturn(globalParamMap);
@@ -171,7 +217,6 @@ public class GlobalParamServiceTest {
 
 	@Test
 	public void syncConfigTest() throws RegBaseCheckedException, ConnectionException {
-
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		HashMap<String, Object> globalParamJsonMap = new HashMap<>();
@@ -203,7 +248,6 @@ public class GlobalParamServiceTest {
 
 	@Test
 	public void updateSoftwareUpdateStatusSuccessCaseTest() {
-
 		GlobalParamId globalParamId = new GlobalParamId();
 		globalParamId.setCode(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE);
 		globalParamId.setLangCode("eng");
@@ -223,7 +267,6 @@ public class GlobalParamServiceTest {
 
 	@Test
 	public void updateSoftwareUpdateStatusFailureCaseTest() {
-
 		GlobalParamId globalParamId = new GlobalParamId();
 		globalParamId.setCode(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE);
 		globalParamId.setLangCode("eng");
@@ -254,14 +297,12 @@ public class GlobalParamServiceTest {
 	}
 	
 	@Test
-	public void updateNulltest() {
-		
+	public void updateNulltest() {		
 		gloablContextParamServiceImpl.update(null,null);
 	}
 
 	@Test
-	public void syncConfigDataUpdate()
-			throws RegBaseCheckedException, ConnectionException {
+	public void syncConfigDataUpdate() throws RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 //		doNothing().when(pageFlow).getInitialPageDetails();

@@ -19,9 +19,6 @@ import java.util.Properties;
 import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
-
-import io.mosip.registration.repositories.SyncJobDefRepository;
 import org.quartz.CronExpression;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
@@ -61,6 +58,7 @@ import io.mosip.registration.entity.SyncTransaction;
 import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.jobs.JobProcessListener;
 import io.mosip.registration.jobs.JobTriggerListener;
+import io.mosip.registration.repositories.SyncJobDefRepository;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.JobConfigurationService;
 import io.mosip.registration.service.config.LocalConfigService;
@@ -664,18 +662,6 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 		});
 	}
 
-	private void updateJobs(final List<SyncJobDef> syncJobDefs) {
-
-		LOGGER.info(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Updating Jobs into DB");
-
-		jobConfigDAO.updateAll(syncJobDefs);
-
-		LOGGER.info(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Updating Jobs in sync active job map");
-
-	}
-
 	private void executeMissedTrigger(final String jobId, final String syncFrequency) {
 
 		LOGGER.info(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
@@ -758,7 +744,7 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 
 	private String getSyncFrequency(SyncJobDef syncJob) {
 		String localPreference = localConfigService.getValue(syncJob.getId());
-		return localPreference.isBlank() ? syncJob.getSyncFreq() : localPreference;
+		return (localPreference == null || localPreference.isBlank()) ? syncJob.getSyncFreq() : localPreference;
 	}
 
 	/*

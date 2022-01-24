@@ -92,6 +92,7 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 			executorServiceForPreReg.awaitTermination(500, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			LOGGER.error("Failed to shutdown pre-reg executor service", e);
+			Thread.currentThread().interrupt();
 		}
 	}
 
@@ -207,7 +208,7 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 		try {
 			/* Check in Database whether required record already exists or not */
 			preRegistration = preRegistrationDAO.get(preRegistrationId);
-			if(preRegistration == null || (preRegistration != null && !FileUtils.getFile(preRegistration.getPacketPath()).exists())) {
+			if(preRegistration == null || !FileUtils.getFile(preRegistration.getPacketPath()).exists()) {
 				LOGGER.info("Pre-Registration ID is not present downloading {}", preRegistrationId);
 				return downloadAndSavePacket(preRegistration, preRegistrationId, lastUpdatedTimeStamp);
 			}

@@ -8,12 +8,17 @@ import static org.mockito.Mockito.when;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.*;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -622,10 +627,10 @@ public class SyncStatusValidatorServiceTest {
 		applicationMap.put("mosip.registration.masterSyncJob.frequency", "20");
 		applicationMap.put("mosip.registration.last_export_registration_config_time", "20");
 		applicationMap.put("mosip.registration.reg_pak_max_cnt_apprv_limit", "20");
-		applicationMap.put("mosip.registration.reg_pak_max_time_apprv_limit", "5");
+		applicationMap.put("mosip.registration.reg_pak_max_time_apprv_limit", "0");
 		applicationMap.put(RegistrationConstants.GPS_DEVICE_DISABLE_FLAG, "N");
 		applicationMap.put(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE, "N");
-		applicationMap.put(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ, "5");
+		applicationMap.put(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ, "1");
 		when(ApplicationContext.map()).thenReturn(applicationMap);
 
 		Mockito.when(globalParamDAO.get(globalParamId)).thenReturn(globalParam);
@@ -638,6 +643,9 @@ public class SyncStatusValidatorServiceTest {
 		Mockito.when(syncJobInfo.getLastExportRegistration()).thenReturn(registration);
 		Mockito.when(syncJobInfo.getYetToExportCount()).thenReturn((double) 20);
 		Mockito.when(syncJobDAO.getRegistrationCount()).thenReturn(20L);
+		
+		registration.setCrDtime(Timestamp.valueOf(LocalDateTime.of(2022, 1, 20, 12, 12)));
+		Mockito.when(syncJobDAO.getFirstRegistration()).thenReturn(registration);
 
 		ResponseDTO responseDTO = syncStatusValidatorServiceImpl.validateSyncStatus();
 		List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();

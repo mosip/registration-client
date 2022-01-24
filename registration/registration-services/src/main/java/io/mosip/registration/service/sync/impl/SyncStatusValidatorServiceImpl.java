@@ -472,13 +472,11 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 		globalParamId.setLangCode(RegistrationConstants.ENGLISH_LANG_CODE);
 		GlobalParam globalParam = globalParamDAO.get(globalParamId);
 
-		String isSoftwareAvailable = "N";
 		if (null != globalParam.getUpdDtimes()) {
 			Date lastSoftwareUpdatedTime = new Date(globalParam.getUpdDtimes().getTime());
 
 			try {
-				if (isSoftwareAvailable != null && isSoftwareAvailable.equalsIgnoreCase(RegistrationConstants.ENABLE)
-						&& Double.parseDouble(String.valueOf(ApplicationContext.map()
+				if (Double.parseDouble(String.valueOf(ApplicationContext.map()
 								.get(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ))) <= getActualDays(
 										lastSoftwareUpdatedTime)) {
 					return true;

@@ -15,15 +15,16 @@ public class PropertiesUtil {
 
         String configFilePath = System.getProperty("user.dir") + System.getProperty("path.config");
 
-        FileReader reader = new FileReader(configFilePath);
-        // create properties object
-        Properties p = new Properties();
+        try (FileReader reader = new FileReader(configFilePath)) {
+        	// create properties object
+            Properties p = new Properties();
 
-        // Add a wrapper around reader object
-        p.load(reader);
+            // Add a wrapper around reader object
+            p.load(reader);
 
-        // access properties data
-        return p.getProperty(key);
+            // access properties data
+            return p.getProperty(key);
+        }
 
     }
 

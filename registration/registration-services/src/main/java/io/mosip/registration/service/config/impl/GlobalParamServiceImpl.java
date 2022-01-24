@@ -138,8 +138,6 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 		}
 
 		try {
-				if (!validate(responseDTO, triggerPoinnt)) { return; }
-
 				boolean isToBeRestarted = false;
 				Map<String, String> requestParamMap = new HashMap<>();
 				requestParamMap.put("key_index",
@@ -183,7 +181,7 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 
 				for (Entry<String, String> key : globalParamMap.entrySet()) {
 					createNew(key.getKey(), globalParamMap.get(key.getKey()), globalParamList);
-					isToBeRestarted = isPropertyRequireRestart(key.getKey());
+					isToBeRestarted = isToBeRestarted ? isToBeRestarted : isPropertyRequireRestart(key.getKey());
 					/* Add in application map */
 					updateApplicationMap(key.getKey(), key.getValue());
 				}
@@ -353,24 +351,6 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 
 	private void updateApplicationMap(String code, String val) {
 		ApplicationContext.setGlobalConfigValueOf(code, val);
-	}
-
-	private boolean validate(ResponseDTO responseDTO, String triggerPoint) throws RegBaseCheckedException {
-
-		if (responseDTO != null) {
-			if (triggerPoint != null) {
-				return true;
-			} else {
-				throw new RegBaseCheckedException(
-						RegistrationExceptionConstants.REG_GLOBALPARAM_SYNC_SERVICE_IMPL_TRIGGER_POINT.getErrorCode(),
-						RegistrationExceptionConstants.REG_POLICY_SYNC_SERVICE_IMPL_CENTERMACHINEID.getErrorMessage());
-			}
-		} else {
-			throw new RegBaseCheckedException(
-					RegistrationExceptionConstants.REG_GLOBALPARAM_SYNC_SERVICE_IMPL.getErrorCode(),
-					RegistrationExceptionConstants.REG_POLICY_SYNC_SERVICE_IMPL.getErrorMessage());
-		}
-
 	}
 
 	private Map<String, Object> getParams(String encodedCipher) {

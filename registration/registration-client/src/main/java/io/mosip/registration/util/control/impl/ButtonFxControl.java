@@ -233,7 +233,7 @@ public class ButtonFxControl extends FxControl {
 			return;
 		}
 
-		Optional<Node> selectedNode = null;
+		Optional<Node> selectedNode;
 
 		if (data instanceof List) {
 			List<SimpleDto> list = (List<SimpleDto>) data;

@@ -223,10 +223,14 @@ public class DropDownFxControl extends FxControl {
 	public boolean isValid() {
 		ComboBox<GenericDto> appComboBox = (ComboBox<GenericDto>) getField(uiFieldDTO.getId());
 		boolean isValid = appComboBox != null && appComboBox.getSelectionModel().getSelectedItem() != null;
-		appComboBox.getStyleClass().removeIf((s) -> {
-			return s.equals("demographicComboboxFocused");
-		});
-		if(!isValid) { appComboBox.getStyleClass().add("demographicComboboxFocused"); }
+		if (appComboBox != null) {
+			appComboBox.getStyleClass().removeIf((s) -> {
+				return s.equals("demographicComboboxFocused");
+			});
+			if(!isValid) { 
+				appComboBox.getStyleClass().add("demographicComboboxFocused"); 
+			}
+		}
 		return isValid;
 	}
 
