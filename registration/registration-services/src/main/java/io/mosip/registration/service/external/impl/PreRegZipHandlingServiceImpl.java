@@ -146,7 +146,6 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 					entries.remove();
 				}
 			}
-			getRegistrationDTOFromSession().getDocuments();
 		} catch (IOException exception) {
 			LOGGER.error(exception.getMessage(), exception);
 			throw new RegBaseCheckedException(REG_IO_EXCEPTION.getErrorCode(), exception.getCause().getMessage());
