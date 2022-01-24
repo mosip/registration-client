@@ -460,8 +460,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 		ImageView imageView;
 		try {
-			imageView = new ImageView(
-					image != null ? image : getImage(getImageIconPath(modality),true));
+			imageView = new ImageView(getImage(getImageIconPath(modality),true));
 			imageView.setFitHeight(80);
 			imageView.setFitWidth(85);
 
@@ -997,7 +996,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 	}
 
 	private boolean isFace(String currentModality) {
-		return currentModality.toUpperCase().contains(RegistrationConstants.FACE.toUpperCase());
+		return currentModality != null && currentModality.toUpperCase().contains(RegistrationConstants.FACE.toUpperCase());
 	}
 
 	private List<String> getSelectedExceptionsByBioType(String subType, String modality)
