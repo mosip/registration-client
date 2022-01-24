@@ -10,6 +10,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -20,6 +21,7 @@ import java.util.concurrent.Executors;
 
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -45,6 +47,7 @@ import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.dao.PreRegistrationDataSyncDAO;
 import io.mosip.registration.dao.impl.RegistrationCenterDAOImpl;
 import io.mosip.registration.dto.PreRegistrationDTO;
+import io.mosip.registration.dto.PreRegistrationExceptionJSONInfoDTO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
@@ -236,6 +239,21 @@ public class PreRegistrationDataSyncServiceTest {
 
 		preRegistrationDataSyncServiceImpl.getPreRegistrationIds("System");
 	}
+	
+	@Test
+	public void getPreRegistrationsAlternateFlowTest2() throws RegBaseCheckedException, ConnectionException {
+		LinkedHashMap<String, Object> postResponse = new LinkedHashMap<>();
+		List<PreRegistrationExceptionJSONInfoDTO> errorList = new ArrayList<>();
+		PreRegistrationExceptionJSONInfoDTO exception = new PreRegistrationExceptionJSONInfoDTO();
+		exception.setErrorCode("PRG_BOOK_RCI_032");
+		exception.setMessage("test error message");
+		errorList.add(exception);
+		postResponse.put("errors", errorList);
+
+		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.any(), Mockito.anyString())).thenReturn(postResponse);
+
+		Assert.assertNotNull(preRegistrationDataSyncServiceImpl.getPreRegistrationIds("System").getSuccessResponseDTO());
+	}
 
 	@Test
 	public void getPreRegistrationTest() throws RegBaseCheckedException, ConnectionException {
@@ -254,15 +272,49 @@ public class PreRegistrationDataSyncServiceTest {
 		
 		PreRegistrationList preRegList = new PreRegistrationList();
 		preRegList.setPacketPath("/preRegSample.zip");
-		preRegList.setLastUpdatedPreRegTimeStamp(Timestamp.from(Instant.now()));
-		Mockito.when(preRegistrationDAO.get(Mockito.anyString())).thenReturn(preRegList);
-		Mockito.when(preRegistrationDAO.update(Mockito.any())).thenReturn(preRegList);
+		preRegList.setLastUpdatedPreRegTimeStamp(Timestamp.valueOf(LocalDateTime.of(2022, 1, 17, 12, 12)));
 		
 		PowerMockito.mockStatic(FileUtils.class);
-		Mockito.when(FileUtils.getFile(Mockito.anyString())).thenReturn(new File("/preRegSample.zip"));
+		File file = Mockito.mock(File.class);
+		Mockito.when(FileUtils.getFile(Mockito.anyString())).thenReturn(file);
+		Mockito.when(file.exists()).thenReturn(true);
+		
+		Mockito.when(preRegistrationDAO.get(Mockito.anyString())).thenReturn(preRegList);
+		Mockito.when(preRegistrationDAO.update(Mockito.any())).thenReturn(preRegList);
 
-		ResponseDTO responseDTO = preRegistrationDataSyncServiceImpl.getPreRegistration("70694681371453", false);
+		ResponseDTO responseDTO = preRegistrationDataSyncServiceImpl.getPreRegistration("70694681371453", true);
 		assertNotNull(responseDTO);
+	}
+	
+	@Test
+	public void getPreRegistrationPacketResponseExceptionTest() throws RegBaseCheckedException, ConnectionException {
+		mockData();
+
+		mockEncryptedPacket();
+		PreRegistrationDTO preRegistrationDTO = new PreRegistrationDTO();
+		preRegistrationDTO.setPacketPath("path");
+		preRegistrationDTO.setSymmetricKey("0E8BAAEB3CED73CBC9BF4964F321824A");
+		preRegistrationDTO.setEncryptedPacket(preRegPacket);
+		preRegistrationDTO.setPreRegId("70694681371453");
+		Mockito.when(preRegZipHandlingService
+		.encryptAndSavePreRegPacket(Mockito.anyString(), Mockito.any())).thenReturn(preRegistrationDTO);
+		RegistrationDTO reg = new RegistrationDTO();
+		Mockito.when(preRegZipHandlingService.extractPreRegZipFile(Mockito.any())).thenThrow(RegBaseCheckedException.class);
+		
+		PreRegistrationList preRegList = new PreRegistrationList();
+		preRegList.setPacketPath("/preRegSample.zip");
+		preRegList.setLastUpdatedPreRegTimeStamp(Timestamp.valueOf(LocalDateTime.of(2022, 1, 17, 12, 12)));
+		
+		PowerMockito.mockStatic(FileUtils.class);
+		File file = Mockito.mock(File.class);
+		Mockito.when(FileUtils.getFile(Mockito.anyString())).thenReturn(file);
+		Mockito.when(file.exists()).thenReturn(true);
+		
+		Mockito.when(preRegistrationDAO.get(Mockito.anyString())).thenReturn(preRegList);
+		Mockito.when(preRegistrationDAO.update(Mockito.any())).thenReturn(preRegList);
+
+		ResponseDTO responseDTO = preRegistrationDataSyncServiceImpl.getPreRegistration("70694681371453", true);
+		assertNotNull(responseDTO.getErrorResponseDTOs());
 	}
 
 	protected void mockData() throws RegBaseCheckedException, ConnectionException {
