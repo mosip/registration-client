@@ -90,6 +90,7 @@ public enum RegistrationExceptionConstants {
 	REG_IRIS_SCANNING_ERROR(RegistrationConstants.USER_REG_IRIS_CAPTURE_EXP_CODE + "IFC-003", "Exception while scanning iris of the individual"),
 	REG_FINGERPRINT_SCANNING_ERROR(RegistrationConstants.USER_REG_FINGERPRINT_CAPTURE_EXP_CODE+"FCS-002", "Exception while scanning fingerprints of the individual"),
 	REG_BIOMETRIC_QUALITY_CHECK_ERROR("REG-BQC-001", "Exception while evaluating the biometrics quality with SDK"),
+	REG_BIOMETRIC_QUALITY_SCORE_RANGE_ERROR("REG-BQC-002", "Exception while evaluating the biometrics quality score"),
 	REG_OTP_VALIDATION("REG-OV-001","Erroe while validating the otp"),
 	REG_PACKET_DATE_PARSER_CODE(PACKET_CREATION_EXP_CODE + "TGE-001", "Exception while parsing the date to display in acknowledgement receipt"),
 	REG_PACKET_JSON_VALIDATOR_ERROR_CODE(PACKET_CREATION_EXP_CODE + "PCS-003", "Exception while validating ID json file"),
@@ -98,6 +99,7 @@ public enum RegistrationExceptionConstants {
 	INVALID_RESPONSE_HEADER("REG-SDU-004", "Response header received from the web-service is not as expected"),
 	AUTHZ_ADDING_REQUEST_SIGN("REG-RCA-002", "Exception while generating the signature of resquest body"),
 	AUTH_TOKEN_COOKIE_NOT_FOUND("REG-SDU-005", "Auth token received from the authentication web-service is either null or empty"),
+	AUTH_TOKEN_SAVE_FAILED("REG-SDU-006", "Failed to save auth token (invalid / too large)"),
 	
 	//Template Service
 	TEMPLATE_CHECK_EXCEPTION(PACKET_CREATION_EXP_CODE + "TSI-001", "Template Type Code / Language Code cannot be null"),
@@ -232,7 +234,10 @@ public enum RegistrationExceptionConstants {
 
 	ACCESS_ERROR("REG_ACCESS_ERR", "Failed to access server"),
 	
-	INVALID_LANGUAGE_CONFIGURED("REG-INIT-002", "**** ResourceBundle is not availabe for configured language(s) ! ****");
+	INVALID_LANGUAGE_CONFIGURED("REG-INIT-002", "**** ResourceBundle is not availabe for configured language(s) ! ****"),
+
+	REG_ACK_RECEIPT_READ_ERROR("REG-ACK-001" ,"Acknowledgment receipt integrity check failed"),
+	REG_FILE_SIGNATURE_ERROR("REG-SIGN-001" ,"Downloaded file signature verification failed");
 
 	/**
 	 * The constructor

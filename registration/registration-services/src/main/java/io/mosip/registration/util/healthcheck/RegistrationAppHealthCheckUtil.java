@@ -21,11 +21,15 @@ import javax.net.ssl.X509TrustManager;
 import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.virusscanner.spi.VirusScanner;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.config.DaoConfig;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.util.restclient.RestClientUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import oshi.SystemInfo;
 import oshi.software.os.FileSystem;
 import oshi.software.os.OSFileStore;
@@ -39,6 +43,8 @@ import oshi.software.os.windows.WindowsOperatingSystem;
  * @author Sivasankar Thalavai
  * @since 1.0.0
  */
+
+@Component
 public class RegistrationAppHealthCheckUtil {
 
 	private static final Logger LOGGER = AppConfig.getLogger(RegistrationAppHealthCheckUtil.class);
@@ -48,108 +54,11 @@ public class RegistrationAppHealthCheckUtil {
 
 	/** The operating system. */
 	private static OperatingSystem operatingSystem;
-	
-	public static String mosipHostNamePlaceHolder = "${mosip.hostname}";
+
 
 	static {
 		systemInfo = new SystemInfo();
 		operatingSystem = systemInfo.getOperatingSystem();
-	}
-
-	/**
-	 * Instantiates a new registration app health check util.
-	 */
-	private RegistrationAppHealthCheckUtil() {
-
-	}
-
-	/**
-	 * This method checks the Internet connectivity across the application.
-	 * 
-	 * <p>
-	 * Creates a {@link HttpURLConnection} and opens a communications link to the
-	 * resource referenced by this URL. If the connection is established
-	 * successfully, this method will return true which indicates Internet Access
-	 * available, otherwise, it will return false, indicating Internet Access not
-	 * available.
-	 * </p>
-	 *
-	 * @return true, if is network available and false, if it is not available.
-	 */
-	@Timed(value = "check.connectivity", longTask = true)
-	public static boolean isNetworkAvailable() {
-		LOGGER.info("REGISTRATION - REGISTRATION APP HEALTHCHECK UTIL - ISNETWORKAVAILABLE", APPLICATION_NAME,
-				APPLICATION_ID, "Registration Network Checker had been called.");
-
-		try (InputStream keyStream = DaoConfig.class.getClassLoader().getResourceAsStream("spring.properties")) {
-
-			Properties keys = new Properties();
-			keys.load(keyStream);
-
-			return checkServiceAvailability(keys.getProperty("mosip.reg.healthcheck.url"));
-		} catch (IOException exception) {
-			LOGGER.error("REGISTRATION - REGISTRATIONAPPHEALTHCHECKUTIL - ISNETWORKAVAILABLE" + false, APPLICATION_NAME,
-					APPLICATION_ID, "No Internet Access." + ExceptionUtils.getStackTrace(exception));
-			return false;
-
-		}
-	}
-
-	/**
-	 * This method checks the service availability.
-	 * 
-	 * <p>
-	 * Creates a {@link HttpURLConnection} and opens a communications link to the
-	 * resource referenced by this URL. If the connection is established
-	 * successfully, this method will return true which indicates Internet Access
-	 * available, otherwise, it will return false, indicating Internet Access not
-	 * available.
-	 * </p>
-	 *
-	 * @param serviceUrl
-	 *            the service url which is required to open the communications link.
-	 * @return true, if connection is available and false, if it is not available.
-	 */
-	public static boolean checkServiceAvailability(String serviceUrl) {
-		boolean isNWAvailable = false;
-		try {
-			serviceUrl = prepareURLByHostName(serviceUrl);
-
-			// serviceUrl = serviceUrl != null && System.getenv("mosip.hostname") != null
-			// ? serviceUrl.replace("${mosip.hostname}", System.getenv("mosip.hostname"))
-			// : serviceUrl;
-			RestClientUtil.turnOffSslChecking();
-			// acceptAnySSLCerticficate();
-			// System.setProperty("java.net.useSystemProxies", "true");
-			URL url = new URL(serviceUrl);
-			// List<Proxy> proxyList = ProxySelector.getDefault().select(new
-			// URI(url.toString()));
-			// Proxy proxy = proxyList.get(0);
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			connection.setConnectTimeout(10000);
-			connection.connect();
-
-			isNWAvailable = (connection.getResponseCode() == HttpURLConnection.HTTP_OK);
-			LOGGER.info( "Connected : {} :: Server status : {}", isNWAvailable, connection.getResponseCode());
-		} catch (Exception exception) {
-			LOGGER.error("No Internet Access" , exception);
-		}
-		return isNWAvailable;
-	}
-
-	public static String getHostName() {
-		String hostname = System.getProperty(RegistrationConstants.MOSIP_HOSTNAME);
-		if(hostname == null || hostname.isEmpty()) {
-			hostname = RegistrationConstants.MOSIP_HOSTNAME_DEF_VAL;
-		}
-		LOGGER.debug("MOSIP Host name : {} " , hostname);
-		return hostname;
-	}
-
-	public static String prepareURLByHostName(String url) {
-		String mosipHostNameVal = getHostName();
-		return (url != null && mosipHostNameVal != null) ? url.replace(mosipHostNamePlaceHolder, mosipHostNameVal)
-				: url;
 	}
 
 	/**
@@ -190,73 +99,5 @@ public class RegistrationAppHealthCheckUtil {
 		LOGGER.info("REGISTRATION - REGISTRATIONAPPHEALTHCHECKUTIL - ISDISKSPACEAVAILABLE", APPLICATION_NAME,
 				APPLICATION_ID, "Registration Disk Space Checker had been ended.");
 		return isSpaceAvailable;
-	}
-
-	/**
-	 * This method is used to accept any SSL certificate.
-	 * 
-	 * <p>
-	 * Installs the all-trusting {@link TrustManager} by creating a null
-	 * implementation which is treated as a successful validation and removing all
-	 * other implementations.
-	 * </p>
-	 *
-	 * @throws NoSuchAlgorithmException
-	 *             the no such algorithm exception
-	 * @throws KeyManagementException
-	 *             the key management exception
-	 */
-	public static void acceptAnySSLCerticficate() throws NoSuchAlgorithmException, KeyManagementException {
-		// Install the all-trusting trust manager
-		final SSLContext sc = SSLContext.getInstance("SSL");
-		sc.init(null, UNQUESTIONING_TRUST_MANAGER, null);
-		HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-	}
-
-	/** The Constant UNQUESTIONING_TRUST_MANAGER. */
-	public static final TrustManager[] UNQUESTIONING_TRUST_MANAGER = new TrustManager[] { new X509TrustManager() {
-		public X509Certificate[] getAcceptedIssuers() {
-			return null;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see javax.net.ssl.X509TrustManager#checkClientTrusted(java.security.cert.
-		 * X509Certificate[], java.lang.String)
-		 */
-		@Override
-		public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see javax.net.ssl.X509TrustManager#checkServerTrusted(java.security.cert.
-		 * X509Certificate[], java.lang.String)
-		 */
-		@Override
-		public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-		}
-
-	} };
-
-	/**
-	 * This method checks if the Operating System is windows.
-	 *
-	 * @return true, if the OS is windows
-	 */
-	public static boolean isWindows() {
-		return operatingSystem instanceof WindowsOperatingSystem;
-
-	}
-
-	/**
-	 * This method checks if the Operating System is Linux.
-	 *
-	 * @return true, if the OS is Linux
-	 */
-	public static boolean isLinux() {
-		return operatingSystem instanceof LinuxOperatingSystem;
 	}
 }

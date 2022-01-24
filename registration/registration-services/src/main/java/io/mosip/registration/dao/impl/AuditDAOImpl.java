@@ -1,12 +1,10 @@
 package io.mosip.registration.dao.impl;
 
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
-
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import io.mosip.kernel.core.util.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +37,7 @@ public class AuditDAOImpl implements AuditDAO {
 	@Transactional
 	public void deleteAudits(LocalDateTime auditLogToDtimes) {
 		LOGGER.info("Deleting Audit Logs created before the given timestamp");
-		regAuditRepository.deleteAllInBatchByCreatedAtLessThan(auditLogToDtimes);
+		regAuditRepository.deleteAllInBatchByActionTimeStampLessThan(auditLogToDtimes);
 	}
 
 	/*
@@ -51,20 +49,18 @@ public class AuditDAOImpl implements AuditDAO {
 	 */
 	@Override
 	public List<Audit> getAudits(String registrationId, String timestamp) {
-		LOGGER.info("REGISTRATION - FETCH_UNSYNCED_AUDITS - GET_ALL_AUDITS", APPLICATION_NAME, APPLICATION_ID,
-				"Fetching of all the audits which are to be added to Registration packet started");
+		LOGGER.info("Fetching of all the audits which are to be added to Registration packet started for RID - {} from timestamp - {}", registrationId, timestamp);
 
 		try {
 			List<Audit> audits;
 			if (timestamp == null) {
-				audits = regAuditRepository.findByIdOrderByCreatedAtAsc(registrationId);
+				audits = regAuditRepository.findAllByOrderByActionTimeStampAsc();
 			} else {
-				audits = regAuditRepository.findByCreatedAtGreaterThanOrderByCreatedAtAsc(
-						Timestamp.valueOf(timestamp).toLocalDateTime());
+				audits = regAuditRepository.findByActionTimeStampGreaterThanOrderByActionTimeStampAsc(
+						DateUtils.parseToLocalDateTime(timestamp));
 			}
 
-			LOGGER.info("REGISTRATION - FETCH_UNSYNCED_AUDITS - GET_ALL_AUDITS", APPLICATION_NAME, APPLICATION_ID,
-					"Fetching of all the audits which are to be added to Registartion packet ended");
+			LOGGER.info("Fetching of all the audits which are to be added to Registartion packet ended with count - {}", audits.size());
 
 			return audits;
 		} catch (RuntimeException exception) {

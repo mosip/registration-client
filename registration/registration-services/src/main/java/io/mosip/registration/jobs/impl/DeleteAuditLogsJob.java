@@ -1,5 +1,6 @@
 package io.mosip.registration.jobs.impl;
 
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.entity.Registration;
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,8 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
+
+import java.sql.Timestamp;
 
 /**
  * The {@code DeleteAuditLogsJob} is a job to delete audit logs which extends
@@ -87,7 +90,7 @@ public class DeleteAuditLogsJob extends BaseJob {
 				this.responseDTO = auditService.deleteAuditLogs();
 			}
 
-			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+			syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		} catch (RegBaseUncheckedException baseUncheckedException) {
 			LOGGER.error(LoggerConstants.DELETE_AUDIT_LOGS_JOB, RegistrationConstants.APPLICATION_NAME,
@@ -120,7 +123,7 @@ public class DeleteAuditLogsJob extends BaseJob {
 		if (responseDTO.getSuccessResponseDTO() != null) {
 			this.responseDTO = auditService.deleteAuditLogs();
 		}
-		syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+		syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		LOGGER.debug(LoggerConstants.DELETE_AUDIT_LOGS_JOB, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "execute job ended");

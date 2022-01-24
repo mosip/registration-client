@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.List;
 
+import io.mosip.kernel.logger.logback.util.MetricTag;
 import org.apache.http.ParseException;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -50,7 +51,9 @@ public interface MosipDeviceSpecificationProvider {
 	 * @throws IOException
 	 * @throws MalformedURLException
 	 */
-	public InputStream stream(MdmBioDevice bioDevice, String modality) throws RegBaseCheckedException;
+	public InputStream stream(@MetricTag(value = "device", extractor = "arg.serialNumber") MdmBioDevice bioDevice,
+							  @MetricTag(value = "modality") String modality)
+			throws RegBaseCheckedException;
 
 	/**
 	 * @param bioDevice     Device Information
@@ -61,7 +64,8 @@ public interface MosipDeviceSpecificationProvider {
 	 * @throws JsonMappingException
 	 * @throws JsonParseException
 	 */
-	public List<BiometricsDto> rCapture(MdmBioDevice bioDevice, MDMRequestDto mdmRequestDto)
+	public List<BiometricsDto> rCapture(@MetricTag(value = "device", extractor = "arg.serialNumber") MdmBioDevice bioDevice,
+										@MetricTag(value = "modality", extractor = "arg.modality") MDMRequestDto mdmRequestDto)
 			throws RegBaseCheckedException;
 
 	/**
@@ -74,6 +78,6 @@ public interface MosipDeviceSpecificationProvider {
 	 * @param mdmBioDevice bio device cached from device info
 	 * @return device was is Ready status or not
 	 */
-	public boolean isDeviceAvailable(MdmBioDevice mdmBioDevice);
+	public boolean isDeviceAvailable(@MetricTag(value = "device", extractor = "arg.serialNumber") MdmBioDevice mdmBioDevice);
 
 }

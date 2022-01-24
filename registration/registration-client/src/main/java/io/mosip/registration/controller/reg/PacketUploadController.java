@@ -49,7 +49,6 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.packet.PacketHandlerService;
 import io.mosip.registration.service.packet.PacketUploadService;
 import io.mosip.registration.service.sync.PacketSynchService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.value.ObservableValue;
@@ -125,6 +124,9 @@ public class PacketUploadController extends BaseController implements Initializa
 
 	@FXML
 	private TableColumn<PacketStatusDTO, String> fileColumn;
+	
+	@FXML
+	private TableColumn<PacketStatusDTO, String> regType;
 
 	@FXML
 	private TableColumn<PacketStatusDTO, String> statusColumn;
@@ -193,20 +195,17 @@ public class PacketUploadController extends BaseController implements Initializa
 		LOGGER.info("REGISTRATION - SYNC_PACKETS_AND_PUSH_TO_SERVER - PACKET_UPLOAD_CONTROLLER", APPLICATION_NAME,
 				APPLICATION_ID, "Sync the packets and push it to the server");
 		
+		if (!proceedOnAction("PS")) {
+			loadInitialPage();
+			return;
+		}
+		
 		packetUploadPane.setDisable(true);
 		progressIndicatorPane.setVisible(true);
 		
 		observableList.clear();
 		table.refresh();
 		service.reset();
-
-		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
-			packetUploadPane.setDisable(false);
-			progressIndicatorPane.setVisible(false);
-			loadInitialPage();
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NETWORK_ERROR));
-			return;
-		}
 
 		if (selectedPackets.isEmpty()) {
 			packetUploadPane.setDisable(false);
@@ -216,8 +215,8 @@ public class PacketUploadController extends BaseController implements Initializa
 			return;
 		}
 
-		List<String> selectedAppIDs = selectedPackets.stream().map(PacketStatusVO::getFileName).collect(Collectors.toList());
-		ResponseDTO responseDTO = packetSynchService.syncPacket(RegistrationConstants.JOB_TRIGGER_POINT_USER, selectedAppIDs);
+		List<String> selectedPacketIDs = selectedPackets.stream().map(PacketStatusVO::getPacketId).collect(Collectors.toList());
+		ResponseDTO responseDTO = packetSynchService.syncPacket(RegistrationConstants.JOB_TRIGGER_POINT_USER, selectedPacketIDs);
 		if(responseDTO.getErrorResponseDTOs() != null && !responseDTO.getErrorResponseDTOs().isEmpty()) {
 			selectAllCheckBox.setSelected(false);
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_FAILURE));
@@ -267,7 +266,6 @@ public class PacketUploadController extends BaseController implements Initializa
 
 					LOGGER.info("REGISTRATION - HANDLE_PACKET_UPLOAD_START - PACKET_UPLOAD_CONTROLLER",
 							APPLICATION_NAME, APPLICATION_ID, "Handling all the packet upload activities");
-					List<PacketStatusVO> packetUploadList = new ArrayList<>();
 					String status = "";
 
 					Map<String, String> tableMap = new HashMap<>();
@@ -277,7 +275,7 @@ public class PacketUploadController extends BaseController implements Initializa
 
 						for (int i = 0; i < selectedPackets.size(); i++) {
 							try {
-								PacketStatusDTO dto = packetUploadService.uploadPacket(selectedPackets.get(i).getFileName());
+								PacketStatusDTO dto = packetUploadService.uploadPacket(selectedPackets.get(i).getPacketId());
 								tableMap.put(dto.getFileName(), dto.getPacketClientStatus());
 							} catch (RegBaseCheckedException e) {
 								tableMap.put(selectedPackets.get(i).getFileName(), RegistrationConstants.ERROR);
@@ -311,38 +309,34 @@ public class PacketUploadController extends BaseController implements Initializa
 		if (!selectedPackets.isEmpty()) {
 			List<PacketStatusDTO> packetsToBeExported = new ArrayList<>();
 			selectedPackets.forEach(packet -> {
-				if ((packet.getPacketServerStatus() == null
-						|| !RegistrationConstants.SERVER_STATUS_RESEND.equalsIgnoreCase(packet.getPacketServerStatus()))
-						&& !RegistrationClientStatusCode.META_INFO_SYN_SERVER.getCode()
-								.equalsIgnoreCase(packet.getPacketClientStatus())) {
-					PacketStatusDTO packetStatusVO = new PacketStatusDTO();
-					packetStatusVO.setClientStatusComments(packet.getClientStatusComments());
-					packetStatusVO.setFileName(packet.getFileName());
-					packetStatusVO.setPacketClientStatus(packet.getPacketClientStatus());
-					packetStatusVO.setPacketPath(packet.getPacketPath());
-					packetStatusVO.setPacketServerStatus(packet.getPacketServerStatus());
-					packetStatusVO.setPacketStatus(packet.getPacketStatus());
-					packetStatusVO.setUploadStatus(packet.getUploadStatus());
-					packetStatusVO.setSupervisorStatus(packet.getSupervisorStatus());
-					packetStatusVO.setSupervisorComments(packet.getSupervisorComments());
-					packetStatusVO.setName(packet.getName());
-					packetStatusVO.setPhone(packet.getPhone());
-					packetStatusVO.setEmail(packet.getEmail());
+				PacketStatusDTO packetStatusVO = new PacketStatusDTO();
+				packetStatusVO.setClientStatusComments(packet.getClientStatusComments());
+				packetStatusVO.setFileName(packet.getFileName());
+				packetStatusVO.setPacketId(packet.getPacketId());
+				packetStatusVO.setPacketClientStatus(packet.getPacketClientStatus());
+				packetStatusVO.setPacketPath(packet.getPacketPath());
+				packetStatusVO.setPacketServerStatus(packet.getPacketServerStatus());
+				packetStatusVO.setPacketStatus(packet.getPacketStatus());
+				packetStatusVO.setUploadStatus(packet.getUploadStatus());
+				packetStatusVO.setSupervisorStatus(packet.getSupervisorStatus());
+				packetStatusVO.setSupervisorComments(packet.getSupervisorComments());
+				packetStatusVO.setName(packet.getName());
+				packetStatusVO.setPhone(packet.getPhone());
+				packetStatusVO.setEmail(packet.getEmail());
 
-					try (FileInputStream fis = new FileInputStream(new File(
-							packet.getPacketPath().replace(RegistrationConstants.ACKNOWLEDGEMENT_FILE_EXTENSION,
-									RegistrationConstants.ZIP_FILE_EXTENSION)))) {
-						byte[] byteArray = new byte[(int) fis.available()];
-						fis.read(byteArray);
-						packetStatusVO.setPacketHash(HMACUtils2.digestAsPlainText(byteArray));
-						packetStatusVO.setPacketSize(BigInteger.valueOf(byteArray.length));
+				try (FileInputStream fis = new FileInputStream(new File(
+						packet.getPacketPath().replace(RegistrationConstants.ACKNOWLEDGEMENT_FILE_EXTENSION,
+								RegistrationConstants.ZIP_FILE_EXTENSION)))) {
+					byte[] byteArray = new byte[(int) fis.available()];
+					fis.read(byteArray);
+					packetStatusVO.setPacketHash(HMACUtils2.digestAsPlainText(byteArray));
+					packetStatusVO.setPacketSize(BigInteger.valueOf(byteArray.length));
 
-					} catch (IOException | NoSuchAlgorithmException ioException) {
-						LOGGER.error("REGISTRATION_BASE_SERVICE", APPLICATION_NAME, APPLICATION_ID,
-								ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
-					}
-					packetsToBeExported.add(packetStatusVO);
+				} catch (IOException | NoSuchAlgorithmException ioException) {
+					LOGGER.error("REGISTRATION_BASE_SERVICE", APPLICATION_NAME, APPLICATION_ID,
+							ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
 				}
+				packetsToBeExported.add(packetStatusVO);
 			});
 			List<PacketStatusDTO> exportedPackets = packetExportController.packetExport(packetsToBeExported);
 			List<PacketStatusVO> packetsToBeExport = new ArrayList<>();
@@ -350,6 +344,7 @@ public class PacketUploadController extends BaseController implements Initializa
 				PacketStatusVO packetStatusVO = new PacketStatusVO();
 				packetStatusVO.setClientStatusComments(packet.getClientStatusComments());
 				packetStatusVO.setFileName(packet.getFileName());
+				packetStatusVO.setPacketId(packet.getPacketId());
 				packetStatusVO.setPacketClientStatus(packet.getPacketClientStatus());
 				packetStatusVO.setPacketPath(packet.getPacketPath());
 				packetStatusVO.setPacketServerStatus(packet.getPacketServerStatus());
@@ -380,6 +375,7 @@ public class PacketUploadController extends BaseController implements Initializa
 		
 		checkBoxColumn.setCellValueFactory(cellData -> cellData.getValue().selectedProperty());
 		fileNameColumn.setCellValueFactory(new PropertyValueFactory<>(RegistrationConstants.PACKET_UPLOAD_FILE));
+		regType.setCellValueFactory(new PropertyValueFactory<>("packetStatus"));
 		regDate.setCellValueFactory(new PropertyValueFactory<>(RegistrationConstants.PACKET_UPLOAD_DATE));
 		slno.setCellValueFactory(new PropertyValueFactory<>(RegistrationConstants.PACKET_UPLOAD_SNO));
 		clientStatus.setCellValueFactory(new PropertyValueFactory<>(RegistrationConstants.PACKET_CLIENT_STATUS));
@@ -424,14 +420,14 @@ public class PacketUploadController extends BaseController implements Initializa
 				while (displayData.next()) {
 					boolean isAdded = false;
 					for (PacketStatusVO packet : selectedPackets) {
-						if (packet.getFileName().equals(table.getItems().get(displayData.getFrom()).getFileName())) {
+						if (displayData.getFrom() < table.getItems().size() && packet.getFileName().equals(table.getItems().get(displayData.getFrom()).getFileName())) {
 							isAdded = true;
 						}
 					}
 					if (displayData.wasUpdated()) {
-						if (!isAdded && !uploadedPackets.contains(table.getItems().get(displayData.getFrom()))) {
+						if (!isAdded && (displayData.getFrom() < table.getItems().size()) && !uploadedPackets.contains(table.getItems().get(displayData.getFrom()))) {
 							selectedPackets.add(table.getItems().get(displayData.getFrom()));
-						} else {
+						} else if (displayData.getFrom() < table.getItems().size()){
 							selectedPackets.remove(table.getItems().get(displayData.getFrom()));
 						}
 						// saveToDevice.setDisable(!selectedPackets.isEmpty());
@@ -606,6 +602,7 @@ public class PacketUploadController extends BaseController implements Initializa
 			PacketStatusVO packetStatusVO = new PacketStatusVO();
 			packetStatusVO.setClientStatusComments(packet.getClientStatusComments());
 			packetStatusVO.setFileName(packet.getFileName());
+			packetStatusVO.setPacketId(packet.getPacketId());
 			packetStatusVO.setPacketClientStatus(packet.getPacketClientStatus());
 			packetStatusVO.setPacketPath(packet.getPacketPath());
 			packetStatusVO.setPacketServerStatus(packet.getPacketServerStatus());
@@ -636,8 +633,8 @@ public class PacketUploadController extends BaseController implements Initializa
 		regDate.setResizable(false);
 
 		disableColumnsReorder(table);
-		// fileColumn.setResizable(false);
-		// statusColumn.setResizable(false);
+		SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+				RegistrationConstants.ENABLE);
 	}
 
 	@SuppressWarnings("unchecked")

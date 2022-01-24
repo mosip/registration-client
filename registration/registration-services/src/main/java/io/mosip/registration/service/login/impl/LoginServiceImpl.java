@@ -6,19 +6,13 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.mapper.CustomObjectMapper.MAPPER_FACADE;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -43,7 +37,7 @@ import io.mosip.registration.dto.LoginUserDTO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.UserDTO;
-import io.mosip.registration.dto.UserMachineMappingDTO;
+import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.UserDetail;
 import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -56,7 +50,6 @@ import io.mosip.registration.service.sync.CertificateSyncService;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.PublicKeySync;
 import io.mosip.registration.service.sync.TPMPublicKeySyncService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
 
 
@@ -144,60 +137,31 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	 * String, java.util.Set)
 	 */
 	@Override
-	public List<String> getModesOfLogin(String authType, Set<String> roleList, boolean isReviewer) {
-		// Retrieve Login information
+	public List<String> getModesOfLogin(String authType, Set<String> roleList) {
+		LOGGER.info("Fetching list of login modes");
 
-		LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "Fetching list of login modes");
+		boolean mandatePwdLogin = !authTokenUtilService.hasAnyValidToken() && serviceDelegateUtil.isNetworkAvailable();
 
-		List<String> loginModes = new ArrayList<>();
+		LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "PWD LOGIN MANDATED ? " + mandatePwdLogin);
 
-		try {
-			getModesOfLoginValidation(authType, roleList);
+		auditFactory.audit(AuditEvent.LOGIN_MODES_FETCH, Components.LOGIN_MODES,
+				RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
 
-			boolean mandatePwdLogin = RegistrationAppHealthCheckUtil.isNetworkAvailable() && !authTokenUtilService.hasAnyValidToken();
+		List<String> loginModes = appAuthenticationDAO.getModesOfLogin(authType, roleList);
 
-			LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "PWD LOGIN MANDATED ? " + mandatePwdLogin);
+		if(mandatePwdLogin) {
+			Optional<String> pwdMode = loginModes.stream().filter(loginMode ->
+					loginMode.equalsIgnoreCase(LoginMode.OTP.getCode()) ||
+							loginMode.equalsIgnoreCase(LoginMode.PASSWORD.getCode()) ||
+							loginMode.equalsIgnoreCase(RegistrationConstants.PWORD)).findFirst();
 
-			auditFactory.audit(AuditEvent.LOGIN_MODES_FETCH, Components.LOGIN_MODES,
-					RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
-			if (Role.isDefaultUser(roleList) || isReviewer) {
-				loginModes.clear();
+			LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "PWD LOGIN mode already present ? " + pwdMode.isPresent());
+
+			if(!pwdMode.isPresent())
 				loginModes.add(RegistrationConstants.PWORD);
-			}
-			else {
-				loginModes = appAuthenticationDAO.getModesOfLogin(authType, roleList);
-
-				if(mandatePwdLogin) {
-					Optional<String> pwdMode = loginModes.stream().filter(loginMode ->
-							loginMode.equalsIgnoreCase(LoginMode.OTP.getCode()) ||
-									loginMode.equalsIgnoreCase(LoginMode.PASSWORD.getCode()) ||
-									loginMode.equalsIgnoreCase(RegistrationConstants.PWORD)).findFirst();
-
-					LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "PWD LOGIN mode already present ? " + pwdMode.isPresent());
-					if(!pwdMode.isPresent())
-						loginModes.add(RegistrationConstants.PWORD);
-
-					return loginModes;
-				}
-
-				if(loginModes != null && loginModes.size() > 1) {
-					if(RegistrationConstants.DISABLE.equalsIgnoreCase(RegistrationConstants.FINGERPRINT_DISABLE_FLAG))
-						loginModes.remove(RegistrationConstants.FINGERPRINT);
-					if(RegistrationConstants.DISABLE.equalsIgnoreCase(RegistrationConstants.IRIS_DISABLE_FLAG))
-						loginModes.remove(RegistrationConstants.IRIS);
-					if(RegistrationConstants.DISABLE.equalsIgnoreCase(RegistrationConstants.FACE_DISABLE_FLAG))
-						loginModes.remove(RegistrationConstants.FACE);
-				}
-			}
-			
-			LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-					"Completed fetching list of login modes");
-			
-		} catch (RegBaseCheckedException regBaseCheckedException) {
-			LOGGER.error(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-					ExceptionUtils.getStackTrace(regBaseCheckedException));
-
 		}
+
+		LOGGER.info("Completed fetching list of login modes, {}", loginModes);
 		return loginModes;
 	}
 
@@ -211,7 +175,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	@Override
 	public UserDTO getUserDetail(String userId) {
 		// Retrieving Officer details
-		LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "Fetching User details");
+		LOGGER.info( "Fetching User details");
 
 		UserDTO userDTO = null;
 
@@ -223,8 +187,7 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 
 			userDTO = MAPPER_FACADE.map(userDetailDAO.getUserDetail(userId), UserDTO.class);
 			
-			LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-					"Completed fetching User details, user found : " + (userDTO == null ? false : true));
+			LOGGER.info("Completed fetching User details, user found : " + (userDTO == null ? false : true));
 			
 		} catch (RegBaseCheckedException regBaseCheckedException) {
 			LOGGER.error(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
@@ -342,7 +305,8 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	 * 6. CA cert sync
 	 * user salt sync is removed @Since 1.1.3
 	 */
-	@Timed(value = "sync", longTask = true, extraTags = {"type", "initial"})
+	@Counted(recordFailuresOnly = true)
+	@Timed
 	@Override
 	public List<String> initialSync(String triggerPoint) {
 		long start = System.currentTimeMillis();
@@ -412,22 +376,6 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 		return results;
 	}
 
-	//Not required as this validation is handled in ClientSecurityFacade
-	/*private String verifyMachinePublicKeyMapping(boolean isInitialSetup) throws RegBaseCheckedException {
-		final boolean tpmAvailable = RegistrationConstants.ENABLE.equals(getGlobalConfigValueOf(RegistrationConstants.TPM_AVAILABILITY));
-		final String environment = getGlobalConfigValueOf(RegistrationConstants.SERVER_ACTIVE_PROFILE);
-
-		if(RegistrationConstants.SERVER_PROD_PROFILE.equalsIgnoreCase(environment) && !tpmAvailable) {
-			LOGGER.info("REGISTRATION  - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID, "TPM IS REQUIRED TO BE ENABLED.");
-			throw new RegBaseCheckedException(RegistrationExceptionConstants.TPM_REQUIRED.getErrorCode(),
-					RegistrationExceptionConstants.TPM_REQUIRED.getErrorMessage());
-		}
-
-		LOGGER.info("REGISTRATION  - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID, "CURRENT PROFILE : " +
-				environment != null ? environment : RegistrationConstants.SERVER_NO_PROFILE);
-
-		return tpmPublicKeySyncService.syncTPMPublicKey();
-	}*/
 	
 	private void validateResponse(ResponseDTO responseDTO, String syncStep) throws RegBaseCheckedException {
 		if(responseDTO == null)
@@ -533,65 +481,60 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	 * @see io.mosip.registration.service.login.LoginService#validateUser(java.lang.
 	 * String)
 	 */
+	@Counted
 	public ResponseDTO validateUser(String userId) {
 		ResponseDTO responseDTO = new ResponseDTO();
-		
 		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Validating User");
 		
 		try {
 			getUserDetailValidation(userId);
-			
 			UserDTO userDTO = getUserDetail(userId);
 			if (userDTO == null) {
 				setErrorResponse(responseDTO, RegistrationConstants.USER_NAME_VALIDATION, null);
-			} else {
-				String stationId = getStationId();
-				String centerId = getCenterId(stationId);
-
-				//excluding the case where center is inactive, in which case centerId is null
-				//We will need user to login when center is inactive to finish pending tasks
-				if(centerId != null && !userDTO.getRegCenterUser().getRegcntrId().equals(centerId)) {
-					setErrorResponse(responseDTO, RegistrationConstants.USER_MACHINE_VALIDATION_MSG, null);
-					return responseDTO;
-				}
-
-				ApplicationContext.map().put(RegistrationConstants.USER_CENTER_ID, centerId);
-				if (userDTO.getStatusCode().equalsIgnoreCase(RegistrationConstants.BLOCKED)) {
-					setErrorResponse(responseDTO, RegistrationConstants.BLOCKED_USER_ERROR, null);
-				} else {
-					for (UserMachineMappingDTO userMachineMapping : userDTO.getUserMachineMapping()) {
-						ApplicationContext.map().put(RegistrationConstants.DONGLE_SERIAL_NUMBER,
-								userMachineMapping.getMachineMaster().getSerialNum());
-					}
-
-					Set<String> roleList = new LinkedHashSet<>();
-					userDTO.getUserRole().forEach(roleCode -> {
-						if (roleCode.isActive()) {
-							roleList.add(String.valueOf(roleCode.getRoleCode()));
-						}
-					});
-
-					LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Validating roles");
-					// Checking roles
-					if (!Role.hasAnyRegistrationRoles(roleList)) {
-						setErrorResponse(responseDTO, RegistrationConstants.ROLES_EMPTY_ERROR, null);
-					} else {
-						ApplicationContext.map().put(RegistrationConstants.USER_STATION_ID, stationId);
-
-						Map<String, Object> params = new LinkedHashMap<>();
-						params.put(RegistrationConstants.ROLES_LIST, roleList);
-						params.put(RegistrationConstants.USER_DTO, userDTO);
-						setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, params);
-					}
-				}
+				return responseDTO;
 			}
 
-			LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "completed validating user");
+			String centerId = getCenterId();
+
+			//excluding the case where center is inactive, in which case centerId is null
+			//We will need user to login when center is inactive to finish pending tasks
+			if(centerId != null && !centerId.equals(userDTO.getRegCenterId())) {
+				setErrorResponse(responseDTO, RegistrationConstants.USER_MACHINE_VALIDATION_MSG, null);
+				return responseDTO;
+			}
+
+			if (userDTO.getStatusCode().equalsIgnoreCase(RegistrationConstants.BLOCKED) || !userDTO.getIsActive() || userDTO.getIsDeleted()) {
+				setErrorResponse(responseDTO, RegistrationConstants.BLOCKED_USER_ERROR, null);
+				return responseDTO;
+			}
+
+			Set<String> roleList = new LinkedHashSet<>();
+			Objects.requireNonNull(userDTO.getUserRole()).forEach(roleCode -> {
+				//if (roleCode.isActive()) {
+					roleList.add(String.valueOf(roleCode.getRoleCode()));
+				//}
+			});
+
+			LOGGER.info("Validating roles for the provided userid {}", roleList);
+
+			// Checking roles
+			//if (!Role.hasAnyRegistrationRoles(roleList)) {
+			//		setErrorResponse(responseDTO, RegistrationConstants.ROLES_EMPTY_ERROR, null);
+			//} else {
+				MachineMaster machineMaster = getMachine();
+				
+				ApplicationContext.map().put(RegistrationConstants.USER_STATION_ID, machineMaster.getId());
+				ApplicationContext.map().put(RegistrationConstants.USER_CENTER_ID, machineMaster.getRegCenterId());
+
+				Map<String, Object> params = new LinkedHashMap<>();
+				params.put(RegistrationConstants.ROLES_LIST, roleList);
+				params.put(RegistrationConstants.USER_DTO, userDTO);
+				setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, params);
+			//}
+			LOGGER.info("completed validating user successfully");
 			
-		} catch(RegBaseCheckedException regBaseCheckedException) {
-			LOGGER.error(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-					ExceptionUtils.getStackTrace(regBaseCheckedException));
-			
+		} catch(Throwable t) {
+			LOGGER.error("Failed validating user {}", userId, t);
 			setErrorResponse(responseDTO, RegistrationConstants.USER_NAME_VALIDATION, null);
 		}
 		return responseDTO;

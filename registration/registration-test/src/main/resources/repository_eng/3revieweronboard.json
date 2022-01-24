@@ -1,0 +1,27 @@
+{
+  "identity": {
+	  "BELOW_ARE_STATIC_KEYWORDS":"",
+    "process": "ReviewerOnboard",
+   	 
+		  "bioAttributes": [
+				 "leftEye",
+					"rightEye",
+					"rightIndex",
+					"rightLittle",
+					"rightRing",
+					"rightMiddle",
+					"leftIndex",
+					"leftLittle",
+					"leftRing",
+					"leftMiddle",
+					"leftThumb",
+					"rightThumb",
+					"face"
+				],
+"profile":"Default",
+"score1":"90",
+"score2":"20",
+"score3":"90",
+"score4":"90"
+    	}
+}

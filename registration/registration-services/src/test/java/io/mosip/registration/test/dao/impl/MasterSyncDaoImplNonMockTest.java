@@ -1,47 +1,31 @@
 package io.mosip.registration.test.dao.impl;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 import java.util.Map;
 
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
-
 import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
-import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.UserDetail;
-import io.mosip.registration.repositories.BiometricAttributeRepository;
-import io.mosip.registration.repositories.BiometricTypeRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.repositories.UserDetailRepository;
-import io.mosip.registration.test.config.TestDaoConfig;
 
 
 /**
  * @author anusha
  *
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration(classes= {TestDaoConfig.class})
+//@RunWith(SpringRunner.class)
+//@ContextConfiguration(classes= {TestDaoConfig.class})
 public class MasterSyncDaoImplNonMockTest {
 	
 	@Autowired
@@ -57,14 +41,11 @@ public class MasterSyncDaoImplNonMockTest {
 	private MachineMasterRepository machineMasterRepository;
 	
 	
-	@BeforeClass
+	//@BeforeClass
 	public static void setup() throws Exception {		
 		
 	  Map<String, Object> appMap = new HashMap<String,Object>();
 	  appMap.put(RegistrationConstants.DOC_DISABLE_FLAG, "Y");
-	  appMap.put(RegistrationConstants.FINGERPRINT_DISABLE_FLAG, "Y");
-	  appMap.put(RegistrationConstants.IRIS_DISABLE_FLAG, "Y");
-	  appMap.put(RegistrationConstants.FACE_DISABLE_FLAG, "Y");
 	  appMap.put(RegistrationConstants.PRIMARY_LANGUAGE, "eng");
 	  appMap.put(RegistrationConstants.SECONDARY_LANGUAGE, "fra");
 	   ApplicationContext.getInstance().setApplicationMap(appMap);
@@ -92,7 +73,7 @@ public class MasterSyncDaoImplNonMockTest {
 		userDetailRepository.saveAll(users);
 	}
 	
-	@Ignore
+	/*@Ignore
 	@Test
 	public void testSuccessBiometricSave() {
 		SyncDataResponseDto syncDataResponseDto = getSyncDataResponseDto("biometricJson.json");	
@@ -119,7 +100,7 @@ public class MasterSyncDaoImplNonMockTest {
 		
 		String keyIndexBasedOnMachineName = machineMappingDAO.getKeyIndexByMachineName("b2ml24784");
 		assertNotNull(keyIndexBasedOnMachineName);
-	}
+	}*/
 	
 	
 	private SyncDataResponseDto getSyncDataResponseDto(String fileName) {

@@ -1,12 +1,15 @@
 package io.mosip.registration.jobs.impl;
 
+import java.sql.Timestamp;
+
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
@@ -33,6 +36,7 @@ import io.mosip.registration.service.packet.PacketUploadService;
  * @since 1.0.0
  *
  */
+@DisallowConcurrentExecution
 @Component(value = "registrationPacketUploadJob")
 public class RegistrationPacketUploadJob extends BaseJob {
 
@@ -72,7 +76,7 @@ public class RegistrationPacketUploadJob extends BaseJob {
 			if (responseDTO.getSuccessResponseDTO() != null) {
 				this.responseDTO = packetUploadService.uploadSyncedPackets();
 			}
-			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+			syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 		} catch (RegBaseUncheckedException baseUncheckedException) {
 			LOGGER.error(LoggerConstants.REG_PACKET_SYNC_STATUS_JOB, RegistrationConstants.APPLICATION_NAME,
 					RegistrationConstants.APPLICATION_ID, baseUncheckedException.getMessage());
@@ -101,7 +105,7 @@ public class RegistrationPacketUploadJob extends BaseJob {
 		if (responseDTO.getSuccessResponseDTO() != null) {
 			this.responseDTO = packetUploadService.uploadSyncedPackets();
 		}
-		syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+		syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		LOGGER.debug(LoggerConstants.REG_PACKET_SYNC_STATUS_JOB, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "execute job ended");

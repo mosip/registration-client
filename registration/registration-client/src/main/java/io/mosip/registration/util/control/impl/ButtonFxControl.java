@@ -2,6 +2,7 @@ package io.mosip.registration.util.control.impl;
 
 import java.util.*;
 
+import io.mosip.registration.controller.ClientApplication;
 import javafx.scene.control.Tooltip;
 import org.springframework.context.ApplicationContext;
 
@@ -12,7 +13,7 @@ import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.controller.FXUtils;
 import io.mosip.registration.controller.Initialization;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.util.control.FxControl;
 import javafx.event.ActionEvent;
@@ -43,28 +44,28 @@ public class ButtonFxControl extends FxControl {
 	private MasterSyncService masterSyncService;
 
 	public ButtonFxControl() {
-		ApplicationContext applicationContext = Initialization.getApplicationContext();
+		ApplicationContext applicationContext = ClientApplication.getApplicationContext();
 		fxUtils = FXUtils.getInstance();
 		regApplicationContext = io.mosip.registration.context.ApplicationContext.getInstance();
 		masterSyncService = applicationContext.getBean(MasterSyncService.class);
 	}
 
 	@Override
-	public FxControl build(UiSchemaDTO uiSchemaDTO) {
-		this.uiSchemaDTO = uiSchemaDTO;
+	public FxControl build(UiFieldDTO uiFieldDTO) {
+		this.uiFieldDTO = uiFieldDTO;
 		this.control = this;
-		this.node = create(uiSchemaDTO, getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
+		this.node = create(uiFieldDTO, getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
 
 		Map<String, Object> data = new LinkedHashMap<>();
 		String lang = getRegistrationDTo().getSelectedLanguagesByApplicant().get(0);
-		data.put(lang, masterSyncService.getFieldValues(uiSchemaDTO.getId(), lang, false));
+		data.put(lang, masterSyncService.getFieldValues(uiFieldDTO.getSubType(), lang, false));
 		fillData(data);
 
 		return this.control;
 	}
 
-	private VBox create(UiSchemaDTO uiSchemaDTO, String langCode) {
-		String fieldName = uiSchemaDTO.getId();
+	private VBox create(UiFieldDTO uiFieldDTO, String langCode) {
+		String fieldName = uiFieldDTO.getId();
 
 		/** Container holds title, fields and validation message elements */
 		VBox simpleTypeVBox = new VBox();
@@ -79,13 +80,13 @@ public class ButtonFxControl extends FxControl {
 				true, prefWidth);
 		List<String> labels = new ArrayList<>();
 		getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(lCode -> {
-			labels.add(this.uiSchemaDTO.getLabel().get(lCode));
+			labels.add(this.uiFieldDTO.getLabel().get(lCode));
 		});
 
-		fieldTitle.setText(String.join(RegistrationConstants.SLASH, labels)	+ getMandatorySuffix(uiSchemaDTO));
+		fieldTitle.setText(String.join(RegistrationConstants.SLASH, labels)	+ getMandatorySuffix(uiFieldDTO));
 		hbox.getChildren().add(fieldTitle);
 		simpleTypeVBox.getChildren().add(hbox);
-		simpleTypeVBox.getChildren().add(getLabel(uiSchemaDTO.getId() + RegistrationConstants.ERROR_MSG, null,
+		simpleTypeVBox.getChildren().add(getLabel(uiFieldDTO.getId() + RegistrationConstants.ERROR_MSG, null,
 				RegistrationConstants.DemoGraphicFieldMessageLabel, false, simpleTypeVBox.getPrefWidth()));
 		changeNodeOrientation(simpleTypeVBox, langCode);
 		return simpleTypeVBox;
@@ -93,25 +94,40 @@ public class ButtonFxControl extends FxControl {
 
 	@Override
 	public void setData(Object data) {
-		HBox primaryHbox = (HBox) getField(uiSchemaDTO.getId() + RegistrationConstants.HBOX);
+		HBox primaryHbox = (HBox) getField(uiFieldDTO.getId() + RegistrationConstants.HBOX);
 
 		Button selectedButton = getSelectedButton(primaryHbox);
 
-		String code = selectedButton.getId().replaceAll(uiSchemaDTO.getId(), "");
+		if(selectedButton == null) {
+			return;
+		}
 
-		List<SimpleDto> values = new ArrayList<SimpleDto>();
-		List<String> toolTipText = new ArrayList<>();
-		for (String langCode : getRegistrationDTo().getSelectedLanguagesByApplicant()) {
+		String code = selectedButton.getId().replaceAll(uiFieldDTO.getId(), "");
 
-			Optional<GenericDto> result = masterSyncService.getFieldValues(uiSchemaDTO.getId(), langCode, false).stream()
+		switch (this.uiFieldDTO.getType()) {
+		case RegistrationConstants.SIMPLE_TYPE:
+			List<SimpleDto> values = new ArrayList<SimpleDto>();
+			List<String> toolTipText = new ArrayList<>();
+			for (String langCode : getRegistrationDTo().getSelectedLanguagesByApplicant()) {
+				Optional<GenericDto> result = masterSyncService.getFieldValues(uiFieldDTO.getSubType(), langCode, false).stream()
+						.filter(b -> b.getCode().equalsIgnoreCase(code)).findFirst();
+				if (result.isPresent()) {
+					values.add(new SimpleDto(langCode, result.get().getName()));
+					toolTipText.add(result.get().getName());
+				}
+			}
+			selectedButton.setTooltip(new Tooltip(String.join(RegistrationConstants.SLASH, toolTipText)));
+			getRegistrationDTo().addDemographicField(uiFieldDTO.getId(), values);
+			getRegistrationDTo().SELECTED_CODES.put(uiFieldDTO.getId()+"Code", code);
+			break;
+		default:
+			Optional<GenericDto> result = masterSyncService.getFieldValues(uiFieldDTO.getSubType(), getRegistrationDTo().getSelectedLanguagesByApplicant().get(0), false).stream()
 					.filter(b -> b.getCode().equalsIgnoreCase(code)).findFirst();
 			if (result.isPresent()) {
-				values.add(new SimpleDto(langCode, result.get().getName()));
-				toolTipText.add(result.get().getName());
+				getRegistrationDTo().addDemographicField(uiFieldDTO.getId(), result.get().getName());
+				getRegistrationDTo().SELECTED_CODES.put(uiFieldDTO.getId()+"Code", code);
 			}
 		}
-		selectedButton.setTooltip(new Tooltip(String.join(RegistrationConstants.SLASH, toolTipText)));
-		getRegistrationDTo().addDemographicField(uiSchemaDTO.getId(), values);
 	}
 
 	private Button getSelectedButton(HBox hBox) {
@@ -132,7 +148,7 @@ public class ButtonFxControl extends FxControl {
 	public void fillData(Object data) {
 		if (data != null) {
 			Map<String, List<GenericDto>> val = (Map<String, List<GenericDto>>) data;
-			setItems((HBox) getField(uiSchemaDTO.getId() + RegistrationConstants.HBOX),
+			setItems((HBox) getField(uiFieldDTO.getId() + RegistrationConstants.HBOX),
 					val.get(getRegistrationDTo().getSelectedLanguagesByApplicant().get(0)));
 		}
 	}
@@ -141,7 +157,7 @@ public class ButtonFxControl extends FxControl {
 		if (hBox != null && val != null && !val.isEmpty()) {
 			val.forEach(genericDto -> {
 				Button button = new Button(genericDto.getName());
-				button.setId(uiSchemaDTO.getId() + genericDto.getCode());
+				button.setId(uiFieldDTO.getId() + genericDto.getCode());
 				hBox.setSpacing(10);
 				hBox.setPadding(new Insets(10, 10, 10, 10));
 				button.getStyleClass().addAll(residence, buttonStyle);
@@ -154,13 +170,13 @@ public class ButtonFxControl extends FxControl {
 
 	@Override
 	public Object getData() {
-		return getRegistrationDTo().getDemographics().get(uiSchemaDTO.getId());
+		return getRegistrationDTo().getDemographics().get(uiFieldDTO.getId());
 	}
 
 
 	@Override
 	public boolean isValid() {
-		HBox primaryHbox = (HBox) getField(uiSchemaDTO.getId() + RegistrationConstants.HBOX);
+		HBox primaryHbox = (HBox) getField(uiFieldDTO.getId() + RegistrationConstants.HBOX);
 		Button selectedButton = getSelectedButton(primaryHbox);
 
 		if(selectedButton != null)
@@ -171,7 +187,7 @@ public class ButtonFxControl extends FxControl {
 
 	@Override
 	public boolean isEmpty() {
-		HBox primaryHbox = (HBox) getField(uiSchemaDTO.getId() + RegistrationConstants.HBOX);
+		HBox primaryHbox = (HBox) getField(uiFieldDTO.getId() + RegistrationConstants.HBOX);
 		Button selectedButton = getSelectedButton(primaryHbox);
 		return selectedButton == null ? true : false;
 	}
@@ -188,6 +204,7 @@ public class ButtonFxControl extends FxControl {
 			resetButtons(button);
 			if (isValid()) {
 				setData(null);
+				refreshFields();
 			}
 		});
 	}
@@ -205,36 +222,33 @@ public class ButtonFxControl extends FxControl {
 
 	@Override
 	public void selectAndSet(Object data) {
-		if (data != null) {
-
-			Object val = null;
-
-			if (val instanceof List) {
-
-				List<SimpleDto> list = (List<SimpleDto>) val;
-
-				for (SimpleDto simpleDto : list) {
-
-					if (getRegistrationDTo().getSelectedLanguagesByApplicant().get(0)
-							.equalsIgnoreCase(simpleDto.getLanguage())) {
-
-						HBox appHBox = (HBox) getField(uiSchemaDTO.getId() + RegistrationConstants.HBOX);
-
-						for (Node node : appHBox.getChildren()) {
-
-							if (node instanceof Button
-									&& ((Button) node).getText().equalsIgnoreCase(simpleDto.getValue())) {
-
-								((Button) node).fire();
-							}
-						}
-
-						break;
-					}
-
+		HBox hbox = (HBox) getField(uiFieldDTO.getId() + RegistrationConstants.HBOX);
+		if (data == null) {
+			hbox.getChildrenUnmodifiable().forEach(node -> {
+				if (node instanceof Button) {
+					node.getStyleClass().clear();
+					node.getStyleClass().addAll(residence, buttonStyle);
 				}
+			});
+			return;
+		}
 
-			}
+		Optional<Node> selectedNode = null;
+
+		if (data instanceof List) {
+			List<SimpleDto> list = (List<SimpleDto>) data;
+			selectedNode = hbox.getChildren().stream()
+					.filter(node1 -> node1.getId().equals(uiFieldDTO.getId()+(list.isEmpty()? null : list.get(0).getValue())))
+					.findFirst();
+		}
+		else {
+			selectedNode = hbox.getChildren().stream()
+					.filter(node1 -> node1.getId().equals(uiFieldDTO.getId()+(String)data))
+					.findFirst();
+		}
+
+		if(selectedNode.isPresent()) {
+			resetButtons((Button) selectedNode.get());
 		}
 	}
 

@@ -8,13 +8,14 @@ import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.neovisionaries.i18n.LanguageAlpha3Code;
+
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.AuthTokenDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 
 /**
  * This class will load all the property files as bundles All application level
@@ -119,7 +120,8 @@ public class ApplicationContext {
 					for (String langCode : langList) {
 						if (!langCode.isBlank()) {
 							String labelLangCodeKey = String.format("%s_%s", langCode, RegistrationConstants.LABELS);
-							Locale locale = new Locale(langCode != null ? langCode.substring(0, 2) : "");
+							String localeCode = (langCode != null) ? (LanguageAlpha3Code.getByCodeIgnoreCase(langCode) != null ? LanguageAlpha3Code.getByCodeIgnoreCase(langCode).getAlpha2().name() : null) : "";
+							Locale locale = new Locale(localeCode != null ? localeCode : langCode.substring(0, 2));
 							ResourceBundle labelsBundle = ResourceBundle.getBundle(RegistrationConstants.LABELS, locale);
 							if (labelsBundle.getLocale().equals(locale)) {
 								resourceBundleMap.put(labelLangCodeKey, labelsBundle);
@@ -152,7 +154,7 @@ public class ApplicationContext {
 	 * @param bundleType messages or labels
 	 * @return Resource Bundle
 	 */
-	public ResourceBundle getBundle(String langCode, String bundleType) {
+	public static ResourceBundle getBundle(String langCode, String bundleType) {
 
 		return resourceBundleMap.get(String.format("%s_%s", langCode, bundleType));
 
@@ -275,37 +277,22 @@ public class ApplicationContext {
 	 * @param code the code
 	 * @return the integer value
 	 */
-	public static int getIntValueFromApplicationMap(String code) {
+	public static Integer getIntValueFromApplicationMap(String code) {
 
-		return Integer.parseInt((String) applicationMap.get(code));
+		return applicationMap.containsKey(code) ? Integer.parseInt((String) applicationMap.get(code)) : null;
 
 	}
 
 	public static String getStringValueFromApplicationMap(String code) {
 
-		return String.valueOf(applicationMap.get(code));
+		return applicationMap.containsKey(code) ? String.valueOf(applicationMap.get(code)) : null;
 
 	}
 
-	public static void setUpgradeServerURL(String url) {
-		applicationMap.put("client.upgrade.server.url", url);
-	}
+	public static Float getFloatValueFromApplicationMap(String code) {
 
-	@Deprecated(since = "1.1.4")
-	public static void setTPMUsageFlag(String tpmUsageFlag) {
-		applicationMap.put("client.tpm.required", tpmUsageFlag);
-	}
+		return applicationMap.containsKey(code) ? Float.parseFloat((String) applicationMap.get(code)) : null;
 
-	public static String getUpgradeServerURL() {
-		return applicationMap.get("client.upgrade.server.url") == null
-				? String.format("https://%s", RegistrationAppHealthCheckUtil.getHostName())
-				: String.valueOf(applicationMap.get("client.upgrade.server.url"));
-	}
-
-	@Deprecated(since = "1.1.4")
-	public static String getTPMUsageFlag() {
-		return applicationMap.get("client.tpm.required") == null ? "Y"
-				: String.valueOf(applicationMap.get("client.tpm.required"));
 	}
 
 	public static String getDateFormat() {

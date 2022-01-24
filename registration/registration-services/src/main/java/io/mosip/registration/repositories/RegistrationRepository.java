@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -37,23 +38,6 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 			@Param("resendStatus") String serverStatusCode, @Param("fileUploadStatus") String fileUploadStatus);
 	
 	/**
-	 * This method returns the list of {@link Registration} based on provided id's.
-	 *
-	 * @param clientstatusCode 
-	 * 				the clientstatus code
-	 * @param exportstatusCode 
-	 * 				the exportstatus code
-	 * @param serverStatusCode 
-	 * 				the server status code
-	 * @param fileUploadStatus 
-	 * 				the file upload status
-	 * @return the list of {@link Registration}
-	 */
-	@Query("select reg from Registration reg where reg.clientStatusCode= :syncStatus or reg.clientStatusCode= :exportStatus and (reg.serverStatusCode=:resendStatus or reg.serverStatusCode IS NULL) or reg.fileUploadStatus=:fileUploadStatus")
-	List<Registration> findByStatusCodes(@Param("syncStatus") String clientstatusCode, @Param("exportStatus") String exportstatusCode,
-			@Param("resendStatus") String serverStatusCode, @Param("fileUploadStatus") String fileUploadStatus, Pageable pageable);
-	
-	/**
 	 * This method returns the list of {@link Registration} based on status code
 	 * 
 	 * @param statusCode
@@ -61,6 +45,15 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	 * @return the list of {@link Registration}
 	 */
 	List<Registration> findByclientStatusCodeOrderByCrDtime(String statusCode);
+	
+	/**
+	 * This method returns the list of {@link Registration} based on status code or status comments
+	 * 
+	 * @param statusCode
+	 * @param statusComments
+	 * @return the list of {@link Registration}
+	 */
+	List<Registration> findByClientStatusCodeOrClientStatusCommentsOrderByCrDtime(String statusCode, String statusComments);
 
 	/**
 	 * This method fetches the registration packets based on given client status
@@ -72,7 +65,7 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	 */
 	List<Registration> findByClientStatusCodeInOrderByUpdDtimesDesc(List<String> statusCodes);
 	
-	List<Registration> findByClientStatusCodeInOrderByCrDtimeAsc(List<String> statusCodes, Pageable pageable);
+	List<Registration> findByClientStatusCodeInOrderByCrDtimeAsc(List<String> statusCodes);
 	
 	/**
 	 * To fetch the records for Packet Upload.
@@ -94,7 +87,7 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	 * 				the server status
 	 * @return List of registration packets
 	 */
-	List<Registration> findByClientStatusCodeAndServerStatusCode(String clientStatus, String serverStatus);
+	List<Registration> findByClientStatusCodeAndServerStatusCodeIn(String clientStatus, List<String> serverStatus);
 	
 	/**
 	 * Find by CrDtimes and client status code.
@@ -113,28 +106,17 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	 * @return the list of {@link Registration}
 	 */
 	List<Registration> findByclientStatusCodeOrderByCrDtimeAsc(String statusCode);
-
-	/**
-	 * Find by client status code and id.
-	 *
-	 * @param clientStatusCode 
-	 * 				the client status code
-	 * @param id 
-	 * 				the registration id
-	 * @return the registration
-	 */
-	Registration findByClientStatusCodeAndId(String clientStatusCode,String id);
 	
 	/**
-	 * Find by CrDtimes and client status code.
+	 * Find by CrDtimes and server status code.
 	 *
 	 * @param crDtimes 
 	 * 				the date upto packets to be deleted
-	 * @param clientStatus 
+	 * @param serverStatus 
 	 * 				status of resgistrationPacket
 	 * @return list of registrations
 	 */
-	List<Registration> findByCrDtimeBeforeAndServerStatusCode(Timestamp crDtimes, String clientStatus);
+	List<Registration> findByCrDtimeBeforeAndServerStatusCodeIn(Timestamp crDtimes, List<String> statusCodes);
 	
 	/**
 	 * fetches all the Registration records which is having the given server status
@@ -165,7 +147,7 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	List<Registration> findByClientStatusCodeNotInAndServerStatusCodeIn(List<String> clientStatusCodes,
 			List<String> serverStatusCodes);
 
-	@Query("select clientStatusCode, serverStatusCode, count(id) from Registration group by clientStatusCode, serverStatusCode")
+	@Query("select clientStatusCode, serverStatusCode, count(packetId) from Registration group by clientStatusCode, serverStatusCode")
 	List<Object[]> getStatusBasedCount();
 	
 	Long countByClientStatusCodeInOrderByUpdDtimesDesc(List<String> statusCodes);
@@ -176,10 +158,25 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	
 	Registration findTopByclientStatusCodeOrderByCrDtimeAsc(String statusCode);
 	
-	Registration findByAppId(String applicationId);
+	Registration findByPacketId(String packetId);
 	
 	@Query("select id from Registration where appId=:appId")
 	String getRIDByAppId(@Param("appId") String appId);
+	
+	List<Registration> findByPacketIdIn(List<String> packetIds);
 
 	List<Registration> findByClientStatusCommentsOrderByCrDtime(String statusComment);
+	
+	Slice<Registration> findByClientStatusCodeInAndUpdDtimesLessThanEqual(List<String> statusCodes, Timestamp updatedDtimes,
+            Pageable pageable);
+	
+	Slice<Registration> findByPacketIdIn(List<String> packetIds, Pageable pageable);
+	
+	Registration findTopByOrderByUpdDtimesDesc();
+	
+	Slice<Registration> findByClientStatusCodeOrClientStatusCommentsAndUpdDtimesLessThanEqual(String statusCode, String statusComments, Timestamp updatedDtimes,
+            Pageable pageable);
+	
+	Slice<Registration> findByClientStatusCodeOrServerStatusCodeOrFileUploadStatusAndUpdDtimesLessThanEqual(String clientstatusCode, String serverStatusCode, String fileUploadStatus, Timestamp updatedDtimes,
+            Pageable pageable);
 }

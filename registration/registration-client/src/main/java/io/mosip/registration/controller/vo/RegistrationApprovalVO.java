@@ -1,6 +1,8 @@
 package io.mosip.registration.controller.vo;
 
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.scene.image.Image;
 
 /**
  * The Class RegistrationApprovalVO.
@@ -11,10 +13,12 @@ public class RegistrationApprovalVO {
 
 	private SimpleStringProperty slno;
 	private SimpleStringProperty id;
+	private SimpleStringProperty packetId;
 	private SimpleStringProperty date;
 	private SimpleStringProperty acknowledgementFormPath;
 	private SimpleStringProperty operatorId;
-	private SimpleStringProperty statusComment;
+	private Image statusComment;
+	private SimpleBooleanProperty hasBwords;
 
 	/**
 	 * Instantiates a new registration approval VO.
@@ -23,14 +27,16 @@ public class RegistrationApprovalVO {
 	 * @param acknowledgementFormPath the acknowledgement form path
 	 * @param statusComment           the status comment
 	 */
-	public RegistrationApprovalVO(String slno, String id, String date,String acknowledgementFormPath, String operatorId, String statusComment) {
+	public RegistrationApprovalVO(String slno, String id, String packetId, String date, String acknowledgementFormPath, String operatorId, Image statusComment, boolean hasBwords) {
 		super();
 		this.slno = new SimpleStringProperty(slno);
 		this.id = new SimpleStringProperty(id);
+		this.packetId = new SimpleStringProperty(packetId);
 		this.date = new SimpleStringProperty(date);
 		this.acknowledgementFormPath = new SimpleStringProperty(acknowledgementFormPath);
 		this.operatorId = new SimpleStringProperty(operatorId);
-		this.statusComment = new SimpleStringProperty(statusComment);
+		this.statusComment = statusComment;
+		this.hasBwords = new SimpleBooleanProperty(hasBwords);
 	}
 
 	/**
@@ -47,6 +53,15 @@ public class RegistrationApprovalVO {
 	 */
 	public String getId() {
 		return id.get();
+	}
+	
+	/**
+	 * Gets the packetId.
+	 *
+	 * @return the packetId
+	 */
+	public String getPacketId() {
+		return packetId.get();
 	}
 
 	/**
@@ -70,11 +85,15 @@ public class RegistrationApprovalVO {
 	 *
 	 * @return the statusComment
 	 */
-	public String getStatusComment() {
-		return statusComment.get();
+	public Image getStatusComment() {
+		return statusComment;
 	}
 	
 	public String getOperatorId() {
 		return operatorId.get();
+	}
+	
+	public boolean getHasBwords() {
+		return hasBwords.get();
 	}
 }

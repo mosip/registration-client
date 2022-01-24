@@ -1,0 +1,369 @@
+{ "identity" : {
+	"ageGroup":"MINOR",
+	"process":"Update",
+	"preferredLang":"English",
+	"documentUploadAttributes":["POB","POR","POA","POI"],
+	"UIN":"5931539704",
+	   "profile":"Default",
+	    "score1":"10",
+	    "score2":"20",
+	    "score3":"90",
+	    "score4":"90",
+	"gender" : [ {
+    "language" : "eng",
+    "value" : "Female"
+  }, {
+    "language" : "ara",
+    "value" : "أنثى"
+  },
+  {
+	    "language" : "fra",
+	    "value" : "Femme"
+	  }],
+  "city" : [ {
+	    "language" : "eng",
+	    "value" : "Kenitra"
+	  }, {
+	    "language" : "ara",
+	    "value" : "االقنيطرة"
+	  },
+	  {
+		    "language" : "fra",
+		    "value" : "Kénitra"
+		  } ],
+  "postalCode" : "14022",
+  "fullName" : [ {
+    "language" : "eng",
+    "value" : "Test Automation"
+  }, {
+    "language" : "ara",
+    "value" : "القنيطرة"
+  } ,
+  {
+	    "language" : "fra",
+	    "value" : "Kénitra"
+	  }],
+	  "dateOfBirth" : "13",
+  "referenceIdentityNumber" : "23444444444444322",
+  "individualBiometrics" : {
+    "format" : "cbeff",
+    "version" : 1.0,
+    "value" : "individualBiometrics_bio_CBEFF"
+  },
+ 
+  "IDSchemaVersion" : 0.1,
+  "province" : [ {
+    "language" : "eng",
+    "value" : "Kenitra"
+  }, {
+    "language" : "ara",
+    "value" : "االقنيطرة"
+  },
+  {
+	    "language" : "fra",
+	    "value" : "Kénitra"
+	  } ],
+  "zone" : [ {
+    "language" : "eng",
+    "value" : "Ben Mansour"
+  }, {
+    "language" : "ara",
+    "value" : "بن منصور"
+  },
+  {
+	    "language" : "fra",
+	    "value" : "Ben Mansour"
+	  }],
+  "phone" : "8600097143",
+  "addressLine1" : [ {
+    "language" : "eng",
+    "value" : "Upgrade1.1.4aa"
+  }, {
+    "language" : "ara",
+    "value" : "بن منصور"
+  } ,
+  {
+	    "language" : "fra",
+	    "value" : "Kénitra"
+	  }],
+  "addressLine2" : [ {
+    "language" : "eng",
+    "value" : "Upgrade1.1.4"
+  }, {
+    "language" : "ara",
+    "value" : "بن منصور"
+  },
+  {
+	    "language" : "fra",
+	    "value" : "Kénitra"
+	  } ],
+  "residenceStatus" : [ {
+    "language" : "fra",
+    "value" : "Étrangère"
+  }, {
+    "language" : "ara",
+    "value" :"غير أجنبي"
+  },
+  {
+	    "language" : "eng",
+	    "value" :"Foreigner"
+	  } ],
+  "addressLine3" :[ {
+	    "language" : "eng",
+	    "value" : "Upgrade1.1.4"
+	  }, {
+	    "language" : "ara",
+	    "value" : "غير أجنبي"
+	  },
+	  {
+		    "language" : "fra",
+		    "value" : "Kénitra"
+		  } ],
+  "region" : [ {
+    "language" : "eng",
+    "value" : "Rabat Sale Kenitra"
+  }, {
+    "language" : "ara",
+    "value" : "جهة الرباط سلا القنيطرة"
+  },{
+	    "language" : "fra",
+	    "value" : "Rabat-Salé-Kénitra"
+	  } ],
+  "modeOfClaim" : [ {
+	    "language" : "eng",
+	    "value" : "Pick-up"
+	  }, {
+	    "language" : "ara",
+	    "value" : "يلتقط"
+	  } ],
+  "email" : "abc@abc.co.in",
+  "consent":"Y",
+  "introducerRID" : "10002100870000320210420134337",
+  "introducerUIN" : "5931539704",
+   "introducerName" : [ {
+    "language" : "eng",
+    "value" : "Upgrade1.1.4"
+  }, {
+    "language" : "ara",
+    "value" : "يلتقط"
+  },
+  {
+	    "language" : "fra",
+	    "value" : "Kénitra"
+	  } ], 
+	  "updateUINAttributes":["DateOfBirth","Biometrics","Consent","PreferredLanguage"],
+	
+	  "bioAuthAttributes":["leftIndex"],
+	  "bioAttributes": [
+			 "leftEye",
+				"rightEye",
+				"rightIndex",
+				"rightLittle",
+				"rightRing",
+				"rightMiddle",
+				"leftIndex",
+				"leftLittle",
+				"leftRing",
+				"leftMiddle",
+				"leftThumb",
+				"rightThumb",
+				"face"
+			],
+	  "proofOfConsent" : [ {
+		    "language" : "eng",
+		    "value" : "Registration Form"
+		  }, {
+		    "language" : "ara",
+		    "value" : "إستمارة تسجيل"
+		  } ],
+		  "proofOfAddress" :  [ {
+			    "language" : "eng",
+			    "value" : "Passport"
+			  }, {
+				    "language" : "fra",
+				    "value" : "Passeport"
+				  }, {
+			    "language" : "ara",
+			    "value" : "جواز سفر"
+			  } ],
+			  "proofOfIdentity" : [ {
+				    "language" : "eng",
+				    "value" : "Passport"
+				  }, {
+					    "language" : "fra",
+					    "value" : "Passeport"
+					  }, {
+				    "language" : "ara",
+				    "value" : "جواز سفر"
+				  } ],
+				  "proofOfRelationship" : [ {
+					    "language" : "eng",
+					    "value" : "Passport"
+					  }, {
+					    "language" : "fra",
+					    "value" : "Passeport"
+					  },
+					  {
+						    "language" : "ara",
+						    "value" : "جواز سفر"
+						  } ],
+						  "proofOfDateOfBirth" : [ {
+							    "language" : "eng",
+							    "value" : "Certificate of Birth"
+							  }, {
+							    "language" : "fra",
+							    "value" : "Certificat de naissance"
+							  },
+							  {
+								    "language" : "ara",
+								    "value" : "شهادة الميلاد"
+								  } ],
+
+							      "yearOfBirth":"2020",
+							      "monthOfBirth":"08",
+							      "dayOfBirth":"01",
+							      "referenceCNIENumber":"LZ267018",
+							      "referenceCNIEexpiry":"",
+							      "nationality":[
+							         {
+							            "language":"eng",
+							            "value":"French"
+							         },
+							         {
+							            "language":"ara",
+							            "value":"الفرنسية"
+							         }
+							      ],
+							      "resOuPass":[
+							         {
+							            "language":"eng",
+							            "value":"Passport"
+							         },
+							         {
+							            "language":"ara",
+							            "value":"جواز سفر"
+							         }
+							      ],
+							      "placeOfBirth":[ 
+							         {
+							            "language":"eng",
+							            "value":"Female"
+							         },
+							         {
+							            "language":"ara",
+							            "value":"أنثى"
+							         },
+							         {
+							            "language":"fra",
+							            "value":"Femme"
+							         }
+							      ],
+							      "listCountry":[
+							         {
+							            "language":"eng",
+							            "value":"Egypt"
+							         },
+							         {
+							            "language":"ara",
+							            "value":"فرنسا"
+							         }
+							      ],
+							      "flagidcs":[
+							         {
+							            "language":"eng",
+							            "value":"non"
+							         },
+							         {
+							            "language":"ara",
+							            "value":"عدم"
+							         }
+							      ],
+							      "birthCertificateNumber":"123456",
+							      "civilRegistryNumber":"123456",
+							      "referenceResidencyNumber":"12345",
+							      "passportNumber":"12345",
+							      "flagb":[
+							         {
+							            "language":"eng",
+							            "value":"Non"
+							         },
+							         {
+							            "language":"ara",
+							            "value":"عدم"
+							         }
+							      ],
+							      "residence":[ 
+							         {
+							            "language":"eng",
+							            "value":"National"
+							         },
+							         {
+							            "language":"ara",
+							            "value":"وطني"
+							         }
+							      ],
+							      "commun":[
+							         {
+							            "language":"eng",
+							            "value":"common"
+							         },
+							         {
+							            "language":"ara",
+							            "value":"مشترك"
+							         }
+							      ],
+							      "addressType":[ 
+							          {
+							              "language":"eng",
+							              "value":"Collective"
+							           },
+							           {
+							              "language":"ara",
+							              "value":"جماعي"
+							           }
+							        ],
+							      "portNo":"1234",
+							      "apptNo":"1111111",
+							      "introducerType":[
+							          {
+							             "language":"eng",
+							             "value":"Autres"
+							          },
+							          {
+							             "language":"ara",
+							             "value":"آحرون"
+							          }
+							       ],
+							      "relationWithChild":[
+							         {
+							            "language":"eng",
+							            "value":"Pere"
+							         },
+							         {
+							            "language":"ara",
+							            "value":"أب"
+							         }
+							      ],
+							      "introducerCNIE":"TI398967",
+							      "CivillastName":[ 
+							         {
+							            "language":"eng",
+							            "value":"CivillastName"
+							         },
+							         {
+							            "language":"ara",
+							            "value":"أنثى"
+							         }
+							      ],
+							      "CivilfirstName":[
+							         {
+							            "language":"eng",
+							            "value":"CivilfirstName"
+							         },
+							         {
+							            "language":"ara",
+							            "value":"أنثى"
+							         }
+							      ]
+} } 
+

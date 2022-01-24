@@ -68,20 +68,11 @@ public class TemplateGeneratorTest {
 		registrationDTO = DataProvider.getPacketDTO();
 		List<FingerprintDetailsDTO> segmentedFingerprints = new ArrayList<>();
 		segmentedFingerprints.add(new FingerprintDetailsDTO());
-		
-		/*registrationDTO.getBiometricDTO().getApplicantBiometricDTO().getFingerprintDetailsDTO()
-				.forEach(fingerPrintDTO -> {
-					fingerPrintDTO.setSegmentedFingerprints(segmentedFingerprints);
-				});*/
+
 		appMap.put(RegistrationConstants.DOC_DISABLE_FLAG, "Y");
-		appMap.put(RegistrationConstants.FINGERPRINT_DISABLE_FLAG, "Y");
-		appMap.put(RegistrationConstants.IRIS_DISABLE_FLAG, "Y");
-		appMap.put(RegistrationConstants.FACE_DISABLE_FLAG, "Y");
 		appMap.put(RegistrationConstants.PRIMARY_LANGUAGE, "ara");
 		appMap.put(RegistrationConstants.SECONDARY_LANGUAGE, "fra");
-		//applicationContext.setApplicationMap(appMap);
-		templateGenerator.setGuidelines("My GuideLines");
-	//	applicationContext.loadResourceBundle();
+
 		when(qrCodeGenerator.generateQrCode(Mockito.anyString(), Mockito.any())).thenReturn(new byte[1024]);
 		BufferedImage image = null;
 		PowerMockito.mockStatic(ImageIO.class);
@@ -117,7 +108,7 @@ public class TemplateGeneratorTest {
 		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
 		Mockito.when(applicationContext.getBundle(Mockito.anyString(), Mockito.anyString())).thenReturn(dummyResourceBundle);
 
-		Mockito.when(identitySchemaServiceImpl.getUISchema(Mockito.anyDouble())).thenReturn(Collections.EMPTY_LIST);
+		Mockito.when(identitySchemaServiceImpl.getAllFieldSpec(Mockito.anyString(),Mockito.anyDouble())).thenReturn(Collections.EMPTY_LIST);
 	}
 	
 	ResourceBundle dummyResourceBundle = new ResourceBundle() {
@@ -141,7 +132,7 @@ public class TemplateGeneratorTest {
 	
 	@Test
 	public void generateTemplateWithDemographicFieldsTest() throws  RegBaseCheckedException {
-		Mockito.when(identitySchemaServiceImpl.getUISchema(Mockito.anyDouble())).thenReturn(DataProvider.getFields());
+		Mockito.when(identitySchemaServiceImpl.getAllFieldSpec(Mockito.anyString(),Mockito.anyDouble())).thenReturn(DataProvider.getFields());
 		ResponseDTO response = templateGenerator.generateTemplate("sample text", registrationDTO, template, RegistrationConstants.TEMPLATE_PREVIEW, "");
 		assertNotNull(response.getSuccessResponseDTO());
 	}

@@ -19,7 +19,10 @@ import io.mosip.kernel.core.util.DateUtils;
 @Entity
 @Table(schema = "REG", name = "REGISTRATION")
 public class Registration extends RegistrationCommonFields {
+	
 	@Id
+	@Column(name = "PACKET_ID")
+	private String packetId;
 	@Column(name = "ID")
 	private String id;
 	@Column(name = "REG_TYPE")
@@ -78,6 +81,12 @@ public class Registration extends RegistrationCommonFields {
 	private byte[] additionalInfo;
 	@Column(name = "APP_ID")
 	private String appId;
+	@Column(name = "ADDITIONAL_INFO_REQ_ID")
+	private String additionalInfoReqId;
+	@Column(name= "ACK_SIGNATURE")
+	private String ackSignature;
+	@Column(name="HAS_BWORDS")
+	private Boolean hasBwords;
 	
 	@ManyToOne
 	@JoinColumn(name = "CR_BY", referencedColumnName = "id", insertable = false, updatable = false)
@@ -329,4 +338,35 @@ public class Registration extends RegistrationCommonFields {
 		this.appId = appId;
 	}
 
+	public String getPacketId() {
+		return packetId;
+	}
+
+	public void setPacketId(String packetId) {
+		this.packetId = packetId;
+	}
+
+	public String getAdditionalInfoReqId() {
+		return additionalInfoReqId;
+	}
+
+	public void setAdditionalInfoReqId(String additionalInfoReqId) {
+		this.additionalInfoReqId = additionalInfoReqId;
+	}
+
+	public String getAckSignature() {
+		return ackSignature;
+	}
+
+	public void setAckSignature(String ackSignature) {
+		this.ackSignature = ackSignature;
+	}
+
+	public Boolean getHasBwords() {
+		return hasBwords;
+	}
+
+	public void setHasBwords(Boolean hasBwords) {
+		this.hasBwords = hasBwords;
+	}
 }

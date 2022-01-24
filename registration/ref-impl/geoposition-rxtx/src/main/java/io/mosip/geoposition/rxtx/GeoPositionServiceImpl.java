@@ -39,7 +39,7 @@ public class GeoPositionServiceImpl implements GeoPositionService, SerialPortEve
                     Thread.sleep(geoPosition.getTimeout());
 
                 } catch (PortInUseException | TooManyListenersException | InterruptedException | UnsupportedCommOperationException | IOException e) {
-                    LOGGER.error("Failed to open serial port");
+                    LOGGER.error("Failed to open serial port", e);
                 } finally {
                     if(serialPort != null) {
                         serialPort.removeEventListener();

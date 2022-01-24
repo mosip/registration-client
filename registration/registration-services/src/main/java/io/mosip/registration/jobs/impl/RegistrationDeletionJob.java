@@ -1,5 +1,6 @@
 package io.mosip.registration.jobs.impl;
 
+import io.mosip.kernel.core.util.DateUtils;
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -14,6 +15,8 @@ import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.service.packet.RegPacketStatusService;
+
+import java.sql.Timestamp;
 
 /**
  * This is a job to delete the registration packets.
@@ -72,7 +75,7 @@ public class RegistrationDeletionJob extends BaseJob {
 
 			}
 
-			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+			syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		} catch (RegBaseUncheckedException baseUncheckedException) {
 			LOGGER.error(LoggerConstants.REGISTRATION_DELETION_JOB_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
@@ -105,7 +108,7 @@ public class RegistrationDeletionJob extends BaseJob {
 		if (responseDTO.getSuccessResponseDTO() != null) {
 			this.responseDTO = packetStatusService.deleteRegistrationPackets();
 		}
-		syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+		syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		LOGGER.info(LoggerConstants.REGISTRATION_DELETION_JOB_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "execute job ended");

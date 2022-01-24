@@ -6,11 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
-import io.mosip.registration.dao.impl.MasterSyncDaoImpl;
-import io.mosip.registration.repositories.*;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -32,21 +32,37 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
+import io.mosip.registration.dao.impl.MasterSyncDaoImpl;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.BiometricAttribute;
-import io.mosip.registration.entity.BlacklistedWords;
+import io.mosip.registration.entity.BlocklistedWords;
+import io.mosip.registration.entity.DocumentCategory;
 import io.mosip.registration.entity.DocumentType;
+import io.mosip.registration.entity.Language;
 import io.mosip.registration.entity.Location;
+import io.mosip.registration.entity.LocationHierarchy;
 import io.mosip.registration.entity.ReasonCategory;
 import io.mosip.registration.entity.ReasonList;
 import io.mosip.registration.entity.RegistrationCenterType;
 import io.mosip.registration.entity.SyncControl;
-import io.mosip.registration.entity.ValidDocument;
-import io.mosip.registration.entity.id.ValidDocumentID;
+import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
+import io.mosip.registration.repositories.BiometricAttributeRepository;
+import io.mosip.registration.repositories.BlocklistedWordsRepository;
+import io.mosip.registration.repositories.DocumentCategoryRepository;
+import io.mosip.registration.repositories.DocumentTypeRepository;
+import io.mosip.registration.repositories.LanguageRepository;
+import io.mosip.registration.repositories.LocationHierarchyRepository;
+import io.mosip.registration.repositories.LocationRepository;
+import io.mosip.registration.repositories.ReasonCategoryRepository;
+import io.mosip.registration.repositories.ReasonListRepository;
+import io.mosip.registration.repositories.SyncJobControlRepository;
+import io.mosip.registration.repositories.SyncJobDefRepository;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import io.mosip.registration.util.mastersync.MetaDataUtils;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 /**
  * @author Sreekar Chukka
@@ -73,9 +89,9 @@ public class MasterSyncDaoImplTest {
 	@Mock
 	private BiometricAttributeRepository biometricAttributeRepository;
 
-	/** Object for Sync Blacklisted Words Repository. */
+	/** Object for Sync Blocklisted Words Repository. */
 	@Mock
-	private BlacklistedWordsRepository blacklistedWordsRepository;
+	private BlocklistedWordsRepository blocklistedWordsRepository;
 
 	/** Object for Sync Document Category Repository. */
 	@Mock
@@ -96,10 +112,6 @@ public class MasterSyncDaoImplTest {
 	/** Object for Sync Reason List Repository. */
 	@Mock
 	private ReasonListRepository reasonListRepository;
-
-	/** Object for Sync Valid Document Repository. */
-	@Mock
-	private ValidDocumentRepository validDocumentRepository;
 
 	/** Object for Sync language Repository. */
 	@Mock
@@ -130,6 +142,9 @@ public class MasterSyncDaoImplTest {
 	@InjectMocks
 	private MasterSyncDaoImpl masterSyncDaoImpl;
 
+	@Mock
+	private ServiceDelegateUtil serviceDelegateUtil;
+
 	
 	@Before
 	public void initialize() throws Exception {
@@ -138,7 +153,7 @@ public class MasterSyncDaoImplTest {
 		PowerMockito.doReturn(userContext).when(SessionContext.class, "userContext");
 		PowerMockito.when(SessionContext.userContext().getUserId()).thenReturn("mosip");
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		//Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
 		//Mockito.when(clientCryptoService.asymmetricDecrypt(Mockito.any())).thenReturn("[]".getBytes(StandardCharsets.UTF_8));
 
@@ -270,23 +285,23 @@ public class MasterSyncDaoImplTest {
 	}
 
 	@Test
-	public void findBlackWords() throws RegBaseCheckedException {
+	public void findBlockWords() throws RegBaseCheckedException {
 
-		List<BlacklistedWords> allBlackWords = new ArrayList<>();
-		BlacklistedWords blackWord = new BlacklistedWords();
-		blackWord.setWord("asdfg");
-		blackWord.setDescription("asdfg");
-		blackWord.setLangCode("ENG");
-		allBlackWords.add(blackWord);
-		allBlackWords.add(blackWord);
+		List<BlocklistedWords> allBlockWords = new ArrayList<>();
+		BlocklistedWords blockWord = new BlocklistedWords();
+		blockWord.setWord("asdfg");
+		blockWord.setDescription("asdfg");
+		blockWord.setLangCode("ENG");
+		allBlockWords.add(blockWord);
+		allBlockWords.add(blockWord);
 
 		Mockito.when(
-				blacklistedWordsRepository.findBlackListedWordsByIsActiveTrueAndLangCode(Mockito.anyString()))
-				.thenReturn(allBlackWords);
+				blocklistedWordsRepository.findBlockListedWordsByIsActiveTrue())
+				.thenReturn(allBlockWords);
 
-		masterSyncDaoImpl.getBlackListedWords("ENG");
+		masterSyncDaoImpl.getBlockListedWords();
 
-		assertTrue(allBlackWords != null);
+		assertTrue(allBlockWords != null);
 	}
 
 	@Test
@@ -311,7 +326,7 @@ public class MasterSyncDaoImplTest {
 	}
 
 
-	@Test
+	/*@Test
 	public void findValidDoc() {
 
 		List<ValidDocument> docList = new ArrayList<>();
@@ -328,7 +343,7 @@ public class MasterSyncDaoImplTest {
 
 		assertTrue(docList != null);
 
-	}
+	}*/
 
 	
 	@Test
@@ -347,8 +362,77 @@ public class MasterSyncDaoImplTest {
 		assertNotNull(masterSyncDaoImpl.getBiometricType("eng", biometricType));
 		
 	}
+	
+	@Test
+	public void getLocationDetailsTest() {
+		List<Location> locations = new ArrayList<Location>();
+		locations.add(new Location());
+		Mockito.when(locationRepository.findAllByIsActiveTrue()).thenReturn(locations);
+		assertEquals(locations.size(), masterSyncDaoImpl.getLocationDetails().size());
+	}
+	
+	@Test
+	public void getLocationDetailsBasedOnLangCodeTest() {
+		List<Location> locations = new ArrayList<Location>();
+		locations.add(new Location());
+		Mockito.when(locationRepository.findByIsActiveTrueAndLangCode(Mockito.anyString())).thenReturn(locations);
+		assertEquals(locations.size(), masterSyncDaoImpl.getLocationDetails("lanCode").size());
+	}
 
-	@Test()
+	@Test
+	public void getLocationDetailsBasedOnLangCodeandHierarchyTest() {
+		List<Location> locations = new ArrayList<Location>();
+		locations.add(new Location());
+		Mockito.when(locationRepository.findByIsActiveTrueAndHierarchyNameAndLangCode(Mockito.anyString(), Mockito.anyString())).thenReturn(locations);
+		assertEquals(locations.size(), masterSyncDaoImpl.getLocationDetails("hierarchyName", "langCode").size());
+	}
+	
+	@Test
+	public void getLocationDetailsBasedOnLangCodeandCodeTest() {
+		Location location = new Location();
+		Mockito.when(locationRepository.findByCodeAndLangCode("code", "langCode")).thenReturn(location);
+		assertNotNull(masterSyncDaoImpl.getLocation("code", "langCode"));
+	}
+
+	@Test
+	public void getDocumentCategoryTest() {
+		List<DocumentCategory> docCategories = new ArrayList<DocumentCategory>();
+		docCategories.add(new DocumentCategory());
+		Mockito.when(documentCategoryRepository.findAllByIsActiveTrue()).thenReturn(docCategories);
+		assertEquals(docCategories.size(), masterSyncDaoImpl.getDocumentCategory().size());
+	}
+
+	@Test
+	public void getActiveLanguagesTest() {
+		List<Language> languages = new ArrayList<Language>();
+		languages.add(new Language());
+		Mockito.when(languageRepository.findAllByIsActiveTrue()).thenReturn(languages);
+		assertEquals(languages.size(), masterSyncDaoImpl.getActiveLanguages().size());
+	}
+	
+	@Test
+	public void getAllLocationHierarchyTest() {
+		List<LocationHierarchy> locationHierarcies = new ArrayList<LocationHierarchy>();
+		locationHierarcies.add(new LocationHierarchy());
+		Mockito.when(locationHierarchyRepository.findAllByIsActiveTrueAndLangCode("langCode")).thenReturn(locationHierarcies);
+		assertEquals(locationHierarcies.size(), masterSyncDaoImpl.getAllLocationHierarchy("langCode").size());
+	}
+
+	@Test
+	public void getSyncJobsTest() {
+		List<SyncJobDef> syncJobs = new ArrayList<SyncJobDef>();
+		syncJobs.add(new SyncJobDef());
+		Mockito.when(syncJobDefRepository.findAllByIsActiveTrue()).thenReturn(syncJobs);
+		assertEquals(syncJobs.size(), masterSyncDaoImpl.getSyncJobs().size());
+	}
+	@Test
+	public void getDocumentTypeTest() {
+		DocumentType docType = new DocumentType();
+		Mockito.when(documentTypeRepository.findByIsActiveTrueAndLangCodeAndCode("langCode","docCode")).thenReturn(docType);
+		assertNotNull(masterSyncDaoImpl.getDocumentType("docCode", "langCode"));
+	}
+	
+	/*@Test()
 	public void testSingleEntity() {
 		String response=null;
 		SyncDataResponseDto syncDataResponseDto = getSyncDataResponseDto("biometricJson.json");
@@ -382,7 +466,7 @@ public class MasterSyncDaoImplTest {
 		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class)))
 		.thenThrow(RegBaseUncheckedException.class);
 		masterSyncDaoImpl.saveSyncData(syncDataResponseDto);			
-	}
+	}*/
 	
 	
 	private SyncDataResponseDto getSyncDataResponseDto(String fileName) {
@@ -399,5 +483,8 @@ public class MasterSyncDaoImplTest {
 		
 		return syncDataResponseDto;
 	}
+	
+	
+	
 
 }

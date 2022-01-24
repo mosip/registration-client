@@ -1,9 +1,5 @@
 package io.mosip.registration.controller.device;
 
-import static io.mosip.registration.constants.LoggerConstants.STREAMER;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,10 +7,8 @@ import java.io.StringWriter;
 
 import org.springframework.stereotype.Component;
 
-import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.SessionContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -32,11 +26,11 @@ public class Streamer {
 			try {
 				urlStream.close();
 			} catch (IOException exception) {
-				LOGGER.error(STREAMER, RegistrationConstants.APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-						exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+				LOGGER.error("Failed to close the stream",exception);
+			} finally {
+				urlStream = null;
+				imageBytes = null;
 			}
-			urlStream = null;
-			imageBytes = null;
 		}
 
 		if (inputStream != null) {
@@ -93,8 +87,7 @@ public class Streamer {
 
 	public void startStream(InputStream inputStream, ImageView streamImage, ImageView scanImage) {
 
-		LOGGER.info(STREAMER, APPLICATION_NAME, APPLICATION_ID,
-				"Streamer Thread initiation started for : " + System.currentTimeMillis());
+		LOGGER.info("Streamer Thread initiation started for : {}", System.currentTimeMillis());
 
 		streamer_thread = new Thread(new Runnable() {
 
@@ -109,27 +102,19 @@ public class Streamer {
 						Image img = new Image(imageStream);
 						streamImage.setImage(img);
 						if (null != scanImage) {
-							// scanImage.setImage(img);
-							//setImageView(scanImage);
 							setStreamImage(img);
 						}
-					} catch (RuntimeException | IOException exception) {
-
-						LOGGER.error(STREAMER, RegistrationConstants.APPLICATION_NAME,
-								RegistrationConstants.APPLICATION_ID,
-								exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+					} catch (Throwable t) {
+						LOGGER.error("Failed in streamer_thread", t);
 						urlStream = null;
-
 					}
 				}
 			}
-
 		}, "STREAMER_THREAD");
 
 		streamer_thread.start();
 
-		LOGGER.info(STREAMER, APPLICATION_NAME, APPLICATION_ID,
-				"Streamer Thread initiated completed for : " + System.currentTimeMillis());
+		LOGGER.info("Streamer Thread initiated completed for : {}", System.currentTimeMillis());
 
 	}
 
@@ -206,7 +191,7 @@ public class Streamer {
 					urlStream.close();
 				streamer_thread = null;
 			} catch (IOException e) {
-				e.printStackTrace();
+				LOGGER.error("Failed to close the stream thread", e);
 			}
 		}
 	}

@@ -39,13 +39,13 @@ public class RegPacketStatusDAOImpl implements RegPacketStatusDAO {
 	 * io.mosip.registration.dao.RegPacketStatusDAO#getPacketIdsByStatusUploaded()
 	 */
 	@Override
-	public List<Registration> getPacketIdsByStatusUploaded() {
+	public List<Registration> getPacketIdsByStatusUploadedOrExported() {
 		LOGGER.info("REGISTRATION - PACKET_STATUS_SYNC - REG_PACKET_STATUS_DAO", APPLICATION_NAME, APPLICATION_ID,
 				"getting packets by status uploaded-successfully has been started");
 
-		return registrationRepository
-				.findByclientStatusCodeOrderByCrDtime(RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode());
-
+		return registrationRepository.findByClientStatusCodeOrClientStatusCommentsOrderByCrDtime(
+				RegistrationClientStatusCode.UPLOADED_SUCCESSFULLY.getCode(),
+				RegistrationClientStatusCode.EXPORT.getCode());
 	}
 	
 	@Override
@@ -55,19 +55,6 @@ public class RegPacketStatusDAOImpl implements RegPacketStatusDAO {
 		return registrationRepository
 				.findByClientStatusCommentsOrderByCrDtime(RegistrationClientStatusCode.EXPORT.getCode());
 
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see io.mosip.registration.dao.RegPacketStatusDAO#get(java.lang.String)
-	 */
-	@Override
-	public Registration get(String registrationId) {
-		LOGGER.info("REGISTRATION - PACKET_STATUS_SYNC - REG_PACKET_STATUS_DAO", APPLICATION_NAME, APPLICATION_ID,
-				"Get registration has been started");
-
-		return registrationRepository.findById(Registration.class, registrationId);
 	}
 
 	/*
@@ -90,7 +77,7 @@ public class RegPacketStatusDAOImpl implements RegPacketStatusDAO {
 		LOGGER.info("Delete registration has been started");
 
 		/* Delete Registartion */
-		registrationRepository.deleteById(registration.getId());
+		registrationRepository.deleteById(registration.getPacketId());
 	}
 
 }

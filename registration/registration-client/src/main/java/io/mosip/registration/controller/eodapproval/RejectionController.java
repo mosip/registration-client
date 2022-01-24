@@ -20,7 +20,6 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.vo.RegistrationApprovalVO;
 import io.mosip.registration.dto.mastersync.ReasonListDto;
@@ -142,8 +141,9 @@ public class RejectionController extends BaseController implements Initializable
 	 * 
 	 * 
 	 * @param event
+	 * @throws RegBaseCheckedException 
 	 */
-	public void packetUpdateStatus() {
+	public void packetUpdateStatus() throws RegBaseCheckedException {
 		LOGGER.info(LOG_REG_REJECT_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"Packet updation as rejection has been started");
 
@@ -156,6 +156,7 @@ public class RejectionController extends BaseController implements Initializable
 
 		Map<String, String> map = new WeakHashMap<>();
 		map.put(RegistrationConstants.PACKET_APPLICATION_ID, rejRegData.getId());
+		map.put(RegistrationConstants.PACKET_ID, rejRegData.getPacketId());
 		map.put(RegistrationConstants.STATUSCODE, RegistrationClientStatusCode.REJECTED.getCode());
 		map.put(RegistrationConstants.STATUSCOMMENT, rejectionComboBox.getSelectionModel().getSelectedItem());
 		rejectionmapList.add(map);
@@ -167,14 +168,16 @@ public class RejectionController extends BaseController implements Initializable
 
 			int focusedIndex = regRejectionTable.getSelectionModel().getFocusedIndex();
 
-			int rowNum = packetIds.get(regRejectionTable.getSelectionModel().getSelectedItem().getId());
+			int rowNum = packetIds.get(regRejectionTable.getSelectionModel().getSelectedItem().getPacketId());
 			RegistrationApprovalVO approvalDTO = new RegistrationApprovalVO(
 					regRejectionTable.getSelectionModel().getSelectedItem().getSlno(),
 					regRejectionTable.getSelectionModel().getSelectedItem().getId(),
+					regRejectionTable.getSelectionModel().getSelectedItem().getPacketId(),
 					regRejectionTable.getSelectionModel().getSelectedItem().getDate(),
 					regRejectionTable.getSelectionModel().getSelectedItem().getAcknowledgementFormPath(),
 					regRejectionTable.getSelectionModel().getSelectedItem().getOperatorId(),
-					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REJECTED));
+					new Image(getImagePath(RegistrationConstants.REJECT_IMG, true)),
+					regRejectionTable.getSelectionModel().getSelectedItem().getHasBwords());
 
 			observableList.set(rowNum, approvalDTO);
 			registrationApprovalController.wrapListAndAddFiltering(observableList);

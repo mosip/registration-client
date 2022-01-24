@@ -21,7 +21,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.dao.IdentitySchemaDao;
-import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.repositories.IdentitySchemaRepository;
 import io.mosip.registration.test.config.TestDaoConfig;
 
@@ -39,15 +39,10 @@ public class IdentitySchemaDaoTest {
 	@Autowired
 	private IdentitySchemaRepository identitySchemaRepository;
 
-	private ObjectMapper mapper = new ObjectMapper();
+	@Autowired
+	private ObjectMapper mapper;
 
-	@Before
-	public void setup() {
-		mapper.registerModule(new JavaTimeModule());
-		mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-	}
 
-	@Ignore
 	@Test
 	public void testSuccessSchemaSync() throws IOException {
 		SchemaDto dto = getSchemaDto("response_1587846312621.json");

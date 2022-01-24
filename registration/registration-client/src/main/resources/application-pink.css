@@ -2638,3 +2638,35 @@ Working on new Css by taleev
 	-fx-text-fill: #FF0000;
     -fx-font-size: 15.0px;
 }
+
+.additionaInfoReqIdLabel {
+	-fx-text-fill: #008080;
+    -fx-font-size: 15px;
+}
+
+.navigationLabel {
+	-fx-text-fill: #008080;
+    -fx-font-size: 13px;
+}
+
+.uinupdate-scroll-pane > .viewport {
+   -fx-background-color: transparent;
+}
+
+.uinupdate-scroll-pane {
+   -fx-background-color: transparent;
+}
+
+.tabErrorLabel {
+    -fx-text-fill: #FF0000;
+}
+
+.tab.tabErrorLabel .tab-label {
+    -fx-text-fill: #FF0000;
+    -fx-font-size: 13px;
+}
+
+.tab:selected.tabErrorLabel .tab-label {
+    -fx-text-fill: #FF0000;
+    -fx-font-weight: bold;
+}

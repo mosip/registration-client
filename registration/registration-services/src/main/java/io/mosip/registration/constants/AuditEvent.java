@@ -34,6 +34,7 @@ public enum AuditEvent {
 	NAV_UPLOAD_PACKETS("REG-EVT-005", USER_EVENT.getCode(), "NAV_UPLOAD_PACKETS", "Navigation link: Upload Packets"),
 	NAV_RE_REGISTRATION("REG-EVT-006", SYSTEM_EVENT.getCode(), "NAV_RE_REGISTRATION",
 			"Navigation link: Re-Registration"),
+	NAV_CORRECTION("REG-EVT-007", USER_EVENT.getCode(), "NAV_CORRECTION", "Navigation link: CORRECTION"),
 	NAV_SYNC_PACKETS("REG-NAV-001", USER_EVENT.getCode(), "NAV_SYNC_PACKETS", "Navigation link: Sync Packet IDs"),
 	NAV_VIRUS_SCAN("REG-NAV-002", USER_EVENT.getCode(), "NAV_VIRUS_SCAN", "Navigation link: Virus Scan"),
 	NAV_SYNC_DATA("REG-NAV-003", USER_EVENT.getCode(), "NAV_SYNC_DATA", "Navigation link: Sync Data"),
@@ -128,21 +129,21 @@ public enum AuditEvent {
 			"Operator authentication with face: Capture and submit"),
 	REG_OPERATOR_AUTH_PREVIEW("REG-EVT-055", USER_EVENT.getCode(), "REG_OPERATOR_AUTH_PREVIEW", "Back to Preview"),
 	REG_ACK_PRINT("REG-EVT-056", USER_EVENT.getCode(), "REG_ACK_PRINT", "Print receipt"),
-	REG_REVIEWER_AUTH_PASSWORD("REG-EVT-057", USER_EVENT.getCode(), "REG_SUPERVISOR_AUTH_PASSWORD",
+	REG_REVIEWER_AUTH_PASSWORD("REG-EVT-057", USER_EVENT.getCode(), "REG_REVIEWER_AUTH_PASSWORD",
 			"Reviewer authentication with password: Click of Submit"),
-	REG_REVIEWER_AUTH_GET_OTP("REG-EVT-058", USER_EVENT.getCode(), "REG_SUPERVISOR_AUTH_GET_OTP",
+	REG_REVIEWER_AUTH_GET_OTP("REG-EVT-058", USER_EVENT.getCode(), "REG_REVIEWER_AUTH_GET_OTP",
 			"Reviewer authentication with OTP: Get OTP"),
-	REG_REVIEWER_AUTH_SUBMIT_OTP("REG-EVT-059", USER_EVENT.getCode(), "REG_SUPERVISOR_AUTH_SUBMIT_OTP",
+	REG_REVIEWER_AUTH_SUBMIT_OTP("REG-EVT-059", USER_EVENT.getCode(), "REG_REVIEWER_AUTH_SUBMIT_OTP",
 			"Reviewer authentication with OTP: Submit OTP"),
-	REG_REVIEWER_AUTH_RESEND_OTP("REG-EVT-060", USER_EVENT.getCode(), "REG_SUPERVISOR_AUTH_RESEND_OTP",
+	REG_REVIEWER_AUTH_RESEND_OTP("REG-EVT-060", USER_EVENT.getCode(), "REG_REVIEWER_AUTH_RESEND_OTP",
 			"Reviewer authentication with OTP: Resend OTP"),
-	REG_REVIEWER_AUTH_FINGERPRINT("REG-EVT-061", USER_EVENT.getCode(), "REG_SUPERVISOR_AUTH_FINGERPRINT",
+	REG_REVIEWER_AUTH_FINGERPRINT("REG-EVT-061", USER_EVENT.getCode(), "REG_REVIEWER_AUTH_FINGERPRINT",
 			"Reviewer authentication with fingerprint: Capture and submit"),
-	REG_REVIEWER_AUTH_IRIS("REG-EVT-062", USER_EVENT.getCode(), "REG_SUPERVISOR_AUTH_IRIS",
+	REG_REVIEWER_AUTH_IRIS("REG-EVT-062", USER_EVENT.getCode(), "REG_REVIEWER_AUTH_IRIS",
 			"Reviewer authentication with iris: Capture and submit"),
-	REG_REVIEWER_AUTH_FACE("REG-EVT-063", USER_EVENT.getCode(), "REG_SUPERVISOR_AUTH_FACE",
+	REG_REVIEWER_AUTH_FACE("REG-EVT-063", USER_EVENT.getCode(), "REG_REVIEWER_AUTH_FACE",
 			"Reviewer authentication with face: Capture and submit"),	
-	REG_SUPERVISOR_AUTH_PREVIEW("REG-EVT-064", USER_EVENT.getCode(), "REG_SUPERVISOR_AUTH_PREVIEW", "Back to Preview"),
+	REG_REVIEWER_AUTH_PREVIEW("REG-EVT-064", USER_EVENT.getCode(), "REG_REVIEWER_AUTH_PREVIEW", "Back to Preview"),
 
 	REG_BIO_EXCEPTION_REMOVING("REG-EVT-065", USER_EVENT.getCode(), "REG_BIO_EXCEPTION_REMOVING",
 			"Biometric Exceptions: Removing"),
@@ -305,7 +306,12 @@ public enum AuditEvent {
 	REG_SUPERVISOR_AUTH_IRIS("REG-EVT-100", USER_EVENT.getCode(), "REG_SUPERVISOR_AUTH_IRIS",
 			"Supervisor authentication with iris: Capture and submit"),
 	REG_SUPERVISOR_AUTH_FACE("REG-EVT-101", USER_EVENT.getCode(), "REG_SUPERVISOR_AUTH_FACE",
-			"Supervisor authentication with face: Capture and submit");
+			"Supervisor authentication with face: Capture and submit"),
+	
+	REG_BLOCKLISTED_WORD_ACCEPTED("REG-EVT-102", USER_EVENT.getCode(), "REG_BLOCKLISTED_WORD_ACCEPTED",
+			"Demographic Details : A blocklisted word has been accepted in Registration"),
+	REG_BLOCKLISTED_WORD_REJECTED("REG-EVT-103", USER_EVENT.getCode(), "REG_BLOCKLISTED_WORD_REJECTED",
+			"Demographic Details : A blocklisted word has been rejected in Registration");
 
 	/**
 	 * The constructor

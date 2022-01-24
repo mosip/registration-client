@@ -1,20 +1,20 @@
 package io.mosip.registration.util.restclient;
 
-import java.io.IOException;
-import java.net.SocketTimeoutException;
+import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import io.micrometer.core.annotation.Timed;
 import io.mosip.registration.exception.ConnectionException;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -37,6 +37,7 @@ import io.mosip.registration.exception.RegistrationExceptionConstants;
 public class ServiceDelegateUtil {
 
 	private static final Logger LOGGER = AppConfig.getLogger(ServiceDelegateUtil.class);
+	public static final String MOSIP_HOSTNAME_PLACEHOLDER = "${mosip.hostname}";
 
 	@Autowired
 	private RestClientUtil restClientUtil;
@@ -44,6 +45,44 @@ public class ServiceDelegateUtil {
 	@Autowired
 	private Environment environment;
 
+
+	public String getHostName() {
+		return io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.MOSIP_HOSTNAME);
+	}
+
+	public String prepareURLByHostName(String url) {
+		String mosipHostNameVal = getHostName();
+		Assert.notNull(mosipHostNameVal, "mosip.hostname is missing");
+		return (url != null) ? url.replace(MOSIP_HOSTNAME_PLACEHOLDER, mosipHostNameVal)
+				: url;
+	}
+
+	/**
+	 * This method checks the Internet connectivity across the application.
+	 *
+	 * <p>
+	 * Creates a {@link HttpURLConnection} and opens a communications link to the
+	 * resource referenced by this URL. If the connection is established
+	 * successfully, this method will return true which indicates Internet Access
+	 * available, otherwise, it will return false, indicating Internet Access not
+	 * available.
+	 * </p>
+	 *
+	 * @return true, if is network available and false, if it is not available.
+	 */
+	@Timed
+	public boolean isNetworkAvailable() {
+		try {
+			String healthCheckUrl = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.HEALTH_CHECK_URL);
+			Assert.notNull(healthCheckUrl, "Property mosip.reg.healthcheck.url missing");
+			String serviceUrl = prepareURLByHostName(healthCheckUrl);
+			LOGGER.info("Registration Network Checker had been called --> {}", serviceUrl);
+			return restClientUtil.isConnectedToSyncServer(serviceUrl);
+		} catch (Exception exception) {
+			LOGGER.error("No Internet Access" , exception);
+		}
+		return false;
+	}
 
 
 	/**
@@ -86,7 +125,7 @@ public class ServiceDelegateUtil {
 
 			// URI creation
 			String url = getEnvironmentProperty(serviceName, RegistrationConstants.SERVICE_URL);
-			url = RegistrationAppHealthCheckUtil.prepareURLByHostName(url);
+			url = prepareURLByHostName(url);
 			Map<String, String> queryParams = new HashMap<>();
 			for (String key : requestParams.keySet()) {
 				if (!url.contains("{" + key + "}")) {
@@ -116,6 +155,42 @@ public class ServiceDelegateUtil {
 		LOGGER.debug("Get method has been ended - {}", serviceName);
 
 		return responseBody;
+	}
+
+
+	public void download(String url, Map<String, String> requestParams, String headers, boolean authRequired,
+					  String authHeader, String triggerPoint, @NonNull Path path, boolean isEncrypted)
+			throws RegBaseCheckedException, ConnectionException {
+		LOGGER.debug("Get method has been called - {}", url);
+		RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
+		try {
+			requestHTTPDTO.setHttpMethod(HttpMethod.GET);
+			requestHTTPDTO.setHttpHeaders(new HttpHeaders());
+			setHeaders(requestHTTPDTO.getHttpHeaders(), headers);// Headers
+			requestHTTPDTO.setAuthRequired(authRequired);
+			requestHTTPDTO.setAuthZHeader(authHeader);
+			requestHTTPDTO.setTriggerPoint(triggerPoint);
+			requestHTTPDTO.setIsSignRequired(true);
+			requestHTTPDTO.setFilePath(path);
+			requestHTTPDTO.setFileEncrypted(isEncrypted);
+
+			url = prepareURLByHostName(url);
+			Map<String, String> queryParams = new HashMap<>();
+			for (String key : requestParams.keySet()) {
+				if (!url.contains("{" + key + "}")) {
+					queryParams.put(key, requestParams.get(key));
+				}
+			}
+			setURI(requestHTTPDTO, queryParams, url);
+			restClientUtil.downloadFile(requestHTTPDTO);
+		}  catch (RestClientException e) {
+			LOGGER.error(e.getMessage(), e);
+			throw new ConnectionException(RegistrationExceptionConstants.ACCESS_ERROR.getErrorCode(),
+					RegistrationExceptionConstants.ACCESS_ERROR.getErrorMessage(), e);
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(), e);
+			throw new RegBaseCheckedException("REG-FILE-ERR", e.getMessage());
+		}
 	}
 
 
@@ -275,12 +350,17 @@ public class ServiceDelegateUtil {
 	 */
 	private void setHeaders(HttpHeaders httpHeaders, String headers) {
 		LOGGER.debug("Preparing Header for web-service request");
+		if(headers == null || headers.trim().isEmpty())
+			return;
 
 		String[] header = headers.split(",");
 		String[] headerValues = null;
-		if (header != null) {
+		//if (header != null) {
 			for (String subheader : header) {
-				if (subheader != null) {
+				if(subheader.trim().isEmpty())
+					continue;
+
+				//if (subheader != null) {
 					headerValues = subheader.split(":");
 					if (headerValues[0].equalsIgnoreCase("timestamp")) {
 						headerValues[1] = DateUtils.formatToISOString(LocalDateTime.now());
@@ -295,10 +375,10 @@ public class ServiceDelegateUtil {
 						headerValues[1] = "sign";
 					}
 					httpHeaders.add(headerValues[0], headerValues[1]);
-				}
+				//}
 			}
 			httpHeaders.add("Cache-Control", "no-cache,max-age=0");
-		}
+		//}
 
 		LOGGER.debug("Completed preparing Header for web-service request");
 	}
@@ -318,27 +398,10 @@ public class ServiceDelegateUtil {
 				HttpMethod.valueOf(getEnvironmentProperty(serviceName, RegistrationConstants.HTTPMETHOD)));
 		requestHTTPDTO.setHttpHeaders(new HttpHeaders());
 		requestHTTPDTO.setRequestBody(requestBody);
-		// set timeout
-		setTimeout(requestHTTPDTO);
 		// Headers
 		setHeaders(requestHTTPDTO.getHttpHeaders(), getEnvironmentProperty(serviceName, RegistrationConstants.HEADERS));
 
 		LOGGER.debug("Completed preparing RequestHTTPDTO object for web-service");
-	}
-
-	/**
-	 * Method to set the request timeout
-	 * 
-	 * @param requestHTTPDTO requestedHTTPDTO
-	 */
-	private void setTimeout(RequestHTTPDTO requestHTTPDTO) {
-		// Timeout in milli second
-		SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-		requestFactory.setReadTimeout(
-				Integer.parseInt((String) ApplicationContext.map().get(RegistrationConstants.HTTP_API_READ_TIMEOUT)));
-		requestFactory.setConnectTimeout(
-				Integer.parseInt((String) ApplicationContext.map().get(RegistrationConstants.HTTP_API_WRITE_TIMEOUT)));
-		requestHTTPDTO.setSimpleClientHttpRequestFactory(requestFactory);
 	}
 
 

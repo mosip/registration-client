@@ -16,6 +16,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import io.mosip.registration.service.BaseService;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
@@ -62,11 +64,20 @@ public class MosipDeviceSpecificationFactory {
 	@Value("${mosip.registration.mdm.default.portRangeTo}")
 	private int defaultMDSPortTo;
 
+	@Value("${mosip.registration.mdm.threadpool.size:5}")
+	private int threadPoolSize;
+
+	@Value("${mosip.registration.mdm.connection.timeout:5}")
+	private int connectionTimeout;
+
 	@Autowired
 	private List<MosipDeviceSpecificationProvider> deviceSpecificationProviders;
 
 	@Autowired
 	private MosipDeviceSpecificationHelper mosipDeviceSpecificationHelper;
+
+	@Autowired
+	private BaseService baseService;
 
 	private int portFrom;
 	private int portTo;
@@ -90,9 +101,13 @@ public class MosipDeviceSpecificationFactory {
 	 * @throws RegBaseCheckedException - generalised exception with errorCode and
 	 *                                 errorMessage
 	 */
-	public void init() {
-		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-				"Entering init method for preparing device registry");
+	public void initializeDeviceMap(boolean async) {
+		LOGGER.debug("Entering initializeDeviceMap method for preparing device registry");
+
+		if(baseService.isInitialSync()) {
+			LOGGER.warn("DO nothing as it is still initial launch");
+			return;
+		}
 
 		portFrom = getPortFrom();
 		portTo = getPortTo();
@@ -100,109 +115,76 @@ public class MosipDeviceSpecificationFactory {
 		availableDeviceInfoMap.clear();
 		selectedDeviceInfoMap.clear();
 
-		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-				"Checking device info from port : " + portFrom + " to port : " + portTo);
+		LOGGER.info("Checking device info from port : {} to port : {} with thread pool size : {}", portFrom, portTo, threadPoolSize);
 
-		if (portFrom != 0) {
+		if (portFrom >= 4500 && portTo <= 4600) {
+			ExecutorService threadPool = Executors.newFixedThreadPool(threadPoolSize);
 			for (int port = portFrom; port <= portTo; port++) {
-				final int currentPort = port;
-
-				/* An A-sync task to complete MDS initialization */
-				new Thread(() -> {
-					try {
-						initByPort(currentPort);
-					} catch (RuntimeException exception) {
-						LOGGER.error(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-								"Exception while mapping the response : " + exception.getMessage()
-										+ ExceptionUtils.getStackTrace(exception));
+				int currentPort = port;
+				Runnable runnable = new Runnable() {
+					@Override
+					public void run() {
+						try {
+							initByPort(currentPort);
+						} catch (RuntimeException exception) {
+							LOGGER.error("Exception while mapping the response : ", exception);
+						}
 					}
-				}).start();
+				};
+
+				if(async) { threadPool.submit(runnable); }
+				else { threadPool.execute(runnable); }
+
 			}
+			if(!async) { awaitTerminationAfterShutdown(threadPool); }
 		}
 
-		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-				"Exit init method for preparing device registry");
+		LOGGER.debug("Exit initializeDeviceMap method for preparing device registry");
 	}
 
-	public void initializeDeviceMap() {
-		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-				"Entering init method for preparing device registry");
-
-		portFrom = getPortFrom();
-		portTo = getPortTo();
-
-		availableDeviceInfoMap.clear();
-		selectedDeviceInfoMap.clear();
-
-		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-				"Checking device info from port : " + portFrom + " to port : " + portTo);
-
-		if (portFrom != 0) {
-			for (int port = portFrom; port <= portTo; port++) {
-				try {
-					initByPort(port);
-				} catch (RuntimeException exception) {
-					LOGGER.error(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-							"Exception while mapping the response : " + exception.getMessage()
-									+ ExceptionUtils.getStackTrace(exception));
-				}
-			}
-		}
-
-		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-				"Exit init method for preparing device registry");
+	public Map<String, List<MdmBioDevice>> getAvailableDeviceInfoMap() {
+		return availableDeviceInfoMap;
 	}
 
-	private int getPortTo() {
-		if (ApplicationContext.map().get(RegistrationConstants.MDM_END_PORT_RANGE) != null) {
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Found port To configuration in application context map");
-			try {
-				return Integer
-						.parseInt((String) ApplicationContext.map().get(RegistrationConstants.MDM_END_PORT_RANGE));
-			} catch (RuntimeException runtimeException) {
-				LOGGER.error(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-						"Exception while parsing  MDM_END_PORT_RANGE : "
-								+ ExceptionUtils.getStackTrace(runtimeException));
-				return defaultMDSPortTo;
-			}
-		} else {
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Not Found port To configuration in application context map so intializing default  value");
-
-			return defaultMDSPortTo;
+	public int getPortTo() {
+		try {
+			Integer port = ApplicationContext.getIntValueFromApplicationMap(RegistrationConstants.MDM_END_PORT_RANGE);
+			if(port != null) { return port; }
+		} catch (RuntimeException runtimeException) {
+			LOGGER.error("Exception while parsing  MDM_END_PORT_RANGE", runtimeException);
 		}
+		LOGGER.error("initializing default value for MDM_END_PORT_RANGE: {}", defaultMDSPortTo);
+		return defaultMDSPortTo;
 	}
 
-	private int getPortFrom() {
-		if (ApplicationContext.map().get(RegistrationConstants.MDM_START_PORT_RANGE) != null) {
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Found port from configuration in application context map");
-			try {
-				return Integer
-						.parseInt((String) ApplicationContext.map().get(RegistrationConstants.MDM_START_PORT_RANGE));
-			} catch (RuntimeException runtimeException) {
-				LOGGER.error(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-						"Exception while parsing  MDM_START_PORT_RANGE : "
-								+ ExceptionUtils.getStackTrace(runtimeException));
-				return defaultMDSPortFrom;
-			}
-		} else {
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Not Found port from configuration in application context map so initializing with default  value");
-
-			return defaultMDSPortFrom;
+	public int getPortFrom() {
+		try {
+			Integer port = ApplicationContext.getIntValueFromApplicationMap(RegistrationConstants.MDM_START_PORT_RANGE);
+			if(port != null) { return port; }
+		} catch (RuntimeException runtimeException) {
+			LOGGER.error("Exception while parsing  MDM_START_PORT_RANGE", runtimeException);
 		}
+		LOGGER.error("initializing default value for MDM_START_PORT_RANGE: {}", defaultMDSPortFrom);
+		return defaultMDSPortFrom;
 	}
 
 	/*
 	 * Testing the network with method
 	 */
 	public static boolean checkServiceAvailability(String serviceUrl, String method) {
-		HttpUriRequest request = RequestBuilder.create(method).setUri(serviceUrl).build();
+		int timeout = MosipDeviceSpecificationHelper.getMDMConnectionTimeout(method);
+		LOGGER.debug("checkServiceAvailability serviceUrl : {}  with timeout {}",serviceUrl, timeout);
+		RequestConfig requestConfig = RequestConfig.custom()
+				.setConnectTimeout(timeout)
+				.setSocketTimeout(timeout)
+				.setConnectionRequestTimeout(timeout)
+				.build();
+		HttpUriRequest request = RequestBuilder.create(method)
+				.setUri(serviceUrl)
+				.setConfig(requestConfig)
+				.build();
 
-		CloseableHttpClient client = HttpClients.createDefault();
-		try {
+		try (CloseableHttpClient client = HttpClients.createDefault()) {
 			client.execute(request);
 		} catch (Exception exception) {
 			return false;
@@ -211,70 +193,32 @@ public class MosipDeviceSpecificationFactory {
 
 	}
 
-	public void initByPort(Integer availablePort) {
-		if (availablePort != null && availablePort != 0) {
-			LOGGER.debug(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Checking device on port : " + availablePort);
-			String url = mosipDeviceSpecificationHelper.buildUrl(availablePort,
-					MosipBioDeviceConstants.DEVICE_INFO_ENDPOINT);
+	private void initByPort(Integer availablePort) {
+		LOGGER.debug("Checking device on port : {}", availablePort);
+		String url = mosipDeviceSpecificationHelper.buildUrl(availablePort,
+				MosipBioDeviceConstants.DEVICE_INFO_ENDPOINT);
 
-			if (!checkServiceAvailability(url, "MOSIPDINFO")) {
-				LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-						"No device is running at port number " + availablePort);
-				return;
-			}
+		if (!checkServiceAvailability(url, "MOSIPDINFO")) {
+			LOGGER.info("No device is running at port number {}", availablePort);
+			return;
+		}
 
-			try {
-				String deviceInfoResponse = getDeviceInfoResponse(url);
-				for (MosipDeviceSpecificationProvider deviceSpecificationProvider : deviceSpecificationProviders) {
-					LOGGER.debug(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-							"Decoding deice info response with provider : " + deviceSpecificationProvider);
-					List<MdmBioDevice> mdmBioDevices = deviceSpecificationProvider.getMdmDevices(deviceInfoResponse,
-							availablePort);
-					for (MdmBioDevice bioDevice : mdmBioDevices) {
-						if (bioDevice != null) {
-							// Add to Device Info Map
-							addToDeviceInfoMap(getKey(getDeviceType(bioDevice.getDeviceType()),
-									getDeviceSubType(bioDevice.getDeviceSubType())), bioDevice);
-						}
+		try {
+			String deviceInfoResponse = getDeviceInfoResponse(url);
+			for (MosipDeviceSpecificationProvider deviceSpecificationProvider : deviceSpecificationProviders) {
+				LOGGER.debug("Decoding deice info response with provider : {}", deviceSpecificationProvider);
+				List<MdmBioDevice> mdmBioDevices = deviceSpecificationProvider.getMdmDevices(deviceInfoResponse,
+						availablePort);
+				for (MdmBioDevice bioDevice : mdmBioDevices) {
+					if (bioDevice != null) {
+						// Add to Device Info Map
+						addToDeviceInfoMap(getKey(getDeviceType(bioDevice.getDeviceType()),
+								getDeviceSubType(bioDevice.getDeviceSubType())), bioDevice);
 					}
 				}
-			} catch (RuntimeException runtimeException) {
-				LOGGER.error(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-						ExceptionUtils.getStackTrace(runtimeException));
 			}
-
-		} else {
-			portFrom = getPortFrom();
-
-			portTo = getPortTo();
-
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Checking device info from port : " + portFrom + " to port : " + portTo);
-			ExecutorService executorService = Executors.newFixedThreadPool(5);
-
-			for (int port = portFrom; port <= portTo; port++) {
-
-				int currentPort = port;
-				executorService.execute(new Runnable() {
-					public void run() {
-
-						initByPort(currentPort);
-
-					}
-				});
-
-			}
-
-			try {
-				executorService.shutdown();
-				executorService.awaitTermination(500, TimeUnit.SECONDS);
-			} catch (Exception exception) {
-				executorService.shutdown();
-				LOGGER.error(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-						exception.getMessage() + ExceptionUtils.getStackTrace(exception));
-
-			}
+		} catch (RuntimeException runtimeException) {
+			LOGGER.error("Failed to parse / validate MDM response", runtimeException);
 		}
 	}
 
@@ -335,12 +279,20 @@ public class MosipDeviceSpecificationFactory {
 	}
 
 	private String getDeviceInfoResponse(String url) {
-		HttpUriRequest request = RequestBuilder.create("MOSIPDINFO").setUri(url).build();
-		CloseableHttpClient client = HttpClients.createDefault();
+		RequestConfig requestConfig = RequestConfig.custom()
+				.setConnectTimeout(connectionTimeout * 1000)
+				.setSocketTimeout(connectionTimeout * 1000)
+				.setConnectionRequestTimeout(connectionTimeout * 1000)
+				.build();
+		HttpUriRequest request = RequestBuilder.create("MOSIPDINFO")
+				.setUri(url)
+				.setConfig(requestConfig)
+				.build();
+		
 		CloseableHttpResponse clientResponse = null;
 		String response = null;
 
-		try {
+		try (CloseableHttpClient client = HttpClients.createDefault()) {
 			clientResponse = client.execute(request);
 			response = EntityUtils.toString(clientResponse.getEntity());
 		} catch (IOException exception) {
@@ -382,7 +334,8 @@ public class MosipDeviceSpecificationFactory {
 		if (selectedDeviceInfoMap.containsKey(key))
 			return selectedDeviceInfoMap.get(key);
 
-		initByPort(null);
+		initializeDeviceMap(true);
+
 		if (selectedDeviceInfoMap.containsKey(key))
 			return selectedDeviceInfoMap.get(key);
 
@@ -411,7 +364,7 @@ public class MosipDeviceSpecificationFactory {
 		if (!result.isPresent()) {
 			selectedDeviceInfoMap.remove(
 					getKey(getDeviceType(bioDevice.getDeviceType()), getDeviceSubType(bioDevice.getDeviceSubType())));
-			init();
+			initializeDeviceMap(true);
 			return false;
 		}
 
@@ -518,6 +471,20 @@ public class MosipDeviceSpecificationFactory {
 				.filter(device -> device.getSerialNumber().equalsIgnoreCase(serialNumber)).findAny();
 		if(bioDevice.isPresent()) {
 			selectedDeviceInfoMap.put(key, bioDevice.get());
+		}
+	}
+
+	public void awaitTerminationAfterShutdown(ExecutorService threadPool) {
+		threadPool.shutdown();
+		LOGGER.info("Waiting for the termination of biometric device search threads...");
+		try {
+			if (!threadPool.awaitTermination(60, TimeUnit.SECONDS)) {
+				LOGGER.error("Shutting down registry initialize executor service as timeout elapsed");
+				threadPool.shutdownNow();
+			}
+		} catch (InterruptedException ex) {
+			threadPool.shutdownNow();
+			Thread.currentThread().interrupt();
 		}
 	}
 

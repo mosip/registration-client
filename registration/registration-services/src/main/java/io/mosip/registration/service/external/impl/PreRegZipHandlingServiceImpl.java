@@ -27,8 +27,12 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.crypto.spi.CryptoCoreSpec;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.keygenerator.bouncycastle.KeyGenerator;
+import io.mosip.registration.service.BaseService;
+import io.mosip.registration.service.sync.MasterSyncService;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
@@ -44,12 +48,11 @@ import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.DocumentTypeDAO;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.PreRegistrationDTO;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -65,9 +68,11 @@ import io.mosip.registration.service.external.PreRegZipHandlingService;
  *
  */
 @Service
-public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
+public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZipHandlingService {
 
-	private static final String DOBSubType = "dateOfBirth";
+	private static final Logger LOGGER = AppConfig.getLogger(PreRegZipHandlingServiceImpl.class);
+	private static final String CONTROLTYPE_DOB = "date";
+	private static final String CONTROLTYPE_DOB_AGE = "ageDate";
 
 	@Autowired
 	private DocumentTypeDAO documentTypeDAO;
@@ -88,8 +93,6 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 	private CryptoCoreSpec<byte[], byte[], SecretKey, PublicKey, PrivateKey, String> cryptoCore;
 
 
-	private static final Logger LOGGER = AppConfig.getLogger(PreRegZipHandlingServiceImpl.class);
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -106,7 +109,7 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 				while ((zipEntry = zipInputStream.getNextEntry()) != null) {
 					if (zipEntry.getName().equalsIgnoreCase("ID.json")) {
 						bufferedReader = new BufferedReader(new InputStreamReader(zipInputStream, StandardCharsets.UTF_8));
-						parseDemographicJson(bufferedReader, zipEntry);						
+						parseDemographicJson(bufferedReader);
 					}	
 				}
 			}finally {
@@ -122,7 +125,7 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 					String fileName = zipEntry.getName();
 					//if (zipEntry.getName().contains("_")) {
 					LOGGER.debug("extractPreRegZipFile zipEntry >>>> {}", fileName);
-						Optional<Map.Entry<String, DocumentDto>> result = getRegistrationDtoContent().getDocuments().entrySet().stream()
+						Optional<Map.Entry<String, DocumentDto>> result = getRegistrationDTOFromSession().getDocuments().entrySet().stream()
 								.filter(e -> fileName.equals(e.getValue().getValue().concat(".").concat(e.getValue().getFormat()))).findFirst();
 						if(result.isPresent()) {
 							DocumentDto documentDto = result.get().getValue();
@@ -134,18 +137,18 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 										documentTypes.get(0).getCode());
 								documentDto.setType(documentTypes.get(0).getCode());
 								documentDto.setValue(documentDto.getCategory().concat("_").concat(documentDto.getType()));
-							}							
-							getRegistrationDtoContent().addDocument(result.get().getKey(), result.get().getValue());
+							}
+							getRegistrationDTOFromSession().addDocument(result.get().getKey(), result.get().getValue());
 							LOGGER.debug("Added zip entry as document for field >>>> {}", result.get().getKey());
 						}
 					//}	
 				}
 			}
 			
-			Set<Entry<String, DocumentDto>> entries = getRegistrationDtoContent().getDocuments().entrySet();
+			Set<Entry<String, DocumentDto>> entries = getRegistrationDTOFromSession().getDocuments().entrySet();
 			entries.stream()
 				.filter(e -> e.getValue().getDocument() == null || e.getValue().getDocument().length == 0)
-				.forEach(e -> { getRegistrationDtoContent().removeDocument(e.getKey()); });
+				.forEach(e -> { getRegistrationDTOFromSession().removeDocument(e.getKey()); });
 		
 		} catch (IOException exception) {
 			LOGGER.error(exception.getMessage(), exception);
@@ -154,7 +157,7 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 			LOGGER.error(exception.getMessage(), exception);
 			throw new RegBaseUncheckedException(RegistrationConstants.PACKET_ZIP_CREATION, exception.getMessage());
 		}
-		return getRegistrationDtoContent();
+		return getRegistrationDTOFromSession();
 	}
 
 
@@ -164,13 +167,11 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 	 * 
 	 * @param bufferedReader
 	 *            - reader for text file
-	 * @param zipEntry
-	 *            - a file entry in zip
 	 * @throws RegBaseCheckedException
 	 *             - holds the cheked exceptions
 	 */
 	@SuppressWarnings("unchecked")
-	private void parseDemographicJson(BufferedReader bufferedReader, ZipEntry zipEntry) throws RegBaseCheckedException {
+	private void parseDemographicJson(BufferedReader bufferedReader) throws RegBaseCheckedException {
 
 		try {
 			
@@ -183,9 +184,11 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 			if (!StringUtils.isEmpty(jsonString) && validateDemographicInfoObject()) {
 				JSONObject jsonObject = (JSONObject) new JSONObject(jsonString.toString()).get("identity");
 				//Always use latest schema, ignoring missing / removed fields
-				List<UiSchemaDTO> fieldList = identitySchemaService.getLatestEffectiveUISchema();
+				RegistrationDTO registrationDTO = getRegistrationDTOFromSession();
+				List<UiFieldDTO> fieldList = identitySchemaService.getAllFieldSpec(registrationDTO.getProcessId(), registrationDTO.getIdSchemaVersion());
+				getRegistrationDTOFromSession().clearRegistrationDto();
 
-				for(UiSchemaDTO field : fieldList) {
+				for(UiFieldDTO field : fieldList) {
 					if(field.getId().equalsIgnoreCase("IDSchemaVersion"))
 						continue;
 					
@@ -200,11 +203,12 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 							documentDto.setType(fieldValue.getString("type"));
 							documentDto.setValue(fieldValue.getString("value"));
 							try {
-							    documentDto.setRefNumber((fieldValue.getString("docRefId")));
+							    documentDto.setRefNumber(fieldValue.has("refNumber") ? fieldValue.getString("refNumber") :
+										(fieldValue.has("docRefId") ? fieldValue.getString("docRefId") : null));
 							} catch(JSONException jsonException) {
 								LOGGER.error("Unable to find Document Refernce Number for Pre-Reg-Sync : ", jsonException);
 							}
-							getRegistrationDtoContent().addDocument(field.getId(), documentDto);
+							getRegistrationDTOFromSession().addDocument(field.getId(), documentDto);
 						}
 						break;
 						
@@ -214,14 +218,13 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 					default:
 						Object fieldValue = getValueFromJson(field.getId(), field.getType(), jsonObject);
 						if(fieldValue != null) {
-							switch (field.getControlType().toLowerCase()) {
-								case "agedate":
-								case "date":
-									getRegistrationDtoContent().setDateField(field.getId(), (String)fieldValue,
-											DOBSubType.equalsIgnoreCase(field.getSubType()));
+							switch (field.getControlType()) {
+								case CONTROLTYPE_DOB_AGE:
+								case CONTROLTYPE_DOB:
+									getRegistrationDTOFromSession().setDateField(field.getId(), (String)fieldValue, field.getSubType());
 									break;
 								default:
-									getRegistrationDtoContent().getDemographics().put(field.getId(), fieldValue);
+									getRegistrationDTOFromSession().getDemographics().put(field.getId(), fieldValue);
 							}
 						}
 						break;
@@ -259,7 +262,7 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 	}
 
 	private boolean validateDemographicInfoObject() {
-		return null != getRegistrationDtoContent() && getRegistrationDtoContent().getDemographics() != null;
+		return null != getRegistrationDTOFromSession() && getRegistrationDTOFromSession().getDemographics() != null;
 	}
 
 	/*
@@ -275,15 +278,10 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 		// Decrypt the preRegPacket data
 		byte[] decryptedPacketData = clientCryptoFacade.decrypt(preRegPacket);
 
-		//KeyGenerator keyGenerator = KeyGeneratorUtils.getKeyGenerator("AES", 256);
 		// Generate AES Session Key
 		final SecretKey symmetricKey = keyGenerator.getSymmetricKey();
 
 		final byte[] encryptedData = cryptoCore.symmetricEncrypt(symmetricKey, decryptedPacketData, null);
-
-		// Encrypt the Pre reg packet data using AES
-		/*final byte[] encryptedData = MosipEncryptor.symmetricEncrypt(symmetricKey.getEncoded(), preRegPacket,
-				MosipSecurityMethod.AES_WITH_CBC_AND_PKCS7PADDING);*/
 
 		LOGGER.info("Pre Registration packet Encrypted");
 
@@ -291,7 +289,7 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 
 		PreRegistrationDTO preRegistrationDTO = new PreRegistrationDTO();
 		preRegistrationDTO.setPacketPath(filePath);
-		preRegistrationDTO.setSymmetricKey(Base64.getEncoder().encodeToString(symmetricKey.getEncoded()));
+		preRegistrationDTO.setSymmetricKey(CryptoUtil.encodeToURLSafeBase64(symmetricKey.getEncoded()));
 		preRegistrationDTO.setEncryptedPacket(encryptedData);
 		preRegistrationDTO.setPreRegId(preRegistrationId);
 		return preRegistrationDTO;
@@ -338,14 +336,9 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 	 */
 	@Override
 	public byte[] decryptPreRegPacket(String symmetricKey, byte[] encryptedPacket) {
-		byte[] secret = Base64.getDecoder().decode(symmetricKey);
-		/*return MosipDecryptor.symmetricDecrypt(Base64.getDecoder().decode(symmetricKey), encryptedPacket,
-				MosipSecurityMethod.AES_WITH_CBC_AND_PKCS7PADDING);*/
+		byte[] secret = ClientCryptoUtils.decodeBase64Data(symmetricKey);
 		SecretKey secretKey = new SecretKeySpec(secret, 0 , secret.length, "AES");
 		return cryptoCore.symmetricDecrypt(secretKey, encryptedPacket, null);
 	}
 
-	private RegistrationDTO getRegistrationDtoContent() {
-		return (RegistrationDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
-	}
 }

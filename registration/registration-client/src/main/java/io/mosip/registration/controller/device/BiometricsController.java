@@ -6,14 +6,11 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -22,14 +19,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
 
-import javax.imageio.ImageIO;
-
-import org.apache.commons.io.IOUtils;
 import org.mvel2.MVEL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import io.mosip.commons.packet.constants.PacketManagerConstants;
+import io.mosip.biometrics.util.ConvertRequestDto;
+import io.mosip.biometrics.util.face.FaceDecoder;
+import io.mosip.biometrics.util.finger.FingerDecoder;
+import io.mosip.biometrics.util.iris.IrisDecoder;
 import io.mosip.commons.packet.dto.packet.BiometricsException;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
@@ -42,25 +39,20 @@ import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.registration.api.docscanner.DocScannerFacade;
-import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
 import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
-import io.mosip.registration.controller.FXUtils;
-import io.mosip.registration.controller.reg.DocumentScanController;
-import io.mosip.registration.controller.reg.RegistrationController;
 import io.mosip.registration.controller.reg.UserOnboardParentController;
 import io.mosip.registration.dao.UserDetailDAO;
-import io.mosip.registration.dto.mastersync.BiometricAttributeDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
-import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.entity.UserBiometric;
+import io.mosip.registration.enums.Modality;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.dto.Biometric;
@@ -69,7 +61,6 @@ import io.mosip.registration.mdm.dto.MdmBioDevice;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.operator.UserOnboardService;
-import io.mosip.registration.enums.Modality;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -80,7 +71,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Tooltip;
@@ -116,9 +106,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 	private GridPane retryBox;
 
 	@FXML
-	private ComboBox<BiometricAttributeDto> biometricTypecombo;
-
-	@FXML
 	private Label biometricType;
 
 	@FXML
@@ -129,6 +116,15 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	@FXML
 	private Label attemptSlap;
+	
+	@FXML
+	private Label attemptsLabel;
+	
+	@FXML
+	private Label attemptsLabel1;
+	
+	@FXML
+	private Label exceptionsLabel;
 
 	@FXML
 	private Label thresholdScoreLabel;
@@ -160,12 +156,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 	@FXML
 	private Button continueBtn;
 
-	// @FXML
-	// private Label duplicateCheckLbl;
-
-	@FXML
-	private Label guardianBiometricsLabel;
-
 	@FXML
 	private ImageView backImageView;
 	
@@ -175,14 +165,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 	@FXML
 	private ImageView rightArrowImgView;
 	
-	public Label getGuardianBiometricsLabel() {
-		return guardianBiometricsLabel;
-	}
-
-	public void setGuardianBiometricsLabel(Label guardianBiometricsLabel) {
-		this.guardianBiometricsLabel = guardianBiometricsLabel;
-	}
-
 	@FXML
 	private GridPane thresholdBox;
 
@@ -197,38 +179,17 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	@FXML
 	private Label captureTimeValue;
-
-	/** The scan popup controller. */
-	@Autowired
-	private ScanPopUpViewController scanPopUpViewController;
-
-	/** The registration controller. */
-	@Autowired
-	private RegistrationController registrationController;
-
-	/** The face capture controller. */
-	// @Autowired
-	// private FaceCaptureController faceCaptureController;
-
-	/** The finger print capture service impl. */
-	// @Autowired
-	// private AuthenticationService authenticationService;
+	
+	@FXML
+	private GridPane biometric;
 
 	/** The iris facade. */
 	@Autowired
 	private BioService bioService;
 
-	private String bioValue;
-
-	private FXUtils fxUtils;
-
-	private static Map<String, Image> STREAM_IMAGES = new HashMap<String, Image>();
+	private static Map<String, byte[]> STREAM_IMAGES = new HashMap<String, byte[]>();
 
 	private static Map<String, Double> BIO_SCORES = new HashMap<String, Double>();
-
-	/** The face capture controller. */
-	// @Autowired
-	// private IrisCaptureController irisCaptureController;
 
 	public ImageView getBiometricImage() {
 		return biometricImage;
@@ -261,13 +222,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	private int currentPosition = -1;
 
-	private int previousPosition = -1;
-
 	private int sizeOfLeftGridPaneImageList = -1;
-
-	// private HashMap<String, VBox> comboBoxMap;
-	//
-	// private HashMap<String, HashMap<String, VBox>> checkBoxMap;
 
 	private HashMap<String, HashMap<String, VBox>> exceptionMap;
 
@@ -301,8 +256,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 	@Autowired
 	private UserDetailDAO userDetailDAO;
 
-	private String bioType;
-
 	@FXML
 	private GridPane leftPanelImageGridPane;
 
@@ -311,12 +264,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	@FXML
 	private GridPane parentProgressPane;
-
-	@Autowired
-	private DocumentScanController documentScanController;
-
-	@Autowired
-	private DocScannerFacade docScannerFacade;
 
 	private Service<List<BiometricsDto>> rCaptureTaskService;
 
@@ -354,7 +301,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 		setImage(rightArrowImgView, RegistrationConstants.ARROW_RIGHT_IMG);
 		
 		currentMap = new LinkedHashMap<>();
-		fxUtils = FXUtils.getInstance();
 		leftHandImageBoxMap = new HashMap<>();
 		exceptionMap = new HashMap<>();
 
@@ -369,37 +315,22 @@ public class BiometricsController extends BaseController /* implements Initializ
 		applicationLabelBundle = applicationContext.getBundle(applicationContext.getApplicationLanguage(),
 				RegistrationConstants.LABELS);
 
-		if (getRegistrationDTOFromSession() != null && getRegistrationDTOFromSession().getSelectionListDTO() != null) {
-
-			registrationNavlabel
-					.setText(applicationLabelBundle.getString(RegistrationConstants.UIN_UPDATE_UINUPDATENAVLBL));
-
-		} else if (getRegistrationDTOFromSession() != null
-				&& getRegistrationDTOFromSession().getRegistrationMetaDataDTO().getRegistrationCategory() != null
-				&& getRegistrationDTOFromSession().getRegistrationMetaDataDTO().getRegistrationCategory()
-						.equals(RegistrationConstants.PACKET_TYPE_LOST)) {
-
-			registrationNavlabel.setText(applicationLabelBundle.getString(RegistrationConstants.LOSTUINLBL));
-
-		}
 	}
 
 	public void populateBiometricPage(boolean isUserOnboard, boolean isGoingBack) {
 		LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"populateBiometricPage invoked, isUserOnboard : " + isUserOnboard);
 
+		if(isUserOnboard) {
+			attemptsLabel.setVisible(false);
+			bioRetryBox.setVisible(false);
+			attemptsLabel1.setVisible(false);
+			exceptionsLabel.setVisible(false);
+			attemptSlap.setVisible(false);
+		}
+		
 		isUserOnboardFlag = isUserOnboard;
-		/*Map<Entry<String, String>, Map<String, List<List<String>>>> mapToProcess = isUserOnboardFlag
-				? getOnboardUserMap()
-				: getconfigureAndNonConfiguredBioAttributes(Arrays.asList(
-						getValue(RegistrationConstants.FINGERPRINT_SLAB_LEFT,
-								RegistrationConstants.leftHandUiAttributes),
-						getValue(RegistrationConstants.FINGERPRINT_SLAB_RIGHT,
-								RegistrationConstants.rightHandUiAttributes),
-						getValue(RegistrationConstants.FINGERPRINT_SLAB_THUMBS,
-								RegistrationConstants.twoThumbsUiAttributes),
-						getValue(RegistrationConstants.IRIS_DOUBLE, RegistrationConstants.eyesUiAttributes),
-						getValue(RegistrationConstants.FACE, RegistrationConstants.faceUiAttributes)));*/
+
 		Map<Entry<String, String>, Map<String, List<List<String>>>> mapToProcess = getOnboardUserMap();
 
 		if (mapToProcess.isEmpty()) {
@@ -409,7 +340,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 			return;
 		}
 
-		removeInapplicableCapturedData(mapToProcess);
+		//removeInapplicableCapturedData(mapToProcess);
 
 		if (isUserOnboard) {
 			registrationNavlabel.setVisible(false);
@@ -514,7 +445,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		// hBox.setAlignment(Pos.BOTTOM_RIGHT);
 		Image image = null;
 
-		if (hasApplicantBiometricException()) {
+		/*if (hasApplicantBiometricException()) {
 			vBox.setVisible(true);
 
 			if (getRegistrationDTOFromSession().getDocuments().containsKey("proofOfException")) {
@@ -523,9 +454,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 				image = convertBytesToImage(documentBytes);
 
 			}
-		} else {
+		} else {*/
 			vBox.setVisible(false);
-		}
+		//}
 
 		ImageView imageView;
 		try {
@@ -544,23 +475,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 			LOGGER.error("Error while getting image");
 		}
 		
-
-		if (image != null) {
-			if (hBox.getChildren().size() == 1) {
-				ImageView tickImageView;
-				try {
-					tickImageView = new ImageView(
-							getImage(RegistrationConstants.TICK_CIRICLE_IMG,true));
-					tickImageView.setFitWidth(40);
-					tickImageView.setFitHeight(40);
-					hBox.getChildren().add(tickImageView);
-				} catch (RegBaseCheckedException exception) {
-					LOGGER.error("Error while getting image");
-				}
-
-				
-			}
-		}
 
 		vBox.getChildren().add(hBox);
 
@@ -608,7 +522,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		thresholdLabel.setText(
 				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.THRESHOLD).concat("  ").concat("0").concat(RegistrationConstants.PERCENTAGE));
 
-		if (hasApplicantBiometricException()
+		/*if (hasApplicantBiometricException()
 				&& getRegistrationDTOFromSession().getDocuments().containsKey("proofOfException")) {
 
 			DocumentDto documentDto = getRegistrationDTOFromSession().getDocuments().get("proofOfException");
@@ -618,7 +532,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 			addImageInUIPane(currentSubType, currentModality, convertBytesToImage(documentDto.getDocument()), true);
 
-		} else {
+		} else {*/
 			try {
 				biometricImage.setImage(getImage(getImageIconPath(modality),true));
 			} catch (RegBaseCheckedException exception) {
@@ -626,7 +540,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 			}
 
 			addImageInUIPane(currentModality, currentModality, null, false);
-		}
+		//}
 	}
 
 	private void initializeState(boolean isGoingBack) {
@@ -637,11 +551,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 			if (isGoingBack) {
 				currentPosition = leftHandImageBoxMap.size() - 1;
 				currentSubType = getListOfBiometricSubTypes().get(currentPosition);
-				previousPosition = currentPosition - 1;
 			} else {
 				currentPosition = 0;
 				currentSubType = getListOfBiometricSubTypes().get(currentPosition);
-				previousPosition = 0;
 			}
 		}
 
@@ -683,34 +595,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 		}
 	}
 
-	private void removeInapplicableCapturedData(
-			Map<Entry<String, String>, Map<String, List<List<String>>>> mapToProcess) {
-
-		// Nothing to remove on user-onboard
-		if (isUserOnboardFlag)
-			return;
-
-		if (!getRegistrationDTOFromSession().getBiometrics().isEmpty()
-				|| !getRegistrationDTOFromSession().getBiometricExceptions().isEmpty()) {
-
-			List<String> applicableSubTypes = new ArrayList<String>();
-			for (Entry<String, String> subType : mapToProcess.keySet()) {
-				applicableSubTypes.add(String.format("%s_.*", subType.getKey()));
-			}
-			String pattern = String.join("|", applicableSubTypes);
-
-			List<String> keys = new ArrayList<String>();
-			keys.addAll(getRegistrationDTOFromSession().getBiometrics().keySet());
-			keys.addAll(getRegistrationDTOFromSession().getBiometricExceptions().keySet());
-
-			for (String key : keys) {
-				if (!key.matches(pattern)) {
-					getRegistrationDTOFromSession().getBiometrics().remove(key);
-					getRegistrationDTOFromSession().getBiometricExceptions().remove(key);
-				}
-			}
-		}
-	}
 
 	private void setScanButtonVisibility(boolean isAllExceptions, Button scanBtn2) {
 		scanBtn.setDisable(isAllExceptions);
@@ -739,7 +623,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 			disableGridPane(findImageListGridPane());
 
-			previousPosition = currentPosition;
 			++currentPosition;
 
 			currentSubType = getListOfBiometricSubTypes().get(currentPosition);
@@ -752,7 +635,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void displaycurrentUiElements() {
 		try {
 
@@ -777,7 +659,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 	private void goToPrevious() {
 		if (currentPosition > 0) {
 			disableGridPane(findImageListGridPane());
-			previousPosition = currentPosition;
 			currentPosition--;
 
 			currentSubType = getListOfBiometricSubTypes().get(currentPosition);
@@ -980,13 +861,11 @@ public class BiometricsController extends BaseController /* implements Initializ
 	public void scan(Stage popupStage) {
 		if (isExceptionPhoto(currentModality)) {
 			try {
-				byte[] byteArray = documentScanController.captureAndConvertBufferedImage();
-
-				saveProofOfExceptionDocument(byteArray);
+				//saveProofOfExceptionDocument(byteArray);
 				generateAlert(RegistrationConstants.ALERT_INFORMATION,
 						RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
 
-				scanPopUpViewController.getPopupStage().close();
+				//scanPopUpViewController.getPopupStage().close();
 
 			} catch (Exception exception) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
@@ -999,26 +878,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 		}
 	}
 
-	private void saveProofOfExceptionDocument(byte[] byteArray) {
-		DocumentDto documentDto = new DocumentDto();
-		documentDto.setDocument(byteArray);
-		documentDto.setType("EOP");
-
-		String docType = getValueFromApplicationContext(RegistrationConstants.DOC_TYPE);
-
-		docType = RegistrationConstants.SCANNER_IMG_TYPE;
-
-		documentDto.setFormat(docType);
-		documentDto.setCategory("POE");
-		documentDto.setOwner("Applicant");
-		documentDto.setValue("POE".concat(RegistrationConstants.UNDER_SCORE).concat("EOP"));
-
-		getRegistrationDTOFromSession().addDocument("proofOfException", documentDto);
-
-		displayExceptionBiometric(currentModality);
-
-		refreshContinueButton();
-	}
 
 	/**
 	 * Scan the biometrics
@@ -1027,15 +886,13 @@ public class BiometricsController extends BaseController /* implements Initializ
 	 */
 	@FXML
 	private void scan(ActionEvent event) {
-
 		LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"Displaying Scan popup for capturing biometrics");
 
 		auditFactory.audit(getAuditEventForScan(currentModality), Components.REG_BIOMETRICS, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
-
-		scanPopUpViewController.setDocumentScan(false);
-		scanPopUpViewController.init(this, "Biometrics");
+		
+		biometric.setDisable(true);
 
 		deviceSearchTask = new Service<MdmBioDevice>() {
 			@Override
@@ -1079,69 +936,45 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 				try {
 
-					if (isExceptionPhoto(currentModality) && (mdmBioDevice == null || mdmBioDevice.getSpecVersion()
-							.equalsIgnoreCase(RegistrationConstants.SPEC_VERSION_092))) {
-
-						streamLocalCamera();
-						return;
-
-					}
 
 						// Disable Auto-Logout
 						SessionContext.setAutoLogout(false);
 
 						if (mdmBioDevice == null) {
-							setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
+							generateAlert(RegistrationConstants.ERROR,  RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
 
 							return;
 						}
 
 						// Start Stream
-						setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_PREP_MESSAGE));
+						//setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_PREP_MESSAGE));
 
 						InputStream urlStream = bioService.getStream(mdmBioDevice,
 								isFace(currentModality) ? RegistrationConstants.FACE_FULLFACE : currentModality);
 
 						boolean isStreamStarted = urlStream != null && urlStream.read() != -1;
 						if (!isStreamStarted) {
-
 							LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 									"URL Stream was null for : " + System.currentTimeMillis());
-
-							deviceSpecificationFactory.init();
-
+							deviceSpecificationFactory.initializeDeviceMap(true);
+							streamer.setUrlStream(null);
 							generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
-							scanPopUpViewController.getPopupStage().close();
 
 							return;
 						}
 
-						setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_INIT_MESSAGE));
-
 						rCaptureTaskService();
 
-						streamer.startStream(urlStream, scanPopUpViewController.getScanImage(), biometricImage);
-
+						streamer.startStream(urlStream, biometricImage, biometricImage);
+						
 				} catch (RegBaseCheckedException | IOException exception) {
-
-					LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-							"Error while streaming : " + ExceptionUtils.getStackTrace(exception));
-
-					LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-							"Checking if exception photo");
-
-					if (isExceptionPhoto(currentModality)) {
-
-						streamLocalCamera();
-
-						return;
-
-					}
+					LOGGER.error("Error while streaming : ", exception);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
-					scanPopUpViewController.getPopupStage().close();
 
 					// Enable Auto-Logout
 					SessionContext.setAutoLogout(true);
+					streamer.setUrlStream(null);
+					biometric.setDisable(false);
 				}
 
 			}
@@ -1155,15 +988,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 				LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 						"Exception while finding bio device");
-
-				if (isExceptionPhoto(currentModality)) {
-
-					streamLocalCamera();
-					return;
-
-				}
-				setPopViewControllerMessage(true, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
-
+				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
+				streamer.setUrlStream(null);
+				biometric.setDisable(false);
 			}
 		});
 
@@ -1244,9 +1071,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 				LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "RCapture task failed");
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
 
-				LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "closing popup stage");
-				scanPopUpViewController.getPopupStage().close();
-
 				LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Enabling LogOut");
 				// Enable Auto-Logout
 				SessionContext.setAutoLogout(true);
@@ -1254,6 +1078,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 				LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 						"Setting URL Stream as null");
 				streamer.setUrlStream(null);
+				biometric.setDisable(false);
 			}
 		});
 		rCaptureTaskService.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
@@ -1264,186 +1089,143 @@ public class BiometricsController extends BaseController /* implements Initializ
 						"RCapture task was successful");
 				try {
 					List<BiometricsDto> mdsCapturedBiometricsList = rCaptureTaskService.getValue();
-
-					LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-							"biometrics captured from mock/real MDM");
-
 					boolean isValidBiometric = isValidBiometric(mdsCapturedBiometricsList);
+					LOGGER.debug("biometrics captured from mock/real MDM was valid : {}", isValidBiometric);
+
+					if(!isValidBiometric) {// if any above checks failed show alert capture failure
+						generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_FAILURE));
+						return;
+					}
+
+					LOGGER.debug("Started local de-dup validation");// validate local de-dup check
+					if(identifyInLocalGallery(mdsCapturedBiometricsList,
+							Biometric.getSingleTypeByModality(isFace(currentModality) || isExceptionPhoto(currentModality) ?
+									"FACE_FULL FACE" : currentModality).value())) {
+						LOGGER.info("*** Local DE_DUPE validation -- found local match !! ");
+						generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.LOCAL_DEDUP_CHECK_FAILED));
+						return;
+					}
+
+					List<BiometricsDto> registrationDTOBiometricsList = new LinkedList<>();
+
+					List<String> exceptionBioAttributes = getSelectedExceptionsByBioType(currentSubType,
+							currentModality);
+					// save to registration DTO
+					for (BiometricsDto biometricDTO : mdsCapturedBiometricsList) {
+						LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
+								"BiometricDTO captured from mock/real MDM >>> "
+										+ biometricDTO.getBioAttribute());
+
+						if (!exceptionBioAttributes.isEmpty()
+								&& exceptionBioAttributes.contains(biometricDTO.getBioAttribute())) {
+							LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
+									"As bio atrribute marked as exception not storing into registration DTO : "
+											+ biometricDTO.getBioAttribute());
+							continue;
+						} else {
+							biometricDTO.setSubType(currentSubType);
+							registrationDTOBiometricsList.add(biometricDTO);
+						}
+					}
 
 					LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-							"biometrics captured from mock/real MDM was valid : " + isValidBiometric);
+							"started Saving filtered biometrics into registration DTO");
+					registrationDTOBiometricsList = saveCapturedBiometricData(currentSubType,
+							registrationDTOBiometricsList);
 
-					if (isValidBiometric) {
+					LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
+							"Completed Saving filtered biometrics into registration DTO");
 
-						// validate local de-dup check
-						boolean isMatchedWithLocalBiometrics = false;
-
-						if (!isExceptionPhoto(currentModality)) {
-							if (!isUserOnboardFlag) {
-
-								// TODO Remove dedup enable/disable validation, currently added for testing
-								// purpose
-								if (RegistrationConstants.ENABLE
-										.equalsIgnoreCase(RegistrationConstants.DEDUPLICATION_ENABLE_FLAG)) {
-									LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-											"Doing local de-dup validation");
-
-									isMatchedWithLocalBiometrics = identifyInLocalGallery(mdsCapturedBiometricsList,
-											Biometric.getSingleTypeByModality(
-													isFace(currentModality) ? "FACE_FULL FACE" : currentModality)
-													.value());
-								}
-							}
-						}
-
-						LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-								"Doing local de-dup validation : " + isMatchedWithLocalBiometrics);
-
-						if (!isMatchedWithLocalBiometrics) {
-
-							List<BiometricsDto> registrationDTOBiometricsList = new LinkedList<>();
-
-							double qualityScore = 0;
-							List<String> exceptionBioAttributes = getSelectedExceptionsByBioType(currentSubType,
-									currentModality);
-							// save to registration DTO
-							for (BiometricsDto biometricDTO : mdsCapturedBiometricsList) {
-								LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-										"BiometricDTO captured from mock/real MDM >>> "
-												+ biometricDTO.getBioAttribute());
-
-								if (!exceptionBioAttributes.isEmpty()
-										&& exceptionBioAttributes.contains(biometricDTO.getBioAttribute())) {
-									LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-											"As bio atrribute marked as exception not storing into registration DTO : "
-													+ biometricDTO.getBioAttribute());
-									continue;
-								} else {
-									qualityScore += biometricDTO.getQualityScore();
-									biometricDTO.setSubType(currentSubType);
-									registrationDTOBiometricsList.add(biometricDTO);
-								}
-							}
-
-							if (isExceptionPhoto(currentModality)) {
-
-								LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-										"started Saving Exception photo captured using MDS");
-								saveProofOfExceptionDocument(
-										extractFaceImageData(registrationDTOBiometricsList.get(0).getAttributeISO()));
-								generateAlert(RegistrationConstants.ALERT_INFORMATION,
-										RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
-
-								scanPopUpViewController.getPopupStage().close();
-								return;
-							}
-							LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-									"started Saving filtered biometrics into registration DTO");
-							registrationDTOBiometricsList = saveCapturedBiometricData(currentSubType,
-									registrationDTOBiometricsList);
-
-							LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-									"Completed Saving filtered biometrics into registration DTO");
-
-							if (!registrationDTOBiometricsList.isEmpty()) {
-								// if all the above check success show alert capture success
-								generateAlert(RegistrationConstants.ALERT_INFORMATION,
-										RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
-
-								/*
-								 * Image streamImage = null; if (bioService.isMdmEnabled()) { streamImage =
-								 * streamer.getStreamImage(); } else { streamImage = new Image(
-								 * this.getClass().getResourceAsStream(getStubStreamImagePath(modality))); }
-								 */
-
-								LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-										"Adding streaming image into local map");
-
-								try {
-
-									byte[] byteimage = streamer.getStreamImageBytes();
-									if (isFace(currentModality)) {
-										byteimage = extractFaceImageData(
-												registrationDTOBiometricsList.get(0).getAttributeISO());
-									}
-									addBioStreamImage(currentSubType, currentModality,
-											registrationDTOBiometricsList.get(0).getNumOfRetries(), byteimage);
-
-									if (currentModality.equalsIgnoreCase(RegistrationConstants.IRIS_DOUBLE)) {
-
-										for (BiometricsDto biometricsDto : registrationDTOBiometricsList) {
-											byteimage = extractIrisImageData(biometricsDto.getAttributeISO());
-
-											if (byteimage != null) {
-												/*addRegistrationStreamImage(currentSubType,
-														biometricsDto.getBioAttribute(),
-														registrationDTOBiometricsList.get(0).getNumOfRetries(),
-														byteimage);*/
-											}
-										}
-									}
-
-								} catch (IOException exception) {
-									LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-											ExceptionUtils.getStackTrace(exception));
-								}
-
-								LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-										"Adding bio scores into local map");
-
-								addBioScores(currentSubType, currentModality,
-										String.valueOf(registrationDTOBiometricsList.get(0).getNumOfRetries()),
-										qualityScore / registrationDTOBiometricsList.size());
-
-								LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-										"using captured response fill the fields like quality score and progress bar,,etc,.. UI");
-								loadBiometricsUIElements(registrationDTOBiometricsList, currentSubType,
-										currentModality);
-
-								refreshContinueButton();
-							} else {
-								// request response mismatch
-								generateAlert(RegistrationConstants.ALERT_INFORMATION,
-										RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_FAILURE));
-							}
-
-						} else {
-
-							LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-									"Local De-Dup check failed");
-							// if any above checks failed show alert capture failure
-							generateAlert(RegistrationConstants.ALERT_INFORMATION,
-									RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.LOCAL_DEDUP_CHECK_FAILED));
-						}
-					} else {
-
-						// if any above checks failed show alert capture failure
+					if (registrationDTOBiometricsList.isEmpty()) {
+						// request response mismatch
 						generateAlert(RegistrationConstants.ALERT_INFORMATION,
 								RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_FAILURE));
 					}
+					LOGGER.info("Adding streaming images and bio scores into local map");
 
-				} catch (RuntimeException | RegBaseCheckedException runtimeException) {
-					LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, String.format(
-							"Exception while getting the scanned biometrics for user registration: %s caused by %s",
-							runtimeException.getMessage(),
-							runtimeException.getCause() + ExceptionUtils.getStackTrace(runtimeException)));
+					addStreamImageAndScoreToCache(registrationDTOBiometricsList, currentModality, registrationDTOBiometricsList.get(0).getNumOfRetries());
+					
+					LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
+							"using captured response fill the fields like quality score and progress bar,,etc,.. UI");
+					
+					loadBiometricsUIElements(registrationDTOBiometricsList, currentSubType,
+							currentModality);
 
+					refreshContinueButton();
+					
+					generateAlert(RegistrationConstants.ALERT_INFORMATION,
+							RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
+					biometric.setDisable(false);
+				} catch (Exception exception) {
+					LOGGER.error("Exception while getting the scanned biometrics for operator onboarding", exception);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
+				} finally {
+					// Enable Auto-Logout
+					SessionContext.setAutoLogout(true);
+					streamer.setUrlStream(null);
+					biometric.setDisable(false);
 				}
-
-				scanPopUpViewController.getPopupStage().close();
-				// Enable Auto-Logout
-				SessionContext.setAutoLogout(true);
-
-				streamer.setUrlStream(null);
 			}
-
 		});
 		LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"Scan process ended for capturing biometrics");
 
 	}
 
+	private void addStreamImageAndScoreToCache(List<BiometricsDto> biometricsDtos, String modalityName, int retry) throws Exception {
+		try {
+			double score = 0;
+			switch (modalityName) {
+				case RegistrationConstants.FINGERPRINT_SLAB_LEFT:
+				case RegistrationConstants.FINGERPRINT_SLAB_RIGHT:
+				case RegistrationConstants.FINGERPRINT_SLAB_THUMBS:
+					for(BiometricsDto dto : biometricsDtos) {
+						ConvertRequestDto convertRequestDto = new ConvertRequestDto();
+						convertRequestDto.setVersion("ISO19794_4_2011");
+						convertRequestDto.setInputBytes(dto.getAttributeISO());
+						STREAM_IMAGES.put(String.format("%s_%s_%s",
+								currentSubType, dto.getBioAttribute(), String.valueOf(retry)),
+								FingerDecoder.convertFingerISOToImageBytes(convertRequestDto));
+						score += dto.getQualityScore();
+					}
+					BIO_SCORES.put(String.format("%s_%s_%s",
+							currentSubType, modalityName, String.valueOf(retry)),
+							score / biometricsDtos.size());
+					break;
+				case RegistrationConstants.IRIS_DOUBLE:
+					for(BiometricsDto dto : biometricsDtos) {
+						ConvertRequestDto convertRequestDto = new ConvertRequestDto();
+						convertRequestDto.setVersion("ISO19794_6_2011");
+						convertRequestDto.setInputBytes(dto.getAttributeISO());
+						STREAM_IMAGES.put(String.format("%s_%s_%s",
+								currentSubType, dto.getBioAttribute(), String.valueOf(retry)),
+								IrisDecoder.convertIrisISOToImageBytes(convertRequestDto));
+						score += dto.getQualityScore();
+					}
+					BIO_SCORES.put(String.format("%s_%s_%s",
+							currentSubType, modalityName, String.valueOf(retry)),
+							score / biometricsDtos.size());
+					break;
+
+				case RegistrationConstants.FACE:
+					BiometricsDto faceDto = biometricsDtos.toArray(new BiometricsDto[0])[0];
+					ConvertRequestDto convertRequestDto = new ConvertRequestDto();
+					convertRequestDto.setVersion("ISO19794_5_2011");
+					convertRequestDto.setInputBytes(faceDto.getAttributeISO());
+					STREAM_IMAGES.put(String.format("%s_%s_%s",
+							currentSubType, faceDto.getBioAttribute(), String.valueOf(retry)),
+							FaceDecoder.convertFaceISOToImageBytes(convertRequestDto));
+					BIO_SCORES.put(String.format("%s_%s_%s",
+							currentSubType, modalityName, String.valueOf(retry)),
+							faceDto.getQualityScore());
+					break;
+			}
+		} catch (Exception exception) {
+			LOGGER.error("Failed to extract image from ISO", exception);
+			throw exception;
+		}
+	}
+	
 	private boolean isValidBiometric(List<BiometricsDto> mdsCapturedBiometricsList) {
 
 		LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Validating captured biometrics");
@@ -1562,7 +1344,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 	private List<BiometricsDto> saveCapturedBiometricData(String subType, List<BiometricsDto> biometrics) {
 		LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"saveCapturedBiometricData invoked size >> " + biometrics.size());
-		if (isUserOnboardFlag) {
+		//if (isUserOnboardFlag) {
 			List<BiometricsDto> savedCaptures = new ArrayList<>();
 			for (BiometricsDto value : biometrics) {
 				LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
@@ -1571,7 +1353,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 			}
 			return savedCaptures;
-		} else {
+		/*} else {
 
 			Map<String, BiometricsDto> biometricsMap = new LinkedHashMap<>();
 
@@ -1585,7 +1367,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 			return getRegistrationDTOFromSession().addAllBiometrics(subType, Modality.valueOf(currentModality), biometricsMap,
 					getThresholdScoreInDouble(getThresholdKeyByBioType(Modality.valueOf(currentModality))),
 					getMaxRetryByModality(currentModality));
-		}
+		}*/
 	}
 
 	private void loadBiometricsUIElements(List<BiometricsDto> biometricDTOList, String subType, String modality) {
@@ -1599,9 +1381,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 				getThresholdScoreInInt(getThresholdKeyByBioType(Modality.valueOf(modality))));
 
 		// Get the stream image from Bio ServiceImpl and load it in the image pane
-		biometricImage.setImage(getBioStreamImage(subType, modality, retry));
+		biometricImage.setImage(getBioStreamImage(subType, Modality.valueOf(modality), retry));
 
-		addImageInUIPane(subType, modality, getBioStreamImage(subType, modality, retry), true);
+		addImageInUIPane(subType, modality, getBioStreamImage(subType, Modality.valueOf(modality), retry), true);
 	}
 
 	private double getAverageQualityScore(List<BiometricsDto> biometricDTOList) {
@@ -1624,14 +1406,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 		String thresholdScore = getValueFromApplicationContext(thresholdKey);
 
 		return thresholdScore != null ? Integer.valueOf(thresholdScore) : 0;
-	}
-
-	private double getThresholdScoreInDouble(String thresholdKey) {
-		/* Get Configued threshold score for bio type */
-
-		String thresholdScore = getValueFromApplicationContext(thresholdKey);
-
-		return thresholdScore != null ? Double.valueOf(thresholdScore) : 0;
 	}
 
 	private String getCaptureTimeOut() {
@@ -1695,9 +1469,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 		LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"Updating biometrics and clearing previous data");
-		this.bioType = constructBioType(bioType);
 
-		bioValue = bioType;
 		try {
 			biometricImage.setImage(getImage(bioImage,true));
 		} catch (RegBaseCheckedException exception) {
@@ -1740,19 +1512,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		qualityText.setText("");
 
 	}
-
-	private String constructBioType(String bioType) {
-		if (bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.RIGHT_SLAP))) {
-			bioType = RegistrationConstants.FINGERPRINT_SLAB_RIGHT;
-		} else if (bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.LEFT_SLAP))) {
-			bioType = RegistrationConstants.FINGERPRINT_SLAB_LEFT;
-		} else if (bioType.equalsIgnoreCase(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.THUMBS))) {
-			bioType = RegistrationConstants.FINGERPRINT_SLAB_THUMBS;
-		}
-
-		return bioType;
-	}
-
+	
 	/**
 	 * Updating captured values
 	 *
@@ -1856,7 +1616,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 					double qualityScoreVal = getBioScores(currentSubType, currentModality, attempt);
 					if (qualityScoreVal != 0) {
-						updateByAttempt(qualityScoreVal, getBioStreamImage(currentSubType, currentModality, attempt),
+						updateByAttempt(qualityScoreVal, getBioStreamImage(currentSubType, Modality.valueOf(currentModality), attempt),
 								getThresholdScoreInInt(getThresholdKeyByBioType(Modality.valueOf(currentModality))), biometricImage,
 								qualityText, bioProgress, qualityScore);
 					}
@@ -1993,30 +1753,10 @@ public class BiometricsController extends BaseController /* implements Initializ
 		clearCaptureData();
 		biometricBox.setVisible(false);
 		retryBox.setVisible(false);
-		bioValue = RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SELECT);
 
 		LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"Cleared the captured biometric data");
 
-	}
-
-	public void addBioStreamImage(String subType, String modality, int attempt, byte[] streamImage) throws IOException {
-		if (streamImage == null) {
-			String imagePath = getStubStreamImagePath(modality);
-			STREAM_IMAGES.put(String.format("%s_%s_%s", subType, modality, attempt),
-					new Image(this.getClass().getResourceAsStream(imagePath)));
-
-			/*addRegistrationStreamImage(subType, isFace(modality) ? RegistrationConstants.FACE_FULLFACE : modality,
-					attempt, IOUtils.toByteArray(this.getClass().getResourceAsStream(imagePath)));
-*/
-		} else {
-			STREAM_IMAGES.put(String.format("%s_%s_%s", subType, modality, attempt),
-					new Image(new ByteArrayInputStream(streamImage)));
-
-			/*addRegistrationStreamImage(subType, isFace(modality) ? RegistrationConstants.FACE_FULLFACE : modality,
-					attempt, streamImage);*/
-
-		}
 	}
 
 	/*private void addRegistrationStreamImage(String subType, String modality, int attempt, byte[] streamImage) {
@@ -2027,9 +1767,34 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	}*/
 
-	public Image getBioStreamImage(String subType, String modality, int attempt) {
+	public Image getBioStreamImage(String subType, Modality modality, int attempt) {
+		List<byte[]> images = new LinkedList<>();
+		for(String attribute : modality.getAttributes()) {
+			byte[] image = STREAM_IMAGES.get(String.format("%s_%s_%s", subType,
+					attribute, attempt));
+			images.add(image);
+		}
 
-		return STREAM_IMAGES.get(String.format("%s_%s_%s", subType, modality, attempt));
+		try {
+			if(images.stream().allMatch( b -> b == null))
+				return getImage(getImageIconPath(modality.name()), false);
+
+			switch (modality) {
+				case FACE:
+				case EXCEPTION_PHOTO:
+					return images.get(0) == null ? getImage(getImageIconPath(modality.name()), false) :
+							new Image(new ByteArrayInputStream(images.get(0)));
+				case IRIS_DOUBLE:
+				case FINGERPRINT_SLAB_THUMBS:
+					return getImage(baseService.concatImages(images.get(0), images.get(1), getImagePath(RegistrationConstants.CROSS_IMG, true)));
+				case FINGERPRINT_SLAB_LEFT:
+				case FINGERPRINT_SLAB_RIGHT:
+					return getImage(baseService.concatImages(images.get(0), images.get(1), images.get(2), images.get(3), getImagePath(RegistrationConstants.CROSS_IMG, true)));
+			}
+		} catch (RegBaseCheckedException e) {
+			LOGGER.error("Failed to get stream image for modality "+ modality, e);
+		}
+		return null;
 	}
 
 	public void refreshContinueButton() {
@@ -2057,7 +1822,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		List<String> faceBioAttributes = getContainsAllElements(RegistrationConstants.faceUiAttributes, bioAttributes);
 		List<String> irisBioAttributes = getContainsAllElements(RegistrationConstants.eyesUiAttributes, bioAttributes);
 
-		String operator = getBooleanOperator();
+		String operator = AND_OPERATOR;
 		boolean considerExceptionAsCaptured = OR_OPERATOR.equals(operator) ? false : true;
 
 		Map<String, Boolean> capturedDetails = new HashMap<String, Boolean>();
@@ -2131,42 +1896,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 		return hasApplicantBiometricException;
 	}
 
-	/**
-	 * Is UserOnboarding, should capture all biometrics as configured During
-	 * registration, by default for NEW applicant, all bioattributes are mandatory
-	 * (exceptions are considered as capture) On updateUIN, and if update biometrics
-	 * is opted then all bioattributes are mandatory (exceptions are considered as
-	 * capture) else any biometrics can be provided for authentication (exceptions
-	 * are NOT considered as capture) On LostUIN, this is based on configuration. BY
-	 * default all bioAttributes are mandatory
-	 *
-	 * @return
-	 */
-	private String getBooleanOperator() {
-		if (isUserOnboardFlag)
-			return AND_OPERATOR;
-
-		String operator = AND_OPERATOR;
-		switch (getRegistrationDTOFromSession().getRegistrationCategory()) {
-		case RegistrationConstants.PACKET_TYPE_NEW:
-
-			operator = RegistrationConstants.APPLICANT.equalsIgnoreCase(currentSubType) ? AND_OPERATOR : OR_OPERATOR;
-
-			break;
-		case RegistrationConstants.PACKET_TYPE_UPDATE:
-			operator = getRegistrationDTOFromSession().isBiometricMarkedForUpdate()
-
-					? (RegistrationConstants.APPLICANT.equalsIgnoreCase(currentSubType) ? AND_OPERATOR : OR_OPERATOR)
-
-					: OR_OPERATOR;
-			break;
-		case RegistrationConstants.PACKET_TYPE_LOST:
-			operator = getValueFromApplicationContext(RegistrationConstants.LOST_REGISTRATION_BIO_MVEL_OPERATOR);
-			operator = operator == null ? AND_OPERATOR : operator;
-			break;
-		}
-		return operator;
-	}
 
 	private Map<String, Boolean> setCapturedDetailsMap(Map<String, Boolean> capturedDetails, List<String> bioAttributes,
 			boolean isBiometricsCaptured) {
@@ -2220,26 +1949,26 @@ public class BiometricsController extends BaseController /* implements Initializ
 	}
 
 	private BiometricsDto getBiometrics(String subType, String bioAttribute) {
-		if (isUserOnboardFlag) {
+		//if (isUserOnboardFlag) {
 			List<BiometricsDto> list = userOnboardService.getBiometrics(subType, Arrays.asList(bioAttribute));
 			return !list.isEmpty() ? list.get(0) : null;
-		} else
-			return getRegistrationDTOFromSession().getBiometric(subType, bioAttribute);
+		/*} else
+			return getRegistrationDTOFromSession().getBiometric(subType, bioAttribute);*/
 	}
 
 	private List<BiometricsDto> getBiometrics(String subType, List<String> bioAttribute) {
-		if (isUserOnboardFlag) {
+		//if (isUserOnboardFlag) {
 			List<BiometricsDto> list = userOnboardService.getBiometrics(subType, bioAttribute);
 			return list;
-		} else
-			return getRegistrationDTOFromSession().getBiometric(subType, bioAttribute);
+		/*} else
+			return getRegistrationDTOFromSession().getBiometric(subType, bioAttribute);*/
 	}
 
 	private boolean isBiometricExceptionAvailable(String subType, String bioAttribute) {
-		if (isUserOnboardFlag)
+		//if (isUserOnboardFlag)
 			return userOnboardService.isBiometricException(subType, bioAttribute);
-		else
-			return getRegistrationDTOFromSession().isBiometricExceptionAvailable(subType, bioAttribute);
+		/*else
+			return getRegistrationDTOFromSession().isBiometricExceptionAvailable(subType, bioAttribute);*/
 	}
 
 	public void addBioScores(String subType, String modality, String attempt, double qualityScore) {
@@ -2266,38 +1995,22 @@ public class BiometricsController extends BaseController /* implements Initializ
 		BIO_SCORES.clear();
 		STREAM_IMAGES.clear();
 	}
-
-	private String getStubStreamImagePath(String modality) {
-		String path = "";
-		switch (modality) {
-		case PacketManagerConstants.FINGERPRINT_SLAB_LEFT:
-			path = RegistrationConstants.LEFTHAND_SLAP_FINGERPRINT_PATH;
-			break;
-		case PacketManagerConstants.FINGERPRINT_SLAB_RIGHT:
-			path = RegistrationConstants.RIGHTHAND_SLAP_FINGERPRINT_PATH;
-			break;
-		case PacketManagerConstants.FINGERPRINT_SLAB_THUMBS:
-			path = RegistrationConstants.BOTH_THUMBS_FINGERPRINT_PATH;
-			break;
-		case PacketManagerConstants.IRIS_DOUBLE:
-			path = RegistrationConstants.IRIS_IMAGE_LOCAL;
-			break;
-		case "FACE":
-		case PacketManagerConstants.FACE_FULLFACE:
-			path = RegistrationConstants.FACE_IMG_PATH;
-			break;
-		}
-		return path;
-	}
-
+	
 	private List<String> getListOfBiometricSubTypes() {
 		return new ArrayList<String>(currentMap.keySet());
 	}
 
 	private boolean identifyInLocalGallery(List<BiometricsDto> biometrics, String modality) {
+		if(RegistrationConstants.DISABLE.equalsIgnoreCase((String) ApplicationContext.map()
+				.getOrDefault(RegistrationConstants.DEDUPLICATION_ENABLE_FLAG, RegistrationConstants.DISABLE))) {
+			LOGGER.info("DEDUPLICATION_ENABLE_FLAG disabled, hence returning false by default");
+			return false;
+		}
+
 		BiometricType biometricType = BiometricType.fromValue(modality);
 		Map<String, List<BIR>> gallery = new HashMap<>();
-		List<UserBiometric> userBiometrics = userDetailDAO.findAllActiveUsers(biometricType.value());
+		List<UserBiometric> userBiometrics = userDetailDAO.findAllActiveUsersExceptCurrentUser(biometricType.value(),
+				SessionContext.userContext().getUserId());
 		if (userBiometrics.isEmpty())
 			return false;
 
@@ -2317,8 +2030,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 					.identify(sample, gallery, biometricType, null);
 			return result.entrySet().stream().anyMatch(e -> e.getValue() == true);
 		} catch (BiometricException e) {
-			LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-					"Failed to dedupe >> " + ExceptionUtils.getStackTrace(e));
+			LOGGER.error("Failed to dedupe check >> ", e);
 		}
 		return false;
 	}
@@ -2351,8 +2063,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 		Image image = null;
 		if (biometricsDtos != null && !biometricsDtos.isEmpty()) {
-
-			image = getBioStreamImage(subtype, modality, biometricsDtos.get(0).getNumOfRetries());
+			image = getBioStreamImage(subtype, Modality.valueOf(modality), biometricsDtos.get(0).getNumOfRetries());
 		}
 
 		try {
@@ -2502,7 +2213,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 	}
 
 	public void updateBiometricData(ImageView clickedImageView, List<ImageView> bioExceptionImagesForSameModality) {
-
+		clearBIOCache(currentSubType, clickedImageView.getId());
 		if (clickedImageView.getOpacity() == 0) {
 			LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 					"Marking exceptions for biometrics");
@@ -2511,12 +2222,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
 			clickedImageView.setOpacity(1);
-
-			if (isUserOnboardFlag)
-				userOnboardService.addOperatorBiometricException(currentSubType, clickedImageView.getId());
-			else
-				getRegistrationDTOFromSession().addBiometricException(currentSubType, clickedImageView.getId(),
-						clickedImageView.getId(), "Temporary", "Temporary");
+			userOnboardService.addOperatorBiometricException(currentSubType, clickedImageView.getId());
 		} else {
 			LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 					"Removing exceptions for biometrics");
@@ -2527,19 +2233,12 @@ public class BiometricsController extends BaseController /* implements Initializ
 			clickedImageView.setOpacity(0);
 			if (isUserOnboardFlag)
 				userOnboardService.removeOperatorBiometricException(currentSubType, clickedImageView.getId());
-			/*else
-				getRegistrationDTOFromSession().removeBiometricException(currentSubType, clickedImageView.getId());
-*/
 		}
 
 		if (hasApplicantBiometricException()) {
-
 			setBiometricExceptionVBox(true);
-
 		} else {
-
 			if (getRegistrationDTOFromSession() != null && getRegistrationDTOFromSession().getDocuments() != null) {
-
 				getRegistrationDTOFromSession().getDocuments().remove("proofOfException");
 			}
 			addImageInUIPane(RegistrationConstants.APPLICANT, RegistrationConstants.EXCEPTION_PHOTO, null, false);
@@ -2548,18 +2247,11 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 		boolean isAllMarked = true;
 		for (ImageView exceptionImageView : bioExceptionImagesForSameModality) {
-
 			if (isUserOnboardFlag)
 				userOnboardService.removeOperatorBiometrics(currentSubType, exceptionImageView.getId());
-			/*else
-				getRegistrationDTOFromSession().removeBiometric(currentSubType, exceptionImageView.getId());
-*/
 			if (isAllMarked) {
-
 				isAllMarked = isAllMarked && exceptionImageView.getOpacity() == 1 ? true : false;
-
 			}
-
 		}
 
 		displayBiometric(currentModality);
@@ -2568,6 +2260,22 @@ public class BiometricsController extends BaseController /* implements Initializ
 		refreshContinueButton();
 	}
 
+	private void clearBIOCache(String subType, String bioAttribute) {
+		Modality modality = Modality.getModality(bioAttribute);
+		List<String> keys = new ArrayList<>();
+		keys.addAll(STREAM_IMAGES.keySet());
+		keys.addAll(BIO_SCORES.keySet());
+		
+		for(String attr : modality.getAttributes()) {
+			keys.stream()
+					.filter( k -> k.startsWith(String.format("%s_%s", subType, attr)))
+					.forEach( k -> {
+						STREAM_IMAGES.remove(k);
+						BIO_SCORES.remove(k);
+					});
+		}
+	}
+	
 	private void setBiometricExceptionVBox(boolean visible) {
 		if (exceptionVBox != null) {
 			// exceptionVBox.setVisible(disable);
@@ -2606,11 +2314,11 @@ public class BiometricsController extends BaseController /* implements Initializ
 						node.setDisable(true);
 						node.setOpacity(1.0);
 
-						if (isUserOnboardFlag)
+						//if (isUserOnboardFlag)
 							userOnboardService.addOperatorBiometricException(currentSubType, node.getId());
-						else
+						/*else
 							getRegistrationDTOFromSession().addBiometricException(currentSubType, node.getId(),
-									node.getId(), "Temporary", "Temporary");
+									node.getId(), "Temporary", "Temporary");*/
 					}
 				}
 			}
@@ -2619,205 +2327,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 		LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"Completed adding exception images in ui pane");
 
-	}
-
-	private void setPopViewControllerMessage(boolean enableCloseButton, String message) {
-		if (enableCloseButton) {
-			scanPopUpViewController.enableCloseButton();
-		}
-		scanPopUpViewController.setScanningMsg(message);
-
-	}
-
-	public byte[] extractFaceImageData(byte[] decodedBioValue) {
-
-		LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-				"Started converting iso to jpg for face");
-
-		try (DataInputStream din = new DataInputStream(new ByteArrayInputStream(decodedBioValue))) {
-
-			LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-					"Started processing bio value : " + new Date());
-			// Parsing general header
-			byte[] format = new byte[4];
-			din.read(format, 0, 4);
-			LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-					"format >>>>>>>>>" + new String(format));
-
-			byte[] version = new byte[4];
-			din.read(version, 0, 4);
-
-			LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-					"version >>>>>>>>>" + new String(version));
-
-			int recordLength = din.readInt(); // 4 bytes
-
-			LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-					"recordLength >>>>>>>>>" + recordLength);
-
-			short numberofRepresentionRecord = din.readShort();
-
-			LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-					"numberofRepresentionRecord >>>>>>>>>" + numberofRepresentionRecord);
-
-			// NOTE: No certification schemes are available for this part of ISO/IEC 19794.
-			byte certificationFlag = din.readByte();
-			LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-					"certificationFlag >>>>>>>>>" + certificationFlag);
-
-			byte[] temporalSequence = new byte[2];
-			din.read(temporalSequence, 0, 2);
-			LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-					"recordLength >>>>>>>>>" + recordLength);
-
-			// Parsing representation header
-			int representationLength = din.readInt();
-			LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-					"representationLength >>>>>>>>>" + representationLength);
-
-			byte[] representationData = new byte[representationLength - 4];
-			din.read(representationData, 0, representationData.length);
-
-			try (DataInputStream rdin = new DataInputStream(new ByteArrayInputStream(representationData))) {
-				byte[] captureDetails = new byte[14];
-				rdin.read(captureDetails, 0, 14);
-
-				byte noOfQualityBlocks = rdin.readByte();
-				LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-						"noOfQualityBlocks >>>>>>>>>" + noOfQualityBlocks);
-
-				if (noOfQualityBlocks > 0) {
-					byte[] qualityBlocks = new byte[noOfQualityBlocks * 5];
-					rdin.read(qualityBlocks, 0, qualityBlocks.length);
-				}
-
-				short noOfLandmarkPoints = rdin.readShort();
-				LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-						"noOfLandmarkPoints >>>>>>>>>" + noOfLandmarkPoints);
-
-				// read next 15 bytes
-				byte[] facialInformation = new byte[15];
-				rdin.read(facialInformation, 0, 15);
-
-				// read all landmarkpoints
-				if (noOfLandmarkPoints > 0) {
-					byte[] landmarkPoints = new byte[noOfLandmarkPoints * 8];
-					rdin.read(landmarkPoints, 0, landmarkPoints.length);
-				}
-
-				byte faceType = rdin.readByte();
-				LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-						"faceType >>>>>>>>>" + faceType);
-
-				// The (1 byte) Image Data Type field denotes the encoding type of the Image
-				// Data block
-				// JPEG 00 HEX
-				// JPEG2000 lossy 01 HEX
-				// JPEG 2000 lossless 02 HEX
-				// PNG 03 HEX
-				// Reserved by SC 37 for future use 04 HEX to FF HEX
-				byte imageDataType = rdin.readByte();
-				LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-						"imageDataType >>>>>>>>>" + imageDataType);
-
-				byte[] otherImageInformation = new byte[9];
-				rdin.read(otherImageInformation, 0, otherImageInformation.length);
-
-				// reading representationData -> imageData + 3d info + 3d data
-				int lengthOfImageData = rdin.readInt();
-				LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-						"lengthOfImageData >>>>>>>>>" + lengthOfImageData);
-
-				byte[] image = new byte[lengthOfImageData];
-				rdin.read(image, 0, lengthOfImageData);
-
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				ImageIO.write(ImageIO.read(new ByteArrayInputStream(image)), "jpg", baos);
-
-				LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Converted JP2 to jpg");
-
-				return baos.toByteArray();
-			}
-		} catch (Exception exception) {
-			LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-					"Error while parsing iso to jpg : " + ExceptionUtils.getStackTrace(exception));
-
-		}
-		return null;
-	}
-
-	public byte[] extractIrisImageData(byte[] decodedBioValue) {
-
-		LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-				"Extracting iris image from decode bio value");
-
-		try (DataInputStream din = new DataInputStream(new ByteArrayInputStream(decodedBioValue))) {
-
-			// general header parsing
-			byte[] formatIdentifier = new byte[4];
-			din.read(formatIdentifier, 0, formatIdentifier.length);
-
-			LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-					"formatIdentifier >>>> " + new String(formatIdentifier));
-
-			int version = din.readInt();
-			int recordLength = din.readInt();
-			short noOfRepresentations = din.readShort();
-			byte certificationFlag = din.readByte();
-
-			// 1 -- left / right
-			// 2 -- both left and right
-			// 0 -- unknown
-			byte noOfIrisRepresented = din.readByte();
-
-			for (int i = 0; i < noOfRepresentations; i++) {
-				// Reading representation header
-				int representationLength = din.readInt();
-
-				byte[] captureDetails = new byte[14];
-				din.read(captureDetails, 0, captureDetails.length);
-
-				// qualityBlock
-				byte noOfQualityBlocks = din.readByte();
-				if (noOfQualityBlocks > 0) {
-					byte[] qualityBlocks = new byte[noOfQualityBlocks * 5];
-					din.read(qualityBlocks, 0, qualityBlocks.length);
-				}
-
-				short representationSequenceNo = din.readShort();
-
-				// 0 -- undefined
-				// 1 -- right
-				// 2 - left
-				byte eyeLabel = din.readByte();
-
-				byte imageType = din.readByte(); // cropped / uncropped
-
-				// 2 -- raw
-				// 10 -- jpeg2000
-				// 14 -- png
-				byte imageFormat = din.readByte();
-
-				byte[] otherDetails = new byte[24];
-				din.read(otherDetails, 0, otherDetails.length);
-
-				int imageLength = din.readInt();
-				byte[] image = new byte[imageLength];
-				din.read(image, 0, image.length);
-
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				ImageIO.write(ImageIO.read(new ByteArrayInputStream(image)), "jpg", baos);
-
-				LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Converted JP2 to jpg");
-
-				return baos.toByteArray();
-			}
-		} catch (Exception exception) {
-			LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
-					"Error while parsing iso to jpg : " + ExceptionUtils.getStackTrace(exception));
-
-		}
-		return null;
 	}
 
 	private Pane getExceptionImagePane(String modality) {
@@ -2947,10 +2456,10 @@ public class BiometricsController extends BaseController /* implements Initializ
 		pane.setId(modality);
 		pane.setPrefHeight(200);
 		pane.setPrefWidth(200);
-		ImageView topImageView = getImageView(null, RegistrationConstants.DOUBLE_IRIS_IMG, 144, 189.0, 7, 4, true,
+		ImageView topImageView = getImageView(null, RegistrationConstants.DOUBLE_IRIS_WITH_INDICATORS_IMG, 144, 189.0, 7, 4, true,
 				true, false);
 
-		ImageView rightImageView = getImageView("rightEye", RegistrationConstants.RIGHTEYE_IMG, 43, 48, 118, 54,
+		ImageView rightImageView = getImageView("rightEye", RegistrationConstants.RIGHTEYE_IMG, 43, 48, 125, 54,
 				true, true, true);
 		ImageView leftImageView = getImageView("leftEye", RegistrationConstants.LEFTEYE_IMG, 43, 48, 35, 54, true,
 				true, true);
@@ -3033,25 +2542,5 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 	}
 
-	private void streamLocalCamera() {
-
-		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Streaming Using Local Camera");
-
-		if (scanPopUpViewController.getPopupStage() != null) {
-			scanPopUpViewController.getPopupStage().close();
-		}
-
-		LOGGER.error(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID, "Capturing with local camera");
-
-		List<DocScanDevice> devices = docScannerFacade.getConnectedCameraDevices();
-		LOGGER.info("Connected devices : {}", devices);
-		if(devices.isEmpty()) {
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.WEBCAM_ALERT_CONTEXT));
-			return;
-		}
-		LOGGER.info("Connecting to local camera device : {}", devices.get(0).getId());
-		scanPopUpViewController.docScanDevice = devices.get(0);
-		scanPopUpViewController.startStream();
-	}
 
 }

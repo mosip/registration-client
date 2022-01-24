@@ -7,6 +7,8 @@ import io.mosip.registration.entity.UserBiometric;
 import io.mosip.registration.entity.UserDetail;
 import io.mosip.registration.entity.UserRole;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * This class is used to get respective user details by providing their id from
  * {@link UserDetail} table. This class is used to update the login parameters
@@ -116,5 +118,9 @@ public interface UserDetailDAO {
 	void update(UserDetail userDetail);
 
 	List<UserRole> getUserRoleByUserId(String userId);
+
+	List<UserBiometric> findAllActiveUsersExceptCurrentUser(String bioType, String userId);
+
+	void updateUserRolesAndUsername(@NotNull String userId, String username, List<String> roles);
 
 }

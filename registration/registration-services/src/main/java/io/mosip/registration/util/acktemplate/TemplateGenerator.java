@@ -18,27 +18,32 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
-import io.mosip.biometrics.util.ConvertRequestDto;
-import io.mosip.biometrics.util.face.FaceDecoder;
-import io.mosip.biometrics.util.finger.FingerDecoder;
-import io.mosip.biometrics.util.iris.IrisDecoder;
-import io.mosip.registration.enums.Modality;
-import io.mosip.registration.enums.Role;
-import io.mosip.registration.service.IdentitySchemaService;
-import io.mosip.registration.service.packet.PacketHandlerService;
-import io.mosip.registration.service.sync.MasterSyncService;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import io.mosip.biometrics.util.ConvertRequestDto;
+import io.mosip.biometrics.util.face.FaceDecoder;
+import io.mosip.biometrics.util.finger.FingerDecoder;
+import io.mosip.biometrics.util.iris.IrisDecoder;
 import io.mosip.commons.packet.constants.Biometric;
 import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -54,23 +59,26 @@ import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.dto.BlocklistedConsentDto;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.entity.UserDetail;
+import io.mosip.registration.enums.Modality;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.BaseService;
+import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.config.JobConfigurationService;
-import io.mosip.registration.service.impl.IdentitySchemaServiceImpl;
 import io.mosip.registration.service.operator.UserDetailService;
 import io.mosip.registration.service.operator.UserMachineMappingService;
+import io.mosip.registration.service.packet.PacketHandlerService;
 import io.mosip.registration.service.packet.RegistrationApprovalService;
-import io.mosip.registration.service.packet.impl.PacketHandlerServiceImpl;
+import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.PacketSynchService;
-import io.mosip.registration.service.sync.impl.MasterSyncServiceImpl;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 
 /**
@@ -91,7 +99,7 @@ public class TemplateGenerator extends BaseService {
 	private QrCodeGenerator<QrVersion> qrCodeGenerator;
 
 	@Autowired
-	private IdentitySchemaService identitySchemaServiceImpl;
+	private IdentitySchemaService identitySchemaService;
 
 	@Autowired
 	private UserDetailService userDetailService;
@@ -117,16 +125,6 @@ public class TemplateGenerator extends BaseService {
 	@Autowired
 	private SoftwareUpdateHandler softwareUpdateHandler;
 
-	private String guidelines;
-
-	public String getGuidelines() {
-		return guidelines;
-	}
-
-	public void setGuidelines(String guidelines) {
-		this.guidelines = guidelines;
-	}
-
 	public ResponseDTO generateTemplate(String templateText, RegistrationDTO registration, TemplateManagerBuilder
 			templateManagerBuilder, String templateType, String crossImagePath) throws RegBaseCheckedException {
 		ResponseDTO response = new ResponseDTO();
@@ -141,7 +139,7 @@ public class TemplateGenerator extends BaseService {
 			ResourceBundle firstLanguageProperties = ApplicationContext.getInstance()
 					.getBundle(firstSelectedLanguage, RegistrationConstants.LABELS);
 			InputStream is = new ByteArrayInputStream(templateText.getBytes(StandardCharsets.UTF_8));
-			List<UiSchemaDTO> schemaFields = getSchemaFields(registration.getIdSchemaVersion());
+			List<UiFieldDTO> schemaFields = identitySchemaService.getAllFieldSpec(registration.getProcessId(), registration.getIdSchemaVersion());
 
 			//Basic values
 			setBasicDetails(templateValues, registration, isPrevTemplate, firstLanguageProperties, response);
@@ -150,7 +148,7 @@ public class TemplateGenerator extends BaseService {
 			Map<String, Map<String, Object>> documentsData = new HashMap<>();
 			Map<String, Map<String, Object>> biometricsData = new HashMap<>();
 
-			for (UiSchemaDTO field : schemaFields) {
+			for (UiFieldDTO field : schemaFields) {
 				switch (field.getType()) {
 					case "documentType":
 						Map<String, Object> doc_data = getDocumentData(registration, field, templateValues);
@@ -158,7 +156,7 @@ public class TemplateGenerator extends BaseService {
 						break;
 
 					case "biometricsType":
-						Map<String, Object> bio_data = getBiometericData(registration, field, isPrevTemplate, templateValues, crossImagePath);
+						Map<String, Object> bio_data = getBiometericData(registration, field, isPrevTemplate, templateValues, crossImagePath, firstLanguageProperties);
 						if(bio_data != null) { biometricsData.put(field.getId(), bio_data); }
 						break;
 
@@ -192,12 +190,17 @@ public class TemplateGenerator extends BaseService {
 		return response;
 	}
 
-	private Map<String, Object> getBiometericData(RegistrationDTO registration, UiSchemaDTO field, boolean isPrevTemplate,
-												  Map<String, Object> templateValues, String crossImagePath)
+	private Map<String, Object> getBiometericData(RegistrationDTO registration, UiFieldDTO field, boolean isPrevTemplate,
+												  Map<String, Object> templateValues, String crossImagePath, ResourceBundle firstLanguageProperties)
 			throws RegBaseCheckedException {
+		
+		templateValues.put("Fingers", firstLanguageProperties.getString("FingersLabel"));
+		templateValues.put("Iris", firstLanguageProperties.getString("IrisLabel"));
+		templateValues.put("Face", firstLanguageProperties.getString("FaceLabel"));
+		
 		List<BiometricsDto> capturedList = new ArrayList<>();
 		for (String attribute : field.getBioAttributes()) {
-			String key = String.format("%s_%s", field.getSubType(), attribute);
+			String key = String.format("%s_%s", field.getId(), attribute);
 			if (registration.getBiometrics().containsKey(key))
 				capturedList.add(registration.getBiometrics().get(key));
 			else if (registration.getBiometricExceptions().containsKey(key)) {
@@ -230,7 +233,7 @@ public class TemplateGenerator extends BaseService {
 			bio_data.put(RegistrationConstants.TEMPLATE_LEFT_EYE, (biometricsDto.getAttributeISO() != null) ?
 					RegistrationConstants.TEMPLATE_RIGHT_MARK : RegistrationConstants.TEMPLATE_CROSS_MARK);
 			setBiometricImage(bio_data, RegistrationConstants.TEMPLATE_CAPTURED_LEFT_EYE,
-					isPrevTemplate ? null : RegistrationConstants.TEMPLATE_EYE_IMAGE_PATH,
+					isPrevTemplate ? crossImagePath : RegistrationConstants.TEMPLATE_EYE_IMAGE_PATH,
 					isPrevTemplate ? getImageFromISO(Modality.IRIS_DOUBLE, Arrays.asList(biometricsDto)).get(0) : null);
 		}
 
@@ -241,7 +244,7 @@ public class TemplateGenerator extends BaseService {
 			bio_data.put(RegistrationConstants.TEMPLATE_RIGHT_EYE, (biometricsDto.getAttributeISO() != null) ?
 					RegistrationConstants.TEMPLATE_RIGHT_MARK : RegistrationConstants.TEMPLATE_CROSS_MARK);
 			setBiometricImage(bio_data, RegistrationConstants.TEMPLATE_CAPTURED_RIGHT_EYE,
-					isPrevTemplate ? null : RegistrationConstants.TEMPLATE_EYE_IMAGE_PATH,
+					isPrevTemplate ? crossImagePath : RegistrationConstants.TEMPLATE_EYE_IMAGE_PATH,
 					isPrevTemplate ? getImageFromISO(Modality.IRIS_DOUBLE, Arrays.asList(biometricsDto)).get(1) : null);
 		}
 
@@ -309,7 +312,7 @@ public class TemplateGenerator extends BaseService {
 		}
 	}
 
-	private Map<String, Object> getDocumentData(RegistrationDTO registration, UiSchemaDTO field,
+	private Map<String, Object> getDocumentData(RegistrationDTO registration, UiFieldDTO field,
 												Map<String, Object> templateValues) {
 		Map<String, Object> data = null;
 		if(registration.getDocuments().get(field.getId()) != null) {
@@ -328,16 +331,16 @@ public class TemplateGenerator extends BaseService {
 		return data;
 	}
 
-	private Object getFieldLabel(UiSchemaDTO field) {
-		String label = RegistrationConstants.EMPTY;
+	private Object getFieldLabel(UiFieldDTO field) {
+		List<String> labels = new ArrayList<>();
 		List<String> selectedLanguages = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant();
 		for (String selectedLanguage : selectedLanguages) {
-			label = !label.isBlank() ? label.concat(RegistrationConstants.SLASH).concat(field.getLabel().get(selectedLanguage)) : field.getLabel().get(selectedLanguage);
+			labels.add(field.getLabel().get(selectedLanguage));
 		}
-		return label;
+		return String.join(RegistrationConstants.SLASH, labels);
 	}
 
-	private Map<String, Object> getDemographicData(RegistrationDTO registration, UiSchemaDTO field) {
+	private Map<String, Object> getDemographicData(RegistrationDTO registration, UiFieldDTO field) {
 		Map<String, Object> data = null;
 		if("UIN".equalsIgnoreCase(field.getId()) || "IDSchemaVersion".equalsIgnoreCase(field.getId()))
 			return null;
@@ -369,7 +372,6 @@ public class TemplateGenerator extends BaseService {
 			templateValues.put(RegistrationConstants.TEMPLATE_MODIFY_IMAGE_SOURCE, getEncodedImage(RegistrationConstants.TEMPLATE_MODIFY_IMAGE_PATH,
 					RegistrationConstants.TEMPLATE_PNG_IMAGE_ENCODING));
 			generateQRCode(registration, templateValues, firstLanguageProperties);
-			setUpImportantGuidelines(templateValues, guidelines);
 			LocalDateTime currentTime = OffsetDateTime.now().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 			templateValues.put(RegistrationConstants.TEMPLATE_DATE, currentTime.format(DateTimeFormatter.ofPattern(RegistrationConstants.TEMPLATE_DATE_FORMAT)));
 			templateValues.put(RegistrationConstants.TEMPLATE_DATE_LABEL, getLabel("date"));
@@ -400,12 +402,6 @@ public class TemplateGenerator extends BaseService {
 		} catch (RegBaseCheckedException ex) {
 			setErrorResponse(responseDTO, ex.getMessage(), null);
 		}
-	}
-
-	private void setUpImportantGuidelines(Map<String, Object> templateValues, String guidelines) {
-		String[] importantGuidelines = guidelines!=null ?
-				guidelines.split(RegistrationConstants.SPLIT_DELIMITOR) : new String[]{};
-		templateValues.put(RegistrationConstants.TEMPLATE_GUIDELINES, Arrays.asList(importantGuidelines));
 	}
 
 
@@ -468,46 +464,29 @@ public class TemplateGenerator extends BaseService {
 		return null;
 	}
 
-
-	private byte[] getStreamImageBytes(List<BiometricsDto> biometricsDtos, RegistrationDTO registration) {
-		Optional<BiometricsDto> biometricsDto = biometricsDtos.stream().filter(b-> b.getAttributeISO() != null).findFirst();
-		if(biometricsDto.isPresent()) {
-			return registration.BIO_CAPTURES.get(String.format("%s_%s_%s", biometricsDto.get().getSubType(),
-					biometricsDto.get().getModalityName(), biometricsDto.get().getNumOfRetries()));
-		}
-		return null;
-	}
-
-	//TODO
-	private byte[] getStreamImageBytes(BiometricsDto biometricsDto, RegistrationDTO registration) {
-		return registration.BIO_CAPTURES.get(String.format("%s_%s_%s", biometricsDto.getSubType(),
-				biometricsDto.getModalityName(), biometricsDto.getNumOfRetries()));
-	}
-
-
 	private void setBiometricImage(Map<String, Object> templateValues, String key, String imagePath, byte[] streamImage)
 			throws RegBaseCheckedException {
-		try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();) {
+		try {
 			if (streamImage != null && streamImage.length > 0) {
 				String encodedBytes = StringUtils.newStringUtf8(Base64.encodeBase64(streamImage, false));
 				templateValues.put(key, RegistrationConstants.TEMPLATE_JPG_IMAGE_ENCODING + encodedBytes);
 			} else if(imagePath != null) {
 				templateValues.put(key, getImage(imagePath));
 			}
-		} catch (IOException ioException) {
-			LOGGER.error(LOG_TEMPLATE_GENERATOR, APPLICATION_NAME, APPLICATION_ID, ioException.getMessage());
-			throw new RegBaseCheckedException(RegistrationConstants.TEMPLATE_GENERATOR_ACK_RECEIPT_EXCEPTION, ioException.getMessage());
+		} catch (Exception exception) {
+			LOGGER.error(LOG_TEMPLATE_GENERATOR, APPLICATION_NAME, APPLICATION_ID, exception.getMessage());
+			throw new RegBaseCheckedException(RegistrationConstants.TEMPLATE_GENERATOR_ACK_RECEIPT_EXCEPTION, exception.getMessage());
 		}
 	}
 
 	private String getLabel(String key) {
-		String label = RegistrationConstants.EMPTY;
+		List<String> labels = new ArrayList<>();
 		List<String> selectedLanguages = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant();
 		for (String selectedLanguage : selectedLanguages) {
 			ResourceBundle resourceBundle = ApplicationContext.getInstance().getBundle(selectedLanguage, RegistrationConstants.LABELS);
-			label = !label.isBlank() ? (resourceBundle.containsKey(key) ? label.concat(RegistrationConstants.SLASH).concat(resourceBundle.getString(key)) : RegistrationConstants.EMPTY) : resourceBundle.getString(key);
+			labels.add(resourceBundle.containsKey(key) ? resourceBundle.getString(key) : RegistrationConstants.EMPTY);
 		}
-		return label;
+		return String.join(RegistrationConstants.SLASH, labels);
 	}
 
 	private String getEncodedImage(String imagePath, String encoding) throws RegBaseCheckedException {
@@ -552,20 +531,30 @@ public class TemplateGenerator extends BaseService {
 				|| fieldValue instanceof Double) {
 			value = String.valueOf(fieldValue);
 		}
+		
+		if (value != null && !getRegistrationDTOFromSession().BLOCKLISTED_CHECK.isEmpty()) {
+			List<BlocklistedConsentDto> blockListedWords = getRegistrationDTOFromSession().BLOCKLISTED_CHECK.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
+			List<String> words = new ArrayList<>();
+			blockListedWords.forEach(blockListedWord -> words.addAll(blockListedWord.getWords()));
+			for (String word : words) {
+				value = value.replaceAll(word, "<mark>"+word+"</mark>");
+			}
+		}
+		
 		return value == null ? RegistrationConstants.EMPTY : value;
 	}
 
-	private String getFieldValue(UiSchemaDTO field) {
-		Object fieldValue = getRegistrationDTOFromSession().getDemographics().get(((UiSchemaDTO) field).getId());
-		String value = RegistrationConstants.EMPTY;
+	private String getFieldValue(UiFieldDTO field) {
+		Object fieldValue = getRegistrationDTOFromSession().getDemographics().get(((UiFieldDTO) field).getId());
+		List<String> values = new ArrayList<>();
 		List<String> selectedLanguages = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant();
 		for (String selectedLanguage : selectedLanguages) {
-			value = value.isBlank() ? value.concat(getValue(fieldValue, selectedLanguage)) : value.concat(RegistrationConstants.SLASH).concat(getValue(fieldValue, selectedLanguage));
+			values.add(getValue(fieldValue, selectedLanguage));
 			if (!field.getType().equalsIgnoreCase(RegistrationConstants.SIMPLE_TYPE)) {
-				return value;
+				return String.join(RegistrationConstants.SLASH, values);
 			}
 		}
-		return value;
+		return String.join(RegistrationConstants.SLASH, values);
 	}
 
 	private String getValue(Object fieldValue) {
@@ -585,15 +574,6 @@ public class TemplateGenerator extends BaseService {
 		return value;
 	}
 
-	private List<UiSchemaDTO> getSchemaFields(double idVersion) throws RegBaseCheckedException {
-		List<UiSchemaDTO> schemaFields;
-		try {
-			schemaFields = identitySchemaServiceImpl.getUISchema(idVersion);
-		} catch (RegBaseCheckedException e) {
-			throw e;
-		}
-		return schemaFields;
-	}
 
 	private String getImage(String imagePath) {
 		try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();) {
@@ -611,11 +591,6 @@ public class TemplateGenerator extends BaseService {
 		return RegistrationConstants.EMPTY;
 	}
 
-	private byte[] getSegmentedImageBytes(BiometricsDto biometricsDto, RegistrationDTO registration) {
-		return registration.BIO_CAPTURES.get(String.format("%s_%s_%s", biometricsDto.getSubType(),
-				biometricsDto.getBioAttribute(), biometricsDto.getNumOfRetries()));
-	}
-
 	public ResponseDTO generateDashboardTemplate(String templateText, TemplateManagerBuilder templateManagerBuilder,
 												 String templateType, String applicationStartTime) throws RegBaseCheckedException {
 		ResponseDTO response = new ResponseDTO();
@@ -624,12 +599,13 @@ public class TemplateGenerator extends BaseService {
 			LOGGER.info(LOG_TEMPLATE_GENERATOR, RegistrationConstants.APPLICATION_NAME,
 					RegistrationConstants.APPLICATION_ID,
 					"generateTemplate had been called for preparing Dashboard Template.");
-
+			
 			Map<String, Object> templateValues = new WeakHashMap<>();
 			ResourceBundle applicationLanguageProperties = ApplicationContext.getInstance().getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS);
 			InputStream is = new ByteArrayInputStream(templateText.getBytes(StandardCharsets.UTF_8));
 
 			templateValues.put(RegistrationConstants.DASHBOARD_TITLE, applicationLanguageProperties.getString("dashBoard"));
+			templateValues.put(RegistrationConstants.DASHBOARD_USERS, applicationLanguageProperties.getString("Users"));
 			templateValues.put(RegistrationConstants.TOTAL_PACKETS_LABEL, applicationLanguageProperties.getString("totalPacketsLabel"));
 			templateValues.put(RegistrationConstants.PENDING_EOD_LABEL, applicationLanguageProperties.getString("pendingEODLabel"));
 			templateValues.put(RegistrationConstants.PENDING_UPLOAD_LABEL, applicationLanguageProperties.getString("pendingUploadLabel"));
@@ -715,7 +691,7 @@ public class TemplateGenerator extends BaseService {
 		clientVersion.put(RegistrationConstants.DASHBOARD_ACTIVITY_VALUE, softwareUpdateHandler.getCurrentVersion());
 		Map<String, Object> schemaVersion = new LinkedHashMap<>();
 		schemaVersion.put(RegistrationConstants.DASHBOARD_ACTIVITY_NAME, applicationLanguageProperties.getString("idschema"));
-		schemaVersion.put(RegistrationConstants.DASHBOARD_ACTIVITY_VALUE, String.valueOf(identitySchemaServiceImpl.getLatestEffectiveSchemaVersion()));
+		schemaVersion.put(RegistrationConstants.DASHBOARD_ACTIVITY_VALUE, String.valueOf(identitySchemaService.getLatestEffectiveSchemaVersion()));
 		List<Map<String, Object>> versionsList = new ArrayList<>();
 		versionsList.add(clientVersion);
 		versionsList.add(schemaVersion);

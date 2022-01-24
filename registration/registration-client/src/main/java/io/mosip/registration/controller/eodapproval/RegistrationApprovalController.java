@@ -5,13 +5,10 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 import static io.mosip.registration.constants.RegistrationConstants.REG_UI_LOGIN_LOADER_EXCEPTION;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.Writer;
 import java.net.URL;
 import java.nio.file.Path;
@@ -43,6 +40,7 @@ import io.mosip.registration.dto.RegistrationApprovalDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
+import io.mosip.registration.service.packet.PacketHandlerService;
 import io.mosip.registration.service.packet.RegistrationApprovalService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -59,12 +57,12 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
@@ -111,7 +109,7 @@ public class RegistrationApprovalController extends BaseController implements In
 	
 	/** status comment column in the table. */
 	@FXML
-	private TableColumn<RegistrationApprovalVO, String> statusComment;
+	private TableColumn<RegistrationApprovalVO, Image> statusComment;
 	
 	@FXML
 	private TableColumn<RegistrationApprovalVO, String> operatorId;
@@ -178,6 +176,9 @@ public class RegistrationApprovalController extends BaseController implements In
 	@FXML
 	private TextField filterField;
 
+	@Autowired
+	private PacketHandlerService packetHandlerService;
+
 	private ObservableList<RegistrationApprovalVO> observableList;
 
 	private Map<String, Integer> packetIds = new HashMap<>();
@@ -204,6 +205,8 @@ public class RegistrationApprovalController extends BaseController implements In
 	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+				RegistrationConstants.ENABLE);
 
 		setImage(exportImageView	, RegistrationConstants.EXPORT_ICON_IMG);
 		setImage(authenticateImageView	, RegistrationConstants.AUTHENTICATE_IMG);
@@ -221,31 +224,11 @@ public class RegistrationApprovalController extends BaseController implements In
 		});
 		
 		reloadTableView();
-		tableCellColorChangeListener();
 		id.setResizable(false);
 		statusComment.setResizable(false);
 		operatorId.setResizable(false);
 		disableColumnsReorder(table);
 		table.getColumns().forEach(column -> column.setReorderable(false));
-	}
-
-	private void tableCellColorChangeListener() {
-		statusComment.setCellFactory(column -> {
-			return new TableCell<RegistrationApprovalVO, String>() {
-				@Override
-				public void updateItem(String item, boolean empty) {
-					super.updateItem(item, empty);
-					setText(item);
-					if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.APPROVED))) {
-						setTextFill(Color.GREEN);
-					} else if (item != null && item.equals(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REJECTED))) {
-						setTextFill(Color.RED);
-					} else {
-						setTextFill(Color.BLACK);
-					}
-				}
-			};
-		});
 	}
 
 	/**
@@ -266,12 +249,55 @@ public class RegistrationApprovalController extends BaseController implements In
 				new PropertyValueFactory<RegistrationApprovalVO, String>(RegistrationConstants.EOD_PROCESS_ID));
 		date.setCellValueFactory(
 				new PropertyValueFactory<RegistrationApprovalVO, String>(RegistrationConstants.EOD_PROCESS_DATE));
-		statusComment.setCellValueFactory(new PropertyValueFactory<RegistrationApprovalVO, String>(
-				RegistrationConstants.EOD_PROCESS_STATUSCOMMENT));
+//		statusComment.setCellValueFactory(new PropertyValueFactory<RegistrationApprovalVO, Image>(
+//				RegistrationConstants.EOD_PROCESS_STATUSCOMMENT));
 		acknowledgementFormPath.setCellValueFactory(new PropertyValueFactory<RegistrationApprovalVO, String>(
 				RegistrationConstants.EOD_PROCESS_ACKNOWLEDGEMENTFORMPATH));
 		operatorId.setCellValueFactory(new PropertyValueFactory<RegistrationApprovalVO, String>(
 				RegistrationConstants.OPERATOR_ID));
+		
+		statusComment.setCellFactory(param -> {
+		       //Set up the ImageView
+		       final ImageView imageview = new ImageView();
+		       imageview.setFitHeight(30);
+		       imageview.setFitWidth(30);
+
+		       //Set up the Table
+		       TableCell<RegistrationApprovalVO, Image> cell = new TableCell<RegistrationApprovalVO, Image>() {
+		           public void updateItem(Image item, boolean empty) {
+		             if (item != null) {
+		            	 imageview.setImage(item);
+		             } else {
+		            	 imageview.setImage(null);
+		             }
+		           }
+		        };
+		        // Attach the imageview to the cell
+		        cell.setGraphic(imageview);
+		        return cell;
+		});
+		
+		id.setCellFactory(param -> {
+			// Set up the Table
+			TableCell<RegistrationApprovalVO, String> cell = new TableCell<RegistrationApprovalVO, String>() {
+				public void updateItem(String item, boolean empty) {
+					if (!empty) {
+						setText(item);
+						int currentIndex = indexProperty().getValue() < 0 ? 0 : indexProperty().getValue();
+						if (param.getTableView().getItems().get(currentIndex).getHasBwords()) {
+							setStyle("-fx-background-color: yellow;");
+						}
+					}
+					if (item == null) {
+						setText(null);
+						setStyle(null);
+					}
+				}
+			};
+			return cell;
+		});
+		
+		statusComment.setCellValueFactory(new PropertyValueFactory<RegistrationApprovalVO, Image>(RegistrationConstants.EOD_PROCESS_STATUSCOMMENT));
 
 		populateTable();
 
@@ -314,20 +340,12 @@ public class RegistrationApprovalController extends BaseController implements In
 			rejectionBtn.setVisible(true);
 			imageAnchorPane.setVisible(true);
 
-			try (FileInputStream file = new FileInputStream(
-					new File(table.getSelectionModel().getSelectedItem().getAcknowledgementFormPath()))) {
-				BufferedReader bufferedReader = new BufferedReader(
-						new InputStreamReader(file, RegistrationConstants.TEMPLATE_ENCODING));
-				StringBuilder acknowledgementContent = new StringBuilder();
-				String line;
-				while ((line = bufferedReader.readLine()) != null) {
-					acknowledgementContent.append(line);
-				}
-				webView.getEngine().loadContent(acknowledgementContent.toString());
-			} catch (IOException ioException) {
-				LOGGER.error("REGISTRATION_APPROVAL_CONTROLLER - REGSITRATION_ACKNOWLEDGEMNT_PAGE_LOADING_FAILED",
-						APPLICATION_NAME, APPLICATION_ID,
-						ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
+			try{
+				String acknowledgementContent = packetHandlerService.getAcknowledgmentReceipt(table.getSelectionModel().getSelectedItem().getPacketId(),
+						table.getSelectionModel().getSelectedItem().getAcknowledgementFormPath());
+				webView.getEngine().loadContent(acknowledgementContent);
+			} catch (RegBaseCheckedException | io.mosip.kernel.core.exception.IOException ex) {
+				LOGGER.error("REGSITRATION_ACKNOWLEDGEMNT_PAGE_LOADING_FAILED", ex);
 			}
 
 		}
@@ -352,12 +370,12 @@ public class RegistrationApprovalController extends BaseController implements In
 				int count = 1;
 				for (RegistrationApprovalDTO approvalDTO : listData) {
 					registrationApprovalVO.add(
-							new RegistrationApprovalVO("    " + count++, approvalDTO.getId(), approvalDTO.getDate(),
-									approvalDTO.getAcknowledgementFormPath(), approvalDTO.getOperatorId(), RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.PENDING)));
+							new RegistrationApprovalVO("    " + count++, approvalDTO.getId(), approvalDTO.getPacketId(), approvalDTO.getDate(),
+									approvalDTO.getAcknowledgementFormPath(), approvalDTO.getOperatorId(), null, approvalDTO.getHasBwords()));
 				}
 				int rowNum = 0;
 				for (RegistrationApprovalDTO approvalDTO : listData) {
-					packetIds.put(approvalDTO.getId(), rowNum++);
+					packetIds.put(approvalDTO.getPacketId(), rowNum++);
 				}
 
 				// 1. Wrap the ObservableList in a FilteredList (initially display all data).
@@ -475,9 +493,11 @@ public class RegistrationApprovalController extends BaseController implements In
 	 *             the reg base checked exception
 	 */
 	public void updateStatus(ActionEvent event) throws RegBaseCheckedException {
-
 		LOGGER.info(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
 				"Registration status updation has been started");
+		
+		SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+				RegistrationConstants.DISABLE);		
 		actionCounter++;
 
 		ToggleButton tBtn = (ToggleButton) event.getSource();
@@ -486,7 +506,7 @@ public class RegistrationApprovalController extends BaseController implements In
 
 			for (Map<String, String> registrationMap : approvalmapList) {
 
-				if (registrationMap.containsValue(table.getSelectionModel().getSelectedItem().getId())) {
+				if (registrationMap.containsValue(table.getSelectionModel().getSelectedItem().getPacketId())) {
 
 					approvalmapList.remove(registrationMap);
 
@@ -496,6 +516,7 @@ public class RegistrationApprovalController extends BaseController implements In
 
 			Map<String, String> map = new WeakHashMap<>();
 			map.put(RegistrationConstants.PACKET_APPLICATION_ID, table.getSelectionModel().getSelectedItem().getId());
+			map.put(RegistrationConstants.PACKET_ID, table.getSelectionModel().getSelectedItem().getPacketId());
 			map.put(RegistrationConstants.STATUSCODE, RegistrationClientStatusCode.APPROVED.getCode());
 			map.put(RegistrationConstants.STATUSCOMMENT, RegistrationConstants.EMPTY);
 			approvalmapList.add(map);
@@ -504,14 +525,16 @@ public class RegistrationApprovalController extends BaseController implements In
 
 			int focusedIndex = table.getSelectionModel().getFocusedIndex();
 
-			int row = packetIds.get(table.getSelectionModel().getSelectedItem().getId());
+			int row = packetIds.get(table.getSelectionModel().getSelectedItem().getPacketId());
 			RegistrationApprovalVO approvalDTO = new RegistrationApprovalVO(
 					table.getSelectionModel().getSelectedItem().getSlno(),
 					table.getSelectionModel().getSelectedItem().getId(),
+					table.getSelectionModel().getSelectedItem().getPacketId(),
 					table.getSelectionModel().getSelectedItem().getDate(),
 					table.getSelectionModel().getSelectedItem().getAcknowledgementFormPath(),
 					table.getSelectionModel().getSelectedItem().getOperatorId(),
-					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.APPROVED));
+					new Image(getImagePath(RegistrationConstants.TICK_IMG, true)), 
+					table.getSelectionModel().getSelectedItem().getHasBwords());
 			observableList.set(row, approvalDTO);
 			wrapListAndAddFiltering(observableList);
 			table.requestFocus();
@@ -533,6 +556,9 @@ public class RegistrationApprovalController extends BaseController implements In
 					authenticateBtn.setDisable(false);
 
 				} else if (tBtn.getId().equals(authenticateBtn.getId())) {
+					SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+							RegistrationConstants.ENABLE);
+					
 					loadStage(primarystage, RegistrationConstants.USER_AUTHENTICATION);
 					eodAuthenticationController.init(this, ProcessNames.EOD.getType());
 				}
@@ -607,7 +633,7 @@ public class RegistrationApprovalController extends BaseController implements In
 
 			List<String> regIds = new ArrayList<>();
 			for (Map<String, String> map : approvalmapList) {
-				registrationApprovalService.updateRegistrationWithAppId(map.get(RegistrationConstants.PACKET_APPLICATION_ID),
+				registrationApprovalService.updateRegistrationWithPacketId(map.get(RegistrationConstants.PACKET_ID),
 						map.get(RegistrationConstants.STATUSCOMMENT), map.get(RegistrationConstants.STATUSCODE));
 				regIds.add(map.get(RegistrationConstants.REGISTRATIONID));
 			}
@@ -665,7 +691,7 @@ public class RegistrationApprovalController extends BaseController implements In
 							.concat(approvaldto.getId()).concat("'").concat(RegistrationConstants.COMMA).concat("'")
 							.concat(approvaldto.getDate()).concat("'").concat(RegistrationConstants.COMMA)
 							.concat(approvaldto.getOperatorId()).concat("'").concat(RegistrationConstants.COMMA)
-							.concat(approvaldto.getStatusComment()))
+							.concat(approvaldto.getStatusComment().getUrl()))
 					.collect(Collectors.joining(RegistrationConstants.NEW_LINE));
 			String headers = RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.EOD_SLNO_LABEL).concat(RegistrationConstants.COMMA)
 					.concat(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.EOD_REGISTRATIONID_LABEL)).concat(RegistrationConstants.COMMA)

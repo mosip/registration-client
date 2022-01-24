@@ -18,7 +18,6 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
@@ -102,8 +101,8 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 	 * @see io.mosip.registration.service.sync.PreRegistrationDataSyncService#
 	 * getPreRegistrationIds(java.lang.String)
 	 */
-	@Counted(value = "pre-registration", extraTags = {"type", "sync"})
-	@Timed(value = "pre-registration", extraTags = {"type", "sync"})
+	@Counted
+	@Timed
 	@Override
 	public ResponseDTO getPreRegistrationIds(@NonNull String syncJobId) {
 		LOGGER.info("Fetching Pre-Registration Id's started, syncJobId : {}", syncJobId);
@@ -135,7 +134,8 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 					mainResponseDTO.getErrors().stream().anyMatch(e -> e.getErrorCode() != null &&
 							(e.getErrorCode().equals("PRG_BOOK_RCI_032") || e.getErrorCode().equals("PRG_DATA_SYNC_016") ) )) {
 				LOGGER.error("RESPONSE from pre-reg-id sync {}",
-						mainResponseDTO.getErrors().stream().map(PreRegistrationExceptionJSONInfoDTO::getErrorCode).collect(Collectors.toList()));
+						mainResponseDTO.getErrors().stream().collect(Collectors.toMap(PreRegistrationExceptionJSONInfoDTO::getErrorCode,
+								PreRegistrationExceptionJSONInfoDTO::getMessage)));
 				return setSuccessResponse(responseDTO, RegistrationConstants.PRE_REG_SUCCESS_MESSAGE, null);
 			}
 
@@ -159,9 +159,6 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 			try {
 				executorServiceForPreReg.execute(
 						new Runnable() {
-
-							@Counted(value = "pre-registration", extraTags = {"type", "packet-download"})
-							@Timed(value = "pre-registration", extraTags = {"type", "packet-download"})
 							public void run() {
 								//TODO - Need to inform pre-reg team to correct date format
 								preRegDetail.setValue(preRegDetail.getValue().endsWith("Z") ? preRegDetail.getValue() : preRegDetail.getValue() + "Z");
@@ -210,7 +207,7 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 		try {
 			/* Check in Database whether required record already exists or not */
 			preRegistration = preRegistrationDAO.get(preRegistrationId);
-			if(preRegistration == null) {
+			if(preRegistration == null || (preRegistration != null && !FileUtils.getFile(preRegistration.getPacketPath()).exists())) {
 				LOGGER.info("Pre-Registration ID is not present downloading {}", preRegistrationId);
 				return downloadAndSavePacket(preRegistration, preRegistrationId, lastUpdatedTimeStamp);
 			}
@@ -227,6 +224,8 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 		return preRegistration;
 	}
 
+	@Counted
+	@Timed
 	private PreRegistrationList downloadAndSavePacket(PreRegistrationList preRegistration, @NonNull String preRegistrationId,
 			 Timestamp lastUpdatedTimeStamp) throws Exception {
 		Map<String, String> requestParamMap = new HashMap<>();
@@ -270,7 +269,8 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 		}
 		LOGGER.info("Pre-reg-id {} errors from response {}", preRegistrationId,
 				mainResponseDTO.getErrors() != null ?
-						mainResponseDTO.getErrors().stream().map(PreRegistrationExceptionJSONInfoDTO::getErrorCode).collect(Collectors.toList()) : "-");
+						mainResponseDTO.getErrors().stream().collect(Collectors.toMap(PreRegistrationExceptionJSONInfoDTO::getErrorCode,
+								PreRegistrationExceptionJSONInfoDTO::getMessage)) : "-");
 		return preRegistration;
 	}
 

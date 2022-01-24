@@ -2,6 +2,7 @@ package io.mosip.registration.test.template;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -11,28 +12,19 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import io.mosip.registration.dao.impl.TemplateDaoImpl;
 import io.mosip.registration.entity.Template;
-import io.mosip.registration.entity.TemplateEmbeddedKeyCommonFields;
-import io.mosip.registration.entity.TemplateFileFormat;
-import io.mosip.registration.entity.TemplateType;
-import io.mosip.registration.repositories.TemplateFileFormatRepository;
 import io.mosip.registration.repositories.TemplateRepository;
-import io.mosip.registration.repositories.TemplateTypeRepository;
 
 public class TemplateDaoImplTest {
 
 	@Mock
 	TemplateRepository<Template> templateRepository;
 
-	@Mock
-	TemplateTypeRepository<TemplateType> typeRepository;
-
-	@Mock
-	TemplateFileFormatRepository<TemplateFileFormat> fileFormatRepository;
 
 	@InjectMocks
 	TemplateDaoImpl templateDao;
@@ -54,8 +46,26 @@ public class TemplateDaoImplTest {
 		when(templateRepository.findByIsActiveTrueAndTemplateTypeCode("ackTemplate")).thenReturn(templates);
 		assertThat(templateDao.getAllTemplates("ackTemplate"), is(templates));
 	}
-
+	
 	@Test
+	public void getAllTemplateTest() {
+		List<Template> templates = new ArrayList<>();
+		Template template = new Template();
+		template.setId("T01");
+
+		template.setFileText("sample text");
+
+		template.setLangCode("en");
+		template.setIsActive(true);
+		templates.add(template);
+		when(templateRepository.findAllByIsActiveTrueAndTemplateTypeCodeLikeAndLangCodeOrderByIdAsc(Mockito.anyString(), Mockito.anyString())).thenReturn(templates);
+		assertEquals(templates.size(),templateDao.getAllTemplates("templateTypeCode", "langCode").size());
+	}
+
+	
+	
+
+	/*@Test
 	public void getTemplateTypesTest() {
 		List<TemplateType> templateTypes = new ArrayList<>();
 		TemplateType templateType = new TemplateType();
@@ -76,5 +86,5 @@ public class TemplateDaoImplTest {
 		fileFormats.add(fileFormat);
 		when(fileFormatRepository.findByIsActiveTrue()).thenReturn(fileFormats);
 		assertThat(templateDao.getAllTemplateFileFormats(), is(fileFormats));
-	}
+	}*/
 }

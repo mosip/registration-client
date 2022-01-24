@@ -3,6 +3,7 @@ package io.mosip.registration.mdm.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.signature.constant.SignatureConstant;
 import io.mosip.kernel.signature.dto.JWTSignatureVerifyRequestDto;
@@ -19,6 +20,16 @@ import io.mosip.registration.mdm.dto.MDMError;
 import io.mosip.registration.mdm.dto.MdmDeviceInfo;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.MdmSbiDeviceInfoWrapper;
 
+import org.apache.http.Consts;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -26,11 +37,8 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,9 +69,6 @@ public class MosipDeviceSpecificationHelper {
 
 	@Value("${mosip.registration.mdm.trust.domain.deviceinfo:DEVICE}")
 	private String deviceInfoTrustDomain;
-
-	@Value("${mosip.mds.validation.time.flag:Y}")
-	private String timeValidationFlag;
 
 	private final String CONTENT_LENGTH = "Content-Length:";
 
@@ -100,7 +105,7 @@ public class MosipDeviceSpecificationHelper {
 	public DeviceInfo getDeviceInfoDecoded(String deviceInfo, Class<?> classType) {
 		try {
 			validateJWTResponse(deviceInfo, deviceInfoTrustDomain);
-			String result = new String(Base64.getUrlDecoder().decode(getPayLoad(deviceInfo)));
+			String result = new String(CryptoUtil.decodeURLSafeBase64(getPayLoad(deviceInfo)));
 			if(classType.getName().equals("io.mosip.registration.mdm.sbi.spec_1_0.service.impl.MosipDeviceSpecification_SBI_1_0_ProviderImpl")) {
 				return mapper.readValue(result, MdmSbiDeviceInfoWrapper.class);
 			} else {
@@ -125,7 +130,7 @@ public class MosipDeviceSpecificationHelper {
 				throw new DeviceException(MDMError.MDM_INVALID_SIGNATURE.getErrorCode(), MDMError.MDM_INVALID_SIGNATURE.getErrorMessage());
 		
 		if (jwtSignatureVerifyRequestDto.getValidateTrust() && !jwtSignatureVerifyResponseDto.getTrustValid().equals(SignatureConstant.TRUST_VALID)) {
-		        throw new DeviceException(MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorCode(), MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorMessage());
+		      throw new DeviceException(MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorCode(), MDMError.MDM_CERT_PATH_TRUST_FAILED.getErrorMessage());
 		}
 	}
 
@@ -239,5 +244,52 @@ public class MosipDeviceSpecificationHelper {
 					RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage()
 							+ " Identified Quality Score for capture biometrics is null or Empty");
 		}
+	}
+
+	public static int getMDMConnectionTimeout(String method) {
+		Integer timeout = ApplicationContext.getIntValueFromApplicationMap(
+				String.format(RegistrationConstants.METHOD_BASED_MDM_CONNECTION_TIMEOUT, method.toUpperCase()));
+		if(timeout == null || timeout == 0) {
+			timeout = ApplicationContext.getIntValueFromApplicationMap(RegistrationConstants.MDM_CONNECTION_TIMEOUT);
+		}
+		return (timeout == null || timeout == 0) ? 10000 : timeout;
+	}
+
+	public String getHttpClientResponseEntity(String url, String method, String body) throws IOException {
+		int timeout = getMDMConnectionTimeout(method);
+		LOGGER.debug("MDM HTTP CALL method : {}  with timeout {}", method, timeout);
+		RequestConfig requestConfig = RequestConfig.custom()
+				.setConnectTimeout(timeout)
+				.setSocketTimeout(timeout)
+				.setConnectionRequestTimeout(timeout)
+				.build();
+		try (CloseableHttpClient client = HttpClients.createDefault()) {
+			StringEntity requestEntity = new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8));
+			HttpUriRequest httpUriRequest = RequestBuilder.create(method)
+					.setConfig(requestConfig)
+					.setUri(url)
+					.setEntity(requestEntity)
+					.build();
+			CloseableHttpResponse response = client.execute(httpUriRequest);
+			return EntityUtils.toString(response.getEntity());
+		}
+	}
+	
+	public CloseableHttpResponse getHttpClientResponse(String url, String method, String body) throws IOException {
+		int timeout = getMDMConnectionTimeout(method);
+		LOGGER.debug("MDM HTTP CALL method : {}  with timeout {}", method, timeout);
+		RequestConfig requestConfig = RequestConfig.custom()
+				.setConnectTimeout(timeout)
+				.setSocketTimeout(timeout)
+				.setConnectionRequestTimeout(timeout)
+				.build();
+		CloseableHttpClient client = HttpClients.createDefault();
+		StringEntity requestEntity = new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8));
+		HttpUriRequest httpUriRequest = RequestBuilder.create(method)
+				.setConfig(requestConfig)
+				.setUri(url)
+				.setEntity(requestEntity)
+				.build();
+		return client.execute(httpUriRequest);
 	}
 }

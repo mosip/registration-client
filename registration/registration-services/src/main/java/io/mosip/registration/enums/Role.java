@@ -1,8 +1,7 @@
 package io.mosip.registration.enums;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public enum Role {
 
@@ -18,11 +17,11 @@ public enum Role {
         return Arrays.asList(REGISTRATION_SUPERVISOR.name());
     }
 
-    public static boolean hasOperatorRole(List<String> userRoles) {
+    public static boolean hasOperatorRole(Collection<String> userRoles) {
         return userRoles != null && userRoles.contains(REGISTRATION_OFFICER.name());
     }
 
-    public static boolean hasSupervisorRole(List<String> userRoles) {
+    public static boolean hasSupervisorRole(Collection<String> userRoles) {
         return userRoles != null && userRoles.stream().anyMatch(r -> getSupervisorAuthRoles().contains(r));
     }
 
@@ -33,5 +32,18 @@ public enum Role {
     public static boolean hasAnyRegistrationRoles(Collection<String> userRoles) {
         return userRoles != null &&
                 userRoles.stream().anyMatch(r ->  getValidRoles().contains(r));
+    }
+
+    public static Role getHighestRankingRole(Collection<String> userRoles) {
+        if(isDefaultUser(userRoles))
+            return Default;
+
+        if(hasSupervisorRole(userRoles))
+            return REGISTRATION_SUPERVISOR;
+
+        if(hasOperatorRole(userRoles))
+            return REGISTRATION_OFFICER;
+
+        return null;
     }
 }

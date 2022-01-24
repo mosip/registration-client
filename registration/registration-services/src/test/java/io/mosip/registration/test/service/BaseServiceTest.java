@@ -24,11 +24,7 @@ import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dao.UserOnboardDAO;
-import io.mosip.registration.entity.CenterMachine;
 import io.mosip.registration.entity.MachineMaster;
-import io.mosip.registration.entity.id.CenterMachineId;
-import io.mosip.registration.entity.id.RegMachineSpecId;
-import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
@@ -50,9 +46,6 @@ public class BaseServiceTest {
 
 	@Mock
 	private MachineMasterRepository machineMasterRepository;
-
-	@Mock
-	private CenterMachineRepository centerMachineRepository;
 
 	@Mock
 	private RegistrationCenterDAO registrationCenterDAO;
@@ -104,51 +97,5 @@ public class BaseServiceTest {
 
 		Assert.assertSame(null, baseService.getStationId());
 	}
-
-	@Test
-	public void getCenterIdTest() {
-
-		CenterMachine centerMachine = new CenterMachine();
-		CenterMachineId centerMachineId = new CenterMachineId();
-		centerMachineId.setMachineId("11002");
-		centerMachineId.setRegCenterId("10011");
-		centerMachine.setCenterMachineId(centerMachineId);
-		centerMachine.setIsActive(true);
-		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString())).thenReturn(centerMachine);
-		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
-
-		Assert.assertSame("10011", baseService.getCenterId("11002"));
-	}
-
-	@Test
-	public void getNegativeCenterIdTest() {
-
-		CenterMachine centerMachine = new CenterMachine();
-		CenterMachineId centerMachineId = new CenterMachineId();
-		centerMachineId.setMachineId("11002");
-		centerMachineId.setRegCenterId("10011");
-		centerMachine.setCenterMachineId(centerMachineId);
-		centerMachine.setIsActive(true);
-		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString())).thenReturn(centerMachine);
-		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(false);
-
-		Assert.assertSame(null, baseService.getCenterId("11002"));
-	}
-
-	@Test
-	public void getCenterIdTestWithCenterInactive() {
-
-		CenterMachine centerMachine = new CenterMachine();
-		CenterMachineId centerMachineId = new CenterMachineId();
-		centerMachineId.setMachineId("11002");
-		centerMachineId.setRegCenterId("10011");
-		centerMachine.setCenterMachineId(centerMachineId);
-		centerMachine.setIsActive(false);
-		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString())).thenReturn(centerMachine);
-		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
-
-		Assert.assertSame("10011", baseService.getCenterId("11002"));
-	}
-	
 
 }

@@ -9,11 +9,14 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 
+import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
+import io.mosip.kernel.core.util.CryptoUtil;
 import org.apache.http.Consts;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -23,7 +26,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.assertj.core.util.Arrays;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -121,7 +124,8 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 		return mdmBioDevices;
 	}
 
-	@Timed(value = "mdm.stream", extraTags = {"version", "0.9.2"})
+	@Counted(extraTags = {"version", "0.9.2"})
+	@Timed(extraTags = {"version", "0.9.2"})
 	@Override
 	public InputStream stream(MdmBioDevice bioDevice, String modality) throws RegBaseCheckedException {
 
@@ -173,7 +177,8 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 
 	}
 
-	@Timed(value = "mdm.rcapture", extraTags = {"version", "0.9.2"})
+	@Counted(extraTags = {"version", "0.9.2"})
+	@Timed(extraTags = {"version", "0.9.2"})
 	@Override
 	public List<BiometricsDto> rCapture(MdmBioDevice bioDevice, MDMRequestDto mdmRequestDto)
 			throws RegBaseCheckedException {
@@ -232,7 +237,7 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 				String payLoad = mosipDeviceSpecificationHelper.getPayLoad(rCaptureResponseBiometricsDTO.getData());
 				String signature = mosipDeviceSpecificationHelper.getSignature(rCaptureResponseBiometricsDTO.getData());
 
-				String decodedPayLoad = new String(Base64.getUrlDecoder().decode(payLoad));
+				String decodedPayLoad = new String(CryptoUtil.decodeURLSafeBase64(payLoad));
 				RCaptureResponseDataDTO dataDTO = mapper.readValue(decodedPayLoad, RCaptureResponseDataDTO.class);
 
 				LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
@@ -338,7 +343,7 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 	private DigitalId getDigitalId(String digitalId) throws IOException, RegBaseCheckedException, DeviceException {
 		mosipDeviceSpecificationHelper.validateJWTResponse(digitalId, digitalIdTrustDomain);
 		return mosipDeviceSpecificationHelper.getMapper().readValue(
-				new String(Base64.getUrlDecoder().decode(mosipDeviceSpecificationHelper.getPayLoad(digitalId))),
+				new String(CryptoUtil.decodeURLSafeBase64(mosipDeviceSpecificationHelper.getPayLoad(digitalId))),
 				DigitalId.class);
 	}
 
@@ -357,6 +362,7 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 
 	}
 
+	@Counted(recordFailuresOnly = true, extraTags = {"version", "0.9.2"})
 	@Override
 	public boolean isDeviceAvailable(MdmBioDevice mdmBioDevice) {
 

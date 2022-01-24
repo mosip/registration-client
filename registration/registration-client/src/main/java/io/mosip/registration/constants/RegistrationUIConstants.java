@@ -17,18 +17,10 @@ public class RegistrationUIConstants {
 
 	public static ResourceBundle bundle = ApplicationContext.getInstance().getApplicationLanguageMessagesBundle();
 
-	public static void setBundle() {
-
-		ApplicationContext applicationContext = ApplicationContext.getInstance();
-		bundle = applicationContext.getBundle(applicationContext.getApplicationLanguage(),
-				RegistrationConstants.MESSAGES);
-
+	public static void setBundle(ResourceBundle messageBundle) {
+		bundle = messageBundle;
 	}
 
-	/*
-	 * public static final String OTP_VALIDITY = bundle.getString("OTP_VALIDITY");
-	 * public static final String MINUTES = bundle.getString("MINUTES");
-	 */
 
 	public static String getMessageLanguageSpecific(String key) {
 		try {
@@ -68,6 +60,7 @@ public class RegistrationUIConstants {
 	public static final String USER_NOT_AUTHORIZED = "USER_NOT_AUTHORIZED";
 	public static final String REVIEWER_NOT_AUTHORIZED = "REVIEWER_NOT_AUTHORIZED";
 	public static final String CREDENTIALS_NOT_FOUND = "CREDENTIALS_NOT_FOUND";
+	public static final String TOKEN_SAVE_FAILED = "TOKEN_SAVE_FAILED";
 	public static final String INCORRECT_PWORD = "INCORRECT_PWORD";
 	public static final String BLOCKED_USER_ERROR = "BLOCKED_USER_ERROR";
 	public static final String USERNAME_FIELD_ERROR = "USERNAME_FIELD_ERROR";
@@ -93,6 +86,7 @@ public class RegistrationUIConstants {
 
 	// MACHINE CENTER REMAP
 	public static final String REMAP_NO_ACCESS_MESSAGE = "REMAP_NO_ACCESS_MESSAGE";
+	public static final String REMAP_MESSAGE = "REMAP_MESSAGE";
 	public static final String REMAP_EOD_PROCESS_MESSAGE = "REMAP_EOD_PROCESS_MESSAGE";
 	public static final String REMAP_CLICK_OK = "REMAP_CLICK_OK";
 	public static final String REMAP_PROCESS_SUCCESS = "REMAP_PROCESS_SUCCESS";
@@ -333,6 +327,7 @@ public class RegistrationUIConstants {
 	public static final String CENTER_MACHINE_INACTIVE = "CENTER_MACHINE_INACTIVE";
 
 	public static final String RESTART_APPLICATION = "RESTART_APPLICATION";
+	public static final String LOGOUT_ALERT = "LOGOUT_ALERT";
 
 	public static final String PRE_REG_TO_GET_ID_ERROR = "PRE_REG_TO_GET_ID_ERROR";
 	public static final String PRE_REG_TO_GET_PACKET_ERROR = "PRE_REG_TO_GET_PACKET_ERROR";
@@ -432,4 +427,6 @@ public class RegistrationUIConstants {
 	
 	public static final String CRON_EXPRESSION_MODIFIED = "CRON_EXPRESSION_MODIFIED";
 
+	public static final String INVALID_FLOW_TYPE = "INVALID_FLOW_TYPE";
+	public static final String ADDITIONAL_INFO_REQ_ID_MISSING = "ADDITIONAL_INFO_REQ_ID_MISSING";
 }

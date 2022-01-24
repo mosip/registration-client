@@ -1,19 +1,14 @@
 package io.mosip.registration.dao.impl;
 
-import static io.mosip.registration.constants.LoggerConstants.LOG_REG_USER_DETAIL;
-import static io.mosip.registration.constants.LoggerConstants.LOG_REG_USER_DETAIL_DAO;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
-
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
@@ -30,12 +25,13 @@ import io.mosip.registration.entity.UserPassword;
 import io.mosip.registration.entity.UserRole;
 import io.mosip.registration.entity.UserToken;
 import io.mosip.registration.entity.id.UserRoleId;
-import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.UserBiometricRepository;
 import io.mosip.registration.repositories.UserDetailRepository;
 import io.mosip.registration.repositories.UserPwdRepository;
 import io.mosip.registration.repositories.UserRoleRepository;
 import io.mosip.registration.repositories.UserTokenRepository;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * The implementation class of {@link UserDetailDAO}.
@@ -79,16 +75,15 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 	 * String)
 	 */
 	public UserDetail getUserDetail(String userId) {
+		LOGGER.info("Fetching User details");
 
-		LOGGER.info("REGISTRATION - USER_DETAIL - REGISTRATION_USER_DETAIL_DAO_IMPL", APPLICATION_NAME, APPLICATION_ID,
-				"Fetching User details");
+		UserDetail userDetail = userDetailRepository.findByIdIgnoreCase(userId);
 
-		UserDetail userDetail = userDetailRepository.findByIdIgnoreCaseAndIsActiveTrue(userId);
+		if(userDetail != null && userDetail.getIsActive())
+			return userDetail;
 
-		LOGGER.info("REGISTRATION - USER_DETAIL - REGISTRATION_USER_DETAIL_DAO_IMPL", APPLICATION_NAME, APPLICATION_ID,
-				"User details fetched successfully");
-
-		return userDetail;
+		LOGGER.info("User details fetched with status : {}", (userDetail==null? null : userDetail.getIsActive()));
+		return null;
 	}
 
 	/*
@@ -99,13 +94,11 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 	 */
 	public void updateLoginParams(UserDetail userDetail) {
 
-		LOGGER.info("REGISTRATION - UPDATE_LOGIN_PARAMS - REGISTRATION_USER_DETAIL_DAO_IMPL", APPLICATION_NAME,
-				APPLICATION_ID, "Updating Login params");
+		LOGGER.info("Updating Login params");
 
 		userDetailRepository.save(userDetail);
 
-		LOGGER.info("REGISTRATION - UPDATE_LOGIN_PARAMS - REGISTRATION_USER_DETAIL_DAO_IMPL", APPLICATION_NAME,
-				APPLICATION_ID, "Updated Login params successfully");
+		LOGGER.info("Updated Login params successfully");
 
 	}
 
@@ -117,10 +110,7 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 	 * lang. String)
 	 */
 	public List<UserBiometric> getAllActiveUsers(String attrCode) {
-
-		LOGGER.info("REGISTRATION - ACTIVE_USERS - REGISTRATION_USER_DETAIL_DAO_IMPL", APPLICATION_NAME, APPLICATION_ID,
-				"Fetching all active users");
-
+		LOGGER.info("Fetching all active users");
 		return userBiometricRepository.findByUserBiometricIdBioAttributeCodeAndIsActiveTrue(attrCode);
 
 	}
@@ -132,35 +122,31 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 	 * getUserSpecificBioDetails(java.lang. String, java.lang.String)
 	 */
 	public List<UserBiometric> getUserSpecificBioDetails(String userId, String bioType) {
-
-		LOGGER.info("REGISTRATION - USER_SPECIFIC_BIO - REGISTRATION_USER_DETAIL_DAO_IMPL", APPLICATION_NAME,
-				APPLICATION_ID, "Fetching user specific biometric details");
-
+		LOGGER.info("Fetching user specific biometric details");
 		return userBiometricRepository
 				.findByUserBiometricIdUsrIdAndIsActiveTrueAndUserBiometricIdBioTypeCodeIgnoreCase(userId, bioType);
 	}
 
 	public void save(UserDetailDto userDetailDto) {
 		UserPassword usrPwd = new UserPassword();
-		UserDetail userDetail = userDetailRepository.findByIdIgnoreCase(userDetailDto.getUserName());
+		UserDetail userDetail = userDetailRepository.findByIdIgnoreCase(userDetailDto.getUserId());
 		boolean userStatus = userDetailDto.getIsActive() != null ? userDetailDto.getIsActive().booleanValue() : true;
 
 		if(userDetail == null) {
 			userDetail = new UserDetail();
-			userDetail.setId(userDetailDto.getUserName());
+			userDetail.setId(userDetailDto.getUserId());
+			userDetail.setName(userDetailDto.getUserId());
 		}
 		else {
 			usrPwd.setPwd(userDetail.getUserPassword().getPwd());
-			List<UserRole> roles = userRoleRepository.findByUserRoleIdUsrId(userDetailDto.getUserName());
-			userDetail.getUserRole().removeAll(roles);
 		}
 
 		if(!userStatus) {//delete authtoken of inactive users
-			userTokenRepository.deleteByUsrId(userDetailDto.getUserName());
+			userTokenRepository.deleteByUsrId(userDetailDto.getUserId());
 			userDetail.setUserToken(null);
 		}
 
-		usrPwd.setUsrId(userDetailDto.getUserName());
+		usrPwd.setUsrId(userDetailDto.getUserId());
 		usrPwd.setStatusCode("00");
 		usrPwd.setIsActive(userStatus);
 		usrPwd.setLangCode(ApplicationContext.applicationLanguage());
@@ -169,12 +155,11 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 		usrPwd.setCrDtime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		userDetail.setUserPassword(usrPwd);
-		userDetail.setEmail(userDetailDto.getMail());
-		userDetail.setMobile(userDetailDto.getMobile());
-		userDetail.setName(userDetailDto.getName());
 		userDetail.setLangCode(ApplicationContext.applicationLanguage());
 		userDetail.setCrDtime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 		userDetail.setIsActive(userStatus);
+		userDetail.setRegCenterId(userDetailDto.getRegCenterId());
+		userDetail.setIsDeleted(userDetailDto.getIsDeleted());
 		userDetail.setCrBy(SessionContext.isSessionContextAvailable() ? SessionContext.userContext().getUserId() :
 				RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
 		userDetail.setStatusCode("00");
@@ -182,29 +167,12 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 		userDetailRepository.saveAndFlush(userDetail);
 		userPwdRepository.save(usrPwd);
 
-		Set<UserRole> newRoles = new HashSet<>();
-		userDetailDto.getRoles().forEach(role -> {
-			UserRole userRole = new UserRole();
-			userRole.setIsActive(userStatus);
-			userRole.setLangCode(ApplicationContext.applicationLanguage());
-			userRole.setCrBy(SessionContext.isSessionContextAvailable() ? SessionContext.userContext().getUserId() :
-					RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
-			userRole.setCrDtime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
-			UserRoleId roleId = new UserRoleId();
-			roleId.setRoleCode(role);
-			roleId.setUsrId(userDetailDto.getUserName());
-			userRole.setUserRoleId(roleId);
-			newRoles.add(userRole);
-			userRoleRepository.save(userRole);
-		});
-
-		LOGGER.info(LOG_REG_USER_DETAIL, APPLICATION_NAME, APPLICATION_ID, "leaving user detail save method...");
+		LOGGER.info("leaving user detail save method...");
 	}
 
 	@Override
 	public UserBiometric getUserSpecificBioDetail(String userId, String bioType, String subType) {
-		LOGGER.info("REGISTRATION - USER_SPECIFIC_BIO - REGISTRATION_USER_DETAIL_DAO_IMPL", APPLICATION_NAME,
-				APPLICATION_ID, "Fetching user specific subtype level biometric detail");
+		LOGGER.info("Fetching user specific subtype level biometric detail");
 
 		return userBiometricRepository
 				.findByUserBiometricIdUsrIdAndIsActiveTrueAndUserBiometricIdBioTypeCodeAndUserBiometricIdBioAttributeCodeIgnoreCase(
@@ -213,9 +181,14 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 
 	@Override
 	public List<UserBiometric> findAllActiveUsers(String bioType) {
-		LOGGER.info(LOG_REG_USER_DETAIL, APPLICATION_NAME, APPLICATION_ID,
-				"Fetching all local users for bioType >>> " + bioType);
+		LOGGER.info("Fetching all local users for bioType >>> {}", bioType);
 		return userBiometricRepository.findByUserBiometricIdBioTypeCodeAndIsActiveTrue(bioType);
+	}
+
+	@Override
+	public List<UserBiometric> findAllActiveUsersExceptCurrentUser(String bioType, String userId) {
+		LOGGER.info("Fetching all local users except login userid for bioType >>> {}", bioType);
+		return userBiometricRepository.findByUserBiometricIdUsrIdNotAndUserBiometricIdBioTypeCodeAndIsActiveTrue(userId, bioType);
 	}
 
 	@Override
@@ -252,10 +225,10 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 		if (userDetail != null) {
 			if (userDetail.getSalt() == null)
 				userDetail
-						.setSalt(CryptoUtil.encodeBase64(DateUtils.formatToISOString(LocalDateTime.now()).getBytes()));
+						.setSalt(CryptoUtil.encodeToURLSafeBase64(DateUtils.formatToISOString(LocalDateTime.now()).getBytes()));
 
 			userDetail.getUserPassword().setPwd(HMACUtils2.digestAsPlainTextWithSalt(password.getBytes(),
-					CryptoUtil.decodeBase64(userDetail.getSalt())));
+					ClientCryptoUtils.decodeBase64Data(userDetail.getSalt())));
 			userDetail.getUserPassword().setUpdDtimes(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 			userPwdRepository.save(userDetail.getUserPassword());
@@ -265,42 +238,65 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 
 	@Override
 	public List<UserDetail> getAllUsers() {
-		LOGGER.info("REGISTRATION - USER_DETAIL - REGISTRATION_USER_DETAIL_DAO_IMPL", APPLICATION_NAME, APPLICATION_ID,
-				"Fetching All User details");
+		LOGGER.info("Fetching All User details");
 		return userDetailRepository.findAll();
 	}
 
 	@Override
 	public void deleteUser(UserDetail userDetail) {
-		LOGGER.info("REGISTRATION - USER_DETAIL - REGISTRATION_USER_DETAIL_DAO_IMPL", APPLICATION_NAME, APPLICATION_ID,
-				"Deleting user  : " + userDetail.getId());
+		LOGGER.info("Deleting user");
 		userDetailRepository.delete(userDetail);
 	}
 
 	@Override
 	public void deleteUserRole(String userName) {
-		LOGGER.info("REGISTRATION - USER_DETAIL - REGISTRATION_USER_DETAIL_DAO_IMPL", APPLICATION_NAME, APPLICATION_ID,
-				"Deleting Roles for user : " + userName);
-
+		LOGGER.info("Deleting Roles for user");
 		List<UserRole> roles = userRoleRepository.findByUserRoleIdUsrId(userName);
 		userRoleRepository.deleteInBatch(roles);
 	}
 
 	@Override
 	public void update(UserDetail userDetail) {
-
-		LOGGER.info("REGISTRATION - USER_DETAIL - REGISTRATION_USER_DETAIL_DAO_IMPL", APPLICATION_NAME, APPLICATION_ID,
-				"Updating User : " + userDetail.getId());
-
 		userDetailRepository.update(userDetail);
 	}
 	
 	@Override
 	public List<UserRole> getUserRoleByUserId(String userId) {
-		LOGGER.info("REGISTRATION - USER_DETAIL - REGISTRATION_USER_DETAIL_DAO_IMPL", APPLICATION_NAME, APPLICATION_ID,
-				"Finding role for the UserID : " + userId);
-		
 		return userRoleRepository.findByUserRoleIdUsrId(userId);
+	}
+
+	@Override
+	public void updateUserRolesAndUsername(@NotNull String userId, String username, List<String> roles) {
+		UserDetail userDetail = userDetailRepository.findByIdIgnoreCase(userId);
+
+		if(userDetail == null) {
+			LOGGER.info("User entry not found for the logged in user to update roles");
+			return;
+		}
+
+		userDetail.setName(username);
+
+		List<UserRole> existingRoles = userRoleRepository.findByUserRoleIdUsrId(userId);
+		if(existingRoles != null && !existingRoles.isEmpty()) {
+			userDetail.getUserRole().removeAll(existingRoles);
+		}
+
+		userDetailRepository.saveAndFlush(userDetail);
+
+		if(roles != null) {
+			for (String role : roles) {
+				UserRole userRole = new UserRole();
+				userRole.setIsActive(true);
+				userRole.setLangCode(ApplicationContext.applicationLanguage());
+				userRole.setCrBy(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
+				userRole.setCrDtime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
+				UserRoleId roleId = new UserRoleId();
+				roleId.setRoleCode(role);
+				roleId.setUsrId(userId);
+				userRole.setUserRoleId(roleId);
+				userRoleRepository.saveAndFlush(userRole);
+			}
+		}
 	}
 
 }

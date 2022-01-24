@@ -1,15 +1,24 @@
 package io.mosip.registration.service.sync.impl;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import io.micrometer.core.annotation.Timed;
-import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
-import io.mosip.kernel.keymanagerservice.repository.CACertificateStoreRepository;
 import io.mosip.kernel.partnercertservice.dto.CACertificateRequestDto;
 import io.mosip.kernel.partnercertservice.dto.CACertificateResponseDto;
 import io.mosip.kernel.partnercertservice.service.spi.PartnerCertificateManagerService;
@@ -24,15 +33,7 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.jobs.SyncManager;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.sync.CertificateSyncService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.*;
 
 
 @Service
@@ -46,9 +47,6 @@ public class CertificateSyncServiceImpl extends BaseService implements Certifica
 
     @Autowired
     private ServiceDelegateUtil serviceDelegateUtil;
-
-    @Autowired
-    private CACertificateStoreRepository certificateStoreRepository;
 
     @Autowired
     private MasterSyncDao masterSyncDao;
@@ -76,7 +74,7 @@ public class CertificateSyncServiceImpl extends BaseService implements Certifica
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-    @Timed(value = "sync", longTask = true, extraTags = {"type", "cacerts"})
+    @Timed
     @Override
     public ResponseDTO getCACertificates(String triggerPoint) {
         ResponseDTO responseDTO = new ResponseDTO();
@@ -87,7 +85,7 @@ public class CertificateSyncServiceImpl extends BaseService implements Certifica
                     LocalDateTime.ofInstant(syncControl.getLastSyncDtimes().toInstant(), ZoneOffset.ofHours(0))));
         }
 
-        if(!RegistrationAppHealthCheckUtil.isNetworkAvailable())
+        if(!serviceDelegateUtil.isNetworkAvailable())
             return setErrorResponse(responseDTO, RegistrationConstants.NO_INTERNET, null);
 
         LOGGER.info("Network available cacerts sync started");

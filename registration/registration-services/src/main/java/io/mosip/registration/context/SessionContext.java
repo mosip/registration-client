@@ -13,8 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import io.mosip.registration.enums.Role;
-import io.mosip.registration.util.restclient.AuthTokenUtilService;
+import io.mosip.registration.dto.*;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.kernel.biometrics.constant.BiometricType;
@@ -24,19 +23,17 @@ import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.LoginMode;
 import io.mosip.registration.constants.ProcessNames;
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.dto.AuthTokenDTO;
-import io.mosip.registration.dto.AuthenticationValidatorDTO;
-import io.mosip.registration.dto.AuthorizationDTO;
-import io.mosip.registration.dto.RegistrationCenterDetailDTO;
-import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.security.AuthenticationService;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
-import io.mosip.registration.util.restclient.ServiceDelegateUtil;
+import io.mosip.registration.util.restclient.AuthTokenUtilService;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * This class will handle the creation of Session context, Security Context and
@@ -136,29 +133,33 @@ public class SessionContext {
 	 * @return boolean - Returns whether the Session context is getting created or
 	 *         not.
 	 * @throws IOException
-	 * @throws RegBaseCheckedException
+	 * @thuserDtlsrows RegBaseCheckedException
 	 */
 	public static boolean create(UserDTO userDTO, String loginMethod, boolean isInitialSetUp,
-			boolean isUserNewToMachine, AuthenticationValidatorDTO authenticationValidatorDTO)
+								 boolean isUserNewToMachine, AuthenticationValidatorDTO authenticationValidatorDTO)
 			throws RegBaseCheckedException, IOException {
-
-		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
-				"Entering into creating Session Context");
-
-		LoginService loginService = applicationContext.getBean(LoginService.class);
+		LOGGER.debug("Entering into creating Session Context");
 
 		Set<String> roleList = new LinkedHashSet<>();
-		if (null != userDTO) {
-			userDTO.getUserRole().forEach(roleCode -> {
+		LoginService loginService = applicationContext.getBean(LoginService.class);
+		if(userDTO != null) {
+			userDTO =  loginService.getUserDetail(userDTO.getId());
+			for(UserRoleDTO roleCode : userDTO.getUserRole()) {
 				if (roleCode.isActive()) {
 					roleList.add(String.valueOf(roleCode.getRoleCode()));
 				}
-			});
+			}
 		}
+
+		if(!isInitialSetUp && userDTO == null) {
+			LOGGER.error("Failed to create sessionContext as userDTO is null");
+			return false;
+		}
+
 		if (isInitialSetUp) {
 			authModes.add(RegistrationConstants.PWORD);
 		} else {
-			authModes = loginService.getModesOfLogin(ProcessNames.LOGIN.getType(), roleList, false);
+			authModes = loginService.getModesOfLogin(ProcessNames.LOGIN.getType(), roleList);
 		}
 
 		if (null == sessionContext) {
@@ -193,7 +194,7 @@ public class SessionContext {
 				createSessionContext();
 				sessionContext.authTokenDTO = authTknDTO;
 				validAuthModes.add(loginMethod);
-				createSecurityContext(userDTO, false);
+				sessionContext = null;
 				return true;
 			} else {
 				validAuthModes.remove(loginMethod);
@@ -262,18 +263,20 @@ public class SessionContext {
 	private static boolean validatePword(String loginMethod, UserDTO userDTO,
 			AuthenticationValidatorDTO authenticationValidatorDTO, boolean skipAuthModes) {
 		AuthenticationService authenticationService = applicationContext.getBean(AuthenticationService.class);
-		if (authenticationValidatorDTO != null && authenticationService.validatePassword(authenticationValidatorDTO)
-				.equalsIgnoreCase(RegistrationConstants.PWD_MATCH)) {
-			createSessionContext();
-			SessionContext.authTokenDTO().setLoginMode(loginMethod);
-			validAuthModes.add(loginMethod);
-			createSecurityContext(userDTO, skipAuthModes);
-			return true;
-		} else {
-			validAuthModes.remove(loginMethod);
-			sessionContext = null;
-			return false;
+		try {
+			if (authenticationValidatorDTO != null && authenticationService.validatePassword(authenticationValidatorDTO)) {
+				createSessionContext();
+				SessionContext.authTokenDTO().setLoginMode(loginMethod);
+				validAuthModes.add(loginMethod);
+				createSecurityContext(userDTO, skipAuthModes);
+				return true;
+			}
+		} catch (RegBaseCheckedException e) {
+			LOGGER.error("Failed validating password", e);
 		}
+		validAuthModes.remove(loginMethod);
+		sessionContext = null;
+		return false;
 	}
 
 	/**
@@ -458,14 +461,15 @@ public class SessionContext {
 				"Started Creating Security Session Context with auth modes skip : " + skipAuthModes);
 		if (skipAuthModes || (null != authModes && null != validAuthModes && authModes.containsAll(validAuthModes))) {
 			userContext = sessionContext.new UserContext();
+			LoginService loginService = applicationContext.getBean(LoginService.class);
 			if (userDTO != null) {
 				List<String> roleList = new ArrayList<>();
-
-				userDTO.getUserRole().forEach(roleCode -> {
+				userDTO =  loginService.getUserDetail(userDTO.getId());
+				for(UserRoleDTO roleCode : userDTO.getUserRole()) {
 					if (roleCode.isActive()) {
 						roleList.add(String.valueOf(roleCode.getRoleCode()));
 					}
-				});
+				}
 
 				securityContext = sessionContext.new SecurityContext();
 				securityContext.setUserId(userDTO.getId());
@@ -495,7 +499,8 @@ public class SessionContext {
 		long refreshedLoginTime = Long.parseLong(String.valueOf(io.mosip.registration.context.ApplicationContext.map()
 				.get(RegistrationConstants.REFRESHED_LOGIN_TIME)));
 		long idealTime = Long.parseLong(String
-				.valueOf(io.mosip.registration.context.ApplicationContext.map().get(RegistrationConstants.IDEAL_TIME)));
+				.valueOf(io.mosip.registration.context.ApplicationContext.map()
+						.getOrDefault(RegistrationConstants.IDLE_TIME, "900")));
 
 		sessionContext.setLoginTime(new Date());
 		sessionContext.setRefreshedLoginTime(refreshedLoginTime);
@@ -508,7 +513,7 @@ public class SessionContext {
 		LoginService loginService = applicationContext.getBean(LoginService.class);
 
 		userContext.setRegistrationCenterDetailDTO(
-				loginService.getRegistrationCenterDetails(userDTO.getRegCenterUser().getRegcntrId(),
+				loginService.getRegistrationCenterDetails(userDTO.getRegCenterId(),
 						io.mosip.registration.context.ApplicationContext.applicationLanguage()));
 		userContext.setAuthorizationDTO(loginService.getScreenAuthorizationDetails(roleList));
 		userContext.setUserMap(new HashMap<String, Object>());
@@ -530,7 +535,7 @@ public class SessionContext {
 
 		/* user onboard skipped for the user with role Default */
 		if ((machineList.contains(RegistrationSystemPropertiesChecker.getMachineId().toLowerCase())
-				&& centerList.contains(userDTO.getRegCenterUser().getRegcntrId()))
+				&& centerList.contains(userDTO.getRegCenterId()))
 				|| Role.isDefaultUser(SessionContext.userContext().getRoles())) {
 			sessionContext.mapObject.put(RegistrationConstants.ONBOARD_USER, false);
 			sessionContext.mapObject.put(RegistrationConstants.ONBOARD_USER_UPDATE, false);

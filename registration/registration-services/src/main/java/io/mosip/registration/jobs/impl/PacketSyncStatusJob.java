@@ -3,7 +3,9 @@ package io.mosip.registration.jobs.impl;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import io.mosip.registration.exception.ConnectionException;
+import java.sql.Timestamp;
+
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -11,10 +13,12 @@ import org.springframework.stereotype.Component;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.ResponseDTO;
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
@@ -43,6 +47,7 @@ import io.mosip.registration.service.packet.RegPacketStatusService;
  * @since 1.0.0
  *
  */
+@DisallowConcurrentExecution
 @Component(value = "packetSyncStatusJob")
 public class PacketSyncStatusJob extends BaseJob {
 
@@ -83,7 +88,7 @@ public class PacketSyncStatusJob extends BaseJob {
 				this.responseDTO = packetStatusService.syncServerPacketStatusWithRetryWrapper(triggerPoint);
 			}
 
-			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+			syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		} catch (RegBaseUncheckedException baseUncheckedException) {
 			LOGGER.error(LoggerConstants.PRE_REG_DATA_SYNC_JOB_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
@@ -119,7 +124,7 @@ public class PacketSyncStatusJob extends BaseJob {
 			if (responseDTO.getSuccessResponseDTO() != null) {
 				this.responseDTO = packetStatusService.syncServerPacketStatusWithRetryWrapper(triggerPoint);
 			}
-			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+			syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 			LOGGER.info(LoggerConstants.PACKET_SYNC_STATUS_JOB_TITLE, RegistrationConstants.APPLICATION_NAME,
 					RegistrationConstants.APPLICATION_ID, "execute job ended");

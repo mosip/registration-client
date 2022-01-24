@@ -2,9 +2,17 @@ package io.mosip.registration.dao;
 
 import java.util.List;
 
-import io.mosip.registration.dto.mastersync.MasterDataResponseDto;
-import io.mosip.registration.dto.response.SyncDataResponseDto;
-import io.mosip.registration.entity.*;
+import io.mosip.registration.entity.BiometricAttribute;
+import io.mosip.registration.entity.BlocklistedWords;
+import io.mosip.registration.entity.DocumentCategory;
+import io.mosip.registration.entity.DocumentType;
+import io.mosip.registration.entity.Language;
+import io.mosip.registration.entity.Location;
+import io.mosip.registration.entity.LocationHierarchy;
+import io.mosip.registration.entity.ReasonCategory;
+import io.mosip.registration.entity.ReasonList;
+import io.mosip.registration.entity.SyncControl;
+import io.mosip.registration.entity.SyncJobDef;
 
 /**
  * This class is used to store the master data details like Location,
@@ -61,12 +69,11 @@ public interface MasterSyncDao {
 	List<ReasonList> getReasonList(String langCode, List<String> reasonCat);
 
 	/**
-	 * Gets the black listed words.
-	 *
-	 * @param langCode the lang code
-	 * @return the black listed words
+	 * Gets the block listed words.
+	 * 
+	 * @return the block listed words
 	 */
-	List<BlacklistedWords> getBlackListedWords(String langCode);
+	List<String> getBlockListedWords();
 
 	/**
 	 * Gets the Document Categories.
@@ -77,13 +84,6 @@ public interface MasterSyncDao {
 	 */
 	List<DocumentType> getDocumentTypes(List<String> docCode, String langCode);
 
-	/**
-	 * Gets the valid documets.
-	 *
-	 * @param docCategoryCode the doc category code
-	 * @return the valid documets
-	 */
-	List<ValidDocument> getValidDocumets(String docCategoryCode);
 
 	/**
 	 * Get All the Active Sync JOBS
@@ -141,15 +141,6 @@ public interface MasterSyncDao {
 	List<Location> getLocationDetails(String hierarchyName, String langCode);
 
 	/**
-	 * This new method is replacement to save method. enhanced to handle dynamic
-	 * entity data sync along with client settings from syncdata-service
-	 * 
-	 * @param syncDataResponseDto
-	 * @return
-	 */
-	public String saveSyncData(SyncDataResponseDto syncDataResponseDto);
-
-	/**
 	 * @param code     location code
 	 * @param langCode language code
 	 * @return Location
@@ -164,6 +155,4 @@ public interface MasterSyncDao {
 	 * @return DocuementType
 	 */
 	DocumentType getDocumentType(String docCode, String langCode);
-	
-	
 }

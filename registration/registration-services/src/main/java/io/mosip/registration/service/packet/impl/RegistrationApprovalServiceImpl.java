@@ -70,17 +70,15 @@ public class RegistrationApprovalServiceImpl extends BaseService implements Regi
 
 		List<RegistrationApprovalDTO> list = new ArrayList<>();
 		if (nullCheckForgetEnrollementByStatus(status)) {
-
 			try {
-
 				List<Registration> details = registrationDAO.getEnrollmentByStatus(status);
 
 				LOGGER.info(LoggerConstants.LOG_GET_REGISTER_PKT, APPLICATION_NAME, APPLICATION_ID,
 						"Packet  list has been fetched");
 				auditFactory.audit(AuditEvent.PACKET_RETRIVE, Components.PACKET_RETRIVE,
 						SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
-				details.forEach(detail -> list.add(new RegistrationApprovalDTO(detail.getAppId(),
-						regDateTimeConversion(detail.getCrDtime().toString()), detail.getAckFilename(), detail.getRegUsrId(), RegistrationConstants.EMPTY)));
+				details.forEach(detail -> list.add(new RegistrationApprovalDTO(detail.getAppId(), detail.getPacketId(),
+						regDateTimeConversion(detail.getCrDtime().toString()), detail.getAckFilename(), detail.getRegUsrId(), RegistrationConstants.EMPTY, detail.getHasBwords())));
 			} catch (RuntimeException runtimeException) {
 				throw new RegBaseUncheckedException(RegistrationConstants.PACKET_RETRIVE_STATUS,
 						runtimeException.toString());
@@ -105,7 +103,7 @@ public class RegistrationApprovalServiceImpl extends BaseService implements Regi
 	@Override
 	@PreAuthorizeUserId(roles = { AuthenticationAdvice.OFFICER_ROLE, AuthenticationAdvice.SUPERVISOR_ROLE,
 			AuthenticationAdvice.ADMIN_ROLE,AuthenticationAdvice.DEFAULT_ROLE })
-	public Registration updateRegistration(String registrationID, String statusComments, String clientStatusCode)
+	public Registration updateRegistration(String packetID, String statusComments, String clientStatusCode)
 			throws RegBaseCheckedException {
 
 		LOGGER.info(LoggerConstants.LOG_UPADTE_REGISTER_PKT, APPLICATION_NAME, APPLICATION_ID,
@@ -113,8 +111,8 @@ public class RegistrationApprovalServiceImpl extends BaseService implements Regi
 		auditFactory.audit(AuditEvent.PACKET_UPDATE, Components.PACKET_UPDATE, SessionContext.userContext().getUserId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 		Registration registration;
-		if (nullCheckForupdateRegistration(registrationID, clientStatusCode)) {
-			registration = registrationDAO.updateRegistration(registrationID, statusComments, clientStatusCode);
+		if (nullCheckForupdateRegistration(packetID, clientStatusCode)) {
+			registration = registrationDAO.updateRegistration(packetID, statusComments, clientStatusCode);
 		} else {
 			throw new RegBaseCheckedException(RegistrationConstants.PACKET_UPDATE_STATUS_EXCEPTION,
 					"Registartion ID/ Client Status Code is empty or null");
@@ -125,7 +123,7 @@ public class RegistrationApprovalServiceImpl extends BaseService implements Regi
 	@Override
 	@PreAuthorizeUserId(roles = { AuthenticationAdvice.OFFICER_ROLE, AuthenticationAdvice.SUPERVISOR_ROLE,
 			AuthenticationAdvice.ADMIN_ROLE,AuthenticationAdvice.DEFAULT_ROLE })
-	public Registration updateRegistrationWithAppId(String applicationId, String statusComments, String clientStatusCode)
+	public Registration updateRegistrationWithPacketId(String packetId, String statusComments, String clientStatusCode)
 			throws RegBaseCheckedException {
 
 		LOGGER.info(LoggerConstants.LOG_UPADTE_REGISTER_PKT, APPLICATION_NAME, APPLICATION_ID,
@@ -133,8 +131,8 @@ public class RegistrationApprovalServiceImpl extends BaseService implements Regi
 		auditFactory.audit(AuditEvent.PACKET_UPDATE, Components.PACKET_UPDATE, SessionContext.userContext().getUserId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 		Registration registration;
-		if (nullCheckForupdateRegistration(applicationId, clientStatusCode)) {
-			registration = registrationDAO.updateRegistrationWithAppId(applicationId, statusComments, clientStatusCode);
+		if (nullCheckForupdateRegistration(packetId, clientStatusCode)) {
+			registration = registrationDAO.updateRegistrationWithPacketId(packetId, statusComments, clientStatusCode);
 		} else {
 			throw new RegBaseCheckedException(RegistrationConstants.PACKET_UPDATE_STATUS_EXCEPTION,
 					"Application ID/ Client Status Code is empty or null");

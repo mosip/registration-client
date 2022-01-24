@@ -5,27 +5,23 @@ import static io.mosip.registration.constants.RegistrationConstants.ACKNOWLEDGEM
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URL;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import io.mosip.registration.enums.Role;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.templatemanager.spi.TemplateManagerBuilder;
-import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
@@ -36,16 +32,21 @@ import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
+import io.mosip.registration.controller.ClientApplication;
 import io.mosip.registration.controller.GenericController;
-import io.mosip.registration.controller.Initialization;
+import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationApprovalDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SyncDataProcessDTO;
+import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.entity.PreRegistrationList;
+import io.mosip.registration.entity.ProcessSpec;
 import io.mosip.registration.entity.SyncControl;
+import io.mosip.registration.enums.FlowType;
+import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
@@ -54,24 +55,26 @@ import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.packet.PacketHandlerService;
 import io.mosip.registration.service.packet.ReRegistrationService;
 import io.mosip.registration.service.packet.RegistrationApprovalService;
-import io.mosip.registration.service.sync.PolicySyncService;
 import io.mosip.registration.service.sync.PreRegistrationDataSyncService;
 import io.mosip.registration.service.template.TemplateService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.acktemplate.TemplateGenerator;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
+import lombok.NonNull;
 
 /**
  * Class for Registration Packet operations
@@ -84,21 +87,6 @@ import javafx.scene.layout.VBox;
 public class PacketHandlerController extends BaseController implements Initializable {
 
 	private static final Logger LOGGER = AppConfig.getLogger(PacketHandlerController.class);
-
-	@FXML
-	private Button uinUpdateBtn;
-
-	@FXML
-	private ImageView uinUpdateImage;
-
-	@FXML
-	private ImageView newRegImage;
-
-	@FXML
-	private ImageView lostUINImage;
-
-	@FXML
-	private Button newRegistrationBtn;
 
 	@FXML
 	private GridPane uploadRoot;
@@ -114,12 +102,137 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 	@FXML
 	private Label lastPreRegPacketDownloadedTime;
+	
+	@FXML
+	private ImageView inProgressImage;
 
 	@FXML
 	private Label lastSyncTime;
 
+	@FXML
+	private GridPane eodProcessGridPane;
+
+	@FXML
+	private VBox vHolder;
+
+	@FXML
+	public GridPane uinUpdateGridPane;
+
+	@FXML
+	public HBox userOnboardMessage;
+	@FXML
+	public ProgressIndicator progressIndicator;
+	@FXML
+	public GridPane progressPane;
+	@FXML
+	public ProgressBar syncProgressBar;
+	@FXML
+	private Label eodLabel;
+	@FXML
+	private GridPane syncDataPane;
+	@FXML
+	private ImageView syncDataImageView;
+	@FXML
+	private GridPane downloadPreRegDataPane;
+	@FXML
+	private ImageView downloadPreRegDataImageView;
+	@FXML
+	private GridPane updateOperatorBiometricsPane;
+	@FXML
+	private ImageView updateOperatorBiometricsImageView;
+	@FXML
+	private GridPane eodApprovalPane;
+	@FXML
+	private ImageView eodApprovalImageView;
+	@FXML
+	private GridPane reRegistrationPane;
+	@FXML
+	private ImageView reRegistrationImageView;
+	@FXML
+	private GridPane dashBoardPane;
+	@FXML
+	private GridPane uploadPacketPane;
+	@FXML
+	private GridPane centerRemapPane;
+	@FXML
+	private GridPane checkUpdatesPane;
+	@FXML
+	private ImageView viewReportsImageView;
+
+	@FXML
+	private Label versionValueLabel;
+
+	@FXML
+	private ImageView uploadPacketImageView;
+
+	@FXML
+	private ImageView remapImageView;
+
+	@FXML
+	private ImageView checkUpdatesImageView;
+
+	@FXML
+	private ImageView tickMarkImageView;
+
+	@FXML
+	private GridPane registrationGridPane;
+
+	@Autowired
+	private AckReceiptController ackReceiptController;
+
+	@Autowired
+	private TemplateService templateService;
+
+	@Autowired
+	private TemplateManagerBuilder templateManagerBuilder;
+
+	@Autowired
+	private TemplateGenerator templateGenerator;
+
+	@Autowired
+	private PreRegistrationDataSyncService preRegistrationDataSyncService;
+
+	@Autowired
+	private UserOnboardController userOnboardController;
+
+	@Autowired
+	private PacketHandlerService packetHandlerService;
+
+	@Autowired
+	private DashBoardController dashBoardController;
+
+	@Autowired
+	private RegistrationApprovalService registrationApprovalService;
+
+	@Autowired
+	private ReRegistrationService reRegistrationService;
+
+	@Autowired
+	private UserOnboardParentController userOnboardParentController;
+
+	@Autowired
+	private RegistrationController registrationController;
+
+	@Autowired
+	private UserOnboardService userOnboardService;
+
 	@Autowired
 	private JobConfigurationService jobConfigurationService;
+
+	@Autowired
+	private IdentitySchemaDao identitySchemaDao;
+
+	@Autowired
+	private SoftwareUpdateHandler softwareUpdateHandler;
+
+	@Autowired
+	private HeaderController headerController;
+
+	@Autowired
+	private GenericController genericController;
+	
+	@Autowired
+	private LanguageSelectionController languageSelectionController;
 
 	@SuppressWarnings("unchecked")
 	public void setLastUpdateTime() {
@@ -154,142 +267,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 		}
 	}
 
-	@FXML
-	private GridPane eodProcessGridPane;
 
-	@FXML
-	private GridPane lostUINPane;
-
-	@FXML
-	private VBox vHolder;
-
-	@FXML
-	public GridPane uinUpdateGridPane;
-
-	@FXML
-	public GridPane newRegGridPane;
-
-	@FXML
-	public HBox userOnboardMessage;
-
-	@Autowired
-	private AckReceiptController ackReceiptController;
-
-	@Autowired
-	private TemplateService templateService;
-
-	@Autowired
-	private TemplateManagerBuilder templateManagerBuilder;
-
-	@Autowired
-	private TemplateGenerator templateGenerator;
-
-	@Autowired
-	PreRegistrationDataSyncService preRegistrationDataSyncService;
-
-	@Autowired
-	private UserOnboardController userOnboardController;
-
-	@Autowired
-	private PacketHandlerService packetHandlerService;
-
-	@Autowired
-	private DashBoardController dashBoardController;
-
-	@Autowired
-	private RegistrationApprovalService registrationApprovalService;
-
-	@Autowired
-	private ReRegistrationService reRegistrationService;
-
-	@Autowired
-	private UserOnboardParentController userOnboardParentController;
-	
-	@Autowired
-	private PolicySyncService policySyncService;
-
-	@Autowired
-	private RegistrationController registrationController;
-
-	@Autowired
-	private UserOnboardService userOnboardService;
-
-	@FXML
-	ProgressIndicator progressIndicator;
-
-	@FXML
-	public GridPane progressPane;
-
-	@FXML
-	public ProgressBar syncProgressBar;
-
-	@FXML
-	private Label eodLabel;
-
-	@FXML
-	private GridPane syncDataPane;
-	@FXML
-	private ImageView syncDataImageView;
-	@FXML
-	private GridPane downloadPreRegDataPane;
-	@FXML
-	private ImageView downloadPreRegDataImageView;
-	@FXML
-	private GridPane updateOperatorBiometricsPane;
-	@FXML
-	private ImageView updateOperatorBiometricsImageView;
-	@FXML
-	private GridPane eodApprovalPane;
-	@FXML
-	private ImageView eodApprovalImageView;
-	@FXML
-	private GridPane reRegistrationPane;
-	@FXML
-	private ImageView reRegistrationImageView;
-	@FXML
-	private GridPane dashBoardPane;
-	@FXML
-	private GridPane uploadPacketPane;
-	@FXML
-	private GridPane centerRemapPane;
-	@FXML
-	private GridPane checkUpdatesPane;
-	@FXML
-	private ImageView viewReportsImageView;
-	@Autowired
-	private SoftwareUpdateHandler softwareUpdateHandler;
-	@FXML
-	private Label versionValueLabel;
-
-	@Autowired
-	HeaderController headerController;
-
-	@FXML
-	private ImageView uploadPacketImageView;
-
-	@FXML
-	private ImageView remapImageView;
-
-	@FXML
-	private ImageView checkUpdatesImageView;
-	
-	@FXML
-	private ImageView tickMarkImageView;
-
-	@Value("${object.store.base.location}")
-	private String baseLocation;
-
-	@Value("${packet.manager.account.name}")
-	private String packetsLocation;
-
-	@Autowired
-	private GenericController genericController;
-
-	@Autowired
-	private Validations validation;
-	
-	@Autowired
-	private LanguageSelectionController languageSelectionController;
 
 	/**
 	 * @return the userOnboardMsg
@@ -305,15 +283,11 @@ public class PacketHandlerController extends BaseController implements Initializ
 		try {
 			setImagesOnHover();
 
-			setImage(newRegImage, RegistrationConstants.NEW_REG_IMG);
 			setImage(syncDataImageView, RegistrationConstants.SYNC_IMG);	
 			setImage(downloadPreRegDataImageView, RegistrationConstants.DWLD_PRE_REG_DATA_IMG);
 			setImage(uploadPacketImageView, RegistrationConstants.UPDATE_OPERATOR_BIOMETRICS_IMG);		
 			setImage(remapImageView, RegistrationConstants.SYNC_IMG);
-			setImage(checkUpdatesImageView, RegistrationConstants.DWLD_PRE_REG_DATA_IMG);		
-			setImage(newRegImage, RegistrationConstants.NEW_REG_IMG);
-			setImage(uinUpdateImage, RegistrationConstants.UIN_UPDATE_IMG);
-			setImage(lostUINImage, RegistrationConstants.LOST_UIN_IMG);		
+			setImage(checkUpdatesImageView, RegistrationConstants.DWLD_PRE_REG_DATA_IMG);
 			setImage(eodApprovalImageView, RegistrationConstants.PENDING_APPROVAL_IMG);
 			setImage(reRegistrationImageView, RegistrationConstants.RE_REGISTRATION_IMG);		
 			setImage(viewReportsImageView, RegistrationConstants.VIEW_REPORTS_IMG);
@@ -332,8 +306,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 					.getEnrollmentByStatus(RegistrationClientStatusCode.CREATED.getCode());
 
 			List<PacketStatusDTO> reRegisterRegistrations = reRegistrationService.getAllReRegistrationPackets();
-			List<String> configuredFieldsfromDB = Arrays.asList(
-					getValueFromApplicationContext(RegistrationConstants.UIN_UPDATE_CONFIG_FIELDS_FROM_DB).split(","));
 
 			if (!pendingApprovalRegistrations.isEmpty()) {
 				pendingApprovalCountLbl
@@ -343,27 +315,15 @@ public class PacketHandlerController extends BaseController implements Initializ
 				reRegistrationCountLbl
 						.setText(reRegisterRegistrations.size() + " " + RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.APPLICATIONS));
 			}
-			if (!(getValueFromApplicationContext(RegistrationConstants.UIN_UPDATE_CONFIG_FLAG))
-					.equalsIgnoreCase(RegistrationConstants.ENABLE)
-					|| configuredFieldsfromDB.get(RegistrationConstants.PARAM_ZERO).isEmpty()) {
-				vHolder.getChildren().forEach(btnNode -> {
-					if (btnNode instanceof GridPane && btnNode.getId() != null
-							&& btnNode.getId().equals(uinUpdateGridPane.getId())) {
-						btnNode.setVisible(false);
-						btnNode.setManaged(false);
-					}
-				});
-			}
+
 			Timestamp ts = userOnboardService.getLastUpdatedTime(SessionContext.userId());
 			if (ts != null) {
 				lastBiometricTime
 						.setText(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.LAST_DOWNLOADED) + " " + getLocalZoneTime(ts.toString()));
 			}
 
-			if (!(getValueFromApplicationContext(RegistrationConstants.LOST_UIN_CONFIG_FLAG))
-					.equalsIgnoreCase(RegistrationConstants.ENABLE)) {
-				lostUINPane.setVisible(false);
-			}
+			loadRegistrationProcesses();
+
 		} catch (RegBaseCheckedException regBaseCheckedException) {
 			LOGGER.error("REGISTRATION - UI- Home Page Loading", APPLICATION_NAME, APPLICATION_ID,
 					regBaseCheckedException.getMessage() + ExceptionUtils.getStackTrace(regBaseCheckedException));
@@ -371,34 +331,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 	}
 
 	private void setImagesOnHover() {
-
-		newRegGridPane.hoverProperty().addListener((ov, oldValue, newValue) -> {
-			if (newValue) {
-				setImage(newRegImage, RegistrationConstants.NEW_REGISTRATION_IMG);
-				newRegImage.setImage(new Image(getClass().getResourceAsStream(RegistrationConstants.NEW_REG_FOCUSED)));
-			} else {
-				setImage(newRegImage, RegistrationConstants.NEW_REG_IMG);
-			}
-		});
-		uinUpdateGridPane.hoverProperty().addListener((ov, oldValue, newValue) -> {
-			if (newValue) {
-				
-				setImage(uinUpdateImage, RegistrationConstants.UPDATE_UIN_FOCUSED_IMG);
-			} else {
-				setImage(uinUpdateImage, RegistrationConstants.UIN_UPDATE_IMG);
-			}
-		});
-		lostUINPane.hoverProperty().addListener((ov, oldValue, newValue) -> {
-			if (newValue) {
-
-				setImage(lostUINImage, RegistrationConstants.LOST_UIN_FOCUSED_IMG);
-				lostUINImage
-						.setImage(new Image(getClass().getResourceAsStream(RegistrationConstants.LOST_UIN_FOCUSED)));
-			} else {
-
-				setImage(lostUINImage, RegistrationConstants.LOST_UIN_IMG);
-			}
-		});
 		syncDataPane.hoverProperty().addListener((ov, oldValue, newValue) -> {
 			if (newValue) {
 				
@@ -472,85 +404,74 @@ public class PacketHandlerController extends BaseController implements Initializ
 		});
 	}
 
-	/**
-	 * Validating screen authorization and Creating Packet and displaying
-	 * acknowledgement form
-	 */
-	public void createPacket() {
-		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Creation of Registration Starting.");
+	public void startRegistration(@NonNull String processId) {
+		LOGGER.info("Creation of Registration Starting : {}", processId);
 		try {
-			auditFactory.audit(AuditEvent.NAV_NEW_REG, Components.NAVIGATION, SessionContext.userContext().getUserId(),
+			double version = identitySchemaDao.getLatestEffectiveSchemaVersion();
+			ProcessSpecDto processSpecDto = identitySchemaDao.getProcessSpec(processId, version);
+			FlowType flowType = FlowType.valueOf(processSpecDto.getFlow());
+			auditFactory.audit(flowType.getAuditEvent(), Components.NAVIGATION, SessionContext.userContext().getUserId(),
 					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-			Parent createRoot = getRoot(RegistrationConstants.CREATE_PACKET_PAGE);
-			LOGGER.info("REGISTRATION - CREATE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
-					APPLICATION_ID, "Validating Create Packet screen for specific role");
-
-			if (!validateScreenAuthorization(createRoot.getId())) {
+			if (!validateScreenAuthorization(flowType.getScreenId())) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHORIZATION_ERROR));
 				return;
 			}
 
-			getScene(createRoot).setRoot(createRoot);
-			getScene(createRoot).getStylesheets().add(ClassLoader.getSystemClassLoader().getResource(getCssName()).toExternalForm());
-			validation.updateAsLostUIN(false);
-
-			if(registrationController.createRegistrationDTOObject(RegistrationConstants.PACKET_TYPE_NEW)) {
-				genericController.populateScreens();
+			StringBuilder errorMessage = new StringBuilder();
+			ResponseDTO responseDTO = validateSyncStatus();
+			List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
+			if (errorResponseDTOs != null && !errorResponseDTOs.isEmpty()) {
+				for (ErrorResponseDTO errorResponseDTO : errorResponseDTOs) {
+					errorMessage.append(
+							RegistrationUIConstants.getMessageLanguageSpecific(errorResponseDTO.getMessage())
+									+ "\n\n");
+				}
+				generateAlert(RegistrationConstants.ERROR, errorMessage.toString().trim());
 				return;
 			}
-		} catch (Exception exception) {
-			LOGGER.error("Failed to start registration", exception);
+
+			switch (flowType) {
+				case NEW:
+				case LOST:
+				case CORRECTION:
+					Parent createRoot = getRoot(RegistrationConstants.CREATE_PACKET_PAGE);
+					getScene(createRoot).setRoot(createRoot);
+					getScene(createRoot).getStylesheets().add(ClassLoader.getSystemClassLoader().getResource(getCssName()).toExternalForm());
+					if(registrationController.createRegistrationDTOObject(processId)) {
+						genericController.populateScreens();
+						return;
+					}
+					break;
+				case UPDATE:
+					if(registrationController.createRegistrationDTOObject(processId)) {
+						Parent root = BaseController.load(getClass().getResource(RegistrationConstants.UIN_UPDATE),
+								applicationContext.getBundle(registrationController.getSelectedLangList().get(0), RegistrationConstants.LABELS));
+						getScene(root);
+						LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Loading Update UIN screen ended.");
+						return;
+					}
+			}
+
+		} catch (Exception e) {
+			LOGGER.error("Failed to start registration : {}", processId, e);
 		}
 		clearRegistrationData();
 		generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_REG_PAGE));
 	}
 
-	/**
-	 * Validating screen authorization and Creating Packet in case of Lost UIN
-	 */
-	public void lostUIN() {
-		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID,
-				"Creating of Registration for lost UIN Starting.");
-		try {
-			auditFactory.audit(AuditEvent.NAV_LOST_UIN, Components.NAVIGATION, SessionContext.userContext().getUserId(),
-					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-			Parent createRoot = getRoot(RegistrationConstants.CREATE_PACKET_PAGE);
-			LOGGER.info("REGISTRATION - CREATE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
-					APPLICATION_ID, "Validating Create Packet screen for specific role");
-
-			if (!validateScreenAuthorization(createRoot.getId())) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHORIZATION_ERROR));
-				return;
-			}
-
-			getScene(createRoot).setRoot(createRoot);
-			validation.updateAsLostUIN(true);
-			if(registrationController.createRegistrationDTOObject(RegistrationConstants.PACKET_TYPE_LOST)) {
-				genericController.populateScreens();
-				return;
-			}
-		} catch (Exception exception) {
-			LOGGER.error("Failed to start Lost UIN", exception);
-		}
-		clearRegistrationData();
-		generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_REG_PAGE));
-	}
 
 	public void showReciept() {
-		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Showing receipt Started.");
 		try {
 			RegistrationDTO registrationDTO = getRegistrationDTOFromSession();
-
+			LOGGER.info("Showing receipt Started for process", registrationDTO.getProcessId());
 			String platformLanguageCode = ApplicationContext.applicationLanguage();
 			String ackTemplateText = templateService.getHtmlTemplate(ACKNOWLEDGEMENT_TEMPLATE_CODE,
 					platformLanguageCode);
 
 			if (ackTemplateText != null && !ackTemplateText.isEmpty()) {
-				String key = "mosip.registration.important_guidelines_" + applicationContext.getApplicationLanguage();
-				String guidelines = getValueFromApplicationContext(key);
-				templateGenerator.setGuidelines(guidelines);
+
 				ResponseDTO templateResponse = templateGenerator.generateTemplate(ackTemplateText, registrationDTO,
 						templateManagerBuilder, RegistrationConstants.ACKNOWLEDGEMENT_TEMPLATE, getImagePath(RegistrationConstants.CROSS_IMG, true));
 				if (templateResponse != null && templateResponse.getSuccessResponseDTO() != null) {
@@ -562,56 +483,39 @@ public class PacketHandlerController extends BaseController implements Initializ
 						Parent createRoot = getRoot(RegistrationConstants.ACK_RECEIPT_PATH);
 						getScene(createRoot).setRoot(createRoot);
 						setIsAckOpened(true);
+						LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Showing receipt ended.");
 						return;
-					} else {
-						clearRegistrationData();
-						createPacket();
 					}
-				} else if (templateResponse != null && templateResponse.getErrorResponseDTOs() != null) {
-					generateAlert(RegistrationConstants.ERROR,
-							RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_ACKNOWLEDGEMENT_PAGE));
-					clearRegistrationData();
-					createPacket();
 				}
-			} else {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_ACKNOWLEDGEMENT_PAGE));
-				clearRegistrationData();
-				createPacket();
 			}
-		} catch (IOException ioException) {
-			LOGGER.error("REGISTRATION - UI- Officer Packet Create ", APPLICATION_NAME, APPLICATION_ID,
-					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
-		} catch (RegBaseCheckedException regBaseCheckedException) {
-			LOGGER.error("REGISTRATION - UI- Officer Packet Create ", APPLICATION_NAME, APPLICATION_ID,
-					regBaseCheckedException.getMessage() + ExceptionUtils.getStackTrace(regBaseCheckedException));
+		} catch (IOException | RegBaseCheckedException e) {
+			LOGGER.error("Failed to load registration acknowledgment", e);
 		}
-		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Showing receipt ended.");
+		generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_ACKNOWLEDGEMENT_PAGE));
+		clearRegistrationData();
+		goToHomePageFromRegistration();
 	}
 
 	/**
 	 * Validating screen authorization and Approve, Reject and Hold packets
 	 */
 	public void approvePacket() {
-
 		LOGGER.info("Loading Pending Approval screen started.");
 		try {
 			auditFactory.audit(AuditEvent.NAV_APPROVE_REG, Components.NAVIGATION,
 					SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
-
 			GridPane root = BaseController.load(getClass().getResource(RegistrationConstants.PENDING_APPROVAL_PAGE));
 
 			LOGGER.info("Validating Approve Packet screen for specific role");
-
-			if (Role.isDefaultUser(SessionContext.userContext().getRoles())) {
-				getScene(root);
-			} else if (!validateScreenAuthorization(root.getId())) {
+			if (!validateScreenAuthorization(root.getId())) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHORIZATION_ERROR));
-			} else {
-				getScene(root);
+				return;
 			}
+
+			getScene(root);
+
 		} catch (IOException ioException) {
 			LOGGER.error(ioException.getMessage(), ioException);
-
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_APPROVAL_PAGE));
 		}
 		LOGGER.info("Loading Pending Approval screen ended.");
@@ -621,95 +525,26 @@ public class PacketHandlerController extends BaseController implements Initializ
 	 * Validating screen authorization and Uploading packets to FTP server
 	 */
 	public void uploadPacket() {
-
-		if (!proceedOnAction("PS")) {
-			return;
-		}
-
-		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Loading Packet Upload screen started.");
+		LOGGER.info("Loading Packet Upload screen started.");
 		try {
 			auditFactory.audit(AuditEvent.NAV_UPLOAD_PACKETS, Components.NAVIGATION,
 					SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
-
 			uploadRoot = BaseController.load(getClass().getResource(RegistrationConstants.FTP_UPLOAD_PAGE));
-
-			LOGGER.info("REGISTRATION - UPLOAD_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
-					APPLICATION_ID, "Validating Upload Packet screen for specific role");
+			LOGGER.info("Validating Upload Packet screen for specific role");
 
 			if (!validateScreenAuthorization(uploadRoot.getId())) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHORIZATION_ERROR));
-			} else {
-				getScene(uploadRoot);
-
-				// Clear all registration data
-				clearRegistrationData();
-
-				// Enable Auto-Logout
-				SessionContext.setAutoLogout(true);
-
+				return;
 			}
+
+			getScene(uploadRoot);
+			clearRegistrationData();
+			SessionContext.setAutoLogout(true);
+
 		} catch (IOException ioException) {
-			LOGGER.error("REGISTRATION - UI- Officer Packet upload", APPLICATION_NAME, APPLICATION_ID,
-					ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
+			LOGGER.error("Failed to load upload packet page", ioException);
 		}
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Loading Packet Upload screen ended.");
-	}
-
-	public void updateUIN() {
-		if (!proceedOnRegistrationAction())
-			return;
-
-		ResponseDTO keyResponse = isKeyValid();
-		if (null == keyResponse.getSuccessResponseDTO()) {
-			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.INVALID_KEY));
-			return;
-		}
-
-		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Loading Update UIN screen started.");
-		try {
-			auditFactory.audit(AuditEvent.NAV_UIN_UPDATE, Components.NAVIGATION,
-					SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
-
-			if (RegistrationConstants.DISABLE
-					.equalsIgnoreCase(getValueFromApplicationContext(RegistrationConstants.FINGERPRINT_DISABLE_FLAG))
-					&& RegistrationConstants.DISABLE.equalsIgnoreCase(
-							getValueFromApplicationContext(RegistrationConstants.IRIS_DISABLE_FLAG))) {
-
-				generateAlert(RegistrationConstants.ERROR,
-						RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_UIN_NO_BIOMETRIC_CONFIG_ALERT));
-			} else {
-				Parent root = BaseController.load(getClass().getResource(RegistrationConstants.UIN_UPDATE), 
-						applicationContext.getBundle(registrationController.getSelectedLangList().get(0), RegistrationConstants.LABELS));
-
-				LOGGER.info("REGISTRATION - update UIN - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
-						APPLICATION_ID, "updating UIN");
-
-				if (!validateScreenAuthorization(root.getId())) {
-					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTHORIZATION_ERROR));
-				} else {
-
-					StringBuilder errorMessage = new StringBuilder();
-					ResponseDTO responseDTO;
-					responseDTO = validateSyncStatus();
-					List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
-					if (errorResponseDTOs != null && !errorResponseDTOs.isEmpty()) {
-						for (ErrorResponseDTO errorResponseDTO : errorResponseDTOs) {
-							errorMessage.append(
-									RegistrationUIConstants.getMessageLanguageSpecific(errorResponseDTO.getMessage())
-											+ "\n\n");
-						}
-						generateAlert(RegistrationConstants.ERROR, errorMessage.toString().trim());
-
-					} else {
-						getScene(root);
-					}
-				}
-			}
-		} catch (IOException ioException) {
-			LOGGER.error("REGISTRATION - UI- UIN Update", APPLICATION_NAME, APPLICATION_ID,
-					ExceptionUtils.getStackTrace(ioException));
-		}
-		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "Loading Update UIN screen ended.");
 	}
 
 	/**
@@ -759,28 +594,19 @@ public class PacketHandlerController extends BaseController implements Initializ
 	 * create packet
 	 */
 	private ResponseDTO savePacket(Writer stringWriter, RegistrationDTO registrationDTO) {
-		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID, "packet creation has been started");
+		LOGGER.info("Packet save has been started");
 		byte[] ackInBytes = null;
 		try {
 			ackInBytes = stringWriter.toString().getBytes(RegistrationConstants.TEMPLATE_ENCODING);
 		} catch (java.io.IOException ioException) {
-			LOGGER.error("REGISTRATION - SAVE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
-					APPLICATION_ID, ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
+			LOGGER.error("",  ioException);
 		}
-
-		/*if (RegistrationConstants.ENABLE
-				.equalsIgnoreCase(getValueFromApplicationContext(RegistrationConstants.ACK_INSIDE_PACKET))) {
-			registrationDTO.setAcknowledgeReceipt(ackInBytes);
-			registrationDTO.setAcknowledgeReceiptName(
-					"RegistrationAcknowledgement." + RegistrationConstants.ACKNOWLEDGEMENT_FORMAT);
-		}*/
 
 		// packet creation
 		ResponseDTO response = packetHandlerService.handle(registrationDTO);
 
 		if (response.getSuccessResponseDTO() != null
 				&& response.getSuccessResponseDTO().getMessage().equals(RegistrationConstants.SUCCESS)) {
-
 			try {
 				// Deletes the pre registration Data after creation of registration Packet.
 				if (getRegistrationDTOFromSession().getPreRegistrationId() != null
@@ -796,20 +622,8 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 				}
 
-				// Generate the file path for storing the Encrypted Packet and Acknowledgement
-				// Receipt
-				String separator = "/";
-				String filePath = baseLocation.concat(separator).concat(packetsLocation).concat(separator)
-						.concat(registrationDTO.getRegistrationId());
-
-				// Storing the Registration Acknowledge Receipt Image
-				FileUtils.copyToFile(new ByteArrayInputStream(ackInBytes),
-						new File(filePath.concat("_Ack.").concat(RegistrationConstants.ACKNOWLEDGEMENT_FORMAT)));
-
-				// TODO - Client should not send notification, save contact details
-				// TODO - so that it can be sent out during RID sync.
-//				sendNotification((String) registrationDTO.getDemographics().get("email"),
-//						(String) registrationDTO.getDemographics().get("phone"), registrationDTO.getRegistrationId());
+				packetHandlerService.createAcknowledgmentReceipt(registrationDTO.getPacketId(), ackInBytes,
+						RegistrationConstants.ACKNOWLEDGEMENT_FORMAT);
 
 				// Sync and Uploads Packet when EOD Process Configuration is set to OFF
 				String supervisorApproval = getValueFromApplicationContext(RegistrationConstants.SUPERVISOR_APPROVAL_CONFIG_FLAG);
@@ -818,23 +632,18 @@ public class PacketHandlerController extends BaseController implements Initializ
 					updatePacketStatus();//auto-approve
 				}
 
-				LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID,
-						"Registration's Acknowledgement Receipt saved");
+				LOGGER.info("Registration's Acknowledgement Receipt saved");
 			} catch (io.mosip.kernel.core.exception.IOException ioException) {
-				LOGGER.error("REGISTRATION - SAVE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
-						APPLICATION_ID, ioException.getMessage() + ExceptionUtils.getStackTrace(ioException));
+				LOGGER.error("",ioException);
 			} catch (RegBaseCheckedException regBaseCheckedException) {
-				LOGGER.error("REGISTRATION - SAVE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
-						APPLICATION_ID,
-						regBaseCheckedException.getMessage() + ExceptionUtils.getStackTrace(regBaseCheckedException));
+				LOGGER.error("", regBaseCheckedException);
 
 				if (regBaseCheckedException.getErrorCode()
 						.equals(RegistrationExceptionConstants.AUTH_ADVICE_USR_ERROR.getErrorCode())) {
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTH_ADVICE_FAILURE));
 				}
 			} catch (RuntimeException runtimeException) {
-				LOGGER.error("REGISTRATION - SAVE_PACKET - REGISTRATION_OFFICER_PACKET_CONTROLLER", APPLICATION_NAME,
-						APPLICATION_ID, runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
+				LOGGER.error("", runtimeException);
 			}
 		} else {
 			if (response.getErrorResponseDTOs() != null && response.getErrorResponseDTOs().get(0).getCode()
@@ -846,6 +655,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 		}
 		return response;
 	}
+
 
 	/**
 	 * Load re registration screen.
@@ -889,7 +699,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 			ResponseDTO templateResponse = templateGenerator.generateDashboardTemplate(dashboardTemplateText,
 					templateManagerBuilder, RegistrationConstants.DASHBOARD_TEMPLATE,
-					Initialization.getApplicationStartTime());
+					ClientApplication.getApplicationStartTime());
 
 			if (templateResponse != null && templateResponse.getSuccessResponseDTO() != null) {
 				Writer stringWriter = (Writer) templateResponse.getSuccessResponseDTO().getOtherAttributes()
@@ -922,7 +732,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID,
 				"Auto Approval of Packet when EOD process disabled started");
 
-		registrationApprovalService.updateRegistration((getRegistrationDTOFromSession().getRegistrationId()),
+		registrationApprovalService.updateRegistration((getRegistrationDTOFromSession().getPacketId()),
 				RegistrationConstants.EMPTY, RegistrationClientStatusCode.APPROVED.getCode());
 
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID,
@@ -930,14 +740,17 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 	}
 
-	private ResponseDTO isKeyValid() {
-
-		return policySyncService.checkKeyValidation();
-
-	}
 
 	public ProgressIndicator getProgressIndicator() {
 		return progressIndicator;
+	}
+	
+	public GridPane getPreRegDataPane() {
+		return downloadPreRegDataPane;
+	}
+	
+	public void setInProgressImage(Image image) {
+		inProgressImage.setImage(image);
 	}
 
 	public void setLastPreRegPacketDownloadedTime() {
@@ -972,16 +785,90 @@ public class PacketHandlerController extends BaseController implements Initializ
 	public void hasUpdate() {
 		headerController.hasUpdate(null);
 	}
+
+
+	private void loadRegistrationProcesses()  {
+		try {
+			double version = identitySchemaDao.getLatestEffectiveSchemaVersion();
+			List<ProcessSpec> processSpecs = identitySchemaDao.getAllActiveProcessSpecs(version);
+			addParentRowConstraints(processSpecs == null ? 0 : processSpecs.size());
+			AtomicInteger i = new AtomicInteger();
+			Objects.requireNonNull(processSpecs).forEach(processSpec -> {
+				try {
+					FlowType flowType = FlowType.valueOf(processSpec.getFlow());
+					if(flowType == null) {
+						LOGGER.error("Invalid registration flow type {}", processSpec.getFlow());
+						generateAlert(RegistrationConstants.ERROR,
+								RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.INVALID_FLOW_TYPE));
+						return;
+					}
+					ProcessSpecDto processSpecDto = identitySchemaDao.getProcessSpec(processSpec.getId(), version);
+					GridPane gridPane = buildRegistrationProcessPane(processSpecDto);
+					registrationGridPane.addRow(i.getAndIncrement(), gridPane);
+				} catch (RegBaseCheckedException e) {
+					LOGGER.error("Failed to build process pane {}", processSpec, e);
+				}
+			});
+		} catch (RegBaseCheckedException e) {
+			LOGGER.error("Failed to get configured processes", e);
+		}
+	}
+
+	private void addParentRowConstraints(int size) {
+		registrationGridPane.getRowConstraints().clear();
+		for(int i=0;i<size;i++) {
+			RowConstraints rowConstraints = new RowConstraints();
+			rowConstraints.setPercentHeight(100/size);
+			registrationGridPane.getRowConstraints().add(rowConstraints);
+		}
+	}
+
+	private GridPane buildRegistrationProcessPane(ProcessSpecDto processSpecDto) {
+		GridPane gridPane = new GridPane();
+		gridPane.getStyleClass().add("operationalPaneDetailsSync");
+		gridPane.setId(processSpecDto.getId());
+		RowConstraints rowConstraints = new RowConstraints();
+		rowConstraints.setPercentHeight(100);
+		gridPane.getRowConstraints().addAll(rowConstraints);
+		ColumnConstraints columnConstraint1 = new ColumnConstraints();
+		columnConstraint1.setPercentWidth(10);
+		ColumnConstraints columnConstraint2 = new ColumnConstraints();
+		columnConstraint2.setPercentWidth(90);
+		gridPane.getColumnConstraints().addAll(columnConstraint1, columnConstraint2);
+		gridPane.setOnMouseClicked(event -> {
+			selectLanguage(event);
+		});
+		VBox vBox = new VBox();
+		vBox.setAlignment(Pos.CENTER);
+		vBox.setPrefHeight(200);
+		vBox.setPrefWidth(100);
+		ImageView imageView = new ImageView();
+		imageView.setId(processSpecDto.getId()+"_img");
+		imageView.setPreserveRatio(true);
+		imageView.setPickOnBounds(true);
+		imageView.setFitHeight(30);
+		imageView.setFitWidth(30);
+		try {
+			imageView.setImage(getImage(processSpecDto.getIcon(), true));
+		} catch (RegBaseCheckedException e) {
+			LOGGER.error("Failed to get process image", e);
+		}
+		vBox.getChildren().add(imageView);
+		gridPane.addColumn(0, vBox);
+
+		Label label = new Label();
+		label.setText(processSpecDto.getLabel().get(ApplicationContext.applicationLanguage()));
+		label.setWrapText(true);
+		label.getStyleClass().add("operationalTitle");
+		gridPane.addColumn(1, label);
+		changeNodeOrientation(gridPane);
+		return gridPane;
+	}
 	
 	public void selectLanguage(MouseEvent event) {
 		if (!proceedOnRegistrationAction())
 			return;
 
-		ResponseDTO keyResponse = isKeyValid();
-		if (null == keyResponse.getSuccessResponseDTO()) {
-			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.INVALID_KEY));
-			return;
-		}
 		StringBuilder errorMessage = new StringBuilder();
 		ResponseDTO responseDTO;
 		responseDTO = validateSyncStatus();
@@ -994,22 +881,15 @@ public class PacketHandlerController extends BaseController implements Initializ
 			}
 			generateAlert(RegistrationConstants.ERROR, errorMessage.toString().trim());
 		} else {
-			String action = RegistrationConstants.EMPTY;
-			if (((GridPane) event.getSource()).equals(newRegGridPane)) {
-				action = RegistrationConstants.NEW_REGISTRATION_FLOW;
-			} else if (((GridPane) event.getSource()).equals(uinUpdateGridPane)) {
-				action = RegistrationConstants.UIN_UPDATE_FLOW;
-			} else if (((GridPane) event.getSource()).equals(lostUINPane)) {
-				action = RegistrationConstants.LOST_UIN_FLOW;
-			}
-
+			String processId = ((GridPane) event.getSource()).getId();
 			try {
+				languageSelectionController.setProcessId(processId);
 				if(isLanguageSelectionRequired()) {
 					getStage().getScene().getRoot().setDisable(true);
-					languageSelectionController.init(action);
+					languageSelectionController.init();
 				}
 				else {
-					languageSelectionController.submitLanguagesAndProceed(action, baseService.getMandatoryLanguages());
+					languageSelectionController.submitLanguagesAndProceed(baseService.getMandatoryLanguages());
 				}
 			} catch (PreConditionCheckException e) {
 				generateAlert(RegistrationConstants.ERROR, e.getErrorCode());

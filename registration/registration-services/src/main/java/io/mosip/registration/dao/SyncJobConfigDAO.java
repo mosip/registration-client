@@ -18,6 +18,13 @@ public interface SyncJobConfigDAO {
 	 * @return list of sync jobs
 	 */
 	List<SyncJobDef> getAll();
+	
+	/**
+	 * To get a job in the List of {@link SyncJobDef}
+	 * 
+	 * @return sync job
+	 */
+	SyncJobDef getSyncJob(String jobId);
 
 	/**
 	 * To get all the List of active {@link SyncJobDef}

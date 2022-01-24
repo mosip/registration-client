@@ -58,7 +58,7 @@ public class UserMachineMappingServiceTest {
 	@Test
 	public void syncUserDetailsTest() throws RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		List<UserMachineMapping> list = new ArrayList<>();
 		UserMachineMapping userMachineMapping = new UserMachineMapping();
 		UserDetail userDetail = new UserDetail();
@@ -69,7 +69,7 @@ public class UserMachineMappingServiceTest {
 		String machineId = "machineId";
 		String centerId = "centerId";
 		Mockito.when(baseService.getStationId()).thenReturn(machineId);
-		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn(centerId);
+		Mockito.when(baseService.getCenterId()).thenReturn(centerId);
 		Mockito.when(machineMappingDAO.getUserMappingDetails(Mockito.anyString())).thenReturn(list);
 		//new code
 		Map<String,Object> myMap=new HashMap<>();
@@ -106,7 +106,7 @@ public class UserMachineMappingServiceTest {
 	@Test
 	public void syncUserDetailsOffLineTest() {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(false);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(false);
 		assertNotNull(userMachineMappingServiceImpl.syncUserDetails());
 
 	}
@@ -138,7 +138,7 @@ public class UserMachineMappingServiceTest {
 		userFailureList.add(userDetailsMap);
 		responseMap.put("errors", userFailureList);
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		List<UserMachineMapping> list = new ArrayList<>();
 		UserMachineMapping userMachineMapping = new UserMachineMapping();
 		UserDetail userDetail = new UserDetail();
@@ -149,7 +149,7 @@ public class UserMachineMappingServiceTest {
 		String machineId = "machineId";
 		String centerId = "centerId";
 		Mockito.when(baseService.getStationId()).thenReturn(machineId);
-		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn(centerId);
+		Mockito.when(baseService.getCenterId()).thenReturn(centerId);
 		Mockito.when(machineMappingDAO.getUserMappingDetails(Mockito.anyString())).thenReturn(list);
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.any(), Mockito.anyString())).thenReturn(responseMap);
 		Map<String, Object> map1 = new HashMap<>();

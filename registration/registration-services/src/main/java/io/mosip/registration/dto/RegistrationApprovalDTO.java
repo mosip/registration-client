@@ -8,10 +8,12 @@ package io.mosip.registration.dto;
 public class RegistrationApprovalDTO {
 
 	private String id;
+	private String packetId;
 	private String date;
 	private String acknowledgementFormPath;
 	private String operatorId;
 	private String statusComment;
+	private boolean hasBwords;
 
 	/**
 	 * Instantiates a new registration approval DTO.
@@ -25,14 +27,16 @@ public class RegistrationApprovalDTO {
 	 * @param statusComment 
 	 * 				the status comment
 	 */
-	public RegistrationApprovalDTO(String id, String date, String acknowledgementFormPath, String operatorId, String statusComment) {
+	public RegistrationApprovalDTO(String id, String packetId, String date, String acknowledgementFormPath, String operatorId, String statusComment, boolean hasBwords) {
 		super();
 		
-		this.id = id;		
+		this.id = id;
+		this.packetId = packetId;
 		this.date = date;
 		this.acknowledgementFormPath =acknowledgementFormPath;
 		this.operatorId = operatorId;
 		this.statusComment = statusComment;
+		this.hasBwords = hasBwords;
 	}
 	
 	/**
@@ -42,6 +46,15 @@ public class RegistrationApprovalDTO {
 	 */
 	public String getId() {
 		return id;
+	}
+	
+	/**
+	 * Gets the packetId.
+	 *
+	 * @return the packetId
+	 */
+	public String getPacketId() {
+		return packetId;
 	}
 
 	/**
@@ -71,5 +84,9 @@ public class RegistrationApprovalDTO {
 	
 	public String getOperatorId() {
 		return operatorId;
+	}
+	
+	public boolean getHasBwords() {
+		return hasBwords;
 	}
 }

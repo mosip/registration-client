@@ -2,6 +2,8 @@ package io.mosip.registration.config;
 
 import javax.sql.DataSource;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -45,11 +47,11 @@ import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderIm
 @Import({ DaoConfig.class, AuditConfig.class, TemplateManagerBuilderImpl.class })
 @EnableJpaRepositories(basePackages = "io.mosip.registration", repositoryBaseClass = HibernateRepositoryImpl.class)
 @ComponentScan(excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = {
-		"io\\.mosip\\.kernel\\.idobjectvalidator\\.impl\\.IdObjectCompositeValidator",
-		"io\\.mosip\\.kernel\\.idobjectvalidator\\.impl\\.IdObjectMasterDataValidator",
-		"io\\.mosip\\.kernel\\.packetmanager\\.impl\\.PacketDecryptorImpl",
-		"io\\.mosip\\.kernel\\.packetmanager\\.util\\.IdSchemaUtils",
-		"io\\.mosip\\.commons\\.packet\\.impl\\.OnlinePacketCryptoServiceImpl" }),
+		".*IdObjectCompositeValidator",
+		".*IdObjectMasterDataValidator",
+		".*PacketDecryptorImpl",
+		".*IdSchemaUtils",
+		".*OnlinePacketCryptoServiceImpl"}),
 		basePackages = { "io.mosip.registration",
 		"io.mosip.kernel.idvalidator", "io.mosip.kernel.ridgenerator", "io.mosip.kernel.qrcode",
 		"io.mosip.kernel.crypto", "io.mosip.kernel.jsonvalidator", "io.mosip.kernel.idgenerator",
@@ -58,7 +60,7 @@ import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderIm
 		"io.mosip.kernel.idobjectvalidator.impl", "io.mosip.kernel.biosdk.provider.impl",
 		"io.mosip.kernel.biosdk.provider.factory", "io.mosip.commons.packet",
 		"io.mosip.registration.api.config" })
-@PropertySource(value = { "classpath:spring.properties" })
+@PropertySource(value = { "classpath:spring.properties", "classpath:props/mosip-application.properties" })
 @ImportAutoConfiguration(RefreshAutoConfiguration.class)
 @EnableConfigurationProperties
 @EnableRetry
@@ -73,13 +75,16 @@ public class AppConfig {
 	}
 
 	@Bean
-	public RestTemplate getRestTemplate() {
+	public RestTemplate restTemplate() {
 		return new RestTemplate();
 	}
 
 	@Bean
-	public ObjectMapper getObjectMapper() {
-		return new ObjectMapper();
+	public ObjectMapper mapper() {
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+		return mapper;
 	}
 
 	@Bean

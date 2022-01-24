@@ -25,10 +25,7 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import io.mosip.registration.dto.mastersync.GenericDto;
-import javafx.scene.image.PixelWriter;
-import javafx.scene.image.WritableImage;
-import javafx.stage.Modality;
+import io.mosip.registration.controller.reg.*;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,20 +45,14 @@ import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.device.BiometricsController;
 import io.mosip.registration.controller.device.ScanPopUpViewController;
 import io.mosip.registration.controller.eodapproval.RegistrationApprovalController;
-import io.mosip.registration.controller.reg.AlertController;
-import io.mosip.registration.controller.reg.HeaderController;
-import io.mosip.registration.controller.reg.HomeController;
-import io.mosip.registration.controller.reg.PacketHandlerController;
-import io.mosip.registration.controller.reg.RegistrationPreviewController;
-import io.mosip.registration.controller.reg.UserOnboardParentController;
-import io.mosip.registration.controller.reg.Validations;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
-import io.mosip.registration.dto.response.SchemaDto;
-import io.mosip.registration.enums.Role;
+import io.mosip.registration.dto.schema.ProcessSpecDto;
+import io.mosip.registration.dto.schema.SchemaDto;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RemapException;
@@ -78,7 +69,6 @@ import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.security.AuthenticationService;
 import io.mosip.registration.service.sync.SyncStatusValidatorService;
 import io.mosip.registration.util.common.PageFlow;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import io.mosip.registration.validator.RequiredFieldValidator;
@@ -109,10 +99,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -217,6 +210,9 @@ public class BaseController {
 
 	@Autowired
 	private BioService bioService;
+
+	@Autowired
+	private DocumentScanController documentScanController;
 	
 	protected ApplicationContext applicationContext = ApplicationContext.getInstance();
 
@@ -336,7 +332,7 @@ public class BaseController {
 	public static <T> T load(URL url) throws IOException {
 		FXMLLoader loader = new FXMLLoader(url, ApplicationContext.getInstance()
 				.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS));
-		loader.setControllerFactory(Initialization.getApplicationContext()::getBean);
+		loader.setControllerFactory(ClientApplication.getApplicationContext()::getBean);
 		return loader.load();
 	}
 
@@ -366,7 +362,7 @@ public class BaseController {
 	 */
 	public static <T> T load(URL url, ResourceBundle resource) throws IOException {
 		FXMLLoader loader = new FXMLLoader(url, resource);
-		loader.setControllerFactory(Initialization.getApplicationContext()::getBean);
+		loader.setControllerFactory(ClientApplication.getApplicationContext()::getBean);
 		return loader.load();
 	}
 
@@ -475,7 +471,7 @@ public class BaseController {
 	 * @return
 	 */
 	protected boolean pageNavigantionAlert() {
-		if (!fXComponents.getScene().getRoot().getId().equals("mainBox") && !SessionContext.map()
+		if (!fXComponents.getScene().getRoot().getId().equals("mainBox") && SessionContext.getInstance() != null && !SessionContext.map()
 				.get(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ).equals(RegistrationConstants.ENABLE)) {
 
 			Alert alert = createAlert(AlertType.CONFIRMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.INFORMATION),
@@ -588,17 +584,6 @@ public class BaseController {
 		delay.play();
 	}
 
-	/**
-	 * {@code globalParams} is to retrieve required global config parameters for
-	 * login from config table.
-	 *
-	 */
-	protected void getGlobalParams() {
-		Map<String, Object> globalProps = globalParamService.getGlobalParams();
-		globalProps.putAll(localConfigService.getLocalConfigurations());
-		ApplicationContext.setApplicationMap(globalProps);
-	}
-
 
 	/**
 	 * Opens the home page screen.
@@ -698,6 +683,16 @@ public class BaseController {
 		SessionContext.userMap().remove(RegistrationConstants.IS_LOW_QUALITY_BIOMETRICS);
 		SessionContext.map().remove(RegistrationConstants.DUPLICATE_FINGER);
 
+		if (SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA) != null) {
+			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
+			registrationDTO.clearRegistrationDto();
+			SessionContext.map().remove(RegistrationConstants.REGISTRATION_DATA);
+		}
+
+		if(documentScanController.getScannedPages() != null) {
+			documentScanController.getScannedPages().clear();
+		}
+
 		pageFlow.loadPageFlow();
 
 	}
@@ -723,7 +718,7 @@ public class BaseController {
 	public static FXMLLoader loadChild(URL url) {
 		FXMLLoader loader = new FXMLLoader(url, ApplicationContext.getInstance()
 				.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS));
-		loader.setControllerFactory(Initialization.getApplicationContext()::getBean);
+		loader.setControllerFactory(ClientApplication.getApplicationContext()::getBean);
 		return loader;
 	}
 
@@ -804,13 +799,13 @@ public class BaseController {
 		authenticationValidatorDTO.setUserId(username);
 		authenticationValidatorDTO.setPassword(password);
 
-		String status = authenticationService.validatePassword(authenticationValidatorDTO);
-		if (status.equals(RegistrationConstants.PWD_MATCH)) {
-			return RegistrationConstants.SUCCESS;
-		} else if (status.equals(RegistrationConstants.CREDS_NOT_FOUND)) {
-			return RegistrationConstants.CREDS_NOT_FOUND;
+		try {
+			return authenticationService.validatePassword(authenticationValidatorDTO) ? RegistrationConstants.SUCCESS :
+					RegistrationConstants.FAILURE;
+		} catch (RegBaseCheckedException e) {
+			LOGGER.error("PWD login failed due to : ", e.getErrorCode());
+			return e.getErrorCode();
 		}
-		return RegistrationConstants.FAILURE;
 	}
 
 	/**
@@ -934,7 +929,7 @@ public class BaseController {
 	}
 
 	private String saveDetails(String currentPage, String returnPage) {
-		if (returnPage.equalsIgnoreCase(RegistrationConstants.REGISTRATION_PREVIEW)) {
+		if (RegistrationConstants.REGISTRATION_PREVIEW.equalsIgnoreCase(returnPage)) {
 
 			LOGGER.info(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
 					"Invoking Save Detail before redirecting to Preview");
@@ -943,7 +938,7 @@ public class BaseController {
 
 			LOGGER.info(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
 					"Details saved and content of preview is set");
-		} else if (returnPage.equalsIgnoreCase(RegistrationConstants.ONBOARD_USER_SUCCESS)) {
+		} else if (RegistrationConstants.ONBOARD_USER_SUCCESS.equalsIgnoreCase(returnPage)) {
 
 			LOGGER.info(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID, "Validating User Onboard data");
 
@@ -1037,19 +1032,21 @@ public class BaseController {
 	protected void getCurrentPage(Pane pageId, String notTosShow, String show) {
 		LOGGER.info("Pane : {}, Navigating from current page {} to show : {}",
 				pageId == null ? "null" : pageId.getId(), notTosShow, show);
-
-		if (notTosShow != null) {
-			((Pane) pageId.lookup(RegistrationConstants.HASH + notTosShow)).setVisible(false);
+		
+		if (pageId != null) {
+			if (notTosShow != null) {
+				((Pane) pageId.lookup(RegistrationConstants.HASH + notTosShow)).setVisible(false);
+			}
+			if (show != null) {
+				((Pane) pageId.lookup(RegistrationConstants.HASH + show)).setVisible(true);
+			}
 		}
-		if (show != null) {
-			((Pane) pageId.lookup(RegistrationConstants.HASH + show)).setVisible(true);
-		}
+		
 		LOGGER.info("Navigated to next page >> {}", show);
 	}
 
 	public void remapMachine() {
-
-		String message = RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REMAP_NO_ACCESS_MESSAGE);
+		String message = RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REMAP_MESSAGE);
 
 		if (isPacketsPendingForEODOrReRegister()) {
 			message += RegistrationConstants.NEW_LINE + RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.REMAP_EOD_PROCESS_MESSAGE);
@@ -1096,7 +1093,6 @@ public class BaseController {
 				handleRemapResponse(service, false);
 			}
 		});
-
 	}
 
 	private void handleRemapResponse(Service<String> service, boolean isSuccess) {
@@ -1208,13 +1204,8 @@ public class BaseController {
 	 * @return the value from application context
 	 */
 	public String getValueFromApplicationContext(String key) {
-
-		LOGGER.info(LoggerConstants.LOG_REG_BASE, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Fetching value from application Context");
-
-		return applicationContext.getApplicationMap().containsKey(key)
-				? (String) applicationContext.getApplicationMap().get(key)
-				: null;
+		LOGGER.debug("Fetching value from application Context {}", key);
+		return ApplicationContext.getStringValueFromApplicationMap(key);
 	}
 
 	/**
@@ -1234,9 +1225,7 @@ public class BaseController {
 	 * @param val    value to be set
 	 */
 	protected void updatePageFlow(String pageId, boolean val) {
-
-		LOGGER.info(LoggerConstants.LOG_REG_BASE, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Updating page flow to navigate next or previous");
+		LOGGER.info("Updating page flow to navigate next or previous, pageId:{}, {}", pageId, val);
 		pageFlow.updateRegMap(pageId, RegistrationConstants.VISIBILITY, val);
 	}
 
@@ -1295,6 +1284,26 @@ public class BaseController {
 	public SchemaDto getLatestSchema() {
 		try {
 			return identitySchemaService.getIdentitySchema(identitySchemaService.getLatestEffectiveSchemaVersion());
+		} catch (RegBaseCheckedException exception) {
+			LOGGER.error(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
+					ExceptionUtils.getStackTrace(exception));
+		}
+		return null;
+	}
+
+	public ProcessSpecDto getProcessSpec(String processId, double idVersion) {
+		try {
+			return identitySchemaService.getProcessSpecDto(processId, idVersion);
+		} catch (RegBaseCheckedException exception) {
+			LOGGER.error(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
+					ExceptionUtils.getStackTrace(exception));
+		}
+		return null;
+	}
+
+	public List<UiFieldDTO> getAllFields(String processId, double idVersion) {
+		try {
+			return identitySchemaService.getAllFieldSpec(processId, idVersion);
 		} catch (RegBaseCheckedException exception) {
 			LOGGER.error(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(exception));
@@ -1395,7 +1404,7 @@ public class BaseController {
 
 	public boolean proceedOnAction(String job) {
 
-		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+		if (!serviceDelegateUtil.isNetworkAvailable()) {
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_INTERNET_CONNECTION));
 			return false;
 		}
@@ -1499,7 +1508,7 @@ public class BaseController {
 
 	protected List<String> getConfiguredLangCodes() {
 		try {
-			return ListUtils.union(baseService.getMandatoryLanguages(), baseService.getOptionalLanguages());
+			return baseService.getConfiguredLangCodes();
 		} catch (PreConditionCheckException e) {
 			generateAlert(RegistrationConstants.ERROR, "Both Mandatory and Optional languages not configured");
 		}
@@ -1550,7 +1559,6 @@ public class BaseController {
         try {
 			return  new Image(getClass().getResourceAsStream(uri));
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			LOGGER.error("Exception while Getting Image "+ uri, exception);
 			throw new RegBaseCheckedException();
 		}
@@ -1620,7 +1628,7 @@ public class BaseController {
 	 * @throws IOException
 	 * @throws RegBaseCheckedException
 	 */
-	protected boolean captureAndValidateFP(String userId, boolean isPacketAuth, boolean isChecker)
+	protected boolean captureAndValidateFP(String userId, boolean isPacketAuth, boolean isReviewer)
 			throws RegBaseCheckedException, IOException {
 		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.FINGERPRINT_SLAB_LEFT, null,
 				"Registration",
@@ -1634,7 +1642,7 @@ public class BaseController {
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 		boolean fpMatchStatus = authenticationService.authValidator(userId, SingleType.FINGER.value(), biometrics);
 		if (fpMatchStatus && isPacketAuth) {
-			addOperatorBiometrics(biometrics, isChecker);
+			addOperatorBiometrics(biometrics, isReviewer);
 		}
 		return fpMatchStatus;
 	}
@@ -1646,7 +1654,7 @@ public class BaseController {
 	 * @return true/false after validating iris
 	 * @throws IOException
 	 */
-	protected boolean captureAndValidateIris(String userId, boolean isPacketAuth, boolean isChecker) throws RegBaseCheckedException, IOException {
+	protected boolean captureAndValidateIris(String userId, boolean isPacketAuth, boolean isReviewer) throws RegBaseCheckedException, IOException {
 		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.IRIS_DOUBLE, null, "Registration",
 				io.mosip.registration.context.ApplicationContext
 						.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
@@ -1658,7 +1666,7 @@ public class BaseController {
 
 		boolean match = authenticationService.authValidator(userId, SingleType.IRIS.value(), biometrics);
 		if (match && isPacketAuth) {
-			addOperatorBiometrics(biometrics, isChecker);
+			addOperatorBiometrics(biometrics, isReviewer);
 		}
 		return match;
 	}
@@ -1671,7 +1679,7 @@ public class BaseController {
 	 * @throws IOException
 	 * @throws RegBaseCheckedException
 	 */
-	protected boolean captureAndValidateFace(String userId, boolean isPacketAuth, boolean isChecker) throws RegBaseCheckedException, IOException {
+	protected boolean captureAndValidateFace(String userId, boolean isPacketAuth, boolean isReviewer) throws RegBaseCheckedException, IOException {
 		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.FACE_FULLFACE, null, "Registration",
 				io.mosip.registration.context.ApplicationContext
 						.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
@@ -1684,13 +1692,13 @@ public class BaseController {
 
 		boolean match = authenticationService.authValidator(userId, SingleType.FACE.value(), biometrics);
 		if (match && isPacketAuth) {
-			addOperatorBiometrics(biometrics, isChecker);
+			addOperatorBiometrics(biometrics, isReviewer);
 		}
 		return match;
 	}
 	
-	private void addOperatorBiometrics(List<BiometricsDto> biometrics, boolean isChecker) {
-		if (isChecker) {
+	private void addOperatorBiometrics(List<BiometricsDto> biometrics, boolean isReviewer) {
+		if (isReviewer) {
 			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.getInstance().getMapObject()
 					.get(RegistrationConstants.REGISTRATION_DATA);
 			registrationDTO.addSupervisorBiometrics(biometrics);
@@ -1698,6 +1706,28 @@ public class BaseController {
 			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.getInstance().getMapObject()
 					.get(RegistrationConstants.REGISTRATION_DATA);
 			registrationDTO.addOfficerBiometrics(biometrics);
+		}
+	}
+	
+	protected void showAlertAndLogout() {
+		/* Generate alert */
+		Alert logoutAlert = createAlert(AlertType.INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_SUCCESS),RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.ALERT_NOTE_LABEL),
+				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.LOGOUT_ALERT),
+				RegistrationConstants.OK_MSG, null);
+
+		logoutAlert.show();
+		Rectangle2D screenSize = Screen.getPrimary().getVisualBounds();		
+		Double xValue = screenSize.getWidth()/2 - logoutAlert.getWidth() + 250;
+		Double yValue = screenSize.getHeight()/2 - logoutAlert.getHeight();
+		logoutAlert.hide();
+		logoutAlert.setX(xValue);
+		logoutAlert.setY(yValue);
+		logoutAlert.showAndWait();
+
+		/* Get Option from user */
+		ButtonType result = logoutAlert.getResult();
+		if (result == ButtonType.OK) {
+			headerController.logout();
 		}
 	}
 }

@@ -7,11 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import io.mosip.registration.dao.TemplateDao;
 import io.mosip.registration.entity.Template;
-import io.mosip.registration.entity.TemplateFileFormat;
-import io.mosip.registration.entity.TemplateType;
-import io.mosip.registration.repositories.TemplateFileFormatRepository;
 import io.mosip.registration.repositories.TemplateRepository;
-import io.mosip.registration.repositories.TemplateTypeRepository;
 
 /**
  * DaoImpl for calling the respective template repositories and getting data from database
@@ -24,23 +20,12 @@ public class TemplateDaoImpl implements TemplateDao{
 	@Autowired
 	private TemplateRepository<Template> templateRepository;
 	
-	@Autowired
-	private TemplateTypeRepository<TemplateType> typeRepository;
-	
-	@Autowired
-	private TemplateFileFormatRepository<TemplateFileFormat> fileFormatRepository;
+
 	
 	public List<Template> getAllTemplates(String templateTypeCode){
 		return templateRepository.findByIsActiveTrueAndTemplateTypeCode(templateTypeCode);
 	}
 	
-	public List<TemplateType> getAllTemplateTypes(String code,String langCode){
-		return typeRepository.findByIsActiveTrueAndCode(code);
-	}
-	
-	public List<TemplateFileFormat> getAllTemplateFileFormats(){
-		return fileFormatRepository.findByIsActiveTrue();
-	}
 
 	public List<Template> getAllTemplates(String templateTypeCode, String langCode){
 		return templateRepository.findAllByIsActiveTrueAndTemplateTypeCodeLikeAndLangCodeOrderByIdAsc(templateTypeCode, langCode);

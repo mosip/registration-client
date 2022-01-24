@@ -1,8 +1,5 @@
 package io.mosip.registration.config;
 
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,31 +7,27 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.WeakHashMap;
+import java.util.*;
 
 import javax.sql.DataSource;
 
+import io.mosip.registration.context.ApplicationContext;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.DependsOn;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertiesPropertySource;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -50,11 +43,11 @@ import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.dataaccess.hibernate.config.HibernateDaoConfig;
 import io.mosip.kernel.dataaccess.hibernate.constant.HibernatePersistenceConstant;
-import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import lombok.SneakyThrows;
+
+import static io.mosip.registration.constants.RegistrationConstants.*;
 
 /**
  *
@@ -100,16 +93,23 @@ public class DaoConfig extends HibernateDaoConfig {
 	private ConfigurableEnvironment environment;
 
 	private static boolean isPPCUpdated = false;
-	private static PropertySourcesPlaceholderConfigurer ppc = null;
-
 	private DriverManagerDataSource driverManagerDataSource = null;
+	private static ApplicationContext applicationContext;
+	private static final SecureRandom secureRandom = new SecureRandom();
 
 	static {
+		try (InputStream configKeys = DaoConfig.class.getClassLoader().getResourceAsStream("spring.properties");
+			 InputStream buildKeys = DaoConfig.class.getClassLoader().getResourceAsStream("props/mosip-application.properties")) {
 
-		try (InputStream keyStream = DaoConfig.class.getClassLoader().getResourceAsStream("spring.properties")) {
+			applicationContext = io.mosip.registration.context.ApplicationContext.getInstance();
 
 			keys = new Properties();
-			keys.load(keyStream);
+			keys.load(configKeys);
+			keys.load(buildKeys);
+
+			keys.keySet().forEach( k -> {
+				applicationContext.getApplicationMap().put((String) k, keys.get(k));
+			});
 
 		} catch (Exception e) {
 			LOGGER.error(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID,
@@ -150,20 +150,6 @@ public class DaoConfig extends HibernateDaoConfig {
 		return jdbcTemplate;
 	}
 
-	/**
-	 * setting profile for spring properties
-	 *
-	 * @return the {@link PropertyPlaceholderConfigurer} after setting the
-	 *         properties
-	 */
-	@Bean
-	public static PropertySourcesPlaceholderConfigurer properties() {
-		ppc = new PropertySourcesPlaceholderConfigurer();
-		Resource[] resources = new ClassPathResource[] { new ClassPathResource("spring.properties") };
-		ppc.setLocations(resources);
-		ppc.setTrimValues(true);
-		return ppc;
-	}
 
 	@Override
 	@Bean
@@ -222,6 +208,8 @@ public class DaoConfig extends HibernateDaoConfig {
 	@VisibleForTesting
 	private void setupDataSource() throws Exception {
 		LOGGER.info(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID, "****** SETTING UP DATASOURCE *******");
+		System.setProperty("derby.stream.error.method", "io.mosip.registration.config.DerbySlf4jBridge.bridge");
+		backwardCompatibleFix();
 		createDatabase();
 		reEncryptExistingDB();
 		setupUserAndPermits();
@@ -323,15 +311,14 @@ public class DaoConfig extends HibernateDaoConfig {
 					statement.executeUpdate(
 							"CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.authentication.provider', 'BUILTIN')");
 					// creating user
-					statement.executeUpdate("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.user."
-							+ dbConf.get(USERNAME_KEY) + "', '" + dbConf.get(PWD_KEY) + "')");
+					statement.executeUpdate(String.format("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.user.%s', '%s')",
+							dbConf.get(USERNAME_KEY), dbConf.get(PWD_KEY)));
 					// setting default connection mode to noaccess
 					statement.executeUpdate(
 							"CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.database.defaultConnectionMode', 'noAccess')");
 					// setting read-write access to only one user
-					statement.executeUpdate(
-							"CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.database.fullAccessUsers', '"
-									+ dbConf.get(USERNAME_KEY) + "')");
+					statement.executeUpdate(String.format("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.database.fullAccessUsers', '%s')",
+							dbConf.get(USERNAME_KEY)));
 					// property ensures that database-wide properties cannot be overridden by
 					// system-wide properties
 					statement.executeUpdate(
@@ -378,8 +365,8 @@ public class DaoConfig extends HibernateDaoConfig {
 			statement.executeUpdate(
 					"CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.authentication.provider', null)");
 			// creating user
-			statement.executeUpdate(
-					"CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.user." + dbConf.get(USERNAME_KEY) + "', null)");
+			statement.executeUpdate(String.format("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.user.%s', null)",
+					dbConf.get(USERNAME_KEY)));
 			// setting default connection mode to noaccess
 			statement.executeUpdate(
 					"CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.database.defaultConnectionMode', 'fullAccess')");
@@ -399,7 +386,7 @@ public class DaoConfig extends HibernateDaoConfig {
 	}
 
 	private void isKeySet(Statement statement, String key, String value) throws SQLException, RegBaseCheckedException {
-		ResultSet rs = statement.executeQuery("VALUES SYSCS_UTIL.SYSCS_GET_DATABASE_PROPERTY('" + key + "')");
+		ResultSet rs = statement.executeQuery(String.format("VALUES SYSCS_UTIL.SYSCS_GET_DATABASE_PROPERTY('%s')", key));
 		if (rs.next() && value.equalsIgnoreCase(rs.getString(1)))
 			return;
 
@@ -425,9 +412,11 @@ public class DaoConfig extends HibernateDaoConfig {
 		if (!isPPCUpdated) {
 			Properties properties = new Properties();
 			Map<String, Object> globalProps = getDBProps(jdbcTemplate);
+			properties.putAll(keys);
 			properties.putAll(getLocalProps(jdbcTemplate, globalProps));
-			PropertiesPropertySource propertiesPropertySource = new PropertiesPropertySource("gobalparams", properties);
+			PropertiesPropertySource propertiesPropertySource = new PropertiesPropertySource("globalparams", properties);
 			environment.getPropertySources().addFirst(propertiesPropertySource);
+			applicationContext.getApplicationMap().putAll(globalProps);
 			isPPCUpdated = true;
 		}
 	}
@@ -458,15 +447,20 @@ public class DaoConfig extends HibernateDaoConfig {
 	 * @return Collection of Global param values
 	 */
 	private static Map<String, Object> getLocalProps(JdbcTemplate jdbcTemplate, Map<String, Object> globalProps) {
-		return jdbcTemplate.query(LOCAL_PREFERENCES, new ResultSetExtractor<Map<String, Object>>() {
-			@Override
-			public Map<String, Object> extractData(ResultSet localParamResultset) throws SQLException {
-				while (localParamResultset.next()) {
-					globalProps.put(localParamResultset.getString(NAME), localParamResultset.getString(VALUE));
+		try {
+			return jdbcTemplate.query(LOCAL_PREFERENCES, new ResultSetExtractor<Map<String, Object>>() {
+				@Override
+				public Map<String, Object> extractData(ResultSet localParamResultset) throws SQLException {
+					while (localParamResultset.next()) {
+						globalProps.put(localParamResultset.getString(NAME), localParamResultset.getString(VALUE));
+					}
+					return globalProps;
 				}
-				return globalProps;
-			}
-		});
+			});
+		} catch (DataAccessException exception) {
+			LOGGER.error("Failed to fetch data from local_preferences table", exception);
+		}
+		return globalProps;
 	}
 
 	private boolean isDBInitializeRequired() {
@@ -490,12 +484,13 @@ public class DaoConfig extends HibernateDaoConfig {
 		if (!path.toFile().exists()) {
 			LOGGER.info("REGISTRATION  - DaoConfig", APPLICATION_NAME, APPLICATION_ID,
 					"getDBSecret invoked - DB_PWD_FILE not found !");
+
 			StringBuilder dbConf = new StringBuilder();
-			dbConf.append(RandomStringUtils.randomAlphanumeric(20));
+			dbConf.append(RandomStringUtils.random(20, 0, 0, true, true, null, secureRandom));
 			dbConf.append(SEPARATOR);
-			dbConf.append(RandomStringUtils.randomAlphabetic(10));
+			dbConf.append(RandomStringUtils.random(10, 0, 0, true, false, null, secureRandom));
 			dbConf.append(SEPARATOR);
-			dbConf.append(RandomStringUtils.randomAlphanumeric(20));
+			dbConf.append(RandomStringUtils.random(20, 0, 0, true, true, null, secureRandom));
 			dbConf.append(SEPARATOR);
 			dbConf.append(ERROR_STATE); // states if successful db conf. 1 = SAFE_STATE, 0 = ERROR_STATE
 			saveDbConf(dbConf.toString());
@@ -511,8 +506,8 @@ public class DaoConfig extends HibernateDaoConfig {
 		// older versions of reg-cli, re-encrypt db and set the new flags
 		if (parts.length == 1) {
 			conf.put(BOOTPWD_KEY, parts[0]);
-			conf.put(USERNAME_KEY, RandomStringUtils.randomAlphabetic(10));
-			conf.put(PWD_KEY, RandomStringUtils.randomAlphanumeric(20));
+			conf.put(USERNAME_KEY, RandomStringUtils.random(10, 0, 0, true, false, null, secureRandom));
+			conf.put(PWD_KEY, RandomStringUtils.random(20, 0, 0, true, true, null, secureRandom));
 			conf.put(STATE_KEY, ERROR_STATE);
 		} else {
 			conf.put(BOOTPWD_KEY, parts[0]);
@@ -542,6 +537,27 @@ public class DaoConfig extends HibernateDaoConfig {
 				ClientCryptoManagerConstant.KEYS_DIR, ClientCryptoManagerConstant.DB_PWD_FILE).toFile())) {
 			fos.write(java.util.Base64.getEncoder().encode(cipher));
 			LOGGER.debug("REGISTRATION  - DaoConfig", APPLICATION_NAME, APPLICATION_ID, "Saved DB configuration");
+		}
+	}
+
+	//Move ${user.home}/.mosipkeys/db.conf to ${user.dir}/.mosipkeys/db.conf
+	private void backwardCompatibleFix() {
+		Path target = Paths.get(ClientCryptoManagerConstant.KEY_PATH, ClientCryptoManagerConstant.KEYS_DIR,
+				ClientCryptoManagerConstant.DB_PWD_FILE);
+		if(target.toFile().exists()) {
+			LOGGER.info("DB credential backward compatibility fix not applicable");
+			return;
+		}
+
+		Path source = Paths.get(System.getProperty("user.home"), ClientCryptoManagerConstant.KEYS_DIR,
+				ClientCryptoManagerConstant.DB_PWD_FILE);
+		if(source.toFile().exists()) {
+			try {
+				FileUtils.moveFile(source.toFile(), target.toFile());
+			} catch (IOException e) {
+				LOGGER.error("Failed to preform backward compatible fix. Failed to copy {} to {} due to {}",
+						source, target, e);
+			}
 		}
 	}
 

@@ -1,5 +1,8 @@
 package io.mosip.registration.jobs.impl;
 
+import java.sql.Timestamp;
+
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -7,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
@@ -42,6 +46,7 @@ import io.mosip.registration.service.sync.PreRegistrationDataSyncService;
  * @since 1.0.0
  *
  */
+@DisallowConcurrentExecution
 @Component(value = "preRegistrationDataSyncJob")
 public class PreRegistrationDataSyncJob extends BaseJob {
 
@@ -76,7 +81,7 @@ public class PreRegistrationDataSyncJob extends BaseJob {
 						.getPreRegistrationIds(RegistrationConstants.OPT_TO_REG_PDS_J00003);
 			}
 
-			syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+			syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		} catch (RegBaseUncheckedException baseUncheckedException) {
 			LOGGER.error(LoggerConstants.PRE_REG_DATA_SYNC_JOB_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
@@ -109,7 +114,7 @@ public class PreRegistrationDataSyncJob extends BaseJob {
 		if (responseDTO.getSuccessResponseDTO() != null) {
 			this.responseDTO = preRegistrationDataSyncService.getPreRegistrationIds(RegistrationConstants.OPT_TO_REG_PDS_J00003);
 		}
-		syncTransactionUpdate(responseDTO, triggerPoint, jobId);
+		syncTransactionUpdate(responseDTO, triggerPoint, jobId, Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 
 		LOGGER.info(LoggerConstants.PRE_REG_DATA_SYNC_JOB_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "execute job ended");

@@ -70,14 +70,14 @@ public class UserMachineMappingServiceImpl extends BaseService implements UserMa
 		List<Map<String, Object>> list = new ArrayList<>();
 		ResponseDTO responseDTO = new ResponseDTO();
 
-		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+		if (!serviceDelegateUtil.isNetworkAvailable()) {
 			buildErrorRespone(responseDTO, RegistrationConstants.POLICY_SYNC_CLIENT_NOT_ONLINE_ERROR_CODE,
 					RegistrationConstants.POLICY_SYNC_CLIENT_NOT_ONLINE_ERROR_MESSAGE);
 		} else {
 
 			try {				
 				stationId = getStationId();
-				centerId = getCenterId(stationId);
+				centerId = getCenterId();
 				userMachineMappingList = machineMappingDAO.getUserMappingDetails(stationId);
 				Map<String, Object> requestMap = new LinkedHashMap<>();
 				requestMap.put(RegistrationConstants.ID, RegistrationConstants.APPLICATION_NAME);

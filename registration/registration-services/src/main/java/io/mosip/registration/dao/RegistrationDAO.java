@@ -137,8 +137,6 @@ public interface RegistrationDAO {
 	 * @return List of {@link Registration} entities
 	 */
 	List<Registration> getPacketsToBeSynched(List<String> statusCodes);
-	
-	List<Registration> getPacketsToBeSynched(List<String> statusCodes, int count);
 
 	/**
 	 * This method is used to update the Packet sync status in the database.
@@ -154,16 +152,7 @@ public interface RegistrationDAO {
 	 * @param status the status
 	 * @return the all re registration packets
 	 */
-	List<Registration> getAllReRegistrationPackets(String[] status);
-
-	/**
-	 * This method is used to get the registration by id.
-	 *
-	 * @param clientStatusCode the client status code
-	 * @param rId              the registration id
-	 * @return the registration by id
-	 */
-	Registration getRegistrationById(String clientStatusCode, String rId);
+	List<Registration> getAllReRegistrationPackets(String clientStatus, List<String> serverStatus);
 
 	/**
 	 * This method is used to get list of Registrations by passing list of registration id's.
@@ -180,7 +169,7 @@ public interface RegistrationDAO {
 	 * @param serverStatusCode status of resgistrationPacket
 	 * @return list of registrations
 	 */
-	List<Registration> get(Timestamp crDtimes, String serverStatusCode);
+	List<Registration> get(Timestamp crDtimes, List<String> serverStatusCodes);
 
 	/**
 	 * This method is used to find list of registrations by server status code in.
@@ -211,14 +200,14 @@ public interface RegistrationDAO {
 
 	List<Registration> getAllRegistrations();
 
-	List<Registration> getRegistrationByStatus(List<String> packetStatus, int limit);
-
 	List<Object[]> getStatusBasedCount();
 
-	Registration updateRegistrationWithAppId(String applicationId, String statusComments, String clientStatusCode);
+	Registration updateRegistrationWithPacketId(String packetId, String statusComments, String clientStatusCode);
 
 	List<String> getRegistrationIds(@NonNull List<String> appIds);
 
-	Registration getRegistrationByAppId(String appId);
+	Registration getRegistrationByPacketId(String packetId);
+
+	Registration updateAckReceiptSignature(String packetId, String signature);
 
 }

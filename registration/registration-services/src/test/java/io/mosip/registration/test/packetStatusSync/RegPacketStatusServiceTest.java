@@ -1,34 +1,20 @@
 package io.mosip.registration.test.packetStatusSync;
 
-import static io.mosip.kernel.core.util.JsonUtils.javaObjectToJsonString;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.when;
 
-import java.net.SocketTimeoutException;
-import java.net.URISyntaxException;
-import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
-import io.mosip.kernel.core.util.HMACUtils2;
-import io.mosip.registration.dao.RegistrationCenterDAO;
-import io.mosip.registration.entity.CenterMachine;
-import io.mosip.registration.entity.MachineMaster;
-import io.mosip.registration.entity.id.CenterMachineId;
-import io.mosip.registration.entity.id.RegMachineSpecId;
-import io.mosip.registration.exception.ConnectionException;
-import io.mosip.registration.repositories.CenterMachineRepository;
-import io.mosip.registration.repositories.MachineMasterRepository;
-import io.mosip.registration.service.BaseService;
-import io.mosip.registration.service.remap.CenterMachineReMapService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -44,24 +30,35 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.ResourceAccessException;
 
-import io.mosip.kernel.core.util.exception.JsonProcessingException;
+import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.dao.RegPacketStatusDAO;
+import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dao.RegistrationDAO;
-import io.mosip.registration.dto.RegistrationPacketSyncDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
+import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.Registration;
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.repositories.MachineMasterRepository;
+import io.mosip.registration.repositories.RegistrationRepository;
+import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.packet.impl.RegPacketStatusServiceImpl;
+import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.PacketSynchService;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 @RunWith(PowerMockRunner.class)
@@ -77,6 +74,8 @@ public class RegPacketStatusServiceTest {
 	private ServiceDelegateUtil serviceDelegateUtil;
 	@Mock
 	private RegPacketStatusDAO packetStatusDao;
+	@Mock
+	private RegistrationRepository registrationRepository;
 	@Mock
 	private PacketSynchService packetSynchService;
 
@@ -101,11 +100,10 @@ public class RegPacketStatusServiceTest {
 	@Mock
 	private CenterMachineReMapService centerMachineReMapService;
 
-	@Mock
-	private CenterMachineRepository centerMachineRepository;
-
 	@Before
 	public void initiate() throws Exception {
+		int batchCount = 10;
+		ReflectionTestUtils.setField(packetStatusService, "batchCount", batchCount);
 		Map<String,Object> appMap = new HashMap<>();
 		appMap.put(RegistrationConstants.REG_DELETION_CONFIGURED_DAYS, "5");
 		PowerMockito.mockStatic(ApplicationContext.class, SessionContext.class, RegistrationSystemPropertiesChecker.class);
@@ -122,14 +120,14 @@ public class RegPacketStatusServiceTest {
 		PowerMockito.doReturn(userContext).when(SessionContext.class, "userContext");
 		PowerMockito.when(SessionContext.userContext().getUserId()).thenReturn("mosip");
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
 
-		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn("10011");
+		Mockito.when(baseService.getCenterId()).thenReturn("10011");
 		Mockito.when(baseService.getStationId()).thenReturn("11002");
 		Mockito.when(baseService.isInitialSync()).thenReturn(false);
-		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
+		Mockito.when(registrationCenterDAO.isMachineCenterActive()).thenReturn(true);
 
 		//Mockito.when(baseService.getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP)).thenReturn(RegistrationConstants.DISABLE);
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);
@@ -139,14 +137,8 @@ public class RegPacketStatusServiceTest {
 		machine.setId("11002");
 		machine.setIsActive(true);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
-
-		CenterMachine centerMachine = new CenterMachine();
-		CenterMachineId centerMachineId = new CenterMachineId();
-		centerMachineId.setMachineId("11002");
-		centerMachineId.setRegCenterId("10011");
-		centerMachine.setCenterMachineId(centerMachineId);
-		centerMachine.setIsActive(true);
-		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString())).thenReturn(centerMachine);
+		
+		packetStatusService.init();
 	}
 
 	@AfterClass
@@ -174,18 +166,25 @@ public class RegPacketStatusServiceTest {
 		List<Registration> list = new LinkedList<>();
 		Registration regis = new Registration();
 		regis.setId("12345");
+		regis.setPacketId("12345");
 		regis.setAckFilename("..//PacketStore/02-Jan-2019/2018782130000102012019115112_Ack.png");
 		regis.setClientStatusCode(RegistrationConstants.PACKET_STATUS_CODE_PROCESSED);
+		regis.setUpdDtimes(Timestamp.from(Instant.now()));
 		list.add(regis);
 
-		when(packetStatusDao.getPacketIdsByStatusUploaded()).thenReturn(list);
+		//when(packetStatusDao.getPacketIdsByStatusUploadedOrExported()).thenReturn(list);
+		Slice<Registration> slice = getSlice(list);
+		
+		when(registrationRepository.findTopByOrderByUpdDtimesDesc()).thenReturn(regis);
+		
+		when(registrationRepository.findByClientStatusCodeOrClientStatusCommentsAndUpdDtimesLessThanEqual(Mockito.anyString(), Mockito.anyString(), 
+				Mockito.any(), Mockito.any())).thenReturn(slice);
 
 		when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.any(), Mockito.anyString())).thenReturn(response);
 		Assert.assertNotNull(packetStatusService.syncServerPacketStatus("System").getSuccessResponseDTO());
 
 		when(packetStatusDao.update(Mockito.any())).thenThrow(RuntimeException.class);
 		packetStatusService.syncServerPacketStatus("System");
-
 	}
 
 	@Test
@@ -207,7 +206,21 @@ public class RegPacketStatusServiceTest {
 		registrations.add(registration12);
 
 		List<Registration> list = new LinkedList<>();
-		when(packetStatusDao.getPacketIdsByStatusUploaded()).thenReturn(list);
+		
+		Slice<Registration> slice = getSlice(list);
+		
+		Registration regis = new Registration();
+		regis.setId("12345");
+		regis.setPacketId("12345");
+		regis.setAckFilename("..//PacketStore/02-Jan-2019/2018782130000102012019115112_Ack.png");
+		regis.setClientStatusCode(RegistrationConstants.PACKET_STATUS_CODE_PROCESSED);
+		regis.setUpdDtimes(Timestamp.from(Instant.now()));
+		when(registrationRepository.findTopByOrderByUpdDtimesDesc()).thenReturn(regis);
+		
+		when(registrationRepository.findByClientStatusCodeOrClientStatusCommentsAndUpdDtimesLessThanEqual(Mockito.anyString(), Mockito.anyString(), 
+				Mockito.any(), Mockito.any())).thenReturn(slice);
+
+		//when(packetStatusDao.getPacketIdsByStatusUploadedOrExported()).thenReturn(list);
 
 		when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString())).thenReturn(response);
 		Assert.assertNotNull(packetStatusService.syncServerPacketStatus("System").getSuccessResponseDTO());
@@ -225,8 +238,16 @@ public class RegPacketStatusServiceTest {
 		regis.setId("12345");
 		regis.setAckFilename("..//PacketStore/02-Jan-2019/2018782130000102012019115112_Ack.png");
 		regis.setClientStatusCode(RegistrationConstants.PACKET_STATUS_CODE_PROCESSED);
+		regis.setUpdDtimes(Timestamp.from(Instant.now()));
 		list.add(regis);
-		when(packetStatusDao.getPacketIdsByStatusUploaded()).thenReturn(list);
+		//when(packetStatusDao.getPacketIdsByStatusUploadedOrExported()).thenReturn(list);
+		
+		Slice<Registration> slice = getSlice(list);
+		
+		when(registrationRepository.findTopByOrderByUpdDtimesDesc()).thenReturn(regis);
+		
+		when(registrationRepository.findByClientStatusCodeOrClientStatusCommentsAndUpdDtimesLessThanEqual(Mockito.anyString(), Mockito.anyString(), 
+				Mockito.any(), Mockito.any())).thenReturn(slice);
 
 		when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString()))
 				.thenThrow(ConnectionException.class);
@@ -237,15 +258,21 @@ public class RegPacketStatusServiceTest {
 
 	@Test
 	public void packetSyncStatusRuntimeExceptionTest()
-			throws RegBaseCheckedException, ConnectionException {
-
+			throws RegBaseCheckedException, ConnectionException {		
 		List<Registration> list = new LinkedList<>();
 		Registration regis = new Registration();
 		regis.setId("12345");
 		regis.setAckFilename("..//PacketStore/02-Jan-2019/2018782130000102012019115112_Ack.png");
 		regis.setClientStatusCode(RegistrationConstants.PACKET_STATUS_CODE_PROCESSED);
+		regis.setUpdDtimes(Timestamp.from(Instant.now()));
 		list.add(regis);
-		when(packetStatusDao.getPacketIdsByStatusUploaded()).thenReturn(list);
+		
+		Slice<Registration> slice = getSlice(list);
+		
+		when(registrationRepository.findTopByOrderByUpdDtimesDesc()).thenReturn(regis);
+		
+		when(registrationRepository.findByClientStatusCodeOrClientStatusCommentsAndUpdDtimesLessThanEqual(Mockito.anyString(), Mockito.anyString(), 
+				Mockito.any(), Mockito.any())).thenReturn(slice);
 
 		when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString()))
 				.thenThrow(RuntimeException.class);
@@ -262,9 +289,17 @@ public class RegPacketStatusServiceTest {
 		regis.setId("12345");
 		regis.setAckFilename("..//PacketStore/02-Jan-2019/2018782130000102012019115112_Ack.png");
 		regis.setClientStatusCode(RegistrationConstants.PACKET_STATUS_CODE_PROCESSED);
+		regis.setUpdDtimes(Timestamp.from(Instant.now()));
 		list.add(regis);
+		
+		Slice<Registration> slice = getSlice(list);
+		
+		when(registrationRepository.findTopByOrderByUpdDtimesDesc()).thenReturn(regis);
+		
+		when(registrationRepository.findByClientStatusCodeOrClientStatusCommentsAndUpdDtimesLessThanEqual(Mockito.anyString(), Mockito.anyString(), 
+				Mockito.any(), Mockito.any())).thenReturn(slice);
 
-		when(packetStatusDao.getPacketIdsByStatusUploaded()).thenReturn(list);
+		//when(packetStatusDao.getPacketIdsByStatusUploadedOrExported()).thenReturn(list);
 
 		List<LinkedHashMap<String, String>> registrations = new ArrayList<>();
 
@@ -285,7 +320,7 @@ public class RegPacketStatusServiceTest {
 		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
 		successResponseDTO.setMessage(RegistrationConstants.REGISTRATION_DELETION_BATCH_JOBS_SUCCESS);
 
-		when(registrationDAO.get(Mockito.any(), Mockito.anyString())).thenReturn(list);
+		when(registrationDAO.get(Mockito.any(), Mockito.any())).thenReturn(list);
 
 		Mockito.doNothing().when(packetStatusDao).delete(Mockito.any());
 
@@ -309,9 +344,7 @@ public class RegPacketStatusServiceTest {
 
 	@Test
 	public void deleteReRegistrationPacketsFailureTest() {
-		List<Registration> list = prepareSamplePackets();
-
-		when(registrationDAO.get(Mockito.any(), Mockito.anyString())).thenThrow(RuntimeException.class);
+		when(registrationDAO.get(Mockito.any(), Mockito.any())).thenThrow(RuntimeException.class);
 
 		assertSame(RegistrationConstants.REGISTRATION_DELETION_BATCH_JOBS_FAILURE,
 				packetStatusService.deleteRegistrationPackets().getErrorResponseDTOs().get(0).getMessage());
@@ -326,5 +359,95 @@ public class RegPacketStatusServiceTest {
 				.thenReturn(list);
 		packetStatusService.deleteAllProcessedRegPackets();
 
+	}
+	
+	private Slice<Registration> getSlice(List<Registration> list) {
+		// TODO Auto-generated method stub
+		return new Slice<Registration>() {
+			
+			@Override
+			public Iterator<Registration> iterator() {
+				// TODO Auto-generated method stub
+				return list.iterator();
+			}
+			
+			@Override
+			public Pageable previousPageable() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+			
+			@Override
+			public Pageable nextPageable() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+			
+			@Override
+			public <U> Slice<U> map(Function<? super Registration, ? extends U> converter) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+			
+			@Override
+			public boolean isLast() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public boolean isFirst() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public boolean hasPrevious() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public boolean hasNext() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public boolean hasContent() {
+				// TODO Auto-generated method stub
+				return true;
+			}
+			
+			@Override
+			public Sort getSort() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+			
+			@Override
+			public int getSize() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+			
+			@Override
+			public int getNumberOfElements() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+			
+			@Override
+			public int getNumber() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+			
+			@Override
+			public List<Registration> getContent() {
+				// TODO Auto-generated method stub
+				return list;
+			}
+		};
 	}
 }

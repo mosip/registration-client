@@ -57,6 +57,7 @@ public class RegistrationConstants {
 	public static final String REG_AUTH_PAGE = "/fxml/OperatorAuthentication.fxml";
 	public static final String SETTINGS_PAGE = "/fxml/Settings.fxml";
 	public static final String FXML_PATH = "/fxml/";
+	public static final String BIOMETRICS_SCAN_PAGE = "/fxml/BiometricScanPopUp.fxml";
 
 	// FXML Id
 	public static final String DEMOGRAPHIC_DETAIL = "demographicDetail";
@@ -222,6 +223,7 @@ public class RegistrationConstants {
 	public static final int PARAM_ZERO = 0;
 	public static final String PREVIOUS = "PREVIOUS";
 	public static final String NEXT = "NEXT";
+	public static final String UNKNOWN = "UNKNOWN";
 
 	// UI Registration Validations
 	public static final String ADDRESS_KEY = "PrevAddress";
@@ -241,10 +243,6 @@ public class RegistrationConstants {
 	public static final String VALIDATION_LOGGER = "VALIDATIONS";
 	public static final String REG_LGN_001 = "REG_LGN_001";
 	public static final String IS_BLOCKED_WORD = "IS_BLOCKED_WORD";
-	public static final String BLACKLISTED_1 = "BLACKLISTED_1";
-	public static final String BLACKLISTED_2 = "BLACKLISTED_2";
-	public static final String BLACKLISTED_ARE = "BLACKLISTED_ARE";
-	public static final String BLACKLISTED_IS = "BLACKLISTED_IS";
 
 	public static final String REG_DDC_004 = "REG_DDC_004";
 	public static final String AGE_FIELD = "ageField";
@@ -286,7 +284,7 @@ public class RegistrationConstants {
 
 	public static final String APPLICATION_LANGUAGE = "application_language";
 	public static final String REGISTRATION_LOCAL_LANGUAGE = "local_language";
-	public static final String PACKET_TYPE_NEW = "New";
+	//public static final String PACKET_TYPE_NEW = "New";
 	public static final String REGISTRATION_DTO = "registrationDto";
 	public static final String UIN_LENGTH = "mosip.kernel.uin.length";
 
@@ -304,14 +302,14 @@ public class RegistrationConstants {
 	public static final String TEMPORARY_EXCEPTION = "Temporary";
 
 	// Lost UIN
-	public static final String PACKET_TYPE_LOST = "Lost";
-	public static final String LOST_UIN_CONFIG_FLAG = "mosip.registration.lost_uin_disable_flag";
+	//public static final String PACKET_TYPE_LOST = "Lost";
+	//public static final String LOST_UIN_CONFIG_FLAG = "mosip.registration.lost_uin_disable_flag";
 
 	// update UIN
 	public static final String UIN_LABEL = "UIN";
 	public static final String FIRST_TOGGLE_LABEL = "toggleLabel1";
 	public static final String SECOND_TOGGLE_LABEL = "toggleLabel2";
-	public static final String PACKET_TYPE_UPDATE = "Update";
+	//public static final String PACKET_TYPE_UPDATE = "Update";
 	public static final String DOB_TOGGLE = "toggleAgeOrDob";
 	public static final String UIN_UPDATE_CONFIG_FLAG = "mosip.registration.uin_update_config_flag";
 	public static final String UIN_UPDATE_CONFIG_FIELDS_FROM_DB = "mosip.registration.uin.update.configured.fields";
@@ -680,6 +678,8 @@ public class RegistrationConstants {
 
 	public static final String UPLOAD_STATUS = "status";
 	public static final List<String> PACKET_UPLOAD_STATUS = Arrays.asList("SYNCED", "EXPORTED", "RESEND", "E");
+	
+	public static final List<String> PACKET_JOBS = Arrays.asList("RPS_J00006", "RSJ_J00014", "PUJ_J00017");
 
 	public static final String PACKET_UPLOAD = "packet_upload";
 	public static final String DUPLICATE = "Duplicate";
@@ -738,20 +738,25 @@ public class RegistrationConstants {
 	public static final String SYNC_PROGRESS_BAR_VALUE = "syncProgressVlaue";
 	public static final String PACKET_STATUS_SYNC_RESPONSE_ENTITY = "registrations";
 	public static final String PACKET_STATUS_SYNC_SERVICE_NAME = "packet_status";
+	public static final String PACKET_EXTERNAL_STATUS_SYNC_SERVICE_NAME = "packet_external_status";
 	public static final String PACKET_STATUS_READER_URL_PARAMETER = "request";
 	public static final String RESPONSE = "response";
-	public static final String PACKET_STATUS_READER_REGISTRATION_ID = "registrationId";
-	public static final String PACKET_STATUS_READER_STATUS_CODE = "statusCode";
+	public static final String REGISTRATION_ID = "registrationId";
+	public static final String PACKET_ID = "packetId";
+	public static final String STATUS_CODE = "statusCode";
 	public static final String PACKET_STATUS_CODE_PROCESSED = "PROCESSED";
+	public static final String PACKET_STATUS_CODE_ACCEPTED = "ACCEPTED";
 	public static final String PACKET_STATUS_CODE_PROCESSING = "PROCESSING";
 	public static final String PACKET_STATUS_CODE_REREGISTER = "REREGISTER";
 	public static final String RE_REGISTER_STATUS_COMEMNTS = "Re-Register";
 	public static final String PACKET_STATUS_CODE_REJECTED = "REJECTED";
+	public static final String PACKET_STATUS_CODE_PROCESSED_2 = "Packet has reached Packet Receiver";
 	public static final List<String> PACKET_STATUS_CODES_FOR_REMAPDELETE = Arrays.asList(PACKET_STATUS_CODE_REREGISTER,
-			PACKET_STATUS_CODE_PROCESSING, PACKET_STATUS_CODE_PROCESSED, PACKET_STATUS_CODE_REJECTED);
+			PACKET_STATUS_CODE_PROCESSING, PACKET_STATUS_CODE_PROCESSED, PACKET_STATUS_CODE_REJECTED, PACKET_STATUS_CODE_PROCESSED_2);
 	public static final String MACHINE_CENTER_REMAP_FLAG = "mosip.registration.machinecenterchanged";
 	public static final String MACHINE_CENTER_REMAP_MSG = "Machine Center Remap process started";
 	public static final String PACKET_STATUS_READER_ID = "mosip.registration.status";
+	public static final String PACKET_EXTERNAL_STATUS_READER_ID = "mosip.registration.packet.external.status";
 	public static final String PACKET_SYNC_STATUS_ID = "mosip.registration.sync";
 	public static final String PACKET_SYNC_VERSION = "1.0";
 
@@ -796,7 +801,7 @@ public class RegistrationConstants {
 	public static final String DEFAULT_HOST_NAME = "mosip.registration.audit_default_host_name";
 	public static final String APP_NAME = "mosip.registration.audit_application_name";
 	public static final String APP_ID = "mosip.registration.audit_application_id";
-	public static final String SUPERVISOR_AUTH_CONFIG = "mosip.registration.supervisor_authentication_configuration";
+	public static final String REVIEWER_AUTH_CONFIG = "mosip.registration.reviewer_authentication_configuration";
 	public static final String QUALITY_SCORE = "mosip.registration.quality_score";
 	public static final String FINGERPRINT_AUTHENTICATION_THRESHHOLD = "mosip.fingerprint_authentication.quality_score";
 	public static final String IRIS_AUTHENTICATION_THRESHHOLD = "mosip.iris_authentication.quality_score";
@@ -815,9 +820,6 @@ public class RegistrationConstants {
 	public static final String MODE_OF_COMM = "mosip.registration.mode_of_communication";
 	public static final String PWORD_LENGTH = "mosip.registration.username_pwd_length";
 	public static final String DOC_DISABLE_FLAG = "mosip.registration.document_enable_flag";
-	public static final String FINGERPRINT_DISABLE_FLAG = "mosip.registration.fingerprint_enable_flag";
-	public static final String IRIS_DISABLE_FLAG = "mosip.registration.iris_enable_flag";
-	public static final String FACE_DISABLE_FLAG = "mosip.registration.face_enable_flag";
 	public static final String GPS_SERIAL_PORT_WINDOWS = "mosip.registration.gps_serial_port_windows";
 	public static final String GPS_PORT_TIMEOUT = "mosip.registration.gps_port_timeout";
 	public static final String GPS_PORT_LINUX = "mosip.registration.gps_serial_port_linux";
@@ -839,6 +841,7 @@ public class RegistrationConstants {
 	public static final String GPS_DEVICE_DISABLE_FLAG = "mosip.registration.gps_device_enable_flag";
 	public static final String PRE_REG_PACKET_LOCATION = "mosip.registration.registration_pre_reg_packet_location";
 	public static final String IS_SOFTWARE_UPDATE_AVAILABLE = "mosip.registration.is_software_update_available";
+	public static final String SOFTWARE_BACKUP_FOLDER = "mosip.registration.software_backup_folder";
 	public static final String PROVIDER_NAME = "mosip.registration.provider_name";
 	public static final String DISK_SPACE = "mosip.registration.disk_space_size";
 	public static final String LAST_SOFTWARE_UPDATE = "mosip.registration.last_software_update";
@@ -902,6 +905,7 @@ public class RegistrationConstants {
 	public static final String POE_DOCUMENT = "POE";
 	public static final String SERVER_STATUS_RESEND = "RESEND";
 	public static final String CLIENT_STATUS_APPROVED = "APPROVED";
+	public static final List<String> CLIENT_STATUS_TO_BE_SYNCED = Arrays.asList("APPROVED", "REJECTED");
 	public static final String SYNCED_STATUS = "SYNCED";
 
 	public static final List<String> PACKET_STATUS = Arrays.asList("APPROVED", "REJECTED", "RE_REGISTER_APPROVED");
@@ -909,6 +913,10 @@ public class RegistrationConstants {
 	public static final List<String> PACKET_STATUS_UPLOAD = Arrays.asList("APPROVED", "REJECTED", "SYNCED", "EXPORTED");
 
 	public static final List<String> PACKET_EXPORT_STATUS = Arrays.asList("APPROVED", "EXPORTED", "SYNCED");
+	
+	public static final List<String> PACKET_PROCESSED_STATUS = Arrays.asList("PROCESSED", "ACCEPTED");
+	
+	public static final List<String> PACKET_REJECTED_STATUS = Arrays.asList("REREGISTER", "REJECTED");
 
 	// Pre Registration
 	public static final String PRE_REGISTRATION_ID = "pre_registration_id";
@@ -1257,6 +1265,7 @@ public class RegistrationConstants {
 
 	// Packet Sync
 	public static final String PACKET_SYNC = "packet_sync";
+	public static final String PACKET_SYNC_V2 = "packet_sync_v2";
 
 	// Validations to ignore
 
@@ -1362,7 +1371,7 @@ public class RegistrationConstants {
 	public static final String SYNC_FAILURE = "SYNC_FAILURE";
 
 	// Scheduler
-	public static final String IDEAL_TIME = "mosip.registration.ideal_time";
+	public static final String IDLE_TIME = "mosip.registration.idle_time";
 	public static final String REFRESHED_LOGIN_TIME = "mosip.registration.refreshed_login_time";
 	public static final String SCHEDULER_TITLE_STYLE = "schedulerTitleMsg";
 	public static final String SCHEDULER_CONTENT_STYLE = "schedulerMsg";
@@ -1529,7 +1538,6 @@ public class RegistrationConstants {
 	public static final String RESPONSE_SIGNATURE = "response-signature";
 	public static final String ON_BOARD_FACE = "FACE";
 	public static final String AUTH_SERVICE_URL = "authmanager/authenticate";
-	public static final String REG_HEALTH_CHECK_URL_PROPERTY = "mosip.reg.healthcheck.url";
 
 	public static final int DAYS = 31;
 	public static final int MONTH = 12;
@@ -1683,6 +1691,8 @@ public class RegistrationConstants {
 	public static final String MDM_END_PORT_RANGE = "mosip.registration.mdm.portRangeTo";
 	public static final String MDM_CONTEXT_PATH = "mosip.registration.mdm.contextPath";
 	public static final String MDM_HOST_PROTOCOL = "mosip.registration.mdm.hostProtocol";
+	public static final String MDM_CONNECTION_TIMEOUT = "mosip.registration.mdm.connection.timeout";
+	public static final String METHOD_BASED_MDM_CONNECTION_TIMEOUT = "mosip.registration.mdm.%s.connection.timeout";
 
 	// #Proof Of Exception Documents
 	public static final String POE_DOCUMENT_VALUE = "mosip.registration.doc_value";
@@ -1742,9 +1752,16 @@ public class RegistrationConstants {
 	public static final String FORGOT_PWORD_URL = "mosip.registration.forgot_password_url";
 	public static final String RESET_PWORD_URL = "mosip.registration.reset_password_url";
 	public static final String EMAIL_PLACEHOLDER = "{EMAIL}";
+	public static final String ONBOARD_YOURSELF_URL = "mosip.registration.onboard_yourself_url";
+	public static final String REGISTERING_INDIVIDUAL_URL = "mosip.registration.registering_individual_url";
+	public static final String SYNC_DATA_URL = "mosip.registration.sync_data_url";
+	public static final String MAPPING_DEVICES_URL = "mosip.registration.mapping_devices_url";
+	public static final String UPLOADING_DATA_URL = "mosip.registration.uploading_data_url";
+	public static final String UPDATING_BIOMETRICS_URL = "mosip.registration.updating_biometrics_url";
 
 	// Dashboard Constants
 	public static final String DASHBOARD_TITLE = "dashBoard";
+	public static final String DASHBOARD_USERS = "Users";
 	public static final String DASHBOARD_FORMAT = "mosip.registration.dashboard_date_format";
 	public static final String TOTAL_PACKETS_LABEL = "totalPacketsLabel";
 	public static final String PENDING_EOD_LABEL = "pendingEODLabel";
@@ -1782,7 +1799,7 @@ public class RegistrationConstants {
 	public static final String Resident_Information = "Resident_Information";
 	public static final String previewHeader = "previewHeader";
 	public static final String authentication = "authentication";
-	public static final String SLASH = "/";
+	public static final String SLASH = " / ";
 
 	public static final String NEW_REGISTRATION_FLOW = "New Registration";
 	public static final String UIN_UPDATE_FLOW = "UIN Update";
@@ -1870,6 +1887,7 @@ public class RegistrationConstants {
 	public static final String BACK_FOCUSED_IMG = "backInWhite.png";
 	public static final String WRONG_IMG = "wrong.png";
 	public static final String DOUBLE_IRIS_IMG = "Eyes.png";
+	public static final String DOUBLE_IRIS_WITH_INDICATORS_IMG = "EyesWithIndicators.png";
 	public static final String FACE_IMG = "Photo.png";
 	public static final String LEFTPALM_IMG= "leftHand.png";
 	public static final String RIGHTPALM_IMG = "rightHand.png";
@@ -1889,11 +1907,11 @@ public class RegistrationConstants {
 	public static final String IMAGES = "images";
 	
 	public static final String MOSIP_HOSTNAME = "mosip.hostname";
-	public static final String MOSIP_HOSTNAME_DEF_VAL = "dev.mosip.net";
+	public static final String MOSIP_UPGRADE_SERVER_URL = "mosip.client.upgrade.server.url";
+	public static final String HEALTH_CHECK_URL = "mosip.reg.healthcheck.url";
 	
 	/** Moved To Here from UiConstants file */
 	public static final String REGEX_TYPE = "REGEX";
-	public static final String SUPERVISOR_AUTHENTICATION_CONFIGURATION = "mosip.registration.supervisor_authentication_configuration";
 
 	/** BIR Meta info constants */
 	public static final String RETRIES = "RETRIES";
@@ -1956,4 +1974,9 @@ public class RegistrationConstants {
 	public static final String AGE_GROUP_CONFIG = "mosip.regproc.packet.classifier.tagging.agegroup.ranges";
 	
 	public static final String LOGOUT = "Logout";
+	public static final String ROLES_MODIFIED = "Roles Modified";
+
+	public static final String JPG_COMPRESSION_QUALITY = "mosip.registration.doc.jpg.compression";
+	public static final String APPLICANT_TYPE_MVEL_SCRIPT = "mosip.kernel.applicantType.mvel.file";
+	public static final String FIELDS_TO_RETAIN_ON_PRID_FETCH = "mosip.registration.fields.to.retain.post.prid.fetch";
 }

@@ -11,6 +11,7 @@ import java.util.*;
 import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.controller.ClientApplication;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
@@ -30,7 +31,7 @@ import io.mosip.registration.constants.AuditReferenceIdTypes;
 import io.mosip.registration.constants.Components;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.Initialization;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.template.TemplateService;
 import io.mosip.registration.util.control.FxControl;
@@ -51,7 +52,7 @@ public class HtmlFxControl extends FxControl {
     private Map<String, String> contentHash = null;
 
     public HtmlFxControl() {
-        org.springframework.context.ApplicationContext applicationContext = Initialization.getApplicationContext();
+        org.springframework.context.ApplicationContext applicationContext = ClientApplication.getApplicationContext();
         auditFactory = applicationContext.getBean(AuditManagerService.class);
         templateManagerBuilder = applicationContext.getBean(TemplateManagerBuilder.class);
         templateService = applicationContext.getBean(TemplateService.class);
@@ -59,17 +60,17 @@ public class HtmlFxControl extends FxControl {
     }
 
     @Override
-    public FxControl build(UiSchemaDTO uiSchemaDTO) {
-        this.uiSchemaDTO = uiSchemaDTO;
+    public FxControl build(UiFieldDTO uiFieldDTO) {
+        this.uiFieldDTO = uiFieldDTO;
         this.control = this;
 
         final VBox vBox = new VBox();
-        vBox.setId(this.uiSchemaDTO.getId());
+        vBox.setId(this.uiFieldDTO.getId());
         vBox.setSpacing(2);
 
         List<String> labels = new ArrayList<>();
         getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(langCode -> {
-            labels.add(this.uiSchemaDTO.getLabel().get(langCode));
+            labels.add(this.uiFieldDTO.getLabel().get(langCode));
         });
         labels.removeAll(Collections.singletonList(null));
 
@@ -83,7 +84,8 @@ public class HtmlFxControl extends FxControl {
         getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(langCode -> {
             final TitledPane titledPane = new TitledPane(resourceBundle.getString(langCode), buildWebView(langCode));
             accordion.getPanes().add(titledPane);
-titledPane.setId(uiSchemaDTO.getId()+langCode);
+            changeNodeOrientation(titledPane, langCode);
+            titledPane.setId(uiFieldDTO.getId()+langCode);
         });
 
         //accordion.setExpandedPane(accordion.getPanes().get(0));
@@ -99,15 +101,15 @@ titledPane.setId(uiSchemaDTO.getId()+langCode);
 
     @Override
     public void setData(Object data) {
-        if (this.uiSchemaDTO.getType().equalsIgnoreCase(RegistrationConstants.SIMPLE_TYPE)) {
+        if (this.uiFieldDTO.getType().equalsIgnoreCase(RegistrationConstants.SIMPLE_TYPE)) {
             List<SimpleDto> values = new ArrayList<SimpleDto>();
             for (String langCode : getRegistrationDTo().getSelectedLanguagesByApplicant()) {
                values.add(new SimpleDto(langCode, contentHash.get(langCode)));
             }
-            getRegistrationDTo().addDemographicField(uiSchemaDTO.getId(), values);
+            getRegistrationDTo().addDemographicField(uiFieldDTO.getId(), values);
 
         } else {
-            getRegistrationDTo().addDemographicField(uiSchemaDTO.getId(),
+            getRegistrationDTo().addDemographicField(uiFieldDTO.getId(),
                     contentHash.get(getRegistrationDTo().getSelectedLanguagesByApplicant().get(0)));
         }
     }
@@ -118,7 +120,7 @@ titledPane.setId(uiSchemaDTO.getId()+langCode);
 
     @Override
     public Object getData() {
-        return getRegistrationDTo().getDemographics().get(uiSchemaDTO.getId());
+        return getRegistrationDTo().getDemographics().get(uiFieldDTO.getId());
     }
 
     @Override
@@ -144,24 +146,28 @@ titledPane.setId(uiSchemaDTO.getId()+langCode);
     public void selectAndSet(Object data) {
     }
 
-    private WebView buildWebView(String langCode) {
+    private VBox buildWebView(String langCode) {
+    	VBox vbox = new VBox();
         final WebView webView = new WebView();
-        webView.setId(uiSchemaDTO.getId());
+        webView.prefHeightProperty().bind(vbox.heightProperty());
+        webView.setId(uiFieldDTO.getId());
         String content = getContent(langCode);
         contentHash.put(langCode, CryptoUtil.computeFingerPrint(content, null));
         webView.getEngine().loadContent(content);
         webView.getEngine()
                 .documentProperty()
                 .addListener((observableValue, oldValue, document) -> addListeners(document));
-        return webView;
+        changeNodeOrientation(webView, langCode);
+        vbox.getChildren().add(webView);
+        return vbox;
     }
 
     private String getContent(String langCode) {
         String templateText = DEFAULT_TEMPLATE;
         try {
             LOGGER.info("Fetching template {} to prepare webview content in {} language",
-                    this.uiSchemaDTO.getTemplateName(), langCode);
-            templateText = templateService.getHtmlTemplate(this.uiSchemaDTO.getTemplateName(), langCode);
+                    this.uiFieldDTO.getTemplateName(), langCode);
+            templateText = templateService.getHtmlTemplate(this.uiFieldDTO.getTemplateName(), langCode);
             Writer writer = new StringWriter();
             TemplateManager templateManager = templateManagerBuilder.build();
             InputStream inputStream = templateManager.merge(new ByteArrayInputStream(templateText == null ?

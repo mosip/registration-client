@@ -13,6 +13,7 @@ import io.micrometer.core.annotation.Counted;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RemapException;
 import io.mosip.registration.service.remap.RemapStatus;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -91,6 +92,9 @@ public class CenterMachineReMapServiceImpl implements CenterMachineReMapService 
 	@Autowired
 	private GlobalParamService globalParamService;
 
+	@Autowired
+	private ServiceDelegateUtil serviceDelegateUtil;
+
 	private static final Logger LOGGER = AppConfig.getLogger(CenterMachineReMapServiceImpl.class);
 
 	/*
@@ -99,7 +103,7 @@ public class CenterMachineReMapServiceImpl implements CenterMachineReMapService 
 	 * @see io.mosip.registration.service.remap.CenterMachineReMapService#
 	 * handleReMapProcess()
 	 */
-	@Counted(value = "center.remap")
+	@Counted
 	@Override
 	public void handleReMapProcess(int step) throws RemapException {
 
@@ -161,7 +165,7 @@ public class CenterMachineReMapServiceImpl implements CenterMachineReMapService 
 	private void syncAndUploadAllPendingPackets() {
 		if (isPacketsPendingForProcessing()) {
 
-			if (RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+			if (serviceDelegateUtil.isNetworkAvailable()) {
 				try {
 
 					/* sync packet status from server to Reg client */

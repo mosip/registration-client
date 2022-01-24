@@ -1,9 +1,14 @@
 package io.mosip.registration.util.restclient;
 
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.impl.JWTParser;
+import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.kernel.core.exception.ExceptionUtils;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
@@ -25,14 +30,13 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
@@ -42,14 +46,11 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
+import javax.validation.constraints.NotNull;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
-
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 
 /**
@@ -60,6 +61,9 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 public class AuthTokenUtilService {
 
     private static final Logger LOGGER = AppConfig.getLogger(AuthTokenUtilService.class);
+    private static final String REALM_ACCESS = "realm_access";
+    private static final String ROLES = "roles";
+    private static final String USERNAME = "name";
 
     @Autowired
     private ClientCryptoFacade clientCryptoFacade;
@@ -76,10 +80,13 @@ public class AuthTokenUtilService {
     @Autowired
     private UserTokenRepository userTokenRepository;
 
+    @Autowired
+    private ServiceDelegateUtil serviceDelegateUtil;
+
     private RetryTemplate retryTemplate;
 
     @PostConstruct
-    private void init() {
+    public void init() {
         FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
         backOffPolicy.setBackOffPeriod((Long) ApplicationContext.map().getOrDefault("mosip.registration.retry.delay.auth", 1000l));
 
@@ -162,8 +169,8 @@ public class AuthTokenUtilService {
             String payload = String.format("{\"refreshToken\" : \"%s\", \"authType\":\"%s\", \"timestamp\" : \"%s\"}",
                     refreshToken, "REFRESH", timestamp);
             byte[] signature = clientCryptoFacade.getClientSecurity().signData(payload.getBytes());
-            String data = String.format("%s.%s.%s", Base64.getUrlEncoder().encodeToString(header.getBytes()),
-                    Base64.getUrlEncoder().encodeToString(payload.getBytes()), Base64.getUrlEncoder().encodeToString(signature));
+            String data = String.format("%s.%s.%s", CryptoUtil.encodeToURLSafeBase64(header.getBytes()),
+                    CryptoUtil.encodeToURLSafeBase64(payload.getBytes()), CryptoUtil.encodeToURLSafeBase64(signature));
 
             RequestHTTPDTO requestHTTPDTO = getRequestHTTPDTO(data, timestamp);
             setTimeout(requestHTTPDTO);
@@ -177,6 +184,10 @@ public class AuthTokenUtilService {
                     currentTimeInSeconds + jsonObject.getLong("expiryTime"),
                     currentTimeInSeconds + jsonObject.getLong("refreshExpiryTime"));
             return jsonObject.getString("token");
+        } catch (DataIntegrityViolationException e) {
+            LOGGER.error(e.getMessage(), e);
+            throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_SAVE_FAILED.getErrorCode(),
+                    RegistrationExceptionConstants.AUTH_TOKEN_SAVE_FAILED.getErrorMessage());
         } catch (Exception exception) {
             LOGGER.error(exception.getMessage(), exception);
             throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(),
@@ -209,34 +220,32 @@ public class AuthTokenUtilService {
             }
 
             byte[] signature = clientCryptoFacade.getClientSecurity().signData(payload.getBytes());
-            String data = String.format("%s.%s.%s", Base64.getUrlEncoder().encodeToString(header.getBytes()),
-                    Base64.getUrlEncoder().encodeToString(payload.getBytes()), Base64.getUrlEncoder().encodeToString(signature));
+            String data = String.format("%s.%s.%s", CryptoUtil.encodeToURLSafeBase64(header.getBytes()),
+                    CryptoUtil.encodeToURLSafeBase64(payload.getBytes()), CryptoUtil.encodeToURLSafeBase64(signature));
 
             RequestHTTPDTO requestHTTPDTO = getRequestHTTPDTO(data, timestamp);
             setTimeout(requestHTTPDTO);
             setURI(requestHTTPDTO, new HashMap<>(), getEnvironmentProperty("auth_by_password", RegistrationConstants.SERVICE_URL));
             Map<String, Object> responseMap = restClientUtil.invokeForToken(requestHTTPDTO);
 
-            long currentTimeInSeconds = System.currentTimeMillis()/1000;
             JSONObject jsonObject = getAuthTokenResponse(responseMap);
             AuthTokenDTO authTokenDTO = new AuthTokenDTO();
             authTokenDTO.setCookie(String.format("Authorization=%s", jsonObject.getString("token")));
             authTokenDTO.setLoginMode(loginMode.getCode());
 
+            updateUserDetails(loginUserDTO.getUserId(), loginUserDTO.getPassword(), jsonObject.getString("token"),
+                    jsonObject.getString("refreshToken"));
+
             ApplicationContext.setAuthTokenDTO(authTokenDTO);
             if(SessionContext.isSessionContextAvailable())
                 SessionContext.setAuthTokenDTO(authTokenDTO);
 
-            if(loginUserDTO.getPassword() != null)
-                userDetailDAO.updateUserPwd(loginUserDTO.getUserId(), loginUserDTO.getPassword());
-
-            userDetailDAO.updateAuthTokens(loginUserDTO.getUserId(), jsonObject.getString("token"),
-                    jsonObject.getString("refreshToken"),
-                    currentTimeInSeconds + jsonObject.getLong("expiryTime"),
-                    currentTimeInSeconds + jsonObject.getLong("refreshExpiryTime"));
-
             return authTokenDTO;
 
+        } catch (DataIntegrityViolationException e) {
+            LOGGER.error(e.getMessage(), e);
+            throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_SAVE_FAILED.getErrorCode(),
+                    RegistrationExceptionConstants.AUTH_TOKEN_SAVE_FAILED.getErrorMessage());
         } catch (Exception exception) {
             LOGGER.error(exception.getMessage(), exception);
             throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(),
@@ -272,13 +281,14 @@ public class AuthTokenUtilService {
             String payload = jsonObject.toString();
 
             byte[] signature = clientCryptoFacade.getClientSecurity().signData(payload.getBytes());
-            String data = String.format("%s.%s.%s", Base64.getUrlEncoder().encodeToString(header.getBytes()),
-                    Base64.getUrlEncoder().encodeToString(payload.getBytes()), Base64.getUrlEncoder().encodeToString(signature));
+            String data = String.format("%s.%s.%s", CryptoUtil.encodeToURLSafeBase64(header.getBytes()),
+                    CryptoUtil.encodeToURLSafeBase64(payload.getBytes()), CryptoUtil.encodeToURLSafeBase64(signature));
 
             RequestHTTPDTO requestHTTPDTO = getRequestHTTPDTO(data, timestamp);
             setTimeout(requestHTTPDTO);
             setURI(requestHTTPDTO, new HashMap<>(), getEnvironmentProperty("auth_by_otp", RegistrationConstants.SERVICE_URL));
             Map<String, Object> responseMap = restClientUtil.invokeForToken(requestHTTPDTO);
+            responseMap = (Map<String, Object>) responseMap.get(RegistrationConstants.REST_RESPONSE_BODY);
 
             if (responseMap.get(RegistrationConstants.RESPONSE) != null) {
                 LinkedHashMap<String, String> otpMessage = (LinkedHashMap<String, String>) responseMap
@@ -294,15 +304,16 @@ public class AuthTokenUtilService {
         } catch (RestClientException ex) {
             throw new ConnectionException("REG_SEND_OTP", ex.getMessage(), ex);
         }
-        return RegistrationConstants.OTP_GENERATION_ERROR_MESSAGE;
+        return null;
     }
 
-    @Timed(value = "auth.token", longTask = true)
+    @Counted(recordFailuresOnly = true)
+    @Timed
     private JSONObject getAuthTokenResponse(Map<String, Object> responseMap) throws RegBaseCheckedException {
         if(responseMap.get(RegistrationConstants.REST_RESPONSE_BODY) != null) {
             Map<String, Object> respBody = (Map<String, Object>) responseMap.get(RegistrationConstants.REST_RESPONSE_BODY);
             if (respBody.get("response") != null) {
-                byte[] decryptedData = clientCryptoFacade.decrypt(CryptoUtil.decodeBase64((String)respBody.get("response")));
+                byte[] decryptedData = clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64((String)respBody.get("response")));
                 return new JSONObject(new String(decryptedData));
             }
 
@@ -344,6 +355,7 @@ public class AuthTokenUtilService {
     }
 
     private void setURI(RequestHTTPDTO requestHTTPDTO, Map<String, String> requestParams, String url) {
+        url = serviceDelegateUtil.prepareURLByHostName(url);
         LOGGER.info("Preparing URI for web-service >>>>>  {} ", url);
         UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(url);
         if (requestParams != null) {
@@ -365,5 +377,36 @@ public class AuthTokenUtilService {
         requestFactory.setConnectTimeout(
                 Integer.parseInt((String) ApplicationContext.map().get(RegistrationConstants.HTTP_API_WRITE_TIMEOUT)));
         requestHTTPDTO.setSimpleClientHttpRequestFactory(requestFactory);
+    }
+
+
+    private void updateUserDetails(@NotNull String userId, String password, String token, String refreshToken) throws Exception {
+        if(password != null)
+            userDetailDAO.updateUserPwd(userId, password);
+
+        Date now = Calendar.getInstance().getTime();
+        DecodedJWT decodedJWT = JWT.decode(token);
+        if(decodedJWT.getExpiresAt() == null || decodedJWT.getExpiresAt().before(now)) {
+            throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(),
+                   "Auth token received is expired : " + decodedJWT.getExpiresAt());
+        }
+
+        userDetailDAO.updateUserRolesAndUsername(userId, getUsername(decodedJWT), getRoles(decodedJWT));
+
+        DecodedJWT decodedRefreshJWT = JWT.decode(refreshToken);
+        userDetailDAO.updateAuthTokens(userId, token, refreshToken, decodedJWT.getExpiresAt().getTime(),
+                decodedRefreshJWT.getExpiresAt().getTime());
+    }
+
+    private List<String> getRoles(@NotNull DecodedJWT decodedJWT) {
+        Claim realmAccess = decodedJWT.getClaim(REALM_ACCESS);
+        if (!realmAccess.isNull()) {
+            return (List<String>) realmAccess.asMap().get("roles");
+        }
+        return new ArrayList<>();
+    }
+
+    private String getUsername(@NotNull DecodedJWT decodedJWT) {
+        return decodedJWT.getClaim(USERNAME) == null ? null : decodedJWT.getClaim(USERNAME).asString().trim();
     }
 }

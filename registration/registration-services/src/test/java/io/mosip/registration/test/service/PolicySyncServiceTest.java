@@ -2,33 +2,14 @@ package io.mosip.registration.test.service;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.net.SocketTimeoutException;
-import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.security.cert.Certificate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import io.mosip.registration.context.SessionContext;
-import io.mosip.registration.dao.impl.RegistrationCenterDAOImpl;
-import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.entity.CenterMachine;
-import io.mosip.registration.entity.MachineMaster;
-import io.mosip.registration.entity.id.CenterMachineId;
-import io.mosip.registration.entity.id.RegMachineSpecId;
-import io.mosip.registration.exception.ConnectionException;
-import io.mosip.registration.repositories.CenterMachineRepository;
-import io.mosip.registration.repositories.MachineMasterRepository;
-import io.mosip.registration.service.BaseService;
-import io.mosip.registration.service.config.GlobalParamService;
-import io.mosip.registration.service.config.LocalConfigService;
-import io.mosip.registration.service.remap.CenterMachineReMapService;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,14 +23,31 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.retry.ExhaustedRetryException;
+import org.springframework.retry.RetryCallback;
+import org.springframework.retry.support.RetryTemplate;
 
+import io.mosip.kernel.cryptomanager.util.CryptomanagerUtils;
+import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
+import io.mosip.kernel.keymanagerservice.dto.UploadCertificateRequestDto;
+import io.mosip.kernel.keymanagerservice.dto.UploadCertificateResponseDto;
+import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import io.mosip.kernel.keymanagerservice.util.KeymanagerUtil;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.dao.UserOnboardDAO;
+import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.dao.impl.RegistrationCenterDAOImpl;
+import io.mosip.registration.entity.MachineMaster;
+import io.mosip.registration.entity.RegistrationCenter;
+import io.mosip.registration.entity.id.RegistartionCenterId;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.repositories.MachineMasterRepository;
+import io.mosip.registration.repositories.RegistrationCenterRepository;
+import io.mosip.registration.service.operator.UserDetailService;
+import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.impl.PolicySyncServiceImpl;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 /**
@@ -62,21 +60,15 @@ import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 @PrepareForTest({ RegistrationAppHealthCheckUtil.class, ApplicationContext.class, SessionContext.class ,
 		RegistrationSystemPropertiesChecker.class})
 public class PolicySyncServiceTest {
+	
 	@Rule
 	public MockitoRule MockitoRule = MockitoJUnit.rule();
 
-	private ApplicationContext applicationContext = ApplicationContext.getInstance();
-
 	@Mock
 	private ServiceDelegateUtil serviceDelegateUtil;
-	@Mock
-	private UserOnboardDAO userOnboardDAO;
 
 	@InjectMocks
 	private PolicySyncServiceImpl policySyncServiceImpl;
-
-	@Mock
-	private BaseService baseService;
 
 	@Mock
 	private RegistrationCenterDAOImpl registrationCenterDAO;
@@ -85,193 +77,146 @@ public class PolicySyncServiceTest {
 	private CenterMachineReMapService centerMachineReMapService;
 
 	@Mock
-	private GlobalParamService globalParamService;
-
-	@Mock
 	private MachineMasterRepository machineMasterRepository;
 
 	@Mock
-	private CenterMachineRepository centerMachineRepository;
+	private RegistrationCenterRepository registrationCenterRepository;
 
 	@Mock
-	private LocalConfigService localConfigService;
+    private RetryTemplate retryTemplate;
+	
+	@Mock
+	private UserDetailService userDetailService;
+	
+	@Mock
+	private KeymanagerService keymanagerService;
+	
+	@Mock
+	private KeymanagerUtil keymanagerUtil;
 
+	@Mock
+	private CryptomanagerUtils cryptomanagerUtils;
 
 	@Before
 	public void initialize() {
 		Map<String, Object> temp = new HashMap<String, Object>();
 		temp.put("mosip.registration.key_policy_sync_threshold_value", "1");
-		applicationContext.setApplicationMap(temp);
+		temp.put("mosip.registration.retry.delay.policy.sync", 1000l);
+		temp.put("mosip.registration.retry.maxattempts.policy.sync", 2);
+		temp.put(RegistrationConstants.INITIAL_SETUP, RegistrationConstants.DISABLE);
 
 		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class,
 				RegistrationSystemPropertiesChecker.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
-		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(true);
+		Mockito.when(SessionContext.userId()).thenReturn("110012");
 		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
+		Mockito.when(ApplicationContext.map()).thenReturn(temp);
+		
+		Mockito.when(userDetailService.isValidUser(Mockito.anyString())).thenReturn(true);
 
-		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn("10011");
-		Mockito.when(baseService.getStationId()).thenReturn("11002");
-		Mockito.when(baseService.isInitialSync()).thenReturn(false);
-		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
-
-		//Mockito.when(baseService.getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP)).thenReturn(RegistrationConstants.DISABLE);
+		Mockito.when(registrationCenterDAO.isMachineCenterActive()).thenReturn(true);
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);
 		Mockito.when(RegistrationSystemPropertiesChecker.getMachineId()).thenReturn("11002");
 
 		MachineMaster machine = new MachineMaster();
 		machine.setId("11002");
+		machine.setRegCenterId("10011");
 		machine.setIsActive(true);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
 
-		CenterMachine centerMachine = new CenterMachine();
-		CenterMachineId centerMachineId = new CenterMachineId();
-		centerMachineId.setMachineId("11002");
-		centerMachineId.setRegCenterId("10011");
-		centerMachine.setCenterMachineId(centerMachineId);
-		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString())).thenReturn(centerMachine);
-	}
-
-	@Test
-	public void fetch() throws RegBaseCheckedException, ConnectionException {
-
-		Map<String, Object> responseMap = new LinkedHashMap<>();
-		LinkedHashMap<String, Object> valuesMap = new LinkedHashMap<>();
-		valuesMap.put("publicKey",
-				"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtCR2L_MwUv4ctfGulWf4ZoWkSyBHbfkVtE_xAmzzIDWHP1V5hGxg8jt8hLtYYFwBNj4l_PTZGkblcVg-IePHilmQiVDptTVVA2PGtwRdud7QL4xox8RXmIf-xa-JmP2E804iVM-Ki8aPf1yuxXNUwLxZsflFww73lc-SGVUHupD8Os0qNZbbJl0BYioNG4WmPMHy3WJ-7jGN0HEV-9E18yf_enR0YewUmUI6Rxxb606-w8iQyWfSJq6UOfFmH5WAn-oTOoTIwg_fBxXuG_FlDoNWs6N5JtI18BMsUQA_GQZJct6TyXcBNUrcBYhZERvPlRGqIOoTl-T2sPJ5ST9eswIDAQAB");
-		valuesMap.put("issuedAt", "2020-04-09T05:51:17.334");
-		valuesMap.put("expiryAt", "2020-04-09T05:51:17.334");
-		responseMap.put(RegistrationConstants.RESPONSE, valuesMap);
-		String machineId = "machineId";
 		String centerId = "centerId";
-
-		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
-				Mockito.anyString())).thenReturn(responseMap);
-
-		assertNotNull(policySyncServiceImpl.fetchPolicy());
-
+		RegistrationCenter registrationCenter = new RegistrationCenter();
+		registrationCenter.setRegistartionCenterId(new RegistartionCenterId());
+		registrationCenter.getRegistartionCenterId().setId(centerId);
+		registrationCenter.getRegistartionCenterId().setLangCode("eng");
+		Optional<RegistrationCenter> mockedCenter = Optional.of(registrationCenter);
+		Mockito.when(registrationCenterRepository.findByIsActiveTrueAndRegistartionCenterIdIdAndRegistartionCenterIdLangCode(Mockito.anyString(),
+				Mockito.anyString())).thenReturn(mockedCenter);
+		policySyncServiceImpl.init();
 	}
 
 	@Test
-	public void netWorkAvailable() throws RegBaseCheckedException {
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(false);
-		assertNotNull(policySyncServiceImpl.fetchPolicy());
-
+	public void fetchPolicySuccessTest() throws ExhaustedRetryException, Throwable {
+		Mockito.when(retryTemplate.execute(Mockito.any(), Mockito.any(), Mockito.any())).thenAnswer(invocation -> {
+            RetryCallback retry = invocation.getArgument(0);
+            return retry.doWithRetry(null);
+        });
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
+		LinkedHashMap<String, Object> publicKeySyncResponse = new LinkedHashMap<>();
+		LinkedHashMap<String, Object> responseMap = new LinkedHashMap<>();
+		responseMap.put(RegistrationConstants.CERTIFICATE, "TEST");
+		publicKeySyncResponse.put(RegistrationConstants.RESPONSE, responseMap);
+		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(), Mockito.anyString())).thenReturn(publicKeySyncResponse);
+		KeyPairGenerateResponseDto certificateDto = new KeyPairGenerateResponseDto();
+		certificateDto.setCertificate("TEST");
+		Mockito.when(keymanagerService.getCertificate(Mockito.anyString(), Mockito.any())).thenReturn(certificateDto);
+		Certificate cert = Mockito.mock(Certificate.class);
+		Mockito.when(keymanagerUtil.convertToCertificate(Mockito.anyString())).thenReturn(cert);
+		Mockito.when(cryptomanagerUtils.getCertificateThumbprint(Mockito.any())).thenReturn("TEST".getBytes());
+		assertNotNull(policySyncServiceImpl.fetchPolicy().getSuccessResponseDTO());
 	}
-
+	
 	@Test
-	public void testKeyStore()
-			throws ParseException, RegBaseCheckedException, ConnectionException {
-
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
-		Date date = dateFormat.parse("2019-4-5");
-		Timestamp timestamp = new Timestamp(date.getTime());
-
-		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
-
-		Map<String, Object> responseMap = new LinkedHashMap<>();
-		LinkedHashMap<String, Object> valuesMap = new LinkedHashMap<>();
-		valuesMap.put("publicKey",
-				"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtCR2L_MwUv4ctfGulWf4ZoWkSyBHbfkVtE_xAmzzIDWHP1V5hGxg8jt8hLtYYFwBNj4l_PTZGkblcVg-IePHilmQiVDptTVVA2PGtwRdud7QL4xox8RXmIf-xa-JmP2E804iVM-Ki8aPf1yuxXNUwLxZsflFww73lc-SGVUHupD8Os0qNZbbJl0BYioNG4WmPMHy3WJ-7jGN0HEV-9E18yf_enR0YewUmUI6Rxxb606-w8iQyWfSJq6UOfFmH5WAn-oTOoTIwg_fBxXuG_FlDoNWs6N5JtI18BMsUQA_GQZJct6TyXcBNUrcBYhZERvPlRGqIOoTl-T2sPJ5ST9eswIDAQAB");
-		valuesMap.put("issuedAt", "2020-04-09T05:51:17.334");
-		valuesMap.put("expiryAt", "2020-04-09T05:51:17.334");
-		responseMap.put(RegistrationConstants.RESPONSE, valuesMap);
+	public void fetchPolicySuccessTest2() throws ExhaustedRetryException, Throwable {
+		Mockito.when(retryTemplate.execute(Mockito.any(), Mockito.any(), Mockito.any())).thenAnswer(invocation -> {
+            RetryCallback retry = invocation.getArgument(0);
+            return retry.doWithRetry(null);
+        });
 		
-
-		String machineId = "machineId";
-		String centerId = "centerId";
-		String refId = centerId + "_" + machineId;
-
-
-		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
-				Mockito.anyString())).thenReturn(responseMap);
-
-		assertNotNull(policySyncServiceImpl.fetchPolicy());
-	}
-	
-	@Test
-	public void testKeyStoreError()
-			throws ParseException, RegBaseCheckedException, ConnectionException {
-
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
-		Date date = dateFormat.parse("2019-4-5");
-		Timestamp timestamp = new Timestamp(date.getTime());
-
-		Map<String, Object> responseMap = new LinkedHashMap<>();
-		List<LinkedHashMap<String, Object>> valuesMap = new ArrayList<>();
-		LinkedHashMap<String, Object> errorMap = new LinkedHashMap<>();
-		errorMap.put("errorCode", "KER-KMS-005");
-		errorMap.put("message", "Required String parameter 'timeStamp' is not present");
-		valuesMap.add(errorMap);
-		responseMap.put(RegistrationConstants.RESPONSE, null);
-		responseMap.put(RegistrationConstants.ERRORS, valuesMap);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
+		LinkedHashMap<String, Object> publicKeySyncResponse = new LinkedHashMap<>();
+		LinkedHashMap<String, Object> responseMap = new LinkedHashMap<>();
+		responseMap.put(RegistrationConstants.CERTIFICATE, "TEST");
+		publicKeySyncResponse.put(RegistrationConstants.RESPONSE, responseMap);
+		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(), Mockito.anyString())).thenReturn(publicKeySyncResponse);
+		Mockito.when(keymanagerService.getCertificate(Mockito.anyString(), Mockito.any())).thenThrow(new RuntimeException());
+		Mockito.when(keymanagerService.uploadOtherDomainCertificate(Mockito.any(UploadCertificateRequestDto.class))).thenReturn(new UploadCertificateResponseDto());
 		
-
-		String machineId = "machineId";
-		String centerId = "centerId";
-		String refId = centerId + "_" + machineId;
-
-		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
-				Mockito.anyString())).thenReturn(responseMap);
-
-		assertNotNull(policySyncServiceImpl.fetchPolicy());
-
+		assertNotNull(policySyncServiceImpl.fetchPolicy().getSuccessResponseDTO());
 	}
 	
 	@Test
-	public void failureTestException() throws RegBaseCheckedException, ConnectionException {
-		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
-				Mockito.anyString())).thenThrow(ConnectionException.class);
-		ResponseDTO responseDTO = policySyncServiceImpl.fetchPolicy();
-		assertNotNull(responseDTO.getErrorResponseDTOs());
-	}
-
-	@Test
-	public void failureTest() throws RegBaseCheckedException, ConnectionException {
-		Mockito.when(serviceDelegateUtil.get(Mockito.any(), Mockito.any(), Mockito.anyBoolean(),
-				Mockito.any())).thenThrow(RegBaseCheckedException.class);
-
-		//assertNotNull(policySyncServiceImpl.fetchPolicy());
-	}
-
-	@Test
-	public void getPublicKeyfailureTest()
-			throws RegBaseCheckedException, ConnectionException {
-		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(),
-				Mockito.anyString())).thenThrow(HttpClientErrorException.class);
-
-		//assertNotNull(policySyncServiceImpl.fetchPolicy());
-	}
-
-	@Test
-	public void checkKeyValidationExpiryTest() throws RegBaseCheckedException {
-
-		String machineId = "machineId";
-		String centerId = "centerId";
-		String refId = centerId + "_" + machineId;
-
-		policySyncServiceImpl.checkKeyValidation();
+	public void fetchPolicyFailureTest() throws ExhaustedRetryException, Throwable {
+		Mockito.when(retryTemplate.execute(Mockito.any(), Mockito.any(), Mockito.any())).thenThrow(RegBaseCheckedException.class);
+		
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
+		LinkedHashMap<String, Object> publicKeySyncResponse = new LinkedHashMap<>();
+		List<LinkedHashMap<String, String>> errors = new ArrayList<>();
+		LinkedHashMap<String, String> errorMap = new LinkedHashMap<>();
+		errorMap.put("EXP-001", "Test Exception");
+		errors.add(errorMap);
+		publicKeySyncResponse.put(RegistrationConstants.ERRORS, errors);
+		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.anyMap(), Mockito.anyBoolean(), Mockito.anyString())).thenReturn(publicKeySyncResponse);
+		
+		assertNotNull(policySyncServiceImpl.fetchPolicy().getErrorResponseDTOs());
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Test
-	public void checkKeyValidationExpiryException() throws RegBaseCheckedException {
-		policySyncServiceImpl.checkKeyValidation();
+	public void fetchPolicyInternetFailureTest() throws ExhaustedRetryException, Throwable {
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(false);
+		assertNotNull(policySyncServiceImpl.fetchPolicy().getErrorResponseDTOs());
 	}
-
-	@Test
-	public void checkKeyValidationTest() throws RegBaseCheckedException {
-
-		String machineId = "machineId";
-		String centerId = "centerId";
-		String refId = centerId + "_" + machineId;
-
-		policySyncServiceImpl.checkKeyValidation();
+	
+	@Test(expected = RegBaseCheckedException.class)
+	public void fetchPolicyValidationFailureTest() throws ExhaustedRetryException, Throwable {
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(null);
+		policySyncServiceImpl.fetchPolicy();
 	}
-
+	
 	@Test
-	public void checkKeyValidationTestFailure() {
-		policySyncServiceImpl.checkKeyValidation();
+	public void checkKeyValidationSuccessTest() {
+		KeyPairGenerateResponseDto certificateDto = new KeyPairGenerateResponseDto();
+		certificateDto.setCertificate("TEST");
+		Mockito.when(keymanagerService.getCertificate(Mockito.anyString(), Mockito.any())).thenReturn(certificateDto);
+		assertNotNull(policySyncServiceImpl.checkKeyValidation().getSuccessResponseDTO());
+	}
+	
+	@Test
+	public void checkKeyValidationFailureTest() {
+		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(null);
+		assertNotNull(policySyncServiceImpl.checkKeyValidation().getErrorResponseDTOs());
 	}
 
 }

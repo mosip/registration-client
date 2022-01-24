@@ -4,7 +4,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,11 +18,7 @@ import org.mockito.junit.MockitoRule;
 
 import io.mosip.registration.dao.TemplateDao;
 import io.mosip.registration.entity.Template;
-import io.mosip.registration.entity.TemplateEmbeddedKeyCommonFields;
-import io.mosip.registration.entity.TemplateFileFormat;
-import io.mosip.registration.entity.TemplateType;
 import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.service.template.impl.TemplateServiceImpl;
 
 public class TemplateServiceTest {
@@ -51,7 +46,7 @@ public class TemplateServiceTest {
 		return templates;
 	}
 	
-	public List<TemplateType> getAllDummyTemplateTypes(){
+	/*public List<TemplateType> getAllDummyTemplateTypes(){
 		List<TemplateType> templateTypes = new ArrayList<>();
 		TemplateType templateType = new TemplateType();
 		templateType.setCode("ackTemplate");
@@ -67,7 +62,7 @@ public class TemplateServiceTest {
 		fileFormat.setIsActive(true);
 		fileFormats.add(fileFormat);
 		return fileFormats;
-	}
+	}*/
 	
 	/*@Test
 	public void getTemplatePositiveTest() {

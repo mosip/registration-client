@@ -3,33 +3,32 @@ package io.mosip.registration.util.advice;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-import io.mosip.commons.packet.constants.CryptomanagerConstant;
-import io.mosip.kernel.core.exception.BaseCheckedException;
-import io.mosip.kernel.core.exception.BaseUncheckedException;
-import io.mosip.kernel.core.keymanager.exception.KeystoreProcessingException;
+import io.mosip.kernel.clientcrypto.constant.ClientCryptoManagerConstant;
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
+import io.mosip.kernel.core.exception.IOException;
 import io.mosip.kernel.core.util.CryptoUtil;
-import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.kernel.core.util.FileUtils;
+import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
-import io.mosip.kernel.keymanagerservice.exception.KeymanagerServiceException;
-import io.mosip.kernel.keymanagerservice.exception.NoUniqueAliasException;
 import io.mosip.kernel.signature.dto.JWTSignatureVerifyRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureVerifyResponseDto;
-import io.mosip.kernel.signature.dto.TimestampRequestDto;
 import io.mosip.kernel.signature.service.SignatureService;
+import io.mosip.registration.entity.FileSignature;
+import io.mosip.registration.exception.RegistrationExceptionConstants;
+import io.mosip.registration.repositories.FileSignatureRepository;
 import io.mosip.registration.service.sync.PublicKeySync;
-import io.mosip.registration.service.sync.impl.PublicKeySyncImpl;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -37,10 +36,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.mosip.commons.packet.spi.IPacketCryptoService;
-import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.kernel.keymanagerservice.dto.UploadCertificateRequestDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
@@ -88,6 +84,12 @@ public class ResponseSignatureAdvice {
 	@Autowired
 	private PublicKeySync publicKeySync;
 
+	@Autowired
+	private ClientCryptoFacade clientCryptoFacade;
+
+	@Autowired
+	private FileSignatureRepository fileSignatureRepository;
+
 	/**
 	 * <p>
 	 * It is an after returning method in which for each and everytime after
@@ -116,9 +118,7 @@ public class ResponseSignatureAdvice {
 	@AfterReturning(pointcut = "execution(* io.mosip.registration.util.restclient.RestClientUtil.invokeURL(..))", returning = "result")
 	public synchronized Map<String, Object> responseSignatureValidation(JoinPoint joinPoint, Object result)
 			throws RegBaseCheckedException {
-
-		LOGGER.info(LoggerConstants.RESPONSE_SIGNATURE_VALIDATION, APPLICATION_ID, APPLICATION_NAME,
-				"Entering into response signature method");
+		LOGGER.info("Response signature advice triggered...");
 
 		HttpHeaders responseHeader = null;
 		Object[] requestHTTPDTO = joinPoint.getArgs();
@@ -126,12 +126,13 @@ public class ResponseSignatureAdvice {
 		LinkedHashMap<String, Object> restClientResponse = null;
 		try {
 			restClientResponse = (LinkedHashMap<String, Object>) result;
+			if (null == requestDto || !requestDto.getIsSignRequired())
+				return restClientResponse;
 
 			LinkedHashMap<String, Object> responseBodyMap = (LinkedHashMap<String, Object>) restClientResponse
 					.get(RegistrationConstants.REST_RESPONSE_BODY);
+			if (null != responseBodyMap && responseBodyMap.size() > 0 && null != responseBodyMap.get(RegistrationConstants.RESPONSE)) {
 
-			if (null != requestDto && requestDto.getIsSignRequired() && null != responseBodyMap && responseBodyMap.size() > 0
-					&& null != responseBodyMap.get(RegistrationConstants.RESPONSE)) {
 				if (responseBodyMap.get(RegistrationConstants.RESPONSE) instanceof LinkedHashMap){
 					LinkedHashMap<String, Object> resp = (LinkedHashMap<String, Object>) responseBodyMap
 							.get(RegistrationConstants.RESPONSE);
@@ -145,7 +146,7 @@ public class ResponseSignatureAdvice {
 					LOGGER.info("Response signature is valid... {}", requestDto.getUri());
 					return restClientResponse;
 				} else {
-					LOGGER.info("Response signature is Invalid... {}", requestDto.getUri());
+					LOGGER.info("Response signature is INVALID... {}", requestDto.getUri());
 					restClientResponse.put(RegistrationConstants.REST_RESPONSE_BODY, new LinkedHashMap<>());
 					restClientResponse.put(RegistrationConstants.REST_RESPONSE_HEADERS, new LinkedHashMap<>());
 				}
@@ -155,21 +156,46 @@ public class ResponseSignatureAdvice {
 			throw new RegBaseCheckedException("Exception in response signature", regBaseCheckedException.getMessage());
 		}
 
-		LOGGER.info(LoggerConstants.RESPONSE_SIGNATURE_VALIDATION, APPLICATION_ID, APPLICATION_NAME,
-				"successfully leaving response signature method...");
-
+		LOGGER.info("Successfully leaving response signature advice.");
 		return restClientResponse;
+	}
 
+
+	@AfterReturning(pointcut = "execution(* io.mosip.registration.util.restclient.RestClientUtil.downloadFile(..))")
+	public synchronized void fileSignatureValidation(JoinPoint joinPoint) throws RegBaseCheckedException {
+		LOGGER.info("File download response signature advice triggered...");
+		Object[] requestArgument = joinPoint.getArgs();
+		RequestHTTPDTO requestHTTPDTO = (RequestHTTPDTO) requestArgument[0];
+
+		Optional<FileSignature> result = fileSignatureRepository.findByFileName(requestHTTPDTO.getFilePath().toFile().getName());
+		try {
+			if(result.isPresent()) {
+				byte[] data = requestHTTPDTO.isFileEncrypted() ?
+						clientCryptoFacade.decrypt(ClientCryptoUtils.decodeBase64Data(
+								FileUtils.readFileToString(requestHTTPDTO.getFilePath().toFile(), StandardCharsets.UTF_8))) :
+						FileUtils.readFileToByteArray(requestHTTPDTO.getFilePath().toFile());
+				String actualData = String.format("{\"hash\":\"%s\"}", HMACUtils2.digestAsPlainText(data));
+				if(isResponseSignatureValid(result.get().getSignature(), actualData)) {
+					LOGGER.info("File signature check passed, {}", requestHTTPDTO.getFilePath());
+					return;
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(), e);
+		}
+		requestHTTPDTO.getFilePath().toFile().delete();
+		throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_FILE_SIGNATURE_ERROR.getErrorCode(),
+				RegistrationExceptionConstants.REG_FILE_SIGNATURE_ERROR.getErrorMessage());
 	}
 
 	private boolean isResponseSignatureValid(String signature, String actualData) {
-		KeyPairGenerateResponseDto certificateDto = keymanagerService
+        KeyPairGenerateResponseDto certificateDto = keymanagerService
 				.getCertificate(RegistrationConstants.RESPONSE_SIGNATURE_PUBLIC_KEY_APP_ID,
 						Optional.of(RegistrationConstants.RESPONSE_SIGNATURE_PUBLIC_KEY_REF_ID));
 
 		JWTSignatureVerifyRequestDto jwtSignatureVerifyRequestDto = new JWTSignatureVerifyRequestDto();
 		jwtSignatureVerifyRequestDto.setJwtSignatureData(signature);
-		jwtSignatureVerifyRequestDto.setActualData(CryptoUtil.encodeBase64(actualData.getBytes(StandardCharsets.UTF_8)));
+		jwtSignatureVerifyRequestDto.setActualData(CryptoUtil.encodeToURLSafeBase64(actualData.getBytes(StandardCharsets.UTF_8)));
 		jwtSignatureVerifyRequestDto.setCertificateData(certificateDto.getCertificate());
 
 		JWTSignatureVerifyResponseDto verifyResponseDto =  signatureService.jwtVerify(jwtSignatureVerifyRequestDto);

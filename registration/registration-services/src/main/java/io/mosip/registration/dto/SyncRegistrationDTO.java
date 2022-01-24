@@ -14,6 +14,8 @@ import lombok.Data;
 public class SyncRegistrationDTO {
 	private String langCode;
 	private String registrationId;
+	private String packetId;
+    private String additionalInfoReqId;
 	private String registrationType;
 	private String packetHashValue;
 	private BigInteger packetSize;
@@ -22,5 +24,4 @@ public class SyncRegistrationDTO {
 	private String name;
 	private String phone;
 	private String email;
-
 }

@@ -173,7 +173,8 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 	 * 
 	 * @see io.mosip.registration.service.JobConfigurationService#initiateJobs()
 	 */
-	@PostConstruct
+	//@PostConstruct -- should be explicitly invoked, currently invoked from pre-loader
+	// because, when jobs are triggered before proper sync, it starts failing in sync precondition checks
 	public void initiateJobs() {
 		LOGGER.info(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Jobs initiation was started");
@@ -458,15 +459,16 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 	 */
 
 	public ResponseDTO executeJob(String jobId, String triggerPoint) {
-
-		LOGGER.info(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
-				RegistrationConstants.APPLICATION_ID, "Execute job started : " + jobId);
 		ResponseDTO responseDTO = new ResponseDTO();
 		if (jobId != null && triggerPoint != null) {
 			try {
-				SyncJobDef syncJobDef = syncActiveJobMap.get(jobId);
+				SyncJobDef syncJobDef = jobConfigDAO.getSyncJob(jobId);
 
-				if (syncJobDef != null && !isNull(syncJobDef.getApiName())) {
+				if (syncJobDef != null && !isNull(syncJobDef.getApiName()) && syncActiveJobMap.containsKey(jobId) 
+						&& syncJobDef.getIsActive()) {
+					LOGGER.info(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
+							RegistrationConstants.APPLICATION_ID, "Execute job started : " + jobId);
+					
 					// Get Job using application context and api name
 					baseJob = (BaseJob) applicationContext.getBean(syncJobDef.getApiName());
 
@@ -774,6 +776,7 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 		BaseJob.successJob.clear();
 		BaseJob.clearCompletedJobMap();
 		List<String> failureJobs = new LinkedList<>();
+		Map<String, Object> attributes = null;
 
 		for (Entry<String, SyncJobDef> syncJob : syncActiveJobMapExecutable.entrySet()) {
 			LOGGER.info(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
@@ -787,8 +790,11 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 						? RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM
 						: RegistrationConstants.JOB_TRIGGER_POINT_USER;
 
-				executeJob(syncJob.getKey(), triggerPoint);
-
+				ResponseDTO response = executeJob(syncJob.getKey(), triggerPoint);
+				if (response != null && response.getSuccessResponseDTO() != null && response.getSuccessResponseDTO().getOtherAttributes() != null 
+						&& response.getSuccessResponseDTO().getOtherAttributes().containsKey(RegistrationConstants.ROLES_MODIFIED)) {
+					attributes = response.getSuccessResponseDTO().getOtherAttributes();
+				}
 			}
 		}
 
@@ -800,7 +806,9 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 		});
 
 		if (!isEmpty(failureJobs)) {
-			setErrorResponse(responseDTO, failureJobs.toString().replace("[", "").replace("]", ""), null);
+			setErrorResponse(responseDTO, failureJobs.toString().replace("[", "").replace("]", ""), attributes);
+		} else {
+			setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, attributes);
 		}
 		LOGGER.info(LoggerConstants.BATCH_JOBS_CONFIG_LOGGER_TITLE, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "completed execute all jobs");
@@ -852,7 +860,7 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 
 		ResponseDTO responseDTO = new ResponseDTO();
 
-		String syncDataFreq = getGlobalConfigValueOf(RegistrationConstants.SYNC_DATA_FREQ);
+		String syncDataFreq = io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SYNC_DATA_FREQ);
 		if (syncDataFreq != null) {
 			ExecutionTime executionTime = getExecutionTime(syncDataFreq);
 			Instant last = getLast(executionTime);

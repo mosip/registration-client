@@ -1,0 +1,368 @@
+{
+  "identity": {
+	  "BELOW_ARE_STATIC_KEYWORDS":"",
+	  "ageGroup":"INFANT",
+    "process": "Lost",
+    "documentUploadAttributes":["POB","POR","POA","POI"],
+    "bioExceptionAttributes": [
+		"leftEye"
+		], 
+			  "bioAuthAttributes":["rightEye"],
+	
+			  "bioAttributes": [
+					 "leftEye",
+						"rightEye",
+						"rightIndex",
+						"rightLittle",
+						"rightRing",
+						"rightMiddle",
+						"leftIndex",
+						"leftLittle",
+						"leftRing",
+						"leftMiddle",
+						"leftThumb",
+						"rightThumb",
+						"face"
+					],
+					   "profile":"Default",
+					    "score1":"10",
+					    "score2":"20",
+					    "score3":"90",
+					    "score4":"90",
+					"BELOW_ARE_THE_SCHEMA_LEVEL_ID's_DATA":"",
+					"dateOfBirth": "2",
+    "preferredLang": [
+        {
+            "language": "hin",
+            "value": "हिंदी",
+            "code": "hin"
+          },
+   {
+            "language": "tam",
+            "value": "தமிழ்",
+            "code": "tam"
+          },
+          {
+            "language": "kan",
+            "value": "ಕನ್ನಡ",
+            "code": "kan"
+          }
+        ],
+    "gender": [
+      {
+        "language": "kan",
+        "value": "ಹೆಣ್ಣು",
+        "code": "FLE"
+      },
+      {
+        "language": "hin",
+        "value": "महिला",
+        "code": "FLE"
+      },
+      {
+        "language": "tam",
+        "value": "பெண்",
+        "code": "FLE"
+      },
+      {
+          "language": "eng",
+          "value": "Female",
+          "code": "FLE"
+        },
+        {
+          "language": "ara",
+          "value": "أنثى",
+          "code": "FLE"
+        },
+        {
+          "language": "fra",
+          "value": "Femme",
+          "code": "FLE"
+        }
+      
+    ],
+    "city": [
+      {
+        "language": "hin",
+        "value": "केनिट्रा",
+        "code": "KNT"
+        
+      },
+      {
+        "language": "kan",
+        "value": "ಕೆನಿತ್ರಾ",
+        "code": "KNT"
+      },
+      {
+        "language": "tam",
+        "value": "கெனிட்ரா",
+        "code": "KNT"
+      }
+    ],
+    "postalCode": [
+        {
+            "language": "hin",
+            "value": "14022",
+            "code": "14022"
+          },
+          {
+            "language": "tam",
+            "value": "14022",
+            "code": "14022"
+          },
+          {
+            "language": "kan",
+            "value": "14022",
+            "code": "14022"
+          }
+        ],
+    "fullName": [
+      {
+        "language": "hin",
+        "value": "परीक्षण स्वचालन"
+      },
+      {
+        "language": "kan",
+        "value": "ಟೆಸ್ಟ್ ಆಟೊಮೇಷನ್"
+      },
+      {
+        "language": "tam",
+        "value": "சோதனை ஆட்டோமேஷன்"
+      }
+    ],
+    
+    "referenceIdentityNumber": "23444444444444322",
+  
+    "province": [
+      {
+        "language": "hin",
+        "value": "केनिट्रा",
+        "code": "KTA"
+      },
+      {
+        "language": "kan",
+        "value": "ಕೆನಿತ್ರಾ",
+        "code": "KTA"
+      },
+      {
+        "language": "tam",
+        "value": "கெனிட்ரா",
+        "code": "KTA"
+      }
+    ],
+    "zone": [
+      {
+        "language": "hin",
+        "value": "बेन मंसूर",
+        "code": "BNMR"
+      },
+      {
+        "language": "kan",
+        "value": "ಬೆನ್ ಮನ್ಸೂರ್",
+        "code": "BNMR"
+      },
+      {
+        "language": "tam",
+        "value": "பென் மன்சூர்",
+        "code": "BNMR"
+      }
+    ],
+    "phone": "8600097143",
+    "addressLine1": [
+      {
+        "language": "kan",
+        "value": "ಟೆಸ್ಟ್ ಆಟೊಮೇಷನ್ ಡೇಟಾ 1"
+      },
+      {
+        "language": "hin",
+        "value": "परीक्षण स्वचालन डेटा1"
+      },
+      {
+        "language": "tam",
+        "value": "சோதனை ஆட்டோமேஷன் தரவு 2"
+      }
+    ],
+    "addressLine2": [
+      {
+        "language": "kan",
+        "value": "ಟೆಸ್ಟ್ ಆಟೊಮೇಷನ್ ಡೇಟಾ 2"
+      },
+      {
+        "language": "hin",
+        "value": "परीक्षण स्वचालन डेटा2"
+      },
+      {
+        "language": "tam",
+        "value": "சோதனை ஆட்டோமேஷன் தரவு 2"
+      }
+    ],
+    "residenceStatus": [
+      {
+        "language": "hin",
+        "value": "परदेशी",     
+        "code":"FR"
+      },
+      {
+        "language": "kan",
+        "value": "ವಿದೇಶಿ",     
+        "code":"FR"
+      },
+      {
+        "language": "tam",
+        "value": "வெளிநாட்டவர்",     
+        "code":"FR"
+      }
+    ],
+    "addressLine3": [
+      {
+        "language": "kan",
+        "value": "ಟೆಸ್ಟ್ ಆಟೊಮೇಷನ್ ಡೇಟಾ 3"
+      },
+      {
+        "language": "hin",
+        "value": "परीक्षण स्वचालन डेटा3"
+      },
+      {
+        "language": "tam",
+        "value": "சோதனை ஆட்டோமேஷன் தரவு 3"
+      }
+    ],
+    "region": [
+      {
+        "language": "hin",
+        "value": "रबात बिक्री केनिट्रा",
+        "code": "RSK"
+      },
+      {
+        "language": "kan",
+        "value": "ರಬತ್ ಮಾರಾಟ ಕೆನಿತ್ರಾ",
+        "code": "RSK"
+      },
+      {
+        "language": "tam",
+        "value": "ரபாத் விற்பனை கெனிட்ரா",
+        "code": "RSK"
+      }
+    ],
+    "modeOfClaim": [
+      {
+        "language": "hin",
+        "value": "पिक अप",
+        "code": "101"
+      },
+      {
+        "language": "kan",
+        "value": "ಪಿಕ್ ಅಪ್",
+        "code": "101"
+      },
+      {
+        "language": "tam",
+        "value": "பிக்-அப்",
+        "code": "101"
+      }
+    ],
+    "email": "abc@abc.co.in",
+    "consent": "Y",
+    "introducerRID": "10001101050000920210726134710",
+    "introducerUIN": "4182130615",
+    "introducerName": [
+    	{
+            "language": "hin",
+            "value": "परीक्षण स्वचालन"
+          },
+          {
+            "language": "kan",
+            "value": "ಟೆಸ್ಟ್ ಆಟೊಮೇಷನ್"
+          },
+          {
+            "language": "tam",
+            "value": "சோதனை ஆட்டோமேஷன்"
+          }
+    ],
+    "proofOfConsent": [
+      {
+        "language": "hin",
+        "value": "पासपोर्ट",
+        "code": "DOC001"
+      },
+      {
+        "language": "kan",
+        "value": "ಪಾಸ್ಪೋರ್ಟ್",
+        "code": "DOC001"
+      },
+      {
+        "language": "tam",
+        "value": "கடவுச்சீட்டு",
+        "code": "DOC001"
+      }
+    ],
+    "proofOfAddress": [
+      {
+        "language": "hin",
+        "value": "पासपोर्ट",
+        "code": "DOC001"
+      },
+      {
+        "language": "kan",
+        "value": "ಪಾಸ್ಪೋರ್ಟ್",
+        "code": "DOC001"
+      },
+      {
+        "language": "tam",
+        "value": "கடவுச்சீட்டு",
+        "code": "DOC001"
+      }
+    ],
+    "proofOfIdentity": [
+      {
+        "language": "hin",
+        "value": "पासपोर्ट",
+        "code": "DOC001"
+      },
+      {
+        "language": "kan",
+        "value": "ಪಾಸ್ಪೋರ್ಟ್",
+        "code": "DOC001"
+      },
+      {
+        "language": "tam",
+        "value": "கடவுச்சீட்டு",
+        "code": "DOC001"
+      }
+    ],
+    "proofOfRelationship": [
+      {
+        "language": "hin",
+        "value": "पासपोर्ट",
+        "code": "DOC001"
+      },
+      {
+        "language": "kan",
+        "value": "ಪಾಸ್ಪೋರ್ಟ್",
+        "code": "DOC001"
+      },
+      {
+        "language": "tam",
+        "value": "கடவுச்சீட்டு",
+        "code": "DOC001"
+      }
+    ],
+    "proofOfDateOfBirth": [
+      {
+        "language": "hin",
+        "value": "जन्म का प्रमाण पत्र",
+        "code": "COB"
+      },
+      {
+        "language": "kan",
+        "value": "ಜನ್ಮ ಪ್ರಮಾಣಪತ್ರ",
+        "code": "COB"
+      },
+      {
+        "language": "tam",
+        "value": "பிறப்பு சான்றிதழ்",
+        "code": "COB"
+      }
+    ]
+  }
+}

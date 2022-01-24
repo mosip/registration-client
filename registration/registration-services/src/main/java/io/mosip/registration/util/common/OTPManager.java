@@ -76,13 +76,14 @@ public class OTPManager extends BaseService {
 		// Create Response to return to UI layer
 		ResponseDTO response = new ResponseDTO();
 		try {
-			if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) { /* Check Network Connectivity */
+			if (!serviceDelegateUtil.isNetworkAvailable()) { /* Check Network Connectivity */
 				setErrorResponse(response, RegistrationConstants.CONNECTION_ERROR, null);
 				return response;
 			}
 
 			String message = authTokenUtilService.sendOtpWithRetryWrapper(userId);
-			return setSuccessResponse(response, message, null);
+			if(message != null)
+				return setSuccessResponse(response, message, null);
 
 		} catch (Throwable e) {
 			LOGGER.error("Failed to send OTP", e);
@@ -133,7 +134,7 @@ public class OTPManager extends BaseService {
 		
 		try {
 			/* Check Network Connectivity */
-			if (RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+			if (serviceDelegateUtil.isNetworkAvailable()) {
 
 				LoginUserDTO loginUserDTO = new LoginUserDTO();
 				loginUserDTO.setUserId(userId);

@@ -9,6 +9,7 @@ import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.enums.Modality;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
@@ -85,8 +86,8 @@ public interface BioService {
 	 * @param registrationDTO
 	 * @return
 	 */
-	public Map<String, Boolean> getCapturedBiometrics(String fieldId, double idVersion,
-													  @NonNull RegistrationDTO registrationDTO);
+	public Map<String, Boolean> getCapturedBiometrics(UiFieldDTO field, double idVersion,
+                                                      @NonNull RegistrationDTO registrationDTO);
 
 	/**
 	 * Returns the list of supported and valid bio-attributes per modality

@@ -1,6 +1,5 @@
 package io.mosip.registration.service.sync.impl;
 
-import java.io.File;
 import java.util.*;
 
 import io.micrometer.core.annotation.Timed;
@@ -12,8 +11,6 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
@@ -31,7 +28,6 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.sync.PolicySyncService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 
 import javax.annotation.PostConstruct;
 
@@ -64,7 +60,7 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 	private RetryTemplate retryTemplate;
 
 	@PostConstruct
-	private void init() {
+	public void init() {
 		FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
 		backOffPolicy.setBackOffPeriod((Long) ApplicationContext.map().getOrDefault("mosip.registration.retry.delay.policy.sync", 1000l));
 
@@ -83,13 +79,13 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 	 *
 	 * @see io.mosip.registration.service.PolicySyncService#fetchPolicy(centerId)
 	 */
-	@Timed(value = "sync", longTask = true, extraTags = {"type", "policy"})
+	@Timed
 	@Override
 	public ResponseDTO fetchPolicy() throws RegBaseCheckedException {
 		LOGGER.debug("fetchPolicy invoked");
 
 		ResponseDTO responseDTO = new ResponseDTO();
-		if (!RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+		if (!serviceDelegateUtil.isNetworkAvailable()) {
 			return setErrorResponse(responseDTO, RegistrationConstants.NO_INTERNET, null);
 		}
 
@@ -97,7 +93,7 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 		proceedWithMasterAndKeySync(null);
 
 		String stationId = getStationId();
-		String centerId = stationId != null ? getCenterId(stationId) : null;
+		String centerId = stationId != null ? getCenterId() : null;
 		validate(centerId, stationId);
 		String centerMachineId = centerId.concat(RegistrationConstants.UNDER_SCORE).concat(stationId);
 
@@ -120,7 +116,7 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 			LOGGER.debug("Policy Sync saved in local DB successfully");
 			return setSuccessResponse(responseDTO, RegistrationConstants.POLICY_SYNC_SUCCESS_MESSAGE, null);
 
-		} catch (ConnectionException | RuntimeException t) {
+		} catch (ConnectionException | RuntimeException | RegBaseCheckedException t) {
 			LOGGER.error("", t);
 		}
 		return setErrorResponse(responseDTO, RegistrationExceptionConstants.REG_POLICY_SYNC_FAILED.getErrorMessage(), null);
@@ -188,7 +184,7 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 		ResponseDTO responseDTO = new ResponseDTO();
 		try {
 			String stationId = getStationId();
-			String centerId = stationId != null ? getCenterId(stationId) : null;
+			String centerId = stationId != null ? getCenterId() : null;
 			validate(centerId, stationId);
 			String centerMachineId = centerId.concat(RegistrationConstants.UNDER_SCORE).concat(stationId);
 

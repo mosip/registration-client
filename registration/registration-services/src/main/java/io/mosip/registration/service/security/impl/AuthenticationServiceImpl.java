@@ -10,6 +10,8 @@ import java.util.Objects;
 
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -72,6 +74,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
 
+	@Autowired
+	private ServiceDelegateUtil serviceDelegateUtil;
 
 	/*
 	 * (non-Javadoc)
@@ -80,7 +84,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	 * authValidator(java.lang.String,
 	 * io.mosip.registration.dto.AuthenticationValidatorDTO)
 	 */
-	@Counted(value = "invalid", recordFailuresOnly = true, extraTags = {"type" , "biometric-login"})
+	@Counted(recordFailuresOnly = true, extraTags = {"type" , "biometric-login"})
 	public Boolean authValidator(String userId, String modality, List<BiometricsDto> biometrics) {
 		LOGGER.info("OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
 				modality + " >> authValidator invoked.");
@@ -91,8 +95,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			if (userBiometrics.isEmpty())
 				return false;
 			userBiometrics.forEach(userBiometric -> {
-//				record.add(buildBir(userBiometric.getBioIsoImage(), biometricType));
-
 				record.add(bioService.buildBir(userBiometric.getUserBiometricId().getBioAttributeCode(),
 						userBiometric.getQualityScore(), userBiometric.getBioIsoImage(), ProcessedLevelType.PROCESSED));
 			});
@@ -111,7 +113,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		return false;
 	}
 
-	@Timed(value = "sdk", extraTags = {"function", "MATCH"})
 	private boolean verifyBiometrics(BiometricType biometricType, String modality,
 									 List<BIR> sample, List<BIR> record) throws BiometricException {
 		iBioProviderApi bioProvider = bioAPIFactory.getBioProvider(biometricType, BiometricFunction.MATCH);
@@ -144,14 +145,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	 *                                   password entered by the user
 	 * @return appropriate message after validation
 	 */
-	public String validatePassword(AuthenticationValidatorDTO authenticationValidatorDTO) {
-		LOGGER.debug("REGISTRATION - OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
-				"Validating credentials using database >>>> " + authenticationValidatorDTO.getUserId());
+	@Counted(recordFailuresOnly = true, extraTags = {"type" , "pwd-login"})
+	public Boolean validatePassword(AuthenticationValidatorDTO authenticationValidatorDTO) throws  RegBaseCheckedException {
+		LOGGER.debug("Validating credentials using database >>>> {}", authenticationValidatorDTO.getUserId());
 		try {
 			//Always mandate user to reach server to validate pwd when machine is online
 			//As in case of new user, any valid authtoken will be simply allowed
 			//to avoid any such scenario, mandate to fetch new token when login
-			if(RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+			if(serviceDelegateUtil.isNetworkAvailable()) {
 				authTokenUtilService.getAuthTokenAndRefreshToken(LoginMode.PASSWORD);
 			}
 
@@ -159,20 +160,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			if (null != userDTO && null != userDTO.getSalt() && HMACUtils2
 							.digestAsPlainTextWithSalt(authenticationValidatorDTO.getPassword().getBytes(),
-									CryptoUtil.decodeBase64(userDTO.getSalt()))
+									ClientCryptoUtils.decodeBase64Data(userDTO.getSalt()))
 							.equals(userDTO.getUserPassword().getPwd())) {
-				return RegistrationConstants.PWD_MATCH;
-			} else if (null != userDTO && null == userDTO.getSalt()) {
-				return RegistrationConstants.CREDS_NOT_FOUND;
-			} else {
-				return RegistrationConstants.PWD_MISMATCH;
+				return  true;
 			}
 
-		} catch (RuntimeException | RegBaseCheckedException | NoSuchAlgorithmException runtimeException) {
-			LOGGER.error("REGISTRATION - OPERATOR_AUTHENTICATION", APPLICATION_NAME, APPLICATION_ID,
-					ExceptionUtils.getStackTrace(runtimeException));
-			return RegistrationConstants.PWD_MISMATCH;
+			if (null != userDTO && null == userDTO.getSalt()) {
+				throw new RegBaseCheckedException(RegistrationConstants.CREDS_NOT_FOUND,
+						RegistrationConstants.CREDS_NOT_FOUND);
+			}
+
+		} catch (RegBaseCheckedException e) {
+			throw e;
+		} catch (RuntimeException | NoSuchAlgorithmException runtimeException) {
+			LOGGER.error("Pwd validation failed", runtimeException);
 		}
+		throw new RegBaseCheckedException(RegistrationConstants.PWD_MISMATCH, RegistrationConstants.PWD_MISMATCH);
 	}
 
 }

@@ -60,7 +60,7 @@ public class SyncManagerImpl extends BaseService implements SyncManager {
 	 * registration.entity.SyncTransaction)
 	 */
 	@Override
-	public synchronized SyncControl createSyncControlTransaction(final SyncTransaction syncTransaction) {
+	public synchronized SyncControl createSyncControlTransaction(final SyncTransaction syncTransaction, Timestamp lastSyncTime) {
 
 		SyncControl syncControl = syncJobDAO.findBySyncJobId(syncTransaction.getSyncJobId());
 
@@ -84,7 +84,7 @@ public class SyncManagerImpl extends BaseService implements SyncManager {
 
 		}
 		syncControl.setSynctrnId(syncTransaction.getId());
-		syncControl.setLastSyncDtimes(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
+		syncControl.setLastSyncDtimes(lastSyncTime);
 
 		if (isNotCreated) {
 			syncControl = syncJobDAO.save(syncControl);
@@ -125,10 +125,9 @@ public class SyncManagerImpl extends BaseService implements SyncManager {
 
 			syncTransaction.setSyncTo(RegistrationConstants.JOB_SYNC_TO_SERVER);
 
-			String machineId = getStationId();
-			syncTransaction.setMachmId(machineId);
+			syncTransaction.setMachmId(getStationId());
 
-			syncTransaction.setCntrId(getCenterId(machineId));
+			syncTransaction.setCntrId(getCenterId());
 
 			syncTransaction.setLangCode(RegistrationConstants.APPLICATION_LANUAGE);
 

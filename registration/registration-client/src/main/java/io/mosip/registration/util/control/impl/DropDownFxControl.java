@@ -3,6 +3,7 @@ package io.mosip.registration.util.control.impl;
 import java.util.*;
 import java.util.Map.Entry;
 
+import io.mosip.registration.controller.ClientApplication;
 import io.mosip.registration.dao.MasterSyncDao;
 import org.springframework.context.ApplicationContext;
 
@@ -15,7 +16,7 @@ import io.mosip.registration.controller.FXUtils;
 import io.mosip.registration.controller.GenericController;
 import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.controller.reg.Validations;
-import io.mosip.registration.dto.schema.UiSchemaDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.entity.Location;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.util.common.ComboBoxAutoComplete;
@@ -43,7 +44,7 @@ public class DropDownFxControl extends FxControl {
 	private MasterSyncDao masterSyncDao;
 
 	public DropDownFxControl() {
-		ApplicationContext applicationContext = Initialization.getApplicationContext();
+		ApplicationContext applicationContext = ClientApplication.getApplicationContext();
 		validation = applicationContext.getBean(Validations.class);
 		demographicChangeActionHandler = applicationContext.getBean(DemographicChangeActionHandler.class);
 		masterSyncService = applicationContext.getBean(MasterSyncService.class);
@@ -51,19 +52,20 @@ public class DropDownFxControl extends FxControl {
 	}
 
 	@Override
-	public FxControl build(UiSchemaDTO uiSchemaDTO) {
-		this.uiSchemaDTO = uiSchemaDTO;
+	public FxControl build(UiFieldDTO uiFieldDTO) {
+		this.uiFieldDTO = uiFieldDTO;
 		this.control = this;
-		this.node = create(uiSchemaDTO, getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
+		this.node = create(uiFieldDTO, getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
 
-		//As subType in UI Spec is defined in english we consider using eng to fill initial dropdown
-		if(GenericController.hierarchyLevels.get("eng").containsValue(uiSchemaDTO.getSubType())) {
-			TreeMap<Integer, String> groupFields = GenericController.currentHierarchyMap.getOrDefault(uiSchemaDTO.getGroup(), new TreeMap<>());
-			for (Entry<Integer, String> entry : GenericController.hierarchyLevels.get("eng").entrySet()) {
-				if (entry.getValue().equals(uiSchemaDTO.getSubType())) {
+		//As subType in UI Spec is defined in any lang we find the langCode to fill initial dropdown
+		String subTypeLangCode = getSubTypeLangCode(uiFieldDTO.getSubType());
+		if(subTypeLangCode != null) {
+			TreeMap<Integer, String> groupFields = GenericController.currentHierarchyMap.getOrDefault(uiFieldDTO.getGroup(), new TreeMap<>());
+			for (Entry<Integer, String> entry : GenericController.hierarchyLevels.get(subTypeLangCode).entrySet()) {
+				if (entry.getValue().equals(uiFieldDTO.getSubType())) {
 					this.hierarchyLevel = entry.getKey();
-					groupFields.put(entry.getKey(), uiSchemaDTO.getId());
-					GenericController.currentHierarchyMap.put(uiSchemaDTO.getGroup(), groupFields);
+					groupFields.put(entry.getKey(), uiFieldDTO.getId());
+					GenericController.currentHierarchyMap.put(uiFieldDTO.getGroup(), groupFields);
 					break;
 				}
 			}
@@ -78,49 +80,58 @@ public class DropDownFxControl extends FxControl {
 		return this.control;
 	}
 
-	private VBox create(UiSchemaDTO uiSchemaDTO, String langCode) {
-		String fieldName = uiSchemaDTO.getId();
+	private String getSubTypeLangCode(String subType) {
+		for( String langCode : GenericController.hierarchyLevels.keySet()) {
+			if(GenericController.hierarchyLevels.get(langCode).containsValue(subType))
+				return langCode;
+		}
+		return null;
+	}
+
+	private VBox create(UiFieldDTO uiFieldDTO, String langCode) {
+		String fieldName = uiFieldDTO.getId();
 
 		/** Container holds title, fields and validation message elements */
 		VBox simpleTypeVBox = new VBox();
-		simpleTypeVBox.setPrefWidth(200);
-		simpleTypeVBox.setPrefHeight(95);
+		//simpleTypeVBox.setPrefWidth(200);
+		//simpleTypeVBox.setPrefHeight(95);
 		simpleTypeVBox.setSpacing(5);
 		simpleTypeVBox.setId(fieldName + RegistrationConstants.VBOX);
 
 		/** Title label */
-		Label fieldTitle = getLabel(uiSchemaDTO.getId() + RegistrationConstants.LABEL, "",
-				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, false, simpleTypeVBox.getWidth());
+		Label fieldTitle = getLabel(uiFieldDTO.getId() + RegistrationConstants.LABEL, "",
+				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, true, simpleTypeVBox.getWidth());
 		simpleTypeVBox.getChildren().add(fieldTitle);
 
 		List<String> labels = new ArrayList<>();
 		getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(lCode -> {
-			labels.add(this.uiSchemaDTO.getLabel().get(lCode));
+			labels.add(this.uiFieldDTO.getLabel().get(lCode));
 		});
 
-		String titleText = String.join(RegistrationConstants.SLASH, labels) + getMandatorySuffix(uiSchemaDTO);
+		String titleText = String.join(RegistrationConstants.SLASH, labels) + getMandatorySuffix(uiFieldDTO);
 		ComboBox<GenericDto> comboBox = getComboBox(fieldName, titleText, RegistrationConstants.DOC_COMBO_BOX,
 				simpleTypeVBox.getPrefWidth(), false);
 		simpleTypeVBox.getChildren().add(comboBox);
 
 		comboBox.setOnMouseExited(event -> {
-			getField(uiSchemaDTO.getId() + RegistrationConstants.MESSAGE).setVisible(false);
+			getField(uiFieldDTO.getId() + RegistrationConstants.MESSAGE).setVisible(false);
 			if(comboBox.getTooltip()!=null) {
 			comboBox.getTooltip().hide();
 			}
 		});
 
 		comboBox.setOnMouseEntered((event -> {
-			getField(uiSchemaDTO.getId() + RegistrationConstants.MESSAGE).setVisible(true);
+			getField(uiFieldDTO.getId() + RegistrationConstants.MESSAGE).setVisible(true);
 
 		}));
 
 		setListener(comboBox);
 
 		fieldTitle.setText(titleText);
-		comboBox.setPromptText(fieldTitle.getText());
-		simpleTypeVBox.getChildren().add(getLabel(uiSchemaDTO.getId() + RegistrationConstants.MESSAGE, null,
-				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, false, simpleTypeVBox.getPrefWidth()));
+		Label messageLabel = getLabel(uiFieldDTO.getId() + RegistrationConstants.MESSAGE, null,
+				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, false, simpleTypeVBox.getPrefWidth());
+		messageLabel.setMaxWidth(200);
+		simpleTypeVBox.getChildren().add(messageLabel);
 
 		changeNodeOrientation(simpleTypeVBox, langCode);
 
@@ -130,11 +141,11 @@ public class DropDownFxControl extends FxControl {
 
 	public List<GenericDto> getPossibleValues(String langCode) {
 		boolean isHierarchical = false;
-		String fieldSubType = uiSchemaDTO.getSubType();
+		String fieldSubType = uiFieldDTO.getSubType();
 
-		if(GenericController.currentHierarchyMap.containsKey(uiSchemaDTO.getGroup())) {
+		if(GenericController.currentHierarchyMap.containsKey(uiFieldDTO.getGroup())) {
 			isHierarchical = true;
-			Entry<Integer, String> parentEntry = GenericController.currentHierarchyMap.get(uiSchemaDTO.getGroup())
+			Entry<Integer, String> parentEntry = GenericController.currentHierarchyMap.get(uiFieldDTO.getGroup())
 					.lowerEntry(this.hierarchyLevel);
 			if(parentEntry == null) { //first parent
 				parentEntry = GenericController.hierarchyLevels.get(langCode).lowerEntry(this.hierarchyLevel);
@@ -161,7 +172,8 @@ public class DropDownFxControl extends FxControl {
 		StringConverter<T> uiRenderForComboBox = FXUtils.getInstance().getStringConverterForComboBox();
 		field.setId(id);
 		// field.setPrefWidth(prefWidth);
-		field.setPromptText(titleText);
+
+		//field.setPromptText(titleText);
 		field.setDisable(isDisable);
 		field.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_COMBOBOX);
 		field.setConverter((StringConverter<GenericDto>) uiRenderForComboBox);
@@ -171,10 +183,13 @@ public class DropDownFxControl extends FxControl {
 
 	@Override
 	public void setData(Object data) {
-		ComboBox<GenericDto> appComboBox = (ComboBox<GenericDto>) getField(uiSchemaDTO.getId());
-		String selectedCode = appComboBox.getSelectionModel().getSelectedItem().getCode();
+		ComboBox<GenericDto> appComboBox = (ComboBox<GenericDto>) getField(uiFieldDTO.getId());
+		if(appComboBox.getSelectionModel().getSelectedItem() == null) {
+			return;
+		}
 
-		switch (this.uiSchemaDTO.getType()) {
+		String selectedCode = appComboBox.getSelectionModel().getSelectedItem().getCode();
+		switch (this.uiFieldDTO.getType()) {
 			case RegistrationConstants.SIMPLE_TYPE:
 				List<SimpleDto> values = new ArrayList<SimpleDto>();
 				for (String langCode : getRegistrationDTo().getSelectedLanguagesByApplicant()) {
@@ -185,13 +200,15 @@ public class DropDownFxControl extends FxControl {
 						values.add(simpleDto);
 					}
 				}
-				getRegistrationDTo().addDemographicField(uiSchemaDTO.getId(), values);
+				getRegistrationDTo().addDemographicField(uiFieldDTO.getId(), values);
+				getRegistrationDTo().SELECTED_CODES.put(uiFieldDTO.getId()+"Code", selectedCode);
 				break;
 			default:
 				Optional<GenericDto> result = getPossibleValues(getRegistrationDTo().getSelectedLanguagesByApplicant().get(0)).stream()
 						.filter(b -> b.getCode().equals(selectedCode)).findFirst();
 				if (result.isPresent()) {
-					getRegistrationDTo().addDemographicField(uiSchemaDTO.getId(), result.get().getName());
+					getRegistrationDTo().addDemographicField(uiFieldDTO.getId(), result.get().getName());
+					getRegistrationDTo().SELECTED_CODES.put(uiFieldDTO.getId()+"Code", selectedCode);
 				}
 				break;
 		}
@@ -199,13 +216,12 @@ public class DropDownFxControl extends FxControl {
 
 	@Override
 	public Object getData() {
-		return getRegistrationDTo().getDemographics().get(uiSchemaDTO.getId());
+		return getRegistrationDTo().getDemographics().get(uiFieldDTO.getId());
 	}
 
 	@Override
 	public boolean isValid() {
-		//TODO check if its lostUIN, then no validation required
-		ComboBox<GenericDto> appComboBox = (ComboBox<GenericDto>) getField(uiSchemaDTO.getId());
+		ComboBox<GenericDto> appComboBox = (ComboBox<GenericDto>) getField(uiFieldDTO.getId());
 		boolean isValid = appComboBox != null && appComboBox.getSelectionModel().getSelectedItem() != null;
 		appComboBox.getStyleClass().removeIf((s) -> {
 			return s.equals("demographicComboboxFocused");
@@ -216,7 +232,7 @@ public class DropDownFxControl extends FxControl {
 
 	@Override
 	public boolean isEmpty() {
-		ComboBox<GenericDto> appComboBox = (ComboBox<GenericDto>) getField(uiSchemaDTO.getId());
+		ComboBox<GenericDto> appComboBox = (ComboBox<GenericDto>) getField(uiFieldDTO.getId());
 		return appComboBox == null || appComboBox.getSelectionModel().getSelectedItem() == null;
 	}
 
@@ -238,12 +254,12 @@ public class DropDownFxControl extends FxControl {
 					}
 				}
 
-				Label messageLabel = (Label) getField(uiSchemaDTO.getId() + RegistrationConstants.MESSAGE);
+				Label messageLabel = (Label) getField(uiFieldDTO.getId() + RegistrationConstants.MESSAGE);
 				messageLabel.setText(String.join(RegistrationConstants.SLASH, toolTipText));
 
 				setData(null);
 				refreshNextHierarchicalFxControls();
-				demographicChangeActionHandler.actionHandle((Pane) getNode(), node.getId(),	uiSchemaDTO.getChangeAction());
+				demographicChangeActionHandler.actionHandle((Pane) getNode(), node.getId(),	uiFieldDTO.getChangeAction());
 				// Group level visibility listeners
 				refreshFields();
 			}
@@ -251,8 +267,8 @@ public class DropDownFxControl extends FxControl {
 	}
 
 	private void refreshNextHierarchicalFxControls() {
-		if(GenericController.currentHierarchyMap.containsKey(uiSchemaDTO.getGroup())) {
-			Entry<Integer, String> nextEntry = GenericController.currentHierarchyMap.get(uiSchemaDTO.getGroup())
+		if(GenericController.currentHierarchyMap.containsKey(uiFieldDTO.getGroup())) {
+			Entry<Integer, String> nextEntry = GenericController.currentHierarchyMap.get(uiFieldDTO.getGroup())
 					.higherEntry(this.hierarchyLevel);
 
 			while (nextEntry != null) {
@@ -263,19 +279,19 @@ public class DropDownFxControl extends FxControl {
 
 				//clears & refills items
 				fxControl.fillData(data);
-				nextEntry = GenericController.currentHierarchyMap.get(uiSchemaDTO.getGroup())
+				nextEntry = GenericController.currentHierarchyMap.get(uiFieldDTO.getGroup())
 						.higherEntry(nextEntry.getKey());
 			}
 		}
 	}
 
 	private void displayFieldLabel() {
-		FXUtils.getInstance().toggleUIField((Pane) getNode(), uiSchemaDTO.getId() + RegistrationConstants.LABEL,
+		FXUtils.getInstance().toggleUIField((Pane) getNode(), uiFieldDTO.getId() + RegistrationConstants.LABEL,
 				true);
-		Label label = (Label) getField(uiSchemaDTO.getId() + RegistrationConstants.LABEL);
+		Label label = (Label) getField(uiFieldDTO.getId() + RegistrationConstants.LABEL);
 		label.getStyleClass().add("demoGraphicFieldLabelOnType");
 		label.getStyleClass().remove("demoGraphicFieldLabel");
-		FXUtils.getInstance().toggleUIField((Pane) getNode(), uiSchemaDTO.getId() + RegistrationConstants.MESSAGE, false);
+		FXUtils.getInstance().toggleUIField((Pane) getNode(), uiFieldDTO.getId() + RegistrationConstants.MESSAGE, false);
 	}
 
 
@@ -294,7 +310,7 @@ public class DropDownFxControl extends FxControl {
 			List<GenericDto> items = val.get(getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
 
 			if (items != null && !items.isEmpty()) {
-				setItems((ComboBox<GenericDto>) getField(uiSchemaDTO.getId()), items);
+				setItems((ComboBox<GenericDto>) getField(uiFieldDTO.getId()), items);
 			}
 
 		}
@@ -314,27 +330,21 @@ public class DropDownFxControl extends FxControl {
 
 	@Override
 	public void selectAndSet(Object data) {
-		if (data != null) {
+		ComboBox<GenericDto> field = (ComboBox<GenericDto>) getField(uiFieldDTO.getId());
+		if (data == null) {
+			field.getSelectionModel().clearSelection();
+			return;
+		}
 
-			if (data instanceof List) {
+		if (data instanceof List) {
 
-				List<SimpleDto> list = (List<SimpleDto>) data;
+			List<SimpleDto> list = (List<SimpleDto>) data;
 
-				for (SimpleDto simpleDto : list) {
+			selectItem(field, list.isEmpty() ? null : list.get(0).getValue());
 
-					if (getRegistrationDTo().getSelectedLanguagesByApplicant().get(0)
-							.equalsIgnoreCase(simpleDto.getLanguage())) {
+		} else if (data instanceof String) {
 
-						selectItem((ComboBox<GenericDto>) getField(uiSchemaDTO.getId()), simpleDto.getValue());
-
-						break;
-					}
-				}
-
-			} else if (data instanceof String) {
-
-				selectItem((ComboBox<GenericDto>) getField(uiSchemaDTO.getId()), (String) data);
-			}
+			selectItem(field, (String) data);
 		}
 	}
 

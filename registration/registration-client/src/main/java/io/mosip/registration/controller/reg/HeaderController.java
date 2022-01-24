@@ -10,6 +10,7 @@ import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
@@ -37,9 +38,9 @@ import io.mosip.registration.controller.auth.LoginController;
 import io.mosip.registration.controller.device.Streamer;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.schema.SettingsSchema;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.dto.schema.SettingsSchema;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.jobs.BaseJob;
@@ -54,8 +55,8 @@ import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.SyncStatusValidatorService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
+import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -269,11 +270,24 @@ public class HeaderController extends BaseController {
 
 			@Override
 			public void run() {
-				Boolean flag = RegistrationAppHealthCheckUtil.isNetworkAvailable();
+				Boolean flag = serviceDelegateUtil.isNetworkAvailable();
 				online.setVisible(flag);
 				offline.setVisible(!flag);
 			}
 		}, 0, 15 * 60 * 1000);
+	}
+	
+	public void logout() {
+		streamer.stop();
+		auditFactory.audit(AuditEvent.LOGOUT_USER, Components.NAVIGATION, SessionContext.userContext().getUserId(),
+				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
+
+		LOGGER.info(LoggerConstants.LOG_REG_HEADER, APPLICATION_NAME, APPLICATION_ID,
+				"Clearing Session context" + SessionContext.authTokenDTO());
+
+		closeAlreadyExistedAlert();
+
+		logoutCleanUp();
 	}
 
 	/**
@@ -284,16 +298,15 @@ public class HeaderController extends BaseController {
 	public void logout(ActionEvent event) {
 		streamer.stop();
 		if (pageNavigantionAlert()) {
-			auditFactory.audit(AuditEvent.LOGOUT_USER, Components.NAVIGATION, SessionContext.userContext().getUserId(),
+			auditFactory.audit(AuditEvent.LOGOUT_USER, Components.NAVIGATION, SessionContext.userId(),
 					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
 			LOGGER.info(LoggerConstants.LOG_REG_HEADER, APPLICATION_NAME, APPLICATION_ID,
-					"Clearing Session context" + SessionContext.authTokenDTO());
+					"Clearing Session context");
 
 			closeAlreadyExistedAlert();
 
 			logoutCleanUp();
-
 		}
 	}
 
@@ -431,7 +444,7 @@ public class HeaderController extends BaseController {
 			auditFactory.audit(AuditEvent.SYNC_PRE_REGISTRATION_PACKET, Components.SYNC_SERVER_TO_CLIENT,
 					SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-			executeDownloadPreRegDataTask(homeController.getMainBox(), packetHandlerController.getProgressIndicator());
+			executeDownloadPreRegDataTask(packetHandlerController.getPreRegDataPane());
 
 		} catch (RuntimeException exception) {
 			LOGGER.error("REGISTRATION - REDIRECTHOME - HEADER_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
@@ -548,7 +561,7 @@ public class HeaderController extends BaseController {
 	private String softwareUpdate() {
 		try {
 
-			softwareUpdateHandler.update();
+			softwareUpdateHandler.doSoftwareUpgrade();
 			return RegistrationConstants.ALERT_INFORMATION;
 
 		} catch (Exception exception) {
@@ -604,11 +617,18 @@ public class HeaderController extends BaseController {
 				packetHandlerController.setLastUpdateTime();
 
 				ResponseDTO responseDTO = taskService.getValue();
+				boolean isLogoutRequired = false;
+				
 				if (responseDTO.getErrorResponseDTOs() != null) {
-					generateAlert(RegistrationConstants.SYNC_FAILURE,
-							responseDTO.getErrorResponseDTOs().get(0).getMessage());
+					generateAlert(RegistrationConstants.ERROR, responseDTO.getErrorResponseDTOs().get(0).getMessage()+"#TYPE#ERROR");
+					isLogoutRequired = !responseDTO.getErrorResponseDTOs().isEmpty() && Objects.nonNull(responseDTO.getErrorResponseDTOs().get(0).getOtherAttributes());
 				} else {
 					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SYNC_SUCCESS));
+					isLogoutRequired = Objects.nonNull(responseDTO.getSuccessResponseDTO().getOtherAttributes()) && 
+							responseDTO.getSuccessResponseDTO().getOtherAttributes().containsKey(RegistrationConstants.ROLES_MODIFIED);
+				}
+				if (isLogoutRequired) {
+					showAlertAndLogout();
 				}
 				if (restartController.isToBeRestarted()) {
 					/* Clear the completed job map */
@@ -623,7 +643,13 @@ public class HeaderController extends BaseController {
 				progressIndicator.setVisible(false);
 			}
 		});
-
+		taskService.setOnFailed(event -> {
+			gridPane.setDisable(false);
+			boolean showAlert = false;
+			if (validUser(showAlert))
+				machineRemapCheck(showAlert);
+			progressIndicator.setVisible(false);
+		});
 	}
 
 	private void progressTask() {
@@ -762,17 +788,12 @@ public class HeaderController extends BaseController {
 			}
 		} else {
 			pane.setDisable(false);
-			if (!isPreLaunchTaskToBeStopped) {
-				loginController.executePreLaunchTask(pane, progressIndicator);
-				jobConfigurationService.startScheduler();
-			}
 		}
-
 	}
 
 	private void softwareUpdateInitiate(Pane pane, ProgressIndicator progressIndicator, String context,
 			boolean isPreLaunchTaskToBeStopped) {
-		if (RegistrationAppHealthCheckUtil.isNetworkAvailable()) {
+		if (serviceDelegateUtil.isNetworkAvailable()) {
 			executeSoftwareUpdateTask(pane, progressIndicator);
 		} else {
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_INTERNET_CONNECTION));
@@ -787,9 +808,7 @@ public class HeaderController extends BaseController {
 		// webCameraController.closeWebcam();
 	}
 
-	public void executeDownloadPreRegDataTask(Pane pane, ProgressIndicator progressIndicator) {
-
-		progressIndicator.setVisible(true);
+	public void executeDownloadPreRegDataTask(GridPane pane) {
 		pane.setDisable(true);
 
 		/**
@@ -812,32 +831,34 @@ public class HeaderController extends BaseController {
 					 */
 					@Override
 					protected ResponseDTO call() {
-
 						LOGGER.info("REGISTRATION - HEADER_CONTROLLER - DOWNLOAD_PRE_REG_DATA_TASK", APPLICATION_NAME,
 								APPLICATION_ID, "Started pre reg download task");
 
-						progressIndicator.setVisible(true);
+						Platform.runLater(() -> {
+							try {
+								packetHandlerController.setInProgressImage(getImage("in-progress.png", true));
+							} catch (RegBaseCheckedException e) {
+								LOGGER.error("Error in getting imageview: " + e);
+							}
+						});
+						
 						pane.setDisable(true);
 						return jobConfigurationService.executeJob(RegistrationConstants.OPT_TO_REG_PDS_J00003,
 								RegistrationConstants.JOB_TRIGGER_POINT_USER);
-
 					}
 				};
 			}
 		};
 
-		progressIndicator.progressProperty().bind(taskService.progressProperty());
 		taskService.start();
 
 		taskService.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
 			@Override
 			public void handle(WorkerStateEvent workerStateEvent) {
-
 				LOGGER.info("REGISTRATION - HEADER_CONTROLLER - DOWNLOAD_PRE_REG_DATA_TASK", APPLICATION_NAME,
 						APPLICATION_ID, "Completed pre reg download task");
 
 				pane.setDisable(false);
-				progressIndicator.setVisible(false);
 
 				ResponseDTO responseDTO = taskService.getValue();
 
@@ -846,17 +867,18 @@ public class HeaderController extends BaseController {
 					generateAlertLanguageSpecific(successResponseDTO.getCode(), successResponseDTO.getMessage());
 
 					packetHandlerController.setLastPreRegPacketDownloadedTime();
-
+					packetHandlerController.setInProgressImage(null);
 				} else if (responseDTO.getErrorResponseDTOs() != null) {
-
 					ErrorResponseDTO errorresponse = responseDTO.getErrorResponseDTOs().get(0);
 					generateAlertLanguageSpecific(errorresponse.getCode(), errorresponse.getMessage());
-
 				}
 			}
-
 		});
-
+		
+		taskService.setOnFailed(event -> {
+			pane.setDisable(false);
+			packetHandlerController.setInProgressImage(null);
+		});
 	}
 
 	/**
@@ -913,7 +935,7 @@ public class HeaderController extends BaseController {
 	}
 
 	private boolean validUser(boolean showAlert) {
-		if (!userDetailService.isValidUser(SessionContext.getInstance().getUserContext().getUserId())) {
+		if (SessionContext.getInstance() == null || !userDetailService.isValidUser(SessionContext.getInstance().getUserContext().getUserId())) {
 			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USER_IN_ACTIVE));
 			logout(null);
 			return false;

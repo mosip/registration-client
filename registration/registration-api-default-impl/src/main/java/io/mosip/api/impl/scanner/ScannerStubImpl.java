@@ -57,8 +57,13 @@ public class ScannerStubImpl implements DocScannerService {
         docScanDevice.setServiceName(getServiceName());
         docScanDevice.setDeviceType(DeviceType.SCANNER);
         docScanDevice.setName(DEVICE_NAME);
-        docScanDevice.setId(getServiceName()+":"+DEVICE_NAME);
+        docScanDevice.setId(DEVICE_NAME);
         return Arrays.asList(docScanDevice);
+    }
+
+    @Override
+    public void stop(DocScanDevice docScanDevice) {
+        //Do nothing
     }
 
     private String getStubPath() {

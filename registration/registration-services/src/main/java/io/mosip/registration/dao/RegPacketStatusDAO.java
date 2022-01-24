@@ -14,21 +14,14 @@ import io.mosip.registration.entity.Registration;
 public interface RegPacketStatusDAO {
 	
 	/**
-	 * This method gets the list of packets which are having the client status as PUSHED
-	 * The fetched data will be returned in the ascending order of createdd time
+	 * This method gets the list of packets which are having the client status as PUSHED or client comments
+	 * as EXPORTED
+	 * The fetched data will be returned in the ascending order of created time
 	 * 
 	 * @return {@link Registration}
 	 * 				returns the list of registrationIds which are uploaded successfully
 	 */
-	List<Registration> getPacketIdsByStatusUploaded();
-	
-	
-	/**
-	 * Fetch the registration based on the registration id.
-	 * @param registrationId - the id of required Registration Entity
-	 * @return registration	- the registration entity with given id
-	 */
-	Registration get(String registrationId);
+	List<Registration> getPacketIdsByStatusUploadedOrExported();
 	
 	/**
 	 * Update the details in the {@link Registration} to the Registration as well as Registration Transaction table.

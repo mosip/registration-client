@@ -1,6 +1,5 @@
 package io.mosip.registration.test.service;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -10,28 +9,13 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
-import io.mosip.kernel.core.util.CryptoUtil;
-import io.mosip.registration.dao.*;
-import io.mosip.registration.dao.impl.RegistrationCenterDAOImpl;
-import io.mosip.registration.entity.*;
-import io.mosip.registration.entity.id.CenterMachineId;
-import io.mosip.registration.entity.id.RegMachineSpecId;
-import io.mosip.registration.exception.ConnectionException;
-import io.mosip.registration.repositories.CenterMachineRepository;
-import io.mosip.registration.repositories.MachineMasterRepository;
-import io.mosip.registration.service.BaseService;
-import io.mosip.registration.service.config.LocalConfigService;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,9 +34,13 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.audit.AuditManagerSerivceImpl;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.Components;
@@ -60,21 +48,41 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
+import io.mosip.registration.dao.DocumentCategoryDAO;
+import io.mosip.registration.dao.DynamicFieldDAO;
+import io.mosip.registration.dao.IdentitySchemaDao;
+import io.mosip.registration.dao.MachineMappingDAO;
+import io.mosip.registration.dao.MasterSyncDao;
+import io.mosip.registration.dao.UserOnboardDAO;
+import io.mosip.registration.dao.impl.RegistrationCenterDAOImpl;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
-import io.mosip.registration.dto.mastersync.BiometricAttributeDto;
+import io.mosip.registration.dto.mastersync.DynamicFieldValueDto;
 import io.mosip.registration.dto.mastersync.MasterDataResponseDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
+import io.mosip.registration.entity.Location;
+import io.mosip.registration.entity.MachineMaster;
+import io.mosip.registration.entity.ReasonCategory;
+import io.mosip.registration.entity.ReasonList;
+import io.mosip.registration.entity.SyncControl;
+import io.mosip.registration.entity.SyncTransaction;
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.SyncManager;
+import io.mosip.registration.repositories.MachineMasterRepository;
+import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
+import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.impl.MasterSyncServiceImpl;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
+import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 /**
@@ -95,6 +103,9 @@ public class MasterSyncServiceTest {
 	private MasterSyncServiceImpl masterSyncServiceImpl;
 	@Mock
 	private MasterSyncDao masterSyncDao;
+
+	@Mock
+	private ClientSettingSyncHelper clientSettingSyncHelper;
 
 	@Mock
 	private RegistrationAppHealthCheckUtil registrationAppHealthCheckUtil;
@@ -144,9 +155,6 @@ public class MasterSyncServiceTest {
 	private MachineMasterRepository machineMasterRepository;
 
 	@Mock
-	private CenterMachineRepository centerMachineRepository;
-
-	@Mock
 	private ClientCryptoService clientCryptoService;
 
 	@Mock
@@ -158,6 +166,12 @@ public class MasterSyncServiceTest {
 	@Mock
 	private LocalConfigService localConfigService;
 
+	@Mock
+	private SoftwareUpdateHandler softwareUpdateHandler;
+
+	@Mock
+	private DynamicFieldDAO dynamicFieldDAO;
+	
 	@Before
 	public void beforeClass() throws Exception {
 		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class,
@@ -174,14 +188,14 @@ public class MasterSyncServiceTest {
 		PowerMockito.when(SessionContext.userContext().getRegistrationCenterDetailDTO()).thenReturn(centerDetailDTO);
 		
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
 
-		Mockito.when(baseService.getCenterId(Mockito.anyString())).thenReturn("10011");
+		Mockito.when(baseService.getCenterId()).thenReturn("10011");
 		Mockito.when(baseService.getStationId()).thenReturn("11002");
 		Mockito.when(baseService.isInitialSync()).thenReturn(false);
-		Mockito.when(registrationCenterDAO.isMachineCenterActive(Mockito.anyString())).thenReturn(true);
+		Mockito.when(registrationCenterDAO.isMachineCenterActive()).thenReturn(true);
 
 		//Mockito.when(baseService.getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP)).thenReturn(RegistrationConstants.DISABLE);
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);
@@ -191,14 +205,6 @@ public class MasterSyncServiceTest {
 		machine.setId("11002");
 		machine.setIsActive(true);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
-
-		CenterMachine centerMachine = new CenterMachine();
-		CenterMachineId centerMachineId = new CenterMachineId();
-		centerMachineId.setMachineId("11002");
-		centerMachineId.setRegCenterId("10011");
-		centerMachine.setCenterMachineId(centerMachineId);
-		centerMachine.setIsActive(true);
-		Mockito.when(centerMachineRepository.findByCenterMachineIdMachineId(Mockito.anyString())).thenReturn(centerMachine);
 
 		Mockito.when(CryptoUtil.computeFingerPrint(Mockito.anyString(), Mockito.any())).thenReturn("testsetsetes");
 		Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
@@ -212,30 +218,6 @@ public class MasterSyncServiceTest {
 		MasterDataResponseDto masterSyncDto = new MasterDataResponseDto();
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
 		ResponseDTO responseDTO = new ResponseDTO();
-
-		BiometricAttributeDto biometricattributes = new BiometricAttributeDto();
-
-		BiometricAttributeDto biometricAttributeResponseDto = new BiometricAttributeDto();
-
-		biometricattributes.setBiometricTypeCode("1");
-		biometricattributes.setCode("1");
-		biometricattributes.setDescription("finerprints");
-		biometricattributes.setLangCode("eng");
-		biometricattributes.setName("littile finger");
-
-		List<BiometricAttributeDto> biometricattribute = new ArrayList<>();
-		biometricattribute.add(biometricattributes);
-
-		biometricAttributeResponseDto.setBiometricTypeCode("1");
-		biometricAttributeResponseDto.setCode("1");
-		biometricAttributeResponseDto.setDescription("finerprints");
-		biometricAttributeResponseDto.setLangCode("eng");
-		biometricAttributeResponseDto.setName("littile finger");
-
-		List<BiometricAttributeDto> biometrictypes = new ArrayList<>();
-		biometrictypes.add(biometricAttributeResponseDto);
-
-		masterSyncDto.setBiometricattributes(biometrictypes);
 
 		SyncControl masterSyncDetails = new SyncControl();
 
@@ -272,14 +254,14 @@ public class MasterSyncServiceTest {
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
 		.thenReturn(responseMap);
 		Mockito.when(masterSyncDao.syncJobDetails(Mockito.anyString())).thenReturn(masterSyncDetails);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		
 		Mockito.when(syncManager.createSyncTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
 				Mockito.anyString())).thenReturn(syncTransaction);
 
 		Mockito.when(objectMapper.readValue(masterJson, MasterDataResponseDto.class)).thenReturn(masterSyncDto);
 
-		Mockito.when(masterSyncDao.saveSyncData(Mockito.any(SyncDataResponseDto.class))).thenReturn(RegistrationConstants.SUCCESS);
+		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class))).thenReturn(RegistrationConstants.SUCCESS);
 		Mockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString()))
 		.thenReturn("keyIndex");
 
@@ -305,7 +287,7 @@ public class MasterSyncServiceTest {
 		ResponseDTO responseDTO = new ResponseDTO();
 		LinkedList<ErrorResponseDTO> errorResponses = new LinkedList<>();
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(false);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(false);
 		Mockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString()))
 		.thenReturn("keyIndex");
 
@@ -317,10 +299,10 @@ public class MasterSyncServiceTest {
 
 		responseDTO.setErrorResponseDTOs(errorResponses);
 
-		ResponseDTO responseDto = masterSyncServiceImpl.getMasterSync("MDS_J00001","System");
+		masterSyncServiceImpl.getMasterSync("MDS_J00001","System");
 	}
 
-	@SuppressWarnings({ "unchecked", "unused" })
+	@SuppressWarnings({ "unused" })
 	@Test
 	public void testExpectedIOException() throws Exception {
 
@@ -354,12 +336,12 @@ public class MasterSyncServiceTest {
 				+ "         \"lunchEndTime\": \"14:00:00\",\n" + "         \"isDeleted\": null,\n"
 				+ "         \"langCode\": \"fra\",\n" + "         \"isActive\": true\n" + "      }\n" + "   ]\n" + "}";
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		Mockito.when(objectMapper.readValue(masterSyncJson.toString(), MasterDataResponseDto.class))
 				.thenReturn(masterSyncDto);
 
-		Mockito.when(masterSyncDao.saveSyncData(Mockito.any(SyncDataResponseDto.class)))
+		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class)))
 				.thenThrow(RegBaseUncheckedException.class);
 		Mockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString()))
 		.thenReturn("keyIndex");
@@ -403,12 +385,12 @@ public class MasterSyncServiceTest {
 				+ "         \"lunchEndTime\": \"14:00:00\",\n" + "         \"isDeleted\": null,\n"
 				+ "         \"langCode\": \"fra\",\n" + "         \"isActive\": true\n" + "      }\n" + "   ]\n" + "}";
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		Mockito.when(objectMapper.readValue(masterSyncJson.toString(), MasterDataResponseDto.class))
 				.thenReturn(masterSyncDto);
 
-		Mockito.when(masterSyncDao.saveSyncData(Mockito.any(SyncDataResponseDto.class)))
+		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class)))
 				.thenReturn(RegistrationConstants.SUCCESS);
 		Mockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString()))
 		.thenReturn("keyIndex");
@@ -417,7 +399,6 @@ public class MasterSyncServiceTest {
 		masterSyncServiceImpl.getMasterSync("MDS_J00001","System");
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testExpectedRegBaseUncheckedException() throws Exception {
 
@@ -451,11 +432,11 @@ public class MasterSyncServiceTest {
 				+ "         \"lunchEndTime\": \"14:00:00\",\n" + "         \"isDeleted\": null,\n"
 				+ "         \"langCode\": \"fra\",\n" + "         \"isActive\": true\n" + "      }\n" + "   ]\n" + "}";
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		Mockito.when(objectMapper.readValue(masterJson, MasterDataResponseDto.class)).thenReturn(masterSyncDto);
 
-		Mockito.when(masterSyncDao.saveSyncData(Mockito.any(SyncDataResponseDto.class)))
+		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class)))
 				.thenReturn(RegistrationConstants.SUCCESS);
 		when(masterSyncDao.syncJobDetails(Mockito.anyString())).thenReturn(null);
 		Mockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString()))
@@ -466,7 +447,6 @@ public class MasterSyncServiceTest {
 		masterSyncServiceImpl.getMasterSync("MDS_J00001","System");
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testExpectedRunException() throws Exception {
 
@@ -500,11 +480,11 @@ public class MasterSyncServiceTest {
 				+ "         \"lunchEndTime\": \"14:00:00\",\n" + "         \"isDeleted\": null,\n"
 				+ "         \"langCode\": \"fra\",\n" + "         \"isActive\": true\n" + "      }\n" + "   ]\n" + "}";
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		Mockito.when(objectMapper.readValue(masterJson, MasterDataResponseDto.class)).thenReturn(masterSyncDto);
 
-		Mockito.when(masterSyncDao.saveSyncData(Mockito.any(SyncDataResponseDto.class)))
+		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class)))
 				.thenReturn(RegistrationConstants.SUCCESS);
 		Mockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString()))
 		.thenReturn("keyIndex");
@@ -516,7 +496,6 @@ public class MasterSyncServiceTest {
 		masterSyncServiceImpl.getMasterSync("MDS_J00001","System");
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testExpectedRegBasecheckedException() throws Exception {
 
@@ -536,13 +515,13 @@ public class MasterSyncServiceTest {
 
 		// Adding list of error responses to response
 		responseDTO.setErrorResponseDTOs(errorResponses);
-		String masterJson = "{\"languages\":[{\"language\":[{\"langCode\":\"1\",\"languageName\":\"eng\",\"languageFamily\":\"Engish\",\"nativeName\":\"Engilsh\"},{\"langCode\":\"2\",\"languageName\":\"arb\",\"languageFamily\":\"Arab\",\"nativeName\":\"Arab\"}]}],\"biometricattributes\":[{\"biometricattribute\":[{\"code\":\"1\",\"name\":\"asdf\",\"description\":\"testing\",\"biometricTypeCode\":\"1\",\"langCode\":\"eng\"}]},{\"biometricattribute\":[{\"code\":\"2\",\"name\":\"asdf\",\"description\":\"testing\",\"biometricTypeCode\":\"1\",\"langCode\":\"eng\"}]},{\"biometricattribute\":[{\"code\":\"3\",\"name\":\"asfesr\",\"description\":\"testing2\",\"biometricTypeCode\":\"2\",\"langCode\":\"eng\"}]}],\"blacklistedwords\":[{\"word\":\"1\",\"description\":\"asdf1\",\"langCode\":\"eng\"},{\"word\":\"2\",\"description\":\"asdf2\",\"langCode\":\"eng\"},{\"word\":\"3\",\"description\":\"asdf3\",\"langCode\":\"eng\"}],\"biometrictypes\":[{\"biometrictype\":[{\"code\":\"1\",\"name\":\"fingerprints\",\"description\":\"fingerprint\",\"langCode\":\"eng\"}]},{\"biometrictype\":[{\"code\":\"2\",\"name\":\"iries\",\"description\":\"iriescapture\",\"langCode\":\"eng\"}]}],\"idtypes\":[{\"code\":\"1\",\"name\":\"PAN\",\"description\":\"pan card\",\"langCode\":\"eng\"},{\"code\":\"1\",\"name\":\"VID\",\"description\":\"voter id\",\"langCode\":\"eng\"}],\"documentcategories\":[{\"code\":\"1\",\"name\":\"POA\",\"description\":\"poaaa\",\"langCode\":\"eng\"},{\"code\":\"2\",\"name\":\"POI\",\"description\":\"porrr\",\"langCode\":\"eng\"},{\"code\":\"3\",\"name\":\"POR\",\"description\":\"pobbb\",\"langCode\":\"eng\"},{\"code\":\"4\",\"name\":\"POB\",\"description\":\"poiii\",\"langCode\":\"eng\"}],\"documenttypes\":[{\"code\":\"1\",\"name\":\"passport\",\"description\":\"passportid\",\"langCode\":\"eng\"},{\"code\":\"2\",\"name\":\"passport\",\"description\":\"passportid's\",\"langCode\":\"eng\"},{\"code\":\"3\",\"name\":\"voterid\",\"description\":\"votercards\",\"langCode\":\"eng\"},{\"code\":\"4\",\"name\":\"passport\",\"description\":\"passports\",\"langCode\":\"eng\"}],\"locations\":[{\"code\":\"1\",\"name\":\"chennai\",\"hierarchyLevel\":\"1\",\"hierarchyName\":\"Tamil Nadu\",\"parentLocCode\":\"1\",\"langCode\":\"eng\"},{\"code\":\"2\",\"name\":\"hyderabad\",\"hierarchyLevel\":\"2\",\"hierarchyName\":\"Telengana\",\"parentLocCode\":\"2\",\"langCode\":\"eng\"}],\"titles\":[{\"title\":[{\"code\":\"1\",\"titleName\":\"admin\",\"titleDescription\":\"ahsasa\",\"langCode\":\"eng\"}]},{\"title\":[{\"code\":\"2\",\"titleDescription\":\"asas\",\"titleName\":\"superadmin\",\"langCode\":\"eng\"}]}],\"genders\":[{\"gender\":[{\"genderCode\":\"1\",\"genderName\":\"male\",\"langCode\":\"eng\"},{\"genderCode\":\"2\",\"genderName\":\"female\",\"langCode\":\"eng\"}]},{\"gender\":[{\"genderCode\":\"1\",\"genderName\":\"female\",\"langCode\":\"eng\"}]}],\"reasonCategory\":{\"code\":\"1\",\"name\":\"rejected\",\"description\":\"rejectedfile\",\"langCode\":\"eng\",\"reasonLists\":[{\"code\":\"1\",\"name\":\"document\",\"description\":\"inavliddoc\",\"langCode\":\"eng\",\"reasonCategoryCode\":\"1\"},{\"code\":\"2\",\"name\":\"document\",\"description\":\"inavlidtype\",\"langCode\":\"eng\",\"reasonCategoryCode\":\"2\"}]}}";
+		String masterJson = "{\"languages\":[{\"language\":[{\"langCode\":\"1\",\"languageName\":\"eng\",\"languageFamily\":\"Engish\",\"nativeName\":\"Engilsh\"},{\"langCode\":\"2\",\"languageName\":\"arb\",\"languageFamily\":\"Arab\",\"nativeName\":\"Arab\"}]}],\"biometricattributes\":[{\"biometricattribute\":[{\"code\":\"1\",\"name\":\"asdf\",\"description\":\"testing\",\"biometricTypeCode\":\"1\",\"langCode\":\"eng\"}]},{\"biometricattribute\":[{\"code\":\"2\",\"name\":\"asdf\",\"description\":\"testing\",\"biometricTypeCode\":\"1\",\"langCode\":\"eng\"}]},{\"biometricattribute\":[{\"code\":\"3\",\"name\":\"asfesr\",\"description\":\"testing2\",\"biometricTypeCode\":\"2\",\"langCode\":\"eng\"}]}],\"blocklistedwords\":[{\"word\":\"1\",\"description\":\"asdf1\",\"langCode\":\"eng\"},{\"word\":\"2\",\"description\":\"asdf2\",\"langCode\":\"eng\"},{\"word\":\"3\",\"description\":\"asdf3\",\"langCode\":\"eng\"}],\"biometrictypes\":[{\"biometrictype\":[{\"code\":\"1\",\"name\":\"fingerprints\",\"description\":\"fingerprint\",\"langCode\":\"eng\"}]},{\"biometrictype\":[{\"code\":\"2\",\"name\":\"iries\",\"description\":\"iriescapture\",\"langCode\":\"eng\"}]}],\"idtypes\":[{\"code\":\"1\",\"name\":\"PAN\",\"description\":\"pan card\",\"langCode\":\"eng\"},{\"code\":\"1\",\"name\":\"VID\",\"description\":\"voter id\",\"langCode\":\"eng\"}],\"documentcategories\":[{\"code\":\"1\",\"name\":\"POA\",\"description\":\"poaaa\",\"langCode\":\"eng\"},{\"code\":\"2\",\"name\":\"POI\",\"description\":\"porrr\",\"langCode\":\"eng\"},{\"code\":\"3\",\"name\":\"POR\",\"description\":\"pobbb\",\"langCode\":\"eng\"},{\"code\":\"4\",\"name\":\"POB\",\"description\":\"poiii\",\"langCode\":\"eng\"}],\"documenttypes\":[{\"code\":\"1\",\"name\":\"passport\",\"description\":\"passportid\",\"langCode\":\"eng\"},{\"code\":\"2\",\"name\":\"passport\",\"description\":\"passportid's\",\"langCode\":\"eng\"},{\"code\":\"3\",\"name\":\"voterid\",\"description\":\"votercards\",\"langCode\":\"eng\"},{\"code\":\"4\",\"name\":\"passport\",\"description\":\"passports\",\"langCode\":\"eng\"}],\"locations\":[{\"code\":\"1\",\"name\":\"chennai\",\"hierarchyLevel\":\"1\",\"hierarchyName\":\"Tamil Nadu\",\"parentLocCode\":\"1\",\"langCode\":\"eng\"},{\"code\":\"2\",\"name\":\"hyderabad\",\"hierarchyLevel\":\"2\",\"hierarchyName\":\"Telengana\",\"parentLocCode\":\"2\",\"langCode\":\"eng\"}],\"titles\":[{\"title\":[{\"code\":\"1\",\"titleName\":\"admin\",\"titleDescription\":\"ahsasa\",\"langCode\":\"eng\"}]},{\"title\":[{\"code\":\"2\",\"titleDescription\":\"asas\",\"titleName\":\"superadmin\",\"langCode\":\"eng\"}]}],\"genders\":[{\"gender\":[{\"genderCode\":\"1\",\"genderName\":\"male\",\"langCode\":\"eng\"},{\"genderCode\":\"2\",\"genderName\":\"female\",\"langCode\":\"eng\"}]},{\"gender\":[{\"genderCode\":\"1\",\"genderName\":\"female\",\"langCode\":\"eng\"}]}],\"reasonCategory\":{\"code\":\"1\",\"name\":\"rejected\",\"description\":\"rejectedfile\",\"langCode\":\"eng\",\"reasonLists\":[{\"code\":\"1\",\"name\":\"document\",\"description\":\"inavliddoc\",\"langCode\":\"eng\",\"reasonCategoryCode\":\"1\"},{\"code\":\"2\",\"name\":\"document\",\"description\":\"inavlidtype\",\"langCode\":\"eng\",\"reasonCategoryCode\":\"2\"}]}}";
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		Mockito.when(objectMapper.readValue(masterJson, MasterDataResponseDto.class)).thenReturn(masterSyncDto);
 
-		Mockito.when(masterSyncDao.saveSyncData(Mockito.any(SyncDataResponseDto.class)))
+		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class)))
 				.thenReturn(RegistrationConstants.SUCCESS);
 		when(masterSyncDao.syncJobDetails(Mockito.anyString())).thenReturn(null);
 		Mockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString()))
@@ -564,30 +543,6 @@ public class MasterSyncServiceTest {
 		MasterDataResponseDto masterSyncDt = new MasterDataResponseDto();
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
 		ResponseDTO responseDTO = new ResponseDTO();
-
-		BiometricAttributeDto biometricattributes = new BiometricAttributeDto();
-
-		BiometricAttributeDto biometricAttributeResponseDto = new BiometricAttributeDto();
-
-		biometricattributes.setBiometricTypeCode("1");
-		biometricattributes.setCode("1");
-		biometricattributes.setDescription("finerprints");
-		biometricattributes.setLangCode("eng");
-		biometricattributes.setName("littile finger");
-
-		List<BiometricAttributeDto> biometricattribute = new ArrayList<>();
-		biometricattribute.add(biometricattributes);
-
-		biometricAttributeResponseDto.setBiometricTypeCode("1");
-		biometricAttributeResponseDto.setCode("1");
-		biometricAttributeResponseDto.setDescription("finerprints");
-		biometricAttributeResponseDto.setLangCode("eng");
-		biometricAttributeResponseDto.setName("littile finger");
-
-		List<BiometricAttributeDto> biometrictypes = new ArrayList<>();
-		biometrictypes.add(biometricAttributeResponseDto);
-
-		masterSyncDto.setBiometricattributes(biometrictypes);
 
 		SyncControl masterSyncDetails = new SyncControl();
 
@@ -616,7 +571,7 @@ public class MasterSyncServiceTest {
 
 		Mockito.when(masterSyncDao.syncJobDetails(Mockito.anyString())).thenReturn(masterSyncDetails);
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
 				.thenReturn(masterJson);
@@ -624,7 +579,7 @@ public class MasterSyncServiceTest {
 		Mockito.when(objectMapper.readValue(masterSyncJson.toString(), MasterDataResponseDto.class))
 				.thenReturn(masterSyncDt);
 
-		Mockito.when(masterSyncDao.saveSyncData(Mockito.any(SyncDataResponseDto.class)))
+		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class)))
 				.thenReturn(RegistrationConstants.SUCCESS);
 		Mockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString()))
 		.thenReturn("keyIndex");
@@ -640,7 +595,7 @@ public class MasterSyncServiceTest {
 		// responseDto.getSuccessResponseDTO().getMessage());
 	}
 
-	@SuppressWarnings({ "unchecked", "unused" })
+	@SuppressWarnings({ "unused" })
 	@Test
 	public void testMasterSyncHttpCaseJson()
 			throws RegBaseCheckedException, ConnectionException, IOException {
@@ -652,30 +607,6 @@ public class MasterSyncServiceTest {
 		MasterDataResponseDto masterSyncDt = new MasterDataResponseDto();
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
 		ResponseDTO responseDTO = new ResponseDTO();
-
-		BiometricAttributeDto biometricattributes = new BiometricAttributeDto();
-
-		BiometricAttributeDto biometricAttributeResponseDto = new BiometricAttributeDto();
-
-		biometricattributes.setBiometricTypeCode("1");
-		biometricattributes.setCode("1");
-		biometricattributes.setDescription("finerprints");
-		biometricattributes.setLangCode("eng");
-		biometricattributes.setName("littile finger");
-
-		List<BiometricAttributeDto> biometricattribute = new ArrayList<>();
-		biometricattribute.add(biometricattributes);
-
-		biometricAttributeResponseDto.setBiometricTypeCode("1");
-		biometricAttributeResponseDto.setCode("1");
-		biometricAttributeResponseDto.setDescription("finerprints");
-		biometricAttributeResponseDto.setLangCode("eng");
-		biometricAttributeResponseDto.setName("littile finger");
-
-		List<BiometricAttributeDto> biometrictypes = new ArrayList<>();
-		biometrictypes.add(biometricAttributeResponseDto);
-
-		masterSyncDto.setBiometricattributes(biometrictypes);
 
 		SyncControl masterSyncDetails = new SyncControl();
 
@@ -692,7 +623,7 @@ public class MasterSyncServiceTest {
 		.thenReturn("keyIndex");
 		Mockito.when(masterSyncDao.syncJobDetails(Mockito.anyString())).thenReturn(masterSyncDetails);
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
 				.thenThrow(HttpClientErrorException.class);
@@ -700,7 +631,7 @@ public class MasterSyncServiceTest {
 		Mockito.when(objectMapper.readValue(masterSyncJson.toString(), MasterDataResponseDto.class))
 				.thenReturn(masterSyncDt);
 
-		Mockito.when(masterSyncDao.saveSyncData(Mockito.any(SyncDataResponseDto.class)))
+		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class)))
 				.thenReturn(RegistrationConstants.SUCCESS);
 
 		sucessResponse.setCode(RegistrationConstants.MASTER_SYNC_SUCESS_MSG_CODE);
@@ -713,7 +644,7 @@ public class MasterSyncServiceTest {
 
 	}
 
-	@SuppressWarnings({ "unchecked", "unused" })
+	@SuppressWarnings({ "unused" })
 	@Test
 	public void testMasterSyncSocketCaseJson()
 			throws RegBaseCheckedException, ConnectionException, IOException {
@@ -725,30 +656,6 @@ public class MasterSyncServiceTest {
 		MasterDataResponseDto masterSyncDt = new MasterDataResponseDto();
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
 		ResponseDTO responseDTO = new ResponseDTO();
-
-		BiometricAttributeDto biometricattributes = new BiometricAttributeDto();
-
-		BiometricAttributeDto biometricAttributeResponseDto = new BiometricAttributeDto();
-
-		biometricattributes.setBiometricTypeCode("1");
-		biometricattributes.setCode("1");
-		biometricattributes.setDescription("finerprints");
-		biometricattributes.setLangCode("eng");
-		biometricattributes.setName("littile finger");
-
-		List<BiometricAttributeDto> biometricattribute = new ArrayList<>();
-		biometricattribute.add(biometricattributes);
-
-		biometricAttributeResponseDto.setBiometricTypeCode("1");
-		biometricAttributeResponseDto.setCode("1");
-		biometricAttributeResponseDto.setDescription("finerprints");
-		biometricAttributeResponseDto.setLangCode("eng");
-		biometricAttributeResponseDto.setName("littile finger");
-
-		List<BiometricAttributeDto> biometrictypes = new ArrayList<>();
-		biometrictypes.add(biometricAttributeResponseDto);
-
-		masterSyncDto.setBiometricattributes(biometrictypes);
 
 		SyncControl masterSyncDetails = new SyncControl();
 
@@ -763,7 +670,7 @@ public class MasterSyncServiceTest {
 
 		Mockito.when(masterSyncDao.syncJobDetails(Mockito.anyString())).thenReturn(masterSyncDetails);
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
 				.thenThrow(ConnectionException.class);
@@ -771,7 +678,7 @@ public class MasterSyncServiceTest {
 		Mockito.when(objectMapper.readValue(masterSyncJson.toString(), MasterDataResponseDto.class))
 				.thenReturn(masterSyncDt);
 
-		Mockito.when(masterSyncDao.saveSyncData(Mockito.any(SyncDataResponseDto.class)))
+		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class)))
 				.thenReturn(RegistrationConstants.SUCCESS);
 		Mockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString()))
 		.thenReturn("keyIndex");
@@ -826,7 +733,6 @@ public class MasterSyncServiceTest {
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void findAllReasons() throws RegBaseCheckedException {
 
@@ -852,42 +758,10 @@ public class MasterSyncServiceTest {
 	}
 
 	@Test
-	public void findAllBlackWords() throws RegBaseCheckedException {
-
-		List<BlacklistedWords> allBlackWords = new ArrayList<>();
-		BlacklistedWords blackWord = new BlacklistedWords();
-		blackWord.setWord("asdfg");
-		blackWord.setDescription("asdfg");
-		blackWord.setLangCode("ENG");
-		allBlackWords.add(blackWord);
-		allBlackWords.add(blackWord);
-
-		Mockito.when(masterSyncDao.getBlackListedWords(Mockito.anyString())).thenReturn(allBlackWords);
-
-		masterSyncServiceImpl.getAllBlackListedWords("ENG");
-
+	public void findAllBlockWords() throws RegBaseCheckedException {
+		Mockito.when(masterSyncDao.getBlockListedWords()).thenReturn(Collections.singletonList("asdfg"));
+		masterSyncServiceImpl.getAllBlockListedWords();
 	}
-
-	@SuppressWarnings("unchecked")
-	@Test
-	public void findDocumentCategories() throws RegBaseCheckedException {
-
-		List<DocumentType> documents = new ArrayList<>();
-		DocumentType document = new DocumentType();
-		document.setName("Aadhar");
-		document.setDescription("Aadhar card");
-		document.setLangCode("ENG");
-		documents.add(document);
-		documents.add(document);
-		List<String> validDocuments = new ArrayList<>();
-		validDocuments.add("CLR");
-		// validDocuments.add("MNA");
-		Mockito.when(masterSyncDao.getDocumentTypes(Mockito.anyList(), Mockito.anyString())).thenReturn(documents);
-
-		masterSyncServiceImpl.getDocumentCategories("ENG", "Test");
-
-	}
-
 
 	
 	@SuppressWarnings("unused")
@@ -898,30 +772,6 @@ public class MasterSyncServiceTest {
 		MasterDataResponseDto masterSyncDto = new MasterDataResponseDto();
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
 		ResponseDTO responseDTO = new ResponseDTO();
-
-		BiometricAttributeDto biometricattributes = new BiometricAttributeDto();
-
-		BiometricAttributeDto biometricAttributeResponseDto = new BiometricAttributeDto();
-
-		biometricattributes.setBiometricTypeCode("1");
-		biometricattributes.setCode("1");
-		biometricattributes.setDescription("finerprints");
-		biometricattributes.setLangCode("eng");
-		biometricattributes.setName("littile finger");
-
-		List<BiometricAttributeDto> biometricattribute = new ArrayList<>();
-		biometricattribute.add(biometricattributes);
-
-		biometricAttributeResponseDto.setBiometricTypeCode("1");
-		biometricAttributeResponseDto.setCode("1");
-		biometricAttributeResponseDto.setDescription("finerprints");
-		biometricAttributeResponseDto.setLangCode("eng");
-		biometricAttributeResponseDto.setName("littile finger");
-
-		List<BiometricAttributeDto> biometrictypes = new ArrayList<>();
-		biometrictypes.add(biometricAttributeResponseDto);
-
-		masterSyncDto.setBiometricattributes(biometrictypes);
 
 		SyncControl masterSyncDetails = new SyncControl();
 
@@ -954,11 +804,11 @@ public class MasterSyncServiceTest {
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
 		.thenReturn(responseMap);
 		Mockito.when(masterSyncDao.syncJobDetails(Mockito.anyString())).thenReturn(masterSyncDetails);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		Mockito.when(objectMapper.readValue(masterJson, MasterDataResponseDto.class)).thenReturn(masterSyncDto);
 
-		Mockito.when(masterSyncDao.saveSyncData(Mockito.any(SyncDataResponseDto.class)))
+		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class)))
 				.thenReturn(RegistrationConstants.SUCCESS);
 		Mockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString()))
 		.thenReturn("keyIndex");
@@ -982,30 +832,6 @@ public class MasterSyncServiceTest {
 		MasterDataResponseDto masterSyncDto = new MasterDataResponseDto();
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
 		ResponseDTO responseDTO = new ResponseDTO();
-
-		BiometricAttributeDto biometricattributes = new BiometricAttributeDto();
-
-		BiometricAttributeDto biometricAttributeResponseDto = new BiometricAttributeDto();
-
-		biometricattributes.setBiometricTypeCode("1");
-		biometricattributes.setCode("1");
-		biometricattributes.setDescription("finerprints");
-		biometricattributes.setLangCode("eng");
-		biometricattributes.setName("littile finger");
-
-		List<BiometricAttributeDto> biometricattribute = new ArrayList<>();
-		biometricattribute.add(biometricattributes);
-
-		biometricAttributeResponseDto.setBiometricTypeCode("1");
-		biometricAttributeResponseDto.setCode("1");
-		biometricAttributeResponseDto.setDescription("finerprints");
-		biometricAttributeResponseDto.setLangCode("eng");
-		biometricAttributeResponseDto.setName("littile finger");
-
-		List<BiometricAttributeDto> biometrictypes = new ArrayList<>();
-		biometrictypes.add(biometricAttributeResponseDto);
-
-		masterSyncDto.setBiometricattributes(biometrictypes);
 
 		SyncControl masterSyncDetails = new SyncControl();
 
@@ -1039,11 +865,11 @@ public class MasterSyncServiceTest {
 		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
 		.thenReturn(responseMap);
 		Mockito.when(masterSyncDao.syncJobDetails(Mockito.anyString())).thenReturn(masterSyncDetails);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		Mockito.when(objectMapper.readValue(masterJson, MasterDataResponseDto.class)).thenReturn(masterSyncDto);
 
-		Mockito.when(masterSyncDao.saveSyncData(Mockito.any(SyncDataResponseDto.class)))
+		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class)))
 				.thenReturn(RegistrationConstants.FAILURE);
 		Mockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString()))
 		.thenReturn("keyIndex");
@@ -1085,7 +911,7 @@ public class MasterSyncServiceTest {
 		mainMap.put(RegistrationConstants.ERRORS, masterFailureList);
 
 		Mockito.when(masterSyncDao.syncJobDetails(Mockito.anyString())).thenReturn(masterSyncDetails);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		Mockito.when(globalParamService.getGlobalParams()).thenReturn(myMap);
 		doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
@@ -1098,97 +924,6 @@ public class MasterSyncServiceTest {
 
 		ResponseDTO responseDto = masterSyncServiceImpl.getMasterSync("MDS_J00001", "System");
 	}
-	
-	@SuppressWarnings("static-access")
-	@Test
-	public void getBiometricTypeWithFingerprintEnable() throws RegBaseCheckedException {
-		List<String> biometricType = new LinkedList<>(Arrays.asList(RegistrationConstants.FNR, RegistrationConstants.IRS));
-		Map<String, Object> appMap = new HashMap<>();
-		appMap.put(RegistrationConstants.FINGERPRINT_DISABLE_FLAG, "Y");
-		when(context.map()).thenReturn(appMap);
-		
-		List<BiometricAttribute> biometricAttributes = new ArrayList<>();
-		BiometricAttribute biometricAttribute = new BiometricAttribute();
-		biometricAttribute.setCode("RS");
-		biometricAttribute.setBiometricTypeCode("FNR");
-		biometricAttribute.setName("Right Slap");
-		biometricAttribute.setLangCode("eng");
-		biometricAttributes.add(biometricAttribute);
-		
-		Mockito.when(masterSyncDao.getBiometricType("eng", biometricType)).thenReturn(biometricAttributes);	
-		List<BiometricAttributeDto> biometricAttributeDtos = masterSyncServiceImpl.getBiometricType("eng");
-		assertNotNull(biometricAttributeDtos);
-		
-	}
-	
-	@SuppressWarnings("static-access")
-	@Test
-	public void getBiometricTypeWithIrisEnable() throws RegBaseCheckedException {
-		List<String> biometricType = new LinkedList<>(Arrays.asList(RegistrationConstants.FNR, RegistrationConstants.IRS));
-		Map<String, Object> appMap = new HashMap<>();
-		appMap.put(RegistrationConstants.IRIS_DISABLE_FLAG, "Y");
-		when(context.map()).thenReturn(appMap);
-		
-		List<BiometricAttribute> biometricAttributes = new ArrayList<>();
-		BiometricAttribute biometricAttribute = new BiometricAttribute();
-		biometricAttribute.setCode("RS");
-		biometricAttribute.setBiometricTypeCode("FNR");
-		biometricAttribute.setName("Right Slap");
-		biometricAttribute.setLangCode("eng");
-		biometricAttributes.add(biometricAttribute);
-		
-		Mockito.when(masterSyncDao.getBiometricType("eng", biometricType)).thenReturn(biometricAttributes);		
-		List<BiometricAttributeDto> biometricAttributeDtos = masterSyncServiceImpl.getBiometricType("eng");
-		assertNotNull(biometricAttributeDtos);
-		
-	}
-
-	@SuppressWarnings("static-access")
-	@Test
-	public void getBiometricTypeWithFingerprintDisble() throws RegBaseCheckedException {
-		List<String> biometricType = new LinkedList<>(Arrays.asList(RegistrationConstants.FNR, RegistrationConstants.IRS));
-		Map<String, Object> appMap = new HashMap<>();
-		appMap.put(RegistrationConstants.FINGERPRINT_DISABLE_FLAG, "N");
-		when(context.map()).thenReturn(appMap);
-		biometricType.remove(RegistrationConstants.FNR);
-		
-		List<BiometricAttribute> biometricAttributes = new ArrayList<>();
-		BiometricAttribute biometricAttribute = new BiometricAttribute();
-		biometricAttribute.setCode("RS");
-		biometricAttribute.setBiometricTypeCode("FNR");
-		biometricAttribute.setName("Right Slap");
-		biometricAttribute.setLangCode("eng");
-		biometricAttributes.add(biometricAttribute);
-		
-		Mockito.when(masterSyncDao.getBiometricType("eng", biometricType)).thenReturn(biometricAttributes);	
-		List<BiometricAttributeDto> biometricAttributeDtos = masterSyncServiceImpl.getBiometricType("eng");
-		assertNotNull(biometricAttributeDtos);
-		
-	}
-	
-	@SuppressWarnings("static-access")
-	@Test
-	public void getBiometricTypeWithIrisDisble() throws RegBaseCheckedException {
-		List<String> biometricType = new LinkedList<>(Arrays.asList(RegistrationConstants.FNR, RegistrationConstants.IRS));
-		Map<String, Object> appMap = new HashMap<>();
-		appMap.put(RegistrationConstants.IRIS_DISABLE_FLAG, "N");
-		when(context.map()).thenReturn(appMap);
-		biometricType.remove(RegistrationConstants.IRS);
-		
-		List<BiometricAttribute> biometricAttributes = new ArrayList<>();
-		BiometricAttribute biometricAttribute = new BiometricAttribute();
-		biometricAttribute.setCode("RS");
-		biometricAttribute.setBiometricTypeCode("FNR");
-		biometricAttribute.setName("Right Slap");
-		biometricAttribute.setLangCode("eng");
-		biometricAttributes.add(biometricAttribute);
-		
-		Mockito.when(masterSyncDao.getBiometricType("eng", biometricType)).thenReturn(biometricAttributes);		
-		List<BiometricAttributeDto> biometricAttributeDtos = masterSyncServiceImpl.getBiometricType("eng");
-		assertNotNull(biometricAttributeDtos);
-		
-	}
-
 
 	@Test
 	public void getMasterSyncWithKeyIndexExceptionTest() throws Exception {
@@ -1211,34 +946,9 @@ public class MasterSyncServiceTest {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		PowerMockito.mockStatic(UriComponentsBuilder.class);
 		PowerMockito.mockStatic(URI.class);
-		MasterDataResponseDto masterSyncDto = new MasterDataResponseDto();
 		MasterDataResponseDto masterSyncDt = new MasterDataResponseDto();
 		SuccessResponseDTO sucessResponse = new SuccessResponseDTO();
 		ResponseDTO responseDTO = new ResponseDTO();
-
-		BiometricAttributeDto biometricattributes = new BiometricAttributeDto();
-
-		BiometricAttributeDto biometricAttributeResponseDto = new BiometricAttributeDto();
-
-		biometricattributes.setBiometricTypeCode("1");
-		biometricattributes.setCode("1");
-		biometricattributes.setDescription("finerprints");
-		biometricattributes.setLangCode("eng");
-		biometricattributes.setName("littile finger");
-
-		List<BiometricAttributeDto> biometricattribute = new ArrayList<>();
-		biometricattribute.add(biometricattributes);
-
-		biometricAttributeResponseDto.setBiometricTypeCode("1");
-		biometricAttributeResponseDto.setCode("1");
-		biometricAttributeResponseDto.setDescription("finerprints");
-		biometricAttributeResponseDto.setLangCode("eng");
-		biometricAttributeResponseDto.setName("littile finger");
-
-		List<BiometricAttributeDto> biometrictypes = new ArrayList<>();
-		biometrictypes.add(biometricAttributeResponseDto);
-
-		masterSyncDto.setBiometricattributes(biometrictypes);
 
 		SyncControl masterSyncDetails = new SyncControl();
 
@@ -1267,7 +977,7 @@ public class MasterSyncServiceTest {
 
 		Mockito.when(masterSyncDao.syncJobDetails(Mockito.anyString())).thenReturn(masterSyncDetails);
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		Mockito.when(
 				serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(), Mockito.anyString()))
@@ -1276,7 +986,7 @@ public class MasterSyncServiceTest {
 		Mockito.when(objectMapper.readValue(masterSyncJson.toString(), MasterDataResponseDto.class))
 				.thenReturn(masterSyncDt);
 
-		Mockito.when(masterSyncDao.saveSyncData(Mockito.any(SyncDataResponseDto.class)))
+		Mockito.when(clientSettingSyncHelper.saveClientSettings(Mockito.any(SyncDataResponseDto.class)))
 				.thenReturn(RegistrationConstants.SUCCESS);
 		Mockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString()))
 		.thenReturn("keyIndex");
@@ -1324,14 +1034,56 @@ public class MasterSyncServiceTest {
 		masterSyncServiceImpl.getAllReasonsList(null);
 	}
 	
-	@Test(expected=RegBaseCheckedException.class)
-	public void getAllBlackListedWords() throws RegBaseCheckedException {
-		masterSyncServiceImpl.getAllBlackListedWords(null);
+	private List<DynamicFieldValueDto> getDynamicFieldValues() {
+		List<DynamicFieldValueDto> dynamicFieldValues = new ArrayList<>();
+		DynamicFieldValueDto dynamicField = new DynamicFieldValueDto();
+		dynamicField.setCode("FLE");
+		dynamicField.setValue("Female");
+		dynamicField.setActive(true);
+		DynamicFieldValueDto dynamicField2 = new DynamicFieldValueDto();
+		dynamicField2.setCode("MLE");
+		dynamicField2.setValue("Male");
+		dynamicField2.setActive(true);
+		dynamicFieldValues.add(dynamicField);
+		dynamicFieldValues.add(dynamicField2);
+		return dynamicFieldValues;
 	}
 	
-	@Test(expected=RegBaseCheckedException.class)
-	public void getBiometricType() throws RegBaseCheckedException {
-		masterSyncServiceImpl.getBiometricType(null);
+	@Test
+	public void testGetDynamicField() throws RegBaseCheckedException {
+		List<DynamicFieldValueDto> dynamicFieldValues = getDynamicFieldValues();
+		Mockito.when(dynamicFieldDAO.getDynamicFieldValues(Mockito.anyString(), Mockito.anyString())).thenReturn(dynamicFieldValues);
+		assertNotNull(masterSyncServiceImpl.getDynamicField("gender", "eng").size());
+	}
+	
+	@Test
+	public void testGetFieldValuesHierarchial() {
+		List<Location> locations = new ArrayList<>();
+		Location loc = new Location();
+		loc.setCode("RBT");
+		loc.setName("Rabat");
+		loc.setLangCode("eng");
+		locations.add(loc);
+		Mockito.when(masterSyncDao.findLocationByParentLocCode(Mockito.anyString(), Mockito.anyString())).thenReturn(locations);
+		assertNotNull(masterSyncServiceImpl.getFieldValues("region", "eng", true).size());
+	}
+	
+	@Test
+	public void testGetFieldValuesHierarchialEmpty() {
+		List<Location> locations = new ArrayList<>();
+		Location loc = new Location();
+		loc.setCode("RBT");
+		loc.setName("Rabat");
+		loc.setLangCode("eng");
+		locations.add(loc);
+		assertNotNull(masterSyncServiceImpl.getFieldValues("region", null, true).size());
+	}
+	
+	@Test
+	public void testGetFieldValuesDynamic() {
+		List<DynamicFieldValueDto> dynamicFieldValues = getDynamicFieldValues();
+		Mockito.when(dynamicFieldDAO.getDynamicFieldValues(Mockito.anyString(), Mockito.anyString())).thenReturn(dynamicFieldValues);
+		assertNotNull(masterSyncServiceImpl.getFieldValues("region", "eng", false).size());
 	}
 
 }

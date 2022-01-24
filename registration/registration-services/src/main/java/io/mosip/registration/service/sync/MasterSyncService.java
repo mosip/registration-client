@@ -67,14 +67,13 @@ public interface MasterSyncService {
 	List<ReasonListDto> getAllReasonsList(String langCode) throws RegBaseCheckedException;
 
 	/**
-	 * Gets all the black listed words that shouldn't be allowed while capturing
+	 * Gets all the block listed words that shouldn't be allowed while capturing
 	 * demographic information from user.
 	 *
-	 * @param langCode the lang code
-	 * @return the all black listed words
+	 * @return the all block listed words
 	 * @throws RegBaseCheckedException
 	 */
-	List<BlacklistedWordsDto> getAllBlackListedWords(String langCode) throws RegBaseCheckedException;
+	List<String> getAllBlockListedWords();
 
 	/**
 	 * Gets all the document categories from db that to be displayed in the UI
@@ -85,7 +84,7 @@ public interface MasterSyncService {
 	 * @return all the document categories
 	 * @throws RegBaseCheckedException
 	 */
-	List<DocumentCategoryDto> getDocumentCategories(String docCode, String langCode);
+	//List<DocumentCategoryDto> getDocumentCategories(String docCode, String langCode);
 	
 	/**
 	 * Get the document Type from db that to be displayed in the UI
@@ -97,15 +96,6 @@ public interface MasterSyncService {
 	 * @throws RegBaseCheckedException
 	 */
 	DocumentType getDocumentType(String docCode, String langCode);
-
-	/**
-	 * Gets the biometric type.
-	 *
-	 * @param langCode the lang code
-	 * @return the biometric type
-	 * @throws RegBaseCheckedException
-	 */
-	List<BiometricAttributeDto> getBiometricType(String langCode) throws RegBaseCheckedException;
 
 	/**
 	 *

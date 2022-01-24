@@ -1,6 +1,6 @@
 package io.mosip.registration.test.service;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.Assert.assertFalse;
 
 import java.io.File;
 import java.sql.Connection;
@@ -11,8 +11,6 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.exception.RemapException;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,6 +32,7 @@ import org.springframework.jdbc.datasource.init.ScriptUtils;
 import io.mosip.kernel.core.exception.IOException;
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.audit.AuditManagerService;
+import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.GlobalParamDAO;
@@ -44,12 +43,14 @@ import io.mosip.registration.entity.GlobalParam;
 import io.mosip.registration.entity.PreRegistrationList;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.entity.SyncJobDef;
+import io.mosip.registration.exception.RemapException;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.packet.PacketUploadService;
 import io.mosip.registration.service.packet.RegPacketStatusService;
 import io.mosip.registration.service.remap.impl.CenterMachineReMapServiceImpl;
 import io.mosip.registration.service.sync.PacketSynchService;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
@@ -88,12 +89,15 @@ public class CenterMachineReMapServiceTest {
 	FileUtils fileUtils;
 	@Mock
 	GlobalParamService globalParamService;
+	@Mock
+	private ServiceDelegateUtil serviceDelegateUtil;
 
 	@BeforeClass
 	public static void initialize() throws IOException, java.io.IOException {
 		Map<String, Object> applicationMap = new HashMap<>();
 		applicationMap.put("mosip.registration.registration_pre_reg_packet_location", "..//PreRegPacketStore");
-		ApplicationContext.getInstance().setApplicationMap(applicationMap);
+		ApplicationContext.getInstance();
+		ApplicationContext.setApplicationMap(applicationMap);
 
 	}
 
@@ -103,18 +107,17 @@ public class CenterMachineReMapServiceTest {
 		PowerMockito.mockStatic(FileUtils.class);
 		PowerMockito.mockStatic(ScriptUtils.class);
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		GlobalParam globalParam = new GlobalParam();
 
 		globalParam.setVal("true");
-		Mockito.when(globalParamDAO.get(Mockito.anyObject())).thenReturn(globalParam);
+		Mockito.when(globalParamDAO.get(Mockito.any())).thenReturn(globalParam);
 		List<Registration> registrationList = new ArrayList<>();
 		Registration registration = new Registration();
 		registration.setClientStatusCode(RegistrationConstants.SYNCED_STATUS);
 		registrationList.add(registration);
 		Mockito.when(registrationDAO.findByServerStatusCodeNotIn(Mockito.anyList())).thenReturn(registrationList);
-		SyncJobDef syncJobDef = new SyncJobDef();
 		List<SyncJobDef> syncJobDefList = new ArrayList<>();
 		Mockito.when(syncJobConfigDAO.getActiveJobs()).thenReturn(syncJobDefList);
 		Mockito.when(jdbcTemplate.getDataSource()).thenReturn(dataSource);
@@ -138,18 +141,17 @@ public class CenterMachineReMapServiceTest {
 		PowerMockito.mockStatic(FileUtils.class);
 		PowerMockito.mockStatic(ScriptUtils.class);
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		GlobalParam globalParam = new GlobalParam();
 
 		globalParam.setVal("true");
-		Mockito.when(globalParamDAO.get(Mockito.anyObject())).thenReturn(globalParam);
+		Mockito.when(globalParamDAO.get(Mockito.any())).thenReturn(globalParam);
 		List<Registration> registrationList = new ArrayList<>();
 		Registration registration = new Registration();
 		registration.setClientStatusCode("RE_REGISTER_APPROVED");
 		registrationList.add(registration);
 		Mockito.when(registrationDAO.findByServerStatusCodeNotIn(Mockito.anyList())).thenReturn(registrationList);
-		SyncJobDef syncJobDef = new SyncJobDef();
 		List<SyncJobDef> syncJobDefList = new ArrayList<>();
 		Mockito.when(syncJobConfigDAO.getActiveJobs()).thenReturn(syncJobDefList);
 		Mockito.when(jdbcTemplate.getDataSource()).thenReturn(dataSource);
@@ -173,12 +175,12 @@ public class CenterMachineReMapServiceTest {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		PowerMockito.mockStatic(FileUtils.class);
 
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		GlobalParam globalParam = new GlobalParam();
 
 		globalParam.setVal("true");
-		Mockito.when(globalParamDAO.get(Mockito.anyObject())).thenReturn(globalParam);
+		Mockito.when(globalParamDAO.get(Mockito.any())).thenReturn(globalParam);
 		List<Registration> registrationList = new ArrayList<>();
 
 		Mockito.when(registrationDAO.findByServerStatusCodeNotIn(Mockito.anyList())).thenReturn(registrationList);
@@ -210,7 +212,7 @@ public class CenterMachineReMapServiceTest {
 		PowerMockito.mockStatic(FileUtils.class);
 		List<Registration> regList = new ArrayList<>();
 		Mockito.when(registrationDAO.getEnrollmentByStatus(Mockito.anyString())).thenReturn(regList);
-		assertNotNull(centerMachineReMapServiceImpl.isPacketsPendingForEOD());
+		assertFalse(centerMachineReMapServiceImpl.isPacketsPendingForEOD());
 
 	}
 
@@ -218,12 +220,12 @@ public class CenterMachineReMapServiceTest {
 	public void handleRemapProcessTestFailure() throws Exception {
 		PowerMockito.mockStatic(FileUtils.class);
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		GlobalParam globalParam = new GlobalParam();
 
 		globalParam.setVal("true");
-		Mockito.when(globalParamDAO.get(Mockito.anyObject())).thenReturn(globalParam);
+		Mockito.when(globalParamDAO.get(Mockito.any())).thenReturn(globalParam);
 		PowerMockito.doThrow(new IOException("error", "error")).when(FileUtils.class, "deleteDirectory",
 				Mockito.any(File.class));
 		centerMachineReMapServiceImpl.handleReMapProcess(3);

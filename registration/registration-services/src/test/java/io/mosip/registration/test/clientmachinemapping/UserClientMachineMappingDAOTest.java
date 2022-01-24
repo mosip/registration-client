@@ -25,18 +25,15 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import io.mosip.registration.audit.AuditManagerSerivceImpl;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.Components;
-import io.mosip.registration.constants.DeviceTypes;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dao.impl.MachineMappingDAOImpl;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.UserDetail;
 import io.mosip.registration.entity.UserMachineMapping;
-import io.mosip.registration.entity.id.RegMachineSpecId;
 import io.mosip.registration.entity.id.UserMachineMappingID;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
-import io.mosip.registration.repositories.CenterMachineRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.repositories.UserDetailRepository;
 import io.mosip.registration.repositories.UserMachineMappingRepository;
@@ -52,8 +49,6 @@ public class UserClientMachineMappingDAOTest {
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
 	@InjectMocks
 	private MachineMappingDAOImpl machineMappingDAOImpl;
-	@Mock
-	private CenterMachineRepository centerMachineRepository;
 	@Mock
 	private MachineMasterRepository machineMasterRepository;
 	@Mock
@@ -92,7 +87,7 @@ public class UserClientMachineMappingDAOTest {
 
 	@Test
 	public void getStationIDNullTest() {
-		Mockito.when(centerMachineRepository.findByIsActiveTrueAndCenterMachineIdMachineId(Mockito.anyString()))
+		Mockito.when(machineMasterRepository.findByIsActiveTrueAndNameIgnoreCase(Mockito.anyString()))
 				.thenReturn(null);
 		try {
 			machineMappingDAOImpl.getStationID("localhost");

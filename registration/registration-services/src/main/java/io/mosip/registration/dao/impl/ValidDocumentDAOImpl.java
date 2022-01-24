@@ -35,9 +35,8 @@ public class ValidDocumentDAOImpl implements ValidDocumentDAO {
 	 */
 	@Override
 	public List<ApplicantValidDocument> getValidDocuments(String applicantType, String docCategoryCode) {
-		LOGGER.info("GET_VALID_DOCUMENTS_DAO", APPLICATION_NAME, APPLICATION_ID,
-				"Fetching Document details");
-		return applicantValidDocumentRepository.findByValidDocumentAppTypeCodeAndDocumentCategoryCode(applicantType,
+		LOGGER.info("Fetching Document details applicantType: {}, docCategoryCode: {}", applicantType, docCategoryCode);
+		return applicantValidDocumentRepository.findByIsActiveTrueAndValidDocumentAppTypeCodeAndValidDocumentDocCatCode(applicantType,
 				docCategoryCode);
 
 	}

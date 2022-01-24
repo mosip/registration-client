@@ -4,25 +4,22 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 import static io.mosip.registration.constants.RegistrationConstants.MACHINE_MAPPING_LOGGER_TITLE;
 
-import java.sql.Timestamp;
 import java.util.List;
 
+import io.mosip.registration.entity.UserMachineMapping;
+import io.mosip.registration.repositories.UserMachineMappingRepository;
+import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.constants.DeviceTypes;
 import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.entity.MachineMaster;
-import io.mosip.registration.entity.UserMachineMapping;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.MachineMasterRepository;
-import io.mosip.registration.repositories.UserMachineMappingRepository;
 
 /**
  * This DAO implementation of {@link MachineMappingDAO}
@@ -96,8 +93,7 @@ public class MachineMappingDAOImpl implements MachineMappingDAO {
 
 	@Override
 	public boolean isExists(String userId) {
-		LOGGER.info(MACHINE_MAPPING_LOGGER_TITLE, APPLICATION_NAME, APPLICATION_ID, "checking exists or not");
-
+		LOGGER.info("checking if user has onboarded to machine or not");
 		return machineMappingRepository.findByUserMachineMappingIdUsrIdIgnoreCase(userId) != null;
 	}
 
@@ -119,6 +115,13 @@ public class MachineMappingDAOImpl implements MachineMappingDAO {
 		LOGGER.info(MACHINE_MAPPING_LOGGER_TITLE, APPLICATION_NAME, APPLICATION_ID,
 				"Completed fetching Key Index of Machine based on Machine name");
 		return machineMaster == null ? null : machineMaster.getKeyIndex();
+	}
+
+	@Override
+	public MachineMaster getMachine() {
+		String machineName = RegistrationSystemPropertiesChecker.getMachineId();
+		return machineMasterRepository
+				.findByIsActiveTrueAndNameIgnoreCase(machineName.toLowerCase());
 	}
 
 }

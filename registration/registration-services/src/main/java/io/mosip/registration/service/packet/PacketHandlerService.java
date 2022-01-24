@@ -2,6 +2,8 @@ package io.mosip.registration.service.packet;
 
 import java.util.List;
 
+import io.mosip.kernel.core.exception.IOException;
+import io.mosip.kernel.logger.logback.util.MetricTag;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationDTO;
@@ -44,18 +46,41 @@ public interface PacketHandlerService {
 	 *            created
 	 * @return the {@link ResponseDTO} object
 	 */
-	public ResponseDTO handle(RegistrationDTO registrationDTO);
+	public ResponseDTO handle(@MetricTag(value = "process", extractor = "arg.processId") RegistrationDTO registrationDTO);
 	
 	public List<Registration> getAllRegistrations();
 
 	/**
-	 *
+	 * Creates an instance of registrationDTO {@link RegistrationDTO}, initializing it with applicationId
+	 * IdSchemaVersion and process details
 	 * @param id
-	 * @param category
+	 * @param processId
 	 * @return
 	 * @throws RegBaseCheckedException
 	 */
-	public RegistrationDTO startRegistration(String id, String category) throws RegBaseCheckedException;
+	public RegistrationDTO startRegistration(String id,  @MetricTag("process") String processId) throws RegBaseCheckedException;
 
 	public List<PacketStatusDTO> getAllPackets();
+
+	/**
+	 * Creates, signs and encrypts Acknowledgement receipt with the provided content.
+	 * signature is stored in registration table
+	 * @param packetId
+	 * @param content
+	 * @param format
+	 * @throws IOException
+	 */
+	public void createAcknowledgmentReceipt(String packetId, byte[] content, String format) throws IOException;
+
+	/**
+	 * Reads the ack receipt, decrypts the content and verifies the signature,
+	 * returns the receipt content only when signature is valid
+	 * @param packetId
+	 * @param filepath
+	 * @return
+	 * @throws RegBaseCheckedException
+	 * @throws IOException
+	 */
+	public String getAcknowledgmentReceipt(String packetId, String filepath)
+			throws RegBaseCheckedException, IOException;
 }
