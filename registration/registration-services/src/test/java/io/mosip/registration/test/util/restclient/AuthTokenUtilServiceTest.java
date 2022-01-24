@@ -1,5 +1,6 @@
 package io.mosip.registration.test.util.restclient;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -73,6 +74,8 @@ public class AuthTokenUtilServiceTest {
 	
 	@Mock
 	private ServiceDelegateUtil serviceDelegateUtil;
+
+	private String payload = "{\"jti\":\"7c10d55d-b4ac-423b-ad83-973b9a0dccb0\",\"exp\":%d,\"nbf\":0,\"iat\":1642874277,\"iss\":\"https://dev.mosip.net/keycloak/auth/realms/mosip\",\"aud\":\"account\",\"sub\":\"a70ef928-4d0b-4503-8df6-ca197eb8d39c\",\"typ\":\"Bearer\",\"azp\":\"mosip-admin-client\",\"auth_time\":1642874277,\"session_state\":\"dd9b3670-e527-4904-960b-0bf285ce45da\",\"acr\":\"1\",\"allowed-origins\":[\"https://qa-double-rc2.mosip.net\"],\"realm_access\":{\"roles\":[\"REGISTRATION_ADMIN\",\"REGISTRATION_SUPERVISOR\",\"ZONAL_ADMIN\",\"offline_access\",\"uma_authorization\",\"Default\",\"GLOBAL_ADMIN\"]},\"name\":\"Test110006 Auto110006\",\"preferred_username\":\"110006\",\"email\":\"110006@xyz.com\"}";
 	
 	@Before
 	public void init() throws Exception {
@@ -151,9 +154,13 @@ public class AuthTokenUtilServiceTest {
 		respBody.put("response", "test-response");
 		responseMap.put(RegistrationConstants.REST_RESPONSE_BODY, respBody);
 		Mockito.when(restClientUtil.invokeForToken(Mockito.any())).thenReturn(responseMap);
+
+		String testPayload = String.format(payload, (System.currentTimeMillis()/1000)+(2*60));
+		testPayload = CryptoUtil.encodeToURLSafeBase64(testPayload.getBytes(StandardCharsets.UTF_8));
+
 		String jsonObjData = "{\n" + 
-				"  	\"token\": \"test-token\",\n" + 
-				"	\"refreshToken\": \"test-refresh-token\",\n" + 
+				"  	\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."+testPayload+".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\",\n" +
+				"	\"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."+testPayload+".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\",\n" +
 				"	\"expiryTime\": 1000,\n" + 
 				"	\"refreshExpiryTime\": 1000\n" +
 				"}";
@@ -169,24 +176,24 @@ public class AuthTokenUtilServiceTest {
 		Mockito.when(userTokenRepository.findTopByTokenExpiryGreaterThanAndUserDetailIsActiveTrueOrderByTokenExpiryDesc(Mockito.anyLong())).thenReturn(null);
 		Mockito.when(userTokenRepository.findTopByRtokenExpiryGreaterThanAndUserDetailIsActiveTrueOrderByRtokenExpiryDesc(Mockito.anyLong())).thenReturn(null);
 		Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
-		PowerMockito.mockStatic(CryptoUtil.class);
-		Mockito.when(CryptoUtil.computeFingerPrint(Mockito.any(byte[].class), Mockito.anyString())).thenReturn("test");
 		Mockito.when(clientCryptoService.signData(Mockito.any())).thenReturn("test".getBytes());
-		Mockito.when(CryptoUtil.encodeToURLSafeBase64(Mockito.any())).thenReturn("test");
 		Mockito.when(serviceDelegateUtil.prepareURLByHostName(Mockito.anyString())).thenReturn("https://dev.mosip.net/v1/syncdata/authenticate/useridpwd");
 		Mockito.when(environment.getProperty("auth_by_password.service.url")).thenReturn("https://dev.mosip.net/v1/syncdata/authenticate/useridpwd");
 		Map<String, Object> responseMap = new LinkedHashMap<>();
 		Map<String, Object> respBody = new LinkedHashMap<>();
-		respBody.put("response", "test-response");
+		respBody.put("response", CryptoUtil.encodeToURLSafeBase64("test-response".getBytes(StandardCharsets.UTF_8)));
 		responseMap.put(RegistrationConstants.REST_RESPONSE_BODY, respBody);
 		Mockito.when(restClientUtil.invokeForToken(Mockito.any())).thenReturn(responseMap);
-		String jsonObjData = "{\n" + 
-				"  	\"token\": \"test-token\",\n" + 
-				"	\"refreshToken\": \"test-refresh-token\",\n" + 
-				"	\"expiryTime\": 1000,\n" + 
+		String testPayload = String.format(payload, (System.currentTimeMillis()/1000)+(2*60));
+		testPayload = CryptoUtil.encodeToURLSafeBase64(testPayload.getBytes(StandardCharsets.UTF_8));
+
+		String jsonObjData = "{\n" +
+				"  	\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."+testPayload+".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\",\n" +
+				"	\"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."+testPayload+".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\",\n" +
+				"	\"expiryTime\": 1000,\n" +
 				"	\"refreshExpiryTime\": 1000\n" +
 				"}";
-		Mockito.when(ClientCryptoUtils.decodeBase64Data(Mockito.anyString())).thenReturn("test".getBytes());
+
 		Mockito.when(clientCryptoFacade.decrypt(Mockito.any())).thenReturn(jsonObjData.getBytes());
 		Mockito.doNothing().when(userDetailDAO).updateUserPwd(Mockito.anyString(), Mockito.anyString());
 		Mockito.doNothing().when(userDetailDAO).updateAuthTokens(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyLong(), Mockito.anyLong());

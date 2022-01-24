@@ -68,6 +68,20 @@ jobs:
         cd registration
         mvn -B package --file pom.xml -s $GITHUB_WORKSPACE/settings.xml
 
+    - name: Getting Root Ca
+      run: |
+        echo ${{secrets.ROOT_CA}} >> RootCA.crt
+
+    - name: Signing the jar
+      run: |
+        find . -name "registration*.jar" -exec readlink -f {} \; > temp.txt
+          while IFS= read -r line
+          do
+            fullpath=$line
+            echo "Pullpath: $fullpath"
+            jarsigner -keystore ./keystore.p12 -storepass ${{secrets.JAR_SIGNER_SECRET}} -certchain ./RootCA.crt -tsa http://timestamp.comodoca.com/rfc3161 -digestalg SHA-256 $fullpath CodeSiging
+          done < temp.txt
+
     - name: Get version info from pom
       id: getPomVersion
       uses: mavrosxristoforos/get-xml-info@1.0

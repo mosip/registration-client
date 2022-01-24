@@ -1,22 +1,18 @@
 package io.mosip.registration.update;
 
-import io.mosip.kernel.core.util.HMACUtils2;
+import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.exception.RegBaseCheckedException;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URL;
-import java.net.URLConnection;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Stack;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -26,7 +22,7 @@ public class ClientSetupValidator {
 
     private static final String PROPERTIES_FILE = "props/mosip-application.properties";
     private static final String manifestFile = "MANIFEST.MF";
-    private static final String libFolder = "lib/";
+    private static final String libFolder = "lib";
     private static final String SLASH = "/";
 
     private static String serverRegClientURL = null;
@@ -36,6 +32,8 @@ public class ClientSetupValidator {
 
     private static String environment = null;
     private static boolean validation_failed = false;
+
+    private static boolean patch_downloaded = false;
     private static Stack<String> messages = new Stack<>();
 
 
@@ -73,7 +71,6 @@ public class ClientSetupValidator {
 
 
     public void validateBuildSetup() throws RegBaseCheckedException {
-        ExecutorService executorService = null;
         try {
 
             if("LOCAL".equals(environment)) {
@@ -101,38 +98,44 @@ public class ClientSetupValidator {
 
             SoftwareUpdateUtil.deleteUnknownJars(localManifest);
 
-            executorService = Executors.newFixedThreadPool(5);
             Map<String, Attributes> localAttributes = localManifest.getEntries();
             for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
-                executorService.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        File file = new File(libFolder + SLASH + entry.getKey());
-                        if(!file.exists() || !SoftwareUpdateUtil.validateJarChecksum(file, entry.getValue())) {
-                            logger.info("{} file checksum validation failed, downloading it", entry.getKey());
-                            String url = serverRegClientURL + latestVersion + SLASH + libFolder + entry.getKey();
-                            try {
-                                if(file.delete()) {
-                                    Files.copy(SoftwareUpdateUtil.download(url), file.toPath());
-                                    logger.info("Successfully deleted and downloaded the latest file : {}", entry.getKey());
-                                }
-                            } catch (IOException | RegBaseCheckedException e) {
-                                logger.error("Failed to download {}", url, e);
-                                validation_failed = true;
-                            }
+                File file = new File(libFolder + File.separator + entry.getKey());
+                String url = serverRegClientURL + latestVersion + SLASH + libFolder + SLASH + entry.getKey();
+                if(!file.exists()) {
+                    logger.info("{} file doesn't exists, downloading it", entry.getKey());
+                    Files.copy(SoftwareUpdateUtil.download(url), file.toPath());
+                    logger.info("Successfully downloaded the file : {}", entry.getKey());
+                    patch_downloaded = true;
+                    continue;
+                }
+
+                if(!SoftwareUpdateUtil.validateJarChecksum(file, entry.getValue())) {
+                    logger.info("{} file checksum validation failed, downloading it", entry.getKey());
+                    try {
+                        if(file.delete()) {
+                            Files.copy(SoftwareUpdateUtil.download(url), file.toPath());
+                            logger.info("Successfully deleted and downloaded the latest file : {}", entry.getKey());
+                            patch_downloaded = true;
                         }
+                    } catch (IOException | RegBaseCheckedException e) {
+                        logger.error("Failed to download {}", url, e);
+                        validation_failed = true;
                     }
-                });
+                }
             }
-        } catch (IOException e) {
+        } catch (Throwable e) {
             logger.error("Failed to validate build setup", e);
-            if(executorService != null) { shutdownAndAwaitTermination(executorService); }
-            throw new RegBaseCheckedException("REG-BUILD-002", "Failed to check client setup validation");
+            validation_failed = true;
         }
     }
 
     public boolean isValidationFailed() {
         return validation_failed;
+    }
+
+    public boolean isPatch_downloaded() {
+        return patch_downloaded;
     }
 
     private void setLocalManifest() throws RegBaseCheckedException {
@@ -153,26 +156,6 @@ public class ClientSetupValidator {
             serverManifest = new Manifest(SoftwareUpdateUtil.download(url));
         } catch (IOException | RegBaseCheckedException e) {
             logger.error("Failed to load server manifest file", e);
-        }
-    }
-
-
-    //From https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/ExecutorService.html
-    private void shutdownAndAwaitTermination(ExecutorService pool) {
-        pool.shutdown(); // Disable new tasks from being submitted
-        try {
-            // Wait a while for existing tasks to terminate
-            if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
-                pool.shutdownNow(); // Cancel currently executing tasks
-                // Wait a while for tasks to respond to being cancelled
-                if (!pool.awaitTermination(60, TimeUnit.SECONDS))
-                    System.err.println("Pool did not terminate");
-            }
-        } catch (InterruptedException ie) {
-            // (Re-)Cancel if current thread also interrupted
-            pool.shutdownNow();
-            // Preserve interrupt status
-            Thread.currentThread().interrupt();
         }
     }
 }

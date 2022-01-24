@@ -172,13 +172,12 @@ public class MosipDeviceSpecificationFactory {
 	 * Testing the network with method
 	 */
 	public static boolean checkServiceAvailability(String serviceUrl, String method) {
-		Integer timeout = ApplicationContext.getIntValueFromApplicationMap(RegistrationConstants.MDM_CONNECTION_TIMEOUT);
-		if(timeout == null || timeout == 0) { timeout = 5; }
+		int timeout = MosipDeviceSpecificationHelper.getMDMConnectionTimeout(method);
 		LOGGER.debug("checkServiceAvailability serviceUrl : {}  with timeout {}",serviceUrl, timeout);
 		RequestConfig requestConfig = RequestConfig.custom()
-				.setConnectTimeout(timeout * 1000)
-				.setSocketTimeout(timeout * 1000)
-				.setConnectionRequestTimeout(timeout * 1000)
+				.setConnectTimeout(timeout)
+				.setSocketTimeout(timeout)
+				.setConnectionRequestTimeout(timeout)
 				.build();
 		HttpUriRequest request = RequestBuilder.create(method)
 				.setUri(serviceUrl)

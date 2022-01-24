@@ -7,17 +7,14 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.WeakHashMap;
+import java.util.*;
 
 import javax.sql.DataSource;
 
@@ -98,6 +95,7 @@ public class DaoConfig extends HibernateDaoConfig {
 	private static boolean isPPCUpdated = false;
 	private DriverManagerDataSource driverManagerDataSource = null;
 	private static ApplicationContext applicationContext;
+	private static final SecureRandom secureRandom = new SecureRandom();
 
 	static {
 		try (InputStream configKeys = DaoConfig.class.getClassLoader().getResourceAsStream("spring.properties");
@@ -313,15 +311,14 @@ public class DaoConfig extends HibernateDaoConfig {
 					statement.executeUpdate(
 							"CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.authentication.provider', 'BUILTIN')");
 					// creating user
-					statement.executeUpdate("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.user."
-							+ dbConf.get(USERNAME_KEY) + "', '" + dbConf.get(PWD_KEY) + "')");
+					statement.executeUpdate(String.format("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.user.%s', '%s')",
+							dbConf.get(USERNAME_KEY), dbConf.get(PWD_KEY)));
 					// setting default connection mode to noaccess
 					statement.executeUpdate(
 							"CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.database.defaultConnectionMode', 'noAccess')");
 					// setting read-write access to only one user
-					statement.executeUpdate(
-							"CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.database.fullAccessUsers', '"
-									+ dbConf.get(USERNAME_KEY) + "')");
+					statement.executeUpdate(String.format("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.database.fullAccessUsers', '%s')",
+							dbConf.get(USERNAME_KEY)));
 					// property ensures that database-wide properties cannot be overridden by
 					// system-wide properties
 					statement.executeUpdate(
@@ -368,8 +365,8 @@ public class DaoConfig extends HibernateDaoConfig {
 			statement.executeUpdate(
 					"CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.authentication.provider', null)");
 			// creating user
-			statement.executeUpdate(
-					"CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.user." + dbConf.get(USERNAME_KEY) + "', null)");
+			statement.executeUpdate(String.format("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.user.%s', null)",
+					dbConf.get(USERNAME_KEY)));
 			// setting default connection mode to noaccess
 			statement.executeUpdate(
 					"CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.database.defaultConnectionMode', 'fullAccess')");
@@ -389,7 +386,7 @@ public class DaoConfig extends HibernateDaoConfig {
 	}
 
 	private void isKeySet(Statement statement, String key, String value) throws SQLException, RegBaseCheckedException {
-		ResultSet rs = statement.executeQuery("VALUES SYSCS_UTIL.SYSCS_GET_DATABASE_PROPERTY('" + key + "')");
+		ResultSet rs = statement.executeQuery(String.format("VALUES SYSCS_UTIL.SYSCS_GET_DATABASE_PROPERTY('%s')", key));
 		if (rs.next() && value.equalsIgnoreCase(rs.getString(1)))
 			return;
 
@@ -487,12 +484,13 @@ public class DaoConfig extends HibernateDaoConfig {
 		if (!path.toFile().exists()) {
 			LOGGER.info("REGISTRATION  - DaoConfig", APPLICATION_NAME, APPLICATION_ID,
 					"getDBSecret invoked - DB_PWD_FILE not found !");
+
 			StringBuilder dbConf = new StringBuilder();
-			dbConf.append(RandomStringUtils.randomAlphanumeric(20));
+			dbConf.append(RandomStringUtils.random(20, 0, 0, true, true, null, secureRandom));
 			dbConf.append(SEPARATOR);
-			dbConf.append(RandomStringUtils.randomAlphabetic(10));
+			dbConf.append(RandomStringUtils.random(10, 0, 0, true, false, null, secureRandom));
 			dbConf.append(SEPARATOR);
-			dbConf.append(RandomStringUtils.randomAlphanumeric(20));
+			dbConf.append(RandomStringUtils.random(20, 0, 0, true, true, null, secureRandom));
 			dbConf.append(SEPARATOR);
 			dbConf.append(ERROR_STATE); // states if successful db conf. 1 = SAFE_STATE, 0 = ERROR_STATE
 			saveDbConf(dbConf.toString());
@@ -508,8 +506,8 @@ public class DaoConfig extends HibernateDaoConfig {
 		// older versions of reg-cli, re-encrypt db and set the new flags
 		if (parts.length == 1) {
 			conf.put(BOOTPWD_KEY, parts[0]);
-			conf.put(USERNAME_KEY, RandomStringUtils.randomAlphabetic(10));
-			conf.put(PWD_KEY, RandomStringUtils.randomAlphanumeric(20));
+			conf.put(USERNAME_KEY, RandomStringUtils.random(10, 0, 0, true, false, null, secureRandom));
+			conf.put(PWD_KEY, RandomStringUtils.random(20, 0, 0, true, true, null, secureRandom));
 			conf.put(STATE_KEY, ERROR_STATE);
 		} else {
 			conf.put(BOOTPWD_KEY, parts[0]);

@@ -191,7 +191,7 @@ public class Streamer {
 					urlStream.close();
 				streamer_thread = null;
 			} catch (IOException e) {
-				e.printStackTrace();
+				LOGGER.error("Failed to close the stream thread", e);
 			}
 		}
 	}
