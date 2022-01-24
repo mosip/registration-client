@@ -1,17 +1,11 @@
 package io.mosip.registration.update;
 
-import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -35,6 +29,7 @@ public class ClientSetupValidator {
 
     private static boolean patch_downloaded = false;
     private static Stack<String> messages = new Stack<>();
+    private static final ClientIntegrityValidator integrityValidator = new ClientIntegrityValidator();
 
 
     public ClientSetupValidator() throws RegBaseCheckedException {
@@ -128,6 +123,8 @@ public class ClientSetupValidator {
             logger.error("Failed to validate build setup", e);
             validation_failed = true;
         }
+        logger.info("Checksum validation completed validation_failed : {}, patch_downloaded : {}", validation_failed,
+                patch_downloaded);
     }
 
     public boolean isValidationFailed() {
