@@ -69,13 +69,13 @@ jobs:
         mvn -B package --file pom.xml -s $GITHUB_WORKSPACE/settings.xml
 
 
-  - name: Run Workflow
-    id: write_file
-    uses: timheuer/base64-to-file@v1.1
-    with:
-      fileName: 'RootCA.crt'
-      fileDir: './'
-      encodedString: ${{ secrets.ROOT_CA }}
+    - name: Run Workflow
+      id: write_file
+      uses: timheuer/base64-to-file@v1.1
+      with:
+        fileName: 'RootCA.crt'
+        fileDir: './'
+        encodedString: ${{ secrets.ROOT_CA }}
 
     - name: Signing the jar
       run: |
