@@ -9,9 +9,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javafx.application.Application;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import registrationtest.utility.PropertiesUtil;
 
 public class JunitClass {
+
+    private static final Logger logger = LoggerFactory.getLogger(JunitClass.class);
 
     @BeforeAll
     public void testcase() {
@@ -37,7 +41,7 @@ public class JunitClass {
                 //    PropertiesUtil.getKeyValue("operatorPwd"), PropertiesUtil.getKeyValue("mosip.upgradeserver"));
         } catch (IOException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("", e);
         }
 
     }

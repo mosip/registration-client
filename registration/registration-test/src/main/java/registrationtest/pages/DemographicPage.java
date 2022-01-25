@@ -541,7 +541,7 @@ public class DemographicPage {
                     mapValue = JsonUtil.JsonObjSimpleParsing(JsonIdentity, key);
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    logger.error("", e);
                 }
                 Set<String> keys = mapValue.keySet();
                 for (String ky : keys) {
@@ -581,7 +581,7 @@ public class DemographicPage {
                     mapValue = JsonUtil.JsonObjSimpleParsing(JsonIdentity, key);
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    logger.error("", e);
                 }
                 Set<String> keys = mapValue.keySet();
                 for (String ky : keys) {
