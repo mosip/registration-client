@@ -65,8 +65,9 @@ mkdir -p "${work_dir}"/sdkjars
 if [ "$reg_client_sdk_url" ]
 then
 	echo "Found thirdparty SDK"
-	wget "$reg_client_sdk_url"
-	/usr/bin/unzip "${work_dir}"/sdkDependency.zip
+	wget "$reg_client_sdk_url" -O sdkDependency.zip
+	mkdir sdkDependency
+	/usr/bin/unzip "${work_dir}"/sdkDependency.zip -d sdkDependency/
 	cp "${work_dir}"/sdkDependency/*.jar "${work_dir}"/registration-client/target/lib/
 else
 	echo "Downloading MOCK SDK..."
