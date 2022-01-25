@@ -29,4 +29,7 @@ public interface AppAuthenticationRepository
 	 */
 	List<AppAuthenticationDetails> findByIsActiveTrueAndAppAuthenticationMethodIdProcessIdAndAppAuthenticationMethodIdRoleCodeInOrderByMethodSequence(String processId, Set<String> roleCode);
 
+
+	List<AppAuthenticationDetails> findByIsActiveTrueAndAppAuthenticationMethodIdProcessIdAndAppAuthenticationMethodIdRoleCodeOrderByMethodSequence(String processId, String roleCode);
+
 }

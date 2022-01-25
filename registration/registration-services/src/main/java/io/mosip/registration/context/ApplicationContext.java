@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -115,7 +116,10 @@ public class ApplicationContext {
 
 				if (null != langList && !langList.isEmpty()) {
 					//choosing first language in the concatenated list as default application language
-					setApplicationLanguage(langList.stream().filter(langCode -> !langCode.isBlank()).findFirst().get());
+					Optional<String> defaultAppLang = langList.stream().filter(langCode -> !langCode.isBlank()).findFirst();
+					if (defaultAppLang.isPresent()) { 
+						setApplicationLanguage(defaultAppLang.get()); 
+					};
 
 					for (String langCode : langList) {
 						if (!langCode.isBlank()) {

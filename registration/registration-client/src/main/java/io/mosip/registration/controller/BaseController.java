@@ -437,8 +437,7 @@ public class BaseController {
 	}
 
 	private void alertTypeCheck(String title, String context, Stage alertStage) {
-		if (context.contains(RegistrationConstants.INFO) || (!context.contains(RegistrationConstants.INFO)
-				&& !context.contains(RegistrationConstants.SUCCESS.toUpperCase())
+		if (context.contains(RegistrationConstants.INFO) || (!context.contains(RegistrationConstants.SUCCESS.toUpperCase())
 				&& !context.contains(RegistrationConstants.ERROR.toUpperCase()))) {
 			if (SessionContext.isSessionContextAvailable()) {
 				SessionContext.map().put(ALERT_STAGE, alertStage);
@@ -1559,7 +1558,6 @@ public class BaseController {
         try {
 			return  new Image(getClass().getResourceAsStream(uri));
 		} catch (Exception exception) {
-			exception.printStackTrace();
 			LOGGER.error("Exception while Getting Image "+ uri, exception);
 			throw new RegBaseCheckedException();
 		}

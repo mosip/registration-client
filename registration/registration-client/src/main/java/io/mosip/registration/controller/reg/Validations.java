@@ -262,9 +262,11 @@ public class Validations extends BaseController {
 		node.getStyleClass().removeIf((s) -> {
 			return s.equals("demoGraphicTextFieldOnType");
 		});
-		nodeLabel.getStyleClass().removeIf((s) -> {
-			return s.equals("demoGraphicFieldLabelOnType");
-		});
+		if (nodeLabel != null) {
+			nodeLabel.getStyleClass().removeIf((s) -> {
+				return s.equals("demoGraphicFieldLabelOnType");
+			});
+		}		
 		node.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_TEXTFIELD);
 	}
 

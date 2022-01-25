@@ -54,6 +54,9 @@ import io.mosip.registration.service.operator.UserDetailService;
 public class UserDetailServiceImpl extends BaseService implements UserDetailService {
 
 	@Autowired
+	private ObjectMapper objectMapper;
+
+	@Autowired
 	private UserDetailDAO userDetailDAO;
 
 	@Autowired
@@ -61,8 +64,6 @@ public class UserDetailServiceImpl extends BaseService implements UserDetailServ
 
 	/** Object for Logger. */
 	private static final Logger LOGGER = AppConfig.getLogger(UserDetailServiceImpl.class);
-
-	private ObjectMapper objectMapper = new ObjectMapper();
 
 	/*
 	 * (non-Javadoc)
@@ -72,71 +73,58 @@ public class UserDetailServiceImpl extends BaseService implements UserDetailServ
 	@Timed
 	public synchronized ResponseDTO save(String triggerPoint) throws RegBaseCheckedException {
 		ResponseDTO responseDTO = new ResponseDTO();
-
-		LOGGER.info(LOG_REG_USER_DETAIL, APPLICATION_NAME, APPLICATION_ID,
-				"Entering into user detail save method...");
+		LOGGER.info("Entering into user detail save method...");
 		try {
 
 			//Precondition check, proceed only if met, otherwise throws exception
 			proceedWithMasterAndKeySync(null);
 
 			LinkedHashMap<String, Object> userDetailSyncResponse = getUsrDetails(triggerPoint);
-			if (null == userDetailSyncResponse.get(RegistrationConstants.RESPONSE)) {
-				setErrorResponse(responseDTO, RegistrationConstants.ERROR, null);
-				return responseDTO;
+
+			if (null == userDetailSyncResponse.get(RegistrationConstants.RESPONSE))
+				return getHttpResponseErrors(responseDTO, userDetailSyncResponse);
+
+			LinkedHashMap<String, String> responseMap = (LinkedHashMap<String, String>) userDetailSyncResponse.get(RegistrationConstants.RESPONSE);
+
+			List<UserDetailDto> userDtls = null;
+			if (responseMap.containsKey("userDetails")) {
+				byte[] data = clientCryptoFacade.decrypt(CryptoUtil.decodeURLSafeBase64(responseMap.get("userDetails")));
+				userDtls = objectMapper.readValue(data,	new TypeReference<List<UserDetailDto>>() {});
 			}
 
-			String jsonString = new ObjectMapper()
-					.writeValueAsString(userDetailSyncResponse.get(RegistrationConstants.RESPONSE));
-			JSONObject jsonObject = new JSONObject(jsonString);
-
-			if (jsonObject.has("userDetails")) {
-				byte[] data = clientCryptoFacade
-						.decrypt(ClientCryptoUtils.decodeBase64Data((String) jsonObject.get("userDetails")));
-				jsonString = new String(data);
+			if(userDtls == null) {
+				LOGGER.error("userDetails not found in the response map, user sync failed");
+				return setErrorResponse(responseDTO, RegistrationConstants.ERROR, null);
 			}
-
-			List<UserDetailDto> userDtls = objectMapper.readValue(jsonString,
-					new TypeReference<List<UserDetailDto>>() {});
 
 			//Remove users who are not part of current sync
 			List<UserDetail> existingUserDetails = userDetailDAO.getAllUsers();
 			for (UserDetail existingUserDetail : existingUserDetails) {
 				Optional<UserDetailDto> result = userDtls.stream().filter(userDetailDto -> userDetailDto
-						.getUserName().equalsIgnoreCase(existingUserDetail.getId())).findFirst();
+						.getUserId().equalsIgnoreCase(existingUserDetail.getId())).findFirst();
 				if (!result.isPresent()) {
-					LOGGER.info(LOG_REG_USER_DETAIL, APPLICATION_NAME, APPLICATION_ID,
-							"Deleting User : " + existingUserDetail.getId());
+					LOGGER.info("Deleting User : {} ", existingUserDetail.getId());
 					userDetailDAO.deleteUser(existingUserDetail);
 				}
 			}
 
-			Map<String, Object> attributes = null;
-			
 			for (UserDetailDto user : userDtls) {
 				userDetailDAO.save(user);
-				if (user.getUserName().equalsIgnoreCase(SessionContext.userId())) {
-					attributes = checkUserRoles(user);
-				}
 			}
 
-			responseDTO = setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, attributes);
-			
-			LOGGER.info(LOG_REG_USER_DETAIL, APPLICATION_NAME, APPLICATION_ID,
-					"User Detail Sync Success......");
+			responseDTO = setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, null);
+			LOGGER.info("User Detail Sync Success......");
+
 		} catch (RegBaseCheckedException | IOException exception) {
-			LOGGER.error(LOG_REG_USER_DETAIL, APPLICATION_NAME, APPLICATION_ID,
-					ExceptionUtils.getStackTrace(exception));
+			LOGGER.error(exception.getMessage(), exception);
 			setErrorResponse(responseDTO, exception.getMessage(), null);
 		}
 		return responseDTO;
 	}
 
-
-	private Map<String, Object> checkUserRoles(UserDetailDto user) {
+	//checks if roles are modified, need to prompt to re-login on change
+	public Map<String, Object> checkLoggedInUserRoles(List<String> newRoles) {
 		Map<String, Object> attributes = new HashMap<>();
-		
-		List<String> newRoles = user.getRoles();
 		List<String> oldRoles = SessionContext.userContext().getRoles();
 		if (oldRoles.size() == newRoles.size() && oldRoles.containsAll(newRoles)) {
 			return null;
@@ -147,13 +135,7 @@ public class UserDetailServiceImpl extends BaseService implements UserDetailServ
 
 
 	private LinkedHashMap<String, Object> getUsrDetails(String triggerPoint) throws RegBaseCheckedException {
-
-		LOGGER.info(LOG_REG_USER_DETAIL, APPLICATION_NAME, APPLICATION_ID,
-				"Entering into user detail rest calling method");
-
-		ResponseDTO responseDTO = new ResponseDTO();
-		List<ErrorResponseDTO> erResponseDTOs = new ArrayList<>();
-		LinkedHashMap<String, Object> userDetailResponse = null;
+		LOGGER.debug("Entering into user detail rest calling method");
 
 		// Setting uri Variables
 		Map<String, String> requestParamMap = new LinkedHashMap<>();
@@ -163,37 +145,14 @@ public class UserDetailServiceImpl extends BaseService implements UserDetailServ
 
 		try {
 
-			userDetailResponse = (LinkedHashMap<String, Object>) serviceDelegateUtil
+			return (LinkedHashMap<String, Object>) serviceDelegateUtil
 					.get(RegistrationConstants.USER_DETAILS_SERVICE_NAME, requestParamMap, true, triggerPoint);
 
-			if (null != userDetailResponse.get(RegistrationConstants.RESPONSE)) {
-				SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
-				successResponseDTO.setCode(RegistrationConstants.SUCCESS);
-				responseDTO.setSuccessResponseDTO(successResponseDTO);
-
-			} else {
-
-				ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO();
-				errorResponseDTO.setCode(RegistrationConstants.ERRORS);
-
-				errorResponseDTO.setMessage(userDetailResponse.size() > 0
-						? ((List<LinkedHashMap<String, String>>) userDetailResponse.get(RegistrationConstants.ERRORS))
-								.get(0).get(RegistrationConstants.ERROR_MSG)
-						: "User Detail Restful service error");
-				erResponseDTOs.add(errorResponseDTO);
-				responseDTO.setErrorResponseDTOs(erResponseDTOs);
-			}
-
 		} catch (Exception exception) {
-			LOGGER.error(LOG_REG_USER_DETAIL, APPLICATION_NAME, APPLICATION_ID, ExceptionUtils.getStackTrace(exception));
+			LOGGER.error("Failed invoking userdetails API", exception);
 			throw new RegBaseCheckedException(exception.getMessage(),
 					exception.getLocalizedMessage());
 		}
-
-		LOGGER.info(LOG_REG_USER_DETAIL, APPLICATION_NAME, APPLICATION_ID,
-				"Leaving into user detail rest calling method");
-
-		return userDetailResponse;
 	}
 
 
