@@ -20,14 +20,24 @@ import java.util.jar.Manifest;
 public class ClientIntegrityValidator {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientIntegrityValidator.class);
-
+    private static final String PROPERTIES_FILE = "props/mosip-application.properties";
     private static final String libFolder = "lib";
     private static final String certPath = "provider.pem";
     private static final String manifestFile = "MANIFEST.MF";
 
 
     public static void verifyClientIntegrity() {
-        try {
+        try(InputStream keyStream = ClientSetupValidator.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
+
+            Properties properties = new Properties();
+            properties.load(keyStream);
+            logger.info("Loading {} completed", PROPERTIES_FILE);
+
+            if("LOCAL".equals(properties.getProperty("environment"))) {
+                logger.warn("NOTE :: IGNORING LOCAL REGISTRATION CLIENT INTEGRITY CHECK AS ITS LOCAL ENVIRONMENT");
+                return;
+            }
+
             X509Certificate trustedCertificate = getCertificate();
             Manifest localManifest = getLocalManifest();
 
@@ -42,7 +52,9 @@ public class ClientIntegrityValidator {
                     }
                     else {
                         logger.info("As provider.cer is not found, invoking verify with JarFile class : {}", entry.getKey());
-                        new JarFile(file, true);
+                        try(JarFile jarFile = new JarFile(file, true)){
+                            logger.info("Integrity check passed -> {}", entry.getKey());
+                        }
                     }
                 }
             }
