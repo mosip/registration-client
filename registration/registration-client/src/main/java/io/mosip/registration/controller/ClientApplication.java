@@ -23,6 +23,7 @@ import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.config.JobConfigurationService;
 import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.login.LoginService;
+import io.mosip.registration.update.ClientIntegrityValidator;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
@@ -66,6 +67,9 @@ public class ClientApplication extends Application {
 		try { //Do heavy lifting here
 			if(ClientPreLoader.errorsFound)
 				return;
+
+			ClientIntegrityValidator.verifyClientIntegrity();
+			notifyPreloader(new ClientPreLoaderNotification("Client integrity check successful."));
 
 			applicationStartTime = String.valueOf(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 

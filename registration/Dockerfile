@@ -18,6 +18,8 @@ ARG client_upgrade_server
 
 ARG cert_server_URL
 
+ARG keystore_secret
+
 ENV client_version_env=${client_version}
 
 ENV healthcheck_url_env=${healthcheck_url}
@@ -29,6 +31,8 @@ ENV client_repo_env=${client_repo_url}
 ENV artifactory_url_env=${artifactory_url}
 
 ENV host_name_env=${host_name}
+
+ENV keystore_secret_env=${keystore_secret}
 
 # can be passed during Docker build as build time environment for github branch to pickup configuration from.
 ARG container_user=mosip

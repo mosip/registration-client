@@ -72,11 +72,11 @@ public class ServiceDelegateUtil {
 	 */
 	@Timed
 	public boolean isNetworkAvailable() {
-		LOGGER.info("Registration Network Checker had been called.");
 		try {
 			String healthCheckUrl = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.HEALTH_CHECK_URL);
 			Assert.notNull(healthCheckUrl, "Property mosip.reg.healthcheck.url missing");
 			String serviceUrl = prepareURLByHostName(healthCheckUrl);
+			LOGGER.info("Registration Network Checker had been called --> {}", serviceUrl);
 			return restClientUtil.isConnectedToSyncServer(serviceUrl);
 		} catch (Exception exception) {
 			LOGGER.error("No Internet Access" , exception);

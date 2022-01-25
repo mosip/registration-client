@@ -13,26 +13,18 @@ import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.Base64;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
-import io.mosip.kernel.core.crypto.spi.CryptoCoreSpec;
-import io.mosip.kernel.core.util.CryptoUtil;
-import io.mosip.kernel.keygenerator.bouncycastle.KeyGenerator;
-import io.mosip.registration.service.BaseService;
-import io.mosip.registration.service.sync.MasterSyncService;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
@@ -41,22 +33,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import io.mosip.commons.packet.dto.packet.SimpleDto;
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
+import io.mosip.kernel.core.crypto.spi.CryptoCoreSpec;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.kernel.core.util.StringUtils;
+import io.mosip.kernel.keygenerator.bouncycastle.KeyGenerator;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dao.DocumentTypeDAO;
-import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.PreRegistrationDTO;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
+import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.external.PreRegZipHandlingService;
 
@@ -76,9 +73,6 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 
 	@Autowired
 	private DocumentTypeDAO documentTypeDAO;
-
-	@Autowired
-	private MasterSyncDao masterSyncDao;
 	
 	@Autowired
 	private IdentitySchemaService identitySchemaService;
@@ -145,11 +139,13 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 				}
 			}
 			
-			Set<Entry<String, DocumentDto>> entries = getRegistrationDTOFromSession().getDocuments().entrySet();
-			entries.stream()
-				.filter(e -> e.getValue().getDocument() == null || e.getValue().getDocument().length == 0)
-				.forEach(e -> { getRegistrationDTOFromSession().removeDocument(e.getKey()); });
-		
+			Iterator<Entry<String, DocumentDto>> entries = getRegistrationDTOFromSession().getDocuments().entrySet().iterator();
+			while (entries.hasNext()) {
+				Entry<String, DocumentDto> entry = entries.next();
+				if (entry.getValue().getDocument() == null || entry.getValue().getDocument().length == 0) {
+					entries.remove();
+				}
+			}
 		} catch (IOException exception) {
 			LOGGER.error(exception.getMessage(), exception);
 			throw new RegBaseCheckedException(REG_IO_EXCEPTION.getErrorCode(), exception.getCause().getMessage());
@@ -170,7 +166,6 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 	 * @throws RegBaseCheckedException
 	 *             - holds the cheked exceptions
 	 */
-	@SuppressWarnings("unchecked")
 	private void parseDemographicJson(BufferedReader bufferedReader) throws RegBaseCheckedException {
 
 		try {

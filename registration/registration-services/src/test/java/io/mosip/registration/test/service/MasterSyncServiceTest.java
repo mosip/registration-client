@@ -1053,7 +1053,7 @@ public class MasterSyncServiceTest {
 	public void testGetDynamicField() throws RegBaseCheckedException {
 		List<DynamicFieldValueDto> dynamicFieldValues = getDynamicFieldValues();
 		Mockito.when(dynamicFieldDAO.getDynamicFieldValues(Mockito.anyString(), Mockito.anyString())).thenReturn(dynamicFieldValues);
-		assertNotNull(masterSyncServiceImpl.getDynamicField("gender", "eng").size());
+		assertNotNull(masterSyncServiceImpl.getDynamicField("gender", "eng"));
 	}
 	
 	@Test
@@ -1065,7 +1065,7 @@ public class MasterSyncServiceTest {
 		loc.setLangCode("eng");
 		locations.add(loc);
 		Mockito.when(masterSyncDao.findLocationByParentLocCode(Mockito.anyString(), Mockito.anyString())).thenReturn(locations);
-		assertNotNull(masterSyncServiceImpl.getFieldValues("region", "eng", true).size());
+		assertNotNull(masterSyncServiceImpl.getFieldValues("region", "eng", true));
 	}
 	
 	@Test
@@ -1076,14 +1076,14 @@ public class MasterSyncServiceTest {
 		loc.setName("Rabat");
 		loc.setLangCode("eng");
 		locations.add(loc);
-		assertNotNull(masterSyncServiceImpl.getFieldValues("region", null, true).size());
+		assertNotNull(masterSyncServiceImpl.getFieldValues("region", null, true));
 	}
 	
 	@Test
 	public void testGetFieldValuesDynamic() {
 		List<DynamicFieldValueDto> dynamicFieldValues = getDynamicFieldValues();
 		Mockito.when(dynamicFieldDAO.getDynamicFieldValues(Mockito.anyString(), Mockito.anyString())).thenReturn(dynamicFieldValues);
-		assertNotNull(masterSyncServiceImpl.getFieldValues("region", "eng", false).size());
+		assertNotNull(masterSyncServiceImpl.getFieldValues("region", "eng", false));
 	}
 
 }

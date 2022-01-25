@@ -141,13 +141,13 @@ public class UserDetailServcieTest {
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
 		List<UserDetailDto> list = new ArrayList<>();
 		UserDetailDto userDetails = new UserDetailDto();
-		userDetails.setUserName("110011");
-		userDetails.setName("SUPERADMIN");
+		userDetails.setUserId("110011");
+		//userDetails.setName("SUPERADMIN");
 		userDetails.setRegCenterId("10011");
 		List<String> roles = new ArrayList<>();
 		roles.add("REGISTRATION_OFFICER");
 		roles.add("REGISTRATION_SUPERVISOR");
-		userDetails.setRoles(roles);
+		//userDetails.setRoles(roles);
 		list.add(userDetails);
 		userDetail.setUserDetails(list);
 		Map<String, String> map = new HashMap<>();
@@ -166,12 +166,12 @@ public class UserDetailServcieTest {
 		userDetailsMap.put("roles", rolesList);
 		userDetailsMap.put("regCenterId", "10011");
 		userDetailsList.add(userDetailsMap);
-		Map<String, Object> usrDetailMap = new HashMap<>();
+		Map<String, Object> usrDetailMap = new LinkedHashMap<>();
 		usrDetailMap.put("userDetails", CryptoUtil.encodeToURLSafeBase64(
 				mapper.writeValueAsString(userDetailsList).getBytes()));
 		responseMap.put("response", usrDetailMap);
 		
-		Mockito.when(objectMapper.readValue(Mockito.anyString(), Mockito.any(TypeReference.class))).thenReturn(list);
+//		Mockito.when(objectMapper.readValue(Mockito.anyString(), Mockito.any(TypeReference.class))).thenReturn(list);
 		
 		List<UserDetail> existingUserDetails = new ArrayList<>();
 		UserDetail user = new UserDetail();
@@ -196,8 +196,8 @@ public class UserDetailServcieTest {
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
 		List<UserDetailDto> list = new ArrayList<>();
 		UserDetailDto userDetails = new UserDetailDto();
-		userDetails.setUserName("110011");
-		userDetails.setName("SUPERADMIN");
+		userDetails.setUserId("110011");
+		//userDetails.setName("SUPERADMIN");
 		list.add(userDetails);
 		userDetail.setUserDetails(list);
 		Map<String, String> map = new HashMap<>();
@@ -216,8 +216,8 @@ public class UserDetailServcieTest {
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
 		List<UserDetailDto> list = new ArrayList<>();
 		UserDetailDto userDetails = new UserDetailDto();
-		userDetails.setUserName("110011");
-		userDetails.setName("SUPERADMIN");
+		userDetails.setUserId("110011");
+		//userDetails.setName("SUPERADMIN");
 		list.add(userDetails);
 		userDetail.setUserDetails(list);
 		Map<String, String> map = new HashMap<>();
@@ -235,18 +235,17 @@ public class UserDetailServcieTest {
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
 		List<UserDetailDto> list = new ArrayList<>();
 		UserDetailDto userDetails = new UserDetailDto();
-		userDetails.setUserName("110011");
-		userDetails.setName("SUPERADMIN");
+		userDetails.setUserId("110011");
+		//userDetails.setName("SUPERADMIN");
 		List<String> roles = new ArrayList<>();
 		roles.add("REGISTRATION_OFFICER");
-		userDetails.setRoles(roles);
+		//userDetails.setRoles(roles);
 		list.add(userDetails);
 		userDetail.setUserDetails(list);
 		Map<String, String> map = new HashMap<>();
 		map.put(RegistrationConstants.USER_CENTER_ID, "10011");
-		Map<String, String> userDetailErrorMap = new LinkedHashMap<>();
 		LinkedHashMap<String, Object> responseMap=new LinkedHashMap<>();
-		Map<String, Object> userDetailsMap = new HashMap<>();
+		Map<String, Object> userDetailsMap = new LinkedHashMap<>();
 		List<String> rolesList = new ArrayList<>();
 		List<Object> userDetailsList = new ArrayList<>();
 		rolesList.add("SUPERADMIN");
@@ -258,7 +257,7 @@ public class UserDetailServcieTest {
 		userDetailsMap.put("name", "superadmin");
 		userDetailsMap.put("roles", rolesList);
 		userDetailsMap.put("regCenterId", "10011");
-		Map<String, Object> usrDetailMap = new HashMap<>();
+		Map<String, Object> usrDetailMap = new LinkedHashMap<>();
 		usrDetailMap.put("userDetails", CryptoUtil.encodeToURLSafeBase64(
 				mapper.writeValueAsString(userDetailsList).getBytes()));
 		//usrDetailMap.put("userDetails", userDetailsList);
@@ -277,8 +276,8 @@ public class UserDetailServcieTest {
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
 		List<UserDetailDto> list = new ArrayList<>();
 		UserDetailDto userDetails = new UserDetailDto();
-		userDetails.setUserName("110011");
-		userDetails.setName("SUPERADMIN");
+		userDetails.setUserId("110011");
+		//userDetails.setName("SUPERADMIN");
 		list.add(userDetails);
 		userDetail.setUserDetails(list);
 		Map<String, String> map = new HashMap<>();
@@ -303,8 +302,8 @@ public class UserDetailServcieTest {
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
 		List<UserDetailDto> list = new ArrayList<>();
 		UserDetailDto userDetails = new UserDetailDto();
-		userDetails.setUserName("110011");
-		userDetails.setName("SUPERADMIN");
+		userDetails.setUserId("110011");
+		//userDetails.setName("SUPERADMIN");
 		list.add(userDetails);
 		userDetail.setUserDetails(list);
 		Map<String, String> map = new HashMap<>();

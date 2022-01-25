@@ -479,7 +479,7 @@ public class BiometricFxControl extends FxControl {
 		if(!capturedData.isEmpty()) {
 			Optional<BiometricsDto> bestCopy = capturedData.stream().sorted(Comparator.comparingDouble(BiometricsDto::getQualityScore)).findFirst();
 			image = biometricsController.getBioStreamImage(uiFieldDTO.getId(), modality,
-					bestCopy.get().getNumOfRetries());
+					bestCopy.isPresent() ? bestCopy.get().getNumOfRetries() : 1);
 		} else {
 			image = biometricsController.getBioStreamImage(uiFieldDTO.getId(), modality, 0);
 		}
