@@ -3,7 +3,12 @@ package io.mosip.registration.test.util.datastub;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import io.mosip.commons.packet.dto.packet.AuditDto;
 import io.mosip.commons.packet.dto.packet.SimpleDto;
@@ -11,14 +16,15 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.OSIDataDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
-import io.mosip.registration.dto.schema.UiFieldDTO;
-import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.dto.biometric.BiometricDTO;
 import io.mosip.registration.dto.biometric.BiometricExceptionDTO;
 import io.mosip.registration.dto.biometric.BiometricInfoDTO;
 import io.mosip.registration.dto.biometric.FaceDetailsDTO;
 import io.mosip.registration.dto.biometric.FingerprintDetailsDTO;
 import io.mosip.registration.dto.biometric.IrisDetailsDTO;
+import io.mosip.registration.dto.packetmanager.DocumentDto;
+import io.mosip.registration.dto.schema.UiFieldDTO;
+import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.exception.RegBaseCheckedException;
 
 public class DataProvider {
@@ -61,6 +67,7 @@ public class DataProvider {
 		HashMap<String, Object> selectionListDTO=new HashMap<>();
 		//registrationDTO.setSelectionListDTO(selectionListDTO);
 		registrationDTO.setSelectedLanguagesByApplicant(Arrays.asList("eng", "ara", "fra"));
+		registrationDTO.setProcessId("NEW");
 		return registrationDTO;
 
 	}
@@ -77,8 +84,9 @@ public class DataProvider {
 		registrationDTO.setProcessId("NEW");
 
 		registrationDTO.setDemographics(getDemographicData(selectedLanguages));
+		registrationDTO.setDocuments(getDocumentDetailsDTO());
 //		registrationDTO.setBiometricDTO(DataProvider.getBiometricDTO());
-		HashMap<String, Object> selectionListDTO=new HashMap<>();
+		//HashMap<String, Object> selectionListDTO=new HashMap<>();
 		//registrationDTO.setSelectionListDTO(selectionListDTO);
 		registrationDTO.setSelectedLanguagesByApplicant(selectedLanguages);
 		return registrationDTO;
@@ -393,21 +401,17 @@ public class DataProvider {
 		applicantDocumentDTO.setAcknowledgeReceipt(DataProvider.getImageBytes("/acknowledgementReceipt.jpg"));
 		applicantDocumentDTO.setAcknowledgeReceiptName("RegistrationAcknowledgement.jpg");
 		return applicantDocumentDTO;
-	}
+	}*/
 
-	private static void getDocumentDetailsDTO(Identity identity, Map<String, DocumentDto> documents) throws RegBaseCheckedException {
-
-		IndividualIdentity individualIdentity = (IndividualIdentity) identity;
-
+	private static Map<String, DocumentDto> getDocumentDetailsDTO() throws RegBaseCheckedException {
+		Map<String, DocumentDto> documents = new HashMap<>();
 		DocumentDto documentDetailsDTO = new DocumentDto();
 		documentDetailsDTO.setDocument(DataProvider.getImageBytes("/proofOfAddress.jpg"));
 		documentDetailsDTO.setType("Passport");
 		documentDetailsDTO.setFormat("jpg");
 		documentDetailsDTO.setValue("ProofOfIdentity");
 		documentDetailsDTO.setOwner("Self");
-		
-		individualIdentity.setProofOfIdentity(documentDetailsDTO);
-		documents.put("POI", documentDetailsDTO);
+		documents.put("proofOfIdentity", documentDetailsDTO);
 
 		DocumentDto documentDetailsResidenceDTO = new DocumentDto();
 		documentDetailsResidenceDTO.setDocument(DataProvider.getImageBytes("/proofOfAddress.jpg"));
@@ -415,30 +419,18 @@ public class DataProvider {
 		documentDetailsResidenceDTO.setFormat("jpg");
 		documentDetailsResidenceDTO.setValue("ProofOfAddress");
 		documentDetailsResidenceDTO.setOwner("hof");
+		documents.put("proofOfAddress", documentDetailsResidenceDTO);
 		
-		individualIdentity.setProofOfAddress(documentDetailsResidenceDTO);
-		documents.put("POA", documentDetailsResidenceDTO);
-
-		documentDetailsDTO = new DocumentDto();
-		documentDetailsDTO.setDocument(DataProvider.getImageBytes("/proofOfAddress.jpg"));
-		documentDetailsDTO.setType("Passport");
-		documentDetailsDTO.setFormat("jpg");
-		documentDetailsDTO.setValue("ProofOfRelationship");
-		documentDetailsDTO.setOwner("Self");
+		DocumentDto documentDetailsExceptionDTO = new DocumentDto();
+		documentDetailsExceptionDTO.setDocument(DataProvider.getImageBytes("/proofOfAddress.jpg"));
+		documentDetailsExceptionDTO.setType("COE");
+		documentDetailsExceptionDTO.setFormat("jpg");
+		documentDetailsExceptionDTO.setValue("ProofOfAddress");
+		documentDetailsExceptionDTO.setOwner("hof");
+		documents.put("proofOfException", documentDetailsResidenceDTO);
 		
-		individualIdentity.setProofOfRelationship(documentDetailsDTO);
-		documents.put("POR", documentDetailsDTO);
-
-		documentDetailsResidenceDTO = new DocumentDto();
-		documentDetailsResidenceDTO.setDocument(DataProvider.getImageBytes("/proofOfAddress.jpg"));
-		documentDetailsResidenceDTO.setType("Passport");
-		documentDetailsResidenceDTO.setFormat("jpg");
-		documentDetailsResidenceDTO.setValue("DateOfBirthProof");
-		documentDetailsResidenceDTO.setOwner("hof");
-		
-		individualIdentity.setProofOfDateOfBirth(documentDetailsResidenceDTO);
-		documents.put("POB", documentDetailsResidenceDTO);
-	}*/
+		return documents;
+	}
 
 	private static RegistrationMetaDataDTO getRegistrationMetaDataDTO() {
 
@@ -510,12 +502,43 @@ public class DataProvider {
 		UiFieldDTO fullname = new UiFieldDTO();
 		fullname.setId("fullName");
 		fullname.setType("simpleType");
+		HashMap<String, String> fullnameLabel = new HashMap<>();
+		fullnameLabel.put("eng", "Full Name");
+		fullnameLabel.put("ara", "Full Name");
+		fullnameLabel.put("fra", "Full Name");
+		fullname.setLabel(fullnameLabel);
 		fields.add(fullname);
 
 		UiFieldDTO region = new UiFieldDTO();
 		region.setId("region");
 		region.setType("simpleType");
+		region.setLabel(fullnameLabel);
 		fields.add(region);
+		
+		UiFieldDTO email = new UiFieldDTO();
+		email.setId("email");
+		email.setType("string");
+		email.setLabel(fullnameLabel);
+		fields.add(email);
+		
+		UiFieldDTO proofOfAddress = new UiFieldDTO();
+		proofOfAddress.setId("proofOfAddress");
+		proofOfAddress.setType("documentType");
+		proofOfAddress.setLabel(fullnameLabel);
+		fields.add(proofOfAddress);
+		
+		UiFieldDTO proofOfIdentity = new UiFieldDTO();
+		proofOfIdentity.setId("proofOfIdentity");
+		proofOfIdentity.setType("documentType");
+		proofOfIdentity.setLabel(fullnameLabel);
+		fields.add(proofOfIdentity);
+		
+		UiFieldDTO proofOfException = new UiFieldDTO();
+		proofOfException.setId("proofOfException");
+		proofOfException.setType("documentType");
+		proofOfException.setSubType("POE");
+		proofOfException.setLabel(fullnameLabel);
+		fields.add(proofOfException);
 
 		return fields;
 	}
