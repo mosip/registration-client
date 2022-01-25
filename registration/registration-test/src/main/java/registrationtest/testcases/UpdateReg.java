@@ -219,7 +219,7 @@ public class UpdateReg {
                 ExtentReportUtil.test1.addScreenCaptureFromPath(WaitsUtil.capture());
             } catch (IOException e1) {
 
-                e1.printStackTrace();
+                logger.error("", e1);
             }
 
         }
