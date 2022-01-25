@@ -382,7 +382,7 @@ public class BaseController {
 			alertStage.initStyle(StageStyle.UNDECORATED);
 			alertStage.setScene(scene);
 			alertStage.initModality(Modality.WINDOW_MODAL);
-			alertController.getAlertGridPane().setPrefHeight(context.length() / 2 + 110);
+			alertController.getAlertGridPane().setPrefHeight((double)(context.length() / 2 + 110));
 			if (scanPopUpViewController.getPopupStage() != null
 					&& scanPopUpViewController.getPopupStage().isShowing()) {
 				alertStage.initOwner(scanPopUpViewController.getPopupStage());
@@ -422,7 +422,7 @@ public class BaseController {
 			alertStage.setScene(scene);
 			alertStage.initModality(Modality.WINDOW_MODAL);
 
-			alertController.getAlertGridPane().setPrefHeight(context.length() / 2 + 110);
+			alertController.getAlertGridPane().setPrefHeight((double)(context.length() / 2 + 110));
 			controller.setScanningMsg(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.VALIDATION_MESSAGE));
 			alertTypeCheck(title, context, alertStage);
 			isValid = run.toRun();

@@ -31,10 +31,7 @@ public class PacketMetrics implements MeterBinder {
     @Override
     public void bindTo(MeterRegistry registry) {
         RegistrationDAO registrationDAO = applicationContext.getBean(RegistrationDAO.class);
-
-        if(registrationDAO == null)
-            return;
-
+        
         List<Object[]> result = null;
 
         try {

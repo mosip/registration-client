@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testfx.api.FxRobot;
 import org.testfx.api.FxRobotContext;
-import javafx.application.Application;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -96,10 +95,12 @@ public class LoginLogoutTest {
                     LoginLogoutTest lg = new LoginLogoutTest();
 
                     lg.loginlogout("", "");
-                } catch (Exception e) {
-                    // TODO Auto-generated catch block
+                } catch (InterruptedException e) {
                     logger.error("", e);
-                }
+                    Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                	logger.error("", e);
+				}
             }
 
         };

@@ -1,13 +1,9 @@
 
 package registrationtest.utility;
 
-import io.mosip.registration.dto.mastersync.GenericDto;
-
 import java.util.Optional;
 
-
-
-
+import io.mosip.registration.dto.mastersync.GenericDto;
 import javafx.application.Platform;
 import javafx.scene.control.ComboBox;
 
@@ -32,8 +28,10 @@ public class ComboBoxUtil {
 
                     try {
                         Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
+                    } catch (InterruptedException e) {
+                        logger.error("", e);
+                        Thread.currentThread().interrupt();
                     } catch (Exception e) {
-
                         logger.error("", e);
                     }
                 }
@@ -68,8 +66,10 @@ public class ComboBoxUtil {
         try {
             taskThread.join();
             Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
+        } catch (InterruptedException e) {
+            logger.error("", e);
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
-
             logger.error("", e);
         }
 

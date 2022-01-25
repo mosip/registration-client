@@ -84,11 +84,16 @@ public class UploadPacketPage {
             result = true;
             robotActions.closeWindow();
            // alerts.clickAlertexit();
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             logger.error("Failure Unable to upload", e);
             robotActions.closeWindow();
             result = false;
-        }
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+        	logger.error("Failure Unable to upload", e);
+            robotActions.closeWindow();
+            result = false;
+		}
 
         return result;
 

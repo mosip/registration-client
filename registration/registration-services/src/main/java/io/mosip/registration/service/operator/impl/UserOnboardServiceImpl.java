@@ -179,7 +179,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 
 				for (BiometricsDto dto : biometrics) {
 					BiometricType bioType = Biometric.getSingleTypeByAttribute(dto.getBioAttribute());
-					String bioSubType = getSubTypes(bioType, dto.getBioAttribute());
+					String bioSubType = getSubTypesAsString(bioType, dto.getBioAttribute());
 					LinkedHashMap<String, Object> dataBlock = buildDataBlock(bioType.name(), bioSubType,
 							dto.getAttributeISO(), previousHash, dto);
 					dataBlock.put(RegistrationConstants.ONBOARD_CERT_THUMBPRINT, CryptoUtil.encodeToURLSafeBase64(getCertificateThumbprint(certificate)));
@@ -298,7 +298,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 		return serviceDelegateUtil.prepareURLByHostName(pattern);
 	}
 
-	private String getSubTypes(BiometricType bioType, String bioAttribute) {
+	private String getSubTypesAsString(BiometricType bioType, String bioAttribute) {
 		List<String> subtypes = new LinkedList<>();
 		switch (bioType) {
 		case FINGER:

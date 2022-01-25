@@ -344,7 +344,7 @@ public class CenterMachineReMapServiceImpl implements CenterMachineReMapService 
 			Connection connection = jdbcTemplate.getDataSource().getConnection();
 			ScriptUtils.executeSqlScript(connection, resource);
 
-		} catch (ScriptException | SQLException exception) {
+		} catch (ScriptException | SQLException | NullPointerException exception) {
 			LOGGER.error("REGISTRATION CENTER MACHINE REMAP : ", APPLICATION_NAME, APPLICATION_ID,
 					exception.getMessage() + ExceptionUtils.getStackTrace(exception));
 

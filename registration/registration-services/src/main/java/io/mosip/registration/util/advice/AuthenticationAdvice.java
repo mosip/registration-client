@@ -64,7 +64,7 @@ public class AuthenticationAdvice {
 		if (SessionContext.isSessionContextAvailable()) {
 			SecurityContext securityContext = SessionContext.securityContext();
 			
-			if(null == securityContext || RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM == securityContext.getUserId()) {
+			if(null == securityContext || RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM.equals(securityContext.getUserId())) {
 				LOGGER.info(LoggerConstants.AUTHORIZE_USER_ID, APPLICATION_ID, APPLICATION_NAME,
 						"Pre-Authorize the user id got failed");
 

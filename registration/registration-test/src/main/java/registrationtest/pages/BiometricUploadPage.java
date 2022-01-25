@@ -3,17 +3,12 @@ package registrationtest.pages;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
-
 
 import org.testfx.api.FxRobot;
 
 import javafx.application.Platform;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
 import registrationtest.controls.Buttons;
 import registrationtest.utility.JsonUtil;
 import registrationtest.utility.PropertiesUtil;
@@ -294,6 +289,9 @@ public class BiometricUploadPage {
             }
             if (flag == false)
                 clickScanBtn(idBioType, jsonContent, idModality);
+        } catch (InterruptedException e) {
+            logger.error("", e);
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -335,8 +333,10 @@ public class BiometricUploadPage {
                 
                 try {
                     Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait1")));
+                } catch (InterruptedException e) {
+                    logger.error("", e);
+                    Thread.currentThread().interrupt();
                 } catch (Exception e) {
-                    // TODO Auto-generated catch block
                     logger.error("", e);
                 }
                 waitsUtil.clickNodeAssert(alertImage);
@@ -353,11 +353,12 @@ public class BiometricUploadPage {
                     break;
 
             }
-        } catch (Exception e1) {
-            // TODO Auto-generated catch block
-            logger.error("", e1);
+        } catch (InterruptedException e) {
+            logger.error("", e);
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            logger.error("", e);
         }
-
     }
 
     public void clickScanBtn(String id, String identityJson, String idModality) {
@@ -381,6 +382,9 @@ public class BiometricUploadPage {
             Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait1")));
             
             clickScanBtn(idBioType, jsonContent, idModality);
+        } catch (InterruptedException e) {
+            logger.error("", e);
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             logger.error("", e);
         }

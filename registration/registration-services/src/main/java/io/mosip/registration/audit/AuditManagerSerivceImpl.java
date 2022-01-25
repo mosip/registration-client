@@ -1,7 +1,5 @@
 package io.mosip.registration.audit;
 
-import java.sql.Timestamp;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -58,7 +56,6 @@ public class AuditManagerSerivceImpl extends BaseService implements AuditManager
 		// Getting Host IP Address and Name
 		String hostIP = "localhost";
 		String hostName = RegistrationSystemPropertiesChecker.getMachineId();
-		hostIP = hostIP != null ? hostIP : String.valueOf(ApplicationContext.map().get(RegistrationConstants.DEFAULT_HOST_IP));
 		hostName = hostName != null ? hostName : String.valueOf(ApplicationContext.map().get(RegistrationConstants.DEFAULT_HOST_NAME));
 
 		if (auditEventEnum.getId().contains(RegistrationConstants.REGISTRATION_EVENTS)

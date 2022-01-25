@@ -280,7 +280,7 @@ public class PacketUploadController extends BaseController implements Initializa
 							} catch (RegBaseCheckedException e) {
 								tableMap.put(selectedPackets.get(i).getFileName(), RegistrationConstants.ERROR);
 							}
-							this.updateProgress(i+1, selectedPackets.size());
+							this.updateProgress((long)i+1, selectedPackets.size());
 						}
 						
 						if (!tableMap.isEmpty()) {

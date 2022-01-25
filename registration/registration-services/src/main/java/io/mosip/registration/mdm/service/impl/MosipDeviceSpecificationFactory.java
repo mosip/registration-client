@@ -331,12 +331,12 @@ public class MosipDeviceSpecificationFactory {
 
 		String key = getKey(getDeviceType(modality), getDeviceSubType(modality));
 
-		if (selectedDeviceInfoMap.containsKey(key))
+		if (key != null && selectedDeviceInfoMap.containsKey(key))
 			return selectedDeviceInfoMap.get(key);
 
 		initializeDeviceMap(true);
 
-		if (selectedDeviceInfoMap.containsKey(key))
+		if (key != null && selectedDeviceInfoMap.containsKey(key))
 			return selectedDeviceInfoMap.get(key);
 
 		LOGGER.info("Bio Device not found for modality : {} at {}", modality, System.currentTimeMillis());
@@ -361,9 +361,9 @@ public class MosipDeviceSpecificationFactory {
 				.filter(provider -> provider.getSpecVersion().equalsIgnoreCase(bioDevice.getSpecVersion())
 						&& provider.isDeviceAvailable(bioDevice))
 				.findFirst();
-		if (!result.isPresent()) {
-			selectedDeviceInfoMap.remove(
-					getKey(getDeviceType(bioDevice.getDeviceType()), getDeviceSubType(bioDevice.getDeviceSubType())));
+		String key = getKey(getDeviceType(bioDevice.getDeviceType()), getDeviceSubType(bioDevice.getDeviceSubType()));
+		if (!result.isPresent() && key != null) {
+			selectedDeviceInfoMap.remove(key);
 			initializeDeviceMap(true);
 			return false;
 		}
