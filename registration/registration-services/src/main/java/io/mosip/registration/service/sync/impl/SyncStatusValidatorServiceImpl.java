@@ -474,9 +474,11 @@ public class SyncStatusValidatorServiceImpl extends BaseService implements SyncS
 
 		if (null != globalParam.getUpdDtimes()) {
 			Date lastSoftwareUpdatedTime = new Date(globalParam.getUpdDtimes().getTime());
+			String isSoftwareAvailable = globalParam.getVal();
 
 			try {
-				if (Double.parseDouble(String.valueOf(ApplicationContext.map()
+				if (isSoftwareAvailable != null && RegistrationConstants.ENABLE.equalsIgnoreCase(isSoftwareAvailable)
+						&& Double.parseDouble(String.valueOf(ApplicationContext.map()
 								.get(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ))) <= getActualDays(
 										lastSoftwareUpdatedTime)) {
 					return true;
