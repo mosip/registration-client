@@ -28,7 +28,7 @@ public class TusURLGlobalParamStore implements io.tus.java.client.TusURLStore {
         GlobalParamId globalParamId = new GlobalParamId();
         globalParamId.setCode(s);
         globalParamId.setLangCode("eng");
-        GlobalParam globalParam = getGlobalParamRepository().getOne(globalParamId);
+        GlobalParam globalParam = getGlobalParam(globalParamId);
         if(globalParam != null) {
             globalParam.setVal(url.toString());
             globalParam.setUpdDtimes(Timestamp.valueOf(LocalDateTime.now()));
@@ -51,7 +51,7 @@ public class TusURLGlobalParamStore implements io.tus.java.client.TusURLStore {
         GlobalParamId globalParamId = new GlobalParamId();
         globalParamId.setCode(s);
         globalParamId.setLangCode("eng");
-        GlobalParam globalParam = getGlobalParamRepository().getOne(globalParamId);
+        GlobalParam globalParam = getGlobalParam(globalParamId);
         try {
             return (globalParam != null) ? new URL(globalParam.getVal()) : null;
         } catch (MalformedURLException e) {
@@ -60,7 +60,16 @@ public class TusURLGlobalParamStore implements io.tus.java.client.TusURLStore {
         return null;
     }
 
-    @Override
+    private GlobalParam getGlobalParam(GlobalParamId globalParamId) {
+		try {
+			return getGlobalParamRepository().getOne(globalParamId);
+		} catch (RuntimeException e) {
+			LOGGER.error(e.getMessage(),e);
+		}
+		return null;
+	}
+
+	@Override
     public void remove(String s) {
         GlobalParamId globalParamId = new GlobalParamId();
         globalParamId.setCode(s);

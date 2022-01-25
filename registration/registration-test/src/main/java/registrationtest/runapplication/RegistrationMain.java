@@ -148,13 +148,16 @@ public class RegistrationMain {
 
                     if (!manualFlag.equalsIgnoreCase("Y"))
                         System.exit(0);
-                } catch (Exception e) {
-
+                } catch (InterruptedException e) {
                     logger.error("", e);
                     ExtentReportUtil.reports.flush();
-
                     waitsUtil.capture();
-                }
+                    Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                	logger.error("", e);
+                    ExtentReportUtil.reports.flush();
+                    waitsUtil.capture();
+				}
             }
 
         };

@@ -274,7 +274,7 @@ public class HeaderController extends BaseController {
 				online.setVisible(flag);
 				offline.setVisible(!flag);
 			}
-		}, 0, 15 * 60 * 1000);
+		}, 0, (long)15 * 60 * 1000);
 	}
 	
 	public void logout() {
@@ -610,9 +610,9 @@ public class HeaderController extends BaseController {
 		taskService.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
 			@Override
 			public void handle(WorkerStateEvent t) {
-				double totalJobs = jobConfigurationService.getActiveSyncJobMap().size()
+				double totalJobs = (double)(jobConfigurationService.getActiveSyncJobMap().size()
 						- jobConfigurationService.getOfflineJobs().size()
-						- jobConfigurationService.getUnTaggedJobs().size();
+						- jobConfigurationService.getUnTaggedJobs().size());
 				packetHandlerController.syncProgressBar.setProgress(BaseJob.successJob.size() / totalJobs);
 				packetHandlerController.setLastUpdateTime();
 
@@ -653,8 +653,8 @@ public class HeaderController extends BaseController {
 	}
 
 	private void progressTask() {
-		double totalJobs = jobConfigurationService.getActiveSyncJobMap().size()
-				- jobConfigurationService.getOfflineJobs().size() - jobConfigurationService.getUnTaggedJobs().size();
+		double totalJobs = (double)(jobConfigurationService.getActiveSyncJobMap().size()
+				- jobConfigurationService.getOfflineJobs().size() - jobConfigurationService.getUnTaggedJobs().size());
 		Service<String> progressTask = new Service<String>() {
 			@Override
 			protected Task<String> createTask() {

@@ -309,13 +309,14 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		metaData.put(PacketManagerConstants.META_PRE_REGISTRATION_ID, registrationDTO.getPreRegistrationId());
 
 		MachineMaster machineMaster = machineMappingDAO.getMachine();
-		if(machineMaster == null || machineMaster.getRegCenterId() == null)
+		if (machineMaster == null || machineMaster.getRegCenterId() == null) {
 			throwRegBaseCheckedException(RegistrationExceptionConstants.REG_PKT_INVALID_MACHINE_ID_EXCEPTION);
-
-		metaData.put(PacketManagerConstants.META_MACHINE_ID, machineMaster.getId());
-		metaData.put(PacketManagerConstants.META_CENTER_ID, machineMaster.getRegCenterId());
-		metaData.put(PacketManagerConstants.META_DONGLE_ID, machineMaster.getSerialNum());
-		metaData.put(PacketManagerConstants.META_KEYINDEX, machineMaster.getKeyIndex());
+		} else {
+			metaData.put(PacketManagerConstants.META_MACHINE_ID, machineMaster.getId());
+			metaData.put(PacketManagerConstants.META_CENTER_ID, machineMaster.getRegCenterId());
+			metaData.put(PacketManagerConstants.META_DONGLE_ID, machineMaster.getSerialNum());
+			metaData.put(PacketManagerConstants.META_KEYINDEX, machineMaster.getKeyIndex());
+		}
 
 		metaData.put("langCodes", String.join(RegistrationConstants.COMMA, registrationDTO.getSelectedLanguagesByApplicant()));
 		metaData.put(PacketManagerConstants.META_APPLICANT_CONSENT,
