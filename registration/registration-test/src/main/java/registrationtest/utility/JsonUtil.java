@@ -44,11 +44,11 @@ public class JsonUtil {
         try {
             payload = mapper.readValue(jsonString, cls);
         } catch (JsonParseException e) {
-            e.printStackTrace();
+            logger.error("", e);
         } catch (JsonMappingException e) {
-            e.printStackTrace();
+            logger.error("", e);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("", e);
         }
         return payload;
     }
