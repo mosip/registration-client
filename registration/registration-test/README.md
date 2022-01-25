@@ -1,4 +1,4 @@
-#Regisration Client Automation.
+# Regisration Client Automation.
 
 Registration Client automation covers thick client flows NEW, LOST, UPDATE and Bio Correction.
 ## Prerequisite :
