@@ -24,7 +24,6 @@ echo "mosip.client.upgrade.server.url=${client_upgrade_server}" >> "${work_dir}"
 echo "mosip.hostname=${client_upgrade_server/https:\/\/}"  >> "${work_dir}"/mosip-application.properties
 
 echo "created mosip-application.properties"
-
 cd "${work_dir}"/registration-client/target/lib
 mkdir -p ${work_dir}/registration-client/target/lib/props
 cp "${work_dir}"/mosip-application.properties ${work_dir}/registration-client/target/lib/props/mosip-application.properties
@@ -32,11 +31,9 @@ jar uf registration-services-${client_version_env}.jar props/mosip-application.p
 rm -rf ${work_dir}/registration-client/target/lib/props
 
 echo "Adding signer certificate"
-
-mkdir -p "${work_dir}"/providercert
-echo $provider_cert_env > "${work_dir}"/providercert/provider.pem
-cd "${work_dir}"/providercert
+cp "${work_dir}"/build_files/Client.crt ${work_dir}/registration-client/target/lib/provider.pem
 jar uf registration-services-${client_version_env}.jar provider.pem
+rm ${work_dir}/registration-client/target/lib/provider.pem
 
 cd "${work_dir}"
 
