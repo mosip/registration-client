@@ -12,7 +12,7 @@ reg_client_sdk_url="$reg_client_sdk_url_env"
 artifactory_url="$artifactory_url_env"
 keystore_secret="$keystore_secret_env"
 
-echo "initalized variables"
+echo "initialized variables"
 
 echo "environment=PRODUCTION" > "${work_dir}"/mosip-application.properties
 echo "mosip.reg.version=${client_version_env}" >> "${work_dir}"/mosip-application.properties
@@ -30,6 +30,13 @@ mkdir -p ${work_dir}/registration-client/target/lib/props
 cp "${work_dir}"/mosip-application.properties ${work_dir}/registration-client/target/lib/props/mosip-application.properties
 jar uf registration-services-${client_version_env}.jar props/mosip-application.properties
 rm -rf ${work_dir}/registration-client/target/lib/props
+
+echo "Adding signer certificate"
+
+mkdir -p "${work_dir}"/providercert
+echo $provider_cert_env > "${work_dir}"/providercert/provider.pem
+cd "${work_dir}"/providercert
+jar uf registration-services-${client_version_env}.jar provider.pem
 
 cd "${work_dir}"
 
@@ -85,8 +92,8 @@ cp "${work_dir}"/build_files/logback.xml "${work_dir}"/registration-client/targe
 cp "${work_dir}"/registration-client/target/registration-client-${client_version_env}.jar "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar
 
 ## jar signing
-jarsigner -keystore "${work_dir}"/build_files/keystore -storepass ${keystore_secret} -tsa http://timestamp.comodoca.com/rfc3161 -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar CodeSigning
-jarsigner -keystore "${work_dir}"/build_files/keystore -storepass ${keystore_secret} -tsa http://timestamp.comodoca.com/rfc3161 -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-services-${client_version_env}.jar CodeSigning
+jarsigner -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore_secret} -tsa ${signer_timestamp_url_env} -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar CodeSigning
+jarsigner -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore_secret} -tsa ${signer_timestamp_url_env} -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-services-${client_version_env}.jar CodeSigning
 
 /usr/local/openjdk-11/bin/java -cp "${work_dir}"/registration-client/target/registration-client-${client_version_env}.jar:"${work_dir}"/registration-client/target/lib/* io.mosip.registration.update.ManifestCreator "${client_version_env}" "${work_dir}/registration-client/target/lib" "${work_dir}/registration-client/target"
 

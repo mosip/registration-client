@@ -7,6 +7,8 @@ import io.mosip.registration.controller.ClientApplication;
 import io.mosip.registration.preloader.ClientPreLoader;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testfx.api.FxRobot;
 import org.testfx.api.FxRobotContext;
 import javafx.application.Application;
@@ -33,6 +35,8 @@ import registrationtest.utility.PropertiesUtil;
  */
 
 public class LoginLogoutTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(LoginLogoutTest.class);
 
     static FxRobot robot;
     Schema schema;
@@ -94,7 +98,7 @@ public class LoginLogoutTest {
                     lg.loginlogout("", "");
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    logger.error("", e);
                 }
             }
 
