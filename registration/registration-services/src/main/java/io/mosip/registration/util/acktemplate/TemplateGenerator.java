@@ -601,7 +601,8 @@ public class TemplateGenerator extends BaseService {
 					"generateTemplate had been called for preparing Dashboard Template.");
 			
 			Map<String, Object> templateValues = new WeakHashMap<>();
-			ResourceBundle applicationLanguageProperties = ApplicationContext.getInstance().getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS);
+			ApplicationContext.getInstance();
+			ResourceBundle applicationLanguageProperties = ApplicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS);
 			InputStream is = new ByteArrayInputStream(templateText.getBytes(StandardCharsets.UTF_8));
 
 			templateValues.put(RegistrationConstants.DASHBOARD_TITLE, applicationLanguageProperties.getString("dashBoard"));
@@ -633,7 +634,7 @@ public class TemplateGenerator extends BaseService {
 			responseMap.put(RegistrationConstants.DASHBOARD_TEMPLATE, writer);
 			setSuccessResponse(response, RegistrationConstants.SUCCESS, responseMap);
 
-		} catch (RuntimeException | IOException runtimeException) {
+		} catch (RegBaseCheckedException | RuntimeException | IOException runtimeException) {
 			setErrorResponse(response, RegistrationConstants.TEMPLATE_GENERATOR_ACK_RECEIPT_EXCEPTION, null);
 			LOGGER.error(LOG_TEMPLATE_GENERATOR, APPLICATION_NAME, APPLICATION_ID,
 					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
