@@ -503,7 +503,8 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 				return responseDTO;
 			}
 
-			if (userDTO.getStatusCode().equalsIgnoreCase(RegistrationConstants.BLOCKED) || !userDTO.getIsActive() || userDTO.getIsDeleted()) {
+			if (RegistrationConstants.BLOCKED.equalsIgnoreCase(userDTO.getStatusCode()) || !userDTO.getIsActive() ||
+					(userDTO.getIsDeleted() != null && userDTO.getIsDeleted())) {
 				setErrorResponse(responseDTO, RegistrationConstants.BLOCKED_USER_ERROR, null);
 				return responseDTO;
 			}
