@@ -29,7 +29,6 @@ public class ClientSetupValidator {
 
     private static boolean patch_downloaded = false;
     private static Stack<String> messages = new Stack<>();
-    private static final ClientIntegrityValidator integrityValidator = new ClientIntegrityValidator();
 
 
     public ClientSetupValidator() throws RegBaseCheckedException {
