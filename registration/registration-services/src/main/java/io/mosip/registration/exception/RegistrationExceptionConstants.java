@@ -237,7 +237,10 @@ public enum RegistrationExceptionConstants {
 	INVALID_LANGUAGE_CONFIGURED("REG-INIT-002", "**** ResourceBundle is not availabe for configured language(s) ! ****"),
 
 	REG_ACK_RECEIPT_READ_ERROR("REG-ACK-001" ,"Acknowledgment receipt integrity check failed"),
-	REG_FILE_SIGNATURE_ERROR("REG-SIGN-001" ,"Downloaded file signature verification failed");
+	REG_FILE_SIGNATURE_ERROR("REG-SIGN-001" ,"Downloaded file signature verification failed"),
+	PRE_REG_PACKET_ENTRIES_THRESHOLD_CROSSED( "PREREG-SYN-001", "Entries count in pre-reg zip greater than limit"),
+	PRE_REG_PACKET_ZIP_SIZE_THRESHOLD_CROSSED( "PREREG-SYN-002", "Pre-reg zip read size is greater than limit"),
+	PRE_REG_PACKET_ZIP_COMPRESSED_RATIO_EXCEEDED( "PREREG-SYN-003", "Pre-reg zip compressed ratio exceeded");
 
 	/**
 	 * The constructor

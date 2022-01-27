@@ -56,6 +56,8 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.external.impl.PreRegZipHandlingServiceImpl;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
@@ -93,6 +95,10 @@ public class PreRegZipHandlingServiceTest {
 
 	@Before
 	public void init() throws Exception {
+		ReflectionTestUtils.setField(preRegZipHandlingServiceImpl, "THRESHOLD_ENTRIES", 15);
+		ReflectionTestUtils.setField(preRegZipHandlingServiceImpl, "THRESHOLD_SIZE", 200000);
+		ReflectionTestUtils.setField(preRegZipHandlingServiceImpl, "THRESHOLD_RATIO", 10);
+
 		createRegistrationDTOObject();
 		
 		UiFieldDTO field1 = new UiFieldDTO();
@@ -179,7 +185,7 @@ public class PreRegZipHandlingServiceTest {
 		docType.setCode("POI");
 		documentTypes.add(docType);
 		Mockito.when(documentTypeDAO.getDocTypeByName(Mockito.anyString())).thenReturn(documentTypes);
-		
+
 		RegistrationDTO registrationDTO = preRegZipHandlingServiceImpl.extractPreRegZipFile(preRegPacket);
 
 		assertNotNull(registrationDTO);
