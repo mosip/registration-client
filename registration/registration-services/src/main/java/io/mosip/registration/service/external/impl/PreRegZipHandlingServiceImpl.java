@@ -2,7 +2,7 @@ package io.mosip.registration.service.external.impl;
 
 
 import static io.mosip.registration.constants.RegistrationConstants.ZIP_FILE_EXTENSION;
-import static io.mosip.registration.exception.RegistrationExceptionConstants.REG_IO_EXCEPTION;
+import static io.mosip.registration.exception.RegistrationExceptionConstants.*;
 import static java.io.File.separator;
 
 import java.io.BufferedReader;
@@ -30,6 +30,7 @@ import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import io.mosip.commons.packet.dto.packet.SimpleDto;
@@ -86,6 +87,14 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 	@Autowired
 	private CryptoCoreSpec<byte[], byte[], SecretKey, PublicKey, PrivateKey, String> cryptoCore;
 
+	@Value("${mosip.registration.prereg.packet.entires.limit:15}")
+	private int THRESHOLD_ENTRIES;
+
+	@Value("${mosip.registration.prereg.packet.size.limit:200000}")
+	private long THRESHOLD_SIZE;
+
+	@Value("${mosip.registration.prereg.packet.threshold.ratio:10}")
+	private int THRESHOLD_RATIO;
 
 	/*
 	 * (non-Javadoc)
@@ -97,25 +106,48 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 	public RegistrationDTO extractPreRegZipFile(byte[] preRegZipFile) throws RegBaseCheckedException {
 		LOGGER.debug("extractPreRegZipFile invoked");
 		try{
-			BufferedReader bufferedReader = null;
+			int totalEntries = 0;
+			long totalReadArchiveSize = 0;
+
 			try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(preRegZipFile))) {
 				ZipEntry zipEntry;
 				while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+					totalEntries++;
 					if (zipEntry.getName().equalsIgnoreCase("ID.json")) {
-						bufferedReader = new BufferedReader(new InputStreamReader(zipInputStream, StandardCharsets.UTF_8));
-						parseDemographicJson(bufferedReader);
-					}	
+						byte[] idjson = IOUtils.toByteArray(zipInputStream);
+						double compressionRatio = idjson.length / zipEntry.getCompressedSize();
+						if(compressionRatio > THRESHOLD_RATIO) {
+							LOGGER.error("compression ratio is more than the threshold");
+							throw new RegBaseCheckedException(PRE_REG_PACKET_ZIP_COMPRESSED_RATIO_EXCEEDED.getErrorCode(),
+									PRE_REG_PACKET_ZIP_COMPRESSED_RATIO_EXCEEDED.getErrorMessage());
+						}
+						totalReadArchiveSize = totalReadArchiveSize + idjson.length;
+						parseDemographicJson(new String(idjson));
+						break;
+					}
+
+					if(totalEntries > THRESHOLD_ENTRIES) {
+						LOGGER.error("Number of entries in the packet is more than the threshold");
+						throw new RegBaseCheckedException(PRE_REG_PACKET_ENTRIES_THRESHOLD_CROSSED.getErrorCode(),
+								PRE_REG_PACKET_ENTRIES_THRESHOLD_CROSSED.getErrorMessage());
+					}
+
+					if(totalReadArchiveSize > THRESHOLD_SIZE) {
+						LOGGER.error("Archive size read in the packet is more than the threshold");
+						throw new RegBaseCheckedException(PRE_REG_PACKET_ZIP_SIZE_THRESHOLD_CROSSED.getErrorCode(),
+								PRE_REG_PACKET_ZIP_SIZE_THRESHOLD_CROSSED.getErrorMessage());
+					}
 				}
-			}finally {
-				if(bufferedReader != null) {
-					bufferedReader.close();
-					bufferedReader = null;
-				}				
 			}
-			
+
+			totalEntries = 0;
+			totalReadArchiveSize = 0;
+
 			try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(preRegZipFile))) {
 				ZipEntry zipEntry;
 				while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+					totalEntries++;
+
 					String fileName = zipEntry.getName();
 					//if (zipEntry.getName().contains("_")) {
 					LOGGER.debug("extractPreRegZipFile zipEntry >>>> {}", fileName);
@@ -124,7 +156,15 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 						if(result.isPresent()) {
 							DocumentDto documentDto = result.get().getValue();
 							documentDto.setDocument(IOUtils.toByteArray(zipInputStream));
-							
+							totalReadArchiveSize = totalReadArchiveSize + documentDto.getDocument().length;
+
+							double compressionRatio = documentDto.getDocument().length / zipEntry.getCompressedSize();
+							if(compressionRatio > THRESHOLD_RATIO) {
+								LOGGER.error("compression ratio is more than the threshold");
+								throw new RegBaseCheckedException(PRE_REG_PACKET_ZIP_COMPRESSED_RATIO_EXCEEDED.getErrorCode(),
+										PRE_REG_PACKET_ZIP_COMPRESSED_RATIO_EXCEEDED.getErrorMessage());
+							}
+
 							List<DocumentType> documentTypes = documentTypeDAO.getDocTypeByName(documentDto.getType());
 							if(Objects.nonNull(documentTypes) && !documentTypes.isEmpty()) {
 								LOGGER.debug("{} >>>> documentTypes.get(0).getCode() >>>> {}", documentDto.getType(),
@@ -135,7 +175,19 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 							getRegistrationDTOFromSession().addDocument(result.get().getKey(), result.get().getValue());
 							LOGGER.debug("Added zip entry as document for field >>>> {}", result.get().getKey());
 						}
-					//}	
+					//}
+
+					if(totalEntries > THRESHOLD_ENTRIES) {
+						LOGGER.error("Number of entries in the packet is more than the threshold", totalEntries);
+						throw new RegBaseCheckedException(PRE_REG_PACKET_ENTRIES_THRESHOLD_CROSSED.getErrorCode(),
+								PRE_REG_PACKET_ENTRIES_THRESHOLD_CROSSED.getErrorMessage());
+					}
+
+					if(totalReadArchiveSize > THRESHOLD_SIZE) {
+						LOGGER.error("Archive size read in the packet is more than the threshold", totalReadArchiveSize);
+						throw new RegBaseCheckedException(PRE_REG_PACKET_ZIP_SIZE_THRESHOLD_CROSSED.getErrorCode(),
+								PRE_REG_PACKET_ZIP_SIZE_THRESHOLD_CROSSED.getErrorMessage());
+					}
 				}
 			}
 			
@@ -161,23 +213,15 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 	 * This method is used to parse the demographic json and converts it into
 	 * RegistrationDto
 	 * 
-	 * @param bufferedReader
+	 * @param jsonString
 	 *            - reader for text file
 	 * @throws RegBaseCheckedException
 	 *             - holds the cheked exceptions
 	 */
-	private void parseDemographicJson(BufferedReader bufferedReader) throws RegBaseCheckedException {
-
+	private void parseDemographicJson(String jsonString) throws RegBaseCheckedException {
 		try {
-			
-			String value;
-			StringBuilder jsonString = new StringBuilder();
-			while ((value = bufferedReader.readLine()) != null) {
-				jsonString.append(value);
-			}
-			
 			if (!StringUtils.isEmpty(jsonString) && validateDemographicInfoObject()) {
-				JSONObject jsonObject = (JSONObject) new JSONObject(jsonString.toString()).get("identity");
+				JSONObject jsonObject = (JSONObject) new JSONObject(jsonString).get("identity");
 				//Always use latest schema, ignoring missing / removed fields
 				RegistrationDTO registrationDTO = getRegistrationDTOFromSession();
 				List<UiFieldDTO> fieldList = identitySchemaService.getAllFieldSpec(registrationDTO.getProcessId(), registrationDTO.getIdSchemaVersion());
