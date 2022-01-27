@@ -186,8 +186,10 @@ public class DemographicPage {
 
                         try {
                             Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SetTextTimeWait")));
+                        } catch (InterruptedException e) {
+                            logger.error("", e);
+                            Thread.currentThread().interrupt();
                         } catch (Exception e) {
-
                             logger.error("", e);
                         }
                     }
@@ -248,8 +250,10 @@ public class DemographicPage {
             try {
                 Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SetTextTimeWait")));
                 logger.info("SetTextTimeWait Done");
+            } catch (InterruptedException e) {
+                logger.error("", e);
+                Thread.currentThread().interrupt();
             } catch (Exception e) {
-
                 logger.error("", e);
             }
             waitsUtil.clickNodeAssert("#" + nameTab + "_tab");
@@ -543,13 +547,15 @@ public class DemographicPage {
                     // TODO Auto-generated catch block
                     logger.error("", e);
                 }
-                Set<String> keys = mapValue.keySet();
-                for (String ky : keys) {
-                    String idk = id + ky;
-                    String v = mapValue.get(ky);
-                    setTextFields(id, idk, v);
-                    if (trans == true)
-                        return;
+                if (mapValue != null) {
+                	Set<String> keys = mapValue.keySet();
+                    for (String ky : keys) {
+                        String idk = id + ky;
+                        String v = mapValue.get(ky);
+                        setTextFields(id, idk, v);
+                        if (trans == true)
+                            return;
+                    }
                 }
             } else {
                 value = null;
@@ -583,13 +589,15 @@ public class DemographicPage {
                     // TODO Auto-generated catch block
                     logger.error("", e);
                 }
-                Set<String> keys = mapValue.keySet();
-                for (String ky : keys) {
-                    String idk = id + ky;
-                    String v = mapValue.get(ky);
-                    setTextFields(id, idk, v);
-                    if (trans == true)
-                        return;
+                if (mapValue != null) {
+                	Set<String> keys = mapValue.keySet();
+                    for (String ky : keys) {
+                        String idk = id + ky;
+                        String v = mapValue.get(ky);
+                        setTextFields(id, idk, v);
+                        if (trans == true)
+                            return;
+                    }
                 }
             } else {
                 value = null;
@@ -625,6 +633,9 @@ public class DemographicPage {
                 }
             }
 
+        } catch (InterruptedException e) {
+            logger.error("", e);
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -709,6 +720,9 @@ public class DemographicPage {
 
             }
 
+        } catch (InterruptedException e) {
+            logger.error("", e);
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -762,6 +776,9 @@ public class DemographicPage {
                 }
             }
 
+        } catch (InterruptedException e) {
+            logger.error("", e);
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -800,6 +817,9 @@ public class DemographicPage {
                 }
             }
 
+        } catch (InterruptedException e) {
+            logger.error("", e);
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -895,8 +915,10 @@ public class DemographicPage {
 
                     try {
                         Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
+                    } catch (InterruptedException e) {
+                        logger.error("", e);
+                        Thread.currentThread().interrupt();
                     } catch (Exception e) {
-
                         logger.error("", e);
                     }
                 }
@@ -915,9 +937,9 @@ public class DemographicPage {
             if (schema.getType().contains("simpleType")) {
                 LinkedHashMap<String, String> mapDropValue = JsonUtil.JsonObjSimpleParsing(JsonIdentity, key);
                 Set<String> dropkeys = mapDropValue.keySet();
-                for (String ky : dropkeys) {
+                if (!dropkeys.isEmpty()) {
 
-                    String valcode = mapDropValue.get(ky);
+                    String valcode = mapDropValue.get(dropkeys.iterator().next());
                     // String valcodeArr[]=valcode.split("@@");
                     // dto.setLangCode(ky);
                     // dto.setName(valcodeArr[0]);
@@ -926,7 +948,6 @@ public class DemographicPage {
                     // comboBoxUtil.user_selects_combo_item2(id,valcode);
 
                     user_selects_combo_item(id, valcode);
-                    break;
                 }
             } else {
                 String val = JsonUtil.JsonObjParsing(JsonIdentity, key);
@@ -956,13 +977,12 @@ public class DemographicPage {
         try {
             dateofbirth = JsonUtil.JsonObjParsing(JsonIdentity, key).split("/");
             System.out.println(dateofbirth);
+            setTextFields(id, id + "ddTextField", dateofbirth[2]);
+            setTextFields(id, id + "mmTextField", dateofbirth[1]);
+            setTextFields(id, id + "yyyyTextField", dateofbirth[0]);
         } catch (Exception e) {
             logger.error("", e);
         }
-        setTextFields(id, id + "ddTextField", dateofbirth[2]);
-        setTextFields(id, id + "mmTextField", dateofbirth[1]);
-        setTextFields(id, id + "yyyyTextField", dateofbirth[0]);
-
     }
 
     public void checkSelection(String id, String JsonIdentity, String key) {
@@ -987,16 +1007,15 @@ public class DemographicPage {
             if (schema.getType().contains("simpleType")) {
                 mapDropValue = JsonUtil.JsonObjSimpleParsing(JsonIdentity, key);
                 Set<String> dropkeys = mapDropValue.keySet();
-                for (String ky : dropkeys) {
-                    text = mapDropValue.get(ky);
-                    break;
+                if (!dropkeys.isEmpty()) {
+                    text = mapDropValue.get(dropkeys.iterator().next());
                 }
             }
 
             else
                 text = JsonUtil.JsonObjParsing(JsonIdentity, key);
 
-            if (!text.isEmpty()) {
+            if (text != null && !text.isEmpty()) {
                 HBox hbox = waitsUtil.lookupById(id + "HBOX");
 
                 Optional<Node> opNode = hbox.getChildren().stream()
@@ -1138,13 +1157,15 @@ public class DemographicPage {
                 } catch (Exception e) {
                     logger.error("", e);
                 }
-                Set<String> keys = mapValue.keySet();
-                for (String ky : keys) {
-                    String idk = id + ky;
-                    String v = mapValue.get(ky);
-                    setTextFields(id, idk, v);
-                    if (transliterate == true)
-                        return;
+                if (mapValue != null) {
+                	Set<String> keys = mapValue.keySet();
+                    for (String ky : keys) {
+                        String idk = id + ky;
+                        String v = mapValue.get(ky);
+                        setTextFields(id, idk, v);
+                        if (transliterate == true)
+                            return;
+                    }
                 }
             }
 
@@ -1179,13 +1200,15 @@ public class DemographicPage {
                 } catch (Exception e) {
                     logger.error("", e);
                 }
-                Set<String> keys = mapValue.keySet();
-                for (String ky : keys) {
-                    String idk = id + ky;
-                    String v = mapValue.get(ky);
-                    setTextFields(id, idk, v);
-                    if (transliterate == true)
-                        return;
+                if (mapValue != null) {
+                	Set<String> keys = mapValue.keySet();
+                    for (String ky : keys) {
+                        String idk = id + ky;
+                        String v = mapValue.get(ky);
+                        setTextFields(id, idk, v);
+                        if (transliterate == true)
+                            return;
+                    }
                 }
             }
 

@@ -41,19 +41,21 @@ public class ClientIntegrityValidator {
             X509Certificate trustedCertificate = getCertificate();
             Manifest localManifest = getLocalManifest();
 
-            Map<String, Attributes> localAttributes = localManifest.getEntries();
-            for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
-                if(entry.getKey().toLowerCase().startsWith("registration-services") ||
-                        entry.getKey().toLowerCase().startsWith("registration-client") ) {
-                    File file = new File(libFolder + File.separator + entry.getKey());
-                    if(trustedCertificate != null) {
-                        verifyIntegrity(trustedCertificate, new JarFile(file));
-                        logger.info("Integrity check passed -> {}", entry.getKey());
-                    }
-                    else {
-                        logger.info("As provider.cer is not found, invoking verify with JarFile class : {}", entry.getKey());
-                        try(JarFile jarFile = new JarFile(file, true)){
+            if (localManifest != null) {
+            	Map<String, Attributes> localAttributes = localManifest.getEntries();
+                for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
+                    if(entry.getKey().toLowerCase().startsWith("registration-services") ||
+                            entry.getKey().toLowerCase().startsWith("registration-client") ) {
+                        File file = new File(libFolder + File.separator + entry.getKey());
+                        if(trustedCertificate != null) {
+                            verifyIntegrity(trustedCertificate, new JarFile(file));
                             logger.info("Integrity check passed -> {}", entry.getKey());
+                        }
+                        else {
+                            logger.info("As provider.cer is not found, invoking verify with JarFile class : {}", entry.getKey());
+                            try(JarFile jarFile = new JarFile(file, true)){
+                                logger.info("Integrity check passed -> {}", entry.getKey());
+                            }
                         }
                     }
                 }

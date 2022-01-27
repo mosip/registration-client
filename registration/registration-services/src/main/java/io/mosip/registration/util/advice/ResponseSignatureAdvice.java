@@ -141,8 +141,10 @@ public class ResponseSignatureAdvice {
 
 				responseHeader = (HttpHeaders) restClientResponse.get(RegistrationConstants.REST_RESPONSE_HEADERS);
 
-				if (isResponseSignatureValid(responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE).get(0),
-						new ObjectMapper().writeValueAsString(responseBodyMap)) ) {
+				if (responseHeader.containsKey(RegistrationConstants.RESPONSE_SIGNATURE) && responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE) != null
+						&& !responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE).isEmpty()
+						&& isResponseSignatureValid(responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE).get(0),
+								new ObjectMapper().writeValueAsString(responseBodyMap))) {
 					LOGGER.info("Response signature is valid... {}", requestDto.getUri());
 					return restClientResponse;
 				} else {
@@ -213,11 +215,11 @@ public class ResponseSignatureAdvice {
 			RequestHTTPDTO requestDto = (RequestHTTPDTO) joinPoint.getArgs()[0];
 
 			UriComponents uriComponents = UriComponentsBuilder.fromUri(requestDto.getUri()).build();
-			if(!(uriComponents.getPath().equals(CERTIFICATE_API_PATH) &&
+			if(!(CERTIFICATE_API_PATH.equals(uriComponents.getPath()) &&
 					uriComponents.getQueryParams().containsKey(RegistrationConstants.GET_CERT_APP_ID) &&
-					uriComponents.getQueryParams().getFirst(RegistrationConstants.GET_CERT_APP_ID).equals(RegistrationConstants.KERNEL_APP_ID) &&
+					RegistrationConstants.KERNEL_APP_ID.equals(uriComponents.getQueryParams().getFirst(RegistrationConstants.GET_CERT_APP_ID)) &&
 					uriComponents.getQueryParams().containsKey(RegistrationConstants.REF_ID) &&
-					uriComponents.getQueryParams().getFirst(RegistrationConstants.REF_ID).equals(signRefId))) {
+					signRefId.equals(uriComponents.getQueryParams().getFirst(RegistrationConstants.REF_ID)))) {
 				return;
 			}
 

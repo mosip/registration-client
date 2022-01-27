@@ -4,8 +4,6 @@ package registrationtest.pages;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.io.IOException;
-
 import io.mosip.registration.dto.mastersync.GenericDto;
 
 
@@ -18,7 +16,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import registrationtest.controls.Alerts;
-import registrationtest.pojo.schema.Schema;
 import registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;
@@ -91,8 +88,10 @@ public class LoginPage {
 
                     try {
                         Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
+                    } catch (InterruptedException e) {
+                        logger.error("", e);
+                        Thread.currentThread().interrupt();
                     } catch (Exception e) {
-
                         logger.error("", e);
                     }
                 }
@@ -135,6 +134,9 @@ public class LoginPage {
 
             assertEquals(userIdText, userIdTextField.getText(), "User id is not as same as entered");
 
+        } catch (InterruptedException e) {
+            logger.error("", e);
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -196,6 +198,9 @@ public class LoginPage {
             waitsUtil.clickNodeAssert(success);
 
             flag = true;
+        } catch (InterruptedException e) {
+            logger.error("", e);
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -228,10 +233,14 @@ public class LoginPage {
                
             }
            
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             logger.error("", e);
             flag = false;
-        }
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+        	logger.error("", e);
+            flag = false;
+		}
         return flag;
 
     }
@@ -251,10 +260,14 @@ public class LoginPage {
 
             waitsUtil.clickNodeAssert(userOnboardMessage);
             flag = true;
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             logger.error("", e);
             flag = false;
-        }
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+        	logger.error("", e);
+            flag = false;
+		}
         return flag;
 
     }
@@ -280,9 +293,12 @@ public class LoginPage {
 
             ExtentReportUtil.test1.info("Successfully Screen Loaded");
 
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             logger.error("", e);
-        }
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+        	logger.error("", e);
+		}
 
     }
 
