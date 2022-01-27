@@ -33,11 +33,11 @@ Update the following:
 * appLanguage=français
 * langcode=eng@@fra@@ara
 * makeUniqueEntry:fullName
-* sync:Y
-* upload:Y
-* multilang:Y
+* sync:Y or N
+* upload:Y or N
+* multilang:Y or N
 * datadir=/repository_eng/
-* manual:Y
+* manual:Y or N
 
 ## Execution result and logs
 1. Verify the failure in the logs file `\logs\AutomationLogs.log`
