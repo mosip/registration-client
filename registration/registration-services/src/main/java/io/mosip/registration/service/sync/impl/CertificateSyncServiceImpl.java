@@ -81,8 +81,7 @@ public class CertificateSyncServiceImpl extends BaseService implements Certifica
         Map<String, String> requestParamMap = new LinkedHashMap<>();
         SyncControl syncControl = masterSyncDao.syncJobDetails(RegistrationConstants.OPT_TO_REG_CCS_J00017);
         if (syncControl != null) {
-            requestParamMap.put(LAST_UPDATED, DateUtils.formatToISOString(
-                    LocalDateTime.ofInstant(syncControl.getLastSyncDtimes().toInstant(), ZoneOffset.ofHours(0))));
+            requestParamMap.put(LAST_UPDATED, DateUtils.formatToISOString(syncControl.getLastSyncDtimes().toLocalDateTime()));
         }
 
         if(!serviceDelegateUtil.isNetworkAvailable())
