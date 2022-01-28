@@ -5,10 +5,7 @@ import static io.mosip.registration.constants.RegistrationConstants.ZIP_FILE_EXT
 import static io.mosip.registration.exception.RegistrationExceptionConstants.*;
 import static java.io.File.separator;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -149,6 +146,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 					totalEntries++;
 
 					String fileName = zipEntry.getName();
+					validateFilename(fileName, ".");
 					//if (zipEntry.getName().contains("_")) {
 					LOGGER.debug("extractPreRegZipFile zipEntry >>>> {}", fileName);
 						Optional<Map.Entry<String, DocumentDto>> result = getRegistrationDTOFromSession().getDocuments().entrySet().stream()
@@ -378,6 +376,20 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 		byte[] secret = ClientCryptoUtils.decodeBase64Data(symmetricKey);
 		SecretKey secretKey = new SecretKeySpec(secret, 0 , secret.length, "AES");
 		return cryptoCore.symmetricDecrypt(secretKey, encryptedPacket, null);
+	}
+
+	private String validateFilename(String filename, String intendedDir) throws IOException {
+		File f = new File(filename);
+		String canonicalPath = f.getCanonicalPath();
+
+		File iD = new File(intendedDir);
+		String canonicalID = iD.getCanonicalPath();
+
+		if (canonicalPath.startsWith(canonicalID)) {
+			return canonicalPath;
+		} else {
+			throw new IllegalStateException("File is outside extraction target directory.");
+		}
 	}
 
 }
