@@ -1629,7 +1629,10 @@ public class BaseController {
 	 */
 	protected boolean captureAndValidateFP(String userId, boolean isPacketAuth, boolean isReviewer)
 			throws RegBaseCheckedException, IOException {
-		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.FINGERPRINT_SLAB_LEFT, null,
+		String authSlab = io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.AUTH_FINGERPRINT_SLAB);
+		if(authSlab == null) { authSlab = RegistrationConstants.FINGERPRINT_SLAB_LEFT; }
+
+		MDMRequestDto mdmRequestDto = new MDMRequestDto(authSlab, null,
 				"Registration",
 				io.mosip.registration.context.ApplicationContext
 						.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),

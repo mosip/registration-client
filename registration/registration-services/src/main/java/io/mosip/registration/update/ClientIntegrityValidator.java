@@ -65,7 +65,8 @@ public class ClientIntegrityValidator {
         }
     }
 
-    private static void verifyIntegrity(X509Certificate trustedCertificate, JarFile jarFile) throws IOException {
+    public static void verifyIntegrity(X509Certificate trustedCertificate, JarFile jarFile) throws IOException {
+        logger.info("Integrity check started -> {}", jarFile.getName());
         verifyCertificate(trustedCertificate);
 
         if(jarFile == null)
@@ -182,7 +183,7 @@ public class ClientIntegrityValidator {
             throw new SecurityException("Trusted certificate is expired");
     }
 
-    private static X509Certificate getCertificate() {
+    public static X509Certificate getCertificate() {
         try(InputStream inStream = ClientIntegrityValidator.class.getClassLoader().getResourceAsStream(certPath)) {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             X509Certificate cert = (X509Certificate) cf.generateCertificate(inStream);
