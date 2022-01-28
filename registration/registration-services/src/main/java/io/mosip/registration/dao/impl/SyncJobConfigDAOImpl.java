@@ -4,6 +4,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -44,8 +45,8 @@ public class SyncJobConfigDAOImpl implements SyncJobConfigDAO {
 	@Override
 	public SyncJobDef getSyncJob(String jobId) {
 		LOGGER.info("Getting SyncJob for " + jobId);
-
-		return jobConfigRepository.findById(jobId).get();
+		Optional<SyncJobDef> syncJobDef = jobConfigRepository.findById(jobId);
+		return syncJobDef.isPresent() ? syncJobDef.get() : null;
 	}
 
 	/*

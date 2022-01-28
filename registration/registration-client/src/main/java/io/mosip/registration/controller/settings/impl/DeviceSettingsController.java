@@ -3,6 +3,7 @@ package io.mosip.registration.controller.settings.impl;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import io.mosip.registration.api.docscanner.DeviceType;
 import io.mosip.registration.api.docscanner.DocScannerFacade;
@@ -516,8 +517,9 @@ public class DeviceSettingsController extends BaseController implements Settings
 	private ScanDeviceInfo getSelectedScanDevice(List<DocScanDevice> scannerDevices) {
 		String selectedScanDevice = documentScanController.getSelectedScanDeviceName();
 		if (selectedScanDevice != null && !selectedScanDevice.isBlank()) {
-			return convertToScanDeviceInfo(scannerDevices.stream()
-					.filter(device -> device.getId().equalsIgnoreCase(selectedScanDevice)).findFirst().get());
+			Optional<DocScanDevice> docScanDevice = scannerDevices.stream().filter(device -> device.getId().equalsIgnoreCase(selectedScanDevice)).findFirst();
+			if (docScanDevice.isPresent()) 
+				return convertToScanDeviceInfo(docScanDevice.get());
 		}
 		documentScanController.setSelectedScanDeviceName(scannerDevices.get(0).getName());
 		return convertToScanDeviceInfo(scannerDevices.get(0));

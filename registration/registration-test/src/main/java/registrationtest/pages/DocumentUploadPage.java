@@ -76,8 +76,10 @@ public class DocumentUploadPage {
 
                     try {
                         Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
+                    } catch (InterruptedException e) {
+                        logger.error("", e);
+                        Thread.currentThread().interrupt();
                     } catch (Exception e) {
-
                         logger.error("", e);
                     }
                 }
@@ -94,15 +96,14 @@ public class DocumentUploadPage {
             if (schema.getType().contains("documentType")) {
                 LinkedHashMap<String, String> mapDropValue = JsonUtil.JsonObjSimpleParsing(JsonIdentity, key);
                 Set<String> dropkeys = mapDropValue.keySet();
-                for (String ky : dropkeys) {
-                    user_selects_combo_itemdoc(id, mapDropValue.get(ky));
+                if (!dropkeys.isEmpty()) {
+                    user_selects_combo_itemdoc(id, mapDropValue.get(dropkeys.iterator().next()));
                     String scanBtn = id + "button";
 
                     Button scanButton = waitsUtil.lookupByIdButton(scanBtn, robot);
                     robot.moveTo(scanButton);
                     robot.clickOn(scanButton);
                     selectDocumentScan();
-                    break;
                 }
             }
         } catch (Exception e) {

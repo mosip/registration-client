@@ -382,7 +382,7 @@ public class BaseController {
 			alertStage.initStyle(StageStyle.UNDECORATED);
 			alertStage.setScene(scene);
 			alertStage.initModality(Modality.WINDOW_MODAL);
-			alertController.getAlertGridPane().setPrefHeight(context.length() / 2 + 110);
+			alertController.getAlertGridPane().setPrefHeight((double)(context.length() / 2 + 110));
 			if (scanPopUpViewController.getPopupStage() != null
 					&& scanPopUpViewController.getPopupStage().isShowing()) {
 				alertStage.initOwner(scanPopUpViewController.getPopupStage());
@@ -422,7 +422,7 @@ public class BaseController {
 			alertStage.setScene(scene);
 			alertStage.initModality(Modality.WINDOW_MODAL);
 
-			alertController.getAlertGridPane().setPrefHeight(context.length() / 2 + 110);
+			alertController.getAlertGridPane().setPrefHeight((double)(context.length() / 2 + 110));
 			controller.setScanningMsg(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.VALIDATION_MESSAGE));
 			alertTypeCheck(title, context, alertStage);
 			isValid = run.toRun();
@@ -1629,7 +1629,10 @@ public class BaseController {
 	 */
 	protected boolean captureAndValidateFP(String userId, boolean isPacketAuth, boolean isReviewer)
 			throws RegBaseCheckedException, IOException {
-		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.FINGERPRINT_SLAB_LEFT, null,
+		String authSlab = io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.AUTH_FINGERPRINT_SLAB);
+		if(authSlab == null) { authSlab = RegistrationConstants.FINGERPRINT_SLAB_LEFT; }
+
+		MDMRequestDto mdmRequestDto = new MDMRequestDto(authSlab, null,
 				"Registration",
 				io.mosip.registration.context.ApplicationContext
 						.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),

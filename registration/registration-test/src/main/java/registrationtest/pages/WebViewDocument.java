@@ -11,7 +11,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
-import registrationtest.pojo.output.*;
+import registrationtest.pojo.output.RID;
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;
 
@@ -176,9 +176,12 @@ public class WebViewDocument {
             // taskThread.join();
 
             Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("WebviewTimeWait")));
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             logger.error("", e);
-        }
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+        	logger.error("", e);
+		}
         return new RID(RID[1], RIDDateTime[1], rid.getWebviewPreview(), rid.getWebviewPreview());
 
     }
@@ -214,9 +217,12 @@ public class WebViewDocument {
             });
 
             Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("WebviewTimeWait")));
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             logger.error("", e);
-        }
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+        	logger.error("", e);
+		}
         return new RID(RID[1], RIDDateTime[1], rid.getWebViewAck(), rid.getWebViewAck());
 
     }

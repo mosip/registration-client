@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -253,10 +254,10 @@ public class PacketHandlerController extends BaseController implements Initializ
 					}
 				});
 
-				String latestUpdateTime = timestamps.stream().sorted((timestamp1, timestamp2) -> Timestamp
-						.valueOf(timestamp2).compareTo(Timestamp.valueOf(timestamp1))).findFirst().get();
+				Optional<String> latestUpdateTime = timestamps.stream().sorted((timestamp1, timestamp2) -> Timestamp
+						.valueOf(timestamp2).compareTo(Timestamp.valueOf(timestamp1))).findFirst();
 
-				lastSyncTime.setText(getLocalZoneTime(latestUpdateTime));
+				lastSyncTime.setText(getLocalZoneTime(latestUpdateTime.isPresent() ? latestUpdateTime.get() : null));
 
 				setLastPreRegPacketDownloadedTime();
 			}
@@ -818,7 +819,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 		registrationGridPane.getRowConstraints().clear();
 		for(int i=0;i<size;i++) {
 			RowConstraints rowConstraints = new RowConstraints();
-			rowConstraints.setPercentHeight(100/size);
+			rowConstraints.setPercentHeight((double)100/size);
 			registrationGridPane.getRowConstraints().add(rowConstraints);
 		}
 	}

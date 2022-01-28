@@ -83,10 +83,9 @@ public class TextFieldFxControl extends FxControl {
 		demographicChangeActionHandler = applicationContext.getBean(DemographicChangeActionHandler.class);
 		Map<String, Transliteration> beans = applicationContext.getBeansOfType(Transliteration.class);
 		LOGGER.debug("Transliterations implementations found : {}", beans);
-		for(String name : beans.keySet()) {
-			LOGGER.info("Choosing transliteration implementations --> {}", name);
-			this.transliteration = beans.get(name);
-			break;
+		if (!beans.keySet().isEmpty()) {
+			LOGGER.info("Choosing transliteration implementations --> {}", beans.keySet().iterator().next());
+			this.transliteration = beans.get(beans.keySet().iterator().next());
 		}
 		genericController = applicationContext.getBean(GenericController.class);
 		this.auditFactory = applicationContext.getBean(AuditManagerService.class);

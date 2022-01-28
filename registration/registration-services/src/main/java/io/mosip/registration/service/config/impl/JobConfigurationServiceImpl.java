@@ -866,7 +866,7 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 	public String getNextRestartTime(String syncFrequency) {
 		ExecutionTime executionTime = getExecutionTime(syncFrequency);
 		Instant next = getNext(executionTime);
-		return next.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+		return next != null ? next.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null;
 	}
 
 	/**

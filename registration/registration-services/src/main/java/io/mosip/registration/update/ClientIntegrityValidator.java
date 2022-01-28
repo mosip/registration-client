@@ -41,19 +41,21 @@ public class ClientIntegrityValidator {
             X509Certificate trustedCertificate = getCertificate();
             Manifest localManifest = getLocalManifest();
 
-            Map<String, Attributes> localAttributes = localManifest.getEntries();
-            for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
-                if(entry.getKey().toLowerCase().startsWith("registration-services") ||
-                        entry.getKey().toLowerCase().startsWith("registration-client") ) {
-                    File file = new File(libFolder + File.separator + entry.getKey());
-                    if(trustedCertificate != null) {
-                        verifyIntegrity(trustedCertificate, new JarFile(file));
-                        logger.info("Integrity check passed -> {}", entry.getKey());
-                    }
-                    else {
-                        logger.info("As provider.cer is not found, invoking verify with JarFile class : {}", entry.getKey());
-                        try(JarFile jarFile = new JarFile(file, true)){
+            if (localManifest != null) {
+            	Map<String, Attributes> localAttributes = localManifest.getEntries();
+                for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
+                    if(entry.getKey().toLowerCase().startsWith("registration-services") ||
+                            entry.getKey().toLowerCase().startsWith("registration-client") ) {
+                        File file = new File(libFolder + File.separator + entry.getKey());
+                        if(trustedCertificate != null) {
+                            verifyIntegrity(trustedCertificate, new JarFile(file));
                             logger.info("Integrity check passed -> {}", entry.getKey());
+                        }
+                        else {
+                            logger.info("As provider.cer is not found, invoking verify with JarFile class : {}", entry.getKey());
+                            try(JarFile jarFile = new JarFile(file, true)){
+                                logger.info("Integrity check passed -> {}", entry.getKey());
+                            }
                         }
                     }
                 }
@@ -63,7 +65,8 @@ public class ClientIntegrityValidator {
         }
     }
 
-    private static void verifyIntegrity(X509Certificate trustedCertificate, JarFile jarFile) throws IOException {
+    public static void verifyIntegrity(X509Certificate trustedCertificate, JarFile jarFile) throws IOException {
+        logger.info("Integrity check started -> {}", jarFile.getName());
         verifyCertificate(trustedCertificate);
 
         if(jarFile == null)
@@ -180,7 +183,7 @@ public class ClientIntegrityValidator {
             throw new SecurityException("Trusted certificate is expired");
     }
 
-    private static X509Certificate getCertificate() {
+    public static X509Certificate getCertificate() {
         try(InputStream inStream = ClientIntegrityValidator.class.getClassLoader().getResourceAsStream(certPath)) {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             X509Certificate cert = (X509Certificate) cf.generateCertificate(inStream);

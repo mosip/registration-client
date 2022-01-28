@@ -71,6 +71,9 @@ public class HomePage {
             waitsUtil.clickNodeAssert(success);
             waitsUtil.clickNodeAssert(exit);
 
+        } catch (InterruptedException e) {
+            logger.error("", e);
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             logger.error("", e);
         }
