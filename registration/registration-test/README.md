@@ -1,7 +1,7 @@
 # Regisration Client Automation
 
 ## Overview
-Registration-test automation covers thick client flows [New, Update, Correction, Lost](https://github.com/mosip/registration/tree/1.2.0-rc2#registration-flows)
+Registration-test automation covers flows [New, Update, Correction, Lost flows](https://docs.mosip.io/1.2.0/id-lifecycle-management)
 
 ## Prerequisite
 1. MockMDS run on port `4501`
@@ -44,5 +44,5 @@ Update the following:
 1. Execution results present under report folder file `extentReport-datetimestamp.html`
 
 ## License
-This project is licensed under the terms of [Mozilla Public License 2.0]
+This project is licensed under the terms of [Mozilla Public License 2.0](../../LICENSE)
 
