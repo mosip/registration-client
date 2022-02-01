@@ -82,6 +82,7 @@ public class SoftwareUpdateUtil {
             URL fileUrl = new URL(url);
             FileUtils.copyURLToFile(fileUrl, new File(TEMP_DIRECTORY + File.separator + fileName),
                     connectionTimeout, readTimeout);
+            return;
 
         } catch (IOException e) {
             LOGGER.error("Failed to download {}", url, e);
