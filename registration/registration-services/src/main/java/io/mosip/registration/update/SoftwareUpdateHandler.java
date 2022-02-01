@@ -66,6 +66,7 @@ public class SoftwareUpdateHandler extends BaseService {
 	private static final String SLASH = "/";
 	private static final String manifestFile = "MANIFEST.MF";
 	private static final String libFolder = "lib";
+	private static final String dbFolder = "db";
 	private static final String binFolder = "bin";
 	private static final String lastUpdatedTag = "lastUpdated";
 	private static final String SQL = "sql";
@@ -153,9 +154,11 @@ public class SoftwareUpdateHandler extends BaseService {
 		documentBuilderFactory.setXIncludeAware(false);
 		documentBuilderFactory.setExpandEntityReferences(false);
 		DocumentBuilder db = documentBuilderFactory.newDocumentBuilder();
-		org.w3c.dom.Document metaInfXmlDocument = db.parse(SoftwareUpdateUtil.download(getURL(serverMosipXmlFileUrl)));
-		setLatestVersion(getElementValue(metaInfXmlDocument, versionTag));
-		setLatestVersionReleaseTimestamp(getElementValue(metaInfXmlDocument, lastUpdatedTag));
+		try(InputStream in = SoftwareUpdateUtil.download(getURL(serverMosipXmlFileUrl))) {
+			org.w3c.dom.Document metaInfXmlDocument = db.parse(in);
+			setLatestVersion(getElementValue(metaInfXmlDocument, versionTag));
+			setLatestVersionReleaseTimestamp(getElementValue(metaInfXmlDocument, lastUpdatedTag));
+		}
 		LOGGER.info("Checking for latest version completed");
 		return latestVersion;
 	}
@@ -251,21 +254,25 @@ public class SoftwareUpdateHandler extends BaseService {
 		setServerManifest();
 		serverManifest.write(new FileOutputStream(manifestFile));
 		setLocalManifest();
-		SoftwareUpdateUtil.deleteUnknownJars(localManifest);
+
+		SoftwareUpdateUtil.clearTempDirectory();
 
 		Map<String, Attributes> localAttributes = localManifest.getEntries();
 		for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
 			File file = new File(libFolder + SLASH + entry.getKey());
-			if(!file.exists() || !SoftwareUpdateUtil.validateJarChecksum(file, entry.getValue())) {
-				String url = serverRegClientURL + latestVersion + SLASH + libFolder + SLASH + entry.getKey();
-				try {
-					if(file.delete()) {
-						Files.copy(SoftwareUpdateUtil.download(url), file.toPath());
-						LOGGER.info("Successfully deleted and downloaded the file : {}", entry.getKey());
-					}
-				} catch (IOException | RegBaseCheckedException e) {
-					LOGGER.error("Failed to download {}", url, e);
-				}
+			String url = serverRegClientURL + latestVersion + SLASH + libFolder + SLASH + entry.getKey();
+
+			if(!file.exists()) {
+				LOGGER.info("{} file doesn't exists, downloading it", entry.getKey());
+				SoftwareUpdateUtil.download(url, entry.getKey());
+				LOGGER.info("Successfully downloaded the file : {}", entry.getKey());
+				continue;
+			}
+
+			if(!SoftwareUpdateUtil.validateJarChecksum(file, entry.getValue())) {
+				LOGGER.info("{} file checksum validation failed, downloading it", entry.getKey());
+				SoftwareUpdateUtil.download(url, entry.getKey());
+				LOGGER.info("Successfully downloaded the latest file : {}", entry.getKey());
 			}
 		}
 
@@ -289,11 +296,16 @@ public class SoftwareUpdateHandler extends BaseService {
 		File lib = new File(backUpFolder.getAbsolutePath() + SLASH + libFolder);
 		lib.mkdirs();
 
+		// db backup folder
+		File db = new File(backUpFolder.getAbsolutePath() + SLASH + dbFolder);
+		db.mkdirs();
+
 		// manifest backup file
 		File manifest = new File(backUpFolder.getAbsolutePath() + SLASH + manifestFile);
 
 		FileUtils.copyDirectory(new File(binFolder), bin);
 		FileUtils.copyDirectory(new File(libFolder), lib);
+		FileUtils.copyDirectory(new File(dbFolder), db);
 		FileUtils.copyFile(new File(manifestFile), manifest);
 
 		for (File backUpFile : new File(backUpPath).listFiles()) {
@@ -321,8 +333,8 @@ public class SoftwareUpdateHandler extends BaseService {
 
 	private void setServerManifest() {
 		String url = serverRegClientURL + latestVersion + SLASH + manifestFile;
-		try {
-			serverManifest = new Manifest(SoftwareUpdateUtil.download(url));
+		try(InputStream in = SoftwareUpdateUtil.download(url)) {
+			serverManifest = new Manifest(in);
 		} catch (IOException | RegBaseCheckedException e) {
 			LOGGER.error("Failed to load server manifest file", e);
 		}

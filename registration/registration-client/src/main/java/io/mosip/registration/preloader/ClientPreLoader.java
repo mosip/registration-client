@@ -118,6 +118,10 @@ public class ClientPreLoader extends Preloader {
                     restartRequired = true;
                     throw new RegBaseCheckedException("","New patches downloaded, Kindly restart the client");
                 }
+                if(clientSetupValidator.isUnknown_jars_found()) {
+                    restartRequired = true;
+                    throw new RegBaseCheckedException("","Unrecognized jars found in the classpath, Kindly restart the client");
+                }
                 else
                     errorsFound = clientSetupValidator.isValidationFailed();
 
