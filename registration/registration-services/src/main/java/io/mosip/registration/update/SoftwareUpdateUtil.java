@@ -40,7 +40,7 @@ public class SoftwareUpdateUtil {
                 LOGGER.error("Unknown file found {}", file.getName());
                 deleteFile(file.getCanonicalPath());
                 builder.append(file.getName());
-                builder.append(";");
+                builder.append("\n");
             }
         }
 
