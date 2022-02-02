@@ -409,7 +409,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>io.mosip.registration.api</groupId>
+			<groupId>io.mosip.registration</groupId>
 			<artifactId>registration-api</artifactId>
 			<version>1.2.0-rc2-SNAPSHOT</version>
 			<exclusions>
@@ -421,8 +421,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>io.mosip.api.impl</groupId>
-			<artifactId>registration-api-default-impl</artifactId>
+			<groupId>io.mosip.registration</groupId>
+			<artifactId>registration-api-stub-impl</artifactId>
 			<version>1.2.0-rc2-SNAPSHOT</version>
 		</dependency>
 

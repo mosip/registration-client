@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -28,6 +27,7 @@ public class ClientSetupValidator {
     private static boolean validation_failed = false;
 
     private static boolean patch_downloaded = false;
+    private static boolean unknown_jars_found = false;
     private static Stack<String> messages = new Stack<>();
 
 
@@ -51,7 +51,7 @@ public class ClientSetupValidator {
             }
 
             Objects.requireNonNull(localManifest, manifestFile + " - Not found");
-            SoftwareUpdateUtil.deleteUnknownJars(localManifest);
+            //SoftwareUpdateUtil.deleteUnknownJars(localManifest);
 
         } catch (RegBaseCheckedException e) {
             throw e;
@@ -90,7 +90,13 @@ public class ClientSetupValidator {
             latestVersion = localManifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
             logger.info("Checksum validation started with manifest version : {}", latestVersion);
 
-            SoftwareUpdateUtil.deleteUnknownJars(localManifest);
+            SoftwareUpdateUtil.clearTempDirectory();
+
+            if(SoftwareUpdateUtil.deleteUnknownJars(localManifest)) {
+                logger.info("Found unknown jars in the classpath !");
+                unknown_jars_found = true;
+                validation_failed = true;
+            }
 
             Map<String, Attributes> localAttributes = localManifest.getEntries();
             for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
@@ -98,7 +104,7 @@ public class ClientSetupValidator {
                 String url = serverRegClientURL + latestVersion + SLASH + libFolder + SLASH + entry.getKey();
                 if(!file.exists()) {
                     logger.info("{} file doesn't exists, downloading it", entry.getKey());
-                    Files.copy(SoftwareUpdateUtil.download(url), file.toPath());
+                    SoftwareUpdateUtil.download(url, entry.getKey());
                     logger.info("Successfully downloaded the file : {}", entry.getKey());
                     patch_downloaded = true;
                     continue;
@@ -106,16 +112,9 @@ public class ClientSetupValidator {
 
                 if(!SoftwareUpdateUtil.validateJarChecksum(file, entry.getValue())) {
                     logger.info("{} file checksum validation failed, downloading it", entry.getKey());
-                    try {
-                        if(file.delete()) {
-                            Files.copy(SoftwareUpdateUtil.download(url), file.toPath());
-                            logger.info("Successfully deleted and downloaded the latest file : {}", entry.getKey());
-                            patch_downloaded = true;
-                        }
-                    } catch (IOException | RegBaseCheckedException e) {
-                        logger.error("Failed to download {}", url, e);
-                        validation_failed = true;
-                    }
+                    SoftwareUpdateUtil.download(url, entry.getKey());
+                    logger.info("Successfully downloaded the latest file : {}", entry.getKey());
+                    patch_downloaded = true;
                 }
             }
         } catch (Throwable e) {
@@ -134,6 +133,10 @@ public class ClientSetupValidator {
         return patch_downloaded;
     }
 
+    public boolean isUnknown_jars_found() {
+        return unknown_jars_found;
+    }
+
     private void setLocalManifest() throws RegBaseCheckedException {
         try {
             File localManifestFile = new File(manifestFile);
@@ -148,8 +151,8 @@ public class ClientSetupValidator {
 
     private void setServerManifest() {
         String url = serverRegClientURL + latestVersion + SLASH + manifestFile;
-        try {
-            serverManifest = new Manifest(SoftwareUpdateUtil.download(url));
+        try(InputStream in = SoftwareUpdateUtil.download(url)) {
+            serverManifest = new Manifest(in);
         } catch (IOException | RegBaseCheckedException e) {
             logger.error("Failed to load server manifest file", e);
         }
