@@ -164,11 +164,11 @@
 
 	<modules>
 		<module>registration-api</module>
-		<module>registration-api-default-impl</module>
+		<module>registration-api-stub-impl</module>
 		<module>registration-services</module>
 		<module>registration-client</module>
-		<!--<module>ref-impl/document-scanner</module>
-		<module>ref-impl/geoposition-rxtx</module>-->
+		<!--<module>ref-impl/ref-document-scanner</module>
+		<module>ref-impl/ref-geoposition-rxtx</module>-->
 		<module>registration-test</module>
 		
 	</modules>

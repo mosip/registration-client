@@ -101,7 +101,17 @@ echo "Started to create the registration client zip"
 
 ls -ltr lib | grep bc
 
-echo "start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" > run.bat
+echo "@echo off" > run.bat
+echo "if exist .UNKNOWN_JARS (" >> run.bat
+echo "FOR /F \"tokens=* delims=\" %%x in (.UNKNOWN_JARS) DO DEL /Q lib\%%x" >> run.bat
+echo ")" >> run.bat
+echo "if exist .TEMP (" >> run.bat
+echo "echo Starting Registration Client after Upgrade" >> run.bat
+echo "xcopy /f/k/y/v/q .TEMP lib && rmdir /s /q .TEMP && start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" >> run.bat
+echo ") else (" >> run.bat
+echo "echo Starting Registration Client" >> run.bat
+echo "start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" >> run.bat
+echo ")" >> run.bat
 
 /usr/bin/zip -r reg-client.zip jre
 /usr/bin/zip -r reg-client.zip lib
@@ -134,6 +144,7 @@ cp "${work_dir}"/registration-client/target/MANIFEST.MF /var/www/html/registrati
 cp "${work_dir}"/build_files/maven-metadata.xml /var/www/html/registration-client/
 cp "${work_dir}"/registration-client/target/reg-client.zip /var/www/html/registration-client/${client_version_env}/
 cp "${work_dir}"/registration-test-utility.zip /var/www/html/registration-client/${client_version_env}/
+cp "${work_dir}"/registration-client/target/run.bat /var/www/html/registration-client/${client_version_env}/
 
 echo "setting up nginx static content - completed"
 
