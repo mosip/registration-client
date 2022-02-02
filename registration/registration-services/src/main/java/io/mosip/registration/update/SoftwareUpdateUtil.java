@@ -47,8 +47,6 @@ public class SoftwareUpdateUtil {
         byte[] bytes =  builder.toString().trim().getBytes(StandardCharsets.UTF_8);
         if(bytes.length > 0) {
             LOGGER.error("Writing the unknown jar names");
-            File unknownJarsFile = new File(UNKNOWN_JARS);
-            deleteFile(unknownJarsFile.getCanonicalPath());
             FileUtils.writeByteArrayToFile(new File(UNKNOWN_JARS), bytes);
             return true;
         }

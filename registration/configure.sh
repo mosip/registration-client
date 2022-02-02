@@ -100,9 +100,9 @@ echo "Started to create the registration client zip"
 
 ls -ltr lib | grep bc
 
-
-echo "if exist .UNKNOWN_JARS (" > run.bat
-echo "FOR /F \"tokens=* delims=\" %%x in (.UNKNOWN_JARS) DO DEL /Q %%x" >> run.bat
+echo "@echo off" > run.bat
+echo "if exist .UNKNOWN_JARS (" >> run.bat
+echo "FOR /F \"tokens=* delims=\" %%x in (.UNKNOWN_JARS) DO DEL /Q lib\%%x" >> run.bat
 echo ")" >> run.bat
 echo "if exist .TEMP (" >> run.bat
 echo "echo Starting Registration Client after Upgrade" >> run.bat
@@ -143,6 +143,7 @@ cp "${work_dir}"/registration-client/target/MANIFEST.MF /var/www/html/registrati
 cp "${work_dir}"/build_files/maven-metadata.xml /var/www/html/registration-client/
 cp "${work_dir}"/registration-client/target/reg-client.zip /var/www/html/registration-client/${client_version_env}/
 cp "${work_dir}"/registration-test-utility.zip /var/www/html/registration-client/${client_version_env}/
+cp "${work_dir}"/registration-client/target/run.bat /var/www/html/registration-client/${client_version_env}/
 
 echo "setting up nginx static content - completed"
 
