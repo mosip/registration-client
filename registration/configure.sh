@@ -11,6 +11,7 @@ client_upgrade_server="$client_upgrade_server_env" #docker hosted url
 reg_client_sdk_url="$reg_client_sdk_url_env"
 artifactory_url="$artifactory_url_env"
 keystore_secret="$keystore_secret_env"
+reg_client_custom_impls_url="$reg_client_custom_impls_url_env"
 
 echo "initialized variables"
 
@@ -48,12 +49,12 @@ else
   echo "No separate resources found !!"
 fi
 
-if wget "${artifactory_url}/artifactory/libs-release-local/reg-client/custom-impl.zip"
+if [ "$reg_client_custom_impls_url" ]
 then
+  wget "$reg_client_custom_impls_url" -O "${work_dir}"/custom-impl.zip
   echo "Successfully downloaded custom-implementations zip, Adding it to reg-client jar"
-  mkdir customimpls
-  /usr/bin/unzip ./custom-impl.zip -d ./customimpls/
-  cd ./customimpls
+  mkdir "${work_dir}"/customimpls
+  /usr/bin/unzip "${work_dir}"/custom-impl.zip -d "${work_dir}"/customimpls/
   cp "${work_dir}"/customimpls/*.jar "${work_dir}"/registration-client/target/lib/
 else
   echo "No Custom(scanner & geo-position) implementations found !!"
