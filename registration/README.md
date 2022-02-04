@@ -1,13 +1,10 @@
-## Registration:
-Registration module provides a desktop application for Registration Officers/Supervisors to register an Individual in MOSIP, by capturing demographic and biometric details of an Individual.
-Registration module uses data captured by `Pre-Registration` module if an Individual has booked for an appointment in the Registration Centre.
-Registration Processor processes the data captured by Registration module to complete the registration process.
+[![Build Status](https://travis-ci.com/mosip/registration-client.svg)](https://app.travis-ci.com/github/mosip/registration-client)  [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mosip_registration-client&id=mosip_registration-client&metric=alert_status)](https://sonarcloud.io/dashboard?id=mosip_registration-client)
 
-Registration Client setup on a local system can be done by following the documentation at https://github.com/mosip/mosip-docs/wiki/Registration-Client-Setup
+## Registration Client Build Scripts
 
-**Configuration**
-Configurations used for ID Repo are available in [mosip-config](https://github.com/mosip/mosip-config)
+TODO
 
-### Build
-Below command should be run in the parent project **authentication**
-`mvn clean install`
+## Configuration
+Refer [Module Configuration](https://github.com/mosip/documentation/blob/1.2.0-rc2/docs/registration-client-configuration.md) to know the important properties that can be customized.
+
+
