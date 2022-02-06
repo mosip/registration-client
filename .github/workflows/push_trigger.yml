@@ -6,6 +6,8 @@ on:
     types: [closed]
   push:
     branches:
+      - '!release-branch'
+      - release-1*
       - master
       - 1.*
       - develop
@@ -91,7 +93,11 @@ jobs:
         # Change all uppercase to lowercase
         IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
         echo "push version ${{steps.getPomVersion.outputs.info}}"
-        VERSION=$BRANCH_NAME
+        if [[ $BRANCH_NAME == master ]]; then
+            VERSION=latest
+          else
+            VERSION=$BRANCH_NAME
+          fi
         echo IMAGE_ID=$IMAGE_ID
         echo VERSION=$VERSION
         docker tag $SERVICE_NAME $IMAGE_ID:$VERSION
@@ -105,6 +111,7 @@ jobs:
       if: failure() # Pick up events even if the job fails or is canceled.
 
   publish_to_nexus:
+    if: "!contains(github.ref, 'master')"
 
     runs-on: ubuntu-latest
     
