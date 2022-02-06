@@ -20,7 +20,7 @@
         <dependency>
             <groupId>io.mosip.registration.api</groupId>
             <artifactId>registration-api</artifactId>
-            <version>1.2.0-rc2-SNAPSHOT</version>
+            <version>1.2.0</version>
             <scope>compile</scope>
         </dependency>
 
