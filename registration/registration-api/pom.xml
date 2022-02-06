@@ -6,13 +6,13 @@
 
     <groupId>io.mosip.registration</groupId>
     <artifactId>registration-api</artifactId>
-    <version>1.2.0-rc2-SNAPSHOT</version>
+    <version>1.2.0-rc2</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <spring.version>5.0.6.RELEASE</spring.version>
-        <mosip.core.kernel.version>1.2.0-rc2-SNAPSHOT</mosip.core.kernel.version>
+        <mosip.core.kernel.version>1.2.0-rc2</mosip.core.kernel.version>
         <openjfx.version>11.0.2</openjfx.version>
         <spring-cloud-config.version>2.0.4.RELEASE</spring-cloud-config.version>
     </properties>
@@ -42,7 +42,7 @@
         <dependency>
             <groupId>io.mosip.kernel</groupId>
             <artifactId>kernel-logger-logback</artifactId>
-            <version>1.2.0-rc2-SNAPSHOT</version>
+            <version>1.2.0-rc2</version>
             <scope>compile</scope>
         </dependency>
 
