@@ -394,8 +394,8 @@ public class AuthTokenUtilService {
         userDetailDAO.updateUserRolesAndUsername(userId, getUsername(decodedJWT), getRoles(decodedJWT));
 
         DecodedJWT decodedRefreshJWT = JWT.decode(refreshToken);
-        userDetailDAO.updateAuthTokens(userId, token, refreshToken, decodedJWT.getExpiresAt().getTime(),
-                decodedRefreshJWT.getExpiresAt().getTime());
+        userDetailDAO.updateAuthTokens(userId, token, refreshToken, decodedJWT.getExpiresAt().getTime()/1000,
+                decodedRefreshJWT.getExpiresAt().getTime()/1000);
     }
 
     private List<String> getRoles(@NotNull DecodedJWT decodedJWT) {
