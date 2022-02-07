@@ -688,14 +688,14 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	}
 
 	public void setUpPreview() {
-		saveBtn.setDisable(true);
-		cropButton.setDisable(true);
-		cancelBtn.setDisable(false);
-		captureBtn.setDisable(true);
-
-		streamBtn.setDisable(true);
-		previewBtn.setDisable(false);
 		previewOption.setVisible(true);
 		preview();
+		//Disable all buttons in document preview
+		saveBtn.setDisable(true);
+		captureBtn.setDisable(true);
+		streamBtn.setDisable(true);
+		cancelBtn.setDisable(true);
+		cropButton.setDisable(true);
+		previewBtn.setDisable(true);
 	}
 }
