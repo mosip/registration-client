@@ -110,8 +110,6 @@
                                                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                              </rowConstraints>
                                           </GridPane>
-                                          <Label fx:id="captureTimeLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="26.0" prefWidth="111.0" styleClass="qualityBoxLabel" text="%captureTime" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                                          <Label fx:id="captureTimeValue" alignment="CENTER" contentDisplay="CENTER" prefHeight="28.0" prefWidth="92.0" styleClass="qualityBoxLabel" text="" GridPane.columnIndex="3" GridPane.rowIndex="2" />
                                        </children>
                                        <columnConstraints>
                                           <ColumnConstraints hgrow="SOMETIMES" percentWidth="20.0" />
