@@ -135,7 +135,8 @@ public class SoftwareUpdateUtil {
             File dir = new File(TEMP_DIRECTORY);
             if(dir.exists()) {
                 FileUtils.cleanDirectory(dir);
-                dir.delete();
+                if (dir.delete()) 
+                	LOGGER.info("Deleted temp file");
             }
         } catch (Exception e) {
             LOGGER.error("Failed to clean and delete temp", e);

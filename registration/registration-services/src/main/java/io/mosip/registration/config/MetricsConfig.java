@@ -244,7 +244,8 @@ public class MetricsConfig {
                     LOGGER.info("Upload available at: {}", uploader.getUploadURL().toString());
 
                     //once successfully uploaded, delete the metrics archive file
-                    file.delete();
+                    if (file.delete())
+                    	LOGGER.info("Metrics archive file deleted");
 
                 }
             };

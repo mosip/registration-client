@@ -197,7 +197,7 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 			LOGGER.debug("Request for RCapture....{}", requestBody);
 
 			String val = mosipDeviceSpecificationHelper.getHttpClientResponseEntity(
-					bioDevice.getCallbackId() + MosipBioDeviceConstants.CAPTURE_ENDPOINT,
+					bioDevice != null ? bioDevice.getCallbackId() + MosipBioDeviceConstants.CAPTURE_ENDPOINT : MosipBioDeviceConstants.CAPTURE_ENDPOINT,
 					"RCAPTURE", requestBody);
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,

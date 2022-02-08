@@ -184,15 +184,11 @@ public class DemographicPage {
                         logger.info(" textfield is visible and setting the text in " + id + "= " + value);
                         demoTextFieldvar.setText(appendDateTime ? value + DateUtil.getDateTime() : value);
 
-                        try {
-                            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SetTextTimeWait")));
-                        } catch (InterruptedException e) {
-                            logger.error("", e);
-                            Thread.currentThread().interrupt();
-                        } catch (Exception e) {
-                            logger.error("", e);
-                        }
+                        Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SetTextTimeWait")));
                     }
+                } catch (InterruptedException e) {
+                    logger.error("", e);
+                    Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     logger.error("", e);
                 }

@@ -6,7 +6,6 @@ import static io.mosip.registration.exception.RegistrationExceptionConstants.*;
 import static java.io.File.separator;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
@@ -112,7 +111,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 					totalEntries++;
 					if (zipEntry.getName().equalsIgnoreCase("ID.json")) {
 						byte[] idjson = IOUtils.toByteArray(zipInputStream);
-						double compressionRatio = idjson.length / zipEntry.getCompressedSize();
+						double compressionRatio = (double)idjson.length / zipEntry.getCompressedSize();
 						if(compressionRatio > THRESHOLD_RATIO) {
 							LOGGER.error("compression ratio is more than the threshold");
 							throw new RegBaseCheckedException(PRE_REG_PACKET_ZIP_COMPRESSED_RATIO_EXCEEDED.getErrorCode(),
@@ -156,7 +155,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 							documentDto.setDocument(IOUtils.toByteArray(zipInputStream));
 							totalReadArchiveSize = totalReadArchiveSize + documentDto.getDocument().length;
 
-							double compressionRatio = documentDto.getDocument().length / zipEntry.getCompressedSize();
+							double compressionRatio = (double)documentDto.getDocument().length / zipEntry.getCompressedSize();
 							if(compressionRatio > THRESHOLD_RATIO) {
 								LOGGER.error("compression ratio is more than the threshold");
 								throw new RegBaseCheckedException(PRE_REG_PACKET_ZIP_COMPRESSED_RATIO_EXCEEDED.getErrorCode(),
