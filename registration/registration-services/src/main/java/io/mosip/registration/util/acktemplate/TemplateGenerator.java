@@ -94,6 +94,7 @@ public class TemplateGenerator extends BaseService {
 	 * Instance of {@link Logger}
 	 */
 	private static final Logger LOGGER = AppConfig.getLogger(TemplateGenerator.class);
+	private static final String TEMPLATE_DATE_FORMAT_CONFIG = "mosip.registration.template.date.format";
 
 	@Autowired
 	private QrCodeGenerator<QrVersion> qrCodeGenerator;
@@ -220,8 +221,8 @@ public class TemplateGenerator extends BaseService {
 		List<BiometricsDto> capturedFace = capturedList.stream()
 				.filter(d -> d.getModalityName().toLowerCase().contains("face")).collect(Collectors.toList());
 
-		bio_data.put("FingerCount", capturedFingers.size());
-		bio_data.put("IrisCount", capturedIris.size());
+		bio_data.put("FingerCount", capturedFingers.stream().filter( b -> b.getAttributeISO() != null).count());
+		bio_data.put("IrisCount", capturedIris.stream().filter( b -> b.getAttributeISO() != null).count());
 		bio_data.put("FaceCount", capturedFace.size());
 		bio_data.put("subType", field.getSubType());
 		bio_data.put("label", getFieldLabel(field));
@@ -373,7 +374,10 @@ public class TemplateGenerator extends BaseService {
 					RegistrationConstants.TEMPLATE_PNG_IMAGE_ENCODING));
 			generateQRCode(registration, templateValues, firstLanguageProperties);
 			LocalDateTime currentTime = OffsetDateTime.now().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-			templateValues.put(RegistrationConstants.TEMPLATE_DATE, currentTime.format(DateTimeFormatter.ofPattern(RegistrationConstants.TEMPLATE_DATE_FORMAT)));
+
+			String format = ApplicationContext.getStringValueFromApplicationMap(TEMPLATE_DATE_FORMAT_CONFIG);
+			templateValues.put(RegistrationConstants.TEMPLATE_DATE,
+					currentTime.format(DateTimeFormatter.ofPattern(format == null ? RegistrationConstants.TEMPLATE_DATE_FORMAT : format)));
 			templateValues.put(RegistrationConstants.TEMPLATE_DATE_LABEL, getLabel("date"));
 
 			templateValues.put(RegistrationConstants.TEMPLATE_RO_NAME_LABEL, getLabel("ro_name"));

@@ -92,8 +92,8 @@ public class DocScannerFacade {
     }
 
     private DocScanDevice setDefaults(@NonNull DocScanDevice docScanDevice) {
-        if(id != null && id.containsValue(docScanDevice.getId())) {
-            Optional<String> result = id.keySet().stream().filter( k -> id.get(k).equals(docScanDevice.getId()) ).findFirst();
+        if(id != null && docScanDevice.getId() != null) {
+            Optional<String> result = id.keySet().stream().filter( k -> docScanDevice.getId().matches(id.get(k)) ).findFirst();
             if(result.isPresent()) {
                 docScanDevice.setDpi(dpi.getOrDefault(result.get(),0));
                 docScanDevice.setWidth(width.getOrDefault(result.get(),0));
