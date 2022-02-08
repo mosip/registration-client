@@ -1,50 +1,44 @@
 package io.mosip.registration.util.advice;
 
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
-
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-import io.mosip.kernel.clientcrypto.constant.ClientCryptoManagerConstant;
-import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
-import io.mosip.kernel.core.exception.IOException;
-import io.mosip.kernel.core.util.CryptoUtil;
-import io.mosip.kernel.core.util.FileUtils;
-import io.mosip.kernel.core.util.HMACUtils2;
-import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
-import io.mosip.kernel.signature.dto.JWTSignatureVerifyRequestDto;
-import io.mosip.kernel.signature.dto.JWTSignatureVerifyResponseDto;
-import io.mosip.kernel.signature.service.SignatureService;
-import io.mosip.registration.entity.FileSignature;
-import io.mosip.registration.exception.RegistrationExceptionConstants;
-import io.mosip.registration.repositories.FileSignatureRepository;
-import io.mosip.registration.service.sync.PublicKeySync;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.CryptoUtil;
+import io.mosip.kernel.core.util.FileUtils;
+import io.mosip.kernel.core.util.HMACUtils2;
+import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import io.mosip.kernel.signature.dto.JWTSignatureVerifyRequestDto;
+import io.mosip.kernel.signature.dto.JWTSignatureVerifyResponseDto;
+import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.entity.FileSignature;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RegistrationExceptionConstants;
+import io.mosip.registration.repositories.FileSignatureRepository;
+import io.mosip.registration.service.sync.PublicKeySync;
 import io.mosip.registration.util.restclient.RequestHTTPDTO;
-import org.springframework.web.util.UriComponents;
-import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * All the responses of the rest call services which are invoking from the
@@ -141,7 +135,8 @@ public class ResponseSignatureAdvice {
 
 				responseHeader = (HttpHeaders) restClientResponse.get(RegistrationConstants.REST_RESPONSE_HEADERS);
 
-				if (responseHeader.containsKey(RegistrationConstants.RESPONSE_SIGNATURE) && responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE) != null
+				if (responseHeader != null && responseHeader.containsKey(RegistrationConstants.RESPONSE_SIGNATURE)
+						&& responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE) != null
 						&& !responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE).isEmpty()
 						&& isResponseSignatureValid(responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE).get(0),
 								new ObjectMapper().writeValueAsString(responseBodyMap))) {
@@ -185,7 +180,8 @@ public class ResponseSignatureAdvice {
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(), e);
 		}
-		requestHTTPDTO.getFilePath().toFile().delete();
+		if (requestHTTPDTO.getFilePath().toFile().delete()) 
+			LOGGER.info("response signature file deleted");
 		throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_FILE_SIGNATURE_ERROR.getErrorCode(),
 				RegistrationExceptionConstants.REG_FILE_SIGNATURE_ERROR.getErrorMessage());
 	}

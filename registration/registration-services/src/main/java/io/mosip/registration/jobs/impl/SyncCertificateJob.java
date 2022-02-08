@@ -1,25 +1,23 @@
 package io.mosip.registration.jobs.impl;
 
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
+
+import java.sql.Timestamp;
+
+import org.quartz.JobExecutionContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.service.sync.CertificateSyncService;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
-
-import java.sql.Timestamp;
-
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 
 /**
@@ -41,7 +39,8 @@ public class SyncCertificateJob extends BaseJob {
     public ResponseDTO executeJob(String triggerPoint, String jobId) {
         LOGGER.info("", RegistrationConstants.APPLICATION_NAME,
                 RegistrationConstants.APPLICATION_ID, "execute Job started");
-
+        this.responseDTO = new ResponseDTO();
+        
         try {
             this.responseDTO = certificateSyncService.getCACertificates(triggerPoint);
         } catch (Throwable exception) {
@@ -58,7 +57,7 @@ public class SyncCertificateJob extends BaseJob {
 
     @Async
     @Override
-    protected void executeInternal(JobExecutionContext context) {
+    public void executeInternal(JobExecutionContext context) {
         LOGGER.info("", RegistrationConstants.APPLICATION_NAME,
                 RegistrationConstants.APPLICATION_ID, "job execute internal started");
         this.responseDTO = new ResponseDTO();

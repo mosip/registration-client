@@ -364,8 +364,8 @@ public class DocumentFxControl extends FxControl {
 					return;
 				}
 
-				int docSize = (int) Math.ceil((double)(Integer.parseInt(documentScanController
-						.getValueFromApplicationContext(RegistrationConstants.DOC_SIZE)) / (1024 * 1024)));
+				int docSize = (int) Math.ceil(Integer.parseInt(documentScanController
+						.getValueFromApplicationContext(RegistrationConstants.DOC_SIZE)) / (double)(1024 * 1024));
 				if (docSize <= (byteArray.length / (1024 * 1024))) {
 					bufferedImages.clear();
 					documentScanController.generateAlert(RegistrationConstants.ERROR,

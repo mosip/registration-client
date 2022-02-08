@@ -24,7 +24,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -265,7 +264,8 @@ public class ClientSettingSyncHelper {
 							new String(clientCryptoFacade.decrypt(ClientCryptoUtils.decodeBase64Data(FileUtils.readFileToString(path.toFile(),
 									StandardCharsets.UTF_8)))) :
 							FileUtils.readFileToString(path.toFile(), StandardCharsets.UTF_8));
-					path.toFile().delete();
+					if (path.toFile().delete()) 
+						LOGGER.info("Entity file deleted");
 					break;
 				case "structured":
 					jsonArray = new JSONArray(new String(data));
@@ -491,7 +491,8 @@ public class ClientSettingSyncHelper {
 								StandardCharsets.UTF_8)))) :
 						FileUtils.readFileToString(path.toFile(), StandardCharsets.UTF_8);
 
-				path.toFile().delete();
+				if (path.toFile().delete()) 
+					LOGGER.info("Entity file deleted");
 
 				if(syncDataBaseDto.getEntityName().equalsIgnoreCase("DynamicFieldDto")) {
 					List<SyncDataBaseDto> list = MapperUtils.convertJSONStringToDto(downloadedData,

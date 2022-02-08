@@ -16,7 +16,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import io.mosip.registration.service.BaseService;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -31,7 +30,6 @@ import org.springframework.stereotype.Component;
 import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
@@ -41,6 +39,7 @@ import io.mosip.registration.mdm.constants.MosipBioDeviceConstants;
 import io.mosip.registration.mdm.dto.Biometric;
 import io.mosip.registration.mdm.dto.MdmBioDevice;
 import io.mosip.registration.mdm.integrator.MosipDeviceSpecificationProvider;
+import io.mosip.registration.service.BaseService;
 
 /**
  * 
@@ -54,9 +53,6 @@ public class MosipDeviceSpecificationFactory {
 
 	private static final Logger LOGGER = AppConfig.getLogger(MosipDeviceSpecificationFactory.class);
 	private static final String loggerClassName = "MosipDeviceSpecificationFactory";
-
-	@Autowired
-	private AuditManagerService auditFactory;
 
 	@Value("${mosip.registration.mdm.default.portRangeFrom}")
 	private int defaultMDSPortFrom;
@@ -210,10 +206,11 @@ public class MosipDeviceSpecificationFactory {
 				List<MdmBioDevice> mdmBioDevices = deviceSpecificationProvider.getMdmDevices(deviceInfoResponse,
 						availablePort);
 				for (MdmBioDevice bioDevice : mdmBioDevices) {
-					if (bioDevice != null) {
+					String deviceType = getDeviceType(bioDevice.getDeviceType());
+					String deviceSubType = getDeviceSubType(bioDevice.getDeviceSubType());
+					if (bioDevice != null && deviceType != null && deviceSubType != null) {
 						// Add to Device Info Map
-						addToDeviceInfoMap(getKey(getDeviceType(bioDevice.getDeviceType()),
-								getDeviceSubType(bioDevice.getDeviceSubType())), bioDevice);
+						addToDeviceInfoMap(getKey(deviceType, deviceSubType), bioDevice);
 					}
 				}
 			}
@@ -328,16 +325,19 @@ public class MosipDeviceSpecificationFactory {
 	}
 
 	public MdmBioDevice getDeviceInfoByModality(String modality) throws RegBaseCheckedException {
+		String deviceType = getDeviceType(modality);
+		String deviceSubType = getDeviceSubType(modality);
+		
+		if (deviceType != null && deviceSubType != null) {
+			String key = getKey(deviceType, deviceSubType);
+			if (key != null && selectedDeviceInfoMap.containsKey(key))
+				return selectedDeviceInfoMap.get(key);
 
-		String key = getKey(getDeviceType(modality), getDeviceSubType(modality));
+			initializeDeviceMap(true);
 
-		if (key != null && selectedDeviceInfoMap.containsKey(key))
-			return selectedDeviceInfoMap.get(key);
-
-		initializeDeviceMap(true);
-
-		if (key != null && selectedDeviceInfoMap.containsKey(key))
-			return selectedDeviceInfoMap.get(key);
+			if (key != null && selectedDeviceInfoMap.containsKey(key))
+				return selectedDeviceInfoMap.get(key);
+		}
 
 		LOGGER.info("Bio Device not found for modality : {} at {}", modality, System.currentTimeMillis());
 		throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
@@ -361,15 +361,20 @@ public class MosipDeviceSpecificationFactory {
 				.filter(provider -> provider.getSpecVersion().equalsIgnoreCase(bioDevice.getSpecVersion())
 						&& provider.isDeviceAvailable(bioDevice))
 				.findFirst();
-		String key = getKey(getDeviceType(bioDevice.getDeviceType()), getDeviceSubType(bioDevice.getDeviceSubType()));
-		if (!result.isPresent() && key != null) {
-			selectedDeviceInfoMap.remove(key);
-			initializeDeviceMap(true);
-			return false;
+		
+		String deviceType = getDeviceType(bioDevice.getDeviceType());
+		String deviceSubType = getDeviceSubType(bioDevice.getDeviceSubType());
+		
+		if (deviceType != null && deviceSubType != null) {
+			String key = getKey(deviceType, deviceSubType);
+			if (!result.isPresent() && key != null) {
+				selectedDeviceInfoMap.remove(key);
+				initializeDeviceMap(true);
+				return false;
+			}
 		}
-
+		
 		return true;
-
 	}
 
 	private String getLatestVersion(String version1, String version2) {

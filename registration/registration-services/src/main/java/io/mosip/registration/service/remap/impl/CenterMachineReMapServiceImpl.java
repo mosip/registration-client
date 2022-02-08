@@ -341,9 +341,10 @@ public class CenterMachineReMapServiceImpl implements CenterMachineReMapService 
 				"delete cleanUpRemappedMachineData() method is called");
 		try {
 			Resource resource = new ClassPathResource("script.sql");
-			Connection connection = jdbcTemplate.getDataSource().getConnection();
-			ScriptUtils.executeSqlScript(connection, resource);
-
+			if (jdbcTemplate.getDataSource() != null) {
+				Connection connection = jdbcTemplate.getDataSource().getConnection();
+				ScriptUtils.executeSqlScript(connection, resource);
+			}
 		} catch (ScriptException | SQLException | NullPointerException exception) {
 			LOGGER.error("REGISTRATION CENTER MACHINE REMAP : ", APPLICATION_NAME, APPLICATION_ID,
 					exception.getMessage() + ExceptionUtils.getStackTrace(exception));
