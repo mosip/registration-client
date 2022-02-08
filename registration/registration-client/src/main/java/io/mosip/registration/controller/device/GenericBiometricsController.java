@@ -458,7 +458,8 @@ public class GenericBiometricsController extends BaseController {
 		auditFactory.audit(getAuditEventForScan(currentModality.name()), Components.REG_BIOMETRICS, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-		biometric.setDisable(true);
+		disableEnableBiometricPane(true);
+
 		deviceSearchTask = new Service<MdmBioDevice>() {
 			@Override
 			protected Task<MdmBioDevice> createTask() {
@@ -524,7 +525,8 @@ public class GenericBiometricsController extends BaseController {
 					// Enable Auto-Logout
 					SessionContext.setAutoLogout(true);
 					streamer.setUrlStream(null);
-					biometric.setDisable(false);
+
+					disableEnableBiometricPane(false);
 				}
 			}
 		});
@@ -534,10 +536,15 @@ public class GenericBiometricsController extends BaseController {
 			public void handle(WorkerStateEvent t) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
 				streamer.setUrlStream(null);
-				biometric.setDisable(false);
+				disableEnableBiometricPane(false);
 			}
 		});
 
+	}
+
+	private void disableEnableBiometricPane(boolean flag) {
+		fxControl.getNode().setDisable(flag);
+		biometric.setDisable(flag);
 	}
 
 	private boolean isFace(Modality currentModality) {
@@ -602,7 +609,8 @@ public class GenericBiometricsController extends BaseController {
 
 				LOGGER.debug("Setting URL Stream as null");
 				streamer.setUrlStream(null);
-				biometric.setDisable(false);
+
+				disableEnableBiometricPane(false);
 			}
 		});
 
@@ -664,14 +672,14 @@ public class GenericBiometricsController extends BaseController {
 					displayBiometric(currentModality);
 					// if all the above check success show alert capture success
 					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
-					biometric.setDisable(false);
 				} catch (Exception e) {
 					LOGGER.error("Exception while getting the scanned biometrics for user registration",e);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
 				} finally {
 					SessionContext.setAutoLogout(true);	// Enable Auto-Logout
 					streamer.setUrlStream(null);
-					biometric.setDisable(false);
+
+					disableEnableBiometricPane(false);
 				}
 			}
 		});
