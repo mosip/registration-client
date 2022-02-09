@@ -24,6 +24,13 @@ public interface GlobalParamDAO {
 	Map<String, Object> getGlobalParams();
 
 	/**
+	 * This method is used to get the global parameters with provided key pattern
+	 * @param pattern
+	 * @return
+	 */
+	Map<String, Object> getGlobalParams(String pattern);
+
+	/**
 	 * This method is used to save all the list of global parameters
 	 * 
 	 * @param list

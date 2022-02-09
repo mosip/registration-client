@@ -137,7 +137,7 @@ public class GlobalConfigSettingsController extends BaseController implements Se
 	}
 
 	private void loadInitialData() {
-		Map<String, Object> globalParams = globalParamService.getGlobalParams();
+		Map<String, Object> globalParams = globalParamService.getRegistrationParams();
 		Map<String, String> localPreferences = localConfigService.getLocalConfigurations();
 		List<String> permittedConfigurations = localConfigService
 				.getPermittedConfigurations(RegistrationConstants.PERMITTED_CONFIG_TYPE);
