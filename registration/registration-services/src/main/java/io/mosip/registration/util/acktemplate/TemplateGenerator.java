@@ -94,7 +94,7 @@ public class TemplateGenerator extends BaseService {
 	 * Instance of {@link Logger}
 	 */
 	private static final Logger LOGGER = AppConfig.getLogger(TemplateGenerator.class);
-	private static final String TEMPLATE_DATE_FORMAT_CONFIG = "mosip.registration.template.date.format";
+	private static final String APPLICATION_DATE_FORMAT_CONFIG = "mosip.registration.application_date_format";
 
 	@Autowired
 	private QrCodeGenerator<QrVersion> qrCodeGenerator;
@@ -375,7 +375,7 @@ public class TemplateGenerator extends BaseService {
 			generateQRCode(registration, templateValues, firstLanguageProperties);
 			LocalDateTime currentTime = OffsetDateTime.now().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 
-			String format = ApplicationContext.getStringValueFromApplicationMap(TEMPLATE_DATE_FORMAT_CONFIG);
+			String format = ApplicationContext.getStringValueFromApplicationMap(APPLICATION_DATE_FORMAT_CONFIG);
 			templateValues.put(RegistrationConstants.TEMPLATE_DATE,
 					currentTime.format(DateTimeFormatter.ofPattern(format == null ? RegistrationConstants.TEMPLATE_DATE_FORMAT : format)));
 			templateValues.put(RegistrationConstants.TEMPLATE_DATE_LABEL, getLabel("date"));

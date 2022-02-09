@@ -1639,7 +1639,7 @@ public class BaseController {
 				io.mosip.registration.context.ApplicationContext
 						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
 				1, io.mosip.registration.context.ApplicationContext.getIntValueFromApplicationMap(
-				RegistrationConstants.FINGERPRINT_AUTHENTICATION_THRESHHOLD));
+				RegistrationConstants.FINGERPRINT_AUTHENTICATION_THRESHOLD));
 		
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 		boolean fpMatchStatus = authenticationService.authValidator(userId, SingleType.FINGER.value(), biometrics);
@@ -1663,7 +1663,7 @@ public class BaseController {
 				io.mosip.registration.context.ApplicationContext
 						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
 				2, io.mosip.registration.context.ApplicationContext
-				.getIntValueFromApplicationMap(RegistrationConstants.IRIS_THRESHOLD));
+				.getIntValueFromApplicationMap(RegistrationConstants.IRIS_AUTHENTICATION_THRESHOLD));
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 
 		boolean match = authenticationService.authValidator(userId, SingleType.IRIS.value(), biometrics);
@@ -1688,7 +1688,7 @@ public class BaseController {
 				io.mosip.registration.context.ApplicationContext
 						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
 				1, io.mosip.registration.context.ApplicationContext
-				.getIntValueFromApplicationMap(RegistrationConstants.FACE_THRESHOLD));
+				.getIntValueFromApplicationMap(RegistrationConstants.FACE_AUTHENTICATION_THRESHOLD));
 
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 
