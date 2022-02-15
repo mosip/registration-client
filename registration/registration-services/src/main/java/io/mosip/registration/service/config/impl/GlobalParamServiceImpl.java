@@ -218,10 +218,6 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 	private boolean parseGlobalParam(boolean isToBeRestarted, HashMap<String, String> globalParamMap,
 			List<GlobalParam> globalParamList) {
 
-		globalParamMap.put("mosip.biometric.sdk.providers.finger.mockvendor.classname", "io.mosip.mock.sdk.impl.SampleSDK");
-		globalParamMap.put("mosip.biometric.sdk.providers.iris.mockvendor.classname", "io.mosip.mock.sdk.impl.SampleSDK");
-		globalParamMap.put("mosip.biometric.sdk.providers.face.mockvendor.classname", "io.mosip.mock.sdk.impl.SampleSDK");
-
 		for (GlobalParam globalParam : globalParamList) {
 			if (!NON_REMOVABLE_PARAMS.contains(globalParam.getGlobalParamId().getCode())) {
 				/* Check in map, if exists, update it and remove from map */
