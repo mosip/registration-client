@@ -27,6 +27,14 @@ public interface GlobalParamService {
 	Map<String, Object> getGlobalParams();
 
 	/**
+	 * Fetching configuration detail from Global parameters table where key starts with mosip.registration.*.
+	 *
+	 * @return map
+	 * 		It contains the key and value pair of each configuration.
+	 */
+	Map<String, Object> getRegistrationParams();
+
+	/**
 	 * It makes call to the external service 'global' to download the configuration from MOSIP server and sync the same with the local db.
 	 * After downloading it does the following while updating db: 
 	 * <ul> 

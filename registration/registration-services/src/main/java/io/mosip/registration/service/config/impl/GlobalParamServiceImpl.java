@@ -82,6 +82,16 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 
 	/*
 	 * (non-Javadoc)
+	 *
+	 * @see io.mosip.registration.service.GlobalParamService#getRegistrationParams
+	 */
+	public Map<String, Object> getRegistrationParams() {
+		LOGGER.info("Fetching list of registration params");
+		return globalParamDAO.getGlobalParams("mosip.registration%");
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * 
 	 * @see io.mosip.registration.service.config.GlobalParamService#synchConfigData(
 	 * boolean)
@@ -207,6 +217,7 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 
 	private boolean parseGlobalParam(boolean isToBeRestarted, HashMap<String, String> globalParamMap,
 			List<GlobalParam> globalParamList) {
+
 		for (GlobalParam globalParam : globalParamList) {
 			if (!NON_REMOVABLE_PARAMS.contains(globalParam.getGlobalParamId().getCode())) {
 				/* Check in map, if exists, update it and remove from map */

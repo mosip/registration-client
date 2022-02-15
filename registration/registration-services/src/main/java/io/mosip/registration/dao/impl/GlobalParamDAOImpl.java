@@ -18,6 +18,8 @@ import io.mosip.registration.entity.GlobalParam;
 import io.mosip.registration.entity.id.GlobalParamId;
 import io.mosip.registration.repositories.GlobalParamRepository;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * The implementation class of {@link GlobalParamDAO}.
  *
@@ -52,6 +54,24 @@ public class GlobalParamDAOImpl implements GlobalParamDAO {
 
 		LOGGER.info("REGISTRATION - GLOBALPARAMS - GLOBAL_PARAM_DAO_IMPL", RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "List of global params fetched successfully");
+
+		return globalParamMap;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see io.mosip.registration.dao.GlobalParamDAO#getGlobalParams(String)
+	 */
+	public Map<String, Object> getGlobalParams(@NotNull String pattern) {
+
+		LOGGER.info("Fetching list of global params with key pattern {}", pattern);
+
+		List<GlobalParamName> globalParams = globalParamRepository.findByNameLikeAndIsActiveTrueAndValIsNotNull(pattern);
+		Map<String, Object> globalParamMap = new LinkedHashMap<>();
+		globalParams.forEach(param -> globalParamMap.put(param.getName(), param.getVal() != null ? param.getVal().trim() : param.getVal()));
+
+		LOGGER.info("List of global params fetched successfully");
 
 		return globalParamMap;
 	}
