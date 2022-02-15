@@ -27,46 +27,47 @@ public class BioCorrectionPage {
     TextField additionalInfoTextBox;
     String additionalInfoRequestId = "#additionalInfoRequestId";
     WaitsUtil waitsUtil;
-    
 
-    public BioCorrectionPage(FxRobot robot) {
-        this.robot = robot;
-        waitsUtil = new WaitsUtil(robot);
+	public BioCorrectionPage(FxRobot robot) {
+		this.robot = robot;
+		waitsUtil = new WaitsUtil(robot);
 
-    }
+	}
 
-    public void setAdditionalInfoRequestId(String value) {
+	public void setAdditionalInfoRequestId(String value) {
 
-        logger.info("set additional info ");
+		logger.info("set additional info ");
 
-        try {
-            additionalInfoTextBox = waitsUtil.lookupByIdTextField(additionalInfoRequestId, robot);
+		try {
+			additionalInfoTextBox = waitsUtil.lookupByIdTextField(additionalInfoRequestId, robot);
 
-            assertNotNull(additionalInfoTextBox, "additionalInfoTextBox Not Present");
+			assertNotNull(additionalInfoTextBox, "additionalInfoTextBox Not Present");
 
-            additionalInfoTextBox.setText(value);
+			additionalInfoTextBox.setText(value);
 
-        } catch (Exception e) {
-            logger.error("Issue with setAdditionalInfoRequestId", e);
-        }
+		} catch (Exception e) {
+			logger.error("Issue with setAdditionalInfoRequestId", e);
+		}
 
-    }
+	}
 
-    public void setMDSscore(String type,String qualityScore) { 
-        
-        try {
-            String requestBody = "{\"type\":\""+type+"\",\"qualityScore\":\"" + qualityScore
-                    + "\",\"fromIso\":false}";
+	public void setMDSscore(String type, String qualityScore) {
 
-            Response response = RestAssured.given().baseUri("http://127.0.0.1:4501/admin/score")
-                    .contentType(ContentType.JSON).and().body(requestBody).when().post().then().extract().response();
+		try {
+			String requestBody = "{\"type\":\"" + type + "\",\"qualityScore\":\"" + qualityScore
+					+ "\",\"fromIso\":false}";
 
-            assertEquals(200, response.statusCode());
-            assertEquals("Success", response.jsonPath().getString("errorInfo"));
-        } catch (Exception e) {
-            logger.error("Issue with the Rest Assured MOCKMDS Score Request", e);
-        }
-    }
+			Response response = RestAssured.given().baseUri("http://127.0.0.1:4501/admin/score")
+					.contentType(ContentType.JSON).and().body(requestBody).when().post().then().extract().response();
+
+
+			assertEquals(200, response.statusCode());
+			assertEquals("Success", response.jsonPath().getString("errorInfo"));
+		} catch (Exception e) {
+			logger.error("Issue with the Rest Assured MOCKMDS Score Request", e);
+		}
+	}
+
 
     public void setMDSprofile(String type,String profile) {
         try {
@@ -83,5 +84,4 @@ public class BioCorrectionPage {
     }
     
     
-
 }
