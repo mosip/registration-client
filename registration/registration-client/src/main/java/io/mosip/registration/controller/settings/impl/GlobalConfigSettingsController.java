@@ -30,18 +30,21 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.text.Text;
 import javafx.stage.Screen;
+import javafx.util.Callback;
 
 @Controller
 public class GlobalConfigSettingsController extends BaseController implements SettingsInterface {
@@ -94,6 +97,8 @@ public class GlobalConfigSettingsController extends BaseController implements Se
 		LOGGER.info("Setting header label as {}", headerLabel);
 
 		this.headerLabel.setText(headerLabel);
+		SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+				RegistrationConstants.ENABLE);
 		setContent();
 	}
 
@@ -115,9 +120,6 @@ public class GlobalConfigSettingsController extends BaseController implements Se
 
 	private void setContent() {
 		try {
-			SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
-					RegistrationConstants.ENABLE);
-			
 			modifiedProperties.clear();
 			if (observableList != null) {
 				observableList.clear();
@@ -179,6 +181,19 @@ public class GlobalConfigSettingsController extends BaseController implements Se
 	}
 	
 	private void setCellFactoryForLocalValue(List<String> permittedConfigurations) {
+		serverValue
+				.setCellFactory(new Callback<TableColumn<GlobalParamVO, String>, TableCell<GlobalParamVO, String>>() {
+					@Override
+					public TableCell<GlobalParamVO, String> call(TableColumn<GlobalParamVO, String> param) {
+						TableCell<GlobalParamVO, String> cell = new TableCell<>();
+						Text text = new Text();
+						cell.setGraphic(text);
+						cell.setPrefHeight(Control.USE_COMPUTED_SIZE);
+						text.wrappingWidthProperty().bind(cell.widthProperty());
+						text.textProperty().bind(cell.itemProperty());
+						return cell;
+					}
+				});
 		localValue.setCellFactory(column -> {
 			return new TableCell<GlobalParamVO, String>() {
 				@Override
@@ -261,6 +276,8 @@ public class GlobalConfigSettingsController extends BaseController implements Se
 			if (configUpdateAlert()) {
 				restartController.restart();
 			}
+			SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+					RegistrationConstants.ENABLE);
 		}
 	}
 	

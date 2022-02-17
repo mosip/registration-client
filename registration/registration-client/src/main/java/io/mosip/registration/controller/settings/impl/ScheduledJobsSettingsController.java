@@ -230,10 +230,6 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 				modifyCronExpression(syncJob, cronTextField.getText());
 			});
 
-			cronTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-				SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
-						RegistrationConstants.DISABLE);
-			});
 			cronTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
 				if (newValue) {
 					Platform.runLater(() -> {
@@ -358,9 +354,13 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 			return;
 		}
 		localConfigService.modifyJob(syncJob.getId(), cronExpression);
+		SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+				RegistrationConstants.DISABLE);
 		if (configUpdateAlert("CRON_EXPRESSION_MODIFIED")) {
 			restartController.restart();
 		}
+		SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+				RegistrationConstants.ENABLE);
 	}
 
 	private boolean configUpdateAlert(String context) {
