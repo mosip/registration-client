@@ -365,16 +365,18 @@ public class MosipDeviceSpecificationFactory {
 		String deviceType = getDeviceType(bioDevice.getDeviceType());
 		String deviceSubType = getDeviceSubType(bioDevice.getDeviceSubType());
 		
-		if (deviceType != null && deviceSubType != null) {
-			String key = getKey(deviceType, deviceSubType);
-			if (!result.isPresent() && key != null) {
-				selectedDeviceInfoMap.remove(key);
-				initializeDeviceMap(true);
-				return false;
-			}
+		if (deviceType == null || deviceSubType == null) {
+			LOGGER.error("DeviceType or DeviceSubType found null");
+			return false;
 		}
-		
-		return true;
+			
+		String key = getKey(deviceType, deviceSubType);
+		if (result.isPresent()) {
+			return true;
+		}
+		selectedDeviceInfoMap.remove(key);
+		initializeDeviceMap(true);
+		return false;
 	}
 
 	private String getLatestVersion(String version1, String version2) {
