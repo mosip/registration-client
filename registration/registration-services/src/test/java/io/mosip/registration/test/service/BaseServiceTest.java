@@ -31,6 +31,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import io.mosip.commons.packet.constants.Biometric;
+import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.kernel.core.util.JsonUtils;
 import io.mosip.registration.constants.RegistrationConstants;
@@ -52,17 +54,19 @@ import io.mosip.registration.repositories.RegistrationCenterRepository;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.config.LocalConfigService;
+import io.mosip.registration.service.login.impl.LoginServiceImpl;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*" })
-@PrepareForTest({ SessionContext.class, ApplicationContext.class, RegistrationSystemPropertiesChecker.class })
+@PrepareForTest({ SessionContext.class, ApplicationContext.class, RegistrationSystemPropertiesChecker.class,JsonUtils.class,FileUtils.class})
 public class BaseServiceTest {
 
 	@Mock
 	private MachineMappingDAO machineMappingDAO;
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
+	
 	@InjectMocks
 	private BaseService baseService;
 
@@ -84,6 +88,7 @@ public class BaseServiceTest {
 	@Mock
 	private RegistrationCenterRepository registrationCenterRepository;
 	
+		
 	@Before
 	public void init() throws Exception {
 
@@ -115,6 +120,13 @@ public class BaseServiceTest {
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(true);
 		Mockito.when(SessionContext.userId()).thenReturn("MYUSERID");
 		Assert.assertSame(baseService.getUserIdFromSession(), "MYUSERID");
+	}
+	
+	@Test
+	public void getDefaultUserIdTest() throws Exception{
+		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(true);
+		PowerMockito.doReturn("NA").when(SessionContext.class, "userId");
+		Assert.assertSame(baseService.getUserIdFromSession(),"System");
 	}
 
 	@Test
@@ -219,18 +231,37 @@ public class BaseServiceTest {
 		Mockito.when(registrationCenterRepository.findByIsActiveTrueAndRegistartionCenterIdIdAndRegistartionCenterIdLangCode("mosip","eng"))
 		.thenReturn(registrationCenterList);		
 		Assert.assertSame(null, baseService.getCenterId());
+	}	
+	@Test
+	public void getPreparePacketStatusDtoTest() throws Throwable,IOException  {
+		Registration registration = getRegistration();
+		PowerMockito.mockStatic(JsonUtils.class);
+		PowerMockito.mockStatic(FileUtils.class);
+		RegistrationDataDto registrationDataDto = getRegistrationDto();		
+		Mockito.when(JsonUtils.jsonStringToJavaObject(Mockito.any(), Mockito.anyString())).thenReturn(registrationDataDto);		
+		PowerMockito.mockStatic(FileUtils.class);
+		Mockito.when(FileUtils.getFile(Mockito.anyString())).thenReturn(new File("../pom.xml"));
+		Assert.assertNotNull(baseService.preparePacketStatusDto(registration));
 	}
 	
 	@Test
+	public void buildBirTest() throws Throwable,IOException  {
+		byte[] iso = "slkdalskdjslkajdjadj".getBytes();
+		Assert.assertNotNull(baseService.buildBir("Face", 2, iso, ProcessedLevelType.INTERMEDIATE));
+	}
+	
+	
 	@Ignore
-	public void getPreparePacketStatusDtoTest() throws Throwable,IOException  {
+	@Test
+	public void getPreparePacketStatusDtoFailureTest() throws Throwable,IOException  {
 		Registration registration = getRegistration();
-		RegistrationDataDto registrationDataDto = getRegistrationDto();
 		PowerMockito.mockStatic(JsonUtils.class);
-		Mockito.when(JsonUtils.jsonStringToJavaObject(Mockito.any(), Mockito.anyString())).thenReturn(registrationDataDto);
-		File mockFile = Mockito.mock(File.class);
-		Mockito.when(FileUtils.getFile(Mockito.any())).thenReturn(mockFile);
-		Assert.assertSame(null, baseService.preparePacketStatusDto(registration));
+		PowerMockito.mockStatic(FileUtils.class);
+		RegistrationDataDto registrationDataDto = null;		
+		Mockito.when(JsonUtils.jsonStringToJavaObject(Mockito.any(), Mockito.anyString())).thenReturn(registrationDataDto);		
+		PowerMockito.mockStatic(FileUtils.class);
+		Mockito.when(FileUtils.getFile(Mockito.anyString())).thenReturn(new File("../pom.xml"));
+		Assert.assertNotNull(baseService.preparePacketStatusDto(registration));
 	}
 	
 	private List<String> getMandaoryLanguages() {
@@ -252,7 +283,6 @@ public class BaseServiceTest {
 		registrationDataDto.setPhone("9999999999");
 		registrationDataDto.setLangCode("eng,fra");
 		return registrationDataDto;
-		
 	}
 	
 	
