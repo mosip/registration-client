@@ -31,7 +31,6 @@ import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.auth.AuthenticationController;
-import io.mosip.registration.controller.reg.RegistrationController;
 import io.mosip.registration.controller.reg.RegistrationPreviewController;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.ErrorResponseDTO;
@@ -44,7 +43,6 @@ import io.mosip.registration.dto.schema.UiScreenDTO;
 import io.mosip.registration.entity.LocationHierarchy;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
-import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.PreRegistrationDataSyncService;
 import io.mosip.registration.util.control.FxControl;
 import io.mosip.registration.util.control.impl.BiometricFxControl;
@@ -56,7 +54,6 @@ import io.mosip.registration.util.control.impl.DocumentFxControl;
 import io.mosip.registration.util.control.impl.DropDownFxControl;
 import io.mosip.registration.util.control.impl.HtmlFxControl;
 import io.mosip.registration.util.control.impl.TextFieldFxControl;
-import io.mosip.registration.validator.RequiredFieldValidator;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -138,30 +135,20 @@ public class GenericController extends BaseController {
 	private ProgressIndicator progressIndicator;
 
 	@Autowired
-	private RegistrationController registrationController;
-
-	@Autowired
 	private AuthenticationController authenticationController;
 
 	@Autowired
 	private MasterSyncDao masterSyncDao;
 
 	@Autowired
-	private MasterSyncService masterSyncService;
-
-	@Autowired
 	private RegistrationPreviewController registrationPreviewController;
-
-	@Autowired
-	private RequiredFieldValidator requiredFieldValidator;
 
 	@Autowired
 	private PridValidator<String> pridValidatorImpl;
 
 	@Autowired
 	private PreRegistrationDataSyncService preRegistrationDataSyncService;
-
-	private ApplicationContext applicationContext = ApplicationContext.getInstance();
+	
 	private static TreeMap<Integer, UiScreenDTO> orderedScreens = new TreeMap<>();
 	private static Map<String, FxControl> fxControlMap = new HashMap<String, FxControl>();
 	private Stage keyboardStage;
@@ -212,7 +199,7 @@ public class GenericController extends BaseController {
 		Label label = new Label();
 		label.getStyleClass().add(LABEL_CLASS);
 		label.setId("preRegistrationLabel");
-		label.setText(applicationContext.getBundle(langCode, RegistrationConstants.LABELS)
+		label.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("search_for_Pre_registration_id"));
 		hBox.getChildren().add(label);
 		TextField textField = new TextField();
@@ -222,7 +209,7 @@ public class GenericController extends BaseController {
 		Button button = new Button();
 		button.setId("fetchBtn");
 		button.getStyleClass().add("demoGraphicPaneContentButton");
-		button.setText(applicationContext.getBundle(langCode, RegistrationConstants.LABELS)
+		button.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("fetch"));
 
 		button.setOnAction(event -> {
@@ -312,7 +299,7 @@ public class GenericController extends BaseController {
 		Label label = new Label();
 		label.getStyleClass().add(LABEL_CLASS);
 		label.setId("additionalInfoRequestIdLabel");
-		label.setText(applicationContext.getBundle(langCode, RegistrationConstants.LABELS)
+		label.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("additionalInfoRequestId"));
 		hBox.getChildren().add(label);
 		TextField textField = new TextField();
@@ -345,7 +332,7 @@ public class GenericController extends BaseController {
 			return true; //bypass check as current screen order is less than the screen it is displayed in.
 
 		if (!provided) {
-			showHideErrorNotification(applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
+			showHideErrorNotification(ApplicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
 					.getString(RegistrationUIConstants.ADDITIONAL_INFO_REQ_ID_MISSING));
 		}
 		return provided;
@@ -464,8 +451,7 @@ public class GenericController extends BaseController {
 
 		Label navigationLabel = new Label();
 		navigationLabel.getStyleClass().add(NAV_LABEL_CLASS);
-		navigationLabel.setText(RegistrationConstants.SLASH + RegistrationConstants.SPACE +
-				processSpecDto.getLabel().get(ApplicationContext.applicationLanguage()));
+		navigationLabel.setText(processSpecDto.getLabel().get(ApplicationContext.applicationLanguage()));
 		navigationLabel.prefWidthProperty().bind(navigationAnchorPane.widthProperty());
 		navigationLabel.setWrapText(true);
 
@@ -628,7 +614,7 @@ public class GenericController extends BaseController {
 		if(result.isPresent()) {
 
 			if(!isAdditionalInfoRequestIdProvided(result.get())) {
-				showHideErrorNotification(applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
+				showHideErrorNotification(ApplicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
 						.getString(RegistrationUIConstants.ADDITIONAL_INFO_REQ_ID_MISSING));
 				return false;
 			}
@@ -652,7 +638,7 @@ public class GenericController extends BaseController {
 	}
 
 	private void showHideErrorNotification(String fieldName) {
-		notification.setText((fieldName == null) ? EMPTY : applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
+		notification.setText((fieldName == null) ? EMPTY : ApplicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
 				.getString("SCREEN_VALIDATION_ERROR") + " [ " + fieldName + " ]");
 	}
 
@@ -778,9 +764,9 @@ public class GenericController extends BaseController {
 		List<String> previewLabels = new ArrayList<>();
 		List<String> authLabels = new ArrayList<>();
 		for (String langCode : getRegistrationDTOFromSession().getSelectedLanguagesByApplicant()) {
-			previewLabels.add(applicationContext.getBundle(langCode, RegistrationConstants.LABELS)
+			previewLabels.add(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 					.getString(RegistrationConstants.previewHeader));
-			authLabels.add(applicationContext.getBundle(langCode, RegistrationConstants.LABELS)
+			authLabels.add(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 					.getString(RegistrationConstants.authentication));
 		}
 
