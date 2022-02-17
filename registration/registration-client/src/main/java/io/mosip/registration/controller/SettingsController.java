@@ -198,6 +198,9 @@ public class SettingsController extends BaseController {
 		LOGGER.info("Loading {} screen started.", fxmlName);
 		try {
 			exitWindow();
+			if (getRegistrationDTOFromSession() != null) {
+				goToSettingsFromRegistration();
+			}
 			FXMLLoader fxmlLoader = BaseController
 					.loadChild(getClass().getResource(RegistrationConstants.FXML_PATH.concat(fxmlName)));
 			Parent root = fxmlLoader.load();

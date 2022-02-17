@@ -612,6 +612,30 @@ public class BaseController {
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE));
 		}
 	}
+	
+	/**
+	 * Opens the home page screen.
+	 */
+	public void goToSettingsFromRegistration() {
+		try {
+			if (isAckOpened() || pageNavigantionAlert()) {
+				setIsAckOpened(false);
+				if (!(boolean) SessionContext.map().get(RegistrationConstants.ONBOARD_USER)) {
+					clearOnboardData();
+					clearRegistrationData();
+
+				} else {
+					SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
+							RegistrationConstants.ENABLE);
+				}
+			}
+
+		} catch (RuntimeException runtimException) {
+			LOGGER.error("REGISTRATION - REDIRECTHOME - BASE_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
+					runtimException.getMessage() + ExceptionUtils.getStackTrace(runtimException));
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE));
+		}
+	}
 
 	/**
 	 * Opens the home page screen.
