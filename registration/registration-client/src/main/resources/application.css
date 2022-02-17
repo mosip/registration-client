@@ -488,6 +488,11 @@
 .loginTextStyle {
 	-fx-pref-height: 39.0px;
 	-fx-pref-width: 221.0px;
+	-fx-prompt-text-fill: derive(-fx-control-inner-background,-30%);
+}
+
+.loginTextStyle:focused {
+    -fx-prompt-text-fill: derive(-fx-control-inner-background,-30%);
 }
 
 .hyperLinkStyle {
