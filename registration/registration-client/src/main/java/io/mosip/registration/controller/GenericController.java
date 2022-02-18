@@ -66,6 +66,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
@@ -638,6 +639,10 @@ public class GenericController extends BaseController {
 	}
 
 	private void showHideErrorNotification(String fieldName) {
+		Tooltip toolTip = new Tooltip(fieldName);
+		toolTip.prefWidthProperty().bind(notification.widthProperty());
+		toolTip.setWrapText(true);
+		notification.setTooltip(toolTip);
 		notification.setText((fieldName == null) ? EMPTY : ApplicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
 				.getString("SCREEN_VALIDATION_ERROR") + " [ " + fieldName + " ]");
 	}
