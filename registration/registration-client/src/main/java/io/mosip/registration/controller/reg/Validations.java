@@ -6,7 +6,6 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import io.mosip.registration.controller.GenericController;
 import io.mosip.registration.enums.FlowType;
@@ -22,12 +21,11 @@ import io.mosip.kernel.core.idvalidator.spi.VidValidator;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.schema.Validator;
-import io.mosip.registration.dto.mastersync.BlocklistedWordsDto;
-import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.validator.RequiredFieldValidator;
 import javafx.scene.Node;
@@ -121,7 +119,7 @@ public class Validations extends BaseController {
 	}
 
 	private ResourceBundle getMessagesBundle(String langCode) {
-		return applicationContext.getBundle(langCode, RegistrationConstants.MESSAGES);
+		return ApplicationContext.getBundle(langCode, RegistrationConstants.MESSAGES);
 	}
 
 	/**
@@ -316,11 +314,13 @@ public class Validations extends BaseController {
 
 	public List<String> getBlockListedWordsList(TextField textField) {
 		List<String> blockListedWords = getRegistrationDTOFromSession().getConfiguredBlockListedWords();
-		return Arrays.stream(textField.getText().split(RegistrationConstants.SPACE))
+		List<String> inputText = new ArrayList<>(Arrays.asList(textField.getText().split(RegistrationConstants.SPACE)));
+		if (inputText.size() > 1) inputText.add(textField.getText());
+		return blockListedWords.stream()
 				.map(String::toLowerCase)
 				.distinct()
-				.filter( token -> blockListedWords.stream().anyMatch(bw -> bw.equalsIgnoreCase(token) ||
-						token.contains(bw.toLowerCase())))
+				.filter(bword -> inputText.stream().anyMatch(text -> text.equalsIgnoreCase(bword) ||
+						text.toLowerCase().contains(bword)))
 				.collect(Collectors.toList());
 	}
 

@@ -488,6 +488,11 @@
 .loginTextStyle {
 	-fx-pref-height: 39.0px;
 	-fx-pref-width: 221.0px;
+	-fx-prompt-text-fill: derive(-fx-control-inner-background,-30%);
+}
+
+.loginTextStyle:focused {
+    -fx-prompt-text-fill: derive(-fx-control-inner-background,-30%);
 }
 
 .hyperLinkStyle {
@@ -2634,7 +2639,7 @@ Working on new Css by taleev
 
 .registrationErrorMsg {
 	-fx-text-fill: #FF0000;
-    -fx-font-size: 15.0px;
+    -fx-font-size: 12.0px;
 }
 
 .additionaInfoReqIdLabel {

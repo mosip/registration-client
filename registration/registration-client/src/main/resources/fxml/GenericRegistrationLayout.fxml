@@ -25,19 +25,20 @@
       </AnchorPane>
       <GridPane fx:id="footerGridPane" alignment="TOP_CENTER" GridPane.columnIndex="1" GridPane.rowIndex="1">
          <columnConstraints>
-            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="10.0" percentWidth="100.0" prefWidth="100.0" />
+            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" percentWidth="88.0" />
+            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" percentWidth="12.0" />
          </columnConstraints>
          <rowConstraints>
-            <RowConstraints minHeight="10.0" percentHeight="25.0" prefHeight="30.0" vgrow="SOMETIMES" />
-            <RowConstraints minHeight="10.0" percentHeight="50.0" prefHeight="30.0" vgrow="SOMETIMES" />
-            <RowConstraints minHeight="10.0" percentHeight="25.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints percentHeight="10.0" vgrow="SOMETIMES" />
+            <RowConstraints percentHeight="80.0" vgrow="SOMETIMES" />
+            <RowConstraints percentHeight="10.0" vgrow="SOMETIMES" />
          </rowConstraints>
          <children>
-            <Button fx:id="next" alignment="BASELINE_CENTER" mnemonicParsing="false" styleClass="contiuneButton" text="%continue" GridPane.rowIndex="1" />
-            <Button fx:id="authenticate" alignment="BASELINE_CENTER" mnemonicParsing="false" styleClass="contiuneButton" text="%authenticate" GridPane.rowIndex="1" />
+            <Button fx:id="next" alignment="BASELINE_CENTER" mnemonicParsing="false" styleClass="contiuneButton" text="%continue" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <Button fx:id="authenticate" alignment="BASELINE_CENTER" mnemonicParsing="false" styleClass="contiuneButton" text="%authenticate" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <Label fx:id="notification" alignment="TOP_LEFT" mnemonicParsing="false" styleClass="registrationErrorMsg" wrapText="true" GridPane.halignment="LEFT" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="1" GridPane.vgrow="SOMETIMES" />
          </children>
       </GridPane>
-      <Label fx:id="notification" alignment="TOP_LEFT" mnemonicParsing="false" styleClass="registrationErrorMsg" GridPane.columnIndex="1" GridPane.rowIndex="1" />
      <!-- <GridPane fx:id="footerGridPane2" alignment="TOP_CENTER" GridPane.columnIndex="0" GridPane.rowIndex="1">
          <columnConstraints>
             <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="10.0" percentWidth="100.0" prefWidth="100.0" />

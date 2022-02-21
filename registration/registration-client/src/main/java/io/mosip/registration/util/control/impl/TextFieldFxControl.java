@@ -187,16 +187,16 @@ public class TextFieldFxControl extends FxControl {
 					hyperLinkHBox.setId(uiFieldDTO.getId() + langCode + "HyperlinkHBox");
 					hyperLinkHBox.getChildren()
 							.add(getHyperlink(uiFieldDTO.getId() + langCode + "Accept", langCode,
-									io.mosip.registration.context.ApplicationContext.getInstance()
+									io.mosip.registration.context.ApplicationContext
 											.getBundle(langCode, RegistrationConstants.LABELS).getString("accept_word"),
 									RegistrationConstants.DemoGraphicFieldMessageLabel, true));
 					hyperLinkHBox.getChildren().add(getLabel(uiFieldDTO.getId() + langCode + "HyperlinkLabel",
-							io.mosip.registration.context.ApplicationContext.getInstance()
+							io.mosip.registration.context.ApplicationContext
 									.getBundle(langCode, RegistrationConstants.LABELS).getString("slash"),
 							RegistrationConstants.DemoGraphicFieldMessageLabel, true, simpleTypeVBox.getPrefWidth()));
 					hyperLinkHBox.getChildren()
 							.add(getHyperlink(uiFieldDTO.getId() + langCode + "Reject", langCode,
-									io.mosip.registration.context.ApplicationContext.getInstance()
+									io.mosip.registration.context.ApplicationContext
 											.getBundle(langCode, RegistrationConstants.LABELS).getString("reject_word"),
 									RegistrationConstants.DemoGraphicFieldMessageLabel, true));
 
@@ -216,18 +216,17 @@ public class TextFieldFxControl extends FxControl {
 				hyperLinkHBox.setId(uiFieldDTO.getId() + langCode + "HyperlinkHBox");
 				hyperLinkHBox.getChildren()
 						.add(getHyperlink(uiFieldDTO.getId() + langCode + "Accept", langCode,
-								io.mosip.registration.context.ApplicationContext.getInstance()
+								io.mosip.registration.context.ApplicationContext
 										.getBundle(langCode, RegistrationConstants.LABELS).getString("accept_word"),
 								RegistrationConstants.DemoGraphicFieldMessageLabel, true));
 				hyperLinkHBox.getChildren()
 						.add(getLabel(uiFieldDTO.getId() + "HyperlinkLabel",
-								io.mosip.registration.context.ApplicationContext.getInstance()
+								io.mosip.registration.context.ApplicationContext
 										.getBundle(langCode, RegistrationConstants.LABELS).getString("slash"),
 								RegistrationConstants.DemoGraphicFieldMessageLabel, true, simpleTypeVBox.getPrefWidth()));
 				hyperLinkHBox.getChildren()
 						.add(getHyperlink(uiFieldDTO.getId() + langCode + "Reject", langCode,
-								io.mosip.registration.context.ApplicationContext.getInstance()
-										.getBundle(langCode, RegistrationConstants.LABELS).getString("reject_word"),
+								io.mosip.registration.context.ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS).getString("reject_word"),
 								RegistrationConstants.DemoGraphicFieldMessageLabel, true));
 
 				vBox.getChildren().add(hyperLinkHBox);
@@ -332,7 +331,7 @@ public class TextFieldFxControl extends FxControl {
 		/** Text Field */
 		TextField textField = new TextField();
 		textField.setId(id);
-		textField.setPromptText(io.mosip.registration.context.ApplicationContext.getInstance()
+		textField.setPromptText(io.mosip.registration.context.ApplicationContext
 				.getBundle(langCode, RegistrationConstants.LABELS).getString("language"));
 		textField.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_TEXTFIELD);
 		textField.setDisable(isDisable);
@@ -407,10 +406,12 @@ public class TextFieldFxControl extends FxControl {
 				}
 			});
 
-			String[] tokens = content.toString().split(RegistrationConstants.SPACE);
+			List<String> inputText = new ArrayList<>(Arrays.asList(content.toString().split(RegistrationConstants.SPACE)));
+			if (inputText.size() > 1) inputText.add(content.toString());
+			//String[] tokens = content.toString().split(RegistrationConstants.SPACE);
 			getRegistrationDTo().BLOCKLISTED_CHECK.get(uiFieldDTO.getId())
 					.getWords()
-					.removeIf(word -> Arrays.stream(tokens).noneMatch(t -> t.toLowerCase().contains(word)));
+					.removeIf(word -> inputText.stream().noneMatch(t -> t.toLowerCase().contains(word)));
 		}
 	}
 
