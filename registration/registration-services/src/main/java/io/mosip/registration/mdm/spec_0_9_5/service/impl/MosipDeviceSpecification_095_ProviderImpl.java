@@ -241,8 +241,8 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 
 					mosipDeviceSpecificationHelper.validateQualityScore(dataDTO.getQualityScore());
 					
-					if (dataDTO.getTransactionId() == null
-							|| !dataDTO.getTransactionId().equalsIgnoreCase(rCaptureRequestDTO.getTransactionId())) {
+					if (dataDTO.getTransactionId() == null && rCaptureRequestDTO !=null &&
+							 !dataDTO.getTransactionId().equalsIgnoreCase(rCaptureRequestDTO.getTransactionId())) {
 						throw new RegBaseCheckedException(
 								RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
 								RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage()
