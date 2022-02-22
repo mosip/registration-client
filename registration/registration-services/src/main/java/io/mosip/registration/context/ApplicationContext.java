@@ -160,7 +160,7 @@ public class ApplicationContext {
 	 */
 	public static ResourceBundle getBundle(String langCode, String bundleType) {
 
-		return resourceBundleMap.get(String.format("%s_%s", langCode, bundleType));
+		return resourceBundleMap.get(String.format("%s_%s", langCode == null ? applicationLanguage() : langCode, bundleType));
 
 	}
 

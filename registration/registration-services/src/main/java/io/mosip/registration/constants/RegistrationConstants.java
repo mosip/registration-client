@@ -1837,7 +1837,7 @@ public class RegistrationConstants {
 	public static final String SYSTEM_IMG = "system.png";;
 	public static final String ONLINE_IMG = "SystemOnline.png";
 	public static final String HAMBURGER_IMG = "hamburger.png";
-	public static final String HOME_IMG = "Home.png";
+	public static final String HOME_IMG = "Home-small.png";
 	public static final String EXPORT_ICON_IMG = "export-icon.jpg";
 	public static final String ACTIVE_DEMO_DETAILS_IMG = "activeDemographicDetails.png";
 	public static final String DEACTIVE_AUTH_IMG = "deactiveAuthentication.png";

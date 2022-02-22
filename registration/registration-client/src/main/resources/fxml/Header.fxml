@@ -213,7 +213,7 @@
       </GridPane>
       <ImageView fx:id="homeImgView" fitHeight="23.0" fitWidth="28.0" onMousePressed="#redirectHome" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="1">
       <image>
-            <Image url="@../images/Home.png" />
+            <Image url="@../images/Home-small.png" />
          </image>
       </ImageView>
    </children>

@@ -173,8 +173,7 @@ public class DocumentFxControl extends FxControl {
 	private GridPane createScanButton(UiFieldDTO uiFieldDTO) {
 
 		Button scanButton = new Button();
-		scanButton.setText(ApplicationContext.getInstance()
-				.getBundle(getRegistrationDTo().getSelectedLanguagesByApplicant().get(0), RegistrationConstants.LABELS)
+		scanButton.setText(ApplicationContext.getBundle(null, RegistrationConstants.LABELS)
 				.getString(RegistrationConstants.SCAN_BUTTON));
 		scanButton.setId(uiFieldDTO.getId() + RegistrationConstants.BUTTON);
 		scanButton.getStyleClass().add(RegistrationConstants.DOCUMENT_CONTENT_BUTTON);

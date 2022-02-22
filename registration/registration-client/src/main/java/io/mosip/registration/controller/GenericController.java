@@ -706,13 +706,16 @@ public class GenericController extends BaseController {
 			getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().forEach(langCode -> {
 				labels.add(screenDTO.getLabel().get(langCode));
 			});
+
+			String tabNameInApplicationLanguage = screenDTO.getLabel().get(ApplicationContext.applicationLanguage());
 			
 			if(screenFieldGroups == null || screenFieldGroups.isEmpty())
 				continue;
 			
 			Tab screenTab = new Tab();
 			screenTab.setId(screenDTO.getName()+"_tab");
-			screenTab.setText(labels.get(0));
+			screenTab.setText(tabNameInApplicationLanguage == null ?
+					labels.get(0) : tabNameInApplicationLanguage);
 			screenTab.setTooltip(new Tooltip(String.join(RegistrationConstants.SLASH, labels)));
 
 			GridPane screenGridPane = getScreenGridPane(screenDTO.getName());
@@ -777,13 +780,15 @@ public class GenericController extends BaseController {
 
 		Tab previewScreen = new Tab();
 		previewScreen.setId("PREVIEW");
-		previewScreen.setText(previewLabels.get(0));
+		previewScreen.setText(ApplicationContext.getBundle(null, RegistrationConstants.LABELS)
+				.getString(RegistrationConstants.previewHeader));
 		previewScreen.setTooltip(new Tooltip(String.join(RegistrationConstants.SLASH, previewLabels)));
 		tabPane.getTabs().add(previewScreen);
 
 		Tab authScreen = new Tab();
 		authScreen.setId("AUTH");
-		authScreen.setText(authLabels.get(0));
+		authScreen.setText(ApplicationContext.getBundle(null, RegistrationConstants.LABELS)
+				.getString(RegistrationConstants.authentication));
 		authScreen.setTooltip(new Tooltip(String.join(RegistrationConstants.SLASH, authLabels)));
 		tabPane.getTabs().add(authScreen);
 	}

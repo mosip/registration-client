@@ -317,6 +317,8 @@ public class BaseController {
 		}
 		scene.setRoot(borderPane);
 		fXComponents.getStage().setScene(scene);
+		scene.setNodeOrientation(applicationContext.isPrimaryLanguageRightToLeft() ?
+				NodeOrientation.RIGHT_TO_LEFT : NodeOrientation.LEFT_TO_RIGHT);
 		scene.getStylesheets().add(ClassLoader.getSystemClassLoader().getResource(getCssName()).toExternalForm());
 		return scene;
 	}
