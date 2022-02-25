@@ -161,9 +161,6 @@ public class RequiredFieldValidatorTest {
 		applicationMap.put(RegistrationConstants.AGE_GROUP_CONFIG, SCRIPT_NAME);
 		applicationMap.put(RegistrationConstants.APPLICANT_TYPE_MVEL_SCRIPT, SCRIPT_NAME);
 		when(context.map()).thenReturn(applicationMap);
-		JSONObject ageGroupConfig = new JSONObject(
-				(String) ApplicationContext.map().get(RegistrationConstants.AGE_GROUP_CONFIG));
-		System.out.println("ageGroupConfig:  " + ageGroupConfig);
 		assertNotNull(requiredFieldValidator.evaluateMvelScript("scriptName", registrationDTO));
 	}
 
