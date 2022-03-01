@@ -241,14 +241,19 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 
 					mosipDeviceSpecificationHelper.validateQualityScore(dataDTO.getQualityScore());
 					
-					if (dataDTO.getTransactionId() == null && rCaptureRequestDTO !=null &&
-							 !dataDTO.getTransactionId().equalsIgnoreCase(rCaptureRequestDTO.getTransactionId())) {
-						throw new RegBaseCheckedException(
-								RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
-								RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage()
-										+ " : RCapture TransactionId Mismatch : " + " request transaction id is : "
-										+ rCaptureRequestDTO.getTransactionId() + " and response transactionId is :"
-										+ dataDTO.getTransactionId());
+					try {
+						if (dataDTO.getTransactionId() == null || (rCaptureRequestDTO != null && !dataDTO
+								.getTransactionId().equalsIgnoreCase(rCaptureRequestDTO.getTransactionId()))) {
+							throw new RegBaseCheckedException(
+									RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
+									" and response transactionId is :" + dataDTO.getTransactionId());
+						}
+					} catch (Exception e) {
+						if (rCaptureRequestDTO != null) {
+							LOGGER.error(RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage()
+									+ " : RCapture TransactionId Mismatch : " + " request transaction id is : "
+									+ rCaptureRequestDTO.getTransactionId());
+						}
 					}
 
 					if (rCaptureResponseBiometricsDTO.getSpecVersion() == null || !rCaptureResponseBiometricsDTO
