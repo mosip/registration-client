@@ -3,10 +3,12 @@ package io.mosip.registration.test.dao.impl;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,5 +71,15 @@ public class JobConfigDAOTest {
 			assertEquals(jobConfigDAOImpl.updateAll(list),list);
 		}
 
+
+		@Test
+		public void getSyncJobTest() {
+			SyncJobDef jobDef =new SyncJobDef();
+			jobDef.setId("12345");
+			Optional<SyncJobDef> syncJobDef = Optional.of(jobDef);
+			
+			Mockito.when(jobConfigRepository.findById("jobId")).thenReturn(syncJobDef);
+			assertNotNull(jobConfigDAOImpl.getSyncJob("jobId"));
+		}
 
 }
