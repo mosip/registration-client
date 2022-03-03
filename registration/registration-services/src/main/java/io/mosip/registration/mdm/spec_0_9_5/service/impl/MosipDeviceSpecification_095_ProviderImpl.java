@@ -193,6 +193,10 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 			mdmRequestDto.setCount(count);
 
 			RCaptureRequestDTO rCaptureRequestDTO = getRCaptureRequest(bioDevice, mdmRequestDto);
+			if (rCaptureRequestDTO == null) {
+				throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
+						" failed to construct Rcapture request");
+			}
 			String requestBody = objectMapper.writeValueAsString(rCaptureRequestDTO);
 			LOGGER.debug("Request for RCapture....{}", requestBody);
 
@@ -240,22 +244,16 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 					mosipDeviceSpecificationHelper.validateResponseTimestamp(dataDTO.getTimestamp());
 
 					mosipDeviceSpecificationHelper.validateQualityScore(dataDTO.getQualityScore());
-					
-					try {
-						if (dataDTO.getTransactionId() == null || (rCaptureRequestDTO != null && !dataDTO
-								.getTransactionId().equalsIgnoreCase(rCaptureRequestDTO.getTransactionId()))) {
-							throw new RegBaseCheckedException(
-									RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
-									" and response transactionId is :" + dataDTO.getTransactionId());
-						}
-					} catch (Exception e) {
-						if (rCaptureRequestDTO != null) {
-							LOGGER.error(RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage()
-									+ " : RCapture TransactionId Mismatch : " + " request transaction id is : "
-									+ rCaptureRequestDTO.getTransactionId());
-						}
-					}
 
+					if (dataDTO.getTransactionId() == null || (rCaptureRequestDTO != null
+							&& !dataDTO.getTransactionId().equalsIgnoreCase(rCaptureRequestDTO.getTransactionId()))) {
+						LOGGER.error(" RCapture TransactionId Mismatch : the request transaction id is:{} response Transaction id {}",
+								rCaptureRequestDTO.getTransactionId(),dataDTO.getTransactionId());
+						throw new RegBaseCheckedException(
+								RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
+								" RCapture TransactionId Mismatch " );
+					}
+					
 					if (rCaptureResponseBiometricsDTO.getSpecVersion() == null || !rCaptureResponseBiometricsDTO
 							.getSpecVersion().equalsIgnoreCase(rCaptureRequestDTO.getSpecVersion())) {
 						throw new RegBaseCheckedException(
