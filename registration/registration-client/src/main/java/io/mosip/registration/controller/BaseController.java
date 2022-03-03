@@ -25,7 +25,6 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import io.mosip.registration.controller.reg.*;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,6 +44,13 @@ import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.device.BiometricsController;
 import io.mosip.registration.controller.device.ScanPopUpViewController;
 import io.mosip.registration.controller.eodapproval.RegistrationApprovalController;
+import io.mosip.registration.controller.reg.AlertController;
+import io.mosip.registration.controller.reg.DocumentScanController;
+import io.mosip.registration.controller.reg.HeaderController;
+import io.mosip.registration.controller.reg.HomeController;
+import io.mosip.registration.controller.reg.PacketHandlerController;
+import io.mosip.registration.controller.reg.RegistrationPreviewController;
+import io.mosip.registration.controller.reg.UserOnboardParentController;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
@@ -62,8 +68,6 @@ import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.config.GlobalParamService;
-import io.mosip.registration.service.config.LocalConfigService;
-import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.security.AuthenticationService;
@@ -71,7 +75,6 @@ import io.mosip.registration.service.sync.SyncStatusValidatorService;
 import io.mosip.registration.util.common.PageFlow;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
-import io.mosip.registration.validator.RequiredFieldValidator;
 import javafx.animation.PauseTransition;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -176,9 +179,6 @@ public class BaseController {
 	private RegistrationApprovalController registrationApprovalController;
 
 	@Autowired
-	private Validations validations;
-
-	@Autowired
 	protected PageFlow pageFlow;
 
 	@Autowired
@@ -191,22 +191,10 @@ public class BaseController {
 	private IdentitySchemaService identitySchemaService;
 
 	@Autowired
-	private RequiredFieldValidator requiredFieldValidator;
-
-	@Autowired
-	private Validations validation;
-
-	@Autowired
 	protected BaseService baseService;
 
 	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
-	
-	@Autowired
-	private LocalConfigService localConfigService;
-	
-	@Autowired
-	private LoginService loginService;
 
 	@Autowired
 	private BioService bioService;
@@ -299,8 +287,7 @@ public class BaseController {
 	}
 
 	protected Parent getRoot(String screen) throws IOException {
-		return BaseController.load(getClass().getResource(screen),
-				applicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS));
+		return BaseController.load(getClass().getResource(screen), applicationContext.getApplicationLanguageLabelBundle());
 	}
 
 	/**
@@ -332,15 +319,22 @@ public class BaseController {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static <T> T load(URL url) throws IOException {
-		FXMLLoader loader = new FXMLLoader(url, ApplicationContext.getInstance()
-				.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS));
+		String langCode = ApplicationContext.applicationLanguage();
+		if (SessionContext.map() != null && !SessionContext.map().isEmpty() && SessionContext.map().containsKey(RegistrationConstants.REGISTRATION_DATA)) {
+			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.map()
+					.get(RegistrationConstants.REGISTRATION_DATA);
+			if (registrationDTO != null && registrationDTO.getSelectedLanguagesByApplicant() != null) {
+				langCode = registrationDTO.getSelectedLanguagesByApplicant().get(0);
+			}
+		}
+		FXMLLoader loader = new FXMLLoader(url, ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS));
 		loader.setControllerFactory(ClientApplication.getApplicationContext()::getBean);
 		return loader.load();
 	}
 
 	public static <T> T loadWithNewInstance(URL url, Object controller) throws IOException {
 		String langCode = ApplicationContext.applicationLanguage();
-		if (SessionContext.map() != null || !SessionContext.map().isEmpty()) {
+		if (SessionContext.map() != null && !SessionContext.map().isEmpty()) {
 			RegistrationDTO registrationDTO = (RegistrationDTO) SessionContext.map()
 					.get(RegistrationConstants.REGISTRATION_DATA);
 			if (registrationDTO != null && registrationDTO.getSelectedLanguagesByApplicant() != null) {
@@ -348,7 +342,7 @@ public class BaseController {
 			}
 		}
 		FXMLLoader loader = new FXMLLoader(url,
-				ApplicationContext.getInstance().getBundle(langCode, RegistrationConstants.LABELS));
+				ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS));
 		loader.setController(controller);
 		return loader.load();
 	}
@@ -472,7 +466,8 @@ public class BaseController {
 	 * @return
 	 */
 	protected boolean pageNavigantionAlert() {
-		if (!fXComponents.getScene().getRoot().getId().equals("mainBox") && SessionContext.getInstance() != null && !SessionContext.map()
+		if (!fXComponents.getScene().getRoot().getId().equals("mainBox") && SessionContext.map() != null && SessionContext.map()
+				.containsKey(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ) && !SessionContext.map()
 				.get(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ).equals(RegistrationConstants.ENABLE)) {
 
 			Alert alert = createAlert(AlertType.CONFIRMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.INFORMATION),
@@ -742,7 +737,7 @@ public class BaseController {
 	 */
 	public static FXMLLoader loadChild(URL url) {
 		FXMLLoader loader = new FXMLLoader(url, ApplicationContext.getInstance()
-				.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.LABELS));
+				.getApplicationLanguageLabelBundle());
 		loader.setControllerFactory(ClientApplication.getApplicationContext()::getBean);
 		return loader;
 	}
@@ -847,7 +842,7 @@ public class BaseController {
 	 */
 	public RegistrationDTO getRegistrationDTOFromSession() {
 		RegistrationDTO registrationDTO = null;
-		if (SessionContext.map() != null || !SessionContext.map().isEmpty()) {
+		if (SessionContext.map() != null && !SessionContext.map().isEmpty()) {
 			registrationDTO = (RegistrationDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
 		}
 		return registrationDTO;
@@ -1458,8 +1453,7 @@ public class BaseController {
 					break;
 			}
 		} catch (PreConditionCheckException ex) {
-			ResourceBundle resourceBundle = applicationContext.getBundle(applicationContext.getApplicationLanguage(),
-					RegistrationConstants.MESSAGES);
+			ResourceBundle resourceBundle = applicationContext.getApplicationLanguageMessagesBundle();
 
 			generateAlert(RegistrationConstants.ERROR,
 					resourceBundle.containsKey(ex.getErrorCode()) ? resourceBundle.getString(ex.getErrorCode())
@@ -1474,8 +1468,7 @@ public class BaseController {
 			baseService.proceedWithRegistration();
 		} catch (PreConditionCheckException ex) {
 
-			ResourceBundle resourceBundle = applicationContext.getBundle(applicationContext.getApplicationLanguage(),
-					RegistrationConstants.MESSAGES);
+			ResourceBundle resourceBundle = applicationContext.getApplicationLanguageMessagesBundle();
 
 			generateAlert(RegistrationConstants.ERROR,
 					resourceBundle.containsKey(ex.getErrorCode()) ? resourceBundle.getString(ex.getErrorCode())
@@ -1489,8 +1482,7 @@ public class BaseController {
 		try {
 			baseService.proceedWithReRegistration();
 		} catch (PreConditionCheckException ex){
-			ResourceBundle resourceBundle = applicationContext.getBundle(applicationContext.getApplicationLanguage(),
-					RegistrationConstants.MESSAGES);
+			ResourceBundle resourceBundle = applicationContext.getApplicationLanguageMessagesBundle();
 
 			generateAlert(RegistrationConstants.ERROR,
 					resourceBundle.containsKey(ex.getErrorCode()) ? resourceBundle.getString(ex.getErrorCode())
@@ -1503,7 +1495,7 @@ public class BaseController {
 	protected List<GenericDto> getConfiguredLanguages() {
 		List<GenericDto> languages = new ArrayList<>();
 		for (String langCode : getConfiguredLangCodes()) {
-			ResourceBundle bundle = applicationContext.getBundle(langCode, RegistrationConstants.LABELS);
+			ResourceBundle bundle = ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS);
 			languages.add(new GenericDto(langCode, bundle != null ? bundle.getString("language") : langCode, langCode));
 		}
 		return languages;
@@ -1512,7 +1504,7 @@ public class BaseController {
 	protected List<GenericDto> getConfiguredLanguagesForLogin() {
 		List<GenericDto> languages = new ArrayList<>();
 		for (String langCode : getConfiguredLangCodes()) {
-			ResourceBundle bundle = applicationContext.getBundle(langCode, RegistrationConstants.LABELS);
+			ResourceBundle bundle = ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS);
 			if (bundle != null) {
 				languages.add(new GenericDto(langCode, bundle.getString("language"), langCode));
 			}
