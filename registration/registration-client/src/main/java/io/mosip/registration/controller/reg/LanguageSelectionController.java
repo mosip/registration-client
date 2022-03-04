@@ -120,9 +120,7 @@ public class LanguageSelectionController extends BaseController implements Initi
 				checkBox.setId(language.getCode());
 				checkBox.setText(language.getName());
 				checkBox.getStyleClass().add("languageCheckBox");
-				if (language.getCode().equalsIgnoreCase(ApplicationContext.applicationLanguage())) {
-					checkBox.setSelected(true); //Pre-selecting application language. Can be de-selected if it is not mandatory.
-				}
+				
 				if (language.getCode().equalsIgnoreCase(language.getName())) {
 					checkBox.setDisable(true); //If ResourceBundle is not present for configured language, show the checkbox but disable it for selection
 				} else {
@@ -149,6 +147,9 @@ public class LanguageSelectionController extends BaseController implements Initi
 							submit.setDisable(true);
 						}
 					});
+				}
+				if (language.getCode().equalsIgnoreCase(ApplicationContext.applicationLanguage())) {
+					checkBox.setSelected(true); //Pre-selecting application language. Can be de-selected if it is not mandatory.
 				}
 				checkBoxesPane.getChildren().add(checkBox);
 			}
