@@ -1,5 +1,6 @@
 package io.mosip.registration.validator;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
@@ -105,11 +106,8 @@ public class RequiredFieldValidatorTest {
 	@Test
 	public void isRequiredFieldTest() {
 		UiFieldDTO schemaField = getUiFieldDTO();
-		RegistrationDTO registrationDTO = new RegistrationDTO();
-		RequiredOnExpr requiredOnExpr = new RequiredOnExpr();
-		requiredOnExpr.setEngine("engine");
-		Optional<RequiredOnExpr> mockedCenter = Optional.of(requiredOnExpr);
-		assertEquals(Boolean.TRUE, requiredFieldValidator.isRequiredField(schemaField, registrationDTO));
+		RegistrationDTO registrationDTO = getRegistrationDTO();
+		assertEquals(Boolean.FALSE, requiredFieldValidator.isRequiredField(schemaField, registrationDTO));
 	}
 	@Test
 	public void isRequiredFieldExecuteMVLFalseTest() {   
@@ -121,7 +119,6 @@ public class RequiredFieldValidatorTest {
 		requiredOnExpr.setExpr("engine");
 		requiredOn.add(requiredOnExpr);
 		schemaField.setRequiredOn(requiredOn);
-		Optional<RequiredOnExpr> mockedCenter = Optional.of(requiredOnExpr);
 		assertEquals(Boolean.FALSE, requiredFieldValidator.isRequiredField(schemaField, registrationDTO));
 	}
 	
@@ -131,17 +128,19 @@ public class RequiredFieldValidatorTest {
 		RegistrationDTO registrationDTO = new RegistrationDTO();
 		RequiredOnExpr requiredOnExpr = new RequiredOnExpr();
 		requiredOnExpr.setEngine("engine");
-		Optional<RequiredOnExpr> mockedCenter = Optional.of(requiredOnExpr);
 		assertEquals(Boolean.FALSE, requiredFieldValidator.isRequiredField(schemaField, registrationDTO));
 	}
 
 	@Test
 	public void getRequiredBioAttributesTest() {
-		UiFieldDTO schemaField =  getUiFieldDTO();
+		UiFieldDTO schemaField =  new UiFieldDTO();
 		RegistrationDTO registrationDTO = new RegistrationDTO();
+		schemaField.setRequired(Boolean.TRUE);
+		schemaField.setConditionalBioAttributes(getConditionalBioAttributes());
+		
 		registrationDTO.setProcessId("processId");
-		registrationDTO.AGE_GROUPS.put("ageGroup", "ageGroup");		
-		assertEquals(schemaField.getBioAttributes().size(),requiredFieldValidator.getRequiredBioAttributes(schemaField, registrationDTO).size());
+		registrationDTO.AGE_GROUPS.put("ageGroup", "ageGroup");	
+		assertNull(requiredFieldValidator.getRequiredBioAttributes(schemaField, registrationDTO));
 	}
 
 	@Test
@@ -166,7 +165,7 @@ public class RequiredFieldValidatorTest {
 		RegistrationDTO registrationDTO = new RegistrationDTO();
 		registrationDTO.setProcessId("processId");
 		registrationDTO.AGE_GROUPS.put("ageGroup", "ageGroup");		
-		assertEquals(schemaField.getBioAttributes().size(),requiredFieldValidator.getRequiredBioAttributes(schemaField, registrationDTO).size());
+		assertNotNull(requiredFieldValidator.getRequiredBioAttributes(schemaField, registrationDTO).size());
 	}
 
 	
@@ -210,7 +209,6 @@ public class RequiredFieldValidatorTest {
 	}
 	@Test
 	public void evaluateMvelScriptFalseTest() {
-		UiFieldDTO schemaField = new UiFieldDTO();
 		RegistrationDTO registrationDTO = new RegistrationDTO();
 		registrationDTO.setProcessId("processId");
 		assertEquals(null, requiredFieldValidator.evaluateMvelScript("scriptName", registrationDTO));
@@ -218,7 +216,6 @@ public class RequiredFieldValidatorTest {
 	
 	@Test
 	public void evaluateMvelScriptExceptionTest() throws RegBaseCheckedException{
-     	UiFieldDTO schemaField = new UiFieldDTO();
 		RegistrationDTO registrationDTO = getRegistrationDTO();
 		registrationDTO.setProcessId("processId");
 		Map<String, Object> allIdentityDetails = new LinkedHashMap<String, Object>();
@@ -232,7 +229,6 @@ public class RequiredFieldValidatorTest {
 	
 	@Test
 	public void getScriptCacheFailureTest() throws NoSuchAlgorithmException,RegBaseCheckedException,IOException,ConnectionException,CertificateEncodingException{
-     	UiFieldDTO schemaField = new UiFieldDTO();
 		RegistrationDTO registrationDTO = getRegistrationDTO();
 		registrationDTO.setProcessId("processId");
 		Map<String, Object> allIdentityDetails = new LinkedHashMap<String, Object>();
@@ -256,13 +252,11 @@ public class RequiredFieldValidatorTest {
 		applicationMap.put(RegistrationConstants.AGE_GROUP_CONFIG, "{'INFANT':'0-5','MINOR':'6-17','ADULT':'18-200'}" );
 		applicationMap.put(RegistrationConstants.APPLICANT_TYPE_MVEL_SCRIPT, "{'INFANT':'0-5','MINOR':'6-17','ADULT':'18-200'}");
 		when(context.map()).thenReturn(applicationMap);	
-		requiredFieldValidator.evaluateMvelScript("MINOR", registrationDTO);
 		assertNull(requiredFieldValidator.evaluateMvelScript("MINOR", registrationDTO));
 	}
 	
 	@Test
 	public void getScriptFileSignatureEncryptionFailureTest() throws NoSuchAlgorithmException,RegBaseCheckedException,IOException,ConnectionException,CertificateEncodingException{
-     	UiFieldDTO schemaField = new UiFieldDTO();
 		RegistrationDTO registrationDTO = getRegistrationDTO();
 		registrationDTO.setProcessId("processId");
 		Map<String, Object> allIdentityDetails = new LinkedHashMap<String, Object>();
@@ -286,14 +280,12 @@ public class RequiredFieldValidatorTest {
 		applicationMap.put(RegistrationConstants.AGE_GROUP_CONFIG, "{'INFANT':'0-5','MINOR':'6-17','ADULT':'18-200'}" );
 		applicationMap.put(RegistrationConstants.APPLICANT_TYPE_MVEL_SCRIPT, "{'INFANT':'0-5','MINOR':'6-17','ADULT':'18-200'}");
 		when(context.map()).thenReturn(applicationMap);	
-		requiredFieldValidator.evaluateMvelScript("MINOR", registrationDTO);
 		assertNull(requiredFieldValidator.evaluateMvelScript("MINOR", registrationDTO));
 	}
 	
 	
 	@Test
 	public void getScriptFileSignatureFailureTest() throws NoSuchAlgorithmException,RegBaseCheckedException,IOException,ConnectionException,CertificateEncodingException{
-     	UiFieldDTO schemaField = new UiFieldDTO();
 		RegistrationDTO registrationDTO = getRegistrationDTO();
 		registrationDTO.setProcessId("processId");
 		Map<String, Object> allIdentityDetails = new LinkedHashMap<String, Object>();
@@ -318,13 +310,11 @@ public class RequiredFieldValidatorTest {
 		applicationMap.put(RegistrationConstants.AGE_GROUP_CONFIG, "{'INFANT':'0-5','MINOR':'6-17','ADULT':'18-200'}" );
 		applicationMap.put(RegistrationConstants.APPLICANT_TYPE_MVEL_SCRIPT, "{'INFANT':'0-5','MINOR':'6-17','ADULT':'18-200'}");
 		when(context.map()).thenReturn(applicationMap);	
-		requiredFieldValidator.evaluateMvelScript("MINOR", registrationDTO);
 		assertNull(requiredFieldValidator.evaluateMvelScript("MINOR", registrationDTO));
 	}
 	
 	@Test
 	public void getScriptValidateScriptSignatureFailureTest() throws NoSuchAlgorithmException,RegBaseCheckedException,IOException,ConnectionException,CertificateEncodingException{
-     	UiFieldDTO schemaField = new UiFieldDTO();
 		RegistrationDTO registrationDTO = getRegistrationDTO();
 		registrationDTO.setProcessId("processId");
 		Map<String, Object> allIdentityDetails = new LinkedHashMap<String, Object>();
@@ -348,14 +338,12 @@ public class RequiredFieldValidatorTest {
 		Mockito.when(fileSignatureRepository.findByFileName(Mockito.anyString())).thenReturn(fileSignature);
 		applicationMap.put(RegistrationConstants.AGE_GROUP_CONFIG, "{'INFANT':'0-5','MINOR':'6-17','ADULT':'18-200'}" );
 		applicationMap.put(RegistrationConstants.APPLICANT_TYPE_MVEL_SCRIPT, "{'INFANT':'0-5','MINOR':'6-17','ADULT':'18-200'}");
-		when(context.map()).thenReturn(applicationMap);	
-		requiredFieldValidator.evaluateMvelScript("MINOR", registrationDTO);
+		when(context.map()).thenReturn(applicationMap);
 		assertNull(requiredFieldValidator.evaluateMvelScript("scriptName", registrationDTO));
 		
 	}
 	@Test
 	public void getScriptTest() throws NoSuchAlgorithmException,RegBaseCheckedException,IOException,ConnectionException,CertificateEncodingException{
-     	UiFieldDTO schemaField = new UiFieldDTO();
 		RegistrationDTO registrationDTO = getRegistrationDTO();
 		registrationDTO.setProcessId("processId");
 		Map<String, Object> allIdentityDetails = new LinkedHashMap<String, Object>();
@@ -392,7 +380,6 @@ public class RequiredFieldValidatorTest {
 		RegistrationDTO registrationDTO = new RegistrationDTO();
 		RequiredOnExpr requiredOnExpr = new RequiredOnExpr();
 		requiredOnExpr.setEngine("engine");
-		Optional<RequiredOnExpr> mockedCenter = Optional.of(requiredOnExpr);
 		assertEquals(Boolean.FALSE, requiredFieldValidator.isRequiredField(schemaField, registrationDTO));
 	}
 	
@@ -408,7 +395,7 @@ public class RequiredFieldValidatorTest {
 	private RegistrationDTO getRegistrationDTO() {
 		FlowType flowtype = FlowType.NEW;
 		flowtype.setCategory("category");
-		List<String> selectedLanguagesByApplicant = new ArrayList();
+		List<String> selectedLanguagesByApplicant = new ArrayList<String>();
 		selectedLanguagesByApplicant.add("English");
 		List<String> updatableFields = new ArrayList<String>();
 		updatableFields.add("updateFields");
@@ -417,8 +404,6 @@ public class RequiredFieldValidatorTest {
 		Map<String, Object> demographics = new HashMap<>();
 		Map<String, DocumentDto> documents = new HashMap<>();
 		Map<String, BiometricsDto> biometrics = new HashMap<>();
-		Map<String, Object> AGE_GROUPS = new HashMap<>();
-		Map<String, String> SELECTED_CODES = new HashMap<>();
 		Map<String, BiometricsException> biometricExceptions = new HashMap<>();
 		
 		RegistrationDTO registrationDTO = new RegistrationDTO();
@@ -442,35 +427,47 @@ public class RequiredFieldValidatorTest {
 
 		UiFieldDTO schemaField = new UiFieldDTO();
 		List<RequiredOnExpr> requiredOn = new ArrayList<RequiredOnExpr>();
-		RequiredOnExpr requiredOnExpr = new RequiredOnExpr();
-		requiredOnExpr.setEngine("engine");
-		requiredOnExpr.setExpr("engine");
 		
-		List<String> bioAttributes = new ArrayList<String>();
-		bioAttributes.add(new String("str1"));
-		
+		List<String> bioAttributes = getBioAttributes();		
 		RequiredOnExpr requiredOnExpr1 = new RequiredOnExpr();
-		requiredOnExpr1.setEngine("engine1");
-		requiredOnExpr1.setExpr("engine1");
+		requiredOnExpr1.setEngine("MVEL");
+		requiredOnExpr1.setExpr("identity.get('ageGroup') == 'INFANT' && (identity.get('introducerRID') == nil || identity.get('introducerRID') == empty)");
 		requiredOn.add(requiredOnExpr1);
 
-		List<ConditionalBioAttributes> conditionalAttributes = new ArrayList<ConditionalBioAttributes>();
-		ConditionalBioAttributes condAttr = new ConditionalBioAttributes();
-		condAttr.setProcess("processId");	
-		condAttr.setAgeGroup("ageGroup");
-		condAttr.setBioAttributes(bioAttributes);
-		conditionalAttributes.add(condAttr);
+		List<ConditionalBioAttributes> conditionalAttributes = getConditionalBioAttributes();
 	
 		schemaField.setId("id");
 		schemaField.setRequired(Boolean.TRUE);
 		schemaField.setRequiredOn(requiredOn);
 		schemaField.setConditionalBioAttributes(conditionalAttributes);
 		schemaField.setBioAttributes(bioAttributes);
-		requiredOnExpr.setEngine("MVEL");
-		requiredOnExpr.setExpr("MVEL");
-		schemaField.setVisible(requiredOnExpr);
+		schemaField.setVisible(requiredOnExpr1);
 		return schemaField;
 
 	}
 
+	private List<ConditionalBioAttributes> getConditionalBioAttributes() {
+		List<ConditionalBioAttributes> conditionalAttributes = new ArrayList<ConditionalBioAttributes>();
+		ConditionalBioAttributes condAttr = new ConditionalBioAttributes();
+		condAttr.setProcess("ALL");
+		condAttr.setAgeGroup("INFANT");
+		condAttr.setValidationExpr(
+				"leftEye || rightEye || rightIndex || rightLittle || rightRing || rightMiddle || leftIndex || leftLittle || leftRing || leftMiddle || leftThumb || rightThumb || face");
+		condAttr.setBioAttributes(getBioAttributes());
+		conditionalAttributes.add(condAttr);
+		return conditionalAttributes;
+	}
+
+	private List<String> getBioAttributes() {
+		List<String> bioAttributes = new ArrayList<String>();
+		bioAttributes.add(new String("leftEye"));
+		bioAttributes.add(new String("rightEye"));
+		bioAttributes.add(new String("rightLittle"));
+		bioAttributes.add(new String("rightIndex"));
+		bioAttributes.add(new String("rightRing"));
+		bioAttributes.add(new String("rightMiddle"));
+		bioAttributes.add(new String("leftIndex"));
+		bioAttributes.add(new String("leftLittle"));
+		return bioAttributes;
+	}
 }
