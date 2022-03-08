@@ -411,7 +411,7 @@
 		<dependency>
 			<groupId>io.mosip.registration</groupId>
 			<artifactId>registration-api</artifactId>
-			<version>1.2.0.1-SNAPSHOT</version>
+			<version>${mosip.core.kernel.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>io.mosip.kernel</groupId>
@@ -423,7 +423,7 @@
 		<dependency>
 			<groupId>io.mosip.registration</groupId>
 			<artifactId>registration-api-stub-impl</artifactId>
-			<version>1.2.0.1-SNAPSHOT</version>
+			<version>${mosip.core.kernel.version}</version>
 		</dependency>
 
 		<dependency>
@@ -453,7 +453,6 @@
 			<artifactId>mockwebserver</artifactId>
 			<version>3.14.4</version>
 		</dependency>
-
 	</dependencies>
 	<!--<repositories> <repository> <id>local-maven-repo</id> <url>file:///${basedir}/lib</url>
 		</repository> </repositories> -->

@@ -12,7 +12,7 @@ public enum Modality {
     FINGERPRINT_SLAB_THUMBS(RegistrationConstants.twoThumbsUiAttributes),
     IRIS_DOUBLE(RegistrationConstants.eyesUiAttributes),
     FACE(RegistrationConstants.faceUiAttributes),
-    EXCEPTION_PHOTO(Collections.EMPTY_LIST);
+    EXCEPTION_PHOTO(RegistrationConstants.exceptionPhotoAttributes);
 
     public List<String> getAttributes() {
         return attributes;
@@ -46,6 +46,8 @@ public enum Modality {
                 return IRIS_DOUBLE.attributes;
             case FACE:
                 return FACE.attributes;
+            case EXCEPTION_PHOTO:
+                return EXCEPTION_PHOTO.attributes;
         }
         return Collections.EMPTY_LIST;
     }
@@ -73,6 +75,7 @@ public enum Modality {
                 return Modality.IRIS_DOUBLE;
 
             case "face": return Modality.FACE;
+            case RegistrationConstants.notAvailableAttribute: return Modality.EXCEPTION_PHOTO;
         }
         return null;
     }

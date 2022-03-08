@@ -1619,6 +1619,9 @@ public class RegistrationConstants {
 	public static final List<String> eyesUiAttributes = Arrays.asList(leftEyeUiAttribute, rightEyeUiAttribute);
 	public static final List<String> faceUiAttributes = Arrays.asList("face");
 
+	public static final String notAvailableAttribute = "unknown";
+	public static final List<String> exceptionPhotoAttributes = Arrays.asList(notAvailableAttribute);
+
 	public static final String ID_SCHEMA_SYNC_SERVICE = "idschema_key";
 
 	/*public static final Map<String, String> regBioMap = new HashMap<String, String>() {

@@ -57,5 +57,7 @@ public class UiFieldDTO {
 	private String fieldLayout;
 	private List<String> locationHierarchy;
 	private List<ConditionalBioAttributes> conditionalBioAttributes;
+	@JsonProperty("exceptionPhotoRequired")
+	private boolean isExceptionPhotoRequired;
 
 }
