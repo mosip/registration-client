@@ -160,7 +160,7 @@ public class ServiceDelegateUtilTest {
 		assertNotNull(delegateUtil.get("otp_validator", requestParamMap, false,"System"));
 	}
 	
-	@Test(expected = ConnectionException.class)
+	@Test
 	public void getRequestFailureTest() throws Exception {
 		ResponseDTO response = new ResponseDTO();
 		when(environment.getProperty("otp_validator.service.httpmethod")).thenReturn("GET");
@@ -179,7 +179,7 @@ public class ServiceDelegateUtilTest {
 		responseMap.put("responseHeader", header);
 		responseMap.put("responseBody", response);
 		Mockito.when(restClientUtil.invokeURL((Mockito.anyObject()))).thenReturn(responseMap);
-		assertNotNull(delegateUtil.get("otp_validator", null, false,"System"));
+		assertNotNull(delegateUtil.get("otp_validator", new HashMap<>(), false,"System"));
 	}
 	
 	@Test
