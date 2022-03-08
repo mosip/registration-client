@@ -160,7 +160,7 @@ public class ServiceDelegateUtilTest {
 		assertNotNull(delegateUtil.get("otp_validator", requestParamMap, false,"System"));
 	}
 	
-	@Test(expected = ConnectionException.class)
+	@Test(expected = NullPointerException.class)
 	public void getRequestFailureTest() throws Exception {
 		ResponseDTO response = new ResponseDTO();
 		when(environment.getProperty("otp_validator.service.httpmethod")).thenReturn("GET");
