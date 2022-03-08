@@ -3,6 +3,7 @@ package io.mosip.registration.util.restclient;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.impl.JWTParser;
+import com.auth0.jwt.impl.NullClaim;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import io.micrometer.core.annotation.Counted;
@@ -400,13 +401,10 @@ public class AuthTokenUtilService {
 
     private List<String> getRoles(@NotNull DecodedJWT decodedJWT) {
         Claim realmAccess = decodedJWT.getClaim(REALM_ACCESS);
-        if (!realmAccess.isNull()) {
-            return (List<String>) realmAccess.asMap().get("roles");
-        }
-        return new ArrayList<>();
+        return (!realmAccess.isNull()) ? (List<String>) realmAccess.asMap().get("roles") :  new ArrayList<>();
     }
 
     private String getUsername(@NotNull DecodedJWT decodedJWT) {
-        return decodedJWT.getClaim(USERNAME) == null ? null : decodedJWT.getClaim(USERNAME).asString().trim();
+        return decodedJWT.getClaim(USERNAME).isNull() ? null : decodedJWT.getClaim(USERNAME).asString().trim();
     }
 }
