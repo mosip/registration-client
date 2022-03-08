@@ -868,7 +868,7 @@ public class GenericController extends BaseController {
 					break;
 
 				case CONTROLTYPE_BIOMETRICS:
-					fxControl = new BiometricFxControl(getProofOfExceptionFields()).build(uiFieldDTO);
+					fxControl = new BiometricFxControl(/*getProofOfExceptionFields()*/).build(uiFieldDTO);
 					break;
 
 				case CONTROLTYPE_BUTTON:
@@ -911,10 +911,10 @@ public class GenericController extends BaseController {
 		orderedScreens.values().forEach(screen -> { refreshScreenVisibility(screen.getName()); });
 	}
 
-	public List<UiFieldDTO> getProofOfExceptionFields() {
+	/*public List<UiFieldDTO> getProofOfExceptionFields() {
 		return fields.stream().filter(field ->
 				field.getSubType().contains(RegistrationConstants.POE_DOCUMENT)).collect(Collectors.toList());
-	}
+	}*/
 
 	private FxControl getFxControl(String fieldId) {
 		return GenericController.getFxControlMap().get(fieldId);

@@ -286,6 +286,13 @@ public class TemplateGenerator extends BaseService {
 						RegistrationConstants.FACE_IMG_PATH, getImageFromISO(Modality.FACE, capturedFace).get(0));
 			}
 		}
+
+		String key = String.format("%s_%s", field.getId(), Modality.EXCEPTION_PHOTO.getAttributes().get(0));
+		if (registration.getBiometrics().containsKey(key)) {
+			setBiometricImage(templateValues, RegistrationConstants.TEMPLATE_EXCEPTION_IMAGE_SOURCE,
+					null, getImageFromISO(Modality.EXCEPTION_PHOTO,
+							Arrays.asList(registration.getBiometrics().get(key))).get(0));
+		}
 		return bio_data;
 	}
 
@@ -324,10 +331,10 @@ public class TemplateGenerator extends BaseService {
 			data.put("format", registration.getDocuments().get(field.getId()).getFormat());
 			data.put("refNumber", registration.getDocuments().get(field.getId()).getRefNumber());
 
-			if("POE".equalsIgnoreCase(field.getSubType()) && !registration.getDocuments().get(field.getId()).getType().equalsIgnoreCase("COE")) {
+			/*if("POE".equalsIgnoreCase(field.getSubType()) && !registration.getDocuments().get(field.getId()).getType().equalsIgnoreCase("COE")) {
 				templateValues.put(RegistrationConstants.TEMPLATE_EXCEPTION_IMAGE_SOURCE, RegistrationConstants.TEMPLATE_JPG_IMAGE_ENCODING +
 						StringUtils.newStringUtf8(Base64.encodeBase64(registration.getDocuments().get(field.getId()).getDocument(), false)));
-			}
+			}*/
 		}
 		return data;
 	}
@@ -434,6 +441,7 @@ public class TemplateGenerator extends BaseService {
 						convertRequestDto.setVersion("ISO19794_6_2011");
 						images.add(IrisDecoder.convertIrisISOToImageBytes(convertRequestDto));
 						break;
+					case EXCEPTION_PHOTO:
 					case FACE:
 						convertRequestDto.setVersion("ISO19794_5_2011");
 						images.add(FaceDecoder.convertFaceISOToImageBytes(convertRequestDto));

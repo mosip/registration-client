@@ -38,7 +38,6 @@ import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.crypto.spi.CryptoCoreSpec;
 import io.mosip.kernel.core.exception.IOException;
-import io.mosip.kernel.core.security.constants.MosipSecurityMethod;
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.kernel.keygenerator.bouncycastle.KeyGenerator;
 import io.mosip.kernel.keygenerator.bouncycastle.util.KeyGeneratorUtils;
@@ -56,7 +55,6 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.external.impl.PreRegZipHandlingServiceImpl;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @RunWith(PowerMockRunner.class)
@@ -82,8 +80,6 @@ public class PreRegZipHandlingServiceTest {
 	static byte[] preRegPacket;
 
 	static byte[] preRegPacketEncrypted;
-
-	static MosipSecurityMethod mosipSecurityMethod;
 	
 	@Mock
 	private IdentitySchemaService identitySchemaService;
@@ -157,9 +153,6 @@ public class PreRegZipHandlingServiceTest {
 		URL url = PreRegZipHandlingServiceTest.class.getResource("/preRegSample.zip");
 		File packetZipFile = new File(URLDecoder.decode(url.getFile(), "UTF-8"));
 		preRegPacket = FileUtils.readFileToByteArray(packetZipFile);
-
-		mosipSecurityMethod = MosipSecurityMethod.AES_WITH_CBC_AND_PKCS7PADDING;
-
 		Map<String, Object> applicationMap = new HashMap<>();
 		applicationMap.put("mosip.registration.registration_pre_reg_packet_location", "..//PreRegPacketStore");
 		ApplicationContext.getInstance();

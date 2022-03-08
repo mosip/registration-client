@@ -1,6 +1,5 @@
 package io.mosip.registration.service.external;
 
-import io.mosip.kernel.core.security.encryption.MosipEncryptor;
 import io.mosip.registration.dto.PreRegistrationDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.entity.PreRegistrationList;
@@ -40,10 +39,7 @@ public interface PreRegZipHandlingService {
 	 * This method is used to encrypt the pre-registration packet and save it into
 	 * the disk
 	 * 
-	 * <p>
-	 * This method internally uses {@link MosipEncryptor} component for encryption
-	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * The encrypted Pre-Registration packet will be saved into the configured
 	 * location in the local system
@@ -96,8 +92,7 @@ public interface PreRegZipHandlingService {
 	 * This method is used to decrypt the encrypted Pre-Registration packet using
 	 * the symmetric key
 	 * 
-	 * <p>This method internally uses {@link MosipEncryptor} component for decryption</p>
-	 * 
+	 *
 	 * @param symmetricKey
 	 *            - key to decrypt the Pre-Registration packet
 	 * @param encryptedPacket

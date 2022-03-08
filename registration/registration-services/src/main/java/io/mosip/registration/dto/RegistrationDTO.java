@@ -6,13 +6,7 @@ import java.time.Period;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ValueRange;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
@@ -216,6 +210,10 @@ public class RegistrationDTO {
 		return biometricExceptions.containsKey(String.format("%s_%s", fieldId, bioAttribute));
 	}
 
+	public boolean isBiometricExceptionAvailable(String fieldId) {
+		return biometricExceptions.keySet().stream().anyMatch(k -> k.startsWith(String.format("%s_", fieldId)));
+	}
+
 	public List<String> getBiometricExceptions(String fieldId) {
 		return biometricExceptions.keySet().stream()
 				.filter(k -> k.startsWith(String.format("%s_", fieldId)))
@@ -225,6 +223,26 @@ public class RegistrationDTO {
 	public BiometricsDto getBiometric(String fieldId, String bioAttribute) {
 		String key = String.format("%s_%s", fieldId, bioAttribute);
 		return this.biometrics.get(key);
+	}
+
+	public void removeExceptionPhoto(String fieldId) {
+		String key = String.format("%s_%s", fieldId, RegistrationConstants.notAvailableAttribute);
+		this.biometrics.remove(key);
+		key = String.format("%s_%s", fieldId, Modality.EXCEPTION_PHOTO.name());
+		this.ATTEMPTS.remove(key);
+		Set<String> captureKeys = this.BIO_CAPTURES.keySet();
+		captureKeys.stream()
+				.filter( k -> k.startsWith(String.format("%s_%s_", fieldId, RegistrationConstants.notAvailableAttribute)))
+				.forEach( k -> {
+					this.BIO_CAPTURES.remove(k);
+				});
+
+		Set<String> scoreKeys = BIO_SCORES.keySet();
+		scoreKeys.stream()
+				.filter( k -> k.startsWith(String.format("%s_%s_", fieldId, Modality.EXCEPTION_PHOTO.name())))
+				.forEach( k -> {
+					this.BIO_SCORES.remove(k);
+				});
 	}
 
 	public void clearBIOCache(String fieldId, String bioAttribute) {
@@ -290,9 +308,8 @@ public class RegistrationDTO {
 
 	public void addAllBiometrics(String fieldId, Map<String, BiometricsDto> biometricsDTOMap,
 			double thresholdScore, int maxRetryAttempt) {
-		//	List<BiometricsDto> savedBiometrics = null;
+
 		if (fieldId != null && biometricsDTOMap != null && !biometricsDTOMap.isEmpty()) {
-		//	savedBiometrics = new LinkedList<>();
 			boolean isQualityCheckPassed = false, isForceCaptured = false;
 
 			if (!biometricsDTOMap.isEmpty()) {
