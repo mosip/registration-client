@@ -39,14 +39,15 @@ public class Schema {
     public List<String> bioAttributes;
     public List<RequiredOn> requiredOn;
     public String subType;
-
-    public Schema()
+    public boolean exceptionPhotoRequired;
+    
+  	public Schema()
     {}
 	public Schema(String id, boolean inputRequired, String type, int minimum, int maximum, String description,
 			HashMap<String, String> label, String controlType, String fieldType, String format, List<Validator> validators,
 			String fieldCategory, Object alignmentGroup, Object visible, String contactType, String group,
 			Object changeAction, boolean required, List<String> bioAttributes, List<RequiredOn> requiredOn,
-			String subType) {
+			String subType,Boolean exceptionPhotoRequired) {
 		super();
 		this.id = id;
 		this.inputRequired = inputRequired;
@@ -69,6 +70,7 @@ public class Schema {
 		this.bioAttributes = bioAttributes;
 		this.requiredOn = requiredOn;
 		this.subType = subType;
+		this.exceptionPhotoRequired=exceptionPhotoRequired;
 	}
 	public String getId() {
 		return id;
@@ -204,5 +206,11 @@ public class Schema {
 			public void setConditionalBioAttributes(List<ConditionalBioAttribute> conditionalBioAttributes) {
 				this.conditionalBioAttributes = conditionalBioAttributes;
 			}
-    
+			  public boolean isExceptionPhotoRequired() {
+					return exceptionPhotoRequired;
+				}
+				public void setExceptionPhotoRequired(boolean exceptionPhotoRequired) {
+					this.exceptionPhotoRequired = exceptionPhotoRequired;
+				}
+
 }

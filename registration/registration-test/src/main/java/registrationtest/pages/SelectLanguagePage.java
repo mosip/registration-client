@@ -31,8 +31,14 @@ public class SelectLanguagePage {
         }
         langCodeList = code.split("@@");
 
-        for (String code : langCodeList) {
-            waitsUtil.clickNodeAssert("#" + code);
+        for(int index=1;index<langCodeList.length;index++)
+        {
+        	String code=langCodeList[index];
+        	waitsUtil.clickNodeAssert("#" + code);
         }
+//        for (String code : langCodeList) {
+//        	
+//            waitsUtil.clickNodeAssert("#" + code);
+//        }
     }
 }
