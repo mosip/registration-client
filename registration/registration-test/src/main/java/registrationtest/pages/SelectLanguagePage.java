@@ -36,9 +36,5 @@ public class SelectLanguagePage {
         	String code=langCodeList[index];
         	waitsUtil.clickNodeAssert("#" + code);
         }
-//        for (String code : langCodeList) {
-//        	
-//            waitsUtil.clickNodeAssert("#" + code);
-//        }
     }
 }
