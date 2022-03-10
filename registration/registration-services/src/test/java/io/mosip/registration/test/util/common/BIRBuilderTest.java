@@ -14,7 +14,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
-import io.mosip.registration.enums.Modality;
 import io.mosip.registration.util.common.BIRBuilder;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 
