@@ -29,6 +29,7 @@ public class BIRBuilderTest {
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
 	
 	
+	
 	 @Test
 	    public void buildBirRightThumbFingerIndexTest() {
 	        BiometricsDto biometricsDto = new BiometricsDto();
