@@ -1,4 +1,4 @@
-# Regisration Client Automation
+# Registration Client Automation
 
 ## Overview
 Registration-test automation covers flows [New, Update, Correction, Lost flows](https://docs.mosip.io/1.2.0/id-lifecycle-management)
