@@ -271,13 +271,12 @@ public class GenericBiometricsController extends BaseController {
 		setImage(closeButtonImageView	, RegistrationConstants.CLOSE_IMG);
 	}
 
-	public boolean isBiometricExceptionProofCollected() {
+	public boolean isBiometricExceptionProofCollected(String fieldId) {
 		boolean flag = false;
-		if(getRegistrationDTOFromSession() != null && getRegistrationDTOFromSession().getDocuments() != null) {
-			flag = getRegistrationDTOFromSession().getDocuments()
-					.values()
-					.stream()
-					.anyMatch(doc -> doc.getCategory().equalsIgnoreCase(RegistrationConstants.POE_DOCUMENT));
+		if(getRegistrationDTOFromSession() != null) {
+			List list = getRegistrationDTOFromSession().getBiometric(fieldId,
+					Modality.EXCEPTION_PHOTO.getAttributes());
+			flag = !list.isEmpty(); //if it's not empty, then exception photo is captured
 		}
 		LOGGER.debug("Is Biometric proof of exception collected ? {}", flag);
 		return flag;
@@ -334,17 +333,17 @@ public class GenericBiometricsController extends BaseController {
 			}
 		}
 
-		if (nonExceptionBioAttributes != null) {
+		/*if (nonExceptionBioAttributes != null) {
 			capturedBiometrics = getBiometrics(fxControl.getUiSchemaDTO().getId(), nonExceptionBioAttributes);
-		}
+		}*/
 
 		updateBiometric(modality, getImageIconPath(modality), bioService.getMDMQualityThreshold(modality),
 				bioService.getRetryCount(modality));
 
 		loadBiometricsUIElements(fxControl.getUiSchemaDTO().getId(), modality);
 
-		if(capturedBiometrics != null && !capturedBiometrics.isEmpty())
-			fxControl.refreshModalityButton(modality);
+		//if(capturedBiometrics != null && !capturedBiometrics.isEmpty())
+		fxControl.refreshModalityButton(modality);
 
 		LOGGER.info("{} Biometrics captured", fxControl.getUiSchemaDTO().getId());
 	}
@@ -400,7 +399,7 @@ public class GenericBiometricsController extends BaseController {
 	/**
 	 * This method will allow to scan and upload documents
 	 */
-	@Override
+	/*@Override
 	public void scan(Stage popupStage) {
 		if (isExceptionPhoto(currentModality)) {
 			try {
@@ -417,9 +416,9 @@ public class GenericBiometricsController extends BaseController {
 			}
 
 		}
-	}
+	}*/
 
-	private void saveProofOfExceptionDocument(byte[] byteArray) {
+	/*private void saveProofOfExceptionDocument(byte[] byteArray) {
 		DocumentDto documentDto = new DocumentDto();
 		documentDto.setDocument(byteArray);
 		documentDto.setType("EOP");
@@ -435,9 +434,9 @@ public class GenericBiometricsController extends BaseController {
 			getRegistrationDTOFromSession().addDocument(result.get().getId(), documentDto);
 			LOGGER.info("Saving Proof of exception document into field : {}", result.get().getId());
 		}
-	}
+	}*/
 
-	public void deleteProofOfExceptionDocument() {
+	/*public void deleteProofOfExceptionDocument() {
 		Optional<UiFieldDTO> result = GenericController.fields.stream()
 				.filter(field -> field.getSubType().equals(RegistrationConstants.POE_DOCUMENT)).findFirst();
 
@@ -445,7 +444,7 @@ public class GenericBiometricsController extends BaseController {
 			getRegistrationDTOFromSession().removeDocument(result.get().getId());
 			LOGGER.info("Removing Proof of exception document into field : {}", result.get().getId());
 		}
-	}
+	}*/
 
 	/**
 	 * Scan the biometrics
@@ -547,7 +546,7 @@ public class GenericBiometricsController extends BaseController {
 		biometric.setDisable(flag);
 	}
 
-	private boolean isFace(Modality currentModality) {
+	private boolean  isFace(Modality currentModality) {
 		return currentModality.equals(Modality.FACE);
 	}
 
@@ -638,16 +637,9 @@ public class GenericBiometricsController extends BaseController {
 						return;
 					}
 
+					// Assumption, only one exception photo
 					if (isExceptionPhoto(currentModality)) {
-						LOGGER.info("started Saving Exception photo captured using MDS");
-						ConvertRequestDto convertRequestDto = new ConvertRequestDto();
-						convertRequestDto.setVersion("ISO19794_5_2011");
-						convertRequestDto.setInputBytes(mdsCapturedBiometricsList.get(0).getAttributeISO());
-						saveProofOfExceptionDocument(FaceDecoder.convertFaceISOToImageBytes(convertRequestDto));
-						generateAlert(RegistrationConstants.ALERT_INFORMATION,
-								RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
-						fxControl.refreshModalityButton(currentModality);
-						return;
+						mdsCapturedBiometricsList.get(0).setBioAttribute(RegistrationConstants.notAvailableAttribute);
 					}
 
 					getRegistrationDTOFromSession().ATTEMPTS.put(String.format("%s_%s", fxControl.getUiSchemaDTO().getId(), currentModality),
@@ -723,6 +715,7 @@ public class GenericBiometricsController extends BaseController {
 							score / biometricsDtos.size());
 					break;
 
+				case EXCEPTION_PHOTO:
 				case FACE:
 					BiometricsDto faceDto = biometricsDtos.toArray(new BiometricsDto[0])[0];
 					ConvertRequestDto convertRequestDto = new ConvertRequestDto();
@@ -767,10 +760,10 @@ public class GenericBiometricsController extends BaseController {
 		//if its exception photo, then we need to send all the exceptions that is marked to MDS
 		//its the information provided to MDS
 		if (isExceptionPhoto(modality)) {
-			for (Entry<String, BiometricsException> bs : getRegistrationDTOFromSession().getBiometricExceptions()
-					.entrySet()) {
-				if (isApplicant(bs.getValue().getIndividualType())) {
-					exceptionBioAttributes.add(bs.getValue().getMissingBiometric());
+			for(String key : getRegistrationDTOFromSession().getBiometricExceptions(fieldId)) {
+				BiometricsException exception = getRegistrationDTOFromSession().getBiometricExceptions().get(key);
+				if(exception != null) {
+					exceptionBioAttributes.add(exception.getMissingBiometric());
 				}
 			}
 		}
@@ -789,11 +782,11 @@ public class GenericBiometricsController extends BaseController {
 
 	}
 
-	public boolean isApplicant(String subType) {
+	/*public boolean isApplicant(String subType) {
 		boolean flag = subType != null && subType.equalsIgnoreCase(RegistrationConstants.APPLICANT);
 		LOGGER.debug("checking isApplicant({}) ? {}", subType, flag);
 		return flag;
-	}
+	}*/
 
 	public boolean isExceptionPhoto(Modality modality) {
 		return modality != null && modality.equals(Modality.EXCEPTION_PHOTO);
@@ -1055,10 +1048,10 @@ public class GenericBiometricsController extends BaseController {
 		}
 
 		try {
-			if(isExceptionPhoto(modality)) {
+			/*if(isExceptionPhoto(modality)) {
 				Image exceptionImage = fxControl.getExceptionDocumentAsImage();
 				return exceptionImage!=null?exceptionImage:getImage(fxControl.getImageIconPath(modality.name()), false);
-			}
+			}*/
 
 			if(images.stream().allMatch( b -> b == null))
 				return getImage(fxControl.getImageIconPath(modality.name()), false);
@@ -1082,7 +1075,7 @@ public class GenericBiometricsController extends BaseController {
 	}
 
 
-	public boolean hasApplicantBiometricException() {
+	/*public boolean hasApplicantBiometricException() {
 		LOGGER.debug("Checking whether applicant has biometric exceptions");
 
 		boolean hasApplicantBiometricException = false;
@@ -1096,7 +1089,7 @@ public class GenericBiometricsController extends BaseController {
 
 		LOGGER.debug("Completed checking whether applicant has biometric exceptions : {}" ,hasApplicantBiometricException);
 		return hasApplicantBiometricException;
-	}
+	}*/
 
 	public List<BiometricsDto> getBiometrics(String fieldId, List<String> bioAttribute) {
 		return getRegistrationDTOFromSession().getBiometric(fieldId, bioAttribute);

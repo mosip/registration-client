@@ -96,7 +96,7 @@ public class RequiredFieldValidator {
 	}
 
 	public ConditionalBioAttributes getConditionalBioAttributes(UiFieldDTO uiFieldDTO, RegistrationDTO registrationDTO) {
-		if(uiFieldDTO.getConditionalBioAttributes() == null)
+		if(uiFieldDTO.getConditionalBioAttributes() == null || uiFieldDTO.getConditionalBioAttributes().isEmpty())
 			return null;
 
 		Optional<ConditionalBioAttributes> result = uiFieldDTO.getConditionalBioAttributes().stream().filter(c ->

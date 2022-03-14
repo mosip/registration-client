@@ -48,6 +48,7 @@ public class WebCamSarxosImpl implements DocScannerService {
     }
 
     private void openDevice(@NotNull Webcam webcam, int width, int height) {
+        LOGGER.info("Opening webcam device ");
         if(webcam.isOpen())
             return;
 
@@ -80,5 +81,7 @@ public class WebCamSarxosImpl implements DocScannerService {
 
         if(result.get().isOpen())
             result.get().close();
+
+        LOGGER.info("Closing webcam device ");
     }
 }

@@ -538,7 +538,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 				LOGGER.error("Exception while getting image",exception);
 			}
 
-			addImageInUIPane(currentModality, currentModality, null, false);
+			addImageInUIPane(currentModality, currentModality, null, false, false);
 		//}
 	}
 
@@ -1375,14 +1375,17 @@ public class BiometricsController extends BaseController /* implements Initializ
 				"Updating progress Bar,Text and attempts Box in UI");
 
 		int retry = biometricDTOList.get(0).getNumOfRetries();
+		
+		double averageQualityScore = getAverageQualityScore(biometricDTOList);
+		int thresholdScore = getThresholdScoreInInt(getThresholdKeyByBioType(Modality.valueOf(modality)));
 
-		setCapturedValues(getAverageQualityScore(biometricDTOList), retry,
-				getThresholdScoreInInt(getThresholdKeyByBioType(Modality.valueOf(modality))));
+		setCapturedValues(averageQualityScore, retry, thresholdScore);
 
 		// Get the stream image from Bio ServiceImpl and load it in the image pane
 		biometricImage.setImage(getBioStreamImage(subType, Modality.valueOf(modality), retry));
 
-		addImageInUIPane(subType, modality, getBioStreamImage(subType, Modality.valueOf(modality), retry), true);
+		boolean retryNeeded = averageQualityScore >= thresholdScore ? false : true;
+		addImageInUIPane(subType, modality, getBioStreamImage(subType, Modality.valueOf(modality), retry), true, retryNeeded);
 	}
 
 	private double getAverageQualityScore(List<BiometricsDto> biometricDTOList) {
@@ -2122,7 +2125,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		return vBox;
 	}
 
-	private void addImageInUIPane(String subType, String modality, Image uiImage, boolean isCaptured) {
+	private void addImageInUIPane(String subType, String modality, Image uiImage, boolean isCaptured, boolean retryNeeded) {
 		for (GridPane gridPane : leftHandImageBoxMap.values()) {
 			if (gridPane.getId().equals(subType)) {
 
@@ -2140,19 +2143,18 @@ public class BiometricsController extends BaseController /* implements Initializ
 						}
 
 						if (isCaptured) {
-							if (hBox.getChildren().size() == 1) {
-								String imageName =uiImage == null?RegistrationConstants.EXCLAMATION_IMG :RegistrationConstants.TICK_CIRICLE_IMG;
+							if (hBox.getChildren().size() > 1) {
+								hBox.getChildren().remove(1);
+							}
+							String imageName = (uiImage == null || retryNeeded) ? RegistrationConstants.EXCLAMATION_IMG : RegistrationConstants.TICK_CIRICLE_IMG;
 
-								try {
-									ImageView imageView = new ImageView(getImage(imageName,true));
-									imageView.setFitWidth(40);
-									imageView.setFitHeight(40);
-									hBox.getChildren().add(imageView);
-								} catch (RegBaseCheckedException e) {
-									LOGGER.error("Error While getting image");
-								}
-
-								
+							try {
+								ImageView imageView = new ImageView(getImage(imageName,true));
+								imageView.setFitWidth(40);
+								imageView.setFitHeight(40);
+								hBox.getChildren().add(imageView);
+							} catch (RegBaseCheckedException e) {
+								LOGGER.error("Error While getting image");
 							}
 						} else {
 
@@ -2240,7 +2242,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 			if (getRegistrationDTOFromSession() != null && getRegistrationDTOFromSession().getDocuments() != null) {
 				getRegistrationDTOFromSession().getDocuments().remove("proofOfException");
 			}
-			addImageInUIPane(RegistrationConstants.APPLICANT, RegistrationConstants.EXCEPTION_PHOTO, null, false);
+			addImageInUIPane(RegistrationConstants.APPLICANT, RegistrationConstants.EXCEPTION_PHOTO, null, false, false);
 			setBiometricExceptionVBox(false);
 		}
 
@@ -2254,7 +2256,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		}
 
 		displayBiometric(currentModality);
-		addImageInUIPane(currentSubType, currentModality, null, isAllMarked);
+		addImageInUIPane(currentSubType, currentModality, null, isAllMarked, false);
 		setScanButtonVisibility(isAllMarked, scanBtn);
 		refreshContinueButton();
 	}

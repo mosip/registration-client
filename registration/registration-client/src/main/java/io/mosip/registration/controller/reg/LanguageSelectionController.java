@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.exception.PreConditionCheckException;
-import lombok.NonNull;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -95,8 +94,7 @@ public class LanguageSelectionController extends BaseController implements Initi
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		ResourceBundle resourceBundle = applicationContext.getBundle(ApplicationContext.applicationLanguage(),
-				RegistrationConstants.LABELS);
+		ResourceBundle resourceBundle = applicationContext.getApplicationLanguageLabelBundle();
 		try {
 			List<GenericDto> langCodes = getConfiguredLanguages();
 			List<String> mandatoryLangCodes = baseService.getMandatoryLanguages();
@@ -122,6 +120,7 @@ public class LanguageSelectionController extends BaseController implements Initi
 				checkBox.setId(language.getCode());
 				checkBox.setText(language.getName());
 				checkBox.getStyleClass().add("languageCheckBox");
+				
 				if (language.getCode().equalsIgnoreCase(language.getName())) {
 					checkBox.setDisable(true); //If ResourceBundle is not present for configured language, show the checkbox but disable it for selection
 				} else {
@@ -148,6 +147,9 @@ public class LanguageSelectionController extends BaseController implements Initi
 							submit.setDisable(true);
 						}
 					});
+				}
+				if (language.getCode().equalsIgnoreCase(ApplicationContext.applicationLanguage())) {
+					checkBox.setSelected(true); //Pre-selecting application language. Can be de-selected if it is not mandatory.
 				}
 				checkBoxesPane.getChildren().add(checkBox);
 			}

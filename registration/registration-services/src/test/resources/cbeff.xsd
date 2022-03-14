@@ -113,6 +113,7 @@ SCHEMA.
 			<xs:enumeration value="Palm"/>
 			<xs:enumeration value="BackOfHand"/>
 			<xs:enumeration value="Wrist"/>
+			<xs:enumeration value="ExceptionPhoto"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="MultipleTypesType">

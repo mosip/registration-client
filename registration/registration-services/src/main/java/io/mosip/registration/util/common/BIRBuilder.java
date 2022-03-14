@@ -106,6 +106,8 @@ public class BIRBuilder {
 			subtypes.add(bioAttribute.contains("left") ? SingleAnySubtypeType.LEFT.value()
 					: SingleAnySubtypeType.RIGHT.value());
 			break;
+
+		case EXCEPTION_PHOTO:
 		case FACE:
 			break;
 		}

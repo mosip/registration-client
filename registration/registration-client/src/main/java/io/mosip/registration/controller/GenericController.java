@@ -66,7 +66,6 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
@@ -707,7 +706,7 @@ public class GenericController extends BaseController {
 				labels.add(screenDTO.getLabel().get(langCode));
 			});
 
-			String tabNameInApplicationLanguage = screenDTO.getLabel().get(ApplicationContext.applicationLanguage());
+			String tabNameInApplicationLanguage = screenDTO.getLabel().get(getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0));
 			
 			if(screenFieldGroups == null || screenFieldGroups.isEmpty())
 				continue;
@@ -777,17 +776,19 @@ public class GenericController extends BaseController {
 			authLabels.add(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 					.getString(RegistrationConstants.authentication));
 		}
+		
+		String langCode = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0);
 
 		Tab previewScreen = new Tab();
 		previewScreen.setId("PREVIEW");
-		previewScreen.setText(ApplicationContext.getBundle(null, RegistrationConstants.LABELS)
+		previewScreen.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString(RegistrationConstants.previewHeader));
 		previewScreen.setTooltip(new Tooltip(String.join(RegistrationConstants.SLASH, previewLabels)));
 		tabPane.getTabs().add(previewScreen);
 
 		Tab authScreen = new Tab();
 		authScreen.setId("AUTH");
-		authScreen.setText(ApplicationContext.getBundle(null, RegistrationConstants.LABELS)
+		authScreen.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString(RegistrationConstants.authentication));
 		authScreen.setTooltip(new Tooltip(String.join(RegistrationConstants.SLASH, authLabels)));
 		tabPane.getTabs().add(authScreen);
@@ -867,7 +868,7 @@ public class GenericController extends BaseController {
 					break;
 
 				case CONTROLTYPE_BIOMETRICS:
-					fxControl = new BiometricFxControl(getProofOfExceptionFields()).build(uiFieldDTO);
+					fxControl = new BiometricFxControl(/*getProofOfExceptionFields()*/).build(uiFieldDTO);
 					break;
 
 				case CONTROLTYPE_BUTTON:
@@ -910,10 +911,10 @@ public class GenericController extends BaseController {
 		orderedScreens.values().forEach(screen -> { refreshScreenVisibility(screen.getName()); });
 	}
 
-	public List<UiFieldDTO> getProofOfExceptionFields() {
+	/*public List<UiFieldDTO> getProofOfExceptionFields() {
 		return fields.stream().filter(field ->
 				field.getSubType().contains(RegistrationConstants.POE_DOCUMENT)).collect(Collectors.toList());
-	}
+	}*/
 
 	private FxControl getFxControl(String fieldId) {
 		return GenericController.getFxControlMap().get(fieldId);

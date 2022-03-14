@@ -1,13 +1,8 @@
 package io.mosip.registration.util.control.impl;
 
-
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 
-import io.mosip.registration.api.docscanner.DocScannerUtil;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
@@ -16,7 +11,6 @@ import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.ClientApplication;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
-import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.dto.schema.ConditionalBioAttributes;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.enums.Modality;
@@ -28,7 +22,6 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.controller.BaseController;
-import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.controller.device.GenericBiometricsController;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -49,7 +42,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import org.mvel2.MVEL;
 
-import javax.imageio.ImageIO;
 
 public class BiometricFxControl extends FxControl {
 
@@ -60,17 +52,14 @@ public class BiometricFxControl extends FxControl {
 	private BioService bioService;
 	private Modality currentModality;
 	private Map<Modality, List<List<String>>> modalityAttributeMap = new HashMap<>();
-	private List<UiFieldDTO> exceptionProofFields;
 
-
-	public BiometricFxControl(List<UiFieldDTO> biometricExceptionProofFields) {
+	public BiometricFxControl() {
 		org.springframework.context.ApplicationContext applicationContext = ClientApplication.getApplicationContext();
 		this.biometricsController = applicationContext.getBean(GenericBiometricsController.class);
 		this.identitySchemaService = applicationContext.getBean(IdentitySchemaService.class);
 		this.bioService = applicationContext.getBean(BioService.class);
 		this.requiredFieldValidator = applicationContext.getBean(RequiredFieldValidator.class);
 		this.auditFactory = applicationContext.getBean(AuditManagerService.class);
-		exceptionProofFields = biometricExceptionProofFields;
 	}
 
 	@Override
@@ -89,10 +78,10 @@ public class BiometricFxControl extends FxControl {
 					bioService.getMDMQualityThreshold(currentModality), bioService.getRetryCount(currentModality));
 		}
 
-		//remove POE_EOP document if there are no biometric exception
+		//remove exception proof if there are no biometric exception
 		if(getRegistrationDTo().getBiometricExceptions(uiFieldDTO.getId()).isEmpty()) {
 			LOGGER.info("Removing exception photo as no exceptions are marked currently");
-			biometricsController.deleteProofOfExceptionDocument();
+			getRegistrationDTo().removeExceptionPhoto(uiFieldDTO.getId());
 		}
 	}
 
@@ -153,6 +142,7 @@ public class BiometricFxControl extends FxControl {
 		gridPane.add(label,1,0);
 		GridPane.setHalignment(label, HPos.CENTER);
 		GridPane.setValignment(label, VPos.TOP);
+		this.node = gridPane;
 
 		Node modalityListingNode = null;
 		switch (getBiometricFieldLayout()) {
@@ -268,9 +258,9 @@ public class BiometricFxControl extends FxControl {
 		
 		try {
 			Image image = null;
-			if(Modality.EXCEPTION_PHOTO == modality) {
+			/*if(Modality.EXCEPTION_PHOTO == modality) {
 				image = getExceptionDocumentAsImage();
-			}
+			}*/
 			image = !capturedData.isEmpty() ? biometricsController.getBioStreamImage(uiFieldDTO.getId(), modality,
 						capturedData.get(0).getNumOfRetries()) : (image == null ? biometricsController.getImage(getImageIconPath(modality.name()),true) : image);
 			button.setGraphic(getImageView(image, 80));
@@ -404,7 +394,9 @@ public class BiometricFxControl extends FxControl {
 		}
 
 		boolean valid = MVEL.evalToBoolean(expression, capturedDetails);
-		valid =  biometricsController.hasApplicantBiometricException() ? valid && biometricsController.isBiometricExceptionProofCollected() : valid;
+		boolean exceptionExists = getRegistrationDTo().isBiometricExceptionAvailable(this.uiFieldDTO.getId());
+		valid = ( this.uiFieldDTO.isExceptionPhotoRequired() && exceptionExists ) ?
+				valid && biometricsController.isBiometricExceptionProofCollected(this.uiFieldDTO.getId()) : valid;
 		//TODO - display message about exception proof
 		if (valid) {
 			auditFactory.audit(AuditEvent.REG_BIO_CAPTURE_NEXT, Components.REG_BIOMETRICS, SessionContext.userId(),
@@ -414,14 +406,14 @@ public class BiometricFxControl extends FxControl {
 	}
 
 	private void createExceptionPhoto(List<HBox> modalityList) {
-		if(exceptionProofFields == null || exceptionProofFields.isEmpty())
+		if(!this.uiFieldDTO.isExceptionPhotoRequired())
 			return;
 
 		HBox modalityView = new HBox();
 		modalityView.setSpacing(10);
 		modalityView.setId(uiFieldDTO.getId() + Modality.EXCEPTION_PHOTO);
 
-		Button button = new Button();
+		/*Button button = new Button();
 		button.setMaxSize(100, 90);
 		button.setMinSize(100, 90);
 		button.setPrefSize(100, 90);
@@ -437,12 +429,12 @@ public class BiometricFxControl extends FxControl {
 				RegistrationConstants.LABELS).getString(Modality.EXCEPTION_PHOTO.name()));
 		tooltip.getStyleClass().add(RegistrationConstants.TOOLTIP_STYLE);
 		button.setTooltip(tooltip);
-		button.setOnAction(getModalityActionHandler(this, Modality.EXCEPTION_PHOTO));
+		button.setOnAction(getModalityActionHandler(this, Modality.EXCEPTION_PHOTO));*/
 
 		modalityView.getChildren().add(addModalityButton(Modality.EXCEPTION_PHOTO));
 		addRemoveCaptureStatusMark(modalityView, Modality.EXCEPTION_PHOTO);
 
-		boolean exceptionExists = biometricsController.hasApplicantBiometricException();
+		boolean exceptionExists = getRegistrationDTo().isBiometricExceptionAvailable(this.uiFieldDTO.getId());
 		modalityView.setVisible(exceptionExists);
 		modalityView.setManaged(exceptionExists);
 		modalityView.getChildren().forEach( child -> {
@@ -453,8 +445,8 @@ public class BiometricFxControl extends FxControl {
 	}
 
 	public void displayExceptionPhoto() {
-		boolean exceptionExists = biometricsController.hasApplicantBiometricException();
-		HBox exceptionPhotoNode = (HBox) this.node.lookup(RegistrationConstants.HASH + uiFieldDTO.getId() + Modality.EXCEPTION_PHOTO);
+		boolean exceptionExists = getRegistrationDTo().isBiometricExceptionAvailable(this.uiFieldDTO.getId());
+		HBox exceptionPhotoNode = (HBox) this.node.lookup(RegistrationConstants.HASH + this.uiFieldDTO.getId() + Modality.EXCEPTION_PHOTO);
 		if(exceptionPhotoNode != null) {
 			exceptionPhotoNode.setVisible(exceptionExists);
 			exceptionPhotoNode.setManaged(exceptionExists);
@@ -498,7 +490,7 @@ public class BiometricFxControl extends FxControl {
 
 		boolean isExceptionsMarked = isAnyExceptions(modality);
 		boolean isCaptured = !getRegistrationDTo().getBiometric(uiFieldDTO.getId(), modality.getAttributes()).isEmpty();
-		if(modality.equals(Modality.EXCEPTION_PHOTO) && biometricsController.isBiometricExceptionProofCollected()) {
+		if(modality.equals(Modality.EXCEPTION_PHOTO) && biometricsController.isBiometricExceptionProofCollected(uiFieldDTO.getId())) {
 			pane.getChildren().add(addCompletionImg(getCompletionImgPath(false)));
 			return;
 		}
@@ -549,8 +541,7 @@ public class BiometricFxControl extends FxControl {
 		return tickImageView;
 	}
 
-	//TODO check how multiple exception photos can be taken, and also displayed in biometric field
-	public Image getExceptionDocumentAsImage() {
+	/*public Image getExceptionDocumentAsImage() {
 		try {
 			DocumentDto documentDto = null;
 			for(String key : getRegistrationDTo().getDocuments().keySet()) {
@@ -576,7 +567,7 @@ public class BiometricFxControl extends FxControl {
 			LOGGER.error("Failed to read document as image", ex);
 		}
 		return null;
-	}
+	}*/
 
 }
 
