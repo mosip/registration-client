@@ -6,9 +6,14 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
-import io.mosip.registration.service.sync.MasterSyncService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -32,6 +37,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.commons.packet.dto.PacketInfo;
 import io.mosip.commons.packet.facade.PacketWriter;
 import io.mosip.kernel.auditmanager.entity.Audit;
+import io.mosip.kernel.biometrics.entities.BDBInfo;
+import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
 import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
@@ -54,6 +61,7 @@ import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
+import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
@@ -63,6 +71,8 @@ import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
+import io.mosip.registration.mdm.dto.MdmBioDevice;
+import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.IdentitySchemaService;
@@ -71,19 +81,26 @@ import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.operator.UserDetailService;
 import io.mosip.registration.service.packet.impl.PacketHandlerServiceImpl;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
+import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.PolicySyncService;
 import io.mosip.registration.test.util.datastub.DataProvider;
 import io.mosip.registration.update.SoftwareUpdateHandler;
+import io.mosip.registration.util.common.BIRBuilder;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*" })
-@PrepareForTest({ JsonUtils.class, ApplicationContext.class, SessionContext.class, Role.class, FileUtils.class, Paths.class, CryptoUtil.class, ClientCryptoUtils.class })
+@PrepareForTest({ JsonUtils.class, ApplicationContext.class, SessionContext.class, Role.class, FileUtils.class, Paths.class, CryptoUtil.class, ClientCryptoUtils.class,  MosipDeviceSpecificationFactory.class })
 public class PacketHandlerServiceTest {
+	
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
+	
 	@InjectMocks
 	private PacketHandlerServiceImpl packetHandlerServiceImpl;
+	
+	@Mock
+	private BIRBuilder birBuilder;
 	
 	@Mock
 	private BaseService baseService;
@@ -279,7 +296,21 @@ public class PacketHandlerServiceTest {
 				Mockito.anyString(), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(packetInfo);
 		Mockito.doNothing().when(registrationDAO).save(Mockito.anyString(), Mockito.any(RegistrationDTO.class));
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
+		BIR bir = new BIR();
+		BDBInfo bdbInfo = new BDBInfo();
+		bdbInfo.setIndex("1");
+		bir.setBdbInfo(bdbInfo );
+		Mockito.when(birBuilder.buildBIR(Mockito.any(BiometricsDto.class))).thenReturn(bir);
 		
+		PowerMockito.mockStatic(MosipDeviceSpecificationFactory.class);
+		Map<String, MdmBioDevice> deviceMap = new HashMap<>();
+		MdmBioDevice device = new MdmBioDevice();
+		device.setSerialNumber("1234");
+		device.setSerialVersion("test_version");
+		device.setDeviceCode("test_code");
+		device.setDeviceMake("test_make");
+		deviceMap.put("FINGERPRINT_DEVICE", device);
+		Mockito.when(MosipDeviceSpecificationFactory.getDeviceRegistryInfo()).thenReturn(deviceMap);
 		ResponseDTO response = packetHandlerServiceImpl.handle(registrationDTO);
 		Assert.assertNotNull(response.getSuccessResponseDTO());
 	}
