@@ -1,13 +1,8 @@
-## Registration:
-Registration module provides a desktop application for Registration Officers/Supervisors to register an Individual in MOSIP, by capturing demographic and biometric details of an Individual.
-Registration module uses data captured by `Pre-Registration` module if an Individual has booked for an appointment in the Registration Centre.
-Registration Processor processes the data captured by Registration module to complete the registration process.
+To know more about setting up Registration Client, see [Registration Client User Guide](https://docs.mosip.io/1.2.0/modules/registration-client/registration-client-user-guide).
 
-Registration Client setup on a local system can be done by following the documentation at https://github.com/mosip/mosip-docs/wiki/Registration-Client-Setup
-
-**Configuration**
-Configurations used for ID Repo are available in [mosip-config](https://github.com/mosip/mosip-config)
+### Configuration
+Configurations used for Registration Client repo is available under [mosip-config](https://github.com/mosip/mosip-config/blob/master/registration-default.properties)
 
 ### Build
-Below command should be run in the parent project **authentication**
-`mvn clean install`
+Below command should be run in the parent project **registration**
+`mvn clean install -Dgpg.skip -DskipTests`
