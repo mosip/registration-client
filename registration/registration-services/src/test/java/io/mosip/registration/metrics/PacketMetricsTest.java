@@ -22,6 +22,7 @@ import io.mosip.registration.repositories.RegistrationRepository;
 import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 
+
 /**
  * 
  * @author M1063027

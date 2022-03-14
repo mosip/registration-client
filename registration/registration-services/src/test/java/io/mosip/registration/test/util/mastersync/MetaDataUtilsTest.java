@@ -35,6 +35,7 @@ import io.mosip.registration.entity.RegistrationCommonFields;
 import io.mosip.registration.entity.UserRole;
 import io.mosip.registration.util.mastersync.MetaDataUtils;
 
+
 /**
  * 
  * @author M1063027
