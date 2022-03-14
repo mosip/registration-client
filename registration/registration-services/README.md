@@ -2,7 +2,8 @@
 
 ## Overview
 
-This document guides the developer to find the traceability between functionality and the respective technical component.  The provided technical classes are available in the package of 'registration-service' module. In this module the required functions are exposed as public method and that can be used to obtain the required features.  
+This document guides the developer to find the traceability between functionality and the respective technical component.  The provided technical classes are available in the package of 'registration-service' module. 
+
 
 |Functionality:| Login with UserName and Password/ BIO  |  
 |:------:|-----|  
