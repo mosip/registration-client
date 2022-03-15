@@ -1,15 +1,14 @@
+# Registration Services
 
-*** 
-This document guide the developer to find the traceability between functionality and the respective technical component.  The provided technical classes are available in the package of 'registration-service' module. In this module the required functions are exposed as public method and that can be used to obtain the required features.  
+## Overview
 
-It doesn't detail about each methods level information since that are covered in the [javadoc](https://github.com/mosip/mosip/tree/master/docs/javadocs/registration/apidocs) of this module.   
+This document guides the developer to find the traceability between functionality and the respective technical component.  The provided technical classes are available in the package of 'registration-service' module. In this module the required functions are exposed as public method and that can be used to obtain the required features.  
 
-
-|**Functionality:**| Login with UserName and Password/ OTP/ BIO  |  
+|**Functionality:**| Login with UserName and Password/ BIO  |  
 |:------:|-----|  
 |**Technical Detail:**| Post successful login, session context would be created. That will be used throughout the application at the required places. The user detail and the respective roles are encapsulated inside the context. Without creation of this context object, the packet can't be created. |  
 |**Main Service class and method:**| SessionContext.create(UserDTO userDTO, String loginMethod, boolean isInitialSetUp, boolean isUserNewToMachine, AuthenticationValidatorDTO authenticationValidatorDTO) |  
-|**Input parameter:**| UserDTO – It should contain info of id, name, roles, center-id. loginMethod – possible values are PWD, OTP, FINGERPRINT, FACE, IRIS. isInitialSetUp – true/false, isUserNewToMachine – true/false,  AuthenticationValidatorDTO – should contain id, password, otp|  
+|**Input parameter:**| UserDTO – It should contain info of id, name, roles, center-id. loginMethod – possible values are PWD, FINGERPRINT, FACE, IRIS. isInitialSetUp – true/false, isUserNewToMachine – true/false,  AuthenticationValidatorDTO – should contain id, password|  
 |**Auth:**| Not required. |  
 |**External Connectivity:**| Service and DB |  
 
@@ -39,7 +38,6 @@ It doesn't detail about each methods level information since that are covered in
 |**External Connectivity:**| DB, File system |  
 
 
-
 |**Functionality:**|  MDM Integration – Register Device |   
 |:------:|-----|  
 |**Technical Detail:**| This method automatically scans all devices by connecting to the MDM service, which is running in a particular port and stores it in device registry. |
@@ -49,13 +47,6 @@ It doesn't detail about each methods level information since that are covered in
 |**External Connectivity:**| deviceInfo - MDM service REST call |  
 
 
-|**Functionality:**|  MDM Integration -Capture bio-metric |   
-|:------:|-----|  
-|**Main Service class and method:**| BioServiceImpl  - getFingerPrintImageAsDTOWithMdm(FingerprintDetailsDTO fpDetailsDTO, String fingerType) |  
-|**Input Parameter:**|    FingerprintDetailsDTO – dto contains the finger print related details, fingerType – Type of the device like Fingerprint/ Iris/Face etc |  
-|**Auth:**| Not required |  
-|**External Connectivity:**| Capture - MDM service REST call |  
-
 
 |**Functionality:**|  MDM Integration  - Validate bio-metric against the bio value already captured and stored in Database. |   
 |:------:|-----|  
@@ -64,12 +55,5 @@ It doesn't detail about each methods level information since that are covered in
 |**Auth:**| Not required |  
 |**External Connectivity:**| DB, Capture - MDM service REST call |  
 
-
-|**Functionality:**|  MDM Integration  - Display video stream |   
-|:------:|-----|  
-|**Main Service class and method:**| Yet to be implemented |  
-|**Input Parameter:**|    |  
-|**Auth:**| Not required |  
-|**External Connectivity:**| |  
 
 

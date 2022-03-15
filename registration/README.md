@@ -1,10 +1,15 @@
-[![Build Status](https://travis-ci.com/mosip/registration-client.svg)](https://app.travis-ci.com/github/mosip/registration-client)  [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mosip_registration-client&id=mosip_registration-client&metric=alert_status)](https://sonarcloud.io/dashboard?id=mosip_registration-client)
+## Overview
 
-## Registration Client Build Scripts
-
-TODO
-
-## Configuration
-Refer [Module Configuration](https://github.com/mosip/documentation/blob/1.2.0-rc2/docs/registration-client-configuration.md) to know the important properties that can be customized.
+This repository contains the two main components of registration:
+1. Registration Client (UI Component)
+2. Registration Services
 
 
+To know more about setting up Registration Client, see [Registration Client User Guide](https://docs.mosip.io/1.2.0/modules/registration-client/registration-client-user-guide).
+
+### Configuration
+Configurations used for Registration Client repo is available under [mosip-config](https://github.com/mosip/mosip-config/blob/master/registration-default.properties)
+
+### Build
+Below command should be run in the parent project **registration**
+`mvn clean install -Dgpg.skip -DskipTests`
