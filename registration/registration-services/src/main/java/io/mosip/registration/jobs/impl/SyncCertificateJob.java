@@ -26,7 +26,7 @@ import io.mosip.registration.service.sync.CertificateSyncService;
  * @author Anusha
  * @since 1.1.5
  */
-@Component
+@Component(value = "syncCertificateJob")
 public class SyncCertificateJob extends BaseJob {
 
     private static final Logger LOGGER = AppConfig.getLogger(SyncCertificateJob.class);
