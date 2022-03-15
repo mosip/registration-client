@@ -1,5 +1,7 @@
 package registrationtest.pojo.schema;
 
+import io.mosip.registration.constants.RegistrationConstants;
+
 import java.util.HashMap;
 import java.util.List;
 
@@ -207,7 +209,8 @@ public class Schema {
 				this.conditionalBioAttributes = conditionalBioAttributes;
 			}
 			  public boolean isExceptionPhotoRequired() {
-					return exceptionPhotoRequired;
+				  return exceptionPhotoRequired ||
+						  (subType != null && RegistrationConstants.APPLICANT.equalsIgnoreCase(subType));
 				}
 				public void setExceptionPhotoRequired(boolean exceptionPhotoRequired) {
 					this.exceptionPhotoRequired = exceptionPhotoRequired;

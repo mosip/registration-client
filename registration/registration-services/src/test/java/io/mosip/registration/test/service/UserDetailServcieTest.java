@@ -3,6 +3,7 @@ package io.mosip.registration.test.service;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,7 +11,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.assertj.core.util.Arrays;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -125,7 +125,7 @@ public class UserDetailServcieTest {
 
 		Map<String, Object> map = new HashMap<>();
 		map.put(RegistrationConstants.MACHINE_CENTER_REMAP_FLAG, false);
-		ApplicationContext.getInstance().setApplicationMap(map);
+		ApplicationContext.setApplicationMap(map);
 
 		Mockito.when(baseService.getCenterId()).thenReturn("10011");
 		Mockito.when(baseService.getStationId()).thenReturn("11002");
@@ -136,8 +136,9 @@ public class UserDetailServcieTest {
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
-	public void userDtls() throws RegBaseCheckedException, ConnectionException, JsonProcessingException {
+	public void userDtls() throws RegBaseCheckedException, ConnectionException, IOException {
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
 		List<UserDetailDto> list = new ArrayList<>();
 		UserDetailDto userDetails = new UserDetailDto();
@@ -171,7 +172,7 @@ public class UserDetailServcieTest {
 				mapper.writeValueAsString(userDetailsList).getBytes()));
 		responseMap.put("response", usrDetailMap);
 		
-//		Mockito.when(objectMapper.readValue(Mockito.anyString(), Mockito.any(TypeReference.class))).thenReturn(list);
+		Mockito.when(objectMapper.readValue(Mockito.any(byte[].class), Mockito.any(TypeReference.class))).thenReturn(list);
 		
 		List<UserDetail> existingUserDetails = new ArrayList<>();
 		UserDetail user = new UserDetail();
@@ -189,7 +190,6 @@ public class UserDetailServcieTest {
 		userDetailServiceImpl.save("System");
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void userDtlsException() throws RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
@@ -209,7 +209,6 @@ public class UserDetailServcieTest {
 		userDetailServiceImpl.save("System");
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void userDtlsException1() throws RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
@@ -229,6 +228,7 @@ public class UserDetailServcieTest {
 		userDetailServiceImpl.save("System");
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void userDtlsFail() throws RegBaseCheckedException, ConnectionException, JsonProcessingException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
@@ -308,7 +308,6 @@ public class UserDetailServcieTest {
 		userDetail.setUserDetails(list);
 		Map<String, String> map = new HashMap<>();
 		map.put(RegistrationConstants.USER_CENTER_ID, "10011");
-		Map<String, String> userDetailErrorMap = new LinkedHashMap<>();
 		LinkedHashMap<String, Object> responseMap=new LinkedHashMap<>();
 		Map<String, Object> userDetailsMap = new HashMap<>();
 		List<String> rolesList = new ArrayList<>();
@@ -375,4 +374,9 @@ public class UserDetailServcieTest {
 		Assert.assertFalse(userDetailServiceImpl.isValidUser("110012"));
 	}
 	
+	@Test
+	public void checkLoggedInUserRolesModifiedTest() {
+		List<String> roles = java.util.Arrays.asList("REGISTRATION_OFFICER", "REGISTRATION_SUPERVISOR");
+		Assert.assertNotNull(userDetailServiceImpl.checkLoggedInUserRoles(roles));
+	}
 }

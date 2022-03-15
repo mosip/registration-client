@@ -159,7 +159,6 @@ public class ServiceDelegateUtilTest {
 		Mockito.when(restClientUtil.invokeURL((Mockito.anyObject()))).thenReturn(responseMap);
 		assertNotNull(delegateUtil.get("otp_validator", requestParamMap, false,"System"));
 	}
-	
 	@Test
 	public void getRequestFailureTest() throws Exception {
 		ResponseDTO response = new ResponseDTO();
