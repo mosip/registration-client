@@ -1,6 +1,5 @@
 package io.mosip.registration.validator;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
@@ -165,7 +164,7 @@ public class RequiredFieldValidatorTest {
 		RegistrationDTO registrationDTO = new RegistrationDTO();
 		registrationDTO.setProcessId("processId");
 		registrationDTO.AGE_GROUPS.put("ageGroup", "ageGroup");		
-		assertNotNull(requiredFieldValidator.getRequiredBioAttributes(schemaField, registrationDTO).size());
+		assertEquals(requiredFieldValidator.getRequiredBioAttributes(schemaField, registrationDTO).size(), 0);
 	}
 
 	

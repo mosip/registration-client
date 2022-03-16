@@ -5,17 +5,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
-import io.mosip.registration.api.docscanner.DeviceType;
-import io.mosip.registration.api.docscanner.DocScannerFacade;
-import io.mosip.registration.api.docscanner.dto.DocScanDevice;
-import io.mosip.registration.dto.BiometricDeviceInfo;
-import io.mosip.registration.dto.ScanDeviceInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.registration.api.docscanner.DeviceType;
+import io.mosip.registration.api.docscanner.DocScannerFacade;
+import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
@@ -24,6 +22,8 @@ import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.reg.DocumentScanController;
 import io.mosip.registration.controller.settings.SettingsInterface;
+import io.mosip.registration.dto.BiometricDeviceInfo;
+import io.mosip.registration.dto.ScanDeviceInfo;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.mdm.dto.MdmBioDevice;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
@@ -409,18 +409,13 @@ public class DeviceSettingsController extends BaseController implements Settings
 			comboBox.getSelectionModel().select(getSelectedDeviceInfo(key));
 			// Create our custom cells for the ComboBox
 			comboBox.setCellFactory(param -> new ListCell<BiometricDeviceInfo>() {
-				// Create a Label to store our text. We'll set it to wrap text and it's
-				// preferred width
-				final Label label = new Label() {
-					{
-						setWrapText(true);
-						setPrefWidth(280);
-					}
-				};
-
 				@Override
 				protected void updateItem(BiometricDeviceInfo item, boolean empty) {
 					super.updateItem(item, empty);
+					// Create a Label to store our text. We'll set it to wrap text and it's preferred width
+					Label label = new Label();
+					label.setWrapText(true);
+					label.setPrefWidth(280);
 
 					if (item == null || empty) {
 						setGraphic(null);
@@ -481,19 +476,14 @@ public class DeviceSettingsController extends BaseController implements Settings
 			comboBox.getSelectionModel().select(getSelectedScanDevice(scannerDevices));
 			// Create our custom cells for the ComboBox
 			comboBox.setCellFactory(param -> new ListCell<ScanDeviceInfo>() {
-				// Create a Label to store our text. We'll set it to wrap text and it's
-				// preferred width
-				final Label label = new Label() {
-					{
-						setWrapText(true);
-						setPrefWidth(280);
-					}
-				};
-
 				@Override
 				protected void updateItem(ScanDeviceInfo item, boolean empty) {
 					super.updateItem(item, empty);
-
+					// Create a Label to store our text. We'll set it to wrap text and it's preferred width
+					Label label = new Label();
+					label.setWrapText(true);
+					label.setPrefWidth(280);
+					
 					if (item == null || empty) {
 						setGraphic(null);
 					} else {

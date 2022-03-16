@@ -257,12 +257,11 @@ public class BiometricFxControl extends FxControl {
 		List<BiometricsDto> capturedData = getRegistrationDTo().getBiometric(uiFieldDTO.getId(), modality.getAttributes());
 		
 		try {
-			Image image = null;
 			/*if(Modality.EXCEPTION_PHOTO == modality) {
 				image = getExceptionDocumentAsImage();
 			}*/
-			image = !capturedData.isEmpty() ? biometricsController.getBioStreamImage(uiFieldDTO.getId(), modality,
-						capturedData.get(0).getNumOfRetries()) : (image == null ? biometricsController.getImage(getImageIconPath(modality.name()),true) : image);
+			Image image = !capturedData.isEmpty() ? biometricsController.getBioStreamImage(uiFieldDTO.getId(), modality,
+						capturedData.get(0).getNumOfRetries()) : biometricsController.getImage(getImageIconPath(modality.name()),true);
 			button.setGraphic(getImageView(image, 80));
 		} catch (RegBaseCheckedException exception) {
 			LOGGER.error("Exception while Getting Image", exception);

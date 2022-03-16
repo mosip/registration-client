@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -309,7 +308,7 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 		return modality.contains("left") ? "1"
 				: modality.contains("right") ? "2"
 						: (modality.contains("double") || modality.contains("thumbs") || modality.contains("two")) ? "3"
-								: modality.contains("face") ? "0" : "0";
+								: "0";
 	}
 
 	private MdmBioDevice getBioDevice(MdmDeviceInfo deviceInfo)
