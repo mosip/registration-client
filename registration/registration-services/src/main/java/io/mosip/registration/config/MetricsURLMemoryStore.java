@@ -36,7 +36,9 @@ public class MetricsURLMemoryStore implements io.tus.java.client.TusURLStore {
 
     @Override
     public void remove(String s) {
-        getFileName(s).delete();
+        if (getFileName(s).delete()) {
+        	LOGGER.info("Deleted metrics");
+        }
     }
 
     private File getFileName(String s) {
