@@ -505,7 +505,7 @@ public class DaoConfig extends HibernateDaoConfig {
 			return;
 		}
 
-		Path targetDB = Paths.get(ClientCryptoManagerConstant.KEY_PATH, dbDir);
+		Path targetDB = Paths.get(dbDir);
 		if(!targetDB.toFile().exists()) {
 			LOGGER.info("DB credential backward compatibility fix not applicable, as this is new setup.");
 			return;
