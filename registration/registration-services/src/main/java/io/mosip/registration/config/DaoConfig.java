@@ -72,6 +72,7 @@ public class DaoConfig extends HibernateDaoConfig {
 	private static final String STATE_KEY = "state";
 	private static final String ERROR_STATE = "0";
 	private static final String SAFE_STATE = "1";
+	private static final String dbDir = "db";
 
 	private static Properties keys;
 	private static JdbcTemplate jdbcTemplate;
@@ -501,6 +502,12 @@ public class DaoConfig extends HibernateDaoConfig {
 				ClientCryptoManagerConstant.DB_PWD_FILE);
 		if(target.toFile().exists()) {
 			LOGGER.info("DB credential backward compatibility fix not applicable");
+			return;
+		}
+
+		Path targetDB = Paths.get(dbDir);
+		if(!targetDB.toFile().exists()) {
+			LOGGER.info("DB credential backward compatibility fix not applicable, as this is new setup.");
 			return;
 		}
 

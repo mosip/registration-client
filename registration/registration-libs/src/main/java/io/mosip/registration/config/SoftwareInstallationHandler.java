@@ -100,7 +100,7 @@ public class SoftwareInstallationHandler {
 			//only if the version is same then rewrite local manifest with server manifest.
 			//if the version is different, then upgrade should handle it, and only checksum validation will be
 			//done based on the local manifest file.
-			if(localVersion.equals(serverVersion)) {
+			if(localVersion == null || localVersion.equals(serverVersion)) {
 				serverManifest.write(new FileOutputStream(manifestFile));
 				//reset the local manifest, as it's overwritten
 				setLocalManifest();
