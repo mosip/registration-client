@@ -180,50 +180,24 @@ public class ClientJarDecryption extends Application {
 					 * @see javafx.concurrent.Task#call()
 					 */
 					@Override
-					protected Boolean call() throws IOException, InterruptedException {
-
-						// updateMessage(IS_TPM_AVAILABLE);
-
+					protected Boolean call() throws InterruptedException {
 						try {
 							LOGGER.info(LoggerConstants.CLIENT_JAR_DECRYPTION, LoggerConstants.APPLICATION_NAME,
 									LoggerConstants.APPLICATION_ID, "Started check for jars task");
 
-							SoftwareInstallationHandler registrationUpdate = new SoftwareInstallationHandler();
-
-							boolean hasJars = false;
-
 							updateMessage(CHECKING_FOR_JARS);
 
-							if (registrationUpdate.getCurrentVersion() != null
-									&& registrationUpdate.hasRequiredJars()) {
+							SoftwareInstallationHandler registrationUpdate = new SoftwareInstallationHandler();
+							registrationUpdate.validateBuildSetup();
 
-								hasJars = true;
-
-							} else {
+							if (registrationUpdate.isValidationFailed()) {
 								LOGGER.info(LoggerConstants.CLIENT_JAR_DECRYPTION, LoggerConstants.APPLICATION_NAME,
-										LoggerConstants.APPLICATION_ID, "Installing of jars started");
-
-								updateMessage(INSTALLING_JARS);
-
-								registrationUpdate.installJars();
-
-								updateMessage(RE_CHECKING_FOR_JARS);
-
-								hasJars = (registrationUpdate.getCurrentVersion() != null
-										&& registrationUpdate.hasRequiredJars());
-							}
-
-							LOGGER.info(LoggerConstants.CLIENT_JAR_DECRYPTION, LoggerConstants.APPLICATION_NAME,
-									LoggerConstants.APPLICATION_ID, "Checking for jars Completed");
-
-							if (!hasJars) {
-								LOGGER.info(LoggerConstants.CLIENT_JAR_DECRYPTION, LoggerConstants.APPLICATION_NAME,
-										LoggerConstants.APPLICATION_ID,
-										"Not installed Fully, closing mosip run.jar screen");
+										LoggerConstants.APPLICATION_ID,"Not installed Fully, closing mosip run.jar screen");
 								updateMessage(FAILED_TO_LAUNCH);
 								updateMessage(TERMINATING_APPLICATION);
 								generateAlertAndTerminate(UNABLE_TO_DOWNLOAD_JARS);
-							} else {
+							}
+							else  {
 								LOGGER.info(LoggerConstants.CLIENT_JAR_DECRYPTION, LoggerConstants.APPLICATION_NAME,
 										LoggerConstants.APPLICATION_ID, "Found all the required jars");
 
@@ -332,8 +306,7 @@ public class ClientJarDecryption extends Application {
 		try {
 			FileUtils.deleteDirectory(new File(tempPath));
 			FileUtils.forceDelete(new File("MANIFEST.MF"));
-			new SoftwareInstallationHandler();
-		} catch (IOException ioException) {
+		} catch (Exception ioException) {
 			LOGGER.error(LoggerConstants.CLIENT_JAR_DECRYPTION, LoggerConstants.APPLICATION_NAME,
 					LoggerConstants.APPLICATION_ID, ExceptionUtils.getStackTrace(ioException));
 		}

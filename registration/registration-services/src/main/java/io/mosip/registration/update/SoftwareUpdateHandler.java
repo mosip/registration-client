@@ -74,6 +74,8 @@ public class SoftwareUpdateHandler extends BaseService {
 	private static final String versionTag = "version";
 	private static final String MOSIP_SERVICES = "mosip-services.jar";
 	private static final String MOSIP_CLIENT = "mosip-client.jar";
+	private static final String FEATURE = "http://apache.org/xml/features/disallow-doctype-decl";
+	private static final String EXTERNAL_DTD_FEATURE = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
 
 	private static Map<String, String> CHECKSUM_MAP;
 	private String currentVersion;
@@ -135,6 +137,10 @@ public class SoftwareUpdateHandler extends BaseService {
 				"Checking for latest version started");
 		// Get latest version using meta-inf.xml
 		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+		documentBuilderFactory.setFeature(FEATURE, true);
+		documentBuilderFactory.setFeature(EXTERNAL_DTD_FEATURE, false);
+		documentBuilderFactory.setXIncludeAware(false);
+		documentBuilderFactory.setExpandEntityReferences(false);
 		DocumentBuilder db = documentBuilderFactory.newDocumentBuilder();
 		org.w3c.dom.Document metaInfXmlDocument = db.parse(getInputStreamOf(getURL(serverMosipXmlFileUrl)));
 
@@ -223,6 +229,7 @@ public class SoftwareUpdateHandler extends BaseService {
 		Path backUp = null;
 
 		try {
+			String local = getLocalManifest().getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
 			// Get Server Manifest
 			getServerManifest();
 
@@ -231,11 +238,11 @@ public class SoftwareUpdateHandler extends BaseService {
 			// replace local manifest with Server manifest
 			serverManifest.write(new FileOutputStream(new File(manifestFile)));
 
-			List<String> downloadJars = new LinkedList<>();
+			/*List<String> downloadJars = new LinkedList<>();
 			List<String> deletableJars = new LinkedList<>();
-			List<String> checkableJars = new LinkedList<>();
+			List<String> checkableJars = new LinkedList<>();*/
 
-			Map<String, Attributes> localAttributes = localManifest.getEntries();
+			/*Map<String, Attributes> localAttributes = localManifest.getEntries();
 			Map<String, Attributes> serverAttributes = serverManifest.getEntries();
 
 			// Compare local and server Manifest
@@ -243,7 +250,7 @@ public class SoftwareUpdateHandler extends BaseService {
 				checkableJars.add(jar.getKey());
 				if (!serverAttributes.containsKey(jar.getKey())) {
 
-					/* unnecessary jar after update */
+					*//* unnecessary jar after update *//*
 					deletableJars.add(jar.getKey());
 
 				} else {
@@ -252,7 +259,7 @@ public class SoftwareUpdateHandler extends BaseService {
 					if (!localAttribute.getValue(Attributes.Name.CONTENT_TYPE)
 							.equals(serverAttribute.getValue(Attributes.Name.CONTENT_TYPE))) {
 
-						/* Jar to be downloaded */
+						*//* Jar to be downloaded *//*
 						downloadJars.add(jar.getKey());
 
 					}
@@ -260,9 +267,9 @@ public class SoftwareUpdateHandler extends BaseService {
 					serverManifest.getEntries().remove(jar.getKey());
 
 				}
-			}
+			}*/
 
-			for (Entry<String, Attributes> jar : serverAttributes.entrySet()) {
+			/*for (Entry<String, Attributes> jar : serverAttributes.entrySet()) {
 				downloadJars.add(jar.getKey());
 			}
 
@@ -270,13 +277,13 @@ public class SoftwareUpdateHandler extends BaseService {
 
 			// Un-Modified jars exist or not
 			checkableJars.removeAll(deletableJars);
-			checkableJars.removeAll(downloadJars);
+			checkableJars.removeAll(downloadJars);*/
 
 			getServerManifest();
 
 			// Download latest jars if not in local
-			checkJars(getLatestVersion(), downloadJars);
-			checkJars(getLatestVersion(), checkableJars);
+			checkJars(getLatestVersion(), serverManifest.getEntries().keySet());
+			//checkJars(getLatestVersion(), checkableJars);
 
 			setLocalManifest(serverManifest);
 			setServerManifest(null);
@@ -289,6 +296,8 @@ public class SoftwareUpdateHandler extends BaseService {
 			Timestamp time = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());			
 			globalParamService.update(RegistrationConstants.LAST_SOFTWARE_UPDATE,
 					String.valueOf(time));
+
+			globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, local);
 
 		} catch (RuntimeException | IOException | ParserConfigurationException | SAXException exception) {
 			LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
@@ -340,7 +349,7 @@ public class SoftwareUpdateHandler extends BaseService {
 
 	}
 
-	private void checkJars(String version, List<String> checkableJars)
+	private void checkJars(String version, Collection<String> checkableJars)
 			throws IOException, io.mosip.kernel.core.exception.IOException {
 
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Checking of jars started");
@@ -539,7 +548,7 @@ public class SoftwareUpdateHandler extends BaseService {
 	 * run from the sql file
 	 * </p>
 	 * 
-	 * @param latestVersion
+	 * @param actualLatestVersion
 	 *            latest version
 	 * @param previousVersion
 	 *            previous version
