@@ -68,7 +68,7 @@ ls -ltr lib | grep bc
 
 /usr/bin/zip -r reg-client.zip bin
 /usr/bin/zip -r reg-client.zip lib
-#/usr/bin/zip reg-client.zip MANIFEST.MF
+/usr/bin/zip reg-client.zip MANIFEST.MF
 
 #Creating Regclient testing framework
 mkdir -p /registration-test-utility
