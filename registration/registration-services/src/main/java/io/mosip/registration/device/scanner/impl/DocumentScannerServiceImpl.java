@@ -15,6 +15,7 @@ import java.util.Optional;
 import javax.imageio.ImageIO;
 
 import eu.gnome.morena.*;
+import io.mosip.registration.exception.RegBaseCheckedException;
 import org.springframework.stereotype.Service;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -121,7 +122,7 @@ public class DocumentScannerServiceImpl extends DocumentScannerService {
 		return null;
 	}
 
-	private Manager getScanManager() {
+	private Manager getScanManager() throws RegBaseCheckedException {
 		String deviceTypes_env = System.getenv("mosip.scanner.device.types");
 		String deviceTypes_conf = (String) ApplicationContext.map()
 				.get(RegistrationConstants.EXCEPTIONAL_SCANNER_DEVICE_TYPES);
@@ -136,7 +137,12 @@ public class DocumentScannerServiceImpl extends DocumentScannerService {
 		}
 		LOGGER.info(LOG_REG_DOC_SCAN_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"Exceptional scanner device types : " + deviceTypes);
-		return Manager.getInstance();
+		try {
+			return Manager.getInstance();
+		} catch (Throwable e) {
+			LOGGER.error("Exception while getting morena manager instance", e);
+			throw new RegBaseCheckedException("", "Failed to get morena device manager instance", e);
+		}
 	}
 
 	public BufferedImage scanImage(Device paramDevice) throws Exception {
