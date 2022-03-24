@@ -328,9 +328,6 @@ public class ClientJarDecryption extends Application {
 				properties.getProperty("mosip.client.upgrade.server.url"),
 				properties.getProperty(MOSIP_CLIENT_TPM_AVAILABILITY));
 
-		LOGGER.info(LoggerConstants.CLIENT_JAR_DECRYPTION, LoggerConstants.APPLICATION_NAME,
-				LoggerConstants.APPLICATION_ID, "launching reg-client with command : " + command);
-
 		Process process = Runtime.getRuntime().exec(command);
 
 		LOGGER.info(LoggerConstants.CLIENT_JAR_DECRYPTION, LoggerConstants.APPLICATION_NAME,
