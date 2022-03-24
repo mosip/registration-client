@@ -128,6 +128,12 @@ public class SoftwareInstallationHandler {
 					download(url, entry.getKey());
 					logger.info("Successfully downloaded the latest file : {}", entry.getKey());
 					patch_downloaded = true;
+
+					//Recheck the checksum after download, invalidate setup if it fails
+					if(!validateJarChecksum(file, entry.getValue())) {
+						logger.error("Downloaded {} file checksum validation failed", entry.getKey());
+						throw new Exception("Downloaded file checksum validation failed");
+					}
 				}
 			}
 		} catch (Throwable e) {
