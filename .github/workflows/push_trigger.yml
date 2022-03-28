@@ -6,6 +6,8 @@ on:
     types: [closed]
   push:
     branches:
+      - '!release-branch'
+      - release-1*
       - master
       - 1.*
       - develop
@@ -28,6 +30,10 @@ jobs:
         java-version: 11
         server-id: ossrh # Value of the distributionManagement/repository/id field of the pom.xml
         settings-path: ${{ github.workspace }} # location for the settings.xml file
+
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
     - name: Setup branch and env
       run: |
@@ -62,7 +68,8 @@ jobs:
     - name: Build with Maven
       run: |
         cd registration
-        mvn clean install -U -s $GITHUB_WORKSPACE/settings.xml -DskipTests --file pom.xml
+        mvn -B package --file pom.xml -s $GITHUB_WORKSPACE/settings.xml
+        
 
     - name: Get version info from pom
       id: getPomVersion
@@ -71,10 +78,14 @@ jobs:
         xml-file: ./${{ env.SERVICE_LOCATION }}/pom.xml
         xpath: /*[local-name()="project"]/*[local-name()="version"]
 
+    - name: Publish the maven package
+      run: |
+        cd registration && mvn deploy  -DaltDeploymentRepository=ossrh::default::${{ secrets.OSSRH_SNAPSHOT_URL }} -s $GITHUB_WORKSPACE/settings.xml -f pom.xml
+
     - name: Build image
       run: |
         cd "./${{env.SERVICE_LOCATION}}"
-        docker build . --file Dockerfile --tag ${{ env.SERVICE_NAME }}
+        docker build . --file Dockerfile --build-arg SOURCE=mosip --build-arg COMMIT_HASH=$(git rev-parse HEAD) --build-arg COMMIT_ID=$(git rev-parse --short HEAD) --build-arg BUILD_TIME=${{steps.date.outputs.date}} --tag ${{ env.SERVICE_NAME }}
 
     - name: Log into registry
       run: echo "${{ secrets.release_docker_hub }}" | docker login -u ${{ secrets.actor_docker_hub }} --password-stdin
@@ -86,23 +97,19 @@ jobs:
         # Change all uppercase to lowercase
         IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
         echo "push version ${{steps.getPomVersion.outputs.info}}"
-        VERSION=$BRANCH_NAME
+        if [[ $BRANCH_NAME == master ]]; then
+            VERSION=latest
+          else
+            VERSION=$BRANCH_NAME
+          fi
         echo IMAGE_ID=$IMAGE_ID
         echo VERSION=$VERSION
         docker tag $SERVICE_NAME $IMAGE_ID:$VERSION
         docker push $IMAGE_ID:$VERSION
-
-    - name: Publish the maven package
-      run: |
-        cd registration
-        mvn deploy -DskipTests -DaltDeploymentRepository=ossrh::default::${{ secrets.RELEASE_URL }} -s $GITHUB_WORKSPACE/settings.xml -f pom.xml
+    - uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        fields: repo,message,author,ref,job # selectable (default: repo,message)
       env:
-        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        GPG_TTY: $(tty)
-    - name: Analyze with SonarCloud
-      run: |
-        cd registration
-        mvn clean -B verify sonar:sonar -Dsonar.projectKey=${{ secrets.PROJECT_KEY }} -Dsonar.organization=${{ secrets.ORG_KEY }} -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }} # required
+      if: failure() # Pick up events even if the job fails or is canceled.
