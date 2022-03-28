@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -55,7 +54,6 @@ import io.mosip.registration.mdm.sbi.spec_1_0.dto.request.SbiRCaptureRequestBioD
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.request.SbiRCaptureRequestDTO;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.request.StreamSbiRequestDTO;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.MdmDeviceInfoResponse;
-import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.MdmSbiDeviceInfo;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.MdmSbiDeviceInfoWrapper;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.SbiDeviceDiscoveryMDSResponse;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.SbiDigitalId;
@@ -129,10 +127,10 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 	@Counted(extraTags = {"version", "1.0"})
 	@Timed(extraTags = {"version", "1.0"})
 	@Override
-	public InputStream stream(MdmBioDevice bioDevice, String modality) throws RegBaseCheckedException {
+	public InputStream stream(MdmBioDevice bioDevice, String modality) throws RegBaseCheckedException, IOException {
 
+		CloseableHttpClient client = null;
 		try {
-
 			if (!isDeviceAvailable(bioDevice)) {
 				throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
 						RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
@@ -154,7 +152,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for Stream...." + request);
 
-			CloseableHttpClient client = HttpClients.createDefault();
+			client = HttpClients.createDefault();
 			StringEntity requestEntity = new StringEntity(request, ContentType.create("Content-Type", Consts.UTF_8));
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 					"Building Stream url...." + System.currentTimeMillis());
@@ -191,7 +189,10 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 		} catch (Exception exception) {
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorCode(),
 					RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorMessage(), exception);
-
+		} finally {
+			if (client != null) {
+				client.close();
+			}
 		}
 
 	}
@@ -200,11 +201,12 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 	@Timed(extraTags = {"version", "1.0"})
 	@Override
 	public List<BiometricsDto> rCapture(MdmBioDevice bioDevice, MDMRequestDto mdmRequestDto)
-			throws RegBaseCheckedException {
+			throws RegBaseCheckedException, IOException {
 
 		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Entering into rCapture method for moadlity : "
 				+ mdmRequestDto.getModality() + "  ....." + System.currentTimeMillis());
 
+		CloseableHttpClient client = null;
 		try {
 			if (mdmRequestDto.getExceptions() != null) {
 				mdmRequestDto.setExceptions(getExceptions(mdmRequestDto.getExceptions()));
@@ -222,7 +224,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for RCapture...." + requestBody);
 
-			CloseableHttpClient client = HttpClients.createDefault();
+			client = HttpClients.createDefault();
 			StringEntity requestEntity = new StringEntity(requestBody,
 					ContentType.create("Content-Type", Consts.UTF_8));
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
@@ -278,6 +280,10 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 		} catch (Exception exception) {
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
 					RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage(), exception);
+		} finally {
+			if (client != null) {
+				client.close();
+			}
 		}
 	}
 
@@ -326,7 +332,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 		return modality.contains("left") ? "1"
 				: modality.contains("right") ? "2"
 						: (modality.contains("double") || modality.contains("thumbs") || modality.contains("two")) ? "3"
-								: modality.contains("face") ? "0" : "0";
+								: "0";
 	}
 
 	private MdmBioDevice getBioDevice(MdmSbiDeviceInfoWrapper deviceSbiInfo)
@@ -382,10 +388,11 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 	@Counted(recordFailuresOnly = true, extraTags = {"version", "1.0"})
 	@Timed(extraTags = {"version", "1.0"})
 	@Override
-	public boolean isDeviceAvailable(MdmBioDevice mdmBioDevice) {
+	public boolean isDeviceAvailable(MdmBioDevice mdmBioDevice) throws IOException {
 
 		boolean isDeviceAvailable = false;
-
+		CloseableHttpClient client = null;
+		
 		try {
 			SbiDeviceDiscoveryRequest sbiDeviceDiscoveryRequest = new SbiDeviceDiscoveryRequest();
 			sbiDeviceDiscoveryRequest.setType(mdmBioDevice.getDeviceType());
@@ -398,7 +405,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for RCapture...." + requestBody);
 
-			CloseableHttpClient client = HttpClients.createDefault();
+			client = HttpClients.createDefault();
 			StringEntity requestEntity = new StringEntity(requestBody,
 					ContentType.create("Content-Type", Consts.UTF_8));
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
@@ -433,7 +440,12 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 		} catch (Throwable exception) {
 			LOGGER.error(MOSIP_BIO_DEVICE_INTEGERATOR, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(exception));
+		} finally {
+			if (client != null) {
+				client.close();
+			}
 		}
+
 		return isDeviceAvailable;
 	}
 }

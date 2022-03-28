@@ -10,13 +10,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.micrometer.core.annotation.Counted;
-import io.micrometer.core.annotation.Timed;
-import io.mosip.kernel.core.util.CryptoUtil;
 import org.apache.http.Consts;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -26,7 +22,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -36,8 +31,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
@@ -127,10 +125,10 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 	@Counted(extraTags = {"version", "0.9.2"})
 	@Timed(extraTags = {"version", "0.9.2"})
 	@Override
-	public InputStream stream(MdmBioDevice bioDevice, String modality) throws RegBaseCheckedException {
+	public InputStream stream(MdmBioDevice bioDevice, String modality) throws RegBaseCheckedException, IOException {
 
+		CloseableHttpClient client = null;
 		try {
-
 			if (!isDeviceAvailable(bioDevice)) {
 				throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
 						RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
@@ -149,7 +147,7 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for Stream...." + request);
 
-			CloseableHttpClient client = HttpClients.createDefault();
+			client = HttpClients.createDefault();
 			StringEntity requestEntity = new StringEntity(request, ContentType.create("Content-Type", Consts.UTF_8));
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 					"Building Stream url...." + System.currentTimeMillis());
@@ -172,7 +170,10 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 		} catch (Exception exception) {
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorCode(),
 					RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorMessage(), exception);
-
+		} finally {
+			if (client != null) {
+				client.close();
+			}
 		}
 
 	}
@@ -181,11 +182,12 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 	@Timed(extraTags = {"version", "0.9.2"})
 	@Override
 	public List<BiometricsDto> rCapture(MdmBioDevice bioDevice, MDMRequestDto mdmRequestDto)
-			throws RegBaseCheckedException {
+			throws RegBaseCheckedException, IOException {
 
 		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Entering into rCapture method for moadlity : "
 				+ mdmRequestDto.getModality() + "  ....." + System.currentTimeMillis());
 
+		CloseableHttpClient client = null;
 		try {
 			if (mdmRequestDto.getExceptions() != null) {
 				mdmRequestDto.setExceptions(getExceptions(mdmRequestDto.getExceptions()));
@@ -204,7 +206,7 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for RCapture...." + requestBody);
 
-			CloseableHttpClient client = HttpClients.createDefault();
+			client = HttpClients.createDefault();
 			StringEntity requestEntity = new StringEntity(requestBody,
 					ContentType.create("Content-Type", Consts.UTF_8));
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
@@ -260,6 +262,10 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 		} catch (Exception exception) {
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
 					RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage(), exception);
+		} finally {
+			if (client != null) {
+				client.close();
+			}
 		}
 	}
 
@@ -364,10 +370,11 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 
 	@Counted(recordFailuresOnly = true, extraTags = {"version", "0.9.2"})
 	@Override
-	public boolean isDeviceAvailable(MdmBioDevice mdmBioDevice) {
+	public boolean isDeviceAvailable(MdmBioDevice mdmBioDevice) throws IOException {
 
 		boolean isDeviceAvailable = false;
-
+		CloseableHttpClient client = null;
+		
 		try {
 			DeviceDiscoveryRequest deviceDiscoveryRequest = new DeviceDiscoveryRequest();
 			deviceDiscoveryRequest.setType(mdmBioDevice.getDeviceType());
@@ -380,7 +387,7 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for RCapture...." + requestBody);
 
-			CloseableHttpClient client = HttpClients.createDefault();
+			client = HttpClients.createDefault();
 			StringEntity requestEntity = new StringEntity(requestBody,
 					ContentType.create("Content-Type", Consts.UTF_8));
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
@@ -406,7 +413,12 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 		} catch (Throwable exception) {
 			LOGGER.error(MOSIP_BIO_DEVICE_INTEGERATOR, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(exception));
+		} finally {
+			if (client != null) {
+				client.close();
+			}
 		}
+		
 		return isDeviceAvailable;
 	}
 }

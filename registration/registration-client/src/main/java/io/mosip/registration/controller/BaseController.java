@@ -433,20 +433,12 @@ public class BaseController {
 	}
 
 	private void alertTypeCheck(String title, String context, Stage alertStage) {
-		if (context.contains(RegistrationConstants.INFO) || (!context.contains(RegistrationConstants.SUCCESS.toUpperCase())
-				&& !context.contains(RegistrationConstants.ERROR.toUpperCase()))) {
-			if (SessionContext.isSessionContextAvailable()) {
-				SessionContext.map().put(ALERT_STAGE, alertStage);
-			}
-			alertController.generateAlertResponse(title, context);
-			alertStage.showAndWait();
-		} else {
-			if (SessionContext.isSessionContextAvailable()) {
-				SessionContext.map().put(ALERT_STAGE, alertStage);
-			}
-			alertController.generateAlertResponse(title, context);
-			alertStage.showAndWait();
+
+		if (SessionContext.isSessionContextAvailable()) {
+			SessionContext.map().put(ALERT_STAGE, alertStage);
 		}
+		alertController.generateAlertResponse(title, context);
+		alertStage.showAndWait();
 		alertController.alertWindowExit();
 	}
 

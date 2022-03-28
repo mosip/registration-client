@@ -357,10 +357,15 @@ public class MosipDeviceSpecificationFactory {
 					RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
 		}
 
-		Optional<MosipDeviceSpecificationProvider> result = deviceSpecificationProviders.stream()
-				.filter(provider -> provider.getSpecVersion().equalsIgnoreCase(bioDevice.getSpecVersion())
-						&& provider.isDeviceAvailable(bioDevice))
-				.findFirst();
+		Optional<MosipDeviceSpecificationProvider> result = deviceSpecificationProviders.stream().filter(provider -> {
+			try {
+				return provider.getSpecVersion().equalsIgnoreCase(bioDevice.getSpecVersion())
+						&& provider.isDeviceAvailable(bioDevice);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return false;
+		}).findFirst();
 		
 		String deviceType = getDeviceType(bioDevice.getDeviceType());
 		String deviceSubType = getDeviceSubType(bioDevice.getDeviceSubType());

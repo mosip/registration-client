@@ -53,7 +53,7 @@ public interface MosipDeviceSpecificationProvider {
 	 */
 	public InputStream stream(@MetricTag(value = "device", extractor = "arg.serialNumber") MdmBioDevice bioDevice,
 							  @MetricTag(value = "modality") String modality)
-			throws RegBaseCheckedException;
+			throws RegBaseCheckedException, IOException;
 
 	/**
 	 * @param bioDevice     Device Information
@@ -66,7 +66,7 @@ public interface MosipDeviceSpecificationProvider {
 	 */
 	public List<BiometricsDto> rCapture(@MetricTag(value = "device", extractor = "arg.serialNumber") MdmBioDevice bioDevice,
 										@MetricTag(value = "modality", extractor = "arg.modality") MDMRequestDto mdmRequestDto)
-			throws RegBaseCheckedException;
+			throws RegBaseCheckedException, IOException;
 
 	/**
 	 * @param deviceInfoResponse received from mds
@@ -77,7 +77,8 @@ public interface MosipDeviceSpecificationProvider {
 	/**
 	 * @param mdmBioDevice bio device cached from device info
 	 * @return device was is Ready status or not
+	 * @throws IOException 
 	 */
-	public boolean isDeviceAvailable(@MetricTag(value = "device", extractor = "arg.serialNumber") MdmBioDevice mdmBioDevice);
+	public boolean isDeviceAvailable(@MetricTag(value = "device", extractor = "arg.serialNumber") MdmBioDevice mdmBioDevice) throws IOException;
 
 }
