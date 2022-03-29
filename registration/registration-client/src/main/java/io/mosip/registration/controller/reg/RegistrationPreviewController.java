@@ -292,7 +292,9 @@ public class RegistrationPreviewController extends BaseController implements Ini
 			} else {
 				SessionContext.map().put(RegistrationConstants.UIN_UPDATE_REGISTRATIONPREVIEW, true);
 			}
-			registrationController.showUINUpdateCurrentPage();
+			registrationController.showCurrentPage(RegistrationConstants.REGISTRATION_PREVIEW,
+					RegistrationConstants.UIN_UPDATE_DOCUMENTSCAN);
+			//registrationController.showUINUpdateCurrentPage();
 		} else {
 			registrationController.showCurrentPage(RegistrationConstants.REGISTRATION_PREVIEW,
 					RegistrationConstants.DOCUMENT_SCAN);
