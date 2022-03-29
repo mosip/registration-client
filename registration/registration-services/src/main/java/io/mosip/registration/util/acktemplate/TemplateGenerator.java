@@ -137,8 +137,10 @@ public class TemplateGenerator extends BaseService {
 			Map<String, Object> templateValues = new WeakHashMap<>();
 			boolean isPrevTemplate = templateType.equals(RegistrationConstants.ACKNOWLEDGEMENT_TEMPLATE) ? false : true;
 			String firstSelectedLanguage = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0);
-			ResourceBundle firstLanguageProperties = ApplicationContext.getInstance()
-					.getBundle(firstSelectedLanguage, RegistrationConstants.LABELS);
+			if (ApplicationContext.getInstance().isLanguageRightToLeft(firstSelectedLanguage)) {
+				templateValues.put("rtl", "dir='rtl'");
+			}
+			ResourceBundle firstLanguageProperties = ApplicationContext.getBundle(firstSelectedLanguage, RegistrationConstants.LABELS);
 			InputStream is = new ByteArrayInputStream(templateText.getBytes(StandardCharsets.UTF_8));
 			List<UiFieldDTO> schemaFields = identitySchemaService.getAllFieldSpec(registration.getProcessId(), registration.getIdSchemaVersion());
 
