@@ -16,15 +16,8 @@ import java.util.List;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.core.util.CryptoUtil;
-import org.apache.http.Consts;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.RequestBuilder;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -152,16 +145,8 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for Stream...." + request);
 
-			client = HttpClients.createDefault();
-			StringEntity requestEntity = new StringEntity(request, ContentType.create("Content-Type", Consts.UTF_8));
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Building Stream url...." + System.currentTimeMillis());
-			HttpUriRequest httpUriRequest = RequestBuilder.create("STREAM").setUri(url).setEntity(requestEntity)
-					.build();
-
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Requesting Stream url...." + System.currentTimeMillis());
-			CloseableHttpResponse response = client.execute(httpUriRequest);
+			CloseableHttpResponse response = mosipDeviceSpecificationHelper.getHttpClientResponse(url, "STREAM",
+					request);
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 					"Request completed.... " + System.currentTimeMillis());
 
@@ -205,8 +190,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 
 		LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Entering into rCapture method for moadlity : "
 				+ mdmRequestDto.getModality() + "  ....." + System.currentTimeMillis());
-
-		CloseableHttpClient client = null;
+		
 		try {
 			if (mdmRequestDto.getExceptions() != null) {
 				mdmRequestDto.setExceptions(getExceptions(mdmRequestDto.getExceptions()));
@@ -224,19 +208,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for RCapture...." + requestBody);
 
-			client = HttpClients.createDefault();
-			StringEntity requestEntity = new StringEntity(requestBody,
-					ContentType.create("Content-Type", Consts.UTF_8));
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Bulding capture url...." + System.currentTimeMillis());
-			HttpUriRequest request = RequestBuilder.create("RCAPTURE").setUri(url).setEntity(requestEntity).build();
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Requesting capture url...." + System.currentTimeMillis());
-			CloseableHttpResponse response = client.execute(request);
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Request completed.... " + System.currentTimeMillis());
-
-			String val = EntityUtils.toString(response.getEntity());
+			String val = mosipDeviceSpecificationHelper.getHttpClientResponseEntity(url, "RCAPTURE", requestBody);
 
 			SbiRCaptureResponseDTO captureResponse = mapper.readValue(val.getBytes(StandardCharsets.UTF_8),
 					SbiRCaptureResponseDTO.class);
@@ -280,10 +252,6 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 		} catch (Exception exception) {
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
 					RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage(), exception);
-		} finally {
-			if (client != null) {
-				client.close();
-			}
 		}
 	}
 
@@ -391,8 +359,6 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 	public boolean isDeviceAvailable(MdmBioDevice mdmBioDevice) throws IOException {
 
 		boolean isDeviceAvailable = false;
-		CloseableHttpClient client = null;
-		
 		try {
 			SbiDeviceDiscoveryRequest sbiDeviceDiscoveryRequest = new SbiDeviceDiscoveryRequest();
 			sbiDeviceDiscoveryRequest.setType(mdmBioDevice.getDeviceType());
@@ -403,23 +369,16 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 			ObjectMapper mapper = new ObjectMapper();
 			String requestBody = mapper.writeValueAsString(sbiDeviceDiscoveryRequest);
 
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for RCapture...." + requestBody);
+			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID, "Request for device discovery...." + requestBody);
 
-			client = HttpClients.createDefault();
-			StringEntity requestEntity = new StringEntity(requestBody,
-					ContentType.create("Content-Type", Consts.UTF_8));
-			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
-					"Bulding Device availbale check url...." + System.currentTimeMillis());
-
-			HttpUriRequest request = RequestBuilder.create("SBIDISC")
-					.setUri(mosipDeviceSpecificationHelper.buildUrl(mdmBioDevice.getPort(), "device"))
-					.setEntity(requestEntity).build();
-
-			CloseableHttpResponse response = client.execute(request);
+			String response = mosipDeviceSpecificationHelper.getHttpClientResponseEntity(
+					mosipDeviceSpecificationHelper.buildUrl(mdmBioDevice.getPort(), "device"), "SBIDISC", requestBody);
+			
 			LOGGER.info(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 					"parsing device discovery response to 092 dto");
-			List<SbiDeviceDiscoveryMDSResponse> deviceList = (mosipDeviceSpecificationHelper.getMapper().readValue(
-					EntityUtils.toString(response.getEntity()), new TypeReference<List<SbiDeviceDiscoveryMDSResponse>>() {	}));
+			List<SbiDeviceDiscoveryMDSResponse> deviceList = (mosipDeviceSpecificationHelper.getMapper()
+					.readValue(response, new TypeReference<List<SbiDeviceDiscoveryMDSResponse>>() {
+					}));
 			for(SbiDeviceDiscoveryMDSResponse response1 : deviceList) {
 				if(response1 != null &&  response1.getSpecVersion() != null && response1.getDeviceStatus() != null && response1.getCertification() != null) {
 					if(Arrays.asList(response1.getSpecVersion()).contains(SPEC_VERSION)) {
@@ -440,12 +399,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 		} catch (Throwable exception) {
 			LOGGER.error(MOSIP_BIO_DEVICE_INTEGERATOR, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(exception));
-		} finally {
-			if (client != null) {
-				client.close();
-			}
 		}
-
 		return isDeviceAvailable;
 	}
 }
