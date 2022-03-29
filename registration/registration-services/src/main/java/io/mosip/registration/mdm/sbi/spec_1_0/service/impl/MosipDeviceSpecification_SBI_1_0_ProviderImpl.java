@@ -13,11 +13,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.micrometer.core.annotation.Counted;
-import io.micrometer.core.annotation.Timed;
-import io.mosip.kernel.core.util.CryptoUtil;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,8 +23,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
@@ -122,7 +121,6 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 	@Override
 	public InputStream stream(MdmBioDevice bioDevice, String modality) throws RegBaseCheckedException, IOException {
 
-		CloseableHttpClient client = null;
 		try {
 			if (!isDeviceAvailable(bioDevice)) {
 				throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
@@ -174,12 +172,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 		} catch (Exception exception) {
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorCode(),
 					RegistrationExceptionConstants.MDS_STREAM_ERROR.getErrorMessage(), exception);
-		} finally {
-			if (client != null) {
-				client.close();
-			}
 		}
-
 	}
 
 	@Counted(extraTags = {"version", "1.0"})
