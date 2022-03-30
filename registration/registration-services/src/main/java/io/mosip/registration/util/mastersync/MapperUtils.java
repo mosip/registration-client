@@ -11,9 +11,7 @@ import java.lang.reflect.Modifier;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -31,11 +29,7 @@ import java.time.ZoneOffset;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -44,7 +38,6 @@ import io.mosip.kernel.core.dataaccess.exception.DataAccessLayerException;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.dto.mastersync.DynamicFieldDto;
 import io.mosip.registration.entity.RegistrationCommonFields;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 
