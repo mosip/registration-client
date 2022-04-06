@@ -26,15 +26,15 @@ public class DiskMetrics implements MeterBinder {
         File dir = new File(System.getProperty("user.dir"));
 
         Gauge.builder("disk.usable", dir, (t) -> {
-            return Long.valueOf(t.getUsableSpace()).doubleValue();
+			return (double) t.getUsableSpace();
         }).tags(tags).strongReference(true).register(registry);
 
         Gauge.builder("disk.free", dir, (t)  -> {
-            return Long.valueOf(t.getFreeSpace()).doubleValue();
+			return (double) t.getFreeSpace();
         }).tags(tags).strongReference(true).register(registry);
 
         Gauge.builder("disk.total", dir, (t) -> {
-            return Long.valueOf(t.getTotalSpace()).doubleValue();
+			return (double) t.getTotalSpace();
         }).tags(tags).strongReference(true).register(registry);
     }
 }

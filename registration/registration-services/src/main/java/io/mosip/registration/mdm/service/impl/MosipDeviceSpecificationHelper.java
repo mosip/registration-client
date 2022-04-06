@@ -19,6 +19,7 @@ import io.mosip.registration.mdm.dto.DeviceInfo;
 import io.mosip.registration.mdm.dto.MDMError;
 import io.mosip.registration.mdm.dto.MdmDeviceInfo;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.MdmSbiDeviceInfoWrapper;
+import io.mosip.registration.mdm.sbi.spec_1_0.service.impl.MosipDeviceSpecification_SBI_1_0_ProviderImpl;
 
 import org.apache.http.Consts;
 import org.apache.http.client.config.RequestConfig;
@@ -106,12 +107,11 @@ public class MosipDeviceSpecificationHelper {
 		try {
 			validateJWTResponse(deviceInfo, deviceInfoTrustDomain);
 			String result = new String(CryptoUtil.decodeURLSafeBase64(getPayLoad(deviceInfo)));
-			if(classType.getName().equals("io.mosip.registration.mdm.sbi.spec_1_0.service.impl.MosipDeviceSpecification_SBI_1_0_ProviderImpl")) {
+			if (classType.isAssignableFrom(MosipDeviceSpecification_SBI_1_0_ProviderImpl.class)) {
 				return mapper.readValue(result, MdmSbiDeviceInfoWrapper.class);
 			} else {
 				return mapper.readValue(result, MdmDeviceInfo.class);
 			}
-			
 		} catch (Exception exception) {
 			LOGGER.error(APPLICATION_ID, APPLICATION_NAME, "Failed to decode device info",
 					ExceptionUtils.getStackTrace(exception));
@@ -283,13 +283,11 @@ public class MosipDeviceSpecificationHelper {
 				.setSocketTimeout(timeout)
 				.setConnectionRequestTimeout(timeout)
 				.build();
-		CloseableHttpClient client = HttpClients.createDefault();
-		StringEntity requestEntity = new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8));
-		HttpUriRequest httpUriRequest = RequestBuilder.create(method)
-				.setConfig(requestConfig)
-				.setUri(url)
-				.setEntity(requestEntity)
-				.build();
-		return client.execute(httpUriRequest);
+		try (CloseableHttpClient client = HttpClients.createDefault()) {
+			StringEntity requestEntity = new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8));
+			HttpUriRequest httpUriRequest = RequestBuilder.create(method).setConfig(requestConfig).setUri(url)
+					.setEntity(requestEntity).build();
+			return client.execute(httpUriRequest);
+		}
 	}
 }

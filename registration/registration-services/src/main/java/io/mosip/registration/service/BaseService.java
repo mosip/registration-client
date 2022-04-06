@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import io.mosip.registration.entity.RegistrationCenter;
 import io.mosip.registration.repositories.RegistrationCenterRepository;
 import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -398,8 +399,7 @@ public class BaseService {
 
 		try (FileInputStream fis = new FileInputStream(FileUtils.getFile(registration.getAckFilename().replace(
 				RegistrationConstants.ACKNOWLEDGEMENT_FILE_EXTENSION, RegistrationConstants.ZIP_FILE_EXTENSION)))) {
-			byte[] byteArray = new byte[(int) fis.available()];
-			fis.read(byteArray);
+			byte[] byteArray = IOUtils.toByteArray(fis);
 			statusDTO.setPacketHash(HMACUtils2.digestAsPlainText(byteArray));
 			statusDTO.setPacketSize(BigInteger.valueOf(byteArray.length));
 
