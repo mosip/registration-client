@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -303,8 +304,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 
 			try (FileInputStream fis = new FileInputStream(FileUtils.getFile(registration.getAckFilename().replace(
 					RegistrationConstants.ACKNOWLEDGEMENT_FILE_EXTENSION, RegistrationConstants.ZIP_FILE_EXTENSION)))) {
-				byte[] byteArray = new byte[(int) fis.available()];
-				fis.read(byteArray);
+				byte[] byteArray = IOUtils.toByteArray(fis);
 				syncDto.setPacketHashValue(HMACUtils2.digestAsPlainText(byteArray));
 				syncDto.setPacketSize(BigInteger.valueOf(byteArray.length));
 			} catch (IOException | NoSuchAlgorithmException ioException) {

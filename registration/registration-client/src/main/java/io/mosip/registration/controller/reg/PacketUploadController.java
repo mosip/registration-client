@@ -26,6 +26,7 @@ import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.ListUtils;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -327,8 +328,7 @@ public class PacketUploadController extends BaseController implements Initializa
 				try (FileInputStream fis = new FileInputStream(new File(
 						packet.getPacketPath().replace(RegistrationConstants.ACKNOWLEDGEMENT_FILE_EXTENSION,
 								RegistrationConstants.ZIP_FILE_EXTENSION)))) {
-					byte[] byteArray = new byte[(int) fis.available()];
-					fis.read(byteArray);
+					byte[] byteArray = IOUtils.toByteArray(fis);
 					packetStatusVO.setPacketHash(HMACUtils2.digestAsPlainText(byteArray));
 					packetStatusVO.setPacketSize(BigInteger.valueOf(byteArray.length));
 

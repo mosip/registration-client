@@ -125,9 +125,10 @@ public class ResponseSignatureAdvice {
 
 			LinkedHashMap<String, Object> responseBodyMap = (LinkedHashMap<String, Object>) restClientResponse
 					.get(RegistrationConstants.REST_RESPONSE_BODY);
-			if (null != responseBodyMap && responseBodyMap.size() > 0 && null != responseBodyMap.get(RegistrationConstants.RESPONSE)) {
+			if (null != responseBodyMap && responseBodyMap.size() > 0
+					&& null != responseBodyMap.get(RegistrationConstants.RESPONSE)) {
 
-				if (responseBodyMap.get(RegistrationConstants.RESPONSE) instanceof LinkedHashMap){
+				if (responseBodyMap.get(RegistrationConstants.RESPONSE) instanceof LinkedHashMap) {
 					LinkedHashMap<String, Object> resp = (LinkedHashMap<String, Object>) responseBodyMap
 							.get(RegistrationConstants.RESPONSE);
 					checkAndUploadCertificate(resp, joinPoint);
@@ -135,18 +136,23 @@ public class ResponseSignatureAdvice {
 
 				responseHeader = (HttpHeaders) restClientResponse.get(RegistrationConstants.REST_RESPONSE_HEADERS);
 
-				if (responseHeader != null && responseHeader.containsKey(RegistrationConstants.RESPONSE_SIGNATURE)
-						&& responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE) != null
-						&& !responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE).isEmpty()
-						&& isResponseSignatureValid(responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE).get(0),
-								new ObjectMapper().writeValueAsString(responseBodyMap))) {
-					LOGGER.info("Response signature is valid... {}", requestDto.getUri());
-					return restClientResponse;
+				if (responseHeader != null && responseHeader.containsKey(RegistrationConstants.RESPONSE_SIGNATURE)) {
+					List<String> responseSignature = responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE);
+					if (responseSignature != null && !responseSignature.isEmpty() && isResponseSignatureValid(
+							responseSignature.get(0), new ObjectMapper().writeValueAsString(responseBodyMap))) {
+						LOGGER.info("Response signature is valid... {}", requestDto.getUri());
+						return restClientResponse;
+					} else {
+						LOGGER.info("Response signature is INVALID... {}", requestDto.getUri());
+						restClientResponse.put(RegistrationConstants.REST_RESPONSE_BODY, new LinkedHashMap<>());
+						restClientResponse.put(RegistrationConstants.REST_RESPONSE_HEADERS, new LinkedHashMap<>());
+					}
 				} else {
 					LOGGER.info("Response signature is INVALID... {}", requestDto.getUri());
 					restClientResponse.put(RegistrationConstants.REST_RESPONSE_BODY, new LinkedHashMap<>());
 					restClientResponse.put(RegistrationConstants.REST_RESPONSE_HEADERS, new LinkedHashMap<>());
 				}
+
 			}
 		} catch (RuntimeException | JsonProcessingException regBaseCheckedException) {
 			LOGGER.error(regBaseCheckedException.getMessage(), regBaseCheckedException);
