@@ -433,7 +433,6 @@ public class BaseController {
 	}
 
 	private void alertTypeCheck(String title, String context, Stage alertStage) {
-
 		if (SessionContext.isSessionContextAvailable()) {
 			SessionContext.map().put(ALERT_STAGE, alertStage);
 		}

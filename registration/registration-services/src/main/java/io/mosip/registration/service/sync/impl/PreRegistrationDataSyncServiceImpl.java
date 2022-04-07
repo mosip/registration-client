@@ -42,6 +42,7 @@ import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.PreRegistrationDataSyncDAO;
 import io.mosip.registration.entity.PreRegistrationList;
 import io.mosip.registration.entity.SyncTransaction;
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.jobs.SyncManager;
 import io.mosip.registration.service.BaseService;
@@ -163,7 +164,11 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 							public void run() {
 								//TODO - Need to inform pre-reg team to correct date format
 								preRegDetail.setValue(preRegDetail.getValue().endsWith("Z") ? preRegDetail.getValue() : preRegDetail.getValue() + "Z");
-								getPreRegistration(preRegDetail.getKey(), Timestamp.from(Instant.parse(preRegDetail.getValue())));
+								try {
+									getPreRegistration(preRegDetail.getKey(), Timestamp.from(Instant.parse(preRegDetail.getValue())));
+								} catch (Exception e) {
+									LOGGER.error("Failed to fetch pre-reg packet", e);
+								}
 							}
 						}
 				);
@@ -195,6 +200,10 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 				setPacketToResponse(responseDTO, decryptedPacket, preRegistrationId);
 				return responseDTO;
 			}
+		} catch (RegBaseCheckedException regBaseCheckedException) {
+			LOGGER.error("Failed to fetch pre-reg packet", regBaseCheckedException);
+			setErrorResponse(responseDTO, regBaseCheckedException.getErrorCode(), null);
+			return responseDTO;
 		} catch (Exception e) {
 			LOGGER.error("Failed to fetch pre-reg packet", e);
 		}
@@ -202,25 +211,20 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 		return responseDTO;
 	}
 
-	private PreRegistrationList getPreRegistration(String preRegistrationId, Timestamp lastUpdatedTimeStamp) {
+	private PreRegistrationList getPreRegistration(String preRegistrationId, Timestamp lastUpdatedTimeStamp) throws RegBaseCheckedException, ConnectionException {
 		LOGGER.info("Fetching Pre-Registration started for {}", preRegistrationId);
 		PreRegistrationList preRegistration = null;
-		try {
-			/* Check in Database whether required record already exists or not */
-			preRegistration = preRegistrationDAO.get(preRegistrationId);
-			if(preRegistration == null || !FileUtils.getFile(preRegistration.getPacketPath()).exists()) {
-				LOGGER.info("Pre-Registration ID is not present downloading {}", preRegistrationId);
-				return downloadAndSavePacket(preRegistration, preRegistrationId, lastUpdatedTimeStamp);
-			}
+		/* Check in Database whether required record already exists or not */
+		preRegistration = preRegistrationDAO.get(preRegistrationId);
+		if(preRegistration == null || !FileUtils.getFile(preRegistration.getPacketPath()).exists()) {
+			LOGGER.info("Pre-Registration ID is not present downloading {}", preRegistrationId);
+			return downloadAndSavePacket(preRegistration, preRegistrationId, lastUpdatedTimeStamp);
+		}
 
-			if(lastUpdatedTimeStamp == null ||
-					preRegistration.getLastUpdatedPreRegTimeStamp().before(lastUpdatedTimeStamp)) {
-				LOGGER.info("Pre-Registration ID is not up-to-date downloading {}", preRegistrationId);
-				return downloadAndSavePacket(preRegistration, preRegistrationId, lastUpdatedTimeStamp);
-			}
-
-		} catch (Exception exception) {
-			LOGGER.error(preRegistrationId, exception);
+		if(lastUpdatedTimeStamp == null ||
+				preRegistration.getLastUpdatedPreRegTimeStamp().before(lastUpdatedTimeStamp)) {
+			LOGGER.info("Pre-Registration ID is not up-to-date downloading {}", preRegistrationId);
+			return downloadAndSavePacket(preRegistration, preRegistrationId, lastUpdatedTimeStamp);
 		}
 		return preRegistration;
 	}
@@ -228,7 +232,7 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 	@Counted
 	@Timed
 	private PreRegistrationList downloadAndSavePacket(PreRegistrationList preRegistration, @NonNull String preRegistrationId,
-			 Timestamp lastUpdatedTimeStamp) throws Exception {
+			 Timestamp lastUpdatedTimeStamp) throws RegBaseCheckedException, ConnectionException {
 		Map<String, String> requestParamMap = new HashMap<>();
 		requestParamMap.put(RegistrationConstants.PRE_REGISTRATION_ID, preRegistrationId);
 		requestParamMap.put(RegistrationConstants.USER_STATION_ID, getStationId());
@@ -267,11 +271,12 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 				preRegistrationList.setUpdDtimes(new Timestamp(System.currentTimeMillis()));
 				preRegistration = preRegistrationDAO.update(preRegistrationList);
 			}
+		} else if (mainResponseDTO.getErrors() != null && !mainResponseDTO.getErrors().isEmpty()) {
+			PreRegistrationExceptionJSONInfoDTO errorResponse = mainResponseDTO.getErrors().get(0);
+			LOGGER.info("Pre-reg-id {} errors from response {}", preRegistrationId,
+					errorResponse.getErrorCode(), errorResponse.getMessage());
+			throw new RegBaseCheckedException(errorResponse.getErrorCode(), errorResponse.getMessage());
 		}
-		LOGGER.info("Pre-reg-id {} errors from response {}", preRegistrationId,
-				mainResponseDTO.getErrors() != null ?
-						mainResponseDTO.getErrors().stream().collect(Collectors.toMap(PreRegistrationExceptionJSONInfoDTO::getErrorCode,
-								PreRegistrationExceptionJSONInfoDTO::getMessage)) : "-");
 		return preRegistration;
 	}
 

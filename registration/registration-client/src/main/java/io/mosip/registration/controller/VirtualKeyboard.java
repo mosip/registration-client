@@ -216,9 +216,11 @@ public class VirtualKeyboard {
 				root.getChildren().add(hbox);
 
 				hbox.getChildren().addAll(extraLeftButtons[buttonRow]);
-				for (int buttonColumn = 0; buttonColumn < unshifted[buttonRow].length; buttonColumn++) {
-					hbox.getChildren().add(createShiftableButton(unshifted[buttonRow][buttonColumn],
-							shifted[buttonRow][buttonColumn], codes[buttonRow][buttonColumn], modifiers, target));
+				if (shifted != null && unshifted != null) {
+					for (int buttonColumn = 0; buttonColumn < unshifted[buttonRow].length; buttonColumn++) {
+						hbox.getChildren().add(createShiftableButton(unshifted[buttonRow][buttonColumn],
+								shifted[buttonRow][buttonColumn], codes[buttonRow][buttonColumn], modifiers, target));
+					}
 				}
 				hbox.getChildren().addAll(extraRightButtons[buttonRow]);
 			}
@@ -297,7 +299,7 @@ public class VirtualKeyboard {
 					final KeyEvent keyReleasedEvent = createKeyEvent(button, targetNode, KeyEvent.KEY_RELEASED,
 							character, code, modifiers);
 					targetNode.fireEvent(keyReleasedEvent);
-					if (character != KeyEvent.CHAR_UNDEFINED) {
+					if (!character.equalsIgnoreCase(KeyEvent.CHAR_UNDEFINED)) {
 						final KeyEvent keyTypedEvent = createKeyEvent(button, targetNode, KeyEvent.KEY_TYPED, character,
 								code, modifiers);
 						targetNode.fireEvent(keyTypedEvent);

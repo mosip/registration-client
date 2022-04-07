@@ -120,6 +120,9 @@ public class BiometricUploadPage {
             }
             if (flag == false)
                 clickScanBtn(idBioType, jsonContent, idModality);
+        } catch (InterruptedException e) {
+            logger.error("", e);
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -151,6 +154,9 @@ public class BiometricUploadPage {
             }
             if (flag == false)
                 clickScanBtn(idBioType, jsonContent, idModality);
+        } catch (InterruptedException e) {
+            logger.error("", e);
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -194,6 +200,9 @@ public class BiometricUploadPage {
             }
             if (flag == false)
                 clickScanBtn(idBioType, jsonContent, idModality);
+        } catch (InterruptedException e) {
+            logger.error("", e);
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             logger.error("", e);
         }

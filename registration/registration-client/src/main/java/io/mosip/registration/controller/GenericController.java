@@ -250,7 +250,16 @@ public class GenericController extends BaseController {
 								return;
 							}
 							ResponseDTO responseDTO = preRegistrationDataSyncService.getPreRegistration(textField.getText(), false);
-
+							
+							if (responseDTO.getErrorResponseDTOs() != null
+									&& !responseDTO.getErrorResponseDTOs().isEmpty()
+									&& responseDTO.getErrorResponseDTOs().get(0).getMessage() != null
+									&& responseDTO.getErrorResponseDTOs().get(0).getMessage()
+											.equalsIgnoreCase(RegistrationConstants.CONSUMED_PRID_ERROR_CODE)) {
+								generateAlertLanguageSpecific(RegistrationConstants.ERROR, RegistrationConstants.PRE_REG_CONSUMED_PACKET_ERROR);
+								return;
+							}
+							
 							try {
 								loadPreRegSync(responseDTO);
 								if (responseDTO.getSuccessResponseDTO() != null) {
@@ -261,7 +270,7 @@ public class GenericController extends BaseController {
 									getRegistrationDTOFromSession().setRegistrationId(textField.getText());
 								}
 							} catch (RegBaseCheckedException exception) {
-								generateAlertLanguageSpecific(RegistrationConstants.ERROR, responseDTO.getErrorResponseDTOs().get(0).getMessage());
+								generateAlertLanguageSpecific(RegistrationConstants.ERROR, RegistrationConstants.PRE_REG_TO_GET_PACKET_ERROR);
 							}
 						});
 						return null;
