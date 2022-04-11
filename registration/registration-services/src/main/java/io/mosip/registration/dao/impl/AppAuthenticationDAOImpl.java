@@ -9,8 +9,6 @@ import org.springframework.stereotype.Repository;
 
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.constants.ProcessNames;
-import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.AppAuthenticationDAO;
 import io.mosip.registration.dao.AppAuthenticationDetails;
 import io.mosip.registration.dao.AppRolePriorityDetails;

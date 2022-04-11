@@ -42,6 +42,14 @@ public class RegPacketStatusDaoImplTest {
 
 		packetStatusDao.getPacketIdsByStatusUploadedOrExported();
 	}
+	
+	@Test
+	public void getPacketIdsByStatusExportedTest() {
+		List<Registration> registrations = null;
+		when(registrationRepository.findByClientStatusCommentsOrderByCrDtime(Mockito.any())).thenReturn(registrations);
+
+		packetStatusDao.getPacketIdsByStatusExported();
+	}
 
 	@Test
 	public void deleteTest() {
