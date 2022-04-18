@@ -84,7 +84,6 @@ public class SyncJobControlDAOImplTest {
 		assertTrue(syncJobnfo.getYetToExportCount() == registrationsList.size());
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test(expected = RegBaseUncheckedException.class)
 	public void testValidateException() throws RegBaseCheckedException {
 		when(registrationRepository.countByClientStatusCodeInOrderByUpdDtimesDesc(Mockito.anyList()))
@@ -139,6 +138,21 @@ public class SyncJobControlDAOImplTest {
 		when(registrationRepository.findByclientStatusCodeOrderByCrDtimeAsc("REGISTERED")).thenReturn(registrations);
 
 		assertEquals(syncJobDAOImpl.getRegistrationDetails(), registrations);
+	}
+	
+	@Test
+	public void getRegistrationCountTest() {
+
+		when(registrationRepository.countByclientStatusCodeOrderByCrDtimeAsc(Mockito.any())).thenReturn(Long.valueOf(4));
+		assertEquals(syncJobDAOImpl.getRegistrationCount(), Long.valueOf(4));
+	}
+	
+	@Test
+	public void getFirstRegistrationTest() {
+
+		Registration registration = new Registration();
+		when(registrationRepository.findTopByclientStatusCodeOrderByCrDtimeAsc(Mockito.any())).thenReturn(registration);
+		assertEquals(syncJobDAOImpl.getFirstRegistration(), registration);
 	}
 
 }

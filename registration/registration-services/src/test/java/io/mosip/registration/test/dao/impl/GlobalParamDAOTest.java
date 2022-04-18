@@ -50,6 +50,16 @@ public class GlobalParamDAOTest {
 	}
 	
 	@Test
+	public void getGlobalParamsUsingPatternTest() {
+		List<GlobalParamName> params = new ArrayList<>();
+
+		Mockito.when(globalParamRepository.findByNameLikeAndIsActiveTrueAndValIsNotNull(Mockito.anyString()))
+				.thenReturn(params);
+		Map<String, Object> globalParamMap = new LinkedHashMap<>();
+		assertEquals(globalParamMap, globalContextParamDAOImpl.getGlobalParams("[pattern]"));
+	}
+	
+	@Test
 	public void saveAllTest() {
 		List<GlobalParam> params = new ArrayList<>(); 
 		
@@ -82,7 +92,22 @@ public class GlobalParamDAOTest {
 		Mockito.when(globalParamRepository.findByNameIn(list)).thenReturn(params);
 		//globalContextParamDAOImpl.get("name");
 		assertEquals(params, globalContextParamDAOImpl.getAll(list));
-	}  
+	}
+	
+	@Test
+	public void getAllEntriesTest() {
+		List<GlobalParam> params = new ArrayList<>();
+
+		GlobalParam globalParam = new GlobalParam();
+		globalParam.setName("1234");
+		params.add(globalParam);
+
+		List<String> list = new LinkedList<>();
+		list.add("1234");
+
+		Mockito.when(globalParamRepository.findAll()).thenReturn(params);
+		assertEquals(params, globalContextParamDAOImpl.getAllEntries());
+	}
 	
 	@Test
 	public void updateSoftwareUpdateStatusSuccessTest() {
