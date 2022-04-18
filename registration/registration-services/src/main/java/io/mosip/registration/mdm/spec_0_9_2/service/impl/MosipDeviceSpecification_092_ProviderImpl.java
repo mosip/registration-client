@@ -280,7 +280,7 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 		return modality.contains("left") ? "1"
 				: modality.contains("right") ? "2"
 						: (modality.contains("double") || modality.contains("thumbs") || modality.contains("two")) ? "3"
-								: modality.contains("face") ? "0" : "0";
+								: "0";
 	}
 
 	private MdmBioDevice getBioDevice(MdmDeviceInfo deviceInfo)

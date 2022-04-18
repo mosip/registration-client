@@ -9,11 +9,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import io.micrometer.core.annotation.Counted;
-import io.mosip.registration.exception.ConnectionException;
-import io.mosip.registration.exception.RemapException;
-import io.mosip.registration.service.remap.RemapStatus;
-import io.mosip.registration.util.restclient.ServiceDelegateUtil;
+import javax.sql.DataSource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -22,6 +19,7 @@ import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.stereotype.Service;
 
+import io.micrometer.core.annotation.Counted;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.exception.IOException;
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -43,13 +41,16 @@ import io.mosip.registration.entity.PreRegistrationList;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.entity.id.GlobalParamId;
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RemapException;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.packet.PacketUploadService;
 import io.mosip.registration.service.packet.RegPacketStatusService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
+import io.mosip.registration.service.remap.RemapStatus;
 import io.mosip.registration.service.sync.PacketSynchService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 /**
  * Class {@code CenterMachineReMapServiceImpl} to handles all the operations
@@ -341,8 +342,9 @@ public class CenterMachineReMapServiceImpl implements CenterMachineReMapService 
 				"delete cleanUpRemappedMachineData() method is called");
 		try {
 			Resource resource = new ClassPathResource("script.sql");
-			if (jdbcTemplate.getDataSource() != null) {
-				Connection connection = jdbcTemplate.getDataSource().getConnection();
+			DataSource dataSource = jdbcTemplate.getDataSource();
+			if (dataSource != null) {
+				Connection connection = dataSource.getConnection();
 				ScriptUtils.executeSqlScript(connection, resource);
 			}
 		} catch (ScriptException | SQLException | NullPointerException exception) {
