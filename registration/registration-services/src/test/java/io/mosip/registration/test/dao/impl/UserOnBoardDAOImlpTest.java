@@ -234,7 +234,6 @@ public class UserOnBoardDAOImlpTest {
 		userOnboardDAOImpl.save();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test(expected = RuntimeException.class)
 	public void saveFailuretest() {
 
@@ -466,7 +465,6 @@ public class UserOnBoardDAOImlpTest {
 	}
 
 	@Test
-	@Ignore
 	public void insertWithBioMetricsListTest() {
 		List<BiometricsDto> biometrics = getBioMetricsDTOList();
 		List<UserBiometric> existingBiometrics = getUserBiometrics();
@@ -540,7 +538,7 @@ public class UserOnBoardDAOImlpTest {
 		byte[] byteData1 = new byte[str1.length()];
 		List<BiometricsDto> biometrics = new ArrayList<BiometricsDto>();
 		BiometricsDto dto = new BiometricsDto("rightIndex", byteData1, 80.0);		
-		dto.setBioAttribute("LEFT_LITTLE");
+		dto.setBioAttribute("LF_LITTLE");
 		dto.setAttributeISO(byteData1);
 		dto.setNumOfRetries(2);
 		dto.setQualityScore(new Double(2));
@@ -549,7 +547,7 @@ public class UserOnBoardDAOImlpTest {
 		String str2 = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAoHCBUVFRgWFRISERgYHBUYGBIS";
 		byte[] byteData2 = new byte[str2.length()];
 		BiometricsDto dto1 = new BiometricsDto("rightIndex", byteData2, 80.0);		
-		dto1.setBioAttribute("LEFT_LITTLE");
+		dto1.setBioAttribute("LF_LITTLE");
 		dto1.setAttributeISO(byteData2);
 		dto1.setNumOfRetries(2);
 		dto1.setQualityScore(new Double(2));
