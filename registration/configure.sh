@@ -12,6 +12,7 @@ reg_client_sdk_url="$reg_client_sdk_url_env"
 artifactory_url="$artifactory_url_env"
 keystore_secret="$keystore_secret_env"
 reg_client_custom_impls_url="$reg_client_custom_impls_url_env"
+host_name="$host_name_env"
 
 echo "initialized variables"
 
@@ -22,7 +23,7 @@ echo "mosip.reg.healthcheck.url=${healthcheck_url_env}" >> "${work_dir}"/mosip-a
 echo "mosip.reg.rollback.path=BackUp" >> "${work_dir}"/mosip-application.properties
 echo "mosip.reg.xml.file.url=${client_upgrade_server}/registration-client/maven-metadata.xml" >> "${work_dir}"/mosip-application.properties
 echo "mosip.client.upgrade.server.url=${client_upgrade_server}" >> "${work_dir}"/mosip-application.properties
-echo "mosip.hostname=${client_upgrade_server/https:\/\/}"  >> "${work_dir}"/mosip-application.properties
+echo "mosip.hostname=${host_name}"  >> "${work_dir}"/mosip-application.properties
 
 echo "created mosip-application.properties"
 cd "${work_dir}"/registration-client/target/lib
