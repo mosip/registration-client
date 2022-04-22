@@ -226,8 +226,9 @@ public class SoftwareInstallationHandler {
 			if(readTimeout == null || readTimeout.trim().isBlank()) { readTimeout = "0"; }
 
 			URL fileUrl = new URL(url);
-			FileUtils.copyURLToFile(fileUrl, new File((fileName.contains("mosip") ? binFolder : libFolder) + File.separator + fileName),
-					Integer.parseInt(connectionTimeout), Integer.parseInt(readTimeout));
+			File file = new File((fileName.contains("mosip") ? binFolder : libFolder) + File.separator + fileName);
+			logger.info("Downloading to file: {}", file.getCanonicalPath());
+			FileUtils.copyURLToFile(fileUrl, file, Integer.parseInt(connectionTimeout), Integer.parseInt(readTimeout));
 			return;
 
 		} catch (IOException e) {
