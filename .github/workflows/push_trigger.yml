@@ -78,9 +78,9 @@ jobs:
         xml-file: ./${{ env.SERVICE_LOCATION }}/pom.xml
         xpath: /*[local-name()="project"]/*[local-name()="version"]
 
-    - name: Publish the maven package
-      run: |
-        cd registration && mvn deploy  -DaltDeploymentRepository=ossrh::default::${{ secrets.OSSRH_SNAPSHOT_URL }} -s $GITHUB_WORKSPACE/settings.xml -f pom.xml
+#    - name: Publish the maven package
+#      run: |
+#        cd registration && mvn deploy  -DaltDeploymentRepository=ossrh::default::${{ secrets.OSSRH_SNAPSHOT_URL }} -s $GITHUB_WORKSPACE/settings.xml -f pom.xml
 
     - name: Build image
       run: |
