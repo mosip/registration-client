@@ -388,25 +388,7 @@ public class SoftwareUpdateHandler extends BaseService {
 
 	}
 
-	/*private void deleteJars(List<String> deletableJars) throws io.mosip.kernel.core.exception.IOException {
 
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Deletion of jars started");
-		for (String jarName : deletableJars) {
-			File deleteFile = null;
-
-			String deleteFolder = jarName.contains(mosip) ? binFolder : libFolder;
-
-			deleteFile = new File(deleteFolder + jarName);
-
-			if (deleteFile.exists()) {
-				// Delete Jar
-				FileUtils.forceDelete(deleteFile);
-
-			}
-		}
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Deletion of jars completed");
-
-	}*/
 
 	private Manifest getLocalManifest() throws IOException {
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
