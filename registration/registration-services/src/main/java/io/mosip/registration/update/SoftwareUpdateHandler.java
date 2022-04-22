@@ -362,7 +362,7 @@ public class SoftwareUpdateHandler extends BaseService {
 			if (!jarInFolder.exists()) {
 
 				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Downloading jar : " + jarFile + " started, copy to : " + jarInFolder.toPath());
+						"Downloading jar : " + jarFile + " started, copyto : " + jarInFolder.toPath());
 				// Download Jar
 				Files.copy(getInputStreamOfJar(version, jarFile), jarInFolder.toPath());
 
@@ -372,7 +372,7 @@ public class SoftwareUpdateHandler extends BaseService {
 				FileUtils.forceDelete(jarInFolder);
 
 				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Downloading jar : " + jarFile + " started, copy to : " + jarInFolder.toPath());
+						"Downloading jar : " + jarFile + " started, copyto : " + jarInFolder.toPath());
 
 				// Download Jar
 				Files.copy(getInputStreamOfJar(version, jarFile), jarInFolder.toPath());
