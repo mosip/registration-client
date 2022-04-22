@@ -36,6 +36,7 @@ public class SoftwareInstallationHandler {
 	private static final String PROPERTIES_FILE = "props/mosip-application.properties";
 	private static final String manifestFile = "MANIFEST.MF";
 	private static final String libFolder = "lib";
+	private static final String binFolder = "bin";
 	private static final String SLASH = "/";
 
 	private static String serverRegClientURL = null;
@@ -113,7 +114,7 @@ public class SoftwareInstallationHandler {
 
 			Map<String, Attributes> localAttributes = localManifest.getEntries();
 			for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
-				File file = new File(libFolder + File.separator + entry.getKey());
+				File file = new File((entry.getKey().contains("mosip") ? binFolder : libFolder) + File.separator + entry.getKey());
 				String url = serverRegClientURL + latestVersion + SLASH + libFolder + SLASH + entry.getKey();
 				if(!file.exists()) {
 					logger.info("{} file doesn't exists, downloading it", entry.getKey());
@@ -225,7 +226,7 @@ public class SoftwareInstallationHandler {
 			if(readTimeout == null || readTimeout.trim().isBlank()) { readTimeout = "0"; }
 
 			URL fileUrl = new URL(url);
-			FileUtils.copyURLToFile(fileUrl, new File(libFolder + File.separator + fileName),
+			FileUtils.copyURLToFile(fileUrl, new File((fileName.contains("mosip") ? binFolder : libFolder) + File.separator + fileName),
 					Integer.parseInt(connectionTimeout), Integer.parseInt(readTimeout));
 			return;
 
