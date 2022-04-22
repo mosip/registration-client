@@ -362,7 +362,7 @@ public class SoftwareUpdateHandler extends BaseService {
 			if (!jarInFolder.exists()) {
 
 				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Downloading jar : " + jarFile + " started");
+						"Downloading jar : " + jarFile + " started, copy to : " + jarInFolder.toPath());
 				// Download Jar
 				Files.copy(getInputStreamOfJar(version, jarFile), jarInFolder.toPath());
 
@@ -372,7 +372,7 @@ public class SoftwareUpdateHandler extends BaseService {
 				FileUtils.forceDelete(jarInFolder);
 
 				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Downloading jar : " + jarFile + " started");
+						"Downloading jar : " + jarFile + " started, copy to : " + jarInFolder.toPath());
 
 				// Download Jar
 				Files.copy(getInputStreamOfJar(version, jarFile), jarInFolder.toPath());
@@ -388,7 +388,7 @@ public class SoftwareUpdateHandler extends BaseService {
 
 	}
 
-	private void deleteJars(List<String> deletableJars) throws io.mosip.kernel.core.exception.IOException {
+	/*private void deleteJars(List<String> deletableJars) throws io.mosip.kernel.core.exception.IOException {
 
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Deletion of jars started");
 		for (String jarName : deletableJars) {
@@ -406,7 +406,7 @@ public class SoftwareUpdateHandler extends BaseService {
 		}
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Deletion of jars completed");
 
-	}
+	}*/
 
 	private Manifest getLocalManifest() throws IOException {
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
