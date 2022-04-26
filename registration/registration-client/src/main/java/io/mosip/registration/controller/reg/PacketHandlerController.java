@@ -699,8 +699,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 					RegistrationConstants.DASHBOARD_TEMPLATE_CODE, ApplicationContext.applicationLanguage());
 
 			ResponseDTO templateResponse = templateGenerator.generateDashboardTemplate(dashboardTemplateText,
-					templateManagerBuilder, RegistrationConstants.DASHBOARD_TEMPLATE,
-					ClientApplication.getApplicationStartTime());
+					templateManagerBuilder, ClientApplication.getApplicationStartTime());
 
 			if (templateResponse != null && templateResponse.getSuccessResponseDTO() != null) {
 				Writer stringWriter = (Writer) templateResponse.getSuccessResponseDTO().getOtherAttributes()
