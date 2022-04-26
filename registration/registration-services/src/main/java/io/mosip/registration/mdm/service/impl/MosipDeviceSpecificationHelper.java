@@ -283,11 +283,13 @@ public class MosipDeviceSpecificationHelper {
 				.setSocketTimeout(timeout)
 				.setConnectionRequestTimeout(timeout)
 				.build();
-		try (CloseableHttpClient client = HttpClients.createDefault()) {
-			StringEntity requestEntity = new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8));
-			HttpUriRequest httpUriRequest = RequestBuilder.create(method).setConfig(requestConfig).setUri(url)
-					.setEntity(requestEntity).build();
-			return client.execute(httpUriRequest);
-		}
+		CloseableHttpClient client = HttpClients.createDefault();
+		StringEntity requestEntity = new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8));
+		HttpUriRequest httpUriRequest = RequestBuilder.create(method)
+				.setConfig(requestConfig)
+				.setUri(url)
+				.setEntity(requestEntity)
+				.build();
+		return client.execute(httpUriRequest);
 	}
 }
