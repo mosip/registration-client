@@ -77,6 +77,10 @@ public class SoftwareUpdateHandler extends BaseService {
 	private static final String FEATURE = "http://apache.org/xml/features/disallow-doctype-decl";
 	private static final String EXTERNAL_DTD_FEATURE = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
 
+	private static final String CONNECTION_TIMEOUT = "mosip.registration.sw.file.download.connection.timeout";
+
+	private static final String READ_TIMEOUT = "mosip.registration.sw.file.download.read.timeout";
+
 	private static Map<String, String> CHECKSUM_MAP;
 	private String currentVersion;
 	private String latestVersion;
@@ -236,7 +240,7 @@ public class SoftwareUpdateHandler extends BaseService {
 			// Back Current Application
 			backUp = backUpSetup();
 			// replace local manifest with Server manifest
-			serverManifest.write(new FileOutputStream(new File(manifestFile)));
+			serverManifest.write(new FileOutputStream(manifestFile));
 
 			/*List<String> downloadJars = new LinkedList<>();
 			List<String> deletableJars = new LinkedList<>();
@@ -350,7 +354,10 @@ public class SoftwareUpdateHandler extends BaseService {
 	}
 
 	private void checkJars(String version, Collection<String> checkableJars)
-			throws IOException, io.mosip.kernel.core.exception.IOException {
+			throws Exception {
+
+		String connectionTimeout = ApplicationContext.getStringValueFromApplicationMap(CONNECTION_TIMEOUT);
+		String readTimeout = ApplicationContext.getStringValueFromApplicationMap(READ_TIMEOUT);
 
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Checking of jars started");
 		for (String jarFile : checkableJars) {
@@ -359,23 +366,9 @@ public class SoftwareUpdateHandler extends BaseService {
 
 			File jarInFolder = new File(folder + jarFile);
 
-			if (!jarInFolder.exists()) {
-
-				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Downloading jar : " + jarFile + " started");
-				// Download Jar
-				Files.copy(getInputStreamOfJar(version, jarFile), jarInFolder.toPath());
-
-			} else if ((!isCheckSumValid(jarInFolder,
-					(currentVersion.equals(version)) ? localManifest : serverManifest))) {
-
-				FileUtils.forceDelete(jarInFolder);
-
-				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Downloading jar : " + jarFile + " started");
-
-				// Download Jar
-				Files.copy(getInputStreamOfJar(version, jarFile), jarInFolder.toPath());
+			if (!jarInFolder.exists() || !isCheckSumValid(jarInFolder, serverManifest)) {
+				download(version, jarFile, connectionTimeout, readTimeout);
+				LOGGER.info("Successfully downloaded the latest file : {}", jarFile);
 			}
 
 		}
@@ -383,10 +376,28 @@ public class SoftwareUpdateHandler extends BaseService {
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Checking of jars completed");
 	}
 
-	private InputStream getInputStreamOfJar(String version, String jarName) throws IOException {
+	protected void download(String version, String fileName, String connectionTimeout, String readTimeout) throws Exception {
+		String url = getURL(serverRegClientURL) + version + SLASH + libFolder + fileName;
+		LOGGER.info("invoking url : {}", url);
+		try {
+			if(connectionTimeout == null || connectionTimeout.equals("null") || connectionTimeout.trim().isBlank()) { connectionTimeout = "50000"; }
+			if(readTimeout == null || readTimeout.equals("null") || readTimeout.trim().isBlank()) { readTimeout = "0"; }
+
+			URL fileUrl = new URL(url);
+			org.apache.commons.io.FileUtils.copyURLToFile(fileUrl, new File((fileName.contains("mosip") ? binFolder : libFolder) + File.separator + fileName),
+					Integer.parseInt(connectionTimeout), Integer.parseInt(readTimeout));
+			return;
+
+		} catch (IOException e) {
+			LOGGER.error("Failed to download {}", url, e);
+			throw e;
+		}
+	}
+
+	/*private InputStream getInputStreamOfJar(String version, String jarName) throws IOException {
 		return getInputStreamOf(getURL(serverRegClientURL) + version + SLASH + libFolder + jarName);
 
-	}
+	}*/
 
 	private void deleteJars(List<String> deletableJars) throws io.mosip.kernel.core.exception.IOException {
 
