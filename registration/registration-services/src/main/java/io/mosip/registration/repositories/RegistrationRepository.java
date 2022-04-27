@@ -3,6 +3,9 @@ package io.mosip.registration.repositories;
 import java.sql.Timestamp;
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -139,10 +142,24 @@ public interface RegistrationRepository extends BaseRepository<Registration, Str
 	/**
 	 * Fetches all the re register pending records
 	 * 
-	 * @param asList
-	 * @param asList2
+	 * @param clientStatusCodes
+	 * @param serverStatusCodes
 	 * @return
 	 */
-	List<Registration> findByClientStatusCodeNotInAndServerStatusCodeIn(List<String> clientStutusCodes,
+	List<Registration> findByClientStatusCodeNotInAndServerStatusCodeIn(List<String> clientStatusCodes,
 			List<String> serverStatusCodes);
+
+
+	Registration findTopByOrderByUpdDtimesDesc();
+
+	Slice<Registration> findByClientStatusCodeInAndUpdDtimesLessThanEqual(List<String> statusCodes, Timestamp updatedDtimes,
+																		  Pageable pageable);
+
+	Slice<Registration> findByClientStatusCodeOrClientStatusCommentsAndUpdDtimesLessThanEqual(String statusCode, String statusComments, Timestamp updatedDtimes,
+																							  Pageable pageable);
+
+	@Modifying
+	@Query("update Registration set serverStatusCode=:serverStatus, serverStatusTimestamp=:updatedOn where id=:registrationId")
+	void updateRegistrationServerStatus(@Param("registrationId") String registrationId,
+										@Param("serverStatus") String serverStatus, @Param("updatedOn") Timestamp updatedOn);
 }
