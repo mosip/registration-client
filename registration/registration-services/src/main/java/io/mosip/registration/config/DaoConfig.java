@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.util.*;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 import javax.sql.DataSource;
 
@@ -214,6 +216,7 @@ public class DaoConfig extends HibernateDaoConfig {
 		createDatabase();
 		reEncryptExistingDB();
 		setupUserAndPermits();
+		applyKeyManager1155Fix();
 		Map<String, String> dbConf = getDBConf();
 		this.driverManagerDataSource = new DriverManagerDataSource();
 		this.driverManagerDataSource.setDriverClassName(DRIVER_CLASS_NAME);
@@ -521,6 +524,42 @@ public class DaoConfig extends HibernateDaoConfig {
 						source, target, e);
 			}
 		}
+	}
+
+	private void applyKeyManager1155Fix() throws Exception {
+		LOGGER.info("****** Checking if key-manager 1.1.5.5 change required ? ******");
+		Connection connection = null;
+		try {
+			Map<String, String> dbConf = getDBConf();
+			connection = DriverManager.getConnection(String.format(URL + ";create=false;" + ENCRYPTION_URL_ATTRIBUTES,
+					dbPath, dbConf.get(BOOTPWD_KEY)), dbConf.get(USERNAME_KEY), dbConf.get(PWD_KEY));
+			DatabaseMetaData databaseMetaData = connection.getMetaData();
+			ResultSet resultSet = databaseMetaData.getColumns(null, "REG", "KEY_ALIAS", "CERT_THUMBPRINT");
+			if(!resultSet.next() && getCurrentVersion().startsWith("1.1.5.5")) {
+				//create cert_thumbprint column only in  1.1.5.5-* versions
+				try(Statement statement = connection.createStatement()) {
+					statement.execute("ALTER TABLE \"REG\".\"KEY_ALIAS\" ADD COLUMN \"CERT_THUMBPRINT\" VARCHAR(128) DEFAULT ''");
+					LOGGER.info("****** Applied key-manager 1.1.5.5 change on key alias table ******");
+				}
+			}
+			shutdownDatabase();
+		} finally {
+			if(connection != null)
+				connection.close();
+		}
+	}
+
+	private String getCurrentVersion() {
+		try {
+			File localManifestFile = new File("MANIFEST.MF");
+			if (localManifestFile.exists()) {
+				Manifest localManifest = new Manifest(new FileInputStream(localManifestFile));
+				return localManifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
+			}
+		} catch (Exception e) {
+			LOGGER.error("Failed to get current software version", e);
+		}
+		return "";
 	}
 
 }
