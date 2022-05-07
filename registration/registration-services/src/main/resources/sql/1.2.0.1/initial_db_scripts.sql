@@ -79,7 +79,6 @@ RENAME COLUMN "REG"."USER_BIOMETRIC".QUALITY_SCORE_2 TO QUALITY_SCORE;
 
 ALTER TABLE "REG"."CA_CERT_STORE" ADD CONSTRAINT "UK_CERT_THUMBPRINT" UNIQUE ("CERT_THUMBPRINT", "PARTNER_DOMAIN");
 DELETE FROM "REG"."KEY_ALIAS";
-ALTER TABLE "REG"."KEY_ALIAS" ADD COLUMN "CERT_THUMBPRINT" VARCHAR(128) DEFAULT '';
 ALTER TABLE "REG"."KEY_ALIAS" ADD COLUMN "UNI_IDENT" VARCHAR(50) DEFAULT '';
 ALTER TABLE "REG"."KEY_ALIAS" ADD CONSTRAINT "UK_UNI_IDENT" UNIQUE ("UNI_IDENT");
 ALTER TABLE "REG"."KEY_POLICY_DEF" ADD COLUMN "PRE_EXPIRE_DAYS" SMALLINT;
@@ -105,10 +104,4 @@ ALTER TABLE "REG"."REGISTRATION_TRANSACTION" ADD COLUMN "APP_ID" VARCHAR(39) NOT
 ----- insert / update statements
 
 UPDATE "REG"."GLOBAL_PARAM" set VAL='DEVICE' WHERE CODE='mosip.registration.mdm.trust.domain.digitalId';
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.restricted-numbers','mosip.kernel.vid.restricted-numbers','786,666','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.not-start-with','mosip.kernel.vid.not-start-with','0,1','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.repeating-limit','mosip.kernel.vid.length.repeating-limit','2','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.repeating-block-limit','mosip.kernel.vid.length.repeating-block-limit','2','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.sequence-limit','mosip.kernel.vid.length.sequence-limit','3','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length','mosip.kernel.vid.length','16','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.audit_timestamp','mosip.registration.audit_timestamp',current timestamp,'CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);

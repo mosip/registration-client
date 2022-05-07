@@ -15,7 +15,6 @@ RENAME TABLE "REG"."BLOCKLISTED_WORDS" TO "BLACKLISTED_WORDS";
 ALTER TABLE "REG"."CA_CERT_STORE" DROP CONSTRAINT "UK_CERT_THUMBPRINT";
 ALTER TABLE "REG"."KEY_ALIAS" DROP CONSTRAINT "UK_UNI_IDENT";
 ALTER TABLE "REG"."KEY_ALIAS" DROP COLUMN "UNI_IDENT";
-ALTER TABLE "REG"."KEY_ALIAS" DROP COLUMN "CERT_THUMBPRINT";
 ALTER TABLE "REG"."KEY_POLICY_DEF" DROP COLUMN "PRE_EXPIRE_DAYS";
 ALTER TABLE "REG"."KEY_POLICY_DEF" DROP COLUMN "ACCESS_ALLOWED";
 DELETE FROM "REG"."KEY_POLICY_DEF" WHERE APP_ID='BASE';
@@ -114,10 +113,4 @@ ALTER TABLE "REG"."MACHINE_MASTER" DROP CONSTRAINT "PK_MACHM_ID";
 ALTER TABLE "REG"."MACHINE_MASTER" ADD CONSTRAINT "PK_MACHM_ID" PRIMARY KEY ("ID", "LANG_CODE");
 
 -----
-delete from "REG"."GLOBAL_PARAM" where code='mosip.kernel.vid.restricted-numbers';
-delete from "REG"."GLOBAL_PARAM" where code='mosip.kernel.vid.not-start-with';
-delete from "REG"."GLOBAL_PARAM" where code='mosip.kernel.vid.length.repeating-limit';
-delete from "REG"."GLOBAL_PARAM" where code='mosip.kernel.vid.length.repeating-block-limit';
-delete from "REG"."GLOBAL_PARAM" where code='mosip.kernel.vid.length.sequence-limit';
-delete from "REG"."GLOBAL_PARAM" where code='mosip.kernel.vid.length';
 delete from "REG"."GLOBAL_PARAM" where code='mosip.registration.audit_timestamp';
