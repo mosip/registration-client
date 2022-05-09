@@ -276,6 +276,12 @@ public class SoftwareUpdateHandler extends BaseService {
 			}
 		}
 
+		if(latestVersion.startsWith("1.2.0")) {
+			String url = serverRegClientURL + latestVersion + SLASH + "run_upgrade.bat";
+			SoftwareUpdateUtil.download(url);
+			LOGGER.info("Successfully downloaded the upgrade bat file");
+		}
+
 		setServerManifest(null);
 		setLatestVersion(null);
 
