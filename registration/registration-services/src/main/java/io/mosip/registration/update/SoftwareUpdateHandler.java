@@ -374,7 +374,7 @@ public class SoftwareUpdateHandler extends BaseService {
 		}
 
 		if(version.startsWith("1.2.0")) {
-			String url = serverRegClientURL + version + SLASH + "run_upgrade.bat";
+			String url =  getURL(serverRegClientURL) + version + SLASH + "run_upgrade.bat";
 			org.apache.commons.io.FileUtils.copyURLToFile(new URL(url), new File("run_upgrade.bat"),
 					Integer.parseInt(connectionTimeout), Integer.parseInt(readTimeout));
 			LOGGER.info("Successfully downloaded the upgrade bat file");
