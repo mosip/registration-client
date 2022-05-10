@@ -121,7 +121,7 @@ echo "FOR /F \"tokens=* delims=\" %%x in (.UNKNOWN_JARS) DO DEL /Q lib\%%x" >> r
 echo ")" >> run_upgrade.bat
 echo "if exist .TEMP (" >> run_upgrade.bat
 echo "echo Starting Registration Client after Upgrade" >> run_upgrade.bat
-echo "xcopy /f/k/y/v/q .TEMP lib && rmdir /s /q .TEMP && start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" >> run_upgrade.bat
+echo "xcopy /f/k/y/v/q .TEMP lib && rmdir /s /q .TEMP && start jre\jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" >> run_upgrade.bat
 echo ") else (" >> run_upgrade.bat
 echo "echo Starting Registration Client" >> run_upgrade.bat
 echo "start jre\jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" >> run_upgrade.bat
