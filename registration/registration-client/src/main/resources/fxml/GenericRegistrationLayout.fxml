@@ -100,7 +100,7 @@
                                                 <Button fx:id="fetchBtn" mnemonicParsing="true" onAction="#fetchPreRegistration" styleClass="demoGraphicPaneContentButton" text="%fetch" />
                                              </children>
                                           </HBox>
-                                          <Label fx:id="preRegistrationLabel" styleClass="demoGraphicFieldLabel" text="%search_for_Pre_registration_id" GridPane.rowIndex="1" />
+                                          <Label fx:id="preRegistrationLabel" styleClass="demoGraphicFieldLabel" text="%applicationId" GridPane.rowIndex="1" />
                                           <TextField fx:id="preRegistrationId" styleClass="demoGraphicTextField" visible="true" GridPane.rowIndex="3" />
                                        </children>
                                     </GridPane>
