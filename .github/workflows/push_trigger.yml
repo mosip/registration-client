@@ -11,14 +11,12 @@ on:
       - develop
   
 jobs:
-  
   build_client:
     runs-on: ubuntu-latest
     env:
       NAMESPACE: mosipdev
       SERVICE_NAME: registration-client
       SERVICE_LOCATION: registration
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 11
@@ -102,9 +100,7 @@ jobs:
 
   publish_to_nexus:
     if: "!contains(github.ref, 'master')"
-
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 11
