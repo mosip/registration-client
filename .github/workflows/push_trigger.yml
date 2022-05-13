@@ -90,14 +90,6 @@ jobs:
         docker tag $SERVICE_NAME $IMAGE_ID:$VERSION
         docker push $IMAGE_ID:$VERSION
 
-    - name: Publish the maven package
-      run: |
-        cd registration
-        mvn deploy  -DaltDeploymentRepository=ossrh::default::${{ secrets.RELEASE_URL }} -s $GITHUB_WORKSPACE/settings.xml -f pom.xml
-      env:
-        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        GPG_TTY: $(tty)
-
   publish_to_nexus:
     if: "!contains(github.ref, 'master')"
     runs-on: ubuntu-latest
