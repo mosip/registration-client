@@ -87,7 +87,6 @@ public class RegistrationDAOTest {
 	@Ignore
 	public void testSaveRegistration() throws RegBaseCheckedException {
 		RegistrationDTO registrationDTO = new RegistrationDTO();
-		RegistrationMetaDataDTO registrationMetaDataDTO=new RegistrationMetaDataDTO();
 		
 		List<ValuesDTO> fullNames = new ArrayList<>();
 		ValuesDTO valuesDTO = new ValuesDTO();
@@ -95,9 +94,6 @@ public class RegistrationDAOTest {
 		valuesDTO.setValue("Individual Name");
 		fullNames.add(valuesDTO);		
 		registrationDTO.getDemographics().put("fullName", fullNames);
-		
-		registrationDTO.setRegistrationMetaDataDTO(registrationMetaDataDTO);
-		//registrationDTO.getRegistrationMetaDataDTO().setRegistrationCategory("New");
 		when(registrationRepository.create(Mockito.any(Registration.class))).thenReturn(new Registration());
 
 		registrationDAOImpl.save("../PacketStore/28-Sep-2018/111111", registrationDTO);
@@ -349,12 +345,10 @@ public class RegistrationDAOTest {
 	@Test
 	public void saveRegistration() throws RegBaseCheckedException {
 		RegistrationDTO registrationDTO = getRegistrationDTO();
-		RegistrationMetaDataDTO registrationMetaDataDTO=new RegistrationMetaDataDTO();		
 		List<SimpleDto> fullNames = new ArrayList<>();
 		SimpleDto valuesDTO = new SimpleDto("eng","Individual Name");
 		fullNames.add(valuesDTO);		
-		registrationDTO.getDemographics().put("fullName", fullNames);		
-		registrationDTO.setRegistrationMetaDataDTO(registrationMetaDataDTO);
+		registrationDTO.getDemographics().put("fullName", fullNames);
 		//registrationDTO.getRegistrationMetaDataDTO().setRegistrationCategory("New");
 		when(identitySchemaService.getAllFieldSpec(Mockito.anyString(),Mockito.anyDouble())).thenReturn(getDocumentTypeTestData());
 		when(registrationRepository.create(Mockito.any(Registration.class))).thenReturn(new Registration());

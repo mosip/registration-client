@@ -48,7 +48,6 @@ public class RegistrationDTO {
 	private String additionalInfoReqId;
 	private String processId;
 	private FlowType flowType;
-	private RegistrationMetaDataDTO registrationMetaDataDTO;
 	private OSIDataDTO osiDataDTO;
 	private List<String> selectedLanguagesByApplicant = new ArrayList<>();
 
