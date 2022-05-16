@@ -188,6 +188,9 @@ public class MetricsConfig {
             // using the Creation extension
             String url = (String) io.mosip.registration.context.ApplicationContext.map()
                     .getOrDefault(TUS_SERVER_URL_CONFIG,"https://dev.mosip.net/files/");
+            
+            LOGGER.info("URL to upload metrics... {}", url);
+            
             int chunkSize = Integer.valueOf((String)io.mosip.registration.context.ApplicationContext.map()
                     .getOrDefault(TUS_SERVER_UPLOAD_CHUNKSIZE,"1024"));
             client.setUploadCreationURL(new URL(url));
