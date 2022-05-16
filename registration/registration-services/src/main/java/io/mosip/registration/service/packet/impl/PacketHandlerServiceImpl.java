@@ -28,7 +28,6 @@ import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.sync.MasterSyncService;
-import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,7 +64,6 @@ import io.mosip.registration.dto.OSIDataDTO;
 import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.RegistrationMetaDataDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
@@ -79,7 +77,6 @@ import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.IdentitySchemaService;
-import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.packet.PacketHandlerService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.common.BIRBuilder;
@@ -132,9 +129,6 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	/** The machine mapping DAO. */
 	@Autowired
 	private MachineMappingDAO machineMappingDAO;
-
-	@Autowired
-	private BioService bioService;
 
 	@Autowired
 	private RidGenerator<String> ridGenerator;
@@ -319,8 +313,8 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		}
 
 		metaData.put("langCodes", String.join(RegistrationConstants.COMMA, registrationDTO.getSelectedLanguagesByApplicant()));
-		metaData.put(PacketManagerConstants.META_APPLICANT_CONSENT,
-				registrationDTO.getRegistrationMetaDataDTO().getConsentOfApplicant());
+//		metaData.put(PacketManagerConstants.META_APPLICANT_CONSENT,
+//				registrationDTO.getRegistrationMetaDataDTO().getConsentOfApplicant());
 
 		metaInfoMap.put("metaData", getJsonString(getLabelValueDTOListString(metaData)));
 		metaInfoMap.put("blockListedWords", getJsonString(registrationDTO.BLOCKLISTED_CHECK));
@@ -608,10 +602,6 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		registrationDTO.setOsiDataDTO(new OSIDataDTO());
 		//by default setting the maker ID
 		registrationDTO.getOsiDataDTO().setOperatorID(SessionContext.userId());
-
-		// Create RegistrationMetaData DTO & set default values in it
-		RegistrationMetaDataDTO registrationMetaDataDTO = new RegistrationMetaDataDTO();
-		registrationDTO.setRegistrationMetaDataDTO(registrationMetaDataDTO);
 
 		//set application id
 		registrationDTO.setAppId(ridGenerator.generateId(

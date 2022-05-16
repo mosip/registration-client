@@ -153,19 +153,21 @@ public class RegistrationPreviewController extends BaseController implements Ini
 	public void goToNextPage(ActionEvent event) {
 		auditFactory.audit(AuditEvent.REG_PREVIEW_SUBMIT, Components.REG_PREVIEW, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
-		if (getRegistrationDTOFromSession().getRegistrationMetaDataDTO().getConsentOfApplicant() != null) {
-			/*if (getRegistrationDTOFromSession().getSelectionListDTO() != null) {
-				SessionContext.map().put(RegistrationConstants.UIN_UPDATE_REGISTRATIONPREVIEW, false);
-				SessionContext.map().put(RegistrationConstants.UIN_UPDATE_OPERATORAUTHENTICATIONPANE, true);
-				registrationController.showUINUpdateCurrentPage();
-			} else {*/
-				registrationController.showCurrentPage(RegistrationConstants.REGISTRATION_PREVIEW,
-						getPageByAction(RegistrationConstants.REGISTRATION_PREVIEW, RegistrationConstants.NEXT));
-			//}
-			registrationController.goToAuthenticationPage();
-		} else {
-			nextButton.setDisable(false);
-		}
+		
+		nextButton.setDisable(false);
+//		if (getRegistrationDTOFromSession().getRegistrationMetaDataDTO().getConsentOfApplicant() != null) {
+//			/*if (getRegistrationDTOFromSession().getSelectionListDTO() != null) {
+//				SessionContext.map().put(RegistrationConstants.UIN_UPDATE_REGISTRATIONPREVIEW, false);
+//				SessionContext.map().put(RegistrationConstants.UIN_UPDATE_OPERATORAUTHENTICATIONPANE, true);
+//				registrationController.showUINUpdateCurrentPage();
+//			} else {*/
+//				registrationController.showCurrentPage(RegistrationConstants.REGISTRATION_PREVIEW,
+//						getPageByAction(RegistrationConstants.REGISTRATION_PREVIEW, RegistrationConstants.NEXT));
+//			//}
+//			registrationController.goToAuthenticationPage();
+//		} else {
+//			nextButton.setDisable(false);
+//		}
 	}
 
 	public void setUpPreviewContent() {
@@ -239,12 +241,10 @@ public class RegistrationPreviewController extends BaseController implements Ini
 	}
 
 	private void enableConsent() {
-		getRegistrationDTOFromSession().getRegistrationMetaDataDTO().setConsentOfApplicant(RegistrationConstants.YES);
 		nextButton.setDisable(false);
 	}
 
 	private void disableConsent() {
-		getRegistrationDTOFromSession().getRegistrationMetaDataDTO().setConsentOfApplicant(RegistrationConstants.NO);
 		nextButton.setDisable(false);
 	}
 }

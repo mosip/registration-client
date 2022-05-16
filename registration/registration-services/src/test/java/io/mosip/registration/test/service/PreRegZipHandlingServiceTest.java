@@ -48,7 +48,6 @@ import io.mosip.registration.dao.DocumentTypeDAO;
 import io.mosip.registration.dto.OSIDataDTO;
 import io.mosip.registration.dto.PreRegistrationDTO;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.RegistrationMetaDataDTO;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -276,11 +275,6 @@ public class PreRegZipHandlingServiceTest {
 
 		// Create object for OSIData DTO
 		registrationDTO.setOsiDataDTO(new OSIDataDTO());
-
-		// Create object for RegistrationMetaData DTO
-		RegistrationMetaDataDTO registrationMetaDataDTO = new RegistrationMetaDataDTO();
-		//registrationMetaDataDTO.setRegistrationCategory("New");
-		registrationDTO.setRegistrationMetaDataDTO(registrationMetaDataDTO);
 
 		// Put the RegistrationDTO object to SessionContext Map
 		PowerMockito.mockStatic(SessionContext.class);
