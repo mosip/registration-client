@@ -59,7 +59,6 @@ public class DataProvider {
 		RegistrationDTO registrationDTO = new RegistrationDTO();
 		registrationDTO.setAuditDTOs(DataProvider.getAuditDTOs());
 		registrationDTO.setOsiDataDTO(DataProvider.getOsiDataDTO());
-		registrationDTO.setRegistrationMetaDataDTO(DataProvider.getRegistrationMetaDataDTO());
 		registrationDTO.setPreRegistrationId("PEN1345T");
 		registrationDTO.setRegistrationId("10011100110016320190307151917");
 
@@ -78,7 +77,6 @@ public class DataProvider {
 		RegistrationDTO registrationDTO = new RegistrationDTO();
 		registrationDTO.setAuditDTOs(DataProvider.getAuditDTOs());
 		registrationDTO.setOsiDataDTO(DataProvider.getOsiDataDTO());
-		registrationDTO.setRegistrationMetaDataDTO(DataProvider.getRegistrationMetaDataDTO());
 		registrationDTO.setPreRegistrationId("PEN1345T");
 		registrationDTO.setRegistrationId("10011100110016320190307151917");
 		registrationDTO.setFlowType(FlowType.NEW);
