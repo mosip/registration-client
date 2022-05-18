@@ -1,0 +1,5 @@
+Manifest-Version: 1.2.0.1-SNAPSHOT
+
+Name: logback.xml
+Manifest-Version: 1.2.0.1-SNAPSHOT
+
