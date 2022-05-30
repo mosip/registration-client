@@ -6,16 +6,19 @@ import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-import io.mosip.registration.entity.*;
-import io.mosip.registration.entity.id.UserMachineMappingID;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.entity.MachineMaster;
+import io.mosip.registration.entity.UserBiometric;
+import io.mosip.registration.entity.UserDetail;
+import io.mosip.registration.entity.UserMachineMapping;
+import io.mosip.registration.entity.UserRole;
 /*import io.mosip.registration.dto.demographic.DemographicDTO;
 import io.mosip.registration.dto.demographic.DemographicInfoDTO;*/
 import io.mosip.registration.entity.id.UserBiometricId;
+import io.mosip.registration.entity.id.UserMachineMappingID;
 import io.mosip.registration.entity.id.UserRoleId;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.mapper.CustomObjectMapper;

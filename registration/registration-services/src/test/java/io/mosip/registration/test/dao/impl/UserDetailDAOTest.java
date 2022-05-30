@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -128,7 +129,6 @@ public class UserDetailDAOTest {
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void userDetlsDao() {
 		UserDetailResponseDto userDetailsResponse = new UserDetailResponseDto();
@@ -142,6 +142,7 @@ public class UserDetailDAOTest {
 		user.setLangCode("eng");
 		UserDetailDto user1 = new UserDetailDto();
 		user1.setUserId("110011");
+		user1.setIsActive(false);
 		//user1.setUserPassword("test".getBytes());
 		//user1.setRoles(Arrays.asList("SUPERADMIN"));
 		//user1.setMobile("9894589435");
@@ -173,6 +174,7 @@ public class UserDetailDAOTest {
 		Mockito.when(userBiometricRepository.findByUserBiometricIdUsrIdAndIsActiveTrueAndUserBiometricIdBioTypeCodeAndUserBiometricIdBioAttributeCodeIgnoreCase("mosip","bio","sub")).thenReturn(userBiometric);
 		assertEquals(userBiometric, userDetailDAOImpl.getUserSpecificBioDetail("mosip","bio","sub"));
 	}
+	
 	@Test
 	public void updateUserPwdTest() {
 		UserDetail userDetail = new UserDetail();
@@ -241,5 +243,22 @@ public class UserDetailDAOTest {
 		UserDetail userDetail = null;
 		Mockito.when(userDetailRepository.findByIdIgnoreCase("mosip")).thenReturn(userDetail);
 		userDetailDAOImpl.getUserDetail("mosip");
+	}
+	
+	@Test
+	public void updateUserRolesAndUsernameTest() {
+		List<UserRole> userRoleList = new ArrayList<UserRole>();
+		UserRole userRole = new UserRole();
+		userRoleList.add(userRole);
+		
+		UserDetail userDetail = new UserDetail();
+		userDetail.setId("mosip");
+		userDetail.setUserRole(userRoleList.stream().collect(Collectors.toSet()));
+		userDetail.setUnsuccessfulLoginCount(0);
+		userDetail.setUserlockTillDtimes(new Timestamp(new Date().getTime()));
+		Mockito.when(userDetailRepository.findByIdIgnoreCase("mosip")).thenReturn(userDetail);
+		
+		Mockito.when(userRoleRepository.findByUserRoleIdUsrId("mosip")).thenReturn(userRoleList);
+		userDetailDAOImpl.updateUserRolesAndUsername("mosip","s1",Arrays.asList("Admin"));
 	}
 }
