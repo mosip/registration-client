@@ -260,10 +260,10 @@ public class GlobalConfigSettingsController extends BaseController implements Se
 			// Compare every ID with filter text.
 			String lowerCaseFilter = newValue.toLowerCase();
 
-			if (globalParam.getKey().contains(lowerCaseFilter)) {
+			if (globalParam.getKey().toLowerCase().contains(lowerCaseFilter)) {
 				globalParamTable.getSelectionModel().selectFirst();
 				return true; // Filter matches key.
-			} 
+			}
 			return false; // Does not match.
 		});
 		globalParamTable.getSelectionModel().selectFirst();
