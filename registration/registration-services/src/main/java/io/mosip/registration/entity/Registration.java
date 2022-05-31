@@ -5,8 +5,6 @@ import java.sql.Timestamp;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import io.mosip.kernel.core.util.DateUtils;
@@ -87,10 +85,6 @@ public class Registration extends RegistrationCommonFields {
 	private String ackSignature;
 	@Column(name="HAS_BWORDS")
 	private Boolean hasBwords;
-	
-	@ManyToOne
-	@JoinColumn(name = "CR_BY", referencedColumnName = "id", insertable = false, updatable = false)
-	private UserDetail userdetail;
 
 	public String getId() {
 		return id;
@@ -298,14 +292,6 @@ public class Registration extends RegistrationCommonFields {
 
 	public void setLatestRegTrnTimestamp(Timestamp latestRegTrnTimestamp) {
 		this.latestRegTrnTimestamp = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
-	}
-
-	public UserDetail getUserdetail() {
-		return userdetail;
-	}
-
-	public void setUserdetail(UserDetail userdetail) {
-		this.userdetail = userdetail;
 	}
 
 	/**
