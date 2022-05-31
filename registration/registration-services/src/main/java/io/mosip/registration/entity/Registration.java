@@ -77,10 +77,6 @@ public class Registration extends RegistrationCommonFields {
 	@Column(name = "ADDITIONAL_INFO")
 	private byte[] additionalInfo;
 
-	@ManyToOne
-	@JoinColumn(name = "CR_BY", referencedColumnName = "id", insertable = false, updatable = false)
-	private UserDetail userdetail;
-
 	public String getId() {
 		return id;
 	}
@@ -288,15 +284,6 @@ public class Registration extends RegistrationCommonFields {
 	public void setLatestRegTrnTimestamp(Timestamp latestRegTrnTimestamp) {
 		this.latestRegTrnTimestamp = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
 	}
-
-	public UserDetail getUserdetail() {
-		return userdetail;
-	}
-
-	public void setUserdetail(UserDetail userdetail) {
-		this.userdetail = userdetail;
-	}
-
 	/**
 	 * @return the preRegId
 	 */
