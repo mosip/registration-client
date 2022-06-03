@@ -1,6 +1,7 @@
 package io.mosip.registration.controller.settings.impl;
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -78,6 +79,8 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 
 	@Autowired
 	private RestartController restartController;
+	
+	private List<String> offlineUntaggedJobs = new ArrayList<>();
 
 	@Override
 	public void setHeaderLabel(String headerLabel) {
@@ -107,6 +110,13 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 		try {
 			SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
 					RegistrationConstants.ENABLE);
+			
+			if (jobConfigurationService.getOfflineJobs() != null && !jobConfigurationService.getOfflineJobs().isEmpty()) {
+				offlineUntaggedJobs.addAll(jobConfigurationService.getOfflineJobs());
+			}
+			if (jobConfigurationService.getUnTaggedJobs() != null && !jobConfigurationService.getUnTaggedJobs().isEmpty()) {
+				offlineUntaggedJobs.addAll(jobConfigurationService.getUnTaggedJobs());
+			}
 			
 			List<SyncJobDef> syncJobs = jobConfigurationService.getSyncJobs();
 			GridPane gridPane = createGridPane(syncJobs.size());
@@ -166,6 +176,10 @@ public class ScheduledJobsSettingsController extends BaseController implements S
 			Tooltip.install(imageVbox, tooltip);
 
 			imageVbox.getChildren().add(imageView);
+			
+			if (offlineUntaggedJobs.contains(syncJob.getId())) {
+				imageVbox.setVisible(false);
+			}
 
 			subGridPane.add(imageVbox, 2, 0);
 
