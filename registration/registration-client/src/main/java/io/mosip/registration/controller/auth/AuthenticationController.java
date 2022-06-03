@@ -5,9 +5,12 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.Set;
 
-import io.mosip.registration.exception.RegistrationExceptionConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -286,7 +289,7 @@ public class AuthenticationController extends BaseController implements Initiali
 				if (null != authenticationService.authValidator(RegistrationConstants.OTP, otpUserId.getText(),
 						otp.getText(), haveToSaveAuthToken(otpUserId.getText()))) {
 					userAuthenticationTypeListValidation.remove(0);
-					addOSIData(userNameField, RegistrationConstants.OTP);
+					addOSIData(otpUserId.getText(), RegistrationConstants.OTP);
 					loadNextScreen();
 				} else {
 					generateAlert(RegistrationConstants.ERROR,
@@ -383,7 +386,7 @@ public class AuthenticationController extends BaseController implements Initiali
 				progressIndicator.setVisible(false);
 				if (taskService.getValue()) {
 					userAuthenticationTypeListValidation.remove(0);
-					addOSIData(userNameField, null);
+					addOSIData(fpUserId.getText(), null);
 					operatorAuthContinue.setDisable(false);
 					fingerPrintScanButton.setDisable(true);
 					generateAlert(RegistrationConstants.ALERT_INFORMATION,
@@ -455,7 +458,7 @@ public class AuthenticationController extends BaseController implements Initiali
 				progressIndicator.setVisible(false);
 				if (taskService.getValue()) {
 					userAuthenticationTypeListValidation.remove(0);
-					addOSIData(userNameField, null);
+					addOSIData(irisUserId.getText(), null);
 					operatorAuthContinue.setDisable(false);
 					irisScanButton.setDisable(true);
 					generateAlert(RegistrationConstants.ALERT_INFORMATION,
@@ -541,7 +544,7 @@ public class AuthenticationController extends BaseController implements Initiali
 				progressIndicator.setVisible(false);
 				if (taskService.getValue()) {
 					userAuthenticationTypeListValidation.remove(0);
-					addOSIData(userNameField, null);
+					addOSIData(faceUserId.getText(), null);
 					operatorAuthContinue.setDisable(false);
 					faceScanButton.setDisable(true);
 					generateAlert(RegistrationConstants.ALERT_INFORMATION,
