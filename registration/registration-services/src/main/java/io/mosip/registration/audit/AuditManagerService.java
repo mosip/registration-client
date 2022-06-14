@@ -1,5 +1,7 @@
 package io.mosip.registration.audit;
 
+import java.util.Map;
+
 import org.springframework.data.auditing.AuditingHandler;
 
 import io.mosip.kernel.auditmanager.builder.AuditRequestBuilder;
@@ -45,5 +47,8 @@ public interface AuditManagerService {
 	 * @return response of deletion
 	 */
 	ResponseDTO deleteAuditLogs();
+
+	void auditWithParams(AuditEvent auditEventEnum, Components appModuleEnum, String refId, String refIdType,
+			Map<String, String> map);
 
 }

@@ -111,6 +111,20 @@ public class AuditFactoryTest {
 
 		auditFactory.audit(AuditEvent.PACKET_APPROVED, Components.PACKET_CREATOR, "id", "ref");
 	}
+	
+	@Test
+	public void auditTestWithParams() throws Exception {
+		
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("<time>", "1");
+		map.put("<count>", "1");
+		
+		PowerMockito.mockStatic(InetAddress.class);
+		PowerMockito.when(InetAddress.getLocalHost()).thenThrow(new UnknownHostException("Unknown"));
+		when(auditHandler.addAudit(Mockito.any(AuditRequestDto.class))).thenReturn(true);
+
+		auditFactory.auditWithParams(AuditEvent.REG_BIO_CAPTURE_DETAILS, Components.PACKET_HANDLER, "id", "ref",map);
+	}
 
 	//Java11 correction
 	@Test

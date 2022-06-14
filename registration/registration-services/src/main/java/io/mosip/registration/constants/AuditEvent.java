@@ -311,7 +311,9 @@ public enum AuditEvent {
 	REG_BLOCKLISTED_WORD_ACCEPTED("REG-EVT-102", USER_EVENT.getCode(), "REG_BLOCKLISTED_WORD_ACCEPTED",
 			"Demographic Details : A blocklisted word has been accepted in Registration"),
 	REG_BLOCKLISTED_WORD_REJECTED("REG-EVT-103", USER_EVENT.getCode(), "REG_BLOCKLISTED_WORD_REJECTED",
-			"Demographic Details : A blocklisted word has been rejected in Registration");
+			"Demographic Details : A blocklisted word has been rejected in Registration"),
+	REG_BIO_CAPTURE_DETAILS("REG-EVT-104", USER_EVENT.getCode(), "REG_BIO_CAPTURE_DETAILS",
+			"Biometric details are captured within <time> milliseconds and capture count is <count>");
 
 	/**
 	 * The constructor
