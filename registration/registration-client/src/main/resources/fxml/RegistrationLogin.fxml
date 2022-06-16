@@ -36,7 +36,7 @@
             <ComboBox fx:id="appLanguage" layoutY="101.0" promptText="%chooselanguage" styleClass="loginCombobox" AnchorPane.leftAnchor="53.0" />
             <Button fx:id="sub1" layoutX="53.0" layoutY="211.0" mnemonicParsing="false" onAction="#validateUserId" styleClass="loginSubmitStyle" text="%submit" />
             <ProgressIndicator fx:id="progressIndicator" layoutX="130.0" layoutY="50.0" progress="0.0" visible="false" />
-            <Hyperlink fx:id="forgotUsrnme" layoutX="167.0" layoutY="293.0" mnemonicParsing="false" onAction="#forgotUsrname" styleClass="hyperLinkStyle" text="%forgotUsername" />
+            <Hyperlink fx:id="forgotUsrnme" layoutX="167.0" layoutY="293.0" mnemonicParsing="false" onAction="#forgotUsrname" styleClass="hyperLinkStyle" text="%forgotUsername" visible="false" />
           </children>
         </AnchorPane>
         <AnchorPane fx:id="credentialsPane" layoutX="37.0" layoutY="188.0" styleClass="loginAnchorPaneExtendedStyle" visible="false">
