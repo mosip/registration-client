@@ -106,7 +106,7 @@ public class AuditManagerSerivceImpl extends BaseService implements AuditManager
 
 		String description = auditEventEnum.getDescription();
 		for (var entry : map.entrySet()) {
-			description.replace(entry.getKey(), entry.getValue());
+			description = description.replaceAll(entry.getKey(), entry.getValue());
 		}
 
 		AuditRequestBuilder auditRequestBuilder = new AuditRequestBuilder();
