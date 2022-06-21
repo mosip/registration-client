@@ -6,7 +6,14 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.mapper.CustomObjectMapper.MAPPER_FACADE;
 
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +46,6 @@ import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.UserDetail;
-import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.BaseService;
@@ -144,8 +150,8 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 
 		LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "PWD LOGIN MANDATED ? " + mandatePwdLogin);
 
-		auditFactory.audit(AuditEvent.LOGIN_MODES_FETCH, Components.LOGIN_MODES,
-				RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
+		auditFactory.audit(AuditEvent.LOGIN_MODES_FETCH, Components.LOGIN_MODES, "NA",
+				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
 		List<String> loginModes = appAuthenticationDAO.getModesOfLogin(authType, roleList);
 
@@ -182,8 +188,8 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 		try {
 			getUserDetailValidation(userId);
 
-			auditFactory.audit(AuditEvent.FETCH_USR_DET, Components.USER_DETAIL, RegistrationConstants.APPLICATION_NAME,
-					AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
+			auditFactory.audit(AuditEvent.FETCH_USR_DET, Components.USER_DETAIL, userId,
+					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
 			userDTO = MAPPER_FACADE.map(userDetailDAO.getUserDetail(userId), UserDTO.class);
 			
