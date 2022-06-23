@@ -130,6 +130,7 @@ public class BioServiceImpl extends BaseService implements BioService {
 		Duration timeElapsed = Duration.between(captureStartTime, captureEndTime);
 
 		Map<String, String> map = new HashMap<String, String>();
+		map.put("<modality>", mdmRequestDto.getModality());
 		map.put("<time>", String.valueOf(timeElapsed.toMillis()));
 		map.put("<count>", String.valueOf(mdmRequestDto.getCount()));
 
