@@ -88,6 +88,10 @@ public class BioServiceImpl extends BaseService implements BioService {
 		LOGGER.info("Entering into captureModality method.. {}", captureStartTime.toEpochMilli());
 		
 		List<BiometricsDto> list = new ArrayList<BiometricsDto>();
+		
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("<modality>", mdmRequestDto.getModality());
+		map.put("<count>", String.valueOf(mdmRequestDto.getCount()));
 
 		try {
 			MdmBioDevice bioDevice = deviceSpecificationFactory.getDeviceInfoByModality(mdmRequestDto.getModality());
@@ -117,6 +121,9 @@ public class BioServiceImpl extends BaseService implements BioService {
 				list.add(biometricsDto);
 			}
 		} catch (RegBaseCheckedException e) {
+			auditFactory.auditWithParams(AuditEvent.REG_BIO_CAPTURE_DETAILS_FAILURE, Components.PACKET_HANDLER,
+					RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.REGISTRATION_ID.getReferenceTypeId(),
+					map);
 			throw e;
 		} catch (Throwable t) {
 			LOGGER.error("Failed in rcapture", t);
@@ -128,11 +135,7 @@ public class BioServiceImpl extends BaseService implements BioService {
 		LOGGER.info("Ended captureModality method.. {}", captureEndTime.toEpochMilli());
 
 		Duration timeElapsed = Duration.between(captureStartTime, captureEndTime);
-
-		Map<String, String> map = new HashMap<String, String>();
-		map.put("<modality>", mdmRequestDto.getModality());
 		map.put("<time>", String.valueOf(timeElapsed.toMillis()));
-		map.put("<count>", String.valueOf(mdmRequestDto.getCount()));
 
 		auditFactory.auditWithParams(AuditEvent.REG_BIO_CAPTURE_DETAILS, Components.PACKET_HANDLER,
 				RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.REGISTRATION_ID.getReferenceTypeId(),
