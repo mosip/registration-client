@@ -83,12 +83,12 @@ public class BioServiceImpl extends BaseService implements BioService {
 
 	@Override
 	public List<BiometricsDto> captureModality(MDMRequestDto mdmRequestDto) throws RegBaseCheckedException {
-		
+
 		Instant captureStartTime = Instant.now();
 		LOGGER.info("Entering into captureModality method.. {}", captureStartTime.toEpochMilli());
-		
+
 		List<BiometricsDto> list = new ArrayList<BiometricsDto>();
-		
+
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("<modality>", mdmRequestDto.getModality());
 		map.put("<count>", String.valueOf(mdmRequestDto.getCount()));
@@ -104,8 +104,10 @@ public class BioServiceImpl extends BaseService implements BioService {
 					continue;
 				}
 
-				if (!ValueRange.of(0, RegistrationConstants.MAX_BIO_QUALITY_SCORE).isValidValue((long) biometricsDto.getQualityScore()))
-					throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_SCORE_RANGE_ERROR.getErrorCode(),
+				if (!ValueRange.of(0, RegistrationConstants.MAX_BIO_QUALITY_SCORE)
+						.isValidValue((long) biometricsDto.getQualityScore()))
+					throw new RegBaseCheckedException(
+							RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_SCORE_RANGE_ERROR.getErrorCode(),
 							RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_SCORE_RANGE_ERROR.getErrorMessage());
 
 				if (RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map()
@@ -114,23 +116,29 @@ public class BioServiceImpl extends BaseService implements BioService {
 						biometricsDto.setSdkScore(getSDKScore(biometricsDto));
 					} catch (BiometricException e) {
 						LOGGER.error("Unable to fetch SDK Score ", e);
-						throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorCode(),
+						throw new RegBaseCheckedException(
+								RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorCode(),
 								RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorMessage());
 					}
 				}
 				list.add(biometricsDto);
 			}
 		} catch (RegBaseCheckedException e) {
+			map.put("<errorMessage>", e.getMessage());
 			auditFactory.auditWithParams(AuditEvent.REG_BIO_CAPTURE_DETAILS_FAILURE, Components.PACKET_HANDLER,
 					RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.REGISTRATION_ID.getReferenceTypeId(),
 					map);
 			throw e;
 		} catch (Throwable t) {
 			LOGGER.error("Failed in rcapture", t);
+			map.put("<errorMessage>", t.getMessage());
+			auditFactory.auditWithParams(AuditEvent.REG_BIO_CAPTURE_DETAILS_FAILURE, Components.PACKET_HANDLER,
+					RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.REGISTRATION_ID.getReferenceTypeId(),
+					map);
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
 					RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage());
 		}
-		
+
 		Instant captureEndTime = Instant.now();
 		LOGGER.info("Ended captureModality method.. {}", captureEndTime.toEpochMilli());
 

@@ -315,7 +315,7 @@ public enum AuditEvent {
 	REG_BIO_CAPTURE_DETAILS("REG-EVT-104", USER_EVENT.getCode(), "REG_BIO_CAPTURE_DETAILS",
 			"<modality> Biometric detail is captured within <time> milliseconds and capture count is <count>"),
 	REG_BIO_CAPTURE_DETAILS_FAILURE("REG-EVT-105", USER_EVENT.getCode(), "REG_BIO_CAPTURE_DETAILS_FAILURE",
-			"<modality> Biometric detail capture is failed and capture count is <count>");
+			"<modality> Biometric detail capture is failed and capture count is <count>. Error Message: <errorMessage>");
 
 	/**
 	 * The constructor
