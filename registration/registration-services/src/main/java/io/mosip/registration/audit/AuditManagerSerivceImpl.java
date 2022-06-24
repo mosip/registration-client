@@ -1,5 +1,7 @@
 package io.mosip.registration.audit;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -80,6 +82,44 @@ public class AuditManagerSerivceImpl extends BaseService implements AuditManager
 
 		auditHandler.addAudit(auditRequestBuilder.build());
 
+	}
+	
+	@Override
+	public void auditWithParams(AuditEvent auditEventEnum, Components appModuleEnum, String refId, String refIdType,
+			Map<String, String> map) {
+
+		// Getting Host IP Address and Name
+		String hostIP = "localhost";
+		String hostName = RegistrationSystemPropertiesChecker.getMachineId();
+		hostName = hostName != null ? hostName
+				: String.valueOf(ApplicationContext.map().get(RegistrationConstants.DEFAULT_HOST_NAME));
+
+		if (auditEventEnum.getId().contains(RegistrationConstants.REGISTRATION_EVENTS)
+				&& getRegistrationDTOFromSession() != null
+				&& getRegistrationDTOFromSession().getRegistrationId() != null) {
+			refId = getRegistrationDTOFromSession().getRegistrationId();
+			refIdType = AuditReferenceIdTypes.REGISTRATION_ID.getReferenceTypeId();
+		} else if (SessionContext.userId() != null && !SessionContext.userId().equals("NA")) {
+			refId = SessionContext.userId();
+			refIdType = AuditReferenceIdTypes.USER_ID.getReferenceTypeId();
+		}
+
+		String description = auditEventEnum.getDescription();
+		for (var entry : map.entrySet()) {
+			description = description.replaceAll(entry.getKey(), entry.getValue());
+		}
+
+		AuditRequestBuilder auditRequestBuilder = new AuditRequestBuilder();
+		auditRequestBuilder.setActionTimeStamp(DateUtils.getUTCCurrentDateTime())
+				.setApplicationId(String.valueOf(ApplicationContext.map().get(RegistrationConstants.APP_ID)))
+				.setApplicationName(String.valueOf(ApplicationContext.map().get(RegistrationConstants.APP_NAME)))
+				.setCreatedBy(SessionContext.userName()).setDescription(description).setEventId(auditEventEnum.getId())
+				.setEventName(auditEventEnum.getName()).setEventType(auditEventEnum.getType()).setHostIp(hostIP)
+				.setHostName(hostName).setId(refId).setIdType(refIdType).setModuleId(appModuleEnum.getId())
+				.setModuleName(appModuleEnum.getName()).setSessionUserId(SessionContext.userId())
+				.setSessionUserName(SessionContext.userName());
+
+		auditHandler.addAudit(auditRequestBuilder.build());
 	}
 
 	/*
