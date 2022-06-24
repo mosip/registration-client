@@ -1,5 +1,7 @@
 package io.mosip.registration.bio.service.test;
 
+import static org.mockito.Mockito.doNothing;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.Buffer;
@@ -13,7 +15,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -38,6 +39,9 @@ import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.signature.constant.SignatureConstant;
 import io.mosip.kernel.signature.dto.JWTSignatureVerifyResponseDto;
 import io.mosip.kernel.signature.service.impl.SignatureServiceImpl;
+import io.mosip.registration.audit.AuditManagerService;
+import io.mosip.registration.constants.AuditEvent;
+import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
@@ -83,6 +87,9 @@ public class BioServiceTest {
 
     @Autowired
     private SignatureServiceImpl signatureService; //mock bean created in TestDaoConfig
+    
+    @Autowired
+	private AuditManagerService auditFactory;
 
     private static MockWebServer mockWebServer;
 
@@ -386,6 +393,9 @@ public class BioServiceTest {
         jwtSignatureVerifyResponseDto.setTrustValid(SignatureConstant.TRUST_VALID);
         Mockito.when(signatureService.jwtVerify(Mockito.any())).thenReturn(jwtSignatureVerifyResponseDto);
         ApplicationContext.map().put(RegistrationConstants.INITIAL_SETUP, "N");
+        
+        doNothing().when(auditFactory).auditWithParams(Mockito.any(AuditEvent.class), Mockito.any(Components.class),
+				Mockito.anyString(), Mockito.anyString(),Mockito.anyMap());
 
         deviceSpecificationFactory.initializeDeviceMap(false);
         Assert.assertEquals(1, deviceSpecificationFactory.getAvailableDeviceInfoMap().size());
@@ -398,7 +408,7 @@ public class BioServiceTest {
         try {
             bioService.captureModality(mdmRequestDto);
         } catch (RegBaseCheckedException e) {
-            errorCode = e.getCause() != null ? ((RegBaseCheckedException)e.getCause()).getErrorCode() : e.getErrorCode();
+            errorCode = e.getErrorCode();
         }
         Assert.assertEquals("REG-MDS-003", errorCode);
     }
