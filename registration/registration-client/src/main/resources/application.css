@@ -1040,7 +1040,6 @@ Working on new Css by taleev
 	-fx-border-color: #C9C9C9;
 	-fx-font-size: 14.0px;
 	-fx-pref-height: 10.0px;
-	-fx-pref-width: 190.0px;
 }
 
 .loginCombobox {
@@ -1074,7 +1073,6 @@ Working on new Css by taleev
 	-fx-border-color: red;
 	-fx-font-size: 14.0px;
 	-fx-pref-height: 10.0px;
-	-fx-pref-width: 190.0px;
 }
 
 .demographicCombobox:focused {
@@ -1083,7 +1081,6 @@ Working on new Css by taleev
 	-fx-border-color: #005baa;
 	-fx-font-size: 14.0px;
 	-fx-pref-height: 10.0px;
-	-fx-pref-width: 190.0px;
 }
 
 .demographicCombobox .combo-box-popup>.list-view>.virtual-flow>.clipped-container>.sheet>.list-cell:filled:hover
@@ -1169,7 +1166,7 @@ Working on new Css by taleev
 }
 
 .fingerPrintPanesSelected {
-	-fx-background-color: #F0F0F0;
+	-fx-background-color: #FFFFFF;
 	-fx-border-color: #EFEFEF;
 	-fx-border-width: 5.0;
 	-fx-padding: -2.5;
@@ -1177,7 +1174,7 @@ Working on new Css by taleev
 }
 
 .IrisPanes {
-	-fx-background-color: #F0F0F0;
+	-fx-background-color: #FFFFFF;
 	-fx-border-color: #EFEFEF;
 	-fx-border-width: 5.0;
 	-fx-padding: -2.5;
@@ -2672,4 +2669,29 @@ Working on new Css by taleev
 .tab:selected.tabErrorLabel .tab-label {
     -fx-text-fill: #FF0000;
     -fx-font-weight: bold;
+}
+
+.preRegParentPaneSection {
+	-fx-border-color:#005baa;
+	-fx-border-radius: 10.0 10.0 10.0 10.0;
+}
+
+.demoGraphicCustomLabel {
+	-fx-background-color: #ffffff;
+	-fx-border-width: 0.0;
+	-fx-text-fill: #005baa;
+	-fx-font-size: 1.2em;
+	-fx-font-weight: 800;
+}
+
+.demoGraphicCustomField{
+	-fx-padding: 0 0 0 55;
+}
+
+.height {
+	-fx-pref-height: 100.0;
+}
+
+.documentCustomCombobox {
+	-fx-pref-height: 77.0;
 }

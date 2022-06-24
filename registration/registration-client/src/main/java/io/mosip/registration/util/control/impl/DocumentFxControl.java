@@ -33,6 +33,7 @@ import io.mosip.registration.util.control.FxControl;
 import io.mosip.registration.validator.RequiredFieldValidator;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -181,12 +182,8 @@ public class DocumentFxControl extends FxControl {
 				new Image(this.getClass().getResourceAsStream(RegistrationConstants.SCAN), 12, 12, true, true)));
 
 		GridPane scanButtonGridPane = new GridPane();
-		RowConstraints rowConstraint1 = new RowConstraints();
-		RowConstraints rowConstraint2 = new RowConstraints();
-		rowConstraint1.setPercentHeight(35);
-		rowConstraint2.setPercentHeight(65);
-		scanButtonGridPane.getRowConstraints().addAll(rowConstraint1, rowConstraint2);
 		scanButtonGridPane.setPrefWidth(80);
+		scanButtonGridPane.setPadding(new Insets(21, 0, 0, 0));
 		scanButtonGridPane.add(scanButton, 0, 1);
 
 		return scanButtonGridPane;

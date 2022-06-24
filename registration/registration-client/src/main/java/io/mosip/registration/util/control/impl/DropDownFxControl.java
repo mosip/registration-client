@@ -5,6 +5,7 @@ import java.util.Map.Entry;
 
 import io.mosip.registration.controller.ClientApplication;
 import io.mosip.registration.dao.MasterSyncDao;
+import javafx.geometry.Insets;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.registration.dto.mastersync.GenericDto;
@@ -111,7 +112,10 @@ public class DropDownFxControl extends FxControl {
 		String titleText = String.join(RegistrationConstants.SLASH, labels) + getMandatorySuffix(uiFieldDTO);
 		ComboBox<GenericDto> comboBox = getComboBox(fieldName, titleText, RegistrationConstants.DOC_COMBO_BOX,
 				simpleTypeVBox.getPrefWidth(), false);
+		comboBox.setMaxWidth(Double.MAX_VALUE);
 		simpleTypeVBox.getChildren().add(comboBox);
+		simpleTypeVBox.setMargin(comboBox, new Insets(0, 15, 0, 0));
+
 
 		comboBox.setOnMouseExited(event -> {
 			getField(uiFieldDTO.getId() + RegistrationConstants.MESSAGE).setVisible(false);
@@ -171,9 +175,6 @@ public class DropDownFxControl extends FxControl {
 		ComboBox<GenericDto> field = new ComboBox<GenericDto>();
 		StringConverter<T> uiRenderForComboBox = FXUtils.getInstance().getStringConverterForComboBox();
 		field.setId(id);
-		// field.setPrefWidth(prefWidth);
-
-		//field.setPromptText(titleText);
 		field.setDisable(isDisable);
 		field.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_COMBOBOX);
 		field.setConverter((StringConverter<GenericDto>) uiRenderForComboBox);

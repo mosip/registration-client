@@ -509,6 +509,11 @@ public class RegistrationConstants {
 	public static final String TEMPLATE_DEMO_INFO = "DemographicInfo";
 	public static final String DEMOGRAPHIC_TEXTFIELD_FOCUSED = "demoGraphicTextFieldFocused";
 	public static final String DEMOGRAPHIC_TEXTFIELD = "demoGraphicTextField";
+	public static final String DEMOGRAPHIC_GROUP = "preRegParentPaneSection";
+	public static final String DEMOGRAPHIC_GROUP_LABEL = "demoGraphicCustomLabel";
+	public static final String DEMOGRAPHIC_FIELD = "demoGraphicCustomField";
+	public static final String DOCUMENT_COMBOBOX_FIELD = "documentCustomCombobox";
+
 	public static final String TEMPLATE_DOCUMENTS_LABEL = "DocumentsLabel";
 	public static final String TEMPLATE_DOCUMENTS = "Documents";
 	public static final String TEMPLATE_BIOMETRICS_LABEL = "BiometricsLabel";
