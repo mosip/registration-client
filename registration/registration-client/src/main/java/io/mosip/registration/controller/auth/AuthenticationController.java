@@ -5,9 +5,12 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.Set;
 
-import io.mosip.registration.exception.RegistrationExceptionConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -24,6 +27,7 @@ import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
+import io.mosip.registration.controller.GenericController;
 import io.mosip.registration.controller.device.Streamer;
 import io.mosip.registration.controller.reg.PacketHandlerController;
 import io.mosip.registration.controller.reg.RegistrationController;
@@ -172,6 +176,9 @@ public class AuthenticationController extends BaseController implements Initiali
 
 	@Autowired
 	private RegistrationController registrationController;
+	
+	@Autowired
+	private GenericController genericController;
 
 	@Autowired
 	private OTPManager otpManager;
@@ -385,12 +392,14 @@ public class AuthenticationController extends BaseController implements Initiali
 					userAuthenticationTypeListValidation.remove(0);
 					addOSIData(fpUserId.getText(), null);
 					operatorAuthContinue.setDisable(false);
+					genericController.disableAuthenticateButton(false);
 					fingerPrintScanButton.setDisable(true);
 					generateAlert(RegistrationConstants.ALERT_INFORMATION,
 							RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
 					loadNextScreen();
 				} else {
 					operatorAuthContinue.setDisable(true);
+					genericController.disableAuthenticateButton(true);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.FINGER_PRINT_MATCH));
 				}
 			}
@@ -457,12 +466,14 @@ public class AuthenticationController extends BaseController implements Initiali
 					userAuthenticationTypeListValidation.remove(0);
 					addOSIData(irisUserId.getText(), null);
 					operatorAuthContinue.setDisable(false);
+					genericController.disableAuthenticateButton(false);
 					irisScanButton.setDisable(true);
 					generateAlert(RegistrationConstants.ALERT_INFORMATION,
 							RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
 					loadNextScreen();
 				} else {
 					operatorAuthContinue.setDisable(true);
+					genericController.disableAuthenticateButton(true);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.IRIS_MATCH));
 				}
 			}
@@ -543,12 +554,14 @@ public class AuthenticationController extends BaseController implements Initiali
 					userAuthenticationTypeListValidation.remove(0);
 					addOSIData(faceUserId.getText(), null);
 					operatorAuthContinue.setDisable(false);
+					genericController.disableAuthenticateButton(false);
 					faceScanButton.setDisable(true);
 					generateAlert(RegistrationConstants.ALERT_INFORMATION,
 							RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
 					loadNextScreen();
 				} else {
 					operatorAuthContinue.setDisable(true);
+					genericController.disableAuthenticateButton(true);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.FACE_MATCH));
 				}
 			}
@@ -610,6 +623,7 @@ public class AuthenticationController extends BaseController implements Initiali
 					getOTP.setVisible(true);
 				}
 				operatorAuthContinue.setDisable(false);
+				genericController.disableAuthenticateButton(false);
 				loadAuthenticationScreen(authenticationType);
 			} else {
 				if (!isReviewer) {
@@ -654,25 +668,30 @@ public class AuthenticationController extends BaseController implements Initiali
 		switch (loginMode.toUpperCase()) {
 			case RegistrationConstants.OTP:
 				operatorAuthContinue.setDisable(false);
+				genericController.disableAuthenticateButton(false);
 				enableOTP();
 				break;
 			case RegistrationConstants.PWORD:
 				operatorAuthContinue.setDisable(false);
+				genericController.disableAuthenticateButton(false);
 				enablePWD();
 				break;
 			case RegistrationConstants.FINGERPRINT_UPPERCASE:
 				fingerPrintScanButton.setDisable(false);
 				operatorAuthContinue.setDisable(true);
+				genericController.disableAuthenticateButton(true);
 				enableFingerPrint();
 				break;
 			case RegistrationConstants.IRIS:
 				irisScanButton.setDisable(false);
 				operatorAuthContinue.setDisable(true);
+				genericController.disableAuthenticateButton(true);
 				enableIris();
 				break;
 			case RegistrationConstants.FACE:
 				faceScanButton.setDisable(false);
 				operatorAuthContinue.setDisable(true);
+				genericController.disableAuthenticateButton(true);
 				enableFace();
 				break;
 			default:

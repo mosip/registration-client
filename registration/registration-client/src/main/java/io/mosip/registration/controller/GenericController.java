@@ -163,6 +163,10 @@ public class GenericController extends BaseController {
 		return fxControlMap;
 	}
 
+	public void disableAuthenticateButton(boolean disable) {
+		authenticate.setDisable(disable);
+	}
+	
 	private void initialize(RegistrationDTO registrationDTO) {
 		orderedScreens.clear();
 		fxControlMap.clear();
