@@ -199,7 +199,7 @@ public class GenericController extends BaseController {
 		label.getStyleClass().add(LABEL_CLASS);
 		label.setId("preRegistrationLabel");
 		label.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
-				.getString("search_for_Pre_registration_id"));
+				.getString("applicationId"));
 		label.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_GROUP_LABEL);
 		label.setPadding(new Insets(0, 0, 0, 55));
 		hBox.getChildren().add(label);
