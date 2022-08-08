@@ -147,6 +147,7 @@ cp "${work_dir}"/build_files/maven-metadata.xml /var/www/html/registration-clien
 cp "${work_dir}"/registration-client/target/reg-client.zip /var/www/html/registration-client/${client_version_env}/
 cp "${work_dir}"/registration-test-utility.zip /var/www/html/registration-client/${client_version_env}/
 cp "${work_dir}"/registration-client/target/run.bat /var/www/html/registration-client/${client_version_env}/
+cp "${work_dir}"/registration-client/target/run.bat /var/www/html/registration-client/${client_version_env}/run_upgrade.bat
 
 echo "setting up nginx static content - completed"
 
