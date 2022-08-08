@@ -342,8 +342,8 @@ public class SessionContext {
 				"Registration", io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
 				io.mosip.registration.context.ApplicationContext
 						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
-				1, io.mosip.registration.context.ApplicationContext
-						.getIntValueFromApplicationMap(RegistrationConstants.FINGERPRINT_AUTHENTICATION_THRESHOLD));
+				1, Integer.parseInt(String.valueOf(io.mosip.registration.context.ApplicationContext
+						.map().getOrDefault(RegistrationConstants.FINGERPRINT_AUTHENTICATION_THRESHOLD, 30))));
 
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 		if (authService.authValidator(authenticationValidatorDTO.getUserId(), BiometricType.FINGER.value(),
@@ -385,8 +385,8 @@ public class SessionContext {
 				io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
 				io.mosip.registration.context.ApplicationContext
 						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
-				2, io.mosip.registration.context.ApplicationContext
-						.getIntValueFromApplicationMap(RegistrationConstants.IRIS_AUTHENTICATION_THRESHOLD));
+				2, Integer.parseInt(String.valueOf(io.mosip.registration.context.ApplicationContext
+						.map().getOrDefault(RegistrationConstants.IRIS_AUTHENTICATION_THRESHOLD, 30))));
 
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 		if (authService.authValidator(authenticationValidatorDTO.getUserId(), BiometricType.IRIS.value(), biometrics)) {
@@ -426,8 +426,9 @@ public class SessionContext {
 		
 		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.FACE_FULLFACE, null, "Registration", io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE), 
 				io.mosip.registration.context.ApplicationContext
-				.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT), 1, io.mosip.registration.context.ApplicationContext
-				.getIntValueFromApplicationMap(RegistrationConstants.FACE_AUTHENTICATION_THRESHOLD));
+				.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT), 1, 
+				Integer.parseInt(String.valueOf(io.mosip.registration.context.ApplicationContext
+						.map().getOrDefault(RegistrationConstants.FACE_AUTHENTICATION_THRESHOLD, 30))));
 		
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 		if(authService.authValidator(authenticationValidatorDTO.getUserId(), BiometricType.FACE.value(), biometrics)) {

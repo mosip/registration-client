@@ -104,6 +104,9 @@ public class GenericBiometricsController extends BaseController {
 
 	@FXML
 	private GridPane biometricBox;
+	
+	@FXML
+	private Label biometricType;
 
 	@FXML
 	private GridPane retryBox;
@@ -265,7 +268,7 @@ public class GenericBiometricsController extends BaseController {
 	@FXML
 	public void initialize() {
 		LOGGER.info("Loading of Guardian Biometric screen started");
-		applicationLabelBundle = applicationContext.getBundle(applicationContext.getApplicationLanguage(),
+		applicationLabelBundle = ApplicationContext.getBundle(applicationContext.getApplicationLanguage(),
 				RegistrationConstants.LABELS);
 		setImage(scanImageView	, RegistrationConstants.SCAN_IMG);
 		setImage(closeButtonImageView	, RegistrationConstants.CLOSE_IMG);
@@ -294,11 +297,12 @@ public class GenericBiometricsController extends BaseController {
 	private void displayBiometric(Modality modality) {
 		LOGGER.info("Displaying biometrics to capture for {}", modality);
 
-		applicationLabelBundle = applicationContext.getBundle(applicationContext.getApplicationLanguage(), RegistrationConstants.LABELS);
+		applicationLabelBundle = ApplicationContext.getBundle(applicationContext.getApplicationLanguage(), RegistrationConstants.LABELS);
 
 		retryBox.setVisible(!isExceptionPhoto(modality));
 		thresholdBox.setVisible(!isExceptionPhoto(modality));
 		biometricBox.setVisible(true);
+		biometricType.setText(applicationLabelBundle.getString(modality.name()));
 		checkBoxPane.getChildren().clear();
 
 		// get List of captured Biometrics based on nonExceptionBio Attributes
