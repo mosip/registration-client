@@ -199,7 +199,9 @@ public class SettingsController extends BaseController {
 		try {
 			exitWindow();
 			if (getRegistrationDTOFromSession() != null) {
-				goToSettingsFromRegistration();
+				if (!goToSettingsFromRegistration()) {
+					return;
+				}
 			}
 			FXMLLoader fxmlLoader = BaseController
 					.loadChild(getClass().getResource(RegistrationConstants.FXML_PATH.concat(fxmlName)));
