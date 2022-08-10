@@ -112,18 +112,6 @@ public class GenericBiometricsController extends BaseController {
 	private ImageView biometricImage;
 
 	@FXML
-	private Label qualityScore;
-
-	@FXML
-	private Label attemptSlap;
-
-	@FXML
-	private Label thresholdScoreLabel;
-
-	@FXML
-	private Label thresholdLabel;
-
-	@FXML
 	private GridPane biometricPane;
 	
 	@FXML
@@ -845,7 +833,6 @@ public class GenericBiometricsController extends BaseController {
 			LOGGER.error("Error while getting image");
 		}
 
-		thresholdScoreLabel.setText(getQualityScoreText(biometricThreshold));
 		createQualityBox(retryCount, biometricThreshold);
 
 		clearBioLabels();
@@ -863,8 +850,6 @@ public class GenericBiometricsController extends BaseController {
 		clearCaptureData();
 		biometricPane.getStyleClass().clear();
 		biometricPane.getStyleClass().add(RegistrationConstants.BIOMETRIC_PANES_SELECTED);
-		qualityScore.setText(RegistrationConstants.HYPHEN);
-		attemptSlap.setText(RegistrationConstants.HYPHEN);
 		// duplicateCheckLbl.setText(RegistrationConstants.EMPTY);
 
 		retryBox.setVisible(!isExceptionPhoto(currentModality));
@@ -889,8 +874,6 @@ public class GenericBiometricsController extends BaseController {
 
 		biometricPane.getStyleClass().clear();
 		biometricPane.getStyleClass().add(RegistrationConstants.FINGERPRINT_PANES_SELECTED);
-		qualityScore.setText(getQualityScoreText(qltyScore));
-		attemptSlap.setText(String.valueOf(retry));
 
 		bioProgress.setProgress(
 				Double.valueOf(getQualityScoreText(qltyScore).split(RegistrationConstants.PERCENTAGE)[0]) / 100);
@@ -953,7 +936,7 @@ public class GenericBiometricsController extends BaseController {
 					//if (qualityScoreVal != 0) {
 						updateByAttempt(qualityScoreVal, getBioStreamImage(fxControl.getUiSchemaDTO().getId(), currentModality, attempt),
 								bioService.getMDMQualityThreshold(currentModality), biometricImage,
-								qualityText, bioProgress, qualityScore);
+								qualityText, bioProgress);
 					//}
 
 					LOGGER.info("Mouse Event by attempt Ended. modality : {}", currentModality);
@@ -975,14 +958,12 @@ public class GenericBiometricsController extends BaseController {
 			bioRetryBox.getChildren().add(label);
 		}
 		bioRetryBox.setOnMouseClicked(mouseEventHandler);
-		thresholdLabel.setAlignment(Pos.CENTER);
 
 		String langCode = ApplicationContext.applicationLanguage();
 		if (getRegistrationDTOFromSession() != null && getRegistrationDTOFromSession().getSelectedLanguagesByApplicant() != null) {
 			langCode = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0);
 		}
-		thresholdLabel.setText(applicationContext.getBundle(langCode, RegistrationConstants.LABELS).getString("threshold").concat("  ").concat(String.valueOf(biometricThreshold))
-				.concat(RegistrationConstants.PERCENTAGE));
+
 		thresholdPane1.setPercentWidth(biometricThreshold);
 		thresholdPane2.setPercentWidth(100.00 - (biometricThreshold));
 		LOGGER.info("Updated Quality and threshold values of biometrics");
@@ -1460,9 +1441,6 @@ public class GenericBiometricsController extends BaseController {
 
 		this.fxControl = (BiometricFxControl) fxControl;
 		this.scanBtn.setId(this.fxControl.getUiSchemaDTO().getId()+"ScanBtn");
-		this.attemptSlap.setId(this.fxControl.getUiSchemaDTO().getId()+"AttemptSlap");
-		this.thresholdScoreLabel.setId(this.fxControl.getUiSchemaDTO().getId()+"ThresholdScoreLabel");
-		this.qualityScore.setId(this.fxControl.getUiSchemaDTO().getId()+"QualityScore");
 		this.currentModality = modality;
 		this.configBioAttributes = configBioAttributes;
 		this.nonConfigBioAttributes = nonConfigBioAttributes;

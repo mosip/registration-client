@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import io.mosip.registration.controller.ClientApplication;
+import javafx.geometry.Insets;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -121,6 +122,7 @@ public class DOBAgeFxControl extends FxControl {
 //						"YEARS, RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, true,
 //						ageVBox.getWidth()));
 		ageVBox.getChildren().add(dobHBox);
+		ageVBox.setMargin(dobHBox, new Insets(0, 30, 0, 0));
 
 		/** Validation message (Invalid/wrong,,etc,.) */
 		ageVBox.getChildren().add(getLabel(uiFieldDTO.getId() + RegistrationConstants.ERROR_MSG, null,

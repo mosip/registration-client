@@ -630,7 +630,7 @@
 Working on new Css by taleev
 */
 #loginScreen {
-	-fx-background-image: url('/images/LoginBackGround.png');
+	-fx-background-image: url('/images/sierra-leone-bg.jpg');
 	-fx-background-size: cover, auto;
 	-fx-background-position: left top, center;
 }
@@ -950,6 +950,7 @@ Working on new Css by taleev
 	-fx-border-width: 0.0;
 	-fx-text-fill: #666666;
 	-fx-font-size: 1em;
+	-fx-min-width: 6em;
 }
 
 .paginationLabel {
@@ -2672,4 +2673,22 @@ Working on new Css by taleev
 .tab:selected.tabErrorLabel .tab-label {
     -fx-text-fill: #FF0000;
     -fx-font-weight: bold;
+}
+
+.preRegParentPaneSection {
+	-fx-border-color:#020F59;
+	-fx-border-radius: 10.0 10.0 10.0 10.0;
+}
+
+.demoGraphicCustomLabel {
+	-fx-background-color: #ffffff;
+	-fx-border-width: 0.0;
+	-fx-text-fill: #020F59;
+	-fx-font-size: 1.5em;
+	-fx-font-weight: 800;
+}
+
+.demoGraphicCustomField{
+	-fx-pref-width: 50%;
+	-fx-padding: 0 0 10 55;
 }

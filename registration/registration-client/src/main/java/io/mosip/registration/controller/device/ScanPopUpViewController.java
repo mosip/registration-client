@@ -419,7 +419,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 				scanImage.setImage(null);
 
 				initializeDocPages(0, 0);
-
+				getImageGroup().getChildren().clear();
 				previewOption.setVisible(false);
 
 			}

@@ -144,7 +144,7 @@ public class RegistrationConstants {
 	public static final String REJECT_IMAGE_PATH = "/images/Reject.png";
 	public static final String SEND_EMAIL_IMAGE_PATH = "/images/SendEmail.png";
 	public static final String SEND_EMAIL_FOCUSED_IMAGE_PATH = "/images/sendEmailFocused.png";
-	public static final String LOGO = "/images/logo-final-small.png";
+	public static final String LOGO = "/images/sierra-leone-logo.png";
 	public static final String NEW_REG_IMAGE = "/images/NewReg.png";
 	public static final String NEW_REG_FOCUSED = "/images/NewRegistration.png";
 	public static final String UPDATE_UIN_IMAGE = "/images/UINUpdate.png";
@@ -601,6 +601,10 @@ public class RegistrationConstants {
 	public static final String TEMPLATE_IS_UIN_UPDATE = "IsUINUpdate";
 	public static final String TEMPLATE_APPLICANT_NAME_LABEL = "NameLabel";
 	public static final String TEMPLATE_APPLICANT_NAME_VALUE = "NameValue";
+	public static final String DEMOGRAPHIC_GROUP = "preRegParentPaneSection";
+	public static final String DEMOGRAPHIC_GROUP_LABEL = "demoGraphicCustomLabel";
+	public static final String DEMOGRAPHIC_FIELD = "demoGraphicCustomField";
+	public static final String DOCUMENT_COMBOBOX_FIELD = "documentCustomCombobox";
 
 	public static final String MODIFY_DEMO_INFO = "modifyDemographicInfo";
 	public static final String MODIFY_DOCUMENTS = "modifyDocuments";
@@ -1836,7 +1840,7 @@ public class RegistrationConstants {
 	public static final String EYE_IMG = "Eye.png";
 	public static final String ARROW_LEFT_IMG = "arrowLeft.png";
 	public static final String ARROW_RIGHT_IMG = "arrowRight.png";
-	public static final String MOSIP_LOGO_SMALL_IMG = "logo-final-small.png";
+	public static final String MOSIP_LOGO_SMALL_IMG = "sierra-leone-logo.png";
 	public static final String USER_IMG = "User.png";
 	public static final String REG_CENTER_LOCATION_IMG = "RegCentreLocation.png";
 	public static final String SYSTEM_IMG = "system.png";;
@@ -1848,7 +1852,7 @@ public class RegistrationConstants {
 	public static final String DEACTIVE_AUTH_IMG = "deactiveAuthentication.png";
 	public static final String DEACTIVE_BIOMETRIC_IMG = "deactiveBiometriDetails.png";
 	public static final String DEACTIVEUPLOAD_DOCUMENT_IMG = "deactiveUploadDocument.png";
-	public static final String MOSIP_LOGON_FINAL_IMG = "logo-final.png";
+	public static final String MOSIP_LOGON_FINAL_IMG = "sierra-leone-logo.png";
 	public static final String FINGERPRINT_SCAN_IMG = "FingerprintScan.png";
 	public static final String EYE_SCAN_IMG = "Eyescan.png";
 	public static final String FACE_SCAN_IMG = "FaceScan.png";

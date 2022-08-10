@@ -1,28 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.jfoenix.controls.*?>
-<?import java.lang.*?>
-<?import javafx.geometry.*?>
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.control.Hyperlink?>
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.text.*?>
-<?import javafx.scene.text.Font?>
 
-<BorderPane id="loginScreen" prefHeight="553.0" prefWidth="523.0" styleClass="loginBorderPaneStyle" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="io.mosip.registration.controller.auth.LoginController">
+<BorderPane id="loginScreen" prefHeight="553.0" prefWidth="523.0" styleClass="loginBorderPaneStyle" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.mosip.registration.controller.auth.LoginController">
   <bottom>
     <HBox id="footer-section">
       <children>
-        <Label text="%mosip.io" />
+        <Label style="-fx-text-fill: white;" text="%mosip.io" />
         <Label text="  " />
-        <Label text="%regClientVersion" />
+        <Label style="-fx-text-fill: white;" text="%regClientVersion" />
         <Label text=" : " />
-        <Label fx:id="versionValueLabel" />
+        <Label style="-fx-text-fill: white;" fx:id="versionValueLabel" />
       </children>
     </HBox>
   </bottom>
@@ -117,9 +107,9 @@
       <children>
         <AnchorPane prefHeight="27.0" prefWidth="71.0">
           <children>
-            <ImageView fx:id="mosipLogoImageView" fitHeight="34.0" fitWidth="30.0" layoutX="20.0" layoutY="2.0">
+            <ImageView fx:id="mosipLogoImageView" fitHeight="35.0" fitWidth="50.0" layoutX="20.0" layoutY="2.0">
               <image>
-                <Image url="@../images/logo-final.png" />
+                <Image url="@../images/sierra-leone-logo.png" />
               </image>
             </ImageView>
           </children>
