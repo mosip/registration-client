@@ -55,6 +55,7 @@ import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.operator.impl.UserDetailServiceImpl;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.test.config.TestClientCryptoServiceImpl;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
@@ -104,6 +105,9 @@ public class UserDetailServcieTest {
 	
 	@Mock
 	private ObjectMapper objectMapper;
+	
+	@Mock
+	private SoftwareUpdateHandler softwareUpdateHandler;
 
 	private ObjectMapper mapper = new ObjectMapper();
 
@@ -134,6 +138,7 @@ public class UserDetailServcieTest {
 
 		Mockito.when(baseService.getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP)).thenReturn(RegistrationConstants.DISABLE);
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);
+		Mockito.when(softwareUpdateHandler.getCurrentVersion()).thenReturn("1.2.0.1");
 	}
 
 	@SuppressWarnings("unchecked")

@@ -74,6 +74,7 @@ import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.operator.UserDetailService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.PolicySyncService;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
@@ -126,6 +127,9 @@ public class BaseService {
 
 	@Autowired
 	private RegistrationCenterRepository registrationCenterRepository;
+	
+	@Autowired
+	private SoftwareUpdateHandler softwareUpdateHandler;
 	
 	@Value("#{'${mosip.mandatory-languages:}'.split('[,]')}")
 	private List<String> mandatoryLanguages;
@@ -862,5 +866,9 @@ public class BaseService {
 		} catch (PreConditionCheckException e) {
 			throw e;
 		}
+	}
+	
+	public String getCurrentSoftwareVersion() {
+		return softwareUpdateHandler.getCurrentVersion();
 	}
 }

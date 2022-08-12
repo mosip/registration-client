@@ -70,6 +70,7 @@ import io.mosip.registration.repositories.SyncJobDefRepository;
 import io.mosip.registration.repositories.TemplateRepository;
 import io.mosip.registration.repositories.UserMachineMappingRepository;
 import io.mosip.registration.service.config.LocalConfigService;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import io.mosip.registration.util.mastersync.MetaDataUtils;
@@ -192,6 +193,9 @@ public class ClientSettingsHelperTest {
 	private DynamicFieldRepository dynamicFieldRepository;
 	
 	@Mock
+	private SoftwareUpdateHandler softwareUpdateHandler;
+	
+	@Mock
 	private Path pMock;
 	
 	@Mock
@@ -205,16 +209,15 @@ public class ClientSettingsHelperTest {
 		assertEquals(RegistrationConstants.SUCCESS, response);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test(expected = RegBaseUncheckedException.class)
 	public void testEmptyJsonRegBaseUncheckedException() {
-		String response = null;
 		SyncDataResponseDto syncDataResponseDto = getSyncDataResponseDto("emptyJson.json");
 		clientSettingSyncHelper.saveClientSettings(syncDataResponseDto);
 	}
 
 	@Test
 	public void testClientSettingsSyncForValidJson() throws RegBaseCheckedException, ConnectionException, IOException, io.mosip.kernel.core.exception.IOException {
+		Mockito.when(softwareUpdateHandler.getCurrentVersion()).thenReturn("1.2.0.1");
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		PowerMockito.mockStatic(Paths.class);
 		PowerMockito.mockStatic(FileUtils.class);

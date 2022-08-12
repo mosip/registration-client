@@ -45,6 +45,7 @@ import io.mosip.registration.entity.id.GlobalParamId;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.config.impl.GlobalParamServiceImpl;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
@@ -84,11 +85,15 @@ public class GlobalParamServiceTest {
 	@Mock
 	private ClientCryptoService clientCryptoService;
 	
+	@Mock
+	private SoftwareUpdateHandler softwareUpdateHandler;
+	
 	@Before
 	public void initialize() {
 		PowerMockito.mockStatic(CryptoUtil.class);
 		Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
 		Mockito.when(clientCryptoService.getEncryptionPublicPart()).thenReturn("test".getBytes());
+		Mockito.when(softwareUpdateHandler.getCurrentVersion()).thenReturn("1.2.0.1");
 	}
 
 	@Test

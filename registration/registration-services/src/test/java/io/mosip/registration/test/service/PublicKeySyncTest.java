@@ -44,6 +44,7 @@ import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.operator.UserDetailService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.impl.PublicKeySyncImpl;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
@@ -92,6 +93,9 @@ public class PublicKeySyncTest {
 
 	@Mock
 	private LocalConfigService localConfigService;
+	
+	@Mock
+	private SoftwareUpdateHandler softwareUpdateHandler;
 
 	@Before
 	public void init() {
@@ -118,6 +122,7 @@ public class PublicKeySyncTest {
 		machine.setRegCenterId("10011");
 		machine.setIsActive(true);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
+		Mockito.when(softwareUpdateHandler.getCurrentVersion()).thenReturn("1.2.0.1");
 	}
 
 	@Test

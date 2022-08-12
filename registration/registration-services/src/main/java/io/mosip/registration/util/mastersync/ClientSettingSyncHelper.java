@@ -16,8 +16,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
-import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
-import io.mosip.registration.dto.schema.ProcessSpecDto;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -30,13 +28,15 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dto.mastersync.DynamicFieldDto;
-import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.dto.response.SyncDataBaseDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
+import io.mosip.registration.dto.schema.ProcessSpecDto;
+import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.entity.DynamicField;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.AppAuthenticationRepository;
@@ -64,7 +64,7 @@ import io.mosip.registration.repositories.ScreenAuthorizationRepository;
 import io.mosip.registration.repositories.ScreenDetailRepository;
 import io.mosip.registration.repositories.SyncJobDefRepository;
 import io.mosip.registration.repositories.TemplateRepository;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import lombok.NonNull;
 
@@ -185,7 +185,7 @@ public class ClientSettingSyncHelper {
 	private PermittedLocalConfigRepository permittedLocalConfigRepository;
 
 	@Autowired
-	private RegistrationAppHealthCheckUtil registrationAppHealthCheckUtil;
+	private SoftwareUpdateHandler softwareUpdateHandler;
 		
 	private static final Map<String, String> ENTITY_CLASS_NAMES = new HashMap<String, String>();
 	
@@ -215,7 +215,7 @@ public class ClientSettingSyncHelper {
 			futures.add(handleIdSchemaPossibleValuesSync(syncDataResponseDto));
 			futures.add(handleMisellaneousSync1(syncDataResponseDto));
 			futures.add(handleMisellaneousSync2(syncDataResponseDto));
-			futures.add(handleDynamicFieldSync(syncDataResponseDto));
+			//futures.add(handleDynamicFieldSync(syncDataResponseDto));
 			futures.add(handleDynamicURLFieldSync(syncDataResponseDto));
 			futures.add(handlePermittedConfigSync(syncDataResponseDto));
 			futures.add(syncSchema("System"));
@@ -565,6 +565,7 @@ public class ClientSettingSyncHelper {
 	}
 
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Async
 	public CompletableFuture syncSchema(String triggerPoint) throws SyncFailedException {
 		LOGGER.info("ID Schema sync started .....");
@@ -574,8 +575,11 @@ public class ClientSettingSyncHelper {
 		}
 
 		try {
+			Map<String, String> requestParamMap = new HashMap<String, String>();
+			requestParamMap.put(RegistrationConstants.VERSION, softwareUpdateHandler.getCurrentVersion());
+			
 			LinkedHashMap<String, Object> syncResponse = (LinkedHashMap<String, Object>) serviceDelegateUtil.get(
-					RegistrationConstants.ID_SCHEMA_SYNC_SERVICE, new HashMap<String, String>(), true,
+					RegistrationConstants.ID_SCHEMA_SYNC_SERVICE, requestParamMap, true,
 					triggerPoint);
 
 			if (null != syncResponse.get(RegistrationConstants.RESPONSE)) {

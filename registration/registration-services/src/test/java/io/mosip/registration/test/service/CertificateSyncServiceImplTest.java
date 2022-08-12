@@ -37,6 +37,7 @@ import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.jobs.SyncManager;
 import io.mosip.registration.service.sync.impl.CertificateSyncServiceImpl;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 @RunWith(PowerMockRunner.class)
@@ -62,6 +63,9 @@ public class CertificateSyncServiceImplTest {
 	@Mock
 	private SyncManager syncManager;
 	
+	@Mock
+	private SoftwareUpdateHandler softwareUpdateHandler;
+	
 	private List<CaCertificateDto> certs = new ArrayList<>();
 	
 	@Before
@@ -81,6 +85,7 @@ public class CertificateSyncServiceImplTest {
 		certs.add(cert1);
 		certs.add(cert2);
 		certs.add(cert3);
+		Mockito.when(softwareUpdateHandler.getCurrentVersion()).thenReturn("1.2.0.1");
 	}
 	
 	@Test

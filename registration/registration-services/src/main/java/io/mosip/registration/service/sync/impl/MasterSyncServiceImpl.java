@@ -47,7 +47,6 @@ import io.mosip.registration.jobs.SyncManager;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.sync.MasterSyncService;
-import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.mastersync.ClientSettingSyncHelper;
 import io.mosip.registration.util.mastersync.MapperUtils;
 
@@ -90,9 +89,6 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 
 	@Autowired
 	private ClientSettingSyncHelper clientSettingSyncHelper;
-
-	@Autowired
-	private SoftwareUpdateHandler softwareUpdateHandler;
 
 	/** Object for Logger. */
 	private static final Logger LOGGER = AppConfig.getLogger(MasterSyncServiceImpl.class);
@@ -371,7 +367,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 		Map<String, String> requestParamMap = new HashMap<String, String>();
 		requestParamMap.put(RegistrationConstants.KEY_INDEX.toLowerCase(),
 				CryptoUtil.computeFingerPrint(clientCryptoFacade.getClientSecurity().getEncryptionPublicPart(), null));
-		requestParamMap.put("version", softwareUpdateHandler.getCurrentVersion());
+		requestParamMap.put(RegistrationConstants.VERSION, getCurrentSoftwareVersion());
 
 		if (!isInitialSync()) {
 			// getting Last Sync date from Data from sync table

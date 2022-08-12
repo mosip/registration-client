@@ -1,26 +1,23 @@
 package io.mosip.registration.service.sync.impl;
 
-import static io.mosip.registration.constants.LoggerConstants.REGISTRATION_PUBLIC_KEY_SYNC;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-import java.net.SocketTimeoutException;
-import java.util.*;
-
-import io.micrometer.core.annotation.Timed;
-import io.mosip.kernel.cryptomanager.util.CryptomanagerUtils;
-import io.mosip.kernel.keymanagerservice.dto.UploadCertificateRequestDto;
-import io.mosip.kernel.keymanagerservice.util.KeymanagerUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
-import io.mosip.kernel.core.exception.ExceptionUtils;
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.kernel.core.util.StringUtils;
+import io.mosip.kernel.cryptomanager.util.CryptomanagerUtils;
 import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
+import io.mosip.kernel.keymanagerservice.dto.UploadCertificateRequestDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import io.mosip.kernel.keymanagerservice.util.KeymanagerUtil;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.ResponseDTO;
@@ -28,7 +25,6 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.sync.PublicKeySync;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 
 /**
  * The Interface for Public Key service implementation.
@@ -109,12 +105,14 @@ public class PublicKeySyncImpl extends BaseService implements PublicKeySync {
 	}
 
 
+	@SuppressWarnings("unchecked")
 	private String getCertificateFromServer() throws Exception {
 		LOGGER.debug("Sign public Sync from server invoked");
 
 		Map<String, String> requestParams = new HashMap<>();
 		requestParams.put(RegistrationConstants.GET_CERT_APP_ID, RegistrationConstants.KERNEL_APP_ID);
 		requestParams.put(RegistrationConstants.REF_ID, signRefId);
+		requestParams.put(RegistrationConstants.VERSION, getCurrentSoftwareVersion());
 
 		LOGGER.info("Calling getCertificate rest call with request params {}", requestParams);
 		LinkedHashMap<String, Object> publicKeySyncResponse = (LinkedHashMap<String, Object>) serviceDelegateUtil

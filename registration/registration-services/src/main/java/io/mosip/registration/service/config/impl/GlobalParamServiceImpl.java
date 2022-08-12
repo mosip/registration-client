@@ -11,14 +11,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import io.micrometer.core.annotation.Timed;
-import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
@@ -30,11 +30,9 @@ import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.entity.GlobalParam;
 import io.mosip.registration.entity.id.GlobalParamId;
-import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 
 /**
  * Class for implementing GlobalContextParam service
@@ -140,6 +138,7 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private void saveGlobalParams(ResponseDTO responseDTO, String triggerPoinnt) {
 
 		if (!serviceDelegateUtil.isNetworkAvailable()) {
@@ -152,6 +151,8 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 				Map<String, String> requestParamMap = new HashMap<>();
 				requestParamMap.put("key_index",
 						CryptoUtil.computeFingerPrint(clientCryptoFacade.getClientSecurity().getEncryptionPublicPart(), null));
+				requestParamMap.put(RegistrationConstants.VERSION, getCurrentSoftwareVersion());
+				
 				LinkedHashMap<String, Object> globalParamJsonMap = (LinkedHashMap<String, Object>) serviceDelegateUtil
 						.get(RegistrationConstants.GET_GLOBAL_CONFIG, requestParamMap, true, triggerPoinnt);
 

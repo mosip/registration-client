@@ -145,12 +145,14 @@ public class PolicySyncServiceImpl extends BaseService implements PolicySyncServ
 	 * @return
 	 * @throws RegBaseCheckedException
 	 */
+	@SuppressWarnings("unchecked")
 	private String getCertificateFromServer(String centerMachineId) throws RegBaseCheckedException, ConnectionException {
 		LOGGER.debug("Policy Sync from server invoked");
 
 		Map<String, String> requestParams = new HashMap<>();
 		requestParams.put(RegistrationConstants.GET_CERT_APP_ID, RegistrationConstants.REG_APP_ID);
 		requestParams.put(RegistrationConstants.REF_ID, centerMachineId);
+		requestParams.put(RegistrationConstants.VERSION, getCurrentSoftwareVersion());
 
 		LOGGER.info("Calling getCertificate rest call with request params {}", requestParams);
 		LinkedHashMap<String, Object> publicKeySyncResponse = (LinkedHashMap<String, Object>) serviceDelegateUtil

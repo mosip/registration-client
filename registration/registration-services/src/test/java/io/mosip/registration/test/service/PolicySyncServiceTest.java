@@ -46,6 +46,7 @@ import io.mosip.registration.repositories.RegistrationCenterRepository;
 import io.mosip.registration.service.operator.UserDetailService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.impl.PolicySyncServiceImpl;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
@@ -96,6 +97,9 @@ public class PolicySyncServiceTest {
 
 	@Mock
 	private CryptomanagerUtils cryptomanagerUtils;
+	
+	@Mock
+	private SoftwareUpdateHandler softwareUpdateHandler;
 
 	@Before
 	public void initialize() {
@@ -133,6 +137,7 @@ public class PolicySyncServiceTest {
 		Optional<RegistrationCenter> mockedCenter = Optional.of(registrationCenter);
 		Mockito.when(registrationCenterRepository.findByIsActiveTrueAndRegistartionCenterIdIdAndRegistartionCenterIdLangCode(Mockito.anyString(),
 				Mockito.anyString())).thenReturn(mockedCenter);
+		Mockito.when(softwareUpdateHandler.getCurrentVersion()).thenReturn("1.2.0.1");
 		policySyncServiceImpl.init();
 	}
 

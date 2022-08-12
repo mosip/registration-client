@@ -74,7 +74,8 @@ public class CertificateSyncServiceImpl extends BaseService implements Certifica
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-    @Timed
+    @SuppressWarnings("unchecked")
+	@Timed
     @Override
     public ResponseDTO getCACertificates(String triggerPoint) {
         ResponseDTO responseDTO = new ResponseDTO();
@@ -83,6 +84,7 @@ public class CertificateSyncServiceImpl extends BaseService implements Certifica
         if (syncControl != null) {
             requestParamMap.put(LAST_UPDATED, DateUtils.formatToISOString(syncControl.getLastSyncDtimes().toLocalDateTime()));
         }
+        requestParamMap.put(RegistrationConstants.VERSION, getCurrentSoftwareVersion());
 
         if(!serviceDelegateUtil.isNetworkAvailable())
             return setErrorResponse(responseDTO, RegistrationConstants.NO_INTERNET, null);

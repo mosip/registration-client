@@ -1,12 +1,10 @@
 package io.mosip.registration.service.operator.impl;
 
 import static io.mosip.registration.constants.LoggerConstants.LOG_REG_MASTER_SYNC;
-import static io.mosip.registration.constants.LoggerConstants.LOG_REG_USER_DETAIL;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,28 +12,22 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import io.micrometer.core.annotation.Counted;
-import io.micrometer.core.annotation.Timed;
-import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
-import io.mosip.registration.context.SessionContext;
-import lombok.NonNull;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.UserDetailDAO;
-import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.UserDetailDto;
 import io.mosip.registration.entity.UserDetail;
 import io.mosip.registration.entity.UserRole;
@@ -43,6 +35,7 @@ import io.mosip.registration.entity.id.UserRoleId;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.operator.UserDetailService;
+import lombok.NonNull;
 
 /**
  * Implementation for {@link UserDetailService}
@@ -134,6 +127,7 @@ public class UserDetailServiceImpl extends BaseService implements UserDetailServ
 	}
 
 
+	@SuppressWarnings("unchecked")
 	private LinkedHashMap<String, Object> getUsrDetails(String triggerPoint) throws RegBaseCheckedException {
 		LOGGER.debug("Entering into user detail rest calling method");
 
@@ -142,6 +136,7 @@ public class UserDetailServiceImpl extends BaseService implements UserDetailServ
 		String keyIndex = CryptoUtil
 				.computeFingerPrint(clientCryptoFacade.getClientSecurity().getEncryptionPublicPart(), null);
 		requestParamMap.put("keyindex", keyIndex);
+		requestParamMap.put(RegistrationConstants.VERSION, getCurrentSoftwareVersion());
 
 		try {
 
