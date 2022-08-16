@@ -215,7 +215,7 @@ public class ClientSettingSyncHelper {
 			futures.add(handleIdSchemaPossibleValuesSync(syncDataResponseDto));
 			futures.add(handleMisellaneousSync1(syncDataResponseDto));
 			futures.add(handleMisellaneousSync2(syncDataResponseDto));
-			//futures.add(handleDynamicFieldSync(syncDataResponseDto));
+			futures.add(handleDynamicFieldSync(syncDataResponseDto));
 			futures.add(handleDynamicURLFieldSync(syncDataResponseDto));
 			futures.add(handlePermittedConfigSync(syncDataResponseDto));
 			futures.add(syncSchema("System"));
