@@ -35,6 +35,7 @@ import io.mosip.registration.dto.OtpGeneratorRequestDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.restclient.RequestHTTPDTO;
 import io.mosip.registration.util.restclient.RestClientUtil;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
@@ -61,6 +62,8 @@ public class ServiceDelegateUtilTest {
 	@Mock
 	private Path pMock;
 	
+	@Mock
+	private SoftwareUpdateHandler softwareUpdateHandler;
 	
 	@Before
 	public void initialize() throws IOException, URISyntaxException {
@@ -79,6 +82,8 @@ public class ServiceDelegateUtilTest {
 		globalParams.put(RegistrationConstants.MOSIP_HOSTNAME, "test.mosip.net");
 		PowerMockito.when(ApplicationContext.map()).thenReturn(globalParams);
 		PowerMockito.when(ApplicationContext.getStringValueFromApplicationMap(Mockito.anyString())).thenReturn("test");
+		
+		Mockito.when(softwareUpdateHandler.getCurrentVersion()).thenReturn("1.2.0.1");
 	}
 
 	/*
