@@ -117,9 +117,6 @@ public class ServiceDelegateUtil {
 		RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
 
 		try {
-			/** Adding "version" as requestparam for all the API calls to support upgrade */
-			requestParams.put(RegistrationConstants.VERSION, softwareUpdateHandler.getCurrentVersion());
-			
 			requestHTTPDTO = prepareGETRequest(requestHTTPDTO, serviceName, requestParams);
 			requestHTTPDTO.setAuthRequired(
 					Boolean.valueOf(getEnvironmentProperty(serviceName, RegistrationConstants.AUTH_REQUIRED)));
@@ -333,11 +330,11 @@ public class ServiceDelegateUtil {
 		// BuildURIComponent
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(url);
 
-		/** Adding "version" as requestparam for all the API calls to support upgrade */
 		if (requestParams == null) {
 			requestParams = new HashMap<>();
-			requestParams.put(RegistrationConstants.VERSION, softwareUpdateHandler.getCurrentVersion());
 		}
+		/** Adding "version" as requestparam for all the API calls to support upgrade */
+		requestParams.put(RegistrationConstants.VERSION, softwareUpdateHandler.getCurrentVersion());
 		
 		Set<String> set = requestParams.keySet();
 		for (String queryParamName : set) {
