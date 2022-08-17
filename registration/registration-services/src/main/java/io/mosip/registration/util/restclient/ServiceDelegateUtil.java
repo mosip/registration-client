@@ -333,14 +333,19 @@ public class ServiceDelegateUtil {
 		// BuildURIComponent
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(url);
 
-		if (requestParams != null) {
-			Set<String> set = requestParams.keySet();
-			for (String queryParamName : set) {
-				uriComponentsBuilder.queryParam(queryParamName, requestParams.get(queryParamName));
-
-			}
+		/** Adding "version" as requestparam for all the API calls to support upgrade */
+		if (requestParams == null) {
+			requestParams = new HashMap<>();
+			requestParams.put(RegistrationConstants.VERSION, softwareUpdateHandler.getCurrentVersion());
 		}
-		URI uri = uriComponentsBuilder.buildAndExpand(softwareUpdateHandler.getCurrentVersion()).toUri();
+		
+		Set<String> set = requestParams.keySet();
+		for (String queryParamName : set) {
+			uriComponentsBuilder.queryParam(queryParamName, requestParams.get(queryParamName));
+
+		}
+		
+		URI uri = uriComponentsBuilder.build().toUri();
 
 		requestHTTPDTO.setUri(uri);
 
