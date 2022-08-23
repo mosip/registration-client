@@ -74,7 +74,9 @@ public enum Components {
 	MDM_CAPTURE_FAIELD("REG-MOD-148","capture failed"),
 	MDM_CAPTURE_SUCESS("REG-MOD-149","capture successfull"),
 	MDM_NO_DEVICE_AVAILABLE("REG-MOD-150","no device found"),
-	MDM_DEVICE_FOUND("REG-MOD-151","Device found");
+	MDM_DEVICE_FOUND("REG-MOD-151","Device found"),
+	
+	CLIENT_UPGRADE("REG-MOD-152", "Client Upgrade");
 
 	/**
 	 * The constructor
