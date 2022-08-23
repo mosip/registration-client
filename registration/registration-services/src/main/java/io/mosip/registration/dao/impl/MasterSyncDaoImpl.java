@@ -16,7 +16,6 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.entity.BiometricAttribute;
-import io.mosip.registration.entity.BlocklistedWords;
 import io.mosip.registration.entity.DocumentCategory;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.entity.Language;
@@ -250,5 +249,10 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	@Override
 	public List<LocationHierarchy> getAllLocationHierarchy(String langCode) {
 		return locationHierarchyRepository.findAllByIsActiveTrueAndLangCode(langCode);
+	}
+	
+	@Override
+	public List<LocationHierarchy> getAllLocationHierarchy() {
+		return locationHierarchyRepository.findAll();
 	}
 }
