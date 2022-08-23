@@ -311,7 +311,12 @@ public enum AuditEvent {
 	REG_BLOCKLISTED_WORD_ACCEPTED("REG-EVT-102", USER_EVENT.getCode(), "REG_BLOCKLISTED_WORD_ACCEPTED",
 			"Demographic Details : A blocklisted word has been accepted in Registration"),
 	REG_BLOCKLISTED_WORD_REJECTED("REG-EVT-103", USER_EVENT.getCode(), "REG_BLOCKLISTED_WORD_REJECTED",
-			"Demographic Details : A blocklisted word has been rejected in Registration");
+			"Demographic Details : A blocklisted word has been rejected in Registration"),
+	
+	CLIENT_UPGRADE_JARS_DOWNLOADED("REG-UPG-001", USER_EVENT.getCode(), "CLIENT_UPGRADE_JARS_DOWNLOADED",
+			"Client Upgrade: Successfully downloaded all the upgrade jars"),
+	CLIENT_DB_UPGRADE_SCRIPTS("REG-UPG-001", USER_EVENT.getCode(), "CLIENT_DB_UPGRADE_SCRIPTS",
+			"Client Upgrade: SQL scripts execution success");
 
 	/**
 	 * The constructor
