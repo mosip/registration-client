@@ -3,7 +3,6 @@ package io.mosip.registration.dao;
 import java.util.List;
 
 import io.mosip.registration.entity.BiometricAttribute;
-import io.mosip.registration.entity.BlocklistedWords;
 import io.mosip.registration.entity.DocumentCategory;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.entity.Language;
@@ -155,4 +154,11 @@ public interface MasterSyncDao {
 	 * @return DocuementType
 	 */
 	DocumentType getDocumentType(String docCode, String langCode);
+
+	/**
+	 * Get all the entries from LocationHierarchy table
+	 * 
+	 * @return list of {@link LocationHierarchy}
+	 */
+	List<LocationHierarchy> getAllLocationHierarchy();
 }
