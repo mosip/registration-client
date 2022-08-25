@@ -156,9 +156,9 @@ public interface MasterSyncDao {
 	DocumentType getDocumentType(String docCode, String langCode);
 
 	/**
-	 * Get all the entries from LocationHierarchy table
+	 * Get count of all the entries from LocationHierarchy table
 	 * 
-	 * @return list of {@link LocationHierarchy}
+	 * @return count of {@link LocationHierarchy}
 	 */
-	List<LocationHierarchy> getAllLocationHierarchy();
+	Long getLocationHierarchyCount();
 }
