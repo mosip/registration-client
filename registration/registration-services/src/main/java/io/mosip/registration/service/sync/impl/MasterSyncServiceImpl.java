@@ -386,7 +386,7 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 			if (registrationCenterId != null)
 				requestParamMap.put(RegistrationConstants.MASTER_CENTER_PARAM, registrationCenterId);
 		}
-		if (masterSyncDao.getAllLocationHierarchy().isEmpty()) {
+		if (masterSyncDao.getLocationHierarchyCount() <= 0) {
 			requestParamMap.put(RegistrationConstants.MASTER_FULLSYNC_ENTITIES, LocationHierarchy.class.getSimpleName());
 		}
 		return requestParamMap;

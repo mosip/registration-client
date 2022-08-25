@@ -252,7 +252,7 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	}
 	
 	@Override
-	public List<LocationHierarchy> getAllLocationHierarchy() {
-		return locationHierarchyRepository.findAll();
+	public Long getLocationHierarchyCount() {
+		return locationHierarchyRepository.count();
 	}
 }
