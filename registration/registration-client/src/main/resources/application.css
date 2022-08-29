@@ -482,7 +482,7 @@
 	-fx-pref-width: 400.0px;
 	-fx-background-color: #FFFFFF;
 	-fx-border-width: 1.0 1.0 1.0 1.0;
-	-fx-border-color: #808080;
+	-fx-border-color: #020F59;
 }
 
 .loginTextStyle {
@@ -630,7 +630,7 @@
 Working on new Css by taleev
 */
 #loginScreen {
-	-fx-background-image: url('/images/sierra-leone-bg.jpg');
+	-fx-background-image: url('/images/generic-background3.jpg');
 	-fx-background-size: cover, auto;
 	-fx-background-position: left top, center;
 }
@@ -1104,6 +1104,7 @@ Working on new Css by taleev
 	-fx-border-width: 0.0 0.0 1.0 0.0;
 	-fx-border-color: black;
 	-fx-font-size: 1.2em;
+	-fx-pref-width: 16em;
 }
 
 #docPreviewImgViewPane {
