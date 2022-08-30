@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import io.mosip.commons.packet.dto.packet.SimpleDto;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.scene.layout.*;
@@ -386,10 +387,17 @@ public class GenericController extends BaseController {
 							fxControl.selectAndSet(getRegistrationDTOFromSession().getDocuments().get(field.getId()));
 							break;
 						default:
-							fxControl.selectAndSet(getRegistrationDTOFromSession().getDemographics().get(field.getId()));
-							//it will read data from field components and set it in registrationDTO along with selectedCodes and ageGroups
-							//kind of supporting data
-							fxControl.setData(getRegistrationDTOFromSession().getDemographics().get(field.getId()));
+							if(field.getId().equals("homeless")) {
+                                List<SimpleDto> values = new ArrayList<SimpleDto>();
+                                values.add(new SimpleDto(getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0), "10"));
+                                fxControl.selectAndSet(values);
+                                fxControl.setData(values);
+                            } else {
+                                fxControl.selectAndSet(getRegistrationDTOFromSession().getDemographics().get(field.getId()));
+                                //it will read data from field components and set it in registrationDTO along with selectedCodes and ageGroups
+                                //kind of supporting data
+                                fxControl.setData(getRegistrationDTOFromSession().getDemographics().get(field.getId()));
+                            }
 							break;
 					}
 				}
