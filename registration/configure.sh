@@ -97,6 +97,7 @@ cp "${work_dir}"/registration-client/target/registration-client-${client_version
 echo "Starting Jarsigner Method"
 ## jar signing
 jarsigner -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore_secret} -tsa ${signer_timestamp_url_env} -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar CodeSigning
+echo "MIddle of Jarsigner Method"
 jarsigner -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore_secret} -tsa ${signer_timestamp_url_env} -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-services-${client_version_env}.jar CodeSigning
 
 echo "Ending Jarsigner Method"
