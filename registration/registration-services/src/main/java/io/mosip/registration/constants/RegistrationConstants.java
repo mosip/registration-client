@@ -230,6 +230,7 @@ public class RegistrationConstants {
 	public static final String REGISTRATION_CONTROLLER = "REGISTRATION_CONTROLLER";
 	public static final String DOCUMNET_SCAN_CONTROLLER = "DOCUMNET_SCAN_CONTROLLER";
 	public static final String REGISTRATION_DATA = "registrationDTOContent";
+	public static final String REGISTRATION_DATA_DEMO = "registrationDTOContentDemo";
 	public static final String REGISTRATION_AGE_DATA = "ageDatePickerContent";
 	public static final String REGISTRATION_PANE1_DATA = "demoGraphicPane1Content";
 	public static final String REGISTRATION_PANE2_DATA = "demoGraphicPane2Content";

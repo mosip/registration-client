@@ -387,17 +387,11 @@ public class GenericController extends BaseController {
 							fxControl.selectAndSet(getRegistrationDTOFromSession().getDocuments().get(field.getId()));
 							break;
 						default:
-							if(field.getId().equals("homeless")) {
-                                List<SimpleDto> values = new ArrayList<SimpleDto>();
-                                values.add(new SimpleDto(getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0), "10"));
-                                fxControl.selectAndSet(values);
-                                fxControl.setData(values);
-                            } else {
-                                fxControl.selectAndSet(getRegistrationDTOFromSession().getDemographics().get(field.getId()));
-                                //it will read data from field components and set it in registrationDTO along with selectedCodes and ageGroups
-                                //kind of supporting data
-                                fxControl.setData(getRegistrationDTOFromSession().getDemographics().get(field.getId()));
-                            }
+							var demographicsCopy = (Map<String, Object>)SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA_DEMO);
+							fxControl.selectAndSet(getRegistrationDTOFromSession().getDemographics().get(field.getId()) != null ? getRegistrationDTOFromSession().getDemographics().get(field.getId()) : demographicsCopy.get(field.getId()));
+							//it will read data from field components and set it in registrationDTO along with selectedCodes and ageGroups
+                            //kind of supporting data
+                            fxControl.setData(getRegistrationDTOFromSession().getDemographics().get(field.getId()) != null ? getRegistrationDTOFromSession().getDemographics().get(field.getId()) : demographicsCopy.get(field.getId()));
 							break;
 					}
 				}

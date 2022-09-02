@@ -8,21 +8,18 @@ import static java.io.File.separator;
 import java.io.*;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import io.mosip.registration.context.SessionContext;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -219,6 +216,10 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 		try {
 			if (!StringUtils.isEmpty(jsonString) && validateDemographicInfoObject()) {
 				JSONObject jsonObject = (JSONObject) new JSONObject(jsonString).get("identity");
+				JSONArray array=new JSONArray();
+				array.put(new JSONObject().put("language", "eng").put("value","10"));
+				jsonObject.put("homeless", array);
+                SessionContext.map().put(RegistrationConstants.REGISTRATION_DATA_DEMO, new HashMap<String,Object>());
 				//Always use latest schema, ignoring missing / removed fields
 				RegistrationDTO registrationDTO = getRegistrationDTOFromSession();
 				List<UiFieldDTO> fieldList = identitySchemaService.getAllFieldSpec(registrationDTO.getProcessId(), registrationDTO.getIdSchemaVersion());
@@ -261,6 +262,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 									break;
 								default:
 									getRegistrationDTOFromSession().getDemographics().put(field.getId(), fieldValue);
+                                    getRegistrationDTODemographics().put(field.getId(), fieldValue);
 							}
 						}
 						break;
