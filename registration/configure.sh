@@ -72,8 +72,8 @@ then
 	/usr/bin/unzip "${work_dir}"/sdkDependency.zip -d sdkDependency/
 	cp "${work_dir}"/sdkDependency/*.jar "${work_dir}"/registration-client/target/lib/
 	
-	echo "Downloading MOCK SDK..."
-	wget "${artifactory_url}/artifactory/libs-release-local/mock-sdk/1.1.5/mock-sdk.jar" -O "${work_dir}"/registration-client/target/lib/mock-sdk.jar
+#	echo "Downloading MOCK SDK..."
+#	wget "${artifactory_url}/artifactory/libs-release-local/mock-sdk/1.1.5/mock-sdk.jar" -O "${work_dir}"/registration-client/target/lib/mock-sdk.jar
 else
 	echo "Downloading MOCK SDK..."
 	wget "${artifactory_url}/artifactory/libs-release-local/mock-sdk/1.1.5/mock-sdk.jar" -O "${work_dir}"/registration-client/target/lib/mock-sdk.jar
