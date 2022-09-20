@@ -942,6 +942,11 @@ public class GenericBiometricsController extends BaseController {
 								qualityText, bioProgress);
 					//}
 
+					if(isFace(currentModality)) {
+						String key = String.format("%s_%s", currentModality.name().toLowerCase(Locale.ROOT), attempt);
+						getRegistrationDTOFromSession().addBiometric(fxControl.getUiSchemaDTO().getId(), currentModality.name().toLowerCase(Locale.ROOT), getRegistrationDTOFromSession().getFaceBiometrics().get(key));
+					}
+
 					LOGGER.info("Mouse Event by attempt Ended. modality : {}", currentModality);
 
 				} catch (RuntimeException runtimeException) {
