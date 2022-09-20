@@ -25,6 +25,7 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 
 /**
  * This is a helper class .it invokes with different classes to get the response
@@ -44,6 +45,9 @@ public class ServiceDelegateUtil {
 
 	@Autowired
 	private Environment environment;
+	
+	@Autowired
+	private SoftwareUpdateHandler softwareUpdateHandler;
 
 
 	public String getHostName() {
@@ -326,13 +330,18 @@ public class ServiceDelegateUtil {
 		// BuildURIComponent
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(url);
 
-		if (requestParams != null) {
-			Set<String> set = requestParams.keySet();
-			for (String queryParamName : set) {
-				uriComponentsBuilder.queryParam(queryParamName, requestParams.get(queryParamName));
-
-			}
+		if (requestParams == null) {
+			requestParams = new HashMap<>();
 		}
+		/** Adding "version" as requestparam for all the API calls to support upgrade */
+		requestParams.put(RegistrationConstants.VERSION, softwareUpdateHandler.getCurrentVersion());
+		
+		Set<String> set = requestParams.keySet();
+		for (String queryParamName : set) {
+			uriComponentsBuilder.queryParam(queryParamName, requestParams.get(queryParamName));
+
+		}
+		
 		URI uri = uriComponentsBuilder.build().toUri();
 
 		requestHTTPDTO.setUri(uri);

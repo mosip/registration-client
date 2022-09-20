@@ -35,6 +35,7 @@ import io.mosip.registration.dto.mastersync.ReasonListDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.entity.Location;
+import io.mosip.registration.entity.LocationHierarchy;
 import io.mosip.registration.entity.ReasonCategory;
 import io.mosip.registration.entity.ReasonList;
 import io.mosip.registration.entity.SyncControl;
@@ -384,6 +385,9 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 			String registrationCenterId = getCenterId();
 			if (registrationCenterId != null)
 				requestParamMap.put(RegistrationConstants.MASTER_CENTER_PARAM, registrationCenterId);
+		}
+		if (masterSyncDao.getLocationHierarchyCount() <= 0) {
+			requestParamMap.put(RegistrationConstants.MASTER_FULLSYNC_ENTITIES, LocationHierarchy.class.getSimpleName());
 		}
 		return requestParamMap;
 	}

@@ -79,7 +79,6 @@ RENAME COLUMN "REG"."USER_BIOMETRIC".QUALITY_SCORE_2 TO QUALITY_SCORE;
 
 ALTER TABLE "REG"."CA_CERT_STORE" ADD CONSTRAINT "UK_CERT_THUMBPRINT" UNIQUE ("CERT_THUMBPRINT", "PARTNER_DOMAIN");
 DELETE FROM "REG"."KEY_ALIAS";
-ALTER TABLE "REG"."KEY_ALIAS" ADD COLUMN "CERT_THUMBPRINT" VARCHAR(128) DEFAULT '';
 ALTER TABLE "REG"."KEY_ALIAS" ADD COLUMN "UNI_IDENT" VARCHAR(50) DEFAULT '';
 ALTER TABLE "REG"."KEY_ALIAS" ADD CONSTRAINT "UK_UNI_IDENT" UNIQUE ("UNI_IDENT");
 ALTER TABLE "REG"."KEY_POLICY_DEF" ADD COLUMN "PRE_EXPIRE_DAYS" SMALLINT;
@@ -96,7 +95,7 @@ ALTER TABLE "REG"."REGISTRATION" ADD COLUMN "PACKET_ID" VARCHAR(256) NOT NULL de
 ALTER TABLE "REG"."REGISTRATION" ADD COLUMN "ADDITIONAL_INFO_REQ_ID" VARCHAR(128);
 ALTER TABLE "REG"."REGISTRATION" ADD COLUMN "ACK_SIGNATURE" VARCHAR(350);
 ALTER TABLE "REG"."REGISTRATION" ADD COLUMN "HAS_BWORDS" BOOLEAN;
-UPDATE "REG"."REGISTRATION" SET PACKET_ID=ID;
+UPDATE "REG"."REGISTRATION" SET PACKET_ID=ID, APP_ID=ID, HAS_BWORDS=false;
 ALTER TABLE "REG"."REGISTRATION" ADD CONSTRAINT "PK_REG_ID" PRIMARY KEY ("PACKET_ID");
 ALTER TABLE "REG"."REGISTRATION" ALTER SERVER_STATUS_CODE SET DATA TYPE VARCHAR(256);
 
@@ -111,4 +110,4 @@ INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.repeating-limi
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.repeating-block-limit','mosip.kernel.vid.length.repeating-block-limit','2','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.sequence-limit','mosip.kernel.vid.length.sequence-limit','3','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length','mosip.kernel.vid.length','16','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.audit_timestamp','mosip.registration.audit_timestamp',current timestamp,'CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.audit_timestamp','mosip.registration.audit_timestamp',null,'CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
