@@ -2,30 +2,36 @@ package io.mosip.registration.config;
 
 import javax.sql.DataSource;
 
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.cloud.autoconfigure.RefreshAutoConfiguration;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-import io.mosip.commons.packet.facade.PacketWriter;
 import io.mosip.kernel.auditmanager.config.AuditConfig;
 import io.mosip.kernel.core.logger.spi.Logger;
-
-import io.mosip.kernel.core.templatemanager.spi.TemplateManagerBuilder;
 import io.mosip.kernel.dataaccess.hibernate.repository.impl.HibernateRepositoryImpl;
-import io.mosip.kernel.logger.logback.appender.RollingFileAppender;
 import io.mosip.kernel.logger.logback.factory.Logfactory;
 import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderImpl;
 
@@ -59,6 +65,18 @@ import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderIm
 @EnableConfigurationProperties
 @EnableRetry
 public class AppConfig {
+	
+	@Value("${regclient.default.httpclient.connections.max.per.host:20}")
+	private int defaultMaxConnectionPerRoute;
+
+	@Value("${regclient.default.httpclient.connections.max:100}")
+	private int defaultTotalMaxConnection;
+	
+	@Value("${regclient.selfToken.httpclient.connections.max.per.host:20}")
+	private int selfTokenMaxConnectionPerRoute;
+
+	@Value("${regclient.selfToken.httpclient.connections.max:100}")
+	private int selfTokenTotalMaxConnection;
 
 	@Autowired
 	@Qualifier("dataSource")
@@ -71,12 +89,22 @@ public class AppConfig {
 	@Bean
 	@Primary
 	public RestTemplate restTemplate() {
-		return new RestTemplate();
+		HttpClientBuilder httpClientBuilder = HttpClients.custom().setMaxConnPerRoute(defaultMaxConnectionPerRoute)
+				.setMaxConnTotal(defaultTotalMaxConnection).disableCookieManagement();
+		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
+		requestFactory.setHttpClient(httpClientBuilder.build());
+
+		return new RestTemplate(requestFactory);
 	}
 
 	@Bean
 	public RestTemplate selfTokenRestTemplate() {
-		return new RestTemplate();
+		HttpClientBuilder httpClientBuilder = HttpClients.custom().setMaxConnPerRoute(selfTokenMaxConnectionPerRoute)
+				.setMaxConnTotal(selfTokenTotalMaxConnection).disableCookieManagement();
+		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
+		requestFactory.setHttpClient(httpClientBuilder.build());
+
+		return new RestTemplate(requestFactory);
 	}
 
 	@Bean
