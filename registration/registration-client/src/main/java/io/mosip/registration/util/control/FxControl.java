@@ -6,6 +6,7 @@ package io.mosip.registration.util.control;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -154,6 +155,8 @@ public abstract class FxControl  {
 			}
 		}
 		visible(this.node, isFieldVisible(uiFieldDTO));
+		setMandatorySuffix(this.node);
+
 	}
 
 	/**
@@ -163,6 +166,26 @@ public abstract class FxControl  {
 		node.setVisible(isVisible);
 		node.setManaged(isVisible);
 	}
+
+	public void setMandatorySuffix(Node node) {
+			List<String> labels = new ArrayList<>();
+			getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(lCode -> {
+				if(this.uiFieldDTO.getLabel().get(lCode) != null) {
+					labels.add(this.uiFieldDTO.getLabel().get(lCode));
+				}
+			});
+
+			if(labels.size() > 0) {
+				String titleText = String.join(RegistrationConstants.SLASH, labels) + getMandatorySuffix(uiFieldDTO);
+
+				if(node instanceof VBox) {
+					var element = ((VBox)node).getChildren().get(0);
+					if(element instanceof Label) {
+						((Label)element).setText(titleText);
+					}
+				}
+			}
+		}
 
 	/**
 	 *
@@ -214,16 +237,19 @@ public abstract class FxControl  {
 	 */
 	protected String getMandatorySuffix(UiFieldDTO schema) {
 		String mandatorySuffix = RegistrationConstants.EMPTY;
+		requiredFieldValidator = ClientApplication.getApplicationContext().getBean(RequiredFieldValidator.class);
+		boolean isRequired = requiredFieldValidator.isRequiredField(schema, getRegistrationDTo());
+
 		switch (getRegistrationDTo().getFlowType()) {
 			case UPDATE:
 				if (getRegistrationDTo().getUpdatableFields().contains(schema.getId())) {
-					mandatorySuffix = schema.isRequired() ? RegistrationConstants.ASTRIK : RegistrationConstants.EMPTY;
+					mandatorySuffix = isRequired ? RegistrationConstants.ASTRIK : RegistrationConstants.EMPTY;
 				}
 				break;
 
 			case CORRECTION:
 			case NEW:
-				mandatorySuffix = schema.isRequired() ? RegistrationConstants.ASTRIK : RegistrationConstants.EMPTY;
+				mandatorySuffix = isRequired ? RegistrationConstants.ASTRIK : RegistrationConstants.EMPTY;
 				break;
 		}
 		return mandatorySuffix;

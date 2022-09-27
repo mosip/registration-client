@@ -96,7 +96,7 @@ public class DropDownFxControl extends FxControl {
 		VBox simpleTypeVBox = new VBox();
 		simpleTypeVBox.setSpacing(5);
 		simpleTypeVBox.setId(fieldName + RegistrationConstants.VBOX);
-		simpleTypeVBox.setMinWidth(300);
+		simpleTypeVBox.setMinWidth(450);
 
 		/** Title label */
 		Label fieldTitle = getLabel(uiFieldDTO.getId() + RegistrationConstants.LABEL, "",

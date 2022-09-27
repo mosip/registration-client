@@ -209,6 +209,9 @@ public class GenericBiometricsController extends BaseController {
 	@FXML
 	private GridPane parentProgressPane;
 
+	@FXML
+	private Label biometricType;
+
 	@Autowired
 	private DocumentScanController documentScanController;
 
@@ -291,6 +294,7 @@ public class GenericBiometricsController extends BaseController {
 		thresholdBox.setVisible(!isExceptionPhoto(modality));
 		biometricBox.setVisible(true);
 		checkBoxPane.getChildren().clear();
+		biometricType.setText(applicationLabelBundle.getString(modality.name()));
 
 		// get List of captured Biometrics based on nonExceptionBio Attributes
 		List<BiometricsDto> capturedBiometrics = null;

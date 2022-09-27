@@ -74,8 +74,21 @@
             <children>
                 <GridPane fx:id="biometricBox" alignment="CENTER" GridPane.columnIndex="1">
                     <children>
+
                         <GridPane GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
                             <children>
+                                <GridPane GridPane.rowIndex="0">
+                                    <children>
+                                        <Label fx:id="biometricType" styleClass="biometricTypeLabel" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.valignment="BOTTOM" />
+                                    </children>
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="90.0" prefWidth="100.0" />
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    </rowConstraints>
+                                </GridPane>
                                 <GridPane GridPane.rowIndex="1">
                                     <children>
                                         <GridPane fx:id="biometricPane" prefHeight="108.0" prefWidth="81.0" styleClass="biometricPaneSelected">
@@ -119,7 +132,6 @@
                         </GridPane>
                         <GridPane fx:id="thresholdBox">
                         </GridPane>
-
                         <GridPane GridPane.columnIndex="1" GridPane.rowIndex="2">
                             <children>
                         <HBox alignment="CENTER_LEFT" GridPane.columnIndex="1">

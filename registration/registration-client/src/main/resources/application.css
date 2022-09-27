@@ -1277,6 +1277,12 @@ Working on new Css by taleev
 	-fx-font-size: 1.5em;
 }
 
+.biometricTypeLabel {
+	-fx-text-fill: #666666;
+	-fx-font-size: 1.2em;
+	-fx-padding: 0px 0px 0px 60px ;
+}
+
 .paneHeader {
 	-fx-text-fill: #005baa;
 	-fx-font-size: 22.0px;

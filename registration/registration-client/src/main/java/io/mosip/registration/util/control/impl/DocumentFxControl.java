@@ -83,6 +83,7 @@ public class DocumentFxControl extends FxControl {
 
 		HBox hBox = new HBox();
 		hBox.setSpacing(20);
+		hBox.setPrefHeight(78);
 
 		// DROP-DOWN
 		hBox.getChildren().add(create(uiFieldDTO));
