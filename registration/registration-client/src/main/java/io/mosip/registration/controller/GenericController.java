@@ -1,9 +1,11 @@
 package io.mosip.registration.controller;
 
+import static com.sun.java.accessibility.util.AWTEventMonitor.addKeyListener;
 import static io.mosip.registration.constants.RegistrationConstants.EMPTY;
 import static io.mosip.registration.constants.RegistrationConstants.HASH;
 import static io.mosip.registration.constants.RegistrationConstants.REG_AUTH_PAGE;
 
+import java.awt.event.KeyAdapter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -18,6 +20,9 @@ import java.util.stream.Collectors;
 import io.mosip.commons.packet.dto.packet.SimpleDto;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
+import javafx.scene.Cursor;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +92,8 @@ import javafx.scene.layout.RowConstraints;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import lombok.SneakyThrows;
+
+import javax.swing.event.ChangeEvent;
 
 /**
  * {@code GenericController} is to capture the demographic/demo/Biometric
@@ -957,11 +964,35 @@ public class GenericController extends BaseController {
 			throw  new Exception("Failed to build fxControl");
 
 		fxControlMap.put(uiFieldDTO.getId(), fxControl);
+
+		fxControl.getNode().addEventHandler(MouseEvent.MOUSE_EXITED, event ->
+			handleContinueButton());
+
 		return fxControl;
 	}
 
 	public void refreshFields() {
 		orderedScreens.values().forEach(screen -> { refreshScreenVisibility(screen.getName()); });
+	}
+
+	public void handleContinueButton() {
+		TabPane tabPane = (TabPane) anchorPane.lookup(HASH+getRegistrationDTOFromSession().getRegistrationId());
+		int selectedIndex = tabPane.getSelectionModel().getSelectedIndex();
+
+		var screenName = tabPane.getTabs().get(selectedIndex).getId().replace("_tab", EMPTY);
+		Optional<UiScreenDTO> result = orderedScreens.values()
+				.stream().filter(screen -> screen.getName().equals(screenName.replace("_tab", EMPTY))).findFirst();
+
+		if(result.isPresent()) {
+			boolean isValid = true;
+			for (UiFieldDTO field : result.get().getFields()) {
+				if (getFxControl(field.getId()) != null && !getFxControl(field.getId()).canContinue()) {
+					isValid = false;
+					break;
+				}
+			}
+			this.next.setDisable(!isValid);
+		}
 	}
 
 	/*public List<UiFieldDTO> getProofOfExceptionFields() {
