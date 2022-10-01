@@ -97,7 +97,7 @@
 		<spring.version>5.0.6.RELEASE</spring.version>
 
 		<!-- Hibernate version -->
-		<hibernate.version>5.2.9.Final</hibernate.version>
+		<hibernate.version>5.4.24.Final</hibernate.version>
 
 		<!-- Apache Commons DPC2 version -->
 		<apache.commons.dpce.version>2.1.1</apache.commons.dpce.version>
