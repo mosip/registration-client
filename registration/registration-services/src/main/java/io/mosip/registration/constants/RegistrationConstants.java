@@ -1139,6 +1139,7 @@ public class RegistrationConstants {
 	// "center_remap_sync";
 	public static final String MASTER_CENTER_PARAM = "regcenterId";
 	public static final String MASTER_DATA_LASTUPDTAE = "lastUpdated";
+	public static final String MASTER_FULLSYNC_ENTITIES = "fullSyncEntities";
 	public static final String MASTER_SYNC_LOGGER_INFO = "Entering into Master Sync Dao Impl...";
 	// POLICY SYNC
 	public static final String REG_APP_ID = "REGISTRATION";

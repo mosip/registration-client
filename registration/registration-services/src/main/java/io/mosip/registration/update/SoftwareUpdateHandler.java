@@ -10,7 +10,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -26,7 +25,6 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -38,7 +36,11 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.kernel.logger.logback.util.MetricTag;
+import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
+import io.mosip.registration.constants.AuditEvent;
+import io.mosip.registration.constants.AuditReferenceIdTypes;
+import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
@@ -99,9 +101,9 @@ public class SoftwareUpdateHandler extends BaseService {
 
 	@Autowired
 	private GlobalParamService globalParamService;
-
+	
 	@Autowired
-	private Environment environment;
+	private AuditManagerService auditFactory;
 
 
 	public ResponseDTO updateDerbyDB() {
@@ -276,6 +278,9 @@ public class SoftwareUpdateHandler extends BaseService {
 			}
 		}
 
+		auditFactory.audit(AuditEvent.CLIENT_UPGRADE_JARS_DOWNLOADED, Components.CLIENT_UPGRADE, 
+				RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
+		
 		setServerManifest(null);
 		setLatestVersion(null);
 
