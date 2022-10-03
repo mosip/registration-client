@@ -95,7 +95,7 @@ public class AuditManagerSerivceImpl extends BaseService implements AuditManager
 				: String.valueOf(ApplicationContext.map().get(RegistrationConstants.DEFAULT_HOST_NAME));
 
 		if (auditEventEnum.getId().contains(RegistrationConstants.REGISTRATION_EVENTS)
-				&& SessionContext.getInstance() != null && getRegistrationDTOFromSession() != null
+				&& SessionContext.isSessionContextAvailable() && getRegistrationDTOFromSession() != null
 				&& getRegistrationDTOFromSession().getRegistrationId() != null) {
 			refId = getRegistrationDTOFromSession().getRegistrationId();
 			refIdType = AuditReferenceIdTypes.REGISTRATION_ID.getReferenceTypeId();
