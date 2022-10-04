@@ -432,7 +432,8 @@ public class TextFieldFxControl extends FxControl {
 	}
 
 	private void transliterate(TextField textField, String langCode) {
-		for (String langCodeToBeTransliterated : getRegistrationDTo().getSelectedLanguagesByApplicant()) {
+		List<String> langCodes = getRegistrationDTo().getSelectedLanguagesByApplicant();
+		for (String langCodeToBeTransliterated : langCodes.subList(1, langCodes.size())) {
 			if (!langCodeToBeTransliterated.equalsIgnoreCase(langCode)) {
 				TextField textFieldToBeTransliterated = (TextField) getField(uiFieldDTO.getId() + langCodeToBeTransliterated);
 				if (textFieldToBeTransliterated != null)  {
