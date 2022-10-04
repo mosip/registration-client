@@ -1,4 +1,4 @@
-Manifest-Version: 1.2.0.1-SNAPSHOT
+Manifest-Version: 1.2.0.1-B1
 
 Name: logback.xml
 Content-Type: 80C2BB94ADCDA80592DEC34C48EC1E0A142D0E333CEB5E6546769B054D
