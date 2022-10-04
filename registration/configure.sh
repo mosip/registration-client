@@ -94,12 +94,10 @@ chmod -R a+x "${work_dir}"/registration-client/target/jre
 cp "${work_dir}"/build_files/logback.xml "${work_dir}"/registration-client/target/lib/logback.xml
 cp "${work_dir}"/registration-client/target/registration-client-${client_version_env}.jar "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar
 
-echo "Starting Jarsigner Method"
 ## jar signing
-jarsigner -verbose -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore_secret} -tsa ${signer_timestamp_url_env} -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar codesigning
-echo "MIddle of Jarsigner Method"
-jarsigner -verbose -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore_secret} -tsa ${signer_timestamp_url_env} -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-services-${client_version_env}.jar codesigning
-echo "Ending Jarsigner Method"
+jarsigner -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore_secret} -tsa ${signer_timestamp_url_env} -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar CodeSigning
+jarsigner -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore_secret} -tsa ${signer_timestamp_url_env} -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-services-${client_version_env}.jar CodeSigning
+
 /usr/local/openjdk-11/bin/java -cp "${work_dir}"/registration-client/target/registration-client-${client_version_env}.jar:"${work_dir}"/registration-client/target/lib/* io.mosip.registration.update.ManifestCreator "${client_version_env}" "${work_dir}/registration-client/target/lib" "${work_dir}/registration-client/target"
 
 cd "${work_dir}"/registration-client/target/
