@@ -641,6 +641,9 @@ public class RegistrationApprovalController extends BaseController implements In
 			actionCounter = 0;
 			primaryStage.close();
 			reloadTableView();
+			if(table.getItems().size() == 0) {
+				goToHomePage();
+			}
 
 			/*if (RegistrationAppHealthCheckUtil.isNetworkAvailable() && !regIds.isEmpty()) {
 
@@ -691,7 +694,7 @@ public class RegistrationApprovalController extends BaseController implements In
 							.concat(approvaldto.getId()).concat("'").concat(RegistrationConstants.COMMA).concat("'")
 							.concat(approvaldto.getDate()).concat("'").concat(RegistrationConstants.COMMA)
 							.concat(approvaldto.getOperatorId()).concat("'").concat(RegistrationConstants.COMMA)
-							.concat(approvaldto.getStatusComment().getUrl()))
+							.concat(approvaldto.getStatusComment() != null ? approvaldto.getStatusComment().getUrl() : ""))
 					.collect(Collectors.joining(RegistrationConstants.NEW_LINE));
 			String headers = RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.EOD_SLNO_LABEL).concat(RegistrationConstants.COMMA)
 					.concat(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.EOD_REGISTRATIONID_LABEL)).concat(RegistrationConstants.COMMA)
