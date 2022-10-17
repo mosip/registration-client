@@ -2698,6 +2698,14 @@ Working on new Css by taleev
 	-fx-padding: 0 0 10 55;
 }
 
-.table-row-cell:selected {
+.eod-table .table-row-cell:selected {
 	-fx-background-color: lightskyblue !important; ;
+}
+
+.upload-table .table-row-cell:selected {
+	-fx-background-color: white !important; ;
+}
+
+.approvalTable .table-row-cell:selected {
+	-fx-background-color: white !important; ;
 }

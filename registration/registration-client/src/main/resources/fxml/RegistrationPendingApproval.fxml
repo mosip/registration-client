@@ -47,7 +47,7 @@
                       <RowConstraints percentHeight="93.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                      <children>
-                        <TableView fx:id="table" GridPane.rowIndex="1">
+                        <TableView fx:id="table" styleClass="eod-table" GridPane.rowIndex="1">
                            <columns>
                               <TableColumn fx:id="slno" editable="false" prefWidth="${tableContainer.width*7/100}" resizable="false" styleClass="tableId" text="%slno" />
                               <TableColumn fx:id="id" editable="false" prefWidth="${tableContainer.width*32/100}" resizable="false" styleClass="tableId" text="%applicationId" />

@@ -49,7 +49,7 @@
                         <Insets bottom="50.0" left="21.0" right="50.0" />
                      </GridPane.margin>
                      <children>
-                        <TableView fx:id="table" GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                        <TableView fx:id="table" styleClass="upload-table" GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.valignment="CENTER">
                            <columns>
                               <TableColumn fx:id="checkBoxColumn" prefWidth="${tableContainer.width*5/100}">
                                  <graphic>
