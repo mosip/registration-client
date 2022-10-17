@@ -58,6 +58,7 @@ public class RegistrationDTO {
 	private boolean isUpdateUINNonBiometric;
 	private boolean isNameNotUpdated;
 	private List<String> defaultUpdatableFieldGroups;
+	private Integer selectedFaceAttempt;
 
 	private Map<String, Object> demographics = new HashMap<>();
 	private Map<String, Object> defaultDemographics = new LinkedHashMap<>();
