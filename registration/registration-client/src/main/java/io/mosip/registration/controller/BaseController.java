@@ -104,6 +104,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
@@ -579,7 +580,6 @@ public class BaseController {
 		try {
 			if (isAckOpened() || pageNavigantionAlert()) {
 				setIsAckOpened(false);
-				BaseController.load(getClass().getResource(RegistrationConstants.HOME_PAGE));
 				if (!(boolean) SessionContext.map().get(RegistrationConstants.ONBOARD_USER)) {
 					clearOnboardData();
 					clearRegistrationData();
@@ -588,6 +588,7 @@ public class BaseController {
 					SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
 							RegistrationConstants.ENABLE);
 				}
+				BaseController.load(getClass().getResource(RegistrationConstants.HOME_PAGE));
 			}
 
 		} catch (IOException ioException) {
@@ -599,6 +600,19 @@ public class BaseController {
 					runtimException.getMessage() + ExceptionUtils.getStackTrace(runtimException));
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE));
 		}
+	}
+	
+	/**
+	 * Opens the home page screen.
+	 */
+	public void goToNewRegistration() {
+		goToHomePage();
+		if (packetHandlerController.getRegistrationGridPane() != null && packetHandlerController.getRegistrationGridPane().getChildren().size() > 0) {
+			Event.fireEvent(packetHandlerController.getRegistrationGridPane().getChildren().get(0), new MouseEvent(MouseEvent.MOUSE_CLICKED, 0,
+	                0, 0, 0, MouseButton.PRIMARY, 1, true, true, true, true,
+	                true, true, true, true, true, true, null));
+		}
+		
 	}
 	
 	/**
