@@ -212,7 +212,7 @@ public class GenericController extends BaseController {
 		hBox.getChildren().add(textField);
 		Button button = new Button();
 		button.setId("fetchBtn");
-		button.getStyleClass().add("demoGraphicPaneContentButton");
+		button.getStyleClass().add("contiuneButton");
 		button.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("fetch"));
 
