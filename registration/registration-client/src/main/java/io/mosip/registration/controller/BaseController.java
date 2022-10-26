@@ -603,7 +603,7 @@ public class BaseController {
 	}
 	
 	/**
-	 * Opens the home page screen.
+	 * Opens the New Registration screen.
 	 */
 	public void goToNewRegistration() {
 		goToHomePage();

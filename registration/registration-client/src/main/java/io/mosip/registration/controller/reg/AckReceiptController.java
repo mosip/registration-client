@@ -146,7 +146,7 @@ public class AckReceiptController extends BaseController implements Initializabl
 				RegistrationConstants.APPLICATION_ID, "Going to New Registration Page after packet creation");
 
 		clearRegistrationData();
-		goToHomePageFromRegistration();
+		goToNewRegistration();
 	}
 
 	/**
