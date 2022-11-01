@@ -346,7 +346,7 @@ public class AuthenticationController extends BaseController implements Initiali
 			executeFPValidationTask(fpUserId.getText(), operatorAuthenticationPane);
 		}
 
-		authCounter.setText(++fingerPrintAuthCount + "");
+//		authCounter.setText(++fingerPrintAuthCount + "");
 	}
 
 	private void executeFPValidationTask(String userId, GridPane pane) {
@@ -583,6 +583,7 @@ public class AuthenticationController extends BaseController implements Initiali
 		Set<String> roleSet = new HashSet<>(SessionContext.userContext().getRoles());
 		
 		userAuthenticationTypeList = loginService.getModesOfLogin(authType, roleSet);
+		userAuthenticationTypeList.add("FINGERPRINT");
 
 		if (userAuthenticationTypeList.isEmpty()) {
 			isReviewer = false;
