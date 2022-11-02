@@ -15,7 +15,7 @@ public class MdmDeviceInfo extends DeviceInfo {
 	private String firmware;
 	private String certification;
 	private String serviceVersion;
-	private int[] deviceSubId;
+	private String[] deviceSubId;
 	private String callbackId;
 	private String digitalId;
 	private String deviceCode;
