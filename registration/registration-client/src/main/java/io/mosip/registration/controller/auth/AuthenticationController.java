@@ -583,7 +583,6 @@ public class AuthenticationController extends BaseController implements Initiali
 		Set<String> roleSet = new HashSet<>(SessionContext.userContext().getRoles());
 		
 		userAuthenticationTypeList = loginService.getModesOfLogin(authType, roleSet);
-	
 
 		if (userAuthenticationTypeList.isEmpty()) {
 			isReviewer = false;
