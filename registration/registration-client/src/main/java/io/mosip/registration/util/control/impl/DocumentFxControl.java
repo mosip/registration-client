@@ -408,7 +408,7 @@ public class DocumentFxControl extends FxControl {
 			documentScanController.generateAlert(RegistrationConstants.ERROR,
 					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_REG_PAGE));
 		}
-		//refreshFields();
+		refreshFields();
 	}
 
 	@Override

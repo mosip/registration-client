@@ -528,8 +528,8 @@ public class GenericController extends BaseController {
 			@SneakyThrows
 			@Override
 			public void handle(ActionEvent event) {
-				TabPane tabPane = (TabPane) anchorPane.lookup(HASH+getRegistrationDTOFromSession().getRegistrationId());
-				String incompleteScreen = getInvalidScreenName(tabPane);
+				//TabPane tabPane = (TabPane) anchorPane.lookup(HASH+getRegistrationDTOFromSession().getRegistrationId());
+				String incompleteScreen = getInvalidScreenName(null);
 
 				if(incompleteScreen == null) {
 					generateAlert(RegistrationConstants.ERROR, incompleteScreen +" Screen with ERROR !");
@@ -634,7 +634,7 @@ public class GenericController extends BaseController {
 
 			for(UiFieldDTO field : result.get().getFields()) {
 				if(getFxControl(field.getId()) != null && !getFxControl(field.getId()).canContinue()) {
-					LOGGER.error("Screen validation , fieldId : {} has invalid value", field.getId());
+					LOGGER.error("Screen validation , fieldId : {} has invalid value", field.getId()); 
 					String label = getFxControl(field.getId()).getUiSchemaDTO().getLabel().getOrDefault(ApplicationContext.applicationLanguage(), field.getId());
 					showHideErrorNotification(label);
 					isValid = false;
@@ -656,7 +656,8 @@ public class GenericController extends BaseController {
 		toolTip.setWrapText(true);
 		notification.setTooltip(toolTip);
 		notification.setText((fieldName == null) ? EMPTY : ApplicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
-				.getString("SCREEN_VALIDATION_ERROR") + " [ " + fieldName + " ]");
+				.getString("SCREEN_VALIDATION_ERROR") + "[ "+fieldName+"]");
+		//refreshFields();
 	}
 
 	private String getInvalidScreenName(TabPane tabPane) {
@@ -922,6 +923,7 @@ public class GenericController extends BaseController {
 
 	public void refreshFields() {
 		orderedScreens.values().forEach(screen -> { refreshScreenVisibility(screen.getName()); });
+		showHideErrorNotification(null);
 	}
 
 	/*public List<UiFieldDTO> getProofOfExceptionFields() {
