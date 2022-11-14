@@ -100,9 +100,9 @@
                                          </StackPane>
                                          </ScrollPane>
                                      </children>
-                                     
+                          
                                   </GridPane>
-                                  <Text  text="%saveState" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2"/>
+                                     <Text  text="%saveState" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2"/>
                            </children>
                         </GridPane>
                      </children>
