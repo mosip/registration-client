@@ -528,8 +528,8 @@ public class GenericController extends BaseController {
 			@SneakyThrows
 			@Override
 			public void handle(ActionEvent event) {
-				//TabPane tabPane = (TabPane) anchorPane.lookup(HASH+getRegistrationDTOFromSession().getRegistrationId());
-				String incompleteScreen = getInvalidScreenName(null);
+				TabPane tabPane = (TabPane) anchorPane.lookup(HASH+getRegistrationDTOFromSession().getRegistrationId());
+				String incompleteScreen = getInvalidScreenName(tabPane);
 
 				if(incompleteScreen == null) {
 					generateAlert(RegistrationConstants.ERROR, incompleteScreen +" Screen with ERROR !");
@@ -657,7 +657,6 @@ public class GenericController extends BaseController {
 		notification.setTooltip(toolTip);
 		notification.setText((fieldName == null) ? EMPTY : ApplicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
 				.getString("SCREEN_VALIDATION_ERROR") + "[ "+fieldName+"]");
-		//refreshFields();
 	}
 
 	private String getInvalidScreenName(TabPane tabPane) {
