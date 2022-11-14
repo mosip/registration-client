@@ -101,12 +101,11 @@
                                          </ScrollPane>
                                      </children>
                                   </GridPane>
-                                     <Text  text="%saveState" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2"/>
                            </children>
+                           <Text  text="%saveState" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2"/>
                         </GridPane>
                      </children>
                   </GridPane>
-                  
                   <GridPane GridPane.columnIndex="1">
                     <columnConstraints>
                       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="100.0" prefWidth="100.0" />
@@ -138,8 +137,6 @@
                                     </ImageView>
                                  </graphic>
                               </Button>
-                             
-        
                               <Button fx:id="saveBtn" graphicTextGap="10.0" mnemonicParsing="false" onAction="#save" styleClass="scanButton" text="%save" GridPane.rowIndex="2">
                                  <graphic>
                                     <ImageView fx:id="saveImageView" fitHeight="19.0" fitWidth="77.0" pickOnBounds="true" preserveRatio="true">
