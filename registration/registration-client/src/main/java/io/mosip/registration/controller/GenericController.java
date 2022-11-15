@@ -568,6 +568,7 @@ public class GenericController extends BaseController {
 					String invalidScreenName = getInvalidScreenName(tabPane);
 					if(invalidScreenName.equals(EMPTY)) {
 						notification.setVisible(false);
+						tabPane.getTabs().get(oldValue.intValue()).getStyleClass().remove(TAB_LABEL_ERROR_CLASS);
 						loadPreviewOrAuthScreen(tabPane, tabPane.getTabs().get(newValue.intValue()));
 						return;
 					}
@@ -634,7 +635,7 @@ public class GenericController extends BaseController {
 
 			for(UiFieldDTO field : result.get().getFields()) {
 				if(getFxControl(field.getId()) != null && !getFxControl(field.getId()).canContinue()) {
-					LOGGER.error("Screen validation , fieldId : {} has invalid value", field.getId());
+					LOGGER.error("Screen validation , fieldId : {} has invalid value", field.getId()); 
 					String label = getFxControl(field.getId()).getUiSchemaDTO().getLabel().getOrDefault(ApplicationContext.applicationLanguage(), field.getId());
 					showHideErrorNotification(label);
 					isValid = false;
@@ -656,7 +657,7 @@ public class GenericController extends BaseController {
 		toolTip.setWrapText(true);
 		notification.setTooltip(toolTip);
 		notification.setText((fieldName == null) ? EMPTY : ApplicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
-				.getString("SCREEN_VALIDATION_ERROR") + " [ " + fieldName + " ]");
+				.getString("SCREEN_VALIDATION_ERROR") + "[ "+fieldName+"]");
 	}
 
 	private String getInvalidScreenName(TabPane tabPane) {
