@@ -568,6 +568,7 @@ public class GenericController extends BaseController {
 					String invalidScreenName = getInvalidScreenName(tabPane);
 					if(invalidScreenName.equals(EMPTY)) {
 						notification.setVisible(false);
+						
 						tabPane.getTabs().get(oldValue.intValue()).getStyleClass().remove(TAB_LABEL_ERROR_CLASS);
 						loadPreviewOrAuthScreen(tabPane, tabPane.getTabs().get(newValue.intValue()));
 						return;
