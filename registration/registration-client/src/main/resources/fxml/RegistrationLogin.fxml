@@ -94,7 +94,7 @@
             <Label styleClass="higlightedLoginLable" text="%registrationlogin" AnchorPane.leftAnchor="35.0" AnchorPane.topAnchor="14.0" />
             <Label layoutX="35.0" layoutY="71.0" text="%withface" />
             <Button layoutX="134.0" layoutY="474.0" mnemonicParsing="false" onAction="#captureFace" styleClass="loginSubmitStyle1" text="%submit" />
-            <Button layoutX="217.0" layoutY="474.0" mnemonicParsing="false" onAction="#streamFace" styleClass="loginSubmitStyle1" text="Stream" />
+            <Button layoutX="217.0" layoutY="474.0" mnemonicParsing="false" onAction="#streamFace" styleClass="loginSubmitStyle1" text="%stream" />
             <ImageView fx:id="faceImage" fitHeight="353.0" fitWidth="378.0" layoutX="38.0" layoutY="113.0" pickOnBounds="true" preserveRatio="true">
               <image>
                 <Image url="@../images/FaceScan.png" />
