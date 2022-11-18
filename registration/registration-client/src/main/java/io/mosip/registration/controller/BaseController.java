@@ -608,8 +608,9 @@ public class BaseController {
 	 */
 	public void goToNewRegistration() {
 		goToHomePage();
-		if (packetHandlerController.getRegistrationGridPane() != null && packetHandlerController.getRegistrationGridPane().getChildren().size() > 0) {
-			Event.fireEvent(packetHandlerController.getRegistrationGridPane().getChildren().get(0), new MouseEvent(MouseEvent.MOUSE_CLICKED, 0,
+		Node newRegNode = packetHandlerController.getRegistrationGridPane().lookup(RegistrationConstants.HASH + "NEW");
+		if (newRegNode != null) {
+			Event.fireEvent(newRegNode, new MouseEvent(MouseEvent.MOUSE_CLICKED, 0,
 	                0, 0, 0, MouseButton.PRIMARY, 1, true, true, true, true,
 	                true, true, true, true, true, true, null));
 		}
