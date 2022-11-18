@@ -402,9 +402,12 @@ public class DeviceSettingsController extends BaseController implements Settings
 		if (devices.size() > 1) {
 			ComboBox<BiometricDeviceInfo> comboBox = new ComboBox<>();
 			comboBox.getStyleClass().add("deviceDetailsComboBox");
-
+		
 			for (MdmBioDevice device : devices) {
-				comboBox.getItems().add(convertToBiometricDeviceInfo(key, device));
+				BiometricDeviceInfo info = convertToBiometricDeviceInfo(key, device);
+				if(!comboBox.getItems().contains(info)) {
+					 comboBox.getItems().add(info);
+					}
 			}
 			comboBox.getSelectionModel().select(getSelectedDeviceInfo(key));
 			// Create our custom cells for the ComboBox

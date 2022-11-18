@@ -228,6 +228,8 @@ public class MosipDeviceSpecificationFactory {
 			} else {
 				List<MdmBioDevice> bioDevices = new ArrayList<>();
 				bioDevices.add(bioDevice);
+				bioDevices.add(bioDevice);
+				bioDevices.add(bioDevice);
 				availableDeviceInfoMap.put(key, bioDevices);
 			}
 		}
