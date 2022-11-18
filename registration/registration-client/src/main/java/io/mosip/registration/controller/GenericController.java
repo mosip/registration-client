@@ -650,7 +650,7 @@ public class GenericController extends BaseController {
 		return isValid;
 	}
 
-	private void showHideErrorNotification(String fieldName) {
+	public void showHideErrorNotification(String fieldName) {
 		Tooltip toolTip = new Tooltip(fieldName);
 		toolTip.prefWidthProperty().bind(notification.widthProperty());
 		toolTip.setWrapText(true);
