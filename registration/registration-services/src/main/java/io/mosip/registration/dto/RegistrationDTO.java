@@ -28,7 +28,7 @@ import lombok.NonNull;
 
 /**
  * This DTO class contains the Registration details.
- * 
+ *
  * @author Dinesh Asokan
  * @author Balaji Sridharan
  * @since 1.0.0
@@ -58,12 +58,14 @@ public class RegistrationDTO {
 	private boolean isUpdateUINNonBiometric;
 	private boolean isNameNotUpdated;
 	private List<String> defaultUpdatableFieldGroups;
+	private Integer selectedFaceAttempt;
 
 	private Map<String, Object> demographics = new HashMap<>();
 	private Map<String, Object> defaultDemographics = new LinkedHashMap<>();
 	private Map<String, DocumentDto> documents = new HashMap<>();
 	private Map<String, BiometricsDto> biometrics = new HashMap<>();
 	private Map<String, BiometricsException> biometricExceptions = new HashMap<>();
+	private Map<String, BiometricsDto> faceBiometrics = new HashMap<>();
 
 	private List<BiometricsDto> supervisorBiometrics = new ArrayList<>();
 	private List<BiometricsDto> officerBiometrics = new ArrayList<>();
@@ -88,6 +90,7 @@ public class RegistrationDTO {
 		this.AGE_GROUPS.clear();
 		this.biometrics.clear();
 		this.biometricExceptions.clear();
+		this.faceBiometrics.clear();
 		this.BIO_CAPTURES.clear();
 		this.BIO_SCORES.clear();
 		this.ATTEMPTS.clear();
@@ -198,7 +201,7 @@ public class RegistrationDTO {
 	}
 
 	public void addBiometricException(String fieldId, String uiSchemaAttribute, String bioAttribute, String reason,
-			String exceptionType, String subType) {
+									  String exceptionType, String subType) {
 		String key = String.format("%s_%s", fieldId, uiSchemaAttribute);
 		SingleType type = io.mosip.registration.mdm.dto.Biometric.getSingleTypeBySpecConstant(uiSchemaAttribute);
 		this.biometricExceptions.put(key, new BiometricsException(type == null ? null : type.value(), bioAttribute,
@@ -307,7 +310,7 @@ public class RegistrationDTO {
 	}
 
 	public void addAllBiometrics(String fieldId, Map<String, BiometricsDto> biometricsDTOMap,
-			double thresholdScore, int maxRetryAttempt) {
+								 double thresholdScore, int maxRetryAttempt) {
 
 		if (fieldId != null && biometricsDTOMap != null && !biometricsDTOMap.isEmpty()) {
 			boolean isQualityCheckPassed = false, isForceCaptured = false;
@@ -347,6 +350,11 @@ public class RegistrationDTO {
 					addBiometric(fieldId, entry.getKey(), value);
 					//savedBiometrics.add(addBiometric(fieldId, entry.getKey(), value));
 				}
+
+				if(entry.getValue().getBioAttribute().equalsIgnoreCase(Modality.FACE.name())) {
+					String key = String.format("%s_%s", entry.getKey(), value.getNumOfRetries());
+					this.faceBiometrics.put(key, value);
+				}
 			}
 		}
 		//return savedBiometrics;
@@ -361,7 +369,7 @@ public class RegistrationDTO {
 
 		return qualityScore;
 	}
-	
+
 	public List<String> getSelectedLanguagesByApplicant() {
 		return selectedLanguagesByApplicant;
 	}
@@ -369,5 +377,5 @@ public class RegistrationDTO {
 	public void setSelectedLanguagesByApplicant(List<String> selectedLanguagesByApplicant) {
 		this.selectedLanguagesByApplicant = selectedLanguagesByApplicant;
 	}
-	
+
 }

@@ -33,6 +33,7 @@ import io.mosip.registration.util.control.FxControl;
 import io.mosip.registration.validator.RequiredFieldValidator;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -82,6 +83,7 @@ public class DocumentFxControl extends FxControl {
 
 		HBox hBox = new HBox();
 		hBox.setSpacing(20);
+		hBox.setPrefHeight(78);
 
 		// DROP-DOWN
 		hBox.getChildren().add(create(uiFieldDTO));
@@ -134,13 +136,13 @@ public class DocumentFxControl extends FxControl {
 		}
 		auditFactory.audit(auditEvent, Components.REG_DOCUMENTS, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
-		
+
 		getRegistrationDTo().removeDocument(this.uiFieldDTO.getId());
-		
+
 		TextField textField = (TextField) getField(
 				uiFieldDTO.getId() + RegistrationConstants.DOC_TEXT_FIELD);
 		textField.setText(RegistrationConstants.EMPTY);
-		
+
 		getField(uiFieldDTO.getId() + PREVIEW_ICON).setVisible(false);
 		getField(uiFieldDTO.getId() + CLEAR_ID).setVisible(false);
 		getField(uiFieldDTO.getId() + PREVIEW_ICON).setManaged(true);
@@ -181,12 +183,8 @@ public class DocumentFxControl extends FxControl {
 				new Image(this.getClass().getResourceAsStream(RegistrationConstants.SCAN), 12, 12, true, true)));
 
 		GridPane scanButtonGridPane = new GridPane();
-		RowConstraints rowConstraint1 = new RowConstraints();
-		RowConstraints rowConstraint2 = new RowConstraints();
-		rowConstraint1.setPercentHeight(35);
-		rowConstraint2.setPercentHeight(65);
-		scanButtonGridPane.getRowConstraints().addAll(rowConstraint1, rowConstraint2);
 		scanButtonGridPane.setPrefWidth(80);
+		scanButtonGridPane.setPadding(new Insets(21, 0, 0, 0));
 		scanButtonGridPane.add(scanButton, 0, 1);
 
 		return scanButtonGridPane;
@@ -475,7 +473,7 @@ public class DocumentFxControl extends FxControl {
 	}
 
 	private <T> ComboBox<DocumentCategoryDto> getComboBox(String id, String titleText, String styleClass,
-			double prefWidth, boolean isDisable) {
+														  double prefWidth, boolean isDisable) {
 		ComboBox<DocumentCategoryDto> field = new ComboBox<DocumentCategoryDto>();
 		StringConverter<T> uiRenderForComboBox = FXUtils.getInstance().getStringConverterForComboBox();
 		//VBox vbox = new VBox();
@@ -495,7 +493,7 @@ public class DocumentFxControl extends FxControl {
 	}
 
 	private TextField getTextField(String id, String titleText, String demographicTextfield, double prefWidth,
-			boolean isDisable) {
+								   boolean isDisable) {
 
 		/** Text Field */
 		TextField textField = new TextField();
@@ -527,7 +525,7 @@ public class DocumentFxControl extends FxControl {
 
 		boolean isRequired = requiredFieldValidator.isRequiredField(this.uiFieldDTO, getRegistrationDTo());
 		if (isRequired && getRegistrationDTo().getDocuments().get(this.uiFieldDTO.getId()) == null) {
-			
+
 			Label label = (Label) getField(uiFieldDTO.getId() + RegistrationConstants.LABEL);
 			label.getStyleClass().clear();
 			label.getStyleClass().add(RegistrationConstants.DemoGraphicFieldMessageLabel);
@@ -565,7 +563,7 @@ public class DocumentFxControl extends FxControl {
 				LOGGER.error("Unable to find doc from pre-reg sync, field: {}, value: {}", uiFieldDTO.getId(), documentDto.getValue());
 				getRegistrationDTo().removeDocument(uiFieldDTO.getId());
 				auditFactory.audit(AuditEvent.REG_DOC_DELETE, Components.REG_DOCUMENTS, SessionContext.userId(),
-					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
+						AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 			}
 		}
 	}
@@ -582,7 +580,7 @@ public class DocumentFxControl extends FxControl {
 			Optional<DocumentCategoryDto> savedValue = list.stream()
 					.filter( d -> getRegistrationDTo().getDocuments().containsKey(uiFieldDTO.getId())
 							&& d.getCode().equals(getRegistrationDTo().getDocuments().get(uiFieldDTO.getId()).getType()))
-							.findFirst();
+					.findFirst();
 
 			if(savedValue.isPresent())
 				comboBox.getSelectionModel().select(savedValue.get());

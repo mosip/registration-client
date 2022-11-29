@@ -482,7 +482,7 @@
 	-fx-pref-width: 400.0px;
 	-fx-background-color: #FFFFFF;
 	-fx-border-width: 1.0 1.0 1.0 1.0;
-	-fx-border-color: #808080;
+	-fx-border-color: #020F59;
 }
 
 .loginTextStyle {
@@ -950,6 +950,7 @@ Working on new Css by taleev
 	-fx-border-width: 0.0;
 	-fx-text-fill: #666666;
 	-fx-font-size: 1em;
+	-fx-min-width: 6em;
 }
 
 .paginationLabel {
@@ -1103,6 +1104,7 @@ Working on new Css by taleev
 	-fx-border-width: 0.0 0.0 1.0 0.0;
 	-fx-border-color: black;
 	-fx-font-size: 1.2em;
+	-fx-pref-width: 16em;
 }
 
 #docPreviewImgViewPane {
@@ -1275,6 +1277,13 @@ Working on new Css by taleev
 	-fx-font-size: 1.5em;
 }
 
+.biometricTypeLabel {
+	-fx-text-fill: #666666;
+	-fx-font-size: 1.2em;
+	-fx-padding: 0px 0px 0px 60px ;
+}
+
+
 .paneHeader {
 	-fx-text-fill: #005baa;
 	-fx-font-size: 22.0px;
@@ -1403,7 +1412,6 @@ Working on new Css by taleev
 }
 
 .table-row-cell {
-	-fx-background-color: #FFFFFF;
 	-fx-background-insets: 0.0, 0.0 0.0 1.0 0.0;
 	-fx-pref-height: 45.0;
 	-fx-padding: 10 0 10 0;
@@ -1427,7 +1435,6 @@ Working on new Css by taleev
 
 .table-view:focused>.virtual-flow>.clipped-container>.sheet>.table-row-cell:filled:selected>.table-cell
 	{
-	-fx-background-color: #FFFFFF;
 	-fx-border-width: 0.0 0.0 1.0 0.0;
 }
 
@@ -2672,4 +2679,34 @@ Working on new Css by taleev
 .tab:selected.tabErrorLabel .tab-label {
     -fx-text-fill: #FF0000;
     -fx-font-weight: bold;
+}
+
+.preRegParentPaneSection {
+	-fx-border-color:#020F59;
+	-fx-border-radius: 10.0 10.0 10.0 10.0;
+}
+
+.demoGraphicCustomLabel {
+	-fx-background-color: #ffffff;
+	-fx-border-width: 0.0;
+	-fx-text-fill: #020F59;
+	-fx-font-size: 1.5em;
+	-fx-font-weight: 800;
+}
+
+.demoGraphicCustomField{
+	-fx-pref-width: 50%;
+	-fx-padding: 0 0 10 55;
+}
+
+.eod-table .table-row-cell:selected {
+	-fx-background-color: lightskyblue !important; ;
+}
+
+.upload-table .table-row-cell:selected {
+	-fx-background-color: white !important; ;
+}
+
+.approvalTable .table-row-cell:selected {
+	-fx-background-color: white !important; ;
 }

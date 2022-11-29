@@ -8,21 +8,18 @@ import static java.io.File.separator;
 import java.io.*;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import io.mosip.registration.context.SessionContext;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +53,7 @@ import io.mosip.registration.service.external.PreRegZipHandlingService;
 
 /**
  * This implementation class to handle the pre-registration data
- * 
+ *
  * @author balamurugan ramamoorthy
  * @since 1.0.0
  *
@@ -70,7 +67,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 
 	@Autowired
 	private DocumentTypeDAO documentTypeDAO;
-	
+
 	@Autowired
 	private IdentitySchemaService identitySchemaService;
 
@@ -94,7 +91,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see io.mosip.registration.service.external.PreRegZipHandlingService#
 	 * extractPreRegZipFile(byte[])
 	 */
@@ -148,30 +145,30 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 					validateFilename(fileName, ".");
 					//if (zipEntry.getName().contains("_")) {
 					LOGGER.debug("extractPreRegZipFile zipEntry >>>> {}", fileName);
-						Optional<Map.Entry<String, DocumentDto>> result = getRegistrationDTOFromSession().getDocuments().entrySet().stream()
-								.filter(e -> fileName.equals(e.getValue().getValue().concat(".").concat(e.getValue().getFormat()))).findFirst();
-						if(result.isPresent()) {
-							DocumentDto documentDto = result.get().getValue();
-							documentDto.setDocument(IOUtils.toByteArray(zipInputStream));
-							totalReadArchiveSize = totalReadArchiveSize + documentDto.getDocument().length;
+					Optional<Map.Entry<String, DocumentDto>> result = getRegistrationDTOFromSession().getDocuments().entrySet().stream()
+							.filter(e -> fileName.equals(e.getValue().getValue().concat(".").concat(e.getValue().getFormat()))).findFirst();
+					if(result.isPresent()) {
+						DocumentDto documentDto = result.get().getValue();
+						documentDto.setDocument(IOUtils.toByteArray(zipInputStream));
+						totalReadArchiveSize = totalReadArchiveSize + documentDto.getDocument().length;
 
-							double compressionRatio = (double)documentDto.getDocument().length / zipEntry.getCompressedSize();
-							if(compressionRatio > THRESHOLD_RATIO) {
-								LOGGER.error("compression ratio is more than the threshold");
-								throw new RegBaseCheckedException(PRE_REG_PACKET_ZIP_COMPRESSED_RATIO_EXCEEDED.getErrorCode(),
-										PRE_REG_PACKET_ZIP_COMPRESSED_RATIO_EXCEEDED.getErrorMessage());
-							}
-
-							List<DocumentType> documentTypes = documentTypeDAO.getDocTypeByName(documentDto.getType());
-							if(Objects.nonNull(documentTypes) && !documentTypes.isEmpty()) {
-								LOGGER.debug("{} >>>> documentTypes.get(0).getCode() >>>> {}", documentDto.getType(),
-										documentTypes.get(0).getCode());
-								documentDto.setType(documentTypes.get(0).getCode());
-								documentDto.setValue(documentDto.getCategory().concat("_").concat(documentDto.getType()));
-							}
-							getRegistrationDTOFromSession().addDocument(result.get().getKey(), result.get().getValue());
-							LOGGER.debug("Added zip entry as document for field >>>> {}", result.get().getKey());
+						double compressionRatio = (double)documentDto.getDocument().length / zipEntry.getCompressedSize();
+						if(compressionRatio > THRESHOLD_RATIO) {
+							LOGGER.error("compression ratio is more than the threshold");
+							throw new RegBaseCheckedException(PRE_REG_PACKET_ZIP_COMPRESSED_RATIO_EXCEEDED.getErrorCode(),
+									PRE_REG_PACKET_ZIP_COMPRESSED_RATIO_EXCEEDED.getErrorMessage());
 						}
+
+						List<DocumentType> documentTypes = documentTypeDAO.getDocTypeByName(documentDto.getType());
+						if(Objects.nonNull(documentTypes) && !documentTypes.isEmpty()) {
+							LOGGER.debug("{} >>>> documentTypes.get(0).getCode() >>>> {}", documentDto.getType(),
+									documentTypes.get(0).getCode());
+							documentDto.setType(documentTypes.get(0).getCode());
+							documentDto.setValue(documentDto.getCategory().concat("_").concat(documentDto.getType()));
+						}
+						getRegistrationDTOFromSession().addDocument(result.get().getKey(), result.get().getValue());
+						LOGGER.debug("Added zip entry as document for field >>>> {}", result.get().getKey());
+					}
 					//}
 
 					if(totalEntries > THRESHOLD_ENTRIES) {
@@ -187,7 +184,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 					}
 				}
 			}
-			
+
 			Iterator<Entry<String, DocumentDto>> entries = getRegistrationDTOFromSession().getDocuments().entrySet().iterator();
 			while (entries.hasNext()) {
 				Entry<String, DocumentDto> entry = entries.next();
@@ -209,7 +206,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 	/**
 	 * This method is used to parse the demographic json and converts it into
 	 * RegistrationDto
-	 * 
+	 *
 	 * @param jsonString
 	 *            - reader for text file
 	 * @throws RegBaseCheckedException
@@ -219,6 +216,10 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 		try {
 			if (!StringUtils.isEmpty(jsonString) && validateDemographicInfoObject()) {
 				JSONObject jsonObject = (JSONObject) new JSONObject(jsonString).get("identity");
+				JSONArray array=new JSONArray();
+				array.put(new JSONObject().put("language", "eng").put("value","10"));
+				jsonObject.put("homeless", array);
+				SessionContext.map().put(RegistrationConstants.REGISTRATION_DATA_DEMO, new HashMap<String,Object>());
 				//Always use latest schema, ignoring missing / removed fields
 				RegistrationDTO registrationDTO = getRegistrationDTOFromSession();
 				List<UiFieldDTO> fieldList = identitySchemaService.getAllFieldSpec(registrationDTO.getProcessId(), registrationDTO.getIdSchemaVersion());
@@ -227,43 +228,44 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 				for(UiFieldDTO field : fieldList) {
 					if(field.getId().equalsIgnoreCase("IDSchemaVersion"))
 						continue;
-					
-					switch (field.getType()) {
-					case "documentType":
-						DocumentDto documentDto = new DocumentDto();
-						if(jsonObject.has(field.getId()) && jsonObject.get(field.getId()) != null) {
-							JSONObject fieldValue = jsonObject.getJSONObject(field.getId());							
-							documentDto.setCategory(field.getSubType());
-							documentDto.setOwner("Applicant");
-							documentDto.setFormat(fieldValue.getString("format"));
-							documentDto.setType(fieldValue.getString("type"));
-							documentDto.setValue(fieldValue.getString("value"));
-							try {
-							    documentDto.setRefNumber(fieldValue.has("refNumber") ? fieldValue.getString("refNumber") :
-										(fieldValue.has("docRefId") ? fieldValue.getString("docRefId") : null));
-							} catch(JSONException jsonException) {
-								LOGGER.error("Unable to find Document Refernce Number for Pre-Reg-Sync : ", jsonException);
-							}
-							getRegistrationDTOFromSession().addDocument(field.getId(), documentDto);
-						}
-						break;
-						
-					case "biometricsType":						
-						break;
 
-					default:
-						Object fieldValue = getValueFromJson(field.getId(), field.getType(), jsonObject);
-						if(fieldValue != null) {
-							switch (field.getControlType()) {
-								case CONTROLTYPE_DOB_AGE:
-								case CONTROLTYPE_DOB:
-									getRegistrationDTOFromSession().setDateField(field.getId(), (String)fieldValue, field.getSubType());
-									break;
-								default:
-									getRegistrationDTOFromSession().getDemographics().put(field.getId(), fieldValue);
+					switch (field.getType()) {
+						case "documentType":
+							DocumentDto documentDto = new DocumentDto();
+							if(jsonObject.has(field.getId()) && jsonObject.get(field.getId()) != null) {
+								JSONObject fieldValue = jsonObject.getJSONObject(field.getId());
+								documentDto.setCategory(field.getSubType());
+								documentDto.setOwner("Applicant");
+								documentDto.setFormat(fieldValue.getString("format"));
+								documentDto.setType(fieldValue.getString("type"));
+								documentDto.setValue(fieldValue.getString("value"));
+								try {
+									documentDto.setRefNumber(fieldValue.has("refNumber") ? fieldValue.getString("refNumber") :
+											(fieldValue.has("docRefId") ? fieldValue.getString("docRefId") : null));
+								} catch(JSONException jsonException) {
+									LOGGER.error("Unable to find Document Refernce Number for Pre-Reg-Sync : ", jsonException);
+								}
+								getRegistrationDTOFromSession().addDocument(field.getId(), documentDto);
 							}
-						}
-						break;
+							break;
+
+						case "biometricsType":
+							break;
+
+						default:
+							Object fieldValue = getValueFromJson(field.getId(), field.getType(), jsonObject);
+							if(fieldValue != null) {
+								switch (field.getControlType()) {
+									case CONTROLTYPE_DOB_AGE:
+									case CONTROLTYPE_DOB:
+										getRegistrationDTOFromSession().setDateField(field.getId(), (String)fieldValue, field.getSubType());
+										break;
+									default:
+										getRegistrationDTOFromSession().getDemographics().put(field.getId(), fieldValue);
+										getRegistrationDTODemographics().put(field.getId(), fieldValue);
+								}
+							}
+							break;
 					}
 				}
 			}
@@ -272,8 +274,8 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 			throw new RegBaseCheckedException(REG_IO_EXCEPTION.getErrorCode(), e.getMessage());
 		}
 	}
-	
-	
+
+
 	private Object getValueFromJson(String key, String fieldType, JSONObject jsonObject) throws IOException, JSONException {
 		if(!jsonObject.has(key))
 			return null;
@@ -303,14 +305,14 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see io.mosip.registration.service.external.PreRegZipHandlingService#
 	 * encryptAndSavePreRegPacket(java.lang.String, byte[])
 	 */
 	@Override
 	public PreRegistrationDTO encryptAndSavePreRegPacket(String preRegistrationId, byte[] preRegPacket)
 			throws RegBaseCheckedException {
-		
+
 		// Decrypt the preRegPacket data
 		byte[] decryptedPacketData = clientCryptoFacade.decrypt(preRegPacket);
 
@@ -334,7 +336,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see io.mosip.registration.service.external.PreRegZipHandlingService#
 	 * storePreRegPacketToDisk(java.lang.String, byte[])
 	 */
@@ -366,7 +368,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see io.mosip.registration.service.external.PreRegZipHandlingService#
 	 * decryptPreRegPacket(java.lang.String, byte[])
 	 */

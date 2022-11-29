@@ -1,11 +1,12 @@
 /**
- * 
+ *
  */
 package io.mosip.registration.util.control;
 
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -29,12 +30,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 /**
- * 
+ *
  * Control Type will give high level controls for fields TextField,CheckBox,
  * DropDown,DropDown, Buttons, document type, Biometric Type
- * 
+ *
  * It also provides a features to copy,disable and visible
- * 
+ *
  * @author YASWANTH S
  *
  */
@@ -53,7 +54,7 @@ public abstract class FxControl  {
 
 	/**
 	 * Build Error code, title and fx Element Set Listeners Set Actione events
-	 * 
+	 *
 	 * @param uiFieldDTO field information
 	 */
 	public abstract FxControl build(UiFieldDTO uiFieldDTO);
@@ -65,31 +66,31 @@ public abstract class FxControl  {
 	public abstract void setListener(Node node);
 
 	/**
-	 * 
+	 *
 	 * Set Data into Registration DTO
-	 * 
+	 *
 	 * @param data value
 	 */
 	public abstract void setData(Object data);
 
 	/**
-	 * 
+	 *
 	 * Fill Data into fx element
-	 * 
+	 *
 	 * @param data value
 	 */
 	public abstract void fillData(Object data);
 
 	/**
 	 * Get Value from fx element
-	 * 
+	 *
 	 * @return Value
 	 */
 	public abstract Object getData();
 
 	/**
 	 * Check value is valid or not
-	 * 
+	 *
 	 * @return boolean is valid or not
 	 */
 	//public abstract boolean isValid(Node node);
@@ -154,6 +155,8 @@ public abstract class FxControl  {
 			}
 		}
 		visible(this.node, isFieldVisible(uiFieldDTO));
+		setMandatorySuffix(this.node);
+
 	}
 
 	/**
@@ -162,6 +165,26 @@ public abstract class FxControl  {
 	public void visible(Node node, boolean isVisible) {
 		node.setVisible(isVisible);
 		node.setManaged(isVisible);
+	}
+
+	public void setMandatorySuffix(Node node) {
+		List<String> labels = new ArrayList<>();
+		getRegistrationDTo().getSelectedLanguagesByApplicant().forEach(lCode -> {
+			if(this.uiFieldDTO.getLabel().get(lCode) != null) {
+				labels.add(this.uiFieldDTO.getLabel().get(lCode));
+			}
+		});
+
+		if(labels.size() > 0) {
+			String titleText = String.join(RegistrationConstants.SLASH, labels) + getMandatorySuffix(uiFieldDTO);
+
+			if(node instanceof VBox) {
+				var element = ((VBox)node).getChildren().get(0);
+				if(element instanceof Label) {
+					((Label)element).setText(titleText);
+				}
+			}
+		}
 	}
 
 	/**
@@ -197,7 +220,7 @@ public abstract class FxControl  {
 				return true;
 
 			if(getRegistrationDTo().getFlowType() == FlowType.UPDATE
-				&& !getRegistrationDTo().getUpdatableFields().contains(this.uiFieldDTO.getId())) {
+					&& !getRegistrationDTo().getUpdatableFields().contains(this.uiFieldDTO.getId())) {
 				LOGGER.error("canContinue check on, {} is non-updatable ignoring", uiFieldDTO.getId());
 				return true;
 			}
@@ -214,16 +237,19 @@ public abstract class FxControl  {
 	 */
 	protected String getMandatorySuffix(UiFieldDTO schema) {
 		String mandatorySuffix = RegistrationConstants.EMPTY;
+		requiredFieldValidator = ClientApplication.getApplicationContext().getBean(RequiredFieldValidator.class);
+		boolean isRequired = requiredFieldValidator.isRequiredField(schema, getRegistrationDTo());
+
 		switch (getRegistrationDTo().getFlowType()) {
 			case UPDATE:
 				if (getRegistrationDTo().getUpdatableFields().contains(schema.getId())) {
-					mandatorySuffix = schema.isRequired() ? RegistrationConstants.ASTRIK : RegistrationConstants.EMPTY;
+					mandatorySuffix = isRequired ? RegistrationConstants.ASTRIK : RegistrationConstants.EMPTY;
 				}
 				break;
 
 			case CORRECTION:
 			case NEW:
-				mandatorySuffix = schema.isRequired() ? RegistrationConstants.ASTRIK : RegistrationConstants.EMPTY;
+				mandatorySuffix = isRequired ? RegistrationConstants.ASTRIK : RegistrationConstants.EMPTY;
 				break;
 		}
 		return mandatorySuffix;

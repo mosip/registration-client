@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package io.mosip.registration.util.control.impl;
 
@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import io.mosip.registration.controller.ClientApplication;
+import javafx.geometry.Insets;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -110,7 +111,7 @@ public class DOBAgeFxControl extends FxControl {
 		label.setMinWidth(Region.USE_PREF_SIZE);
 		label.setAlignment(Pos.CENTER);
 		dobHBox.getChildren().add(label);
-		
+
 		/** Add Age Field */
 		dobHBox.getChildren().add(addDateTextField(uiFieldDTO, RegistrationConstants.AGE_FIELD,
 				resourceBundle.getString(RegistrationConstants.AGE_FIELD)));
@@ -121,6 +122,7 @@ public class DOBAgeFxControl extends FxControl {
 //						"YEARS, RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, true,
 //						ageVBox.getWidth()));
 		ageVBox.getChildren().add(dobHBox);
+		ageVBox.setMargin(dobHBox, new Insets(0, 30, 0, 0));
 
 		/** Validation message (Invalid/wrong,,etc,.) */
 		ageVBox.getChildren().add(getLabel(uiFieldDTO.getId() + RegistrationConstants.ERROR_MSG, null,
@@ -236,7 +238,7 @@ public class DOBAgeFxControl extends FxControl {
 	}
 
 	private TextField getTextField(String id, String titleText, String demographicTextfield, double prefWidth,
-			boolean isDisable) {
+								   boolean isDisable) {
 
 		/** Text Field */
 		TextField textField = new TextField();

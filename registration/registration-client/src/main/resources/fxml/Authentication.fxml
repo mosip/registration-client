@@ -87,7 +87,7 @@
 												<VBox prefHeight="200.0" prefWidth="100.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
 													<children>
 														<TextField fx:id="username" promptText="%username" styleClass="authenticationStyle" />
-														<PasswordField fx:id="password" promptText="%password" styleClass="authenticationStyle" />
+														<PasswordField fx:id="password" onAction="#validatePwd" promptText="%password" styleClass="authenticationStyle" />
 														<GridPane>
 															<children>
 																<Button fx:id="submitbtn" mnemonicParsing="false" onAction="#validatePwd" styleClass="contiuneButton" text="%submit" GridPane.rowIndex="1" />
