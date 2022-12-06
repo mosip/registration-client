@@ -164,9 +164,8 @@ public class NewReg {
 
             // Enter userid and password
             String multilangFlag = PropertiesUtil.getKeyValue("multilang");
-            if (multilangFlag.equalsIgnoreCase("Y")) {
+            if (multilangFlag.equalsIgnoreCase("Y")) 
             loginPage.selectAppLang();
-            }
             loginPage.setUserId(operatorUserid);
             flag = loginPage.verifyOnbard(operatorPwd, jsoncontent);
         //    flag2 = loginPage.verifyOnboardBio(jsoncontent);
