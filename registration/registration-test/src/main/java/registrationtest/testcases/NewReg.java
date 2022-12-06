@@ -163,7 +163,10 @@ public class NewReg {
             ExtentReportUtil.test1.info("Operator Enter Details ");
 
             // Enter userid and password
+            String multilangFlag = PropertiesUtil.getKeyValue("multilang");
+            if (multilangFlag.equalsIgnoreCase("Y")) {
             loginPage.selectAppLang();
+            }
             loginPage.setUserId(operatorUserid);
             flag = loginPage.verifyOnbard(operatorPwd, jsoncontent);
         //    flag2 = loginPage.verifyOnboardBio(jsoncontent);
