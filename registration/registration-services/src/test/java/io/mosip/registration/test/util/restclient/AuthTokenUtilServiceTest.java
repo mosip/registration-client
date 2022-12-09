@@ -33,6 +33,8 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.UserDetailDAO;
 import io.mosip.registration.dto.LoginUserDTO;
+import io.mosip.registration.entity.UserDetail;
+import io.mosip.registration.entity.UserPassword;
 import io.mosip.registration.entity.UserToken;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.repositories.UserTokenRepository;
@@ -113,7 +115,13 @@ public class AuthTokenUtilServiceTest {
 	@Test
 	public void hasAnyValidTokenFailureTest() {
 		Mockito.when(userTokenRepository.findTopByTokenExpiryGreaterThanAndUserDetailIsActiveTrueOrderByTokenExpiryDesc(Mockito.anyLong())).thenReturn(null);
-		Mockito.when(userTokenRepository.findTopByRtokenExpiryGreaterThanAndUserDetailIsActiveTrueOrderByRtokenExpiryDesc(Mockito.anyLong())).thenReturn(null);
+		//Mockito.when(userTokenRepository.findTopByRtokenExpiryGreaterThanAndUserDetailIsActiveTrueOrderByRtokenExpiryDesc(Mockito.anyLong())).thenReturn(null);
+		Assert.assertFalse(authTokenUtilService.hasAnyValidToken());
+	}
+	
+	@Test
+	public void hasAnyValidTokenFailureTest2() {
+		Mockito.when(userTokenRepository.findTopByTokenExpiryGreaterThanAndUserDetailIsActiveTrueOrderByTokenExpiryDesc(Mockito.anyLong())).thenReturn(null);
 		Assert.assertFalse(authTokenUtilService.hasAnyValidToken());
 	}
 	
@@ -222,5 +230,31 @@ public class AuthTokenUtilServiceTest {
 		Mockito.when(restClientUtil.invokeForToken(Mockito.any())).thenReturn(responseMap);
 		Assert.assertNotNull(authTokenUtilService.sendOtpWithRetryWrapper("test"));
 	}
+	
+	/*
+	 * @Test public void updateUserDetailsTest() throws Exception {
+	 * 
+	 * UserDetail userDetail = new UserDetail(); userDetail.setId("userId");
+	 * UserPassword usrPwd = new UserPassword();
+	 * //usrPwd.setPwd(userDetail.getUserPassword().getPwd());
+	 * userDetail.setUserPassword(usrPwd); UserToken userToken = new UserToken();
+	 * userToken.setToken("test-token");
+	 * userToken.setRefreshToken("test-refresh-token"); userToken.setUsrId("10011");
+	 * userToken.setTokenExpiry(System.currentTimeMillis()/1000);
+	 * userToken.setRtokenExpiry(System.currentTimeMillis()/100);
+	 * Mockito.when(userTokenRepository.findByUsrIdAndUserDetailIsActiveTrue(Mockito
+	 * .anyString())).thenReturn(userToken);
+	 * //Mockito.when(authTokenUtilService.updateUserDetails()).thenReturn(
+	 * userDetail);
+	 * //Mockito.when(authTokenUtilService.updateUserDetails(Mockito.anyString(),
+	 * Mockito.anyString(), Mockito.anyString(),
+	 * Mockito.anyString())).thenReturn(userDetail);
+	 * //Mockito.when(userDetailDAO.updateUserPwd("userId",
+	 * "password")).thenReturn(userDetail);
+	 * Assert.assertNotNull("updateUserDetails",userDetail);
+	 * 
+	 * }
+	 */
+	
 
 }

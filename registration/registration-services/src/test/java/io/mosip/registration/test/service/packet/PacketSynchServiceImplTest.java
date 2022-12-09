@@ -169,8 +169,8 @@ public class PacketSynchServiceImplTest {
 		assertEquals(syncList.get(0).getId(), packetSynchServiceImpl.fetchPacketsToBeSynched().get(0).getFileName());
 	}
 
-	/*@Test
-	public void testSyncPacketsToServer() throws RegBaseCheckedException, ConnectionException {
+	@Test
+	public void syncPacketsToServerTest() throws RegBaseCheckedException, ConnectionException {
 		List<SyncRegistrationDTO> syncDtoList = new ArrayList<>();
 		LinkedHashMap<String, Object> respObj = new LinkedHashMap<>();
 		LinkedHashMap<String, Object> msg = new LinkedHashMap<>();
@@ -184,18 +184,21 @@ public class PacketSynchServiceImplTest {
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
 				.thenReturn(respObj);
 
-		assertEquals("Success", packetSynchServiceImpl.("123456789", "System")
-				.getSuccessResponseDTO().getOtherAttributes().get("123456789"));
-	}*/
+		
+		  assertEquals("Success",
+		  packetSynchServiceImpl.syncPacketsToServer("123456789", "System", true)
+		  .getSuccessResponseDTO().getOtherAttributes().get("123456789"));
+		 
+	}
 
-	/*@Test
-	public void testUpdateSyncStatus() {
-		List<PacketStatusDTO> synchedPackets = new ArrayList<>();
-		PacketStatusDTO reg = new PacketStatusDTO();
-		synchedPackets.add(reg);
-		Mockito.when(registrationDAO.updatePacketSyncStatus(reg)).thenReturn(new Registration());
-		assertTrue(packetSynchServiceImpl.updateSyncStatus(synchedPackets));
-	}*/
+	/*
+	 * @Test public void testUpdateSyncStatus() { List<PacketStatusDTO>
+	 * synchedPackets = new ArrayList<>(); PacketStatusDTO reg = new
+	 * PacketStatusDTO(); synchedPackets.add(reg);
+	 * Mockito.when(registrationDAO.updatePacketSyncStatus(reg)).thenReturn(new
+	 * Registration());
+	 * assertTrue(packetSynchServiceImpl.updateSyncStatus(synchedPackets)); }
+	 */
 
 //	@Test
 //	public void testHttpException() throws RegBaseCheckedException, ConnectionException {
@@ -220,17 +223,19 @@ public class PacketSynchServiceImplTest {
 		assertEquals(respObj, packetSynchServiceImpl.syncPacketsToServer("123456789", "System"));
 	}*/
 	
-//	@Test
-//	public void testSocketTimeoutException() throws RegBaseCheckedException, ConnectionException {
-//		List<SyncRegistrationDTO> syncDtoList = new ArrayList<>();
-//		syncDtoList.add(new SyncRegistrationDTO());
-//		RegistrationPacketSyncDTO registrationPacketSyncDTO = new RegistrationPacketSyncDTO();
-//		Object respObj = new Object();
-//		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
-//				.thenThrow(new ConnectionException());
-//
-//		assertNotNull(packetSynchServiceImpl.syncPacket("System").getErrorResponseDTOs());
-//	}
+	/*
+	 * @Test public void testSocketTimeoutException() throws
+	 * RegBaseCheckedException, ConnectionException { List<SyncRegistrationDTO>
+	 * syncDtoList = new ArrayList<>(); syncDtoList.add(new SyncRegistrationDTO());
+	 * RegistrationPacketSyncDTO registrationPacketSyncDTO = new
+	 * RegistrationPacketSyncDTO(); Object respObj = new Object();
+	 * Mockito.when(serviceDelegateUtil.post(Mockito.anyString(),
+	 * Mockito.anyString(), Mockito.anyString())) .thenThrow(new
+	 * ConnectionException());
+	 * 
+	 * assertNotNull(packetSynchServiceImpl.syncPacket("System").
+	 * getErrorResponseDTOs()); }
+	 */
 
 	@Test
 	public void packetSyncTest() throws Throwable {
@@ -406,27 +411,27 @@ public class PacketSynchServiceImplTest {
 		//packetSynchServiceImpl.packetSync("");
 	}
 
-//	@Test
-//	public void testsyncPacketException1()
-//			throws RegBaseCheckedException, ConnectionException, NoSuchAlgorithmException {
-//		Registration reg = new Registration();
-//		reg.setId("123456789");
-//		reg.setAckFilename("10001100010025920190430051904_Ack.html");
-//		reg.setStatusCode("NEW");
-//		reg.setUpdDtimes(Timestamp.from(Instant.now()));
-//		
-//		when(registrationRepository.findTopByOrderByUpdDtimesDesc()).thenReturn(reg);
-//		
-//		List<SyncRegistrationDTO> syncDtoList = new ArrayList<>();
-//		syncDtoList.add(new SyncRegistrationDTO());
-//		
-//		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
-//				.thenThrow(new HttpClientErrorException(HttpStatus.ACCEPTED));
-//
-//		Mockito.when(HMACUtils2.generateHash(Mockito.anyString().getBytes())).thenReturn("asa".getBytes());
-//		assertNotNull(packetSynchServiceImpl.syncPacket("System").getErrorResponseDTOs());
-//	}
-
+	/*
+	 * @Test public void testsyncPacketException1() throws RegBaseCheckedException,
+	 * ConnectionException, NoSuchAlgorithmException { Registration reg = new
+	 * Registration(); reg.setId("123456789");
+	 * reg.setAckFilename("10001100010025920190430051904_Ack.html");
+	 * reg.setStatusCode("NEW"); reg.setUpdDtimes(Timestamp.from(Instant.now()));
+	 * 
+	 * when(registrationRepository.findTopByOrderByUpdDtimesDesc()).thenReturn(reg);
+	 * 
+	 * List<SyncRegistrationDTO> syncDtoList = new ArrayList<>();
+	 * syncDtoList.add(new SyncRegistrationDTO());
+	 * 
+	 * Mockito.when(serviceDelegateUtil.post(Mockito.anyString(),
+	 * Mockito.anyString(), Mockito.anyString())) .thenThrow(new
+	 * HttpClientErrorException(HttpStatus.ACCEPTED));
+	 * 
+	 * Mockito.when(HMACUtils2.generateHash(Mockito.anyString().getBytes())).
+	 * thenReturn("asa".getBytes());
+	 * assertNotNull(packetSynchServiceImpl.syncPacket("System").
+	 * getErrorResponseDTOs()); }
+	 */
 	
 	@Test
 	public void testSyncPacketsToServer_1() throws RegBaseCheckedException, ConnectionException {
@@ -447,24 +452,20 @@ public class PacketSynchServiceImplTest {
 	}
 	
 	private Slice<Registration> getSlice(List<Registration> list) {
-		// TODO Auto-generated method stub
 		return new Slice<Registration>() {
 			
 			@Override
 			public Iterator<Registration> iterator() {
-				// TODO Auto-generated method stub
 				return list.iterator();
 			}
 			
 			@Override
 			public Pageable previousPageable() {
-				// TODO Auto-generated method stub
 				return null;
 			}
 			
 			@Override
 			public Pageable nextPageable() {
-				// TODO Auto-generated method stub
 				return null;
 			}
 			

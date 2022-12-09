@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -26,12 +28,14 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.xml.sax.SAXException;
 
 import com.itextpdf.io.IOException;
 
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
@@ -80,7 +84,7 @@ public class SoftwareUpdateHandlerTest {
 	}
 
 
-	@Ignore
+//	@Ignore
 	@Test
 	public void executeSQLTestRollBack() throws Exception {
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(),
@@ -178,5 +182,38 @@ public class SoftwareUpdateHandlerTest {
 		Mockito.when(manifest.getEntries()).thenReturn(entries);
 		assertNotNull(softwareUpdateHandler.getJarChecksum());
 	}
+	
+	 @Test 
+	 public void setLocalManifestTest() throws  RegBaseCheckedException{
+		 softwareUpdateHandler.setLocalManifest();
+		 Assert.assertNotNull(softwareUpdateHandler.getLocalManifest());
+	 }
 
-}
+		/*
+		 * @Test public void getElementValueTest() { String val = "abc";
+		 * Mockito.when(softwareUpdateHandler.getElementValue(null,
+		 * "abc")).thenReturn("val"); }
+		 */		 
+	 
+		/*
+		 * @Test public void getLatestVersionTest() throws RegBaseCheckedException,
+		 * java.io.IOException, ParserConfigurationException, SAXException {
+		 * softwareUpdateHandler.setLatestVersion("1.2.0-SNAPSHOT");
+		 * Assert.assertNotNull(softwareUpdateHandler.getLatestVersion()); }
+		 */
+	 
+		
+		/*
+		 * @Test public void updateTest() throws Exception {
+		 * ReflectionTestUtils.setField(softwareUpdateHandler, "serverMosipXmlFileUrl",
+		 * "https://dev.mosip.net/registration-client/maven-metadata.xml"); Attributes
+		 * attributes = new Attributes(); attributes.put(Attributes.Name.CONTENT_TYPE,
+		 * "test"); Map<String, Attributes> entries = new HashMap<>();
+		 * entries.put("registration-client", attributes);
+		 * entries.put("registration-services", attributes);
+		 * Mockito.when(manifest.getEntries()).thenReturn(entries);
+		 * softwareUpdateHandler.update();
+		 * 
+		 * }
+		 */
+	 }
