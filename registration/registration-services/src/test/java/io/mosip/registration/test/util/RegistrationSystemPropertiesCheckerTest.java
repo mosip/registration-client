@@ -1,17 +1,38 @@
 package io.mosip.registration.test.util;
 
-import org.junit.Assert;
+
+//import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.net.UnknownHostException;
+
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 
 public class RegistrationSystemPropertiesCheckerTest {
 
+	@Mock
+	private RegistrationSystemPropertiesChecker registrationSystemPropertiesChecker;
+
 	@Test
-	public void testGetMachineId() {
+	public void testGetMachineId() throws Exception  {
 		String machineId = RegistrationSystemPropertiesChecker.getMachineId();
-		Assert.assertNotNull(machineId);
+		Assertions.assertNotNull(machineId);
+		
 	}
 
+	@Test
+    public void testGetMachineIdException() throws UnknownHostException{
+		
+		String machineId1 = RegistrationSystemPropertiesChecker.getMachineId();
+		
+		machineId1 = "";
+//		assertThrows(UnknownHostException.class, () -> RegistrationSystemPropertiesChecker.getMachineId());
+
+	}
 
 }
