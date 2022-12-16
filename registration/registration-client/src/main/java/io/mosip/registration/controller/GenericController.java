@@ -656,7 +656,7 @@ public class GenericController extends BaseController {
 		toolTip.setWrapText(true);
 		notification.setTooltip(toolTip);
 		notification.setText((fieldName == null) ? EMPTY : ApplicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
-				.getString("SCREEN_VALIDATION_ERROR") + "[ "+fieldName+"]");
+				.getString("SCREEN_VALIDATION_ERROR") + "[ " + fieldName + " ]");
 	}
 
 	private String getInvalidScreenName(TabPane tabPane) {
