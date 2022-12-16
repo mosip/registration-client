@@ -414,7 +414,6 @@ public class DocumentFxControl extends FxControl {
 					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_REG_PAGE));
 		}
 		//refreshFields();
-		
 	}
 
 	@Override
