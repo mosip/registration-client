@@ -608,6 +608,8 @@ public class BaseController {
 	 */
 	public void goToNewRegistration() {
 		goToHomePage();
+		//When "New Registration" button is clicked at the end of registration in acknowledgement screen, 
+		//checking for an fx item with id "NEW" in home page and triggering mouse-click event on it.
 		Node newRegNode = packetHandlerController.getRegistrationGridPane().lookup(RegistrationConstants.HASH + "NEW");
 		if (newRegNode != null) {
 			Event.fireEvent(newRegNode, new MouseEvent(MouseEvent.MOUSE_CLICKED, 0,
