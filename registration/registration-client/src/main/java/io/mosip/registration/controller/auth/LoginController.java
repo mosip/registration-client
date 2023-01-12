@@ -388,12 +388,6 @@ public class LoginController extends BaseController implements Initializable {
 			UserDTO userDTO = (UserDTO) responseDTO.getSuccessResponseDTO().getOtherAttributes().get(RegistrationConstants.USER_DTO);
 			userId.setText(userDTO.getId());
 			
-			if (userDTO.getUserRole().isEmpty()) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.USER_ROLES_EMPTY_ERROR));
-				LOGGER.info("Roles found empty for the user");
-				return;
-			}
-			
 			if (validateInvalidLogin(userDTO, "")) {
 				isUserNewToMachine = machineMappingService.isUserNewToMachine(userDTO.getId()).getErrorResponseDTOs() != null;
 				if (isUserNewToMachine) {
