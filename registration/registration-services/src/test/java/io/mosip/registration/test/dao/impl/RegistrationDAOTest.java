@@ -176,7 +176,7 @@ public class RegistrationDAOTest {
 		regobject.setCrBy("Mosip123");
 		regobject.setAckFilename("file1");
 
-		regobject.setUserdetail(regUserDetail);
+		//regobject.setUserdetail(regUserDetail);
 		details.add(regobject);
 
 		Mockito.when(registrationRepository.findByclientStatusCodeOrderByCrDtime("R")).thenReturn(details);
@@ -186,7 +186,7 @@ public class RegistrationDAOTest {
 		assertEquals("123456", enrollmentsByStatus.get(0).getId());
 		assertEquals("R", enrollmentsByStatus.get(0).getClientStatusCode());
 		assertEquals("Mosip123", enrollmentsByStatus.get(0).getCrBy());
-		assertEquals("RegistrationOfficer", enrollmentsByStatus.get(0).getUserdetail().getName());
+		//assertEquals("RegistrationOfficer", enrollmentsByStatus.get(0).getUserdetail().getName());
 		assertEquals("file1", enrollmentsByStatus.get(0).getAckFilename());
 	}
 

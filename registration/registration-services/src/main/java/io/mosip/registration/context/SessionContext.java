@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import io.mosip.registration.dto.*;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.kernel.biometrics.constant.BiometricType;
@@ -23,6 +22,12 @@ import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.LoginMode;
 import io.mosip.registration.constants.ProcessNames;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.dto.AuthTokenDTO;
+import io.mosip.registration.dto.AuthenticationValidatorDTO;
+import io.mosip.registration.dto.AuthorizationDTO;
+import io.mosip.registration.dto.RegistrationCenterDetailDTO;
+import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.dto.UserRoleDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.enums.Role;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -32,8 +37,6 @@ import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.security.AuthenticationService;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * This class will handle the creation of Session context, Security Context and
@@ -339,8 +342,8 @@ public class SessionContext {
 				"Registration", io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
 				io.mosip.registration.context.ApplicationContext
 						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
-				1, io.mosip.registration.context.ApplicationContext
-						.getIntValueFromApplicationMap(RegistrationConstants.FINGERPRINT_AUTHENTICATION_THRESHOLD));
+				1, Integer.parseInt(String.valueOf(io.mosip.registration.context.ApplicationContext
+						.map().getOrDefault(RegistrationConstants.FINGERPRINT_AUTHENTICATION_THRESHOLD, 30))));
 
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 		if (authService.authValidator(authenticationValidatorDTO.getUserId(), BiometricType.FINGER.value(),
@@ -382,8 +385,8 @@ public class SessionContext {
 				io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
 				io.mosip.registration.context.ApplicationContext
 						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
-				2, io.mosip.registration.context.ApplicationContext
-						.getIntValueFromApplicationMap(RegistrationConstants.IRIS_AUTHENTICATION_THRESHOLD));
+				2, Integer.parseInt(String.valueOf(io.mosip.registration.context.ApplicationContext
+						.map().getOrDefault(RegistrationConstants.IRIS_AUTHENTICATION_THRESHOLD, 30))));
 
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 		if (authService.authValidator(authenticationValidatorDTO.getUserId(), BiometricType.IRIS.value(), biometrics)) {
@@ -423,8 +426,9 @@ public class SessionContext {
 		
 		MDMRequestDto mdmRequestDto = new MDMRequestDto(RegistrationConstants.FACE_FULLFACE, null, "Registration", io.mosip.registration.context.ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE), 
 				io.mosip.registration.context.ApplicationContext
-				.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT), 1, io.mosip.registration.context.ApplicationContext
-				.getIntValueFromApplicationMap(RegistrationConstants.FACE_AUTHENTICATION_THRESHOLD));
+				.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT), 1, 
+				Integer.parseInt(String.valueOf(io.mosip.registration.context.ApplicationContext
+						.map().getOrDefault(RegistrationConstants.FACE_AUTHENTICATION_THRESHOLD, 30))));
 		
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 		if(authService.authValidator(authenticationValidatorDTO.getUserId(), BiometricType.FACE.value(), biometrics)) {

@@ -25,7 +25,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -71,7 +70,6 @@ import io.mosip.registration.util.restclient.ServiceDelegateUtil;
  */
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@SpringBootTest
 @PrepareForTest({ MetaDataUtils.class, RegBaseUncheckedException.class, SessionContext.class,
 		BiometricAttributeRepository.class, RegistrationAppHealthCheckUtil.class })
 public class MasterSyncDaoImplTest {
@@ -192,7 +190,6 @@ public class MasterSyncDaoImplTest {
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testMasterSyncExceptionThrown() throws RegBaseUncheckedException {
 

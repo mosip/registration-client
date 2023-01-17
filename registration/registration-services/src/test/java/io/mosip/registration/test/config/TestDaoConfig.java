@@ -1,31 +1,24 @@
 package io.mosip.registration.test.config;
 
 import java.io.InputStream;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Map;
 import java.util.Properties;
-import java.util.WeakHashMap;
-
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.kernel.signature.service.impl.SignatureServiceImpl;
+import io.mosip.registration.audit.AuditManagerSerivceImpl;
+import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.DaoConfig;
-import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationHelper;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.*;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.jpa.JpaDialect;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -34,7 +27,6 @@ import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaDialect;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 
-import io.mosip.kernel.dataaccess.hibernate.config.HibernateDaoConfig;
 import io.mosip.registration.context.ApplicationContext;
 import org.springframework.transaction.PlatformTransactionManager;
 
@@ -187,6 +179,12 @@ public class TestDaoConfig extends DaoConfig {
 	@Bean
 	public BioAPIFactory bioAPIFactory() {
 		return Mockito.mock(BioAPIFactory.class);
+	}
+	
+	@Primary
+	@Bean
+	public AuditManagerService auditManagerService() {
+		return Mockito.mock(AuditManagerSerivceImpl.class);
 	}
 
 

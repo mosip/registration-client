@@ -36,7 +36,7 @@
             <ComboBox fx:id="appLanguage" layoutY="101.0" promptText="%chooselanguage" styleClass="loginCombobox" AnchorPane.leftAnchor="53.0" />
             <Button fx:id="sub1" layoutX="53.0" layoutY="211.0" mnemonicParsing="false" onAction="#validateUserId" styleClass="loginSubmitStyle" text="%submit" />
             <ProgressIndicator fx:id="progressIndicator" layoutX="130.0" layoutY="50.0" progress="0.0" visible="false" />
-            <Hyperlink fx:id="forgotUsrnme" layoutX="167.0" layoutY="293.0" mnemonicParsing="false" onAction="#forgotUsrname" styleClass="hyperLinkStyle" text="%forgotUsername" />
+            <Hyperlink fx:id="forgotUsrnme" layoutX="167.0" layoutY="293.0" mnemonicParsing="false" onAction="#forgotUsrname" styleClass="hyperLinkStyle" text="%forgotUsername" visible="false" />
           </children>
         </AnchorPane>
         <AnchorPane fx:id="credentialsPane" layoutX="37.0" layoutY="188.0" styleClass="loginAnchorPaneExtendedStyle" visible="false">
@@ -94,7 +94,7 @@
             <Label styleClass="higlightedLoginLable" text="%registrationlogin" AnchorPane.leftAnchor="35.0" AnchorPane.topAnchor="14.0" />
             <Label layoutX="35.0" layoutY="71.0" text="%withface" />
             <Button layoutX="134.0" layoutY="474.0" mnemonicParsing="false" onAction="#captureFace" styleClass="loginSubmitStyle1" text="%submit" />
-            <Button layoutX="217.0" layoutY="474.0" mnemonicParsing="false" onAction="#streamFace" styleClass="loginSubmitStyle1" text="Stream" />
+            <Button layoutX="217.0" layoutY="474.0" mnemonicParsing="false" onAction="#streamFace" styleClass="loginSubmitStyle1" text="%stream" />
             <ImageView fx:id="faceImage" fitHeight="353.0" fitWidth="378.0" layoutX="38.0" layoutY="113.0" pickOnBounds="true" preserveRatio="true">
               <image>
                 <Image url="@../images/FaceScan.png" />

@@ -229,19 +229,23 @@ public class RegistrationDTO {
 		this.biometrics.remove(key);
 		key = String.format("%s_%s", fieldId, Modality.EXCEPTION_PHOTO.name());
 		this.ATTEMPTS.remove(key);
-		Set<String> captureKeys = this.BIO_CAPTURES.keySet();
-		captureKeys.stream()
-				.filter( k -> k.startsWith(String.format("%s_%s_", fieldId, RegistrationConstants.notAvailableAttribute)))
-				.forEach( k -> {
-					this.BIO_CAPTURES.remove(k);
-				});
-
-		Set<String> scoreKeys = BIO_SCORES.keySet();
-		scoreKeys.stream()
-				.filter( k -> k.startsWith(String.format("%s_%s_", fieldId, Modality.EXCEPTION_PHOTO.name())))
-				.forEach( k -> {
-					this.BIO_SCORES.remove(k);
-				});
+		
+		Iterator<Entry<String, byte[]>> iterator = this.BIO_CAPTURES.entrySet().iterator();
+		while (iterator.hasNext()) {
+		    Entry<String, byte[]> item = iterator.next();
+		    if (item.getKey().startsWith(String.format("%s_%s_", fieldId, RegistrationConstants.notAvailableAttribute))) {
+		    	iterator.remove();
+		    }
+		}
+		
+		Iterator<Entry<String, Double>> iterator2 = this.BIO_SCORES.entrySet().iterator();
+		while (iterator2.hasNext()) {
+		    Entry<String, Double> item = iterator2.next();
+		    if (item.getKey().startsWith(String.format("%s_%s_", fieldId, Modality.EXCEPTION_PHOTO.name()))) {
+		    	iterator2.remove();
+		    }
+		}
+		
 	}
 
 	public void clearBIOCache(String fieldId, String bioAttribute) {

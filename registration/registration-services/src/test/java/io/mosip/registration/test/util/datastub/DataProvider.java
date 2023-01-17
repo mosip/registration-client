@@ -17,7 +17,6 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.OSIDataDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
-import io.mosip.registration.dto.biometric.BiometricDTO;
 import io.mosip.registration.dto.biometric.BiometricExceptionDTO;
 import io.mosip.registration.dto.biometric.BiometricInfoDTO;
 import io.mosip.registration.dto.biometric.FaceDetailsDTO;
@@ -64,7 +63,7 @@ public class DataProvider {
 
 		//registrationDTO.setDemographicDTO(DataProvider.getDemographicDTO());
 		registrationDTO.setDemographics(new HashMap<String, Object>());
-		//registrationDTO.setBiometricDTO(DataProvider.getBiometricDTO());
+		registrationDTO.setBiometrics(getBiometricDTO());
 		HashMap<String, Object> selectionListDTO=new HashMap<>();
 		//registrationDTO.setSelectionListDTO(selectionListDTO);
 		registrationDTO.setSelectedLanguagesByApplicant(Arrays.asList("eng", "ara", "fra"));
@@ -98,20 +97,20 @@ public class DataProvider {
 
 	private static Map<String, BiometricsException> buildExceptionBiometrics() {
 		Map<String, BiometricsException> biometricExceptions = new HashMap<>();
-		BiometricsException exception = new BiometricsException("fingerprint", "rightIndex", "Due to accident", PERMANANENT, APPLICANT);
-		biometricExceptions.put("applicant_rightIndex", exception);
+		BiometricsException exception = new BiometricsException("iris", "rightEye", "Due to accident", PERMANANENT, APPLICANT);
+		biometricExceptions.put("applicant_rightEye", exception);
 		return biometricExceptions;
 	}
 
 	private static Map<String, BiometricsDto> buildApplicantBiometrics() {
 		Map<String, BiometricsDto> applicantBiometrics = new HashMap<>();
-		BiometricsDto biometric = new BiometricsDto("leftIndex", "leftIndex".getBytes(), 90);
+		BiometricsDto biometric = new BiometricsDto("leftEye", "leftEye".getBytes(), 90);
 		biometric.setSignature("signature");
 		biometric.setNumOfRetries(1);
 		biometric.setSdkScore(90);
 		biometric.setForceCaptured(false);
 		biometric.setSpecVersion("1.2.0");
-		applicantBiometrics.put("applicant_leftIndex", biometric);
+		applicantBiometrics.put("applicant_leftEye", biometric);
 		return applicantBiometrics;
 	}
 
@@ -127,13 +126,25 @@ public class DataProvider {
 		return biometrics;
 	}
 
-	private static BiometricDTO getBiometricDTO() throws RegBaseCheckedException {
-		BiometricDTO biometricDTO = new BiometricDTO();
-//		biometricDTO.setApplicantBiometricDTO(DataProvider.buildBioMerticDTO(DataProvider.APPLICANT));
-//		biometricDTO.setIntroducerBiometricDTO(DataProvider.buildBioMerticDTO("introducer"));
-		biometricDTO.setSupervisorBiometricDTO(DataProvider.buildBioMerticDTO("supervisor"));
-		biometricDTO.setOperatorBiometricDTO(DataProvider.buildBioMerticDTO("officer"));
-		return biometricDTO;
+	private static Map<String, BiometricsDto> getBiometricDTO() throws RegBaseCheckedException {
+		BiometricsDto biometrics1 = new BiometricsDto("leftMiddle", "leftMiddle".getBytes(), 90.0);
+		biometrics1.setModalityName(RegistrationConstants.FINGERPRINT_UPPERCASE);
+		BiometricsDto biometrics2 = new BiometricsDto("leftRing", "leftRing".getBytes(), 90.0);
+		biometrics2.setModalityName(RegistrationConstants.FINGERPRINT_UPPERCASE);
+		BiometricsDto biometrics3 = new BiometricsDto("leftEye", "leftEye".getBytes(), 90.0);
+		biometrics3.setModalityName(RegistrationConstants.IRIS);
+		BiometricsDto biometrics4 = new BiometricsDto("rightLittle", "rightLittle".getBytes(), 90.0);
+		biometrics4.setModalityName(RegistrationConstants.FINGERPRINT_UPPERCASE);
+		BiometricsDto biometrics5 = new BiometricsDto("face", "face".getBytes(), 90.0);
+		biometrics5.setModalityName(RegistrationConstants.FACE);
+		
+		Map<String, BiometricsDto> applicantBiometrics = new HashMap<>();
+		applicantBiometrics.put("applicant_leftMiddle", biometrics1);
+		applicantBiometrics.put("applicant_leftRing", biometrics2);
+		applicantBiometrics.put("applicant_leftEye", biometrics3);
+		applicantBiometrics.put("applicant_rightLittle", biometrics4);
+		applicantBiometrics.put("applicant_face", biometrics5);
+		return applicantBiometrics;
 	}
 
 	private static BiometricInfoDTO buildBioMerticDTO(String persontype) throws RegBaseCheckedException {
@@ -573,7 +584,27 @@ public class DataProvider {
 		proofOfException.setSubType("POE");
 		proofOfException.setLabel(fullnameLabel);
 		fields.add(proofOfException);
+		
+		UiFieldDTO individualBiometrics = new UiFieldDTO();
+		individualBiometrics.setId("applicant");
+		individualBiometrics.setBioAttributes(getBioAttributes());
+		individualBiometrics.setType("biometricsType");
+		individualBiometrics.setLabel(fullnameLabel);
+		fields.add(individualBiometrics);
 
 		return fields;
+	}
+	
+	private static List<String> getBioAttributes() {
+		List<String> bioAttributes = new ArrayList<String>();
+		bioAttributes.add(new String("leftEye"));
+		bioAttributes.add(new String("rightEye"));
+		bioAttributes.add(new String("rightLittle"));
+		bioAttributes.add(new String("rightIndex"));
+		bioAttributes.add(new String("rightRing"));
+		bioAttributes.add(new String("rightMiddle"));
+		bioAttributes.add(new String("leftIndex"));
+		bioAttributes.add(new String("leftLittle"));
+		return bioAttributes;
 	}
 }

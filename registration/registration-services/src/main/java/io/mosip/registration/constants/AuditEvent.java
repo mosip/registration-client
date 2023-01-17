@@ -311,7 +311,17 @@ public enum AuditEvent {
 	REG_BLOCKLISTED_WORD_ACCEPTED("REG-EVT-102", USER_EVENT.getCode(), "REG_BLOCKLISTED_WORD_ACCEPTED",
 			"Demographic Details : A blocklisted word has been accepted in Registration"),
 	REG_BLOCKLISTED_WORD_REJECTED("REG-EVT-103", USER_EVENT.getCode(), "REG_BLOCKLISTED_WORD_REJECTED",
-			"Demographic Details : A blocklisted word has been rejected in Registration");
+			"Demographic Details : A blocklisted word has been rejected in Registration"),
+
+	REG_BIO_CAPTURE_DETAILS("REG-EVT-104", USER_EVENT.getCode(), "REG_BIO_CAPTURE_DETAILS",
+			"<modality> Biometric detail is captured within <time> milliseconds and capture count is <count>"),
+	REG_BIO_CAPTURE_DETAILS_FAILURE("REG-EVT-105", USER_EVENT.getCode(), "REG_BIO_CAPTURE_DETAILS_FAILURE",
+			"<modality> Biometric detail capture is failed and capture count is <count>. Error Message: <errorMessage>"),
+	
+	CLIENT_UPGRADE_JARS_DOWNLOADED("REG-UPG-001", USER_EVENT.getCode(), "CLIENT_UPGRADE_JARS_DOWNLOADED",
+			"Client Upgrade: Successfully downloaded all the upgrade jars"),
+	CLIENT_DB_UPGRADE_SCRIPTS("REG-UPG-001", USER_EVENT.getCode(), "CLIENT_DB_UPGRADE_SCRIPTS",
+			"Client Upgrade: SQL scripts execution success");
 
 	/**
 	 * The constructor
