@@ -154,7 +154,14 @@ public class UserClientMachineMappingDAOTest {
 				.thenReturn(null);
 
 		Assert.assertNull(machineMappingDAOImpl.getKeyIndexByMachineName("name"));
+	}
+	
+	@Test
+	public void getMachineNullTest() {
+		PowerMockito.when(machineMasterRepository.findByIsActiveTrueAndNameIgnoreCase(Mockito.anyString()))
+				.thenReturn(null);
 
+		Assert.assertNull(machineMappingDAOImpl.getMachine());
 	}
 
 }

@@ -433,19 +433,11 @@ public class BaseController {
 	}
 
 	private void alertTypeCheck(String title, String context, Stage alertStage) {
-		if (!context.contains(RegistrationConstants.SUCCESS.toUpperCase()) && !context.contains(RegistrationConstants.ERROR.toUpperCase())) {
-			if (SessionContext.isSessionContextAvailable()) {
-				SessionContext.map().put(ALERT_STAGE, alertStage);
-			}
-			alertController.generateAlertResponse(title, context);
-			alertStage.showAndWait();
-		} else {
-			if (SessionContext.isSessionContextAvailable()) {
-				SessionContext.map().put(ALERT_STAGE, alertStage);
-			}
-			alertController.generateAlertResponse(title, context);
-			alertStage.showAndWait();
+		if (SessionContext.isSessionContextAvailable()) {
+			SessionContext.map().put(ALERT_STAGE, alertStage);
 		}
+		alertController.generateAlertResponse(title, context);
+		alertStage.showAndWait();
 		alertController.alertWindowExit();
 	}
 
@@ -612,7 +604,7 @@ public class BaseController {
 	/**
 	 * Opens the home page screen.
 	 */
-	public void goToSettingsFromRegistration() {
+	public boolean goToSettingsFromRegistration() {
 		try {
 			if (isAckOpened() || pageNavigantionAlert()) {
 				setIsAckOpened(false);
@@ -624,12 +616,14 @@ public class BaseController {
 					SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
 							RegistrationConstants.ENABLE);
 				}
+				return true;
 			}
-
+			return false;
 		} catch (RuntimeException runtimException) {
 			LOGGER.error("REGISTRATION - REDIRECTHOME - BASE_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 					runtimException.getMessage() + ExceptionUtils.getStackTrace(runtimException));
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE));
+			return false;
 		}
 	}
 
@@ -1655,8 +1649,8 @@ public class BaseController {
 						.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
 				io.mosip.registration.context.ApplicationContext
 						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
-				1, io.mosip.registration.context.ApplicationContext.getIntValueFromApplicationMap(
-				RegistrationConstants.FINGERPRINT_AUTHENTICATION_THRESHOLD));
+				1, Integer.parseInt(String.valueOf(io.mosip.registration.context.ApplicationContext
+						.map().getOrDefault(RegistrationConstants.FINGERPRINT_AUTHENTICATION_THRESHOLD, 30))));
 		
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 		boolean fpMatchStatus = authenticationService.authValidator(userId, SingleType.FINGER.value(), biometrics);
@@ -1679,8 +1673,8 @@ public class BaseController {
 						.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
 				io.mosip.registration.context.ApplicationContext
 						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
-				2, io.mosip.registration.context.ApplicationContext
-				.getIntValueFromApplicationMap(RegistrationConstants.IRIS_AUTHENTICATION_THRESHOLD));
+				2, Integer.parseInt(String.valueOf(io.mosip.registration.context.ApplicationContext
+						.map().getOrDefault(RegistrationConstants.IRIS_AUTHENTICATION_THRESHOLD, 30))));
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 
 		boolean match = authenticationService.authValidator(userId, SingleType.IRIS.value(), biometrics);
@@ -1704,8 +1698,8 @@ public class BaseController {
 						.getStringValueFromApplicationMap(RegistrationConstants.SERVER_ACTIVE_PROFILE),
 				io.mosip.registration.context.ApplicationContext
 						.getIntValueFromApplicationMap(RegistrationConstants.CAPTURE_TIME_OUT),
-				1, io.mosip.registration.context.ApplicationContext
-				.getIntValueFromApplicationMap(RegistrationConstants.FACE_AUTHENTICATION_THRESHOLD));
+				1, Integer.parseInt(String.valueOf(io.mosip.registration.context.ApplicationContext
+						.map().getOrDefault(RegistrationConstants.FACE_AUTHENTICATION_THRESHOLD, 30))));
 
 		List<BiometricsDto> biometrics = bioService.captureModalityForAuth(mdmRequestDto);
 

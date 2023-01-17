@@ -6,36 +6,40 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.ResourceBundle;
 
-import io.mosip.commons.packet.dto.packet.SimpleDto;
-import io.mosip.kernel.core.util.CryptoUtil;
-import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.controller.ClientApplication;
-import javafx.scene.control.Accordion;
-import javafx.scene.control.Label;
-import javafx.scene.control.TitledPane;
-import javafx.scene.layout.VBox;
 import org.apache.commons.io.IOUtils;
 import org.w3c.dom.Document;
 
-
-import io.mosip.registration.dto.mastersync.GenericDto;
+import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.templatemanager.spi.TemplateManager;
 import io.mosip.kernel.core.templatemanager.spi.TemplateManagerBuilder;
+import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
 import io.mosip.registration.constants.Components;
+import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.SessionContext;
-import io.mosip.registration.controller.Initialization;
+import io.mosip.registration.controller.ClientApplication;
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.template.TemplateService;
 import io.mosip.registration.util.control.FxControl;
 import javafx.scene.Node;
+import javafx.scene.control.Accordion;
+import javafx.scene.control.Label;
+import javafx.scene.control.TitledPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
 
 /**
@@ -183,6 +187,6 @@ public class HtmlFxControl extends FxControl {
     }
 
     private void addListeners(Document document) {
-        //TODO
+        setData(this.uiFieldDTO);
     }
 }

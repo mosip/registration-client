@@ -2,6 +2,7 @@ package io.mosip.registration.constants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1479,66 +1480,65 @@ public class RegistrationConstants {
 	public static final String TPM_PUBLIC_KEY_SYNC_SERVICE_NAME = "tpm_public_key";
 	public static final String SERIAL_NUMBER = "serialnumber";
 
-	public static final Map<String, String> userOnBoardMap = new HashMap<String, String>() {
+	public static final Map<String, String> userOnBoardMap = createUserOnBoardMap();
 
-		{
-			put("leftIndex", "LF_INDEX");
-			put("leftLittle", "LF_LITTLE");
-			put("leftMiddle", "LF_MIDDLE");
-			put("leftRing", "LF_RING");
-			put("leftThumb", "LF_THUMB");
-			put("rightIndex", "RF_INDEX");
-			put("rightLittle", "RF_LITTLE");
-			put("rightMiddle", "RF_MIDDLE");
-			put("rightRing", "RF_RING");
-			put("rightThumb", "RF_THUMB");
-			put("LeftEye", "L_IRIS");
-			put("RightEye", "R_IRIS");
-			put("LeftEye.png", "LEFT");
-			put("RightEye.png", "RIGHT");
-		}
+	private static Map<String, String> createUserOnBoardMap() {
+        Map<String, String> result = new HashMap<>();
+        result.put("leftIndex", "LF_INDEX");
+        result.put("leftLittle", "LF_LITTLE");
+        result.put("leftMiddle", "LF_MIDDLE");
+        result.put("leftRing", "LF_RING");
+        result.put("leftThumb", "LF_THUMB");
+        result.put("rightIndex", "RF_INDEX");
+        result.put("rightLittle", "RF_LITTLE");
+        result.put("rightMiddle", "RF_MIDDLE");
+        result.put("rightRing", "RF_RING");
+        result.put("rightThumb", "RF_THUMB");
+        result.put("LeftEye", "L_IRIS");
+        result.put("RightEye", "R_IRIS");
+        result.put("LeftEye.png", "LEFT");
+        result.put("RightEye.png", "RIGHT");
+        return Collections.unmodifiableMap(result);
+    }
 
-	};
+	public static final Map<String, String> uIToMDSExceptionMap = creareUIToMDSExceptionMap();
 
-	public static final Map<String, String> uIToMDSExceptionMap = new HashMap<String, String>() {
+	private static Map<String, String> creareUIToMDSExceptionMap() {
+        Map<String, String> result = new HashMap<>();
+        result.put("leftIndex", "LF_INDEX");
+        result.put("leftLittle", "LF_LITTLE");
+        result.put("leftMiddle", "LF_MIDDLE");
+        result.put("leftRing", "LF_RING");
+        result.put("leftThumb", "LF_THUMB");
+        result.put("rightIndex", "RF_INDEX");
+        result.put("rightLittle", "RF_LITTLE");
+        result.put("rightMiddle", "RF_MIDDLE");
+        result.put("rightRing", "RF_RING");
+        result.put("rightThumb", "RF_THUMB");
+        result.put("leftEye", "L_IRIS");
+        result.put("rightEye", "R_IRIS");
+        return Collections.unmodifiableMap(result);
+    }
 
-		{
-			put("leftIndex", "LF_INDEX");
-			put("leftLittle", "LF_LITTLE");
-			put("leftMiddle", "LF_MIDDLE");
-			put("leftRing", "LF_RING");
-			put("leftThumb", "LF_THUMB");
-			put("rightIndex", "RF_INDEX");
-			put("rightLittle", "RF_LITTLE");
-			put("rightMiddle", "RF_MIDDLE");
-			put("rightRing", "RF_RING");
-			put("rightThumb", "RF_THUMB");
-			put("leftEye", "L_IRIS");
-			put("rightEye", "R_IRIS");
-		}
+	public static final Map<String, String> userOnBoardBioFlag = createUserOnBoardBioFlag();
 
-	};
-
-	public static final Map<String, String> userOnBoardBioFlag = new HashMap<String, String>() {
-
-		{
-			put("Left Index", "Left IndexFinger");
-			put("Left Little", "Left LittleFinger");
-			put("Left Middle", "Left MiddleFinger");
-			put("Left Ring", "Left RingFinger");
-			put("Left Thumb", "Left Thumb");
-			put("Right Index", "Right IndexFinger");
-			put("Right Little", "Right LittleFinger");
-			put("Right Middle", "Right MiddleFinger");
-			put("Right Ring", "Right RingFinger");
-			put("Right Thumb", "Right Thumb");
-			put("Left Iris", "Left");
-			put("Right Iris", "Right");
-
-		}
-
-	};
-
+	private static Map<String, String> createUserOnBoardBioFlag() {
+        Map<String, String> result = new HashMap<>();
+        result.put("Left Index", "Left IndexFinger");
+        result.put("Left Little", "Left LittleFinger");
+        result.put("Left Middle", "Left MiddleFinger");
+        result.put("Left Ring", "Left RingFinger");
+        result.put("Left Thumb", "Left Thumb");
+        result.put("Right Index", "Right IndexFinger");
+        result.put("Right Little", "Right LittleFinger");
+        result.put("Right Middle", "Right MiddleFinger");
+        result.put("Right Ring", "Right RingFinger");
+        result.put("Right Thumb", "Right Thumb");
+        result.put("Left Iris", "Left");
+        result.put("Right Iris", "Right");
+        return Collections.unmodifiableMap(result);
+    }
+	
 	public static final String RESPONSE_SIGNATURE = "response-signature";
 	public static final String ON_BOARD_FACE = "FACE";
 	public static final String AUTH_SERVICE_URL = "authmanager/authenticate";

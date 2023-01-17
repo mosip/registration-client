@@ -26,8 +26,10 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.registration.constants.RegistrationClientStatusCode;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.dao.impl.RegistrationDAOImpl;
@@ -44,11 +46,10 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.RegistrationRepository;
 import io.mosip.registration.service.IdentitySchemaService;
-import io.mosip.registration.service.impl.IdentitySchemaServiceImpl;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@PrepareForTest({ SessionContext.class })
+@PrepareForTest({ SessionContext.class, ApplicationContext.class })
 public class RegistrationDAOTest {
 
 	@Rule
@@ -60,9 +61,6 @@ public class RegistrationDAOTest {
 
 	@Mock
 	private IdentitySchemaService identitySchemaService;
-	
-	@Mock
-	private IdentitySchemaServiceImpl identitySchemaServiceImpl;
 	
 	Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
@@ -80,13 +78,15 @@ public class RegistrationDAOTest {
 		PowerMockito.when(SessionContext.userContext().getName()).thenReturn("mosip");
 		PowerMockito.when(SessionContext.userContext().getRoles()).thenReturn(roles);
 		PowerMockito.when(SessionContext.userContext().getRegistrationCenterDetailDTO()).thenReturn(center);
+		
+		PowerMockito.mockStatic(ApplicationContext.class);
+		PowerMockito.doReturn("eng").when(ApplicationContext.class, "applicationLanguage");
 	}
 
 	@Test
 	@Ignore
 	public void testSaveRegistration() throws RegBaseCheckedException {
 		RegistrationDTO registrationDTO = new RegistrationDTO();
-		RegistrationMetaDataDTO registrationMetaDataDTO=new RegistrationMetaDataDTO();
 		
 		List<ValuesDTO> fullNames = new ArrayList<>();
 		ValuesDTO valuesDTO = new ValuesDTO();
@@ -94,9 +94,6 @@ public class RegistrationDAOTest {
 		valuesDTO.setValue("Individual Name");
 		fullNames.add(valuesDTO);		
 		registrationDTO.getDemographics().put("fullName", fullNames);
-		
-		registrationDTO.setRegistrationMetaDataDTO(registrationMetaDataDTO);
-		//registrationDTO.getRegistrationMetaDataDTO().setRegistrationCategory("New");
 		when(registrationRepository.create(Mockito.any(Registration.class))).thenReturn(new Registration());
 
 		registrationDAOImpl.save("../PacketStore/28-Sep-2018/111111", registrationDTO);
@@ -348,16 +345,12 @@ public class RegistrationDAOTest {
 	@Test
 	public void saveRegistration() throws RegBaseCheckedException {
 		RegistrationDTO registrationDTO = getRegistrationDTO();
-		RegistrationMetaDataDTO registrationMetaDataDTO=new RegistrationMetaDataDTO();		
-		List<ValuesDTO> fullNames = new ArrayList<>();
-		ValuesDTO valuesDTO = new ValuesDTO();
-		valuesDTO.setLanguage("eng");
-		valuesDTO.setValue("Individual Name");
+		List<SimpleDto> fullNames = new ArrayList<>();
+		SimpleDto valuesDTO = new SimpleDto("eng","Individual Name");
 		fullNames.add(valuesDTO);		
-		registrationDTO.getDemographics().put("fullName", fullNames);		
-		registrationDTO.setRegistrationMetaDataDTO(registrationMetaDataDTO);
+		registrationDTO.getDemographics().put("fullName", fullNames);
 		//registrationDTO.getRegistrationMetaDataDTO().setRegistrationCategory("New");
-		when(identitySchemaServiceImpl.getAllFieldSpec(Mockito.anyString(),Mockito.anyDouble())).thenReturn(getDocumentTypeTestData());
+		when(identitySchemaService.getAllFieldSpec(Mockito.anyString(),Mockito.anyDouble())).thenReturn(getDocumentTypeTestData());
 		when(registrationRepository.create(Mockito.any(Registration.class))).thenReturn(new Registration());
 		registrationDAOImpl.save("test", registrationDTO);
 	}

@@ -16,7 +16,7 @@ public class RegistrationUIConstants {
 	// Key values to read value from messages.properties file
 
 	public static ResourceBundle bundle = ApplicationContext.getInstance().getApplicationLanguageMessagesBundle();
-
+	public static final String USER_ROLES_EMPTY_ERROR = "USER_ROLES_EMPTY_ERROR";
 	public static void setBundle(ResourceBundle messageBundle) {
 		bundle = messageBundle;
 	}

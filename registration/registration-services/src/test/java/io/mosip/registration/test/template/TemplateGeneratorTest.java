@@ -35,6 +35,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import io.mosip.biometrics.util.iris.IrisDecoder;
 import io.mosip.kernel.core.qrcodegenerator.spi.QrCodeGenerator;
 import io.mosip.kernel.qrcode.generator.zxing.constant.QrVersion;
 import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderImpl;
@@ -64,7 +65,7 @@ import io.mosip.registration.util.acktemplate.TemplateGenerator;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@PrepareForTest({ ImageIO.class, ApplicationContext.class, SessionContext.class, IOUtils.class })
+@PrepareForTest({ ImageIO.class, ApplicationContext.class, SessionContext.class, IOUtils.class, IrisDecoder.class })
 public class TemplateGeneratorTest {
 	TemplateManagerBuilderImpl template = new TemplateManagerBuilderImpl();
 
@@ -137,6 +138,8 @@ public class TemplateGeneratorTest {
 				templateGenerator.getClass().getResourceAsStream(RegistrationConstants.TEMPLATE_THUMBS_IMAGE_PATH)))
 						.thenReturn(image);
 		*/
+		PowerMockito.mockStatic(IrisDecoder.class);
+		when(IrisDecoder.convertIrisISOToImageBytes(Mockito.any())).thenReturn("image".getBytes());
 		UserContext userContext = Mockito.mock(SessionContext.UserContext.class);
 		PowerMockito.mockStatic(SessionContext.class);
 		PowerMockito.doReturn(userContext).when(SessionContext.class, "userContext");
@@ -225,7 +228,9 @@ public class TemplateGeneratorTest {
 		Mockito.when(jobConfigurationService.getSyncControlOfJob(Mockito.anyString())).thenReturn(syncControl);
 		Mockito.when(softwareUpdateHandler.getCurrentVersion()).thenReturn("1.2.0-rc2-SNAPSHOT");
 		Mockito.when(identitySchemaService.getLatestEffectiveSchemaVersion()).thenReturn(0.5);
-		assertNotNull(templateGenerator.generateDashboardTemplate("sample text", template, "test template", Timestamp.from(Instant.now()).toString()).getSuccessResponseDTO());
+		assertNotNull(templateGenerator
+				.generateDashboardTemplate("sample text", template, Timestamp.from(Instant.now()).toString())
+				.getSuccessResponseDTO());
 	}
 	
 	@Test
@@ -246,7 +251,9 @@ public class TemplateGeneratorTest {
 		ResponseDTO resp = new ResponseDTO();
 		resp.setErrorResponseDTOs(new ArrayList<>());
 		Mockito.when(userMachineMappingService.isUserNewToMachine("110013")).thenReturn(new ResponseDTO());
-		assertNotNull(templateGenerator.generateDashboardTemplate("sample text", template, "test template", Timestamp.from(Instant.now()).toString()).getErrorResponseDTOs());
+		assertNotNull(templateGenerator
+				.generateDashboardTemplate("sample text", template, Timestamp.from(Instant.now()).toString())
+				.getErrorResponseDTOs());
 	}
 	
 	@Test
@@ -291,6 +298,8 @@ public class TemplateGeneratorTest {
 		Mockito.when(jobConfigurationService.getSyncControlOfJob(Mockito.anyString())).thenReturn(syncControl);
 		Mockito.when(softwareUpdateHandler.getCurrentVersion()).thenReturn("1.2.0-rc2-SNAPSHOT");
 		Mockito.when(identitySchemaService.getLatestEffectiveSchemaVersion()).thenReturn(0.5);
-		assertNotNull(templateGenerator.generateDashboardTemplate("sample text", template, "test template", Timestamp.from(Instant.now()).toString()).getSuccessResponseDTO());
+		assertNotNull(templateGenerator
+				.generateDashboardTemplate("sample text", template, Timestamp.from(Instant.now()).toString())
+				.getSuccessResponseDTO());
 	}
 }

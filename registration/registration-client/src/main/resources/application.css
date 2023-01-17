@@ -1275,6 +1275,11 @@ Working on new Css by taleev
 	-fx-font-size: 1.5em;
 }
 
+.modalityLabel {
+	-fx-text-fill: #666666;
+	-fx-font-size: 1.2em;
+}
+
 .paneHeader {
 	-fx-text-fill: #005baa;
 	-fx-font-size: 22.0px;

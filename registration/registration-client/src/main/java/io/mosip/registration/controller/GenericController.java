@@ -167,6 +167,10 @@ public class GenericController extends BaseController {
 		authenticate.setDisable(disable);
 	}
 
+	public void disableAuthenticateButton(boolean disable) {
+		authenticate.setDisable(disable);
+	}
+	
 	private void initialize(RegistrationDTO registrationDTO) {
 		orderedScreens.clear();
 		fxControlMap.clear();
@@ -204,7 +208,7 @@ public class GenericController extends BaseController {
 		label.getStyleClass().add(LABEL_CLASS);
 		label.setId("preRegistrationLabel");
 		label.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
-				.getString("search_for_Pre_registration_id"));
+				.getString("applicationId"));
 		hBox.getChildren().add(label);
 		TextField textField = new TextField();
 		textField.setId("preRegistrationId");

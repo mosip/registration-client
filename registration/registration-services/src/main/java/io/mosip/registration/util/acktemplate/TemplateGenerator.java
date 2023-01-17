@@ -606,7 +606,7 @@ public class TemplateGenerator extends BaseService {
 	}
 
 	public ResponseDTO generateDashboardTemplate(String templateText, TemplateManagerBuilder templateManagerBuilder,
-												 String templateType, String applicationStartTime) throws RegBaseCheckedException {
+			String applicationStartTime) throws RegBaseCheckedException {
 		ResponseDTO response = new ResponseDTO();
 
 		try {
