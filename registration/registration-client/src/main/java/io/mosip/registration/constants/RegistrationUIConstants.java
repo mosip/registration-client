@@ -16,7 +16,7 @@ public class RegistrationUIConstants {
 	// Key values to read value from messages.properties file
 
 	public static ResourceBundle bundle = ApplicationContext.getInstance().getApplicationLanguageMessagesBundle();
-	public static final String USER_ROLES_EMPTY_ERROR = "USER_ROLES_EMPTY_ERROR";
+	
 	public static void setBundle(ResourceBundle messageBundle) {
 		bundle = messageBundle;
 	}
@@ -429,4 +429,5 @@ public class RegistrationUIConstants {
 
 	public static final String INVALID_FLOW_TYPE = "INVALID_FLOW_TYPE";
 	public static final String ADDITIONAL_INFO_REQ_ID_MISSING = "ADDITIONAL_INFO_REQ_ID_MISSING";
+	public static final String USER_ROLES_EMPTY_ERROR = "USER_ROLES_EMPTY_ERROR";
 }

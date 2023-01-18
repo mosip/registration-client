@@ -451,7 +451,7 @@ public class BioServiceTest {
                 mdmDeviceInfo.setDigitalId(String.format(JWT_FORMAT,
                         CryptoUtil.encodeToURLSafeBase64(objectMapper.writeValueAsBytes(digitalId))));
                 mdmDeviceInfo.setDeviceId("1");
-                mdmDeviceInfo.setDeviceSubId(new int[] { 1, 2 });
+                mdmDeviceInfo.setDeviceSubId(new String[] { "1", "2" });
                 mdmDeviceInfo.setDeviceCode("1");
                 mdmDeviceInfo.setDeviceStatus(deviceStatus);
                 mdmDeviceInfo.setCallbackId("http://127.0.0.1:"+port);
