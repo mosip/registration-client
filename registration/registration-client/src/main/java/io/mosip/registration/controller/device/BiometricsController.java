@@ -28,8 +28,10 @@ import io.mosip.biometrics.util.face.FaceDecoder;
 import io.mosip.biometrics.util.finger.FingerDecoder;
 import io.mosip.biometrics.util.iris.IrisDecoder;
 import io.mosip.commons.packet.dto.packet.BiometricsException;
+import io.mosip.kernel.biometrics.commons.CbeffValidator;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
 import io.mosip.kernel.biometrics.constant.PurposeType;
 import io.mosip.kernel.biometrics.entities.BDBInfo;
 import io.mosip.kernel.biometrics.entities.BIR;
@@ -2018,13 +2020,25 @@ public class BiometricsController extends BaseController /* implements Initializ
 
 		userBiometrics.forEach(userBiometric -> {
 			String userId = userBiometric.getUserBiometricId().getUsrId();
-			gallery.computeIfAbsent(userId, k -> new ArrayList<BIR>())
-					.add(buildBir(userBiometric.getBioIsoImage(), biometricType));
+			
+			try {
+				BIR bir = CbeffValidator.getBIRFromXML(userBiometric.getBirData());
+				gallery.computeIfAbsent(userId, k -> new ArrayList<BIR>())
+					.add(bir.getBirs().get(0));
+			} catch (Exception e) {
+				LOGGER.error("Failed deserialization of BIR data of operator with exception >> ", e);
+				// Since de-serialization failed, we assume that we stored BDB in database and
+				// generating BIR from it
+				gallery.computeIfAbsent(userId, k -> new ArrayList<BIR>())
+						.add(buildBir(userBiometric.getUserBiometricId().getBioAttributeCode(),
+								userBiometric.getQualityScore(), userBiometric.getBioIsoImage(), ProcessedLevelType.PROCESSED));
+			}
 		});
 
 		List<BIR> sample = new ArrayList<>(biometrics.size());
 		biometrics.forEach(biometricDto -> {
-			sample.add(buildBir(biometricDto.getAttributeISO(), biometricType));
+			sample.add(buildBir(biometricDto.getBioAttribute(),
+					(long) biometricDto.getQualityScore(), biometricDto.getAttributeISO(), ProcessedLevelType.RAW));
 		});
 
 		try {
@@ -2035,14 +2049,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 			LOGGER.error("Failed to dedupe check >> ", e);
 		}
 		return false;
-	}
-
-	private BIR buildBir(byte[] biometricImageISO, BiometricType modality) {
-		return new BIRBuilder().withBdb(biometricImageISO)
-				.withBdbInfo(new BDBInfo.BDBInfoBuilder().withFormat(new RegistryIDType())
-						.withType(Collections.singletonList(modality))
-						.withPurpose(PurposeType.IDENTIFY).build())
-				.build();
 	}
 
 	private VBox getImageVBox(String modality, String subtype, List<String> configBioAttributes) {

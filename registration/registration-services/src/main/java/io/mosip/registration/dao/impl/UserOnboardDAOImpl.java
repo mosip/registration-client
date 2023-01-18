@@ -4,21 +4,25 @@ import static io.mosip.registration.constants.LoggerConstants.LOG_REG_USER_ONBOA
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
-import io.mosip.registration.entity.UserMachineMapping;
-import io.mosip.registration.entity.id.UserMachineMappingID;
-import io.mosip.registration.repositories.UserMachineMappingRepository;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import io.mosip.commons.packet.constants.Biometric;
+import io.mosip.kernel.biometrics.commons.CbeffValidator;
 import io.mosip.kernel.biometrics.entities.BIR;
+import io.mosip.kernel.biometrics.entities.BiometricRecord;
+import io.mosip.kernel.cbeffutil.container.impl.CbeffContainerImpl;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
@@ -33,11 +37,14 @@ import io.mosip.registration.dto.biometric.FingerprintDetailsDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.entity.UserBiometric;
 import io.mosip.registration.entity.UserDetail;
+import io.mosip.registration.entity.UserMachineMapping;
 import io.mosip.registration.entity.id.UserBiometricId;
+import io.mosip.registration.entity.id.UserMachineMappingID;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.repositories.UserBiometricRepository;
 import io.mosip.registration.repositories.UserDetailRepository;
+import io.mosip.registration.repositories.UserMachineMappingRepository;
 
 /**
  * The implementation class of {@link UserOnboardDAO}
@@ -309,6 +316,27 @@ public class UserOnboardDAOImpl implements UserOnboardDAO {
 				bioMetrics.setCrBy(SessionContext.userContext().getUserId());
 				bioMetrics.setCrDtime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
 				bioMetrics.setIsActive(true);
+				
+				try (InputStream xsd = getClass().getClassLoader().getResourceAsStream("cbeff.xsd")) {
+					BiometricRecord biometricRecord = new BiometricRecord();
+					biometricRecord.setOthers(new HashMap<>());
+					biometricRecord.setSegments(Arrays.asList(template));
+					
+					CbeffContainerImpl cbeffContainer = new CbeffContainerImpl();
+		            BIR bir = cbeffContainer.createBIRType(biometricRecord.getSegments());
+		            HashMap<String, String> entries = new HashMap<String, String>();
+		            biometricRecord.getOthers().forEach((k, v) -> {
+		                entries.put(k, v);
+		            });
+		            bir.setOthers(entries);
+		            
+					bioMetrics.setBirData(CbeffValidator.createXMLBytes(bir, IOUtils.toByteArray(xsd)));
+					
+					bioMetrics.setBirMinorVersion(Integer.toString(template.getVersion().getMinor()));
+					bioMetrics.setBirMajorVersion(Integer.toString(template.getVersion().getMajor()));
+				} catch (Exception exception) {
+					LOGGER.error("Serialization of BIR failed with exception >> ", exception);
+				}
 				bioMetricsList.add(bioMetrics);
 			});
 
@@ -331,7 +359,12 @@ public class UserOnboardDAOImpl implements UserOnboardDAO {
 	}
 
 	private String getBioAttribute(List<String> subType) {
-		String subTypeName = String.join("", subType);
+		String subTypeName;
+		if (subType == null || subType.isEmpty()) {
+			subTypeName = "Face";
+		} else {
+			subTypeName = String.join("", subType);
+		}
 		return BiometricAttributes.getAttributeBySubType(subTypeName);
 	}
 

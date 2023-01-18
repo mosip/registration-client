@@ -3,29 +3,31 @@ package io.mosip.registration.controller.device;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
-import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
 
-import io.mosip.biometrics.util.ConvertRequestDto;
-import io.mosip.biometrics.util.face.FaceDecoder;
-import io.mosip.biometrics.util.finger.FingerDecoder;
-import io.mosip.biometrics.util.iris.IrisDecoder;
-import io.mosip.registration.dto.schema.UiFieldDTO;
-import io.mosip.registration.service.BaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
+import io.mosip.biometrics.util.ConvertRequestDto;
+import io.mosip.biometrics.util.face.FaceDecoder;
+import io.mosip.biometrics.util.finger.FingerDecoder;
+import io.mosip.biometrics.util.iris.IrisDecoder;
 import io.mosip.commons.packet.dto.packet.BiometricsException;
+import io.mosip.kernel.biometrics.commons.CbeffValidator;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
-import io.mosip.kernel.biometrics.constant.PurposeType;
-import io.mosip.kernel.biometrics.entities.BDBInfo;
+import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
 import io.mosip.kernel.biometrics.entities.BIR;
-import io.mosip.kernel.biometrics.entities.BIR.BIRBuilder;
-import io.mosip.kernel.biometrics.entities.RegistryIDType;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -44,16 +46,16 @@ import io.mosip.registration.controller.reg.DocumentScanController;
 import io.mosip.registration.controller.reg.RegistrationController;
 import io.mosip.registration.dao.UserDetailDAO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
-import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.entity.UserBiometric;
+import io.mosip.registration.enums.Modality;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.dto.Biometric;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.mdm.dto.MdmBioDevice;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
+import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.bio.BioService;
-import io.mosip.registration.enums.Modality;
 import io.mosip.registration.util.control.FxControl;
 import io.mosip.registration.util.control.impl.BiometricFxControl;
 import javafx.concurrent.Service;
@@ -1125,13 +1127,24 @@ public class GenericBiometricsController extends BaseController {
 
 		userBiometrics.forEach(userBiometric -> {
 			String userId = userBiometric.getUserBiometricId().getUsrId();
-			gallery.computeIfAbsent(userId, k -> new ArrayList<BIR>())
-					.add(buildBir(userBiometric.getBioIsoImage(), biometricType));
+			try {
+				BIR bir = CbeffValidator.getBIRFromXML(userBiometric.getBirData());
+				gallery.computeIfAbsent(userId, k -> new ArrayList<BIR>())
+					.add(bir.getBirs().get(0));
+			} catch (Exception e) {
+				LOGGER.error("Failed deserialization of BIR data of operator with exception >> ", e);
+				// Since de-serialization failed, we assume that we stored BDB in database and
+				// generating BIR from it
+				gallery.computeIfAbsent(userId, k -> new ArrayList<BIR>())
+						.add(buildBir(userBiometric.getUserBiometricId().getBioAttributeCode(),
+								userBiometric.getQualityScore(), userBiometric.getBioIsoImage(), ProcessedLevelType.PROCESSED));
+			}
 		});
 
 		List<BIR> sample = new ArrayList<>(biometrics.size());
 		biometrics.forEach(biometricDto -> {
-			sample.add(buildBir(biometricDto.getAttributeISO(), biometricType));
+			sample.add(buildBir(biometricDto.getBioAttribute(),
+					(long) biometricDto.getQualityScore(), biometricDto.getAttributeISO(), ProcessedLevelType.RAW));
 		});
 
 		try {
@@ -1139,19 +1152,10 @@ public class GenericBiometricsController extends BaseController {
 					.identify(sample, gallery, biometricType, null);
 			return result.entrySet().stream().anyMatch(e -> e.getValue() == true);
 		} catch (BiometricException e) {
-			LOGGER.error("Failed dedupe check >> ",e);
+			LOGGER.error("Failed dedupe check >> ", e);
 		}
 		return false;
 	}
-
-	private BIR buildBir(byte[] biometricImageISO, BiometricType modality) {
-		return new BIRBuilder().withBdb(biometricImageISO)
-				.withBdbInfo(new BDBInfo.BDBInfoBuilder().withFormat(new RegistryIDType())
-						.withType(Collections.singletonList(modality))
-						.withPurpose(PurposeType.IDENTIFY).build())
-				.build();
-	}
-
 
 	private Pane getExceptionImagePane(Modality modality, List<String> configBioAttributes,
 			List<String> nonConfigBioAttributes, String fieldId) {
