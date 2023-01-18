@@ -30,13 +30,17 @@ public class UserBiometric extends RegistrationCommonFields {
 	private UserBiometricId userBiometricId;
 	
 	@Lob
-	@Column(name = "bio_raw_image")
-	private byte[] bioRawImage;
+	@Column(name = "bir_data")
+	private byte[] birData;
 	@Column(name = "bio_minutia")
 	private String bioMinutia;
 	@Lob
 	@Column(name = "bio_iso_image")
 	private byte[] bioIsoImage;
+	@Column(name = "bir_minor_version")
+	private String birMinorVersion;
+	@Column(name = "bir_major_version")
+	private String birMajorVersion;
 	@Column(name = "quality_score")
 	private Integer qualityScore;
 	@Column(name = "no_of_retry")

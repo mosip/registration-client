@@ -615,7 +615,6 @@ public class BaseService {
 					: SingleAnySubtypeType.RIGHT.value());
 			break;
 		case FACE:
-			subtypes.add(BiometricType.FACE.value());
 			break;
 		default:
 			break;
