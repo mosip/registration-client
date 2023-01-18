@@ -1608,7 +1608,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 					if (qualityScoreVal != 0) {
 						updateByAttempt(qualityScoreVal, getBioStreamImage(currentSubType, Modality.valueOf(currentModality), attempt),
 								getThresholdScoreInInt(getThresholdKeyByBioType(Modality.valueOf(currentModality))), biometricImage,
-								qualityText, bioProgress, qualityScore);
+								qualityText, bioProgress);
 					}
 
 					LOGGER.info(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
