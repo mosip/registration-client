@@ -75,6 +75,7 @@ public class RegistrationDTO {
 	// Caches
 	public Map<String, byte[]> BIO_CAPTURES = new HashMap<>();
 	public Map<String, Double> BIO_SCORES = new HashMap<>();
+	public Map<String, Double> SDK_SCORES = new HashMap<>();
 	public Map<String, Object> AGE_GROUPS = new HashMap<>();
 	public Map<String, Integer> ATTEMPTS = new HashMap<>();
 	public Map<String, List<String>> CONFIGURED_BIOATTRIBUTES = new HashMap<>();
@@ -89,6 +90,7 @@ public class RegistrationDTO {
 		this.biometricExceptions.clear();
 		this.BIO_CAPTURES.clear();
 		this.BIO_SCORES.clear();
+		this.SDK_SCORES.clear();
 		this.ATTEMPTS.clear();
 		this.SELECTED_CODES.clear();
 
@@ -245,7 +247,15 @@ public class RegistrationDTO {
 		    	iterator2.remove();
 		    }
 		}
-		
+
+		Iterator<Entry<String, Double>> iterator3 = this.SDK_SCORES.entrySet().iterator();
+		while (iterator3.hasNext()) {
+			Entry<String, Double> item = iterator3.next();
+			if (item.getKey().startsWith(String.format("%s_%s_", fieldId, Modality.EXCEPTION_PHOTO.name()))) {
+				iterator3.remove();
+			}
+		}
+
 	}
 
 	public void clearBIOCache(String fieldId, String bioAttribute) {
@@ -260,6 +270,7 @@ public class RegistrationDTO {
 					.filter( k -> k.startsWith(String.format("%s_%s", fieldId, attr)))
 					.forEach( k -> {
 						this.BIO_SCORES.remove(k);
+						this.SDK_SCORES.remove(k);
 						this.BIO_CAPTURES.remove(k);
 						this.biometrics.remove(k);
 						this.biometricExceptions.remove(k);
@@ -271,10 +282,12 @@ public class RegistrationDTO {
 
 		keys.clear();
 		keys.addAll(this.BIO_SCORES.keySet());
+		keys.addAll(this.SDK_SCORES.keySet());
 		keys.stream()
 				.filter( k -> k.startsWith(key))
 				.forEach( k -> {
 					this.BIO_SCORES.remove(k);
+					this.SDK_SCORES.remove(k);
 				});
 	}
 
