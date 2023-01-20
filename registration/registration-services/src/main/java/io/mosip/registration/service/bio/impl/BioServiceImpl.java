@@ -6,13 +6,11 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 
 import java.io.InputStream;
 import java.time.temporal.ValueRange;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import io.micrometer.core.annotation.Timed;
-import io.mosip.registration.dto.schema.UiFieldDTO;
-import io.mosip.registration.enums.Modality;
-import io.mosip.registration.service.IdentitySchemaService;
-import lombok.NonNull;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,18 +18,19 @@ import org.springframework.stereotype.Service;
 import io.mosip.commons.packet.constants.Biometric;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
-import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.dto.schema.UiFieldDTO;
+import io.mosip.registration.enums.Modality;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
@@ -39,7 +38,10 @@ import io.mosip.registration.mdm.dto.MdmBioDevice;
 import io.mosip.registration.mdm.integrator.MosipDeviceSpecificationProvider;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.BaseService;
+import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.bio.BioService;
+import io.mosip.registration.util.common.BIRBuilder;
+import lombok.NonNull;
 
 /**
  * This class {@code BioServiceImpl} handles all the biometric captures and
@@ -66,7 +68,9 @@ public class BioServiceImpl extends BaseService implements BioService {
 	@Autowired
 	private IdentitySchemaService identitySchemaService;
 
-
+	@Autowired
+	protected BIRBuilder birBuilder;
+	
 	/**
 	 * Gets the registration DTO from session.
 	 *
@@ -164,7 +168,7 @@ public class BioServiceImpl extends BaseService implements BioService {
 	public double getSDKScore(BiometricsDto biometricsDto) throws BiometricException {
 		BiometricType biometricType = BiometricType
 				.fromValue(Biometric.getSingleTypeByAttribute(biometricsDto.getBioAttribute()).name());
-		BIR bir = buildBir(biometricsDto);
+		BIR bir = birBuilder.buildBir(biometricsDto, ProcessedLevelType.RAW);
 		BIR[] birList = new BIR[] { bir };
 		Map<BiometricType, Float> scoreMap = bioAPIFactory
 				.getBioProvider(biometricType, BiometricFunction.QUALITY_CHECK)

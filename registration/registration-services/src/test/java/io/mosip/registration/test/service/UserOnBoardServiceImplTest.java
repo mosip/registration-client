@@ -37,6 +37,9 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 
+import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
+import io.mosip.kernel.biometrics.entities.BDBInfo;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.biosdk.provider.spi.iBioProviderApi;
@@ -66,6 +69,7 @@ import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.operator.UserDetailService;
 import io.mosip.registration.service.operator.impl.UserOnboardServiceImpl;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
+import io.mosip.registration.util.common.BIRBuilder;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
@@ -132,6 +136,9 @@ public class UserOnBoardServiceImplTest {
 	
 	@Mock
 	private MachineMasterRepository machineMasterRepository;
+	
+	@Mock
+	private BIRBuilder birBuilder;
 	
 	@Before
 	public void init() throws Exception {
@@ -250,6 +257,12 @@ public class UserOnBoardServiceImplTest {
 		rMap.put(RegistrationConstants.ON_BOARD_AUTH_STATUS, true);
 		onBoardResponse.put(RegistrationConstants.RESPONSE, rMap);
 		Mockito.when(serviceDelegateUtil.post(Mockito.anyString(), Mockito.any(), Mockito.anyString())).thenReturn(onBoardResponse);
+		
+		BIR bir = new BIR();
+		BDBInfo bdbInfo = new BDBInfo();
+		bdbInfo.setType(Arrays.asList(BiometricType.FINGER));
+		bir.setBdbInfo(bdbInfo);
+		Mockito.when(birBuilder.buildBir(Mockito.any(BiometricsDto.class), Mockito.any(ProcessedLevelType.class))).thenReturn(bir);
 		
 		Mockito.when(bioAPIFactory.getBioProvider(Mockito.any(), Mockito.any())).thenReturn(bioProvider);
 		List<BIR> templates = new ArrayList<>();

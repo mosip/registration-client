@@ -34,9 +34,11 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import io.mosip.commons.packet.util.PacketManagerHelper;
 import io.mosip.kernel.biometrics.constant.QualityType;
 import io.mosip.kernel.biometrics.entities.BDBInfo;
 import io.mosip.kernel.biometrics.entities.BIR;
+import io.mosip.kernel.biometrics.entities.BiometricRecord;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
@@ -100,6 +102,9 @@ public class UserOnBoardDAOImlpTest {
 	
 	@Mock
 	private UserDetailRepository userDetailRepository;
+	
+	@Mock
+	private PacketManagerHelper packetManagerHelper;
 
 	@Before
 	public void initialize() throws Exception {
@@ -439,12 +444,13 @@ public class UserOnBoardDAOImlpTest {
 	}
 	
 	@Test
-	public void insertExtractedTemplatesTest() {
+	public void insertExtractedTemplatesTest() throws Exception {
 		List<BIR> templates = getTemplates();
 		List<UserBiometric> bioMetricsList = getUserBiometrics();
 		UserDetail userDetail = getUserDetails();
 		Mockito.when(userBiometricRepository.findByUserBiometricIdUsrId(Mockito.anyString())).thenReturn(bioMetricsList);
 		Mockito.when(userDetailRepository.findByIdIgnoreCaseAndIsActiveTrue(Mockito.anyString())).thenReturn(userDetail);
+		Mockito.when(packetManagerHelper.getXMLData(Mockito.any(BiometricRecord.class), Mockito.anyBoolean())).thenReturn("testXML".getBytes());
 		assertEquals(RegistrationConstants.SUCCESS,userOnboardDAOImpl.insertExtractedTemplates(templates));
 	};
 

@@ -30,8 +30,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import io.mosip.kernel.biometrics.commons.CbeffValidator;
+import io.mosip.kernel.biometrics.constant.BiometricFunction;
+import io.mosip.kernel.biometrics.constant.BiometricType;
 import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
 import io.mosip.kernel.biometrics.entities.BIR;
+import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
+import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -61,6 +66,7 @@ import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.dto.schema.SchemaDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
+import io.mosip.registration.entity.UserBiometric;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RemapException;
@@ -74,6 +80,7 @@ import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.security.AuthenticationService;
 import io.mosip.registration.service.sync.SyncStatusValidatorService;
+import io.mosip.registration.util.common.BIRBuilder;
 import io.mosip.registration.util.common.PageFlow;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
@@ -194,6 +201,12 @@ public class BaseController {
 
 	@Autowired
 	protected BaseService baseService;
+	
+	@Autowired
+	protected BIRBuilder birBuilder;
+	
+	@Autowired
+	private BioAPIFactory bioAPIFactory;
 
 	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
@@ -1752,7 +1765,38 @@ public class BaseController {
 		}
 	}
 	
-	public BIR buildBir(String bioAttribute, long qualityScore, byte[] iso, ProcessedLevelType processedLevelType) {
-		return baseService.buildBir(bioAttribute, qualityScore, iso, processedLevelType);
+	public boolean matchBiometrics(BiometricType biometricType, List<UserBiometric> userBiometrics, List<BiometricsDto> biometrics) {
+		Map<String, List<BIR>> gallery = new HashMap<>();
+		userBiometrics.forEach(userBiometric -> {
+			String userId = userBiometric.getUserBiometricId().getUsrId();
+			
+			try {
+				BIR bir = CbeffValidator.getBIRFromXML(userBiometric.getBioRawImage());
+				gallery.computeIfAbsent(userId, k -> new ArrayList<BIR>())
+					.add(bir.getBirs().get(0));
+			} catch (Exception e) {
+				LOGGER.error("Failed deserialization of BIR data of operator with exception >> ", e);
+				// Since de-serialization failed, we assume that we stored BDB in database and
+				// generating BIR from it
+				gallery.computeIfAbsent(userId, k -> new ArrayList<BIR>())
+						.add(birBuilder.buildBir(userBiometric.getUserBiometricId().getBioAttributeCode(),
+								userBiometric.getQualityScore(), userBiometric.getBioIsoImage(), ProcessedLevelType.PROCESSED));
+			}
+		});
+
+		List<BIR> sample = new ArrayList<>(biometrics.size());
+		biometrics.forEach(biometricDto -> {
+			sample.add(birBuilder.buildBir(biometricDto.getBioAttribute(),
+					(long) biometricDto.getQualityScore(), biometricDto.getAttributeISO(), ProcessedLevelType.RAW));
+		});
+
+		try {
+			Map<String, Boolean> result = bioAPIFactory.getBioProvider(biometricType, BiometricFunction.MATCH)
+					.identify(sample, gallery, biometricType, null);
+			return result.entrySet().stream().anyMatch(e -> e.getValue() == true);
+		} catch (BiometricException e) {
+			LOGGER.error("Failed in dedupe check >> ", e);
+		}
+		return false;
 	}
 }

@@ -34,9 +34,9 @@ import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.entity.UserBiometric;
 import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.security.AuthenticationService;
+import io.mosip.registration.util.common.BIRBuilder;
 import io.mosip.registration.util.common.OTPManager;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
@@ -65,9 +65,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Autowired
 	private UserDetailDAO userDetailDAO;
-
+	
 	@Autowired
-	private BioService bioService;
+	protected BIRBuilder birBuilder;
 
 	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
@@ -94,20 +94,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				return false;
 			userBiometrics.forEach(userBiometric -> {
 				try {
-					BIR bir = CbeffValidator.getBIRFromXML(userBiometric.getBirData());
+					BIR bir = CbeffValidator.getBIRFromXML(userBiometric.getBioRawImage());
 					record.add(bir.getBirs().get(0));
 				} catch (Exception e) {
 					LOGGER.error("Failed deserialization of BIR data of operator with exception >> ", e);
 					// Since de-serialization failed, we assume that we stored BDB in database and
 					// generating BIR from it
-					record.add(bioService.buildBir(userBiometric.getUserBiometricId().getBioAttributeCode(),
+					record.add(birBuilder.buildBir(userBiometric.getUserBiometricId().getBioAttributeCode(),
 							userBiometric.getQualityScore(), userBiometric.getBioIsoImage(), ProcessedLevelType.PROCESSED));
 				}
 			});
 
 			List<BIR> sample = new ArrayList<>(biometrics.size());
 			biometrics.forEach(biometricDto -> {
-				sample.add(bioService.buildBir(biometricDto));
+				sample.add(birBuilder.buildBir(biometricDto, ProcessedLevelType.RAW));
 			});
 
 			return verifyBiometrics(biometricType, modality, sample, record);
