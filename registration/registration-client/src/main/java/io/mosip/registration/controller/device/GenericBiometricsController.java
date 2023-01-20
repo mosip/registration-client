@@ -3,9 +3,7 @@ package io.mosip.registration.controller.device;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,13 +21,7 @@ import io.mosip.biometrics.util.face.FaceDecoder;
 import io.mosip.biometrics.util.finger.FingerDecoder;
 import io.mosip.biometrics.util.iris.IrisDecoder;
 import io.mosip.commons.packet.dto.packet.BiometricsException;
-import io.mosip.kernel.biometrics.commons.CbeffValidator;
-import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
-import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
-import io.mosip.kernel.biometrics.entities.BIR;
-import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
-import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
@@ -207,9 +199,6 @@ public class GenericBiometricsController extends BaseController {
 
 	@Autowired
 	private MosipDeviceSpecificationFactory deviceSpecificationFactory;
-
-	@Autowired
-	private BioAPIFactory bioAPIFactory;
 
 	@Autowired
 	private UserDetailDAO userDetailDAO;
@@ -1124,41 +1113,9 @@ public class GenericBiometricsController extends BaseController {
 		}
 
 		BiometricType biometricType = BiometricType.fromValue(modality);
-		Map<String, List<BIR>> gallery = new HashMap<>();
 		List<UserBiometric> userBiometrics = userDetailDAO.findAllActiveUsers(biometricType.value());
-		if (userBiometrics.isEmpty())
-			return false;
-
-		userBiometrics.forEach(userBiometric -> {
-			String userId = userBiometric.getUserBiometricId().getUsrId();
-			try {
-				BIR bir = CbeffValidator.getBIRFromXML(userBiometric.getBirData());
-				gallery.computeIfAbsent(userId, k -> new ArrayList<BIR>())
-					.add(bir.getBirs().get(0));
-			} catch (Exception e) {
-				LOGGER.error("Failed deserialization of BIR data of operator with exception >> ", e);
-				// Since de-serialization failed, we assume that we stored BDB in database and
-				// generating BIR from it
-				gallery.computeIfAbsent(userId, k -> new ArrayList<BIR>())
-						.add(buildBir(userBiometric.getUserBiometricId().getBioAttributeCode(),
-								userBiometric.getQualityScore(), userBiometric.getBioIsoImage(), ProcessedLevelType.PROCESSED));
-			}
-		});
-
-		List<BIR> sample = new ArrayList<>(biometrics.size());
-		biometrics.forEach(biometricDto -> {
-			sample.add(buildBir(biometricDto.getBioAttribute(),
-					(long) biometricDto.getQualityScore(), biometricDto.getAttributeISO(), ProcessedLevelType.RAW));
-		});
-
-		try {
-			Map<String, Boolean> result = bioAPIFactory.getBioProvider(biometricType, BiometricFunction.MATCH)
-					.identify(sample, gallery, biometricType, null);
-			return result.entrySet().stream().anyMatch(e -> e.getValue() == true);
-		} catch (BiometricException e) {
-			LOGGER.error("Failed dedupe check >> ", e);
-		}
-		return false;
+		
+		return userBiometrics.isEmpty() ? false : matchBiometrics(biometricType, userBiometrics, biometrics);	
 	}
 
 	private Pane getExceptionImagePane(Modality modality, List<String> configBioAttributes,

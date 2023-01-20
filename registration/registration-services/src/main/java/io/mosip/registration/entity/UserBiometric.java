@@ -30,17 +30,14 @@ public class UserBiometric extends RegistrationCommonFields {
 	private UserBiometricId userBiometricId;
 	
 	@Lob
-	@Column(name = "bir_data")
-	private byte[] birData;
+	@Column(name = "bio_raw_image")
+	private byte[] bioRawImage;	//This column is not used before 1.2.0.1-B2 release. 
+								//After 1.2.0.1-B2 release, we serialize the complete BIR to XML bytes and store in this column
 	@Column(name = "bio_minutia")
 	private String bioMinutia;
 	@Lob
 	@Column(name = "bio_iso_image")
 	private byte[] bioIsoImage;
-	@Column(name = "bir_minor_version")
-	private String birMinorVersion;
-	@Column(name = "bir_major_version")
-	private String birMajorVersion;
 	@Column(name = "quality_score")
 	private Integer qualityScore;
 	@Column(name = "no_of_retry")

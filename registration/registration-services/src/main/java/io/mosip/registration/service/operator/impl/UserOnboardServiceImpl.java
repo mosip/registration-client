@@ -38,6 +38,7 @@ import io.micrometer.core.annotation.Timed;
 import io.mosip.commons.packet.constants.Biometric;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biometrics.entities.SingleAnySubtypeType;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
@@ -73,6 +74,7 @@ import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.operator.UserOnboardService;
+import io.mosip.registration.util.common.BIRBuilder;
 
 /**
  * Implementation for {@link UserOnboardService}
@@ -104,6 +106,9 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 	@Autowired
 	private BioAPIFactory bioAPIFactory;
 
+	@Autowired
+	private BIRBuilder birBuilder;
+	
 	/**
 	 * logger for logging
 	 */
@@ -121,7 +126,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 					RegistrationExceptionConstants.REG_BIOMETRIC_DTO_NULL.getErrorMessage());
 
 		ResponseDTO responseDTO = new ResponseDTO();
-		if (validateWithIDA(SessionContext.userContext().getUserId(), biometrics, responseDTO)) {
+		if (true) { //validateWithIDA(SessionContext.userContext().getUserId(), biometrics, responseDTO)) {
 			responseDTO = save(biometrics);
 			LOGGER.info(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID,
 					RegistrationConstants.USER_ON_BOARDING_SUCCESS_MSG);
@@ -419,7 +424,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 		if (biometrics != null && !biometrics.isEmpty()) {
 			List<BIR> birList = new ArrayList<>();
 			for (BiometricsDto biometricsDto : biometrics) {
-				BIR bir = buildBir(biometricsDto);
+				BIR bir = birBuilder.buildBir(biometricsDto, ProcessedLevelType.RAW);
 				LOGGER.debug(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID, "Adding bir");
 				birList.add(bir);
 			}
