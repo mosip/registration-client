@@ -180,6 +180,14 @@ public class GenericController extends BaseController {
 	}
 
 
+	public Label getNotification() {
+		return notification;
+	}
+
+	public void setNotification(Label notification) {
+		this.notification = notification;
+	}
+
 	private void fillHierarchicalLevelsByLanguage() {
 		for(String langCode : getConfiguredLangCodes()) {
 			TreeMap<Integer, String> hierarchicalData = new TreeMap<>();

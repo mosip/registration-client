@@ -405,7 +405,7 @@ public class DocumentFxControl extends FxControl {
 				label.getStyleClass().clear();
 				label.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL);
 			}
-			genericController.showHideErrorNotification(null);
+			genericController.getNotification().setText(RegistrationConstants.EMPTY);
 		} catch (IOException exception) {
 			LOGGER.error("Unable to parse the buffered images to byte array ", exception);
 			getField(uiFieldDTO.getId() + PREVIEW_ICON).setVisible(false);
