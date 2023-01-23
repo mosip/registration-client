@@ -179,15 +179,6 @@ public class GenericController extends BaseController {
 		additionalInfoReqIdScreenOrder = null;
 	}
 
-
-	public Label getNotification() {
-		return notification;
-	}
-
-	public void setNotification(Label notification) {
-		this.notification = notification;
-	}
-
 	private void fillHierarchicalLevelsByLanguage() {
 		for(String langCode : getConfiguredLangCodes()) {
 			TreeMap<Integer, String> hierarchicalData = new TreeMap<>();
@@ -656,6 +647,14 @@ public class GenericController extends BaseController {
 					SessionContext.userContext().getUserId(), AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 		}
 		return isValid;
+	}
+	
+	public Label getNotification() {
+		return notification;
+	}
+
+	public void setNotification(Label notification) {
+		this.notification = notification;
 	}
 
 	public void showHideErrorNotification(String fieldName) {

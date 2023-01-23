@@ -60,14 +60,14 @@ public class DocumentFxControl extends FxControl {
 	private DocumentScanController documentScanController;
 
 	private MasterSyncService masterSyncService;
+	
+	private GenericController genericController;
 
 	private ValidDocumentService validDocumentService;
 
 	private String PREVIEW_ICON = "previewIcon";
 
 	private String CLEAR_ID = "clear";
-	
-	private GenericController genericController;
 
 	public DocumentFxControl() {
 		org.springframework.context.ApplicationContext applicationContext = ClientApplication.getApplicationContext();
