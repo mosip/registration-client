@@ -6,6 +6,8 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,7 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import io.mosip.commons.packet.constants.Biometric;
+import io.mosip.commons.packet.util.PacketManagerHelper;
 import io.mosip.kernel.biometrics.entities.BIR;
+import io.mosip.kernel.biometrics.entities.BiometricRecord;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
@@ -60,6 +64,9 @@ public class UserOnboardDAOImpl implements UserOnboardDAO {
 
 	@Autowired
 	private UserDetailRepository userDetailRepository;
+	
+	@Autowired
+	private PacketManagerHelper packetManagerHelper;
 
 	/**
 	 * logger for logging
@@ -289,21 +296,27 @@ public class UserOnboardDAOImpl implements UserOnboardDAO {
 		List<UserBiometric> bioMetricsList = new ArrayList<>();
 		
 		try {
-			templates.forEach( template -> {
-				UserBiometric bioMetrics = new UserBiometric();
+			for (BIR template : templates) {
+				UserBiometric biometrics = new UserBiometric();
 				UserBiometricId biometricId = new UserBiometricId();
 				biometricId.setBioAttributeCode(getBioAttribute(template.getBdbInfo().getSubtype()));
 				biometricId.setBioTypeCode(getBioAttributeCode(getBioAttribute(template.getBdbInfo().getSubtype())));
 				biometricId.setUsrId(SessionContext.userContext().getUserId());
-				bioMetrics.setBioIsoImage(template.getBdb());
-				bioMetrics.setUserBiometricId(biometricId);
+				biometrics.setBioIsoImage(template.getBdb());
+				biometrics.setUserBiometricId(biometricId);
 				Long qualityScore = template.getBdbInfo().getQuality().getScore();
-				bioMetrics.setQualityScore(qualityScore.intValue());
-				bioMetrics.setCrBy(SessionContext.userContext().getUserId());
-				bioMetrics.setCrDtime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
-				bioMetrics.setIsActive(true);
-				bioMetricsList.add(bioMetrics);
-			});
+				biometrics.setQualityScore(qualityScore.intValue());
+				biometrics.setCrBy(SessionContext.userContext().getUserId());
+				biometrics.setCrDtime(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()));
+				biometrics.setIsActive(true);
+				
+				BiometricRecord biometricRecord = new BiometricRecord();
+				biometricRecord.setOthers(new HashMap<>());
+				biometricRecord.setSegments(Arrays.asList(template));
+				biometrics.setBioRawImage(packetManagerHelper.getXMLData(biometricRecord, true));
+				
+				bioMetricsList.add(biometrics);
+			}
 
 			clearUserBiometrics(SessionContext.userContext().getUserId());
 			userBiometricRepository.saveAll(bioMetricsList);
@@ -311,20 +324,18 @@ public class UserOnboardDAOImpl implements UserOnboardDAO {
 					"Biometric information insertion successful");
 	
 			response = RegistrationConstants.SUCCESS;
-		} catch (RuntimeException runtimeException) {
-	
-			LOGGER.error(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID,
-					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
+		} catch (Exception exception) {	
+			LOGGER.error("Saving operator details in DB failed with error - ", exception);
 			response = RegistrationConstants.USER_ON_BOARDING_ERROR_RESPONSE;
 			throw new RegBaseUncheckedException(RegistrationConstants.USER_ON_BOARDING_EXCEPTION + response,
-					runtimeException.getMessage());
+					exception.getMessage());
 		}
 		LOGGER.info(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID, "Leaving insertExtractedTemplates method");
 		return response;
 	}
 
 	private String getBioAttribute(List<String> subType) {
-		String subTypeName = String.join("", subType);
+		String subTypeName = (subType == null || subType.isEmpty()) ? "Face" : String.join("", subType);
 		return BiometricAttributes.getAttributeBySubType(subTypeName);
 	}
 
