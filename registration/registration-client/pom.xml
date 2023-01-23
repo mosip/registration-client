@@ -12,7 +12,7 @@
 
 	<artifactId>registration-client</artifactId>
 	<packaging>jar</packaging>
-	<version>1.2.0.1-B1</version>
+	<version>1.2.0.1-B2</version>
 	<name>registration-client</name>
 	<description>Maven project of MOSIP Registration UI</description>
 
@@ -22,7 +22,7 @@
 		<dependency>
 			<groupId>io.mosip.registration</groupId>
 			<artifactId>registration-services</artifactId>
-			<version>1.2.0.1-B1</version>
+			<version>1.2.0.1-B2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
