@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.biosdk.provider.impl.BioProviderImpl_V_0_9;
@@ -28,6 +29,7 @@ import io.mosip.registration.mdm.spec_0_9_5.dto.response.*;
 import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.test.config.TestDaoConfig;
+import io.mosip.registration.util.common.BIRBuilder;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.*;
@@ -70,6 +72,9 @@ public class BioServiceTest {
 
     @Autowired
     private BioService bioService;
+    
+    @Autowired
+    private BIRBuilder birBuilder;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -321,7 +326,7 @@ public class BioServiceTest {
         biometricsDto.setQualityScore(70.0);
         biometricsDto.setAttributeISO(new byte[0]);
         biometricsDto.setModalityName(Modality.FACE.name());
-        BIR bir = bioService.buildBir(biometricsDto);
+        BIR bir = birBuilder.buildBir(biometricsDto, ProcessedLevelType.RAW);
         Assert.assertNotNull(bir);
         Assert.assertEquals(0, bir.getBdb().length, 0);
         double scoreInBIR = bir.getBdbInfo().getQuality().getScore();
