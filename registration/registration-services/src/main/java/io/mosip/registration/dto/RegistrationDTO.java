@@ -232,27 +232,27 @@ public class RegistrationDTO {
 		key = String.format("%s_%s", fieldId, Modality.EXCEPTION_PHOTO.name());
 		this.ATTEMPTS.remove(key);
 		
-		Iterator<Entry<String, byte[]>> iterator = this.BIO_CAPTURES.entrySet().iterator();
-		while (iterator.hasNext()) {
-		    Entry<String, byte[]> item = iterator.next();
+		Iterator<Entry<String, byte[]>> bioCapturesIterator = this.BIO_CAPTURES.entrySet().iterator();
+		while (bioCapturesIterator.hasNext()) {
+		    Entry<String, byte[]> item = bioCapturesIterator.next();
 		    if (item.getKey().startsWith(String.format("%s_%s_", fieldId, RegistrationConstants.notAvailableAttribute))) {
-		    	iterator.remove();
+		    	bioCapturesIterator.remove();
 		    }
 		}
 		
-		Iterator<Entry<String, Double>> iterator2 = this.BIO_SCORES.entrySet().iterator();
-		while (iterator2.hasNext()) {
-		    Entry<String, Double> item = iterator2.next();
+		Iterator<Entry<String, Double>> bioScoresIterator = this.BIO_SCORES.entrySet().iterator();
+		while (bioScoresIterator.hasNext()) {
+		    Entry<String, Double> item = bioScoresIterator.next();
 		    if (item.getKey().startsWith(String.format("%s_%s_", fieldId, Modality.EXCEPTION_PHOTO.name()))) {
-		    	iterator2.remove();
+		    	bioScoresIterator.remove();
 		    }
 		}
 
-		Iterator<Entry<String, Double>> iterator3 = this.SDK_SCORES.entrySet().iterator();
-		while (iterator3.hasNext()) {
-			Entry<String, Double> item = iterator3.next();
+		Iterator<Entry<String, Double>> sdkScoresIterator = this.SDK_SCORES.entrySet().iterator();
+		while (sdkScoresIterator.hasNext()) {
+			Entry<String, Double> item = sdkScoresIterator.next();
 			if (item.getKey().startsWith(String.format("%s_%s_", fieldId, Modality.EXCEPTION_PHOTO.name()))) {
-				iterator3.remove();
+				sdkScoresIterator.remove();
 			}
 		}
 
