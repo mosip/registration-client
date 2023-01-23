@@ -8,23 +8,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import io.micrometer.core.annotation.Counted;
-import io.micrometer.core.annotation.Timed;
-import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
-import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import io.micrometer.core.annotation.Counted;
+import io.mosip.kernel.biometrics.commons.CbeffValidator;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
 import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.biosdk.provider.spi.iBioProviderApi;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoginMode;
@@ -36,12 +34,12 @@ import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.entity.UserBiometric;
 import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.security.AuthenticationService;
+import io.mosip.registration.util.common.BIRBuilder;
 import io.mosip.registration.util.common.OTPManager;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 /**
  * Service class for Authentication
@@ -67,9 +65,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Autowired
 	private UserDetailDAO userDetailDAO;
-
+	
 	@Autowired
-	private BioService bioService;
+	protected BIRBuilder birBuilder;
 
 	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
@@ -95,13 +93,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			if (userBiometrics.isEmpty())
 				return false;
 			userBiometrics.forEach(userBiometric -> {
-				record.add(bioService.buildBir(userBiometric.getUserBiometricId().getBioAttributeCode(),
-						userBiometric.getQualityScore(), userBiometric.getBioIsoImage(), ProcessedLevelType.PROCESSED));
+				try {
+					BIR bir = CbeffValidator.getBIRFromXML(userBiometric.getBioRawImage());
+					record.add(bir.getBirs().get(0));
+				} catch (Exception e) {
+					LOGGER.error("Failed deserialization of BIR data of operator with exception >> ", e);
+					// Since de-serialization failed, we assume that we stored BDB in database and
+					// generating BIR from it
+					record.add(birBuilder.buildBir(userBiometric.getUserBiometricId().getBioAttributeCode(),
+							userBiometric.getQualityScore(), userBiometric.getBioIsoImage(), ProcessedLevelType.PROCESSED));
+				}
 			});
 
 			List<BIR> sample = new ArrayList<>(biometrics.size());
 			biometrics.forEach(biometricDto -> {
-				sample.add(bioService.buildBir(biometricDto));
+				sample.add(birBuilder.buildBir(biometricDto, ProcessedLevelType.RAW));
 			});
 
 			return verifyBiometrics(biometricType, modality, sample, record);
