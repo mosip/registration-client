@@ -3,8 +3,6 @@ package io.mosip.registration.test.jobs;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -35,9 +33,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.Trigger;
 import org.springframework.context.ApplicationContext;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
@@ -217,7 +213,7 @@ public class SyncManagerTest {
 
 	@Test(expected = RegBaseUncheckedException.class)
 	public void createSyncTransactionExceptionTest() {
-		SyncTransaction syncTransaction = null;
+		
 		Mockito.when(jobTransactionDAO.save(Mockito.any(SyncTransaction.class))).thenThrow(RuntimeException.class);
 		syncTransactionManagerImpl.createSyncTransaction("Completed", "Completed", "USER", "1");
 
@@ -236,26 +232,6 @@ public class SyncManagerTest {
 		assertNotNull(syncTransactionManagerImpl.createSyncControlTransaction(syncTransaction,Timestamp.valueOf(DateUtils.getUTCCurrentDateTime())));
 	}
 
-	private SyncDataResponseDto getSyncDataResponseDto(String fileName) {
-		
-		ObjectMapper mapper = new ObjectMapper();
-        SyncDataResponseDto syncDataResponseDto = null;
-		
-			try {
-				syncDataResponseDto = mapper.readValue(
-						new File(getClass().getClassLoader().getResource(fileName).getFile()),SyncDataResponseDto.class);
-			} catch (JsonParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (JsonMappingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		
-		return syncDataResponseDto;
-	}
+	
 
 }

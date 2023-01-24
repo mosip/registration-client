@@ -1,5 +1,7 @@
 package io.mosip.registration.test.login;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -16,6 +18,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.internal.util.reflection.Whitebox;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.powermock.api.mockito.PowerMockito;
@@ -30,6 +33,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
+
+import com.amazonaws.services.datapipeline.model.Field;
 
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
@@ -82,6 +87,13 @@ public class RestClientUtilTest {
 		appMap.put(RegistrationConstants.HTTP_API_WRITE_TIMEOUT, "30");
 		PowerMockito.mockStatic(ApplicationContext.class);
 		Mockito.when(ApplicationContext.map()).thenReturn(appMap);
+		
+		FileSignature fileSignature = new FileSignature();
+		//fileSignature.setSignature("");
+	    
+	    assertEquals(null, fileSignature.getSignature());
+		
+		
 	}
 
 
@@ -116,6 +128,7 @@ public class RestClientUtilTest {
 		requestHTTPDTO.setFilePath(file.toPath());
 		requestHTTPDTO.setFileEncrypted(true);
 		FileSignature fileSign = new FileSignature();
+		
 		fileSign.setContentLength(10);
 		Optional<FileSignature> fileSignature = Optional.of(fileSign);
 		Mockito.when(fileSignatureRepository.findByFileName(Mockito.anyString())).thenReturn(fileSignature);
@@ -123,5 +136,7 @@ public class RestClientUtilTest {
 		Mockito.when(plainRestTemplate.execute(Mockito.any(URI.class), Mockito.any(HttpMethod.class), Mockito.any(RequestCallback.class), Mockito.any(ResponseExtractor.class))).thenReturn(file);
 		restClientUtil.downloadFile(requestHTTPDTO);
 	}
+	
+	
 
 }

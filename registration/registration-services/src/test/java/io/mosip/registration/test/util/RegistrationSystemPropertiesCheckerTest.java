@@ -28,9 +28,9 @@ public class RegistrationSystemPropertiesCheckerTest {
 	@Test
     public void testGetMachineIdException() throws UnknownHostException{
 		
-		String machineId1 = RegistrationSystemPropertiesChecker.getMachineId();
+		String machineId = RegistrationSystemPropertiesChecker.getMachineId();
 		
-		machineId1 = "";
+		machineId = "";
 //		assertThrows(UnknownHostException.class, () -> RegistrationSystemPropertiesChecker.getMachineId());
 
 	}
