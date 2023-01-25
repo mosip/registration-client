@@ -10,6 +10,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import io.mosip.biometrics.util.ConvertRequestDto;
+import io.mosip.biometrics.util.face.FaceDecoder;
+import io.mosip.biometrics.util.finger.FingerDecoder;
+import io.mosip.biometrics.util.iris.IrisDecoder;
+import io.mosip.kernel.biometrics.constant.*;
+import io.mosip.kernel.biometrics.entities.*;
+import io.mosip.registration.dto.schema.UiFieldDTO;
+import io.mosip.registration.service.BaseService;
+import javafx.geometry.Insets;
+import javafx.scene.layout.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -98,7 +108,7 @@ public class GenericBiometricsController extends BaseController {
 
 	@FXML
 	private GridPane biometricBox;
-	
+
 	@FXML
 	private Label biometricType;
 
@@ -112,17 +122,11 @@ public class GenericBiometricsController extends BaseController {
 	private Label qualityScore;
 
 	@FXML
-	private Label attemptSlap;
-
-	@FXML
-	private Label thresholdScoreLabel;
-
-	@FXML
 	private Label thresholdLabel;
 
 	@FXML
 	private GridPane biometricPane;
-	
+
 	@FXML
 	private GridPane biometric;
 
@@ -134,6 +138,9 @@ public class GenericBiometricsController extends BaseController {
 
 	@FXML
 	private Label qualityText;
+
+	@FXML
+	private Label sdkQualityText;
 
 	@FXML
 	private ColumnConstraints thresholdPane1;
@@ -148,7 +155,7 @@ public class GenericBiometricsController extends BaseController {
 	private Label guardianBiometricsLabel;
 
 	@FXML
-	private ImageView scanImageView;	
+	private ImageView scanImageView;
 	@FXML
 	private ImageView closeButtonImageView;
 
@@ -291,7 +298,9 @@ public class GenericBiometricsController extends BaseController {
 		applicationLabelBundle = ApplicationContext.getBundle(applicationContext.getApplicationLanguage(), RegistrationConstants.LABELS);
 
 		retryBox.setVisible(!isExceptionPhoto(modality));
-		thresholdBox.setVisible(!isExceptionPhoto(modality));
+		thresholdBox.setVisible(!isExceptionPhoto(modality) && isQualityCheckWithSdkEnabled());
+		GridPane.setMargin(thresholdBox, new Insets(0, 0, isQualityCheckWithSdkEnabled() ? 50 : 0,0));
+
 		biometricBox.setVisible(true);
 		biometricType.setText(applicationLabelBundle.getString(modality.name()));
 		checkBoxPane.getChildren().clear();
@@ -466,11 +475,11 @@ public class GenericBiometricsController extends BaseController {
 					@Override
 					protected MdmBioDevice call() throws RegBaseCheckedException {
 						LOGGER.info("device search request started {}", System.currentTimeMillis());
-						
+
 						String modality = isFace(currentModality) || isExceptionPhoto(currentModality) ?
 								 RegistrationConstants.FACE_FULLFACE : currentModality.name();
 						 MdmBioDevice bioDevice =deviceSpecificationFactory.getDeviceInfoByModality(modality);
-						    
+
 						    if (deviceSpecificationFactory.isDeviceAvailable(bioDevice)) {
 	                            return bioDevice;
 	                        } else {
@@ -677,6 +686,7 @@ public class GenericBiometricsController extends BaseController {
 	private void addStreamImageAndScoreToCache(String fieldId, Modality modalityName, Collection<BiometricsDto> biometricsDtos, int retry) throws Exception {
 		try {
 			double score = 0;
+			double sdkScore = 0;
 			switch (modalityName) {
 				case FINGERPRINT_SLAB_LEFT:
 				case FINGERPRINT_SLAB_RIGHT:
@@ -690,10 +700,14 @@ public class GenericBiometricsController extends BaseController {
 								fieldId, dto.getBioAttribute(), retry),
 								FingerDecoder.convertFingerISOToImageBytes(convertRequestDto));
 						score += dto.getQualityScore();
+						sdkScore += dto.getSdkScore();
 					}
 					getRegistrationDTOFromSession().BIO_SCORES.put(String.format("%s_%s_%s",
 							fieldId, modalityName.name(), retry),
 							score / biometricsDtos.size());
+					getRegistrationDTOFromSession().SDK_SCORES.put(String.format("%s_%s_%s",
+							fieldId, modalityName.name(), retry),
+							sdkScore / biometricsDtos.size());
 					break;
 				case IRIS_DOUBLE:
 					for(BiometricsDto dto : biometricsDtos) {
@@ -704,10 +718,14 @@ public class GenericBiometricsController extends BaseController {
 								fieldId, dto.getBioAttribute(), retry),
 								IrisDecoder.convertIrisISOToImageBytes(convertRequestDto));
 						score += dto.getQualityScore();
+						sdkScore += dto.getSdkScore();
 					}
 					getRegistrationDTOFromSession().BIO_SCORES.put(String.format("%s_%s_%s",
 							fieldId, modalityName.name(), retry),
 							score / biometricsDtos.size());
+					getRegistrationDTOFromSession().SDK_SCORES.put(String.format("%s_%s_%s",
+							fieldId, modalityName.name(), retry),
+							sdkScore / biometricsDtos.size());
 					break;
 
 				case EXCEPTION_PHOTO:
@@ -722,6 +740,9 @@ public class GenericBiometricsController extends BaseController {
 					getRegistrationDTOFromSession().BIO_SCORES.put(String.format("%s_%s_%s",
 							fieldId, modalityName.name(), retry),
 							faceDto.getQualityScore());
+					getRegistrationDTOFromSession().SDK_SCORES.put(String.format("%s_%s_%s",
+							fieldId, modalityName.name(), retry),
+							faceDto.getSdkScore());
 					break;
 			}
 		} catch (Exception exception) {
@@ -787,6 +808,11 @@ public class GenericBiometricsController extends BaseController {
 		return modality != null && modality.equals(Modality.EXCEPTION_PHOTO);
 	}
 
+	public boolean isQualityCheckWithSdkEnabled() {
+		return RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map()
+				.getOrDefault(RegistrationConstants.QUALITY_CHECK_WITH_SDK, RegistrationConstants.DISABLE));
+	}
+
 	private AuditEvent getAuditEventForScan(String modality) {
 		AuditEvent auditEvent = AuditEvent.REG_DOC_NEXT;
 		if (modality.equalsIgnoreCase(RegistrationConstants.FINGERPRINT_SLAB_RIGHT)) {
@@ -810,6 +836,7 @@ public class GenericBiometricsController extends BaseController {
 		int retry = getRegistrationDTOFromSession().ATTEMPTS.getOrDefault(String.format("%s_%s", fieldId, modality.name()), 0);
 
 		setCapturedValues(getRegistrationDTOFromSession().BIO_SCORES.getOrDefault(String.format("%s_%s_%s",
+				fieldId, modality.name(), retry), 0.0), getRegistrationDTOFromSession().SDK_SCORES.getOrDefault(String.format("%s_%s_%s",
 				fieldId, modality.name(), retry), 0.0), retry, bioService.getMDMQualityThreshold(modality));
 
 		// Get the stream image from Bio ServiceImpl and load it in the image pane
@@ -840,7 +867,6 @@ public class GenericBiometricsController extends BaseController {
 			LOGGER.error("Error while getting image");
 		}
 
-		thresholdScoreLabel.setText(getQualityScoreText(biometricThreshold));
 		createQualityBox(retryCount, biometricThreshold);
 
 		clearBioLabels();
@@ -859,7 +885,6 @@ public class GenericBiometricsController extends BaseController {
 		biometricPane.getStyleClass().clear();
 		biometricPane.getStyleClass().add(RegistrationConstants.BIOMETRIC_PANES_SELECTED);
 		qualityScore.setText(RegistrationConstants.HYPHEN);
-		attemptSlap.setText(RegistrationConstants.HYPHEN);
 		// duplicateCheckLbl.setText(RegistrationConstants.EMPTY);
 
 		retryBox.setVisible(!isExceptionPhoto(currentModality));
@@ -867,6 +892,7 @@ public class GenericBiometricsController extends BaseController {
 
 		bioProgress.setProgress(0);
 		qualityText.setText("");
+		sdkQualityText.setText("");
 
 	}
 
@@ -878,18 +904,17 @@ public class GenericBiometricsController extends BaseController {
 	 * @param retry          retrycount
 	 * @param thresholdValue threshold value
 	 */
-	private void setCapturedValues(double qltyScore, int retry, double thresholdValue) {
+	private void setCapturedValues(double qltyScore, double sdkScore, int retry, double thresholdValue) {
 
 		LOGGER.info("Updating captured values of biometrics");
 
 		biometricPane.getStyleClass().clear();
 		biometricPane.getStyleClass().add(RegistrationConstants.FINGERPRINT_PANES_SELECTED);
 		qualityScore.setText(getQualityScoreText(qltyScore));
-		attemptSlap.setText(String.valueOf(retry));
-
 		bioProgress.setProgress(
 				Double.valueOf(getQualityScoreText(qltyScore).split(RegistrationConstants.PERCENTAGE)[0]) / 100);
 		qualityText.setText(getQualityScoreText(qltyScore));
+		sdkQualityText.setText(getQualityScoreText(sdkScore));
 
 		retry = retry == 0 ? 1 : retry;
 		clearAttemptsBox(thresholdValue, retry);
@@ -946,9 +971,9 @@ public class GenericBiometricsController extends BaseController {
 
 					double qualityScoreVal = getBioScores(fxControl.getUiSchemaDTO().getId(), currentModality, attempt);
 					//if (qualityScoreVal != 0) {
-						updateByAttempt(qualityScoreVal, getBioStreamImage(fxControl.getUiSchemaDTO().getId(), currentModality, attempt),
-								bioService.getMDMQualityThreshold(currentModality), biometricImage,
-								qualityText, bioProgress, qualityScore);
+					updateByAttempt(qualityScoreVal, getBioStreamImage(fxControl.getUiSchemaDTO().getId(), currentModality, attempt),
+							bioService.getMDMQualityThreshold(currentModality), biometricImage,
+							qualityText, bioProgress);
 					//}
 
 					LOGGER.info("Mouse Event by attempt Ended. modality : {}", currentModality);
@@ -1114,8 +1139,8 @@ public class GenericBiometricsController extends BaseController {
 
 		BiometricType biometricType = BiometricType.fromValue(modality);
 		List<UserBiometric> userBiometrics = userDetailDAO.findAllActiveUsers(biometricType.value());
-		
-		return userBiometrics.isEmpty() ? false : matchBiometrics(biometricType, userBiometrics, biometrics);	
+
+		return userBiometrics.isEmpty() ? false : matchBiometrics(biometricType, userBiometrics, biometrics);
 	}
 
 	private Pane getExceptionImagePane(Modality modality, List<String> configBioAttributes,
@@ -1369,7 +1394,7 @@ public class GenericBiometricsController extends BaseController {
 			LOGGER.error("Exception while getting image",exception);
 		}
 
-		
+
 		return imageView;
 
 	}
@@ -1425,8 +1450,6 @@ public class GenericBiometricsController extends BaseController {
 
 		this.fxControl = (BiometricFxControl) fxControl;
 		this.scanBtn.setId(this.fxControl.getUiSchemaDTO().getId()+"ScanBtn");
-		this.attemptSlap.setId(this.fxControl.getUiSchemaDTO().getId()+"AttemptSlap");
-		this.thresholdScoreLabel.setId(this.fxControl.getUiSchemaDTO().getId()+"ThresholdScoreLabel");
 		this.qualityScore.setId(this.fxControl.getUiSchemaDTO().getId()+"QualityScore");
 		this.currentModality = modality;
 		this.configBioAttributes = configBioAttributes;
@@ -1436,7 +1459,7 @@ public class GenericBiometricsController extends BaseController {
 
 	/**
 	 * event class to exit from present pop up window.
-	 * 
+	 *
 	 * @param event
 	 */
 	public void exitWindow(ActionEvent event) {

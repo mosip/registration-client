@@ -1279,6 +1279,27 @@ Working on new Css by taleev
 	-fx-font-size: 1.2em;
 }
 
+.mdsQualityLabel {
+	-fx-text-fill: #000000;
+	-fx-font-weight: bold;
+}
+
+.sdkQualityLabel {
+	-fx-text-fill: #800000;
+	-fx-font-weight: bold;
+}
+
+.sdkQualityText {
+	-fx-text-fill: #800000;
+	-fx-font-size: 12.0px;
+}
+
+.biometricTypeLabel {
+	-fx-text-fill: #666666;
+	-fx-font-size: 1.2em;
+	-fx-padding: 0px 0px 0px 60px ;
+}
+
 .paneHeader {
 	-fx-text-fill: #005baa;
 	-fx-font-size: 22.0px;

@@ -162,7 +162,7 @@ public class GenericController extends BaseController {
 	public static Map<String, FxControl> getFxControlMap() {
 		return fxControlMap;
 	}
-
+	
 	public void disableAuthenticateButton(boolean disable) {
 		authenticate.setDisable(disable);
 	}
