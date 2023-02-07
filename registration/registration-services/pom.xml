@@ -12,6 +12,9 @@
 	<name>registration-services</name>
 	<description>Maven project of MOSIP Registration Service</description>
 	<version>1.2.0.1-B2-SNAPSHOT</version>
+	<properties>
+		<io.micrometer.prometheus.version>1.5.5</io.micrometer.prometheus.version>
+	</properties>
 
 	<dependencies>
 		<!-- Prometheus -->
