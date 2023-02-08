@@ -75,6 +75,7 @@ public class TusURLGlobalParamStore implements io.tus.java.client.TusURLStore {
         globalParamId.setCode(s);
         globalParamId.setLangCode("eng");
         getGlobalParamRepository().deleteById(globalParamId);
+        System.out.println(globalParamId);
     }
 
     public GlobalParamRepository getGlobalParamRepository() {

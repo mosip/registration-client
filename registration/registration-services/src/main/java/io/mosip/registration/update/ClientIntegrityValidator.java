@@ -40,7 +40,7 @@ public class ClientIntegrityValidator {
 
             X509Certificate trustedCertificate = getCertificate();
             Manifest localManifest = getLocalManifest();
-
+ 
             if (localManifest != null) {
             	Map<String, Attributes> localAttributes = localManifest.getEntries();
                 for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {

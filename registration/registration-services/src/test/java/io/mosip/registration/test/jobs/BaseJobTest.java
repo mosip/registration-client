@@ -280,25 +280,25 @@ public class BaseJobTest {
 		
 	}
 	
-	/*@Test(expected = RegBaseUncheckedException.class)
-	public void executejobNoSuchBeanDefinitionExceptionTest() {
+	@Test(expected = RegBaseUncheckedException.class)
+	public void executejobNoSuchBeanDefinitionExceptionTest1() {
 		ResponseDTO responseDTO=new ResponseDTO();
 		SuccessResponseDTO successResponseDTO=new SuccessResponseDTO();
 		responseDTO.setSuccessResponseDTO(successResponseDTO);
 		Mockito.when(applicationContext.getBean(SyncManager.class)).thenThrow(NoSuchBeanDefinitionException.class);
-				packetSyncStatusJob.executeJob("User");
+				packetSyncStatusJob.executeParentJob("User");
 	packetSyncStatusJob.executeInternal(context);
-	}*/
+	}
 	
-	/*@Test(expected = RegBaseUncheckedException.class)
-	public void executejobNullPointerExceptionTest() {
+	@Test(expected = RegBaseUncheckedException.class)
+	public void executejobNullPointerExceptionTest1() {
 		ResponseDTO responseDTO=new ResponseDTO();
 		SuccessResponseDTO successResponseDTO=new SuccessResponseDTO();
 		responseDTO.setSuccessResponseDTO(successResponseDTO);
 		Mockito.when(applicationContext.getBean(SyncManager.class)).thenThrow(NullPointerException.class);
-				packetSyncStatusJob.executeJob("User");
+				packetSyncStatusJob.executeParentJob("User");
 	packetSyncStatusJob.executeInternal(context);
-	}*/
+	}
 	
 	
 }

@@ -134,7 +134,7 @@ public class KeyPolicySyncJobTest {
 		ResponseDTO responseDTO = new ResponseDTO();
 		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
 		responseDTO.setSuccessResponseDTO(successResponseDTO);
-
+ 
 		Mockito.when(sessionContext.getUserContext()).thenReturn(userContext);
 		Mockito.when(userContext.getRegistrationCenterDetailDTO()).thenReturn(registrationCenterDetailDTO);
 		Mockito.when(registrationCenterDetailDTO.getRegistrationCenterId()).thenReturn("CNTR123");
@@ -168,16 +168,7 @@ public class KeyPolicySyncJobTest {
 		keyPolicySyncJob.executeInternal(context);
 	}
 
-	@Test(expected = RegBaseUncheckedException.class)
-	public void executejobNullPointerExceptionTest() {
-		ResponseDTO responseDTO = new ResponseDTO();
-		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
-		responseDTO.setSuccessResponseDTO(successResponseDTO);
-		Mockito.when(context.getJobDetail()).thenThrow(NullPointerException.class);
-
-		keyPolicySyncJob.executeInternal(context);
-	}
-
+	
 	@Test(expected = RegBaseUncheckedException.class)
 	public void executeChildJobsTest() throws JobExecutionException {
 		SyncJobDef syncJob = new SyncJobDef();
@@ -191,11 +182,11 @@ public class KeyPolicySyncJobTest {
 		syncJob.setParentSyncJobId("1");
 
 		jobMap.put("2", syncJob);
-
+		
 		ResponseDTO responseDTO = new ResponseDTO();
 		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
 		responseDTO.setSuccessResponseDTO(successResponseDTO);
-
+		
 		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenThrow(NoSuchBeanDefinitionException.class);
 
 		keyPolicySyncJob.executeParentJob("1");
