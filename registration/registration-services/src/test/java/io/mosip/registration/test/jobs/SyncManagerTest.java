@@ -233,5 +233,16 @@ public class SyncManagerTest {
 	}
 
 	
+	@Test
+	public void updateClientSettingLastSyncTime() {
+		SyncTransaction syncTransaction = prepareSyncTransaction();
 
+		SyncControl syncControl = null;
+		Mockito.when(syncJobDAO.findBySyncJobId(Mockito.any())).thenReturn(syncControl);
+
+		syncControl =new SyncControl();
+		syncControl.setId(syncTransaction.getId());
+		Mockito.when(syncJobDAO.save(Mockito.any(SyncControl.class))).thenReturn(syncControl);
+		assertNotNull(syncTransactionManagerImpl.updateClientSettingLastSyncTime(syncTransaction,Timestamp.valueOf(DateUtils.getUTCCurrentDateTime())));
+	}
 }

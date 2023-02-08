@@ -1,5 +1,6 @@
 package io.mosip.registration.metrics;
 
+import io.mosip.registration.entity.FileSignature;
 import io.mosip.registration.entity.GlobalParam;
 import io.mosip.registration.entity.id.GlobalParamId;
 import io.mosip.registration.repositories.GlobalParamRepository;
@@ -10,13 +11,20 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.itextpdf.html2pdf.jsoup.helper.Validate;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,7 +43,7 @@ public class TusURLGlobalParamStoreTest {
 	@Mock
 	private ApplicationContext applicationContext;
 
-	@InjectMocks
+	@Mock
 	TusURLGlobalParamStore tusURLGlobalParamStore;
 
 	@Before
@@ -61,51 +69,24 @@ public class TusURLGlobalParamStoreTest {
 
 	}
 
-//	  @Test public void testParamStorex() throws MalformedURLException {
-//	  TusURLGlobalParamStore tusURLGlobalParamStore = new
-//	  TusURLGlobalParamStore(applicationContext);
-//	  tusURLGlobalParamStore.set("test-metrics-file", new
-//	  URL("http://tus-server/test-metrics-file/part"));
-//	  
-////	  GlobalParam globalParam = new GlobalParam();
-////	  globalParam.setName("test-metrics-file");
-////	  globalParam.setVal("http://tus-server/test-metrics-file/part");
-////	  Mockito.when(globalParamRepository.getOne(Mockito.any())).thenReturn(
-////	  globalParam);
-//	  
-//	  tusURLGlobalParamStore.set("test-metrics-file", new
-//	  URL("http://tus-server/test-metrics-file/part"));
-//	 
-//	  URL url = tusURLGlobalParamStore.get("test-metrics-file"); 
-//	  try {
-//		  
-//	  tusURLGlobalParamStore.get("xyz");
-//	  
-//	  } catch (MalformedURLException e){
-//		  e.printStackTrace();
-//	  }
-//	 
-//	 }
 
 	@Test
-	public void removeTest() {
-
-	//	GlobalParamId globalParamId = Mockito.mock(GlobalParamId.class);
-//		GlobalParamRepository globalParamRepository = mock(GlobalParamRepository.class);
-		TusURLGlobalParamStore tusURLGlobalParamStore = Mockito.mock(TusURLGlobalParamStore.class);
-
-		GlobalParamId globalParamId = new GlobalParamId();
-				
-//		tusURLGlobalParamStore.getGlobalParamRepository().deleteById(globalParamId); 
-// 	tusURLGlobalParamStore.getGlobalParamRepository().findById(globalParamId);
-
-//		Assert.assertNull(globalParamId);
- 
-//		System.out.println(globalParamId);
+	public void removeTest1() {
 		
-//        when(globalParamRepository.findById(globalParamId)).thenReturn(globalParamId);
-
-//			verify(tusURLGlobalParamStore.getGlobalParamRepository(), times(1)).deleteById(globalParamId);
-		}
+		GlobalParamRepository globalParamRepository = Mockito.mock(GlobalParamRepository.class);
+//		globalParamRepository = applicationContext.getBean(GlobalParamRepository.class);
+		
+		Mockito.doNothing().when(globalParamRepository).deleteById(Mockito.any());
+		GlobalParamId globalParamId = new GlobalParamId();
+		globalParamId.setCode("s");
+		globalParamId.setLangCode("eng");
+		Optional<GlobalParam> globalParamId1 = Optional.empty();
+		
+		
+		Mockito.when(tusURLGlobalParamStore.getGlobalParamRepository().findById(Mockito.any())).thenReturn(globalParamId1);
+//        verify(tusURLGlobalParamStore.getGlobalParamRepository(), times(1)).deleteById(globalParamId);
+         System.out.println(globalParamId);
+	}
+	
 
 }

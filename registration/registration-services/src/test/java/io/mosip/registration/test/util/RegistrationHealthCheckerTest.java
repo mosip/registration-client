@@ -7,7 +7,7 @@ import org.mockito.Mock;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 import oshi.software.os.OSFileStore;
 
-public class RegistrationHealthCheckerTest {
+public class RegistrationHealthCheckerTest { 
 
 
 @Mock

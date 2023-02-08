@@ -1,6 +1,9 @@
 package io.mosip.registration.test.login;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -21,6 +24,7 @@ import org.mockito.Mockito;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import org.mockito.stubbing.OngoingStubbing;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -124,6 +128,7 @@ public class RestClientUtilTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void downloadFileTest() throws Exception {
+		RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
 		File file = new File(getClass().getClassLoader().getResource("emptyJson.json").getFile());
 		requestHTTPDTO.setFilePath(file.toPath());
 		requestHTTPDTO.setFileEncrypted(true);
@@ -133,10 +138,17 @@ public class RestClientUtilTest {
 		Optional<FileSignature> fileSignature = Optional.of(fileSign);
 		Mockito.when(fileSignatureRepository.findByFileName(Mockito.anyString())).thenReturn(fileSignature);
 		Mockito.when(fileSignatureRepository.save(Mockito.any(FileSignature.class))).thenReturn(new FileSignature());
-		Mockito.when(plainRestTemplate.execute(Mockito.any(URI.class), Mockito.any(HttpMethod.class), Mockito.any(RequestCallback.class), Mockito.any(ResponseExtractor.class))).thenReturn(file);
+		Mockito.when(restTemplate.execute(Mockito.any(URI.class), Mockito.any(HttpMethod.class), Mockito.any(RequestCallback.class), Mockito.any(ResponseExtractor.class))).thenReturn(file);
 		restClientUtil.downloadFile(requestHTTPDTO);
 	}
 	
+	@Test
+	public void saveTest(){
+		
+		FileSignature fileSignature = Mockito.mock(FileSignature.class);
+		
+		Mockito.when(fileSignatureRepository.save(Mockito.any(FileSignature.class))).thenReturn(new FileSignature());
+	}
 	
 
 }

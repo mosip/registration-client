@@ -32,7 +32,7 @@ public class RegistrationSystemPropertiesCheckerTest {
 		
 		machineId = "";
 //		assertThrows(UnknownHostException.class, () -> RegistrationSystemPropertiesChecker.getMachineId());
-
+ 
 	}
 
 }
