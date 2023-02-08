@@ -340,7 +340,7 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 	 *             the ConnectionException
 	 */
 	@VisibleForTesting
-	private ResponseDTO syncPacketsToServer(@NonNull String encodedString, @NonNull String triggerPoint, boolean packetIdExists)
+	public ResponseDTO syncPacketsToServer(@NonNull String encodedString, @NonNull String triggerPoint, boolean packetIdExists)
 			throws RegBaseCheckedException, ConnectionException {
 		LOGGER.info("Sync the packets to the server");
 		ResponseDTO responseDTO = new ResponseDTO();

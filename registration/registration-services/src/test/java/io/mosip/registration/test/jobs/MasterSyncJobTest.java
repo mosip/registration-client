@@ -34,6 +34,7 @@ import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.jobs.JobManager;
 import io.mosip.registration.jobs.SyncManager;
 import io.mosip.registration.jobs.impl.MasterSyncJob;
+import io.mosip.registration.jobs.impl.UserDetailServiceJob;
 import io.mosip.registration.service.config.impl.JobConfigurationServiceImpl;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.impl.MasterSyncServiceImpl;
@@ -78,6 +79,9 @@ public class MasterSyncJobTest {
 
 	@Mock
 	MasterSyncServiceImpl masterSyncService;
+	
+	@Mock
+	UserDetailServiceJob userDetailServiceJob;
 
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -134,10 +138,10 @@ public class MasterSyncJobTest {
 		Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
 		Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
 		Mockito.when(applicationContext.getBean(MasterSyncServiceImpl.class)).thenReturn(masterSyncService);
+		Mockito.when(applicationContext.getBean(UserDetailServiceJob.class)).thenReturn(userDetailServiceJob);
 		
 //		Mockito.when(jobManager.getChildJobs(Mockito.any())).thenReturn(jobMap);
-		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("1");
-		
+		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("2");
 		
 		
 		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(masterSyncJob);
