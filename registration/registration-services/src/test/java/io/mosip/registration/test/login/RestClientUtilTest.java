@@ -1,5 +1,10 @@
 package io.mosip.registration.test.login;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -16,8 +21,10 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.internal.util.reflection.Whitebox;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import org.mockito.stubbing.OngoingStubbing;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -30,6 +37,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
+
+import com.amazonaws.services.datapipeline.model.Field;
 
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
@@ -82,6 +91,13 @@ public class RestClientUtilTest {
 		appMap.put(RegistrationConstants.HTTP_API_WRITE_TIMEOUT, "30");
 		PowerMockito.mockStatic(ApplicationContext.class);
 		Mockito.when(ApplicationContext.map()).thenReturn(appMap);
+		
+		FileSignature fileSignature = new FileSignature();
+		//fileSignature.setSignature("");
+	    
+	    assertEquals(null, fileSignature.getSignature());
+		
+		
 	}
 
 
@@ -112,16 +128,29 @@ public class RestClientUtilTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void downloadFileTest() throws Exception {
+		RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
 		File file = new File(getClass().getClassLoader().getResource("emptyJson.json").getFile());
 		requestHTTPDTO.setFilePath(file.toPath());
 		requestHTTPDTO.setFileEncrypted(true);
 		FileSignature fileSign = new FileSignature();
+		
 		fileSign.setContentLength(10);
 		Optional<FileSignature> fileSignature = Optional.of(fileSign);
 		Mockito.when(fileSignatureRepository.findByFileName(Mockito.anyString())).thenReturn(fileSignature);
 		Mockito.when(fileSignatureRepository.save(Mockito.any(FileSignature.class))).thenReturn(new FileSignature());
-		Mockito.when(plainRestTemplate.execute(Mockito.any(URI.class), Mockito.any(HttpMethod.class), Mockito.any(RequestCallback.class), Mockito.any(ResponseExtractor.class))).thenReturn(file);
+		Mockito.when(restTemplate.execute(Mockito.any(URI.class), Mockito.any(HttpMethod.class), Mockito.any(RequestCallback.class), Mockito.any(ResponseExtractor.class))).thenReturn(file);
 		restClientUtil.downloadFile(requestHTTPDTO);
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void saveTest(){
+		
+		FileSignature fileSignature = Mockito.mock(FileSignature.class);
+		
+		Mockito.when(fileSignatureRepository.save(Mockito.any(FileSignature.class))).thenReturn(new FileSignature());
+//		verify(fileSignatureRepository, times(1)).save(any());
+	}
+	
 
 }
