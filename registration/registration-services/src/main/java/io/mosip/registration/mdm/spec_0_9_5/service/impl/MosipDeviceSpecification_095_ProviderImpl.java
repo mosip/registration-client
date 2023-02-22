@@ -202,7 +202,7 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 				mdmRequestDto.setExceptions(getExceptions(mdmRequestDto.getExceptions()));
 			}
 
-			int count = getCount(getDefaultCount(mdmRequestDto.getModality()),
+			int count = getCount(mdmRequestDto.getModality(), getDefaultCount(mdmRequestDto.getModality()),
 					mdmRequestDto.getExceptions() != null ? mdmRequestDto.getExceptions().length : 0);
 			mdmRequestDto.setCount(count);
 
@@ -432,8 +432,8 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 		return defaultCount;
 	}
 
-	private int getCount(int defaultCount, int exceptionsCount) {
-		return defaultCount - exceptionsCount;
+	private int getCount(String modality, int defaultCount, int exceptionsCount) {
+		return RegistrationConstants.FACE_FULLFACE.equalsIgnoreCase(modality) ? 1 : (defaultCount - exceptionsCount);
 	}
 
 	@Override
