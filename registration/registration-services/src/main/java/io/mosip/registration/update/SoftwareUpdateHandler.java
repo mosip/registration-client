@@ -147,7 +147,7 @@ public class SoftwareUpdateHandler extends BaseService {
 	 * @throws ParserConfigurationException
 	 * @throws SAXException
 	 */
-	public String getLatestVersion() throws IOException, ParserConfigurationException, SAXException, RegBaseCheckedException {
+	private String getLatestVersion() throws IOException, ParserConfigurationException, SAXException, RegBaseCheckedException {
 		LOGGER.info("Checking for latest version started");
 		// Get latest version using meta-inf.xml
 		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -165,7 +165,7 @@ public class SoftwareUpdateHandler extends BaseService {
 		return latestVersion;
 	}
 
-	public String getElementValue(Document metaInfXmlDocument, String tagName) {
+	private String getElementValue(Document metaInfXmlDocument, String tagName) {
 		NodeList list = metaInfXmlDocument.getDocumentElement().getElementsByTagName(tagName);
 		String val = null;
 		if (list != null && list.getLength() > 0) {
@@ -251,7 +251,7 @@ public class SoftwareUpdateHandler extends BaseService {
 	 *             - IOException
 	 */
 	@Counted(recordFailuresOnly = true)
-	public void update() throws Exception {
+	private void update() throws Exception {
 		// fetch server manifest && replace local manifest with Server manifest
 		setServerManifest();
 		serverManifest.write(new FileOutputStream(manifestFile));
@@ -324,7 +324,7 @@ public class SoftwareUpdateHandler extends BaseService {
 		LOGGER.info("Backup of current version completed at {}", backUpFolder.getAbsolutePath());
 	}
 
-	public void setLocalManifest() throws RegBaseCheckedException {
+	private void setLocalManifest() throws RegBaseCheckedException {
 		try {
 			File localManifestFile = new File(manifestFile);
 			if (localManifestFile.exists()) {
@@ -503,15 +503,15 @@ public class SoftwareUpdateHandler extends BaseService {
 		return url;
 	}
 
-	public void setServerManifest(Manifest serverManifest) {
+	private void setServerManifest(Manifest serverManifest) {
 		this.serverManifest = serverManifest;
 	}
 
-	public void setCurrentVersion(String currentVersion) {
+	private void setCurrentVersion(String currentVersion) {
 		this.currentVersion = currentVersion;
 	}
 
-	public void setLatestVersion(String latestVersion) {
+	private void setLatestVersion(String latestVersion) {
 		this.latestVersion = latestVersion;
 	}
 
@@ -519,7 +519,7 @@ public class SoftwareUpdateHandler extends BaseService {
 		this.latestVersionReleaseTimestamp = latestVersionReleaseTimestamp;
 	}
 
-	public Manifest getLocalManifest() throws RegBaseCheckedException {
+	private Manifest getLocalManifest() throws RegBaseCheckedException {
 		if(localManifest == null) { setLocalManifest(); }
 		return localManifest;
 	}

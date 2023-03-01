@@ -1,7 +1,11 @@
 package io.mosip.registration.test.jobs;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Before;
@@ -24,10 +28,16 @@ import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 
+import io.mosip.registration.constants.LoggerConstants;
+import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.SyncJobConfigDAO;
+import io.mosip.registration.dto.AuthenticationValidatorDTO;
+import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
+import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.entity.SyncJobDef;
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
@@ -36,6 +46,7 @@ import io.mosip.registration.jobs.SyncManager;
 import io.mosip.registration.jobs.impl.MasterSyncJob;
 import io.mosip.registration.jobs.impl.UserDetailServiceJob;
 import io.mosip.registration.service.config.impl.JobConfigurationServiceImpl;
+import io.mosip.registration.service.packet.RegPacketStatusService;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.impl.MasterSyncServiceImpl;
 
@@ -95,7 +106,7 @@ public class MasterSyncJobTest {
 		SyncJobDef syncJob = new SyncJobDef();
 		syncJob.setId("1234");
 
-		syncJob.setApiName("packetSyncStatusJob");
+		syncJob.setApiName("masterSyncJob");
 		syncJob.setSyncFreq("0/5 * * * * ?");
 		syncJobList.add(syncJob);
 
@@ -206,5 +217,55 @@ public class MasterSyncJobTest {
 		masterSyncJob.executeParentJob("1");
 
 	}
+	
+	
+	  @Test(expected = RuntimeException.class) 
+	  public void executejobThrowingException() throws RegBaseCheckedException { 
+	  ResponseDTO responseDTO = new ResponseDTO(); 
+	  ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(); 
+	  List<ErrorResponseDTO> errorResponseDTOs = new ArrayList<>(); errorResponseDTOs.add(errorResponseDTO);
+	  responseDTO.setErrorResponseDTOs(errorResponseDTOs); 
+	  SyncJobDef syncJob = new SyncJobDef(); syncJob.setId("1");
+	  
+	  Map<String, SyncJobDef> jobMap = new HashMap<>();
+	  
+	  jobMap.put(syncJob.getId(), syncJob);
+	  
+	  syncJob.setId("2"); syncJob.setParentSyncJobId("1");
+	  
+	  jobMap.put("2", syncJob);
+	  
+	  Mockito.when(context.getJobDetail()).thenReturn(jobDetail);
+	  Mockito.when(jobDetail.getJobDataMap()).thenReturn(jobDataMap);
+	  Mockito.when(jobDataMap.get(Mockito.any())).thenReturn(applicationContext);
+	  Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
+	  Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
+	  Mockito.when(applicationContext.getBean(MasterSyncService.class)).thenReturn(masterSyncService);
+	  
+	  Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).
+	  thenReturn("1");
+	  
+	  Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(masterSyncJob);
+	  
+	  Mockito.when(masterSyncService.getMasterSync("User", "1")).thenThrow(RuntimeException.class);
+	  
+	  masterSyncJob.executeInternal(context);
+	  
+	  }
+	 
+
+	
+	/*
+	 * @Test public void Test() { SyncControl masterSyncDetails =
+	 * masterSyncDao.syncJobDetails(masterSyncDtls);
+	 * 
+	 * Mockito.when(masterSyncService.getMasterSync("User", "1")).thenReturn(null);
+	 * String errorCode = null; try {
+	 * masterSyncService.executeInternal(masterSyncDetails); } catch
+	 * (RegBaseCheckedException e) { errorCode = e.getErrorCode(); }
+	 * assertEquals(LoggerConstants.USER_DETAIL_SERVICE_JOB_TITLE, errorCode);
+	 * 
+	 * }
+	 */
 
 }

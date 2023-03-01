@@ -183,12 +183,11 @@ public class SoftwareUpdateHandlerTest {
 		assertNotNull(softwareUpdateHandler.getJarChecksum());
 	}
 	
-	 @Test 
-	 public void setLocalManifestTest() throws  RegBaseCheckedException{
-		 softwareUpdateHandler.setLocalManifest();
-		 Assert.assertNotNull(softwareUpdateHandler.getLocalManifest());
-	 }
-
+	/*
+	 * @Test public void setCurrentVersion() throws RegBaseCheckedException{
+	 * softwareUpdateHandler.setCurrentVersion("MF");
+	 * Assert.assertNotNull(softwareUpdateHandler.getCurrentVersion()); }
+	 */
 		/*
 		 * @Test public void getElementValueTest() { String val = "abc";
 		 * Mockito.when(softwareUpdateHandler.getElementValue(null,

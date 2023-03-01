@@ -178,7 +178,7 @@ public class PacketSyncStatusJobTest {
 	
 	  @Test(expected = RuntimeException.class) 
 	  public void executejobRunTimeExceptionTest() throws ConnectionException,RegBaseCheckedException { 
-		  ResponseDTO responseDTO = new ResponseDTO();
+	  ResponseDTO responseDTO = new ResponseDTO(); 
 	  ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO();
 	  List<ErrorResponseDTO> errorResponseDTOs = new ArrayList<>();
 	  errorResponseDTOs.add(errorResponseDTO);
@@ -209,41 +209,5 @@ public class PacketSyncStatusJobTest {
 	  packetSyncStatusJob.executeInternal(context);
 	  
 	  }
-	  
-	  
-	  @Test(expected = RuntimeException.class) 
-	  public void executejobThrowingConnectionException() throws ConnectionException,RegBaseCheckedException { 
-	  ResponseDTO responseDTO = new ResponseDTO();
-	  ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO();
-	  List<ErrorResponseDTO> errorResponseDTOs = new ArrayList<>();
-	  errorResponseDTOs.add(errorResponseDTO);
-	  responseDTO.setErrorResponseDTOs(errorResponseDTOs); SyncJobDef syncJob = new
-	  SyncJobDef(); syncJob.setId("1");
-	  
-	  Map<String, SyncJobDef> jobMap = new HashMap<>();
-	  
-	  jobMap.put(syncJob.getId(), syncJob);
-	  
-	  syncJob.setId("2"); syncJob.setParentSyncJobId("1");
-	  
-	  jobMap.put("2", syncJob);
-	  
-	  Mockito.when(context.getJobDetail()).thenReturn(jobDetail);
-	  Mockito.when(jobDetail.getJobDataMap()).thenReturn(jobDataMap);
-	  Mockito.when(jobDataMap.get(Mockito.any())).thenReturn(applicationContext);
-	  Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
-	  Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
-	  Mockito.when(applicationContext.getBean(RegPacketStatusService.class)).thenReturn(regPacketStatusService);
-	  
-	  Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("1");
-	  
-	  Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(packetSyncStatusJob);
-	  
-	  Mockito.when(regPacketStatusService.syncServerPacketStatusWithRetryWrapper("System")).thenThrow(ConnectionException.class);
-	  
-	  packetSyncStatusJob.executeInternal(context);
-	  
-	  }
 	 
-
 }

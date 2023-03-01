@@ -381,7 +381,7 @@ public class AuthTokenUtilService {
     }
 
 
-    public void updateUserDetails(@NotNull String userId, String password, String token, String refreshToken) throws Exception {
+    private void updateUserDetails(@NotNull String userId, String password, String token, String refreshToken) throws Exception {
         if(password != null)
             userDetailDAO.updateUserPwd(userId, password);
 
