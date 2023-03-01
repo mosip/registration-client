@@ -40,6 +40,7 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import io.mosip.kernel.core.exception.IOException;
 import io.mosip.kernel.core.util.FileUtils;
+import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
@@ -469,12 +470,24 @@ public class PreRegistrationDataSyncServiceTest {
 		preRegistrationList.setId("123456789");
 		preRegistrationList.setPreRegId("987654321");
 		Mockito.when(preRegistrationDAO.get(Mockito.anyString())).thenReturn(preRegistrationList);
+		//Mockito.when(StringUtils.isEmpty(null)).thenReturn(true);
 		PreRegistrationList preRegistration = preRegistrationDataSyncServiceImpl
 				.getPreRegistrationRecordForDeletion("987654321");
 
 		assertTrue(preRegistration.getId().equals("123456789"));
 		assertTrue(preRegistration.getPreRegId().equals("987654321"));
 	}
+	
+	@Test
+	public void getPreRegistrationRecordForDeletionFailureTest() throws java.io.IOException {
+		PreRegistrationList preRegistrationList = new PreRegistrationList();
+		preRegistrationList.setId("123456789");
+		preRegistrationList.setPreRegId(null);
+		Mockito.when(preRegistrationDAO.get(Mockito.anyString())).thenReturn(preRegistrationList);
+		PreRegistrationList preRegistration = preRegistrationDataSyncServiceImpl
+				.getPreRegistrationRecordForDeletion(null);
+	}
+
 	
 	@Test
 	public void getLastUpdatedTime() {
