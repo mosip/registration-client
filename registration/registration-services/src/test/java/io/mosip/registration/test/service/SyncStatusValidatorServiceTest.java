@@ -2,6 +2,7 @@ package io.mosip.registration.test.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -55,6 +56,7 @@ import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.entity.id.GlobalParamId;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
+import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.sync.impl.SyncStatusValidatorServiceImpl;
 
@@ -114,7 +116,7 @@ public class SyncStatusValidatorServiceTest {
 	}
 
 	//Needs to be corrected
-	//@Test
+	@Test(expected = RegBaseUncheckedException.class)
 	public void testValidateSyncStatusFailureCase() {
 		SyncControl syncControl1 = new SyncControl();
 		syncControl1.setSyncJobId("MDS_J00001");
@@ -163,7 +165,13 @@ public class SyncStatusValidatorServiceTest {
 		applicationMap.put(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE, "Y");
 		applicationMap.put(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ, "0");
 		when(ApplicationContext.map()).thenReturn(applicationMap);
-
+		
+		GeoPosition geoPosition = new GeoPosition(); 
+		geoPosition.setLatitude(00);
+		geoPosition.setLongitude(00);
+		  
+		Mockito.when(geoPositionFacade.getMachineGeoPosition(Mockito.any())).thenReturn(geoPosition);
+		 
 		Mockito.when(globalParamDAO.get(globalParamId)).thenReturn(globalParam);
 
 		Mockito.when(syncJobDAO.getRegistrationDetails()).thenReturn(registrationList);
@@ -277,6 +285,19 @@ public class SyncStatusValidatorServiceTest {
 		List<ErrorResponseDTO> errorResponseDTOs = responseDTO.getErrorResponseDTOs();
 		assertTrue(errorResponseDTOs.isEmpty());
 	}
+	
+	/*
+	 * @Test public void testValidateSyncStatusFailure1Case() { GeoPosition
+	 * geoPosition = new GeoPosition(); geoPosition.setLatitude(00);
+	 * geoPosition.setLongitude(00);
+	 * 
+	 * Mockito.when(geoPositionFacade.getMachineGeoPosition(Mockito.any())).
+	 * thenReturn(geoPosition); ResponseDTO responseDTO =
+	 * syncStatusValidatorServiceImpl.validateSyncStatus(); List<ErrorResponseDTO>
+	 * errorResponseDTOs = responseDTO.getErrorResponseDTOs();
+	 * assertTrue(errorResponseDTOs.isEmpty()); }
+	 */
+	
 	
 	//Needs to be corrected
 	//@Test
@@ -653,7 +674,7 @@ public class SyncStatusValidatorServiceTest {
 		assertEquals("REG_PKT_APPRVL_CNT_EXCEED", errorResponseDTOs.get(0).getMessage());
 	}
 
-	@Ignore
+//	@Ignore
 	@Test
 	public void testValidatePacketDurationFailureCase() {
 		SyncControl syncControl1 = new SyncControl();
@@ -804,4 +825,14 @@ public class SyncStatusValidatorServiceTest {
 		assertEquals("OPT_TO_REG_REACH_MAX_LIMIT", errorResponseDTOs.get(0).getMessage());
 	}
 
+	
+	/*
+	 * @Test public void isToBeForceUpdateTest() { GlobalParamId globalParamId = new
+	 * GlobalParamId(); globalParamId.setCode(null);
+	 * globalParamId.setLangCode(null); GlobalParam globalParam =
+	 * globalParamDAO.get(globalParamId);
+	 * Mockito.when(syncStatusValidatorServiceImpl.isToBeForceUpdate()).thenReturn(
+	 * null); }
+	 */
+	 
 }
