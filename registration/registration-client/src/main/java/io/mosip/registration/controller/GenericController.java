@@ -162,7 +162,7 @@ public class GenericController extends BaseController {
 	public static Map<String, FxControl> getFxControlMap() {
 		return fxControlMap;
 	}
-
+	
 	public void disableAuthenticateButton(boolean disable) {
 		authenticate.setDisable(disable);
 	}
@@ -211,7 +211,7 @@ public class GenericController extends BaseController {
 		hBox.getChildren().add(textField);
 		Button button = new Button();
 		button.setId("fetchBtn");
-		button.getStyleClass().add("demoGraphicPaneContentButton");
+		button.getStyleClass().add("contiuneButton");
 		button.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("fetch"));
 
@@ -567,6 +567,7 @@ public class GenericController extends BaseController {
 					String invalidScreenName = getInvalidScreenName(tabPane);
 					if(invalidScreenName.equals(EMPTY)) {
 						notification.setVisible(false);
+						tabPane.getTabs().get(oldValue.intValue()).getStyleClass().remove(TAB_LABEL_ERROR_CLASS);
 						loadPreviewOrAuthScreen(tabPane, tabPane.getTabs().get(newValue.intValue()));
 						return;
 					}

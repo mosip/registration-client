@@ -38,6 +38,7 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
+import io.mosip.registration.update.SoftwareUpdateUtil;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 @RunWith(PowerMockRunner.class)
@@ -50,7 +51,10 @@ public class SoftwareUpdateHandlerTest {
 
 	@InjectMocks
 	private SoftwareUpdateHandler softwareUpdateHandler;
-
+	
+	@InjectMocks
+	private SoftwareUpdateUtil softwareUpdateUtil;
+ 
 	@Mock
 	private File mockFile;
 

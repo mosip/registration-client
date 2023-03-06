@@ -1,5 +1,9 @@
 package io.mosip.registration.util.common;
 
+import static io.mosip.registration.constants.LoggerConstants.BIO_SERVICE;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
+
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -86,9 +90,70 @@ public class BIRBuilder {
 				.withOthers(OtherKey.SPEC_VERSION, bioDto.getSpecVersion() == null ? RegistrationConstants.EMPTY : bioDto.getSpecVersion())
 				.build();
 	}
+	
+	public BIR buildBir(String bioAttribute, long qualityScore, byte[] iso, ProcessedLevelType processedLevelType) {
+
+		LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID,
+				"Building BIR for captured biometrics to pass them for quality check with SDK");
+
+		BiometricType biometricType = Biometric.getSingleTypeByAttribute(bioAttribute);
+		
+		RegistryIDType birFormat = new RegistryIDType();
+		birFormat.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_FORMAT_ORG);
+		birFormat.setType(String.valueOf(Biometric.getFormatType(biometricType)));
+
+		RegistryIDType birAlgorithm = new RegistryIDType();
+		birAlgorithm.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_ALG_ORG);
+		birAlgorithm.setType(PacketManagerConstants.CBEFF_DEFAULT_ALG_TYPE);
+
+		QualityType qualityType = new QualityType();
+		qualityType.setAlgorithm(birAlgorithm);
+		qualityType.setScore(qualityScore);
+
+		return new BIR.BIRBuilder().withBdb(iso)
+				.withVersion(new VersionType(1, 1))
+				.withCbeffversion(new VersionType(1, 1))
+				.withBirInfo(new BIRInfo.BIRInfoBuilder().withIntegrity(false).build())
+				.withBdbInfo(new BDBInfo.BDBInfoBuilder().withFormat(birFormat).withQuality(qualityType)
+						.withType(Arrays.asList(biometricType)).withSubtype(getSubTypes(biometricType, bioAttribute))
+						.withPurpose(PurposeType.IDENTIFY).withLevel(processedLevelType)
+						.withCreationDate(LocalDateTime.now(ZoneId.of("UTC"))).withIndex(UUID.randomUUID().toString())
+						.build())
+				.build();
+
+	}
+
+	public BIR buildBir(BiometricsDto biometricsDto, ProcessedLevelType processedLevelType) {
+		LOGGER.info("Building BIR for captured biometrics to pass them for quality check with SDK");
+
+		BiometricType biometricType = Biometric.getSingleTypeByAttribute(biometricsDto.getBioAttribute());
+
+		RegistryIDType birFormat = new RegistryIDType();
+		birFormat.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_FORMAT_ORG);
+		birFormat.setType(String.valueOf(Biometric.getFormatType(biometricType)));
+
+		RegistryIDType birAlgorithm = new RegistryIDType();
+		birAlgorithm.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_ALG_ORG);
+		birAlgorithm.setType(PacketManagerConstants.CBEFF_DEFAULT_ALG_TYPE);
+
+		QualityType qualityType = new QualityType();
+		qualityType.setAlgorithm(birAlgorithm);
+		qualityType.setScore((long) biometricsDto.getQualityScore());
+
+		return new BIR.BIRBuilder().withBdb(biometricsDto.getAttributeISO())
+				.withVersion(new VersionType(1, 1))
+				.withCbeffversion(new VersionType(1, 1))
+				.withBirInfo(new BIRInfo.BIRInfoBuilder().withIntegrity(false).build())
+				.withBdbInfo(new BDBInfo.BDBInfoBuilder().withFormat(birFormat).withQuality(qualityType)
+						.withType(Arrays.asList(biometricType)).withSubtype(getSubTypes(biometricType, biometricsDto.getBioAttribute()))
+						.withPurpose(PurposeType.IDENTIFY).withLevel(processedLevelType)
+						.withCreationDate(LocalDateTime.now(ZoneId.of("UTC"))).withIndex(UUID.randomUUID().toString())
+						.build())
+				.build();
+	}
 
 	@SuppressWarnings("incomplete-switch")
-	private List<String> getSubTypes(BiometricType biometricType, String bioAttribute) {
+	public List<String> getSubTypes(BiometricType biometricType, String bioAttribute) {
 		List<String> subtypes = new LinkedList<>();
 		switch (biometricType) {
 		case FINGER:
