@@ -8,6 +8,15 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
+import io.mosip.kernel.core.util.HMACUtils2;
+import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.dao.impl.UserDetailDAOImpl;
+import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.util.common.OTPManager;
+import io.mosip.registration.util.restclient.AuthTokenUtilService;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,6 +78,8 @@ public class AuthenticationServiceTest {
 	private ServiceDelegateUtil serviceDelegateUtil;
 	
 	@Mock
+	private AuthTokenUtilService authTokenUtilService;
+	
 	private BIRBuilder birBuilder;
 	
 	@Mock
@@ -107,6 +118,7 @@ public class AuthenticationServiceTest {
 		authenticationValidatorDTO.setUserId("mosip");
 		authenticationValidatorDTO.setPassword("mosip");
 		PowerMockito.mockStatic(CryptoUtil.class, HMACUtils2.class);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(loginService.getUserDetail("mosip")).thenReturn(userDTO);		
 		Mockito.when(ClientCryptoUtils.decodeBase64Data("salt")).thenReturn("salt".getBytes());
 		Mockito.when(HMACUtils2.digestAsPlainTextWithSalt("mosip".getBytes(), "salt".getBytes())).thenReturn("mosip");

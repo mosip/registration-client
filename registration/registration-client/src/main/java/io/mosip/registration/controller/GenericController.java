@@ -179,7 +179,6 @@ public class GenericController extends BaseController {
 		additionalInfoReqIdScreenOrder = null;
 	}
 
-
 	private void fillHierarchicalLevelsByLanguage() {
 		for(String langCode : getConfiguredLangCodes()) {
 			TreeMap<Integer, String> hierarchicalData = new TreeMap<>();
@@ -635,7 +634,7 @@ public class GenericController extends BaseController {
 
 			for(UiFieldDTO field : result.get().getFields()) {
 				if(getFxControl(field.getId()) != null && !getFxControl(field.getId()).canContinue()) {
-					LOGGER.error("Screen validation , fieldId : {} has invalid value", field.getId());
+					LOGGER.error("Screen validation , fieldId : {} has invalid value", field.getId()); 
 					String label = getFxControl(field.getId()).getUiSchemaDTO().getLabel().getOrDefault(ApplicationContext.applicationLanguage(), field.getId());
 					showHideErrorNotification(label);
 					isValid = false;
@@ -650,8 +649,16 @@ public class GenericController extends BaseController {
 		}
 		return isValid;
 	}
+	
+	public Label getNotification() {
+		return notification;
+	}
 
-	private void showHideErrorNotification(String fieldName) {
+	public void setNotification(Label notification) {
+		this.notification = notification;
+	}
+
+	public void showHideErrorNotification(String fieldName) {
 		Tooltip toolTip = new Tooltip(fieldName);
 		toolTip.prefWidthProperty().bind(notification.widthProperty());
 		toolTip.setWrapText(true);
@@ -659,7 +666,7 @@ public class GenericController extends BaseController {
 		notification.setText((fieldName == null) ? EMPTY : ApplicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
 				.getString("SCREEN_VALIDATION_ERROR") + " [ " + fieldName + " ]");
 	}
-
+	
 	private String getInvalidScreenName(TabPane tabPane) {
 		String errorScreen = EMPTY;
 		for(UiScreenDTO screen : orderedScreens.values()) {
@@ -923,6 +930,7 @@ public class GenericController extends BaseController {
 
 	public void refreshFields() {
 		orderedScreens.values().forEach(screen -> { refreshScreenVisibility(screen.getName()); });
+		showHideErrorNotification(null);
 	}
 
 	/*public List<UiFieldDTO> getProofOfExceptionFields() {
