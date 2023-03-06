@@ -61,6 +61,7 @@ import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.entity.id.UserRoleId;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.repositories.AppAuthenticationRepository;
 import io.mosip.registration.repositories.MachineMasterRepository;
 import io.mosip.registration.repositories.RegistrationCenterRepository;
@@ -248,7 +249,9 @@ public class LoginServiceTest {
 	
 	@Test
 	public void getModesOfLoginNegativeTest() {
-		Set<String> roleSet = new HashSet<>();		
+		Set<String> roleSet = new HashSet<>();
+		Mockito.when(authTokenUtilService.hasAnyValidToken()).thenReturn(false);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		loginServiceImpl.getModesOfLogin("LOGIN", roleSet);		
 	}
 	
@@ -510,9 +513,12 @@ public class LoginServiceTest {
 		assertNotNull(loginServiceImpl.validateUser("mosip").getSuccessResponseDTO());
 	}
 	
+	//@Test(expected = RegBaseUncheckedException.class)
 	@Test
 	public void validateUserFailureTest() throws Exception {
 		ResponseDTO responseDTO = new ResponseDTO();
+	//	UserDetail userDetail = new UserDetail();
+	//	userDetail.setStatusCode("ACTIVE");
 		Mockito.when(userDetailDAO.getUserDetail(Mockito.anyString())).thenReturn(null);
 		
 		List<ErrorResponseDTO> errorResponseDTOs = new ArrayList<>();
