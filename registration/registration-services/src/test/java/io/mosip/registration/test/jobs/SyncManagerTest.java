@@ -200,7 +200,7 @@ public class SyncManagerTest {
 		assertNotNull(syncTransactionManagerImpl.createSyncControlTransaction(syncTransaction,
 				Timestamp.valueOf(DateUtils.getUTCCurrentDateTime())));
 	}
-	
+	 
 	@Test
 	public void updateClientSettingLastSyncTimeTest() throws ParseException {
 		SyncDataResponseDto syncDataResponseDto= new SyncDataResponseDto();
