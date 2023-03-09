@@ -36,8 +36,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import io.mosip.commons.packet.constants.Biometric;
-import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.kernel.core.util.JsonUtils;
 import io.mosip.registration.api.docscanner.DeviceType;
@@ -51,11 +49,9 @@ import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dao.UserDetailDAO;
 import io.mosip.registration.dao.UserOnboardDAO;
-import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.RegistrationDataDto;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
-import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.entity.RegistrationCenter;
@@ -128,7 +124,8 @@ public class BaseServiceTest {
 		Map<String, Object> map = new HashMap<>();
 		map.put(RegistrationConstants.MACHINE_CENTER_REMAP_FLAG, false);
 		map.put(RegistrationConstants.AGE_GROUP_CONFIG, "{'INFANT':'0-5','MINOR':'6-17','ADULT':'18-200'}");
-		ApplicationContext.getInstance().setApplicationMap(map);	
+		ApplicationContext.getInstance();
+		ApplicationContext.setApplicationMap(map);	
 		List<String> mandatoryLanguages = getMandaoryLanguages();
 		List<String> optionalLanguages = getOptionalLanguages();
 		int minLanguagesCount = 1;
@@ -319,24 +316,6 @@ public class BaseServiceTest {
 		Mockito.when(FileUtils.getFile(Mockito.anyString())).thenReturn(new File("../pom.xml"));
 		Assert.assertNotNull(baseService.preparePacketStatusDto(registration));
 	}
-	
-	/*
-	 * @Test public void buildBir1Test() throws Throwable,IOException {
-	 * BiometricsDto biometricsDto = new BiometricsDto();
-	 * biometricsDto.setQualityScore(4); biometricsDto.setBioSubType("face");
-	 * biometricsDto.getAttributeISO(); byte[] iso =
-	 * "slkdalskdjslkajdjadj".getBytes();
-	 * Mockito.when(baseService.buildBir(Mockito.anyString())).thenReturn(
-	 * biometricsDto); Assert.assertNotNull(baseService.buildBir("Face", 2, iso,
-	 * ProcessedLevelType.INTERMEDIATE)); }
-	 */
-	
-	@Test
-	public void buildBirTest() throws Throwable,IOException  {
-		byte[] iso = "slkdalskdjslkajdjadj".getBytes();
-		Assert.assertNotNull(baseService.buildBir("Face", 2, iso, ProcessedLevelType.INTERMEDIATE));
-	}
-
 	
 	@Test
 	public void getConfiguredLangCodesTest() throws Throwable,IOException  {

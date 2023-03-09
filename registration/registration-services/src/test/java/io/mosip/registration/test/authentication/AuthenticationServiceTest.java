@@ -80,6 +80,7 @@ public class AuthenticationServiceTest {
 	@Mock
 	private AuthTokenUtilService authTokenUtilService;
 	
+	@Mock
 	private BIRBuilder birBuilder;
 	
 	@Mock

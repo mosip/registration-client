@@ -1,8 +1,8 @@
 package io.mosip.registration.metrics;
 
-import io.mosip.registration.entity.GlobalParam;
-import io.mosip.registration.entity.id.GlobalParamId;
-import io.mosip.registration.repositories.GlobalParamRepository;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,30 +10,18 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.itextpdf.html2pdf.jsoup.helper.Validate;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Optional;
+import io.mosip.registration.entity.GlobalParam;
+import io.mosip.registration.repositories.GlobalParamRepository;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*" })
 public class TusURLGlobalParamStoreTest {
 
-	@MockBean
+	@Mock
 	GlobalParamRepository mockRepository;
 
 	@Mock
@@ -42,7 +30,7 @@ public class TusURLGlobalParamStoreTest {
 	@Mock
 	private ApplicationContext applicationContext;
 
-	@Mock
+	@InjectMocks
 	TusURLGlobalParamStore tusURLGlobalParamStore;
 
 	@Before
@@ -65,24 +53,6 @@ public class TusURLGlobalParamStoreTest {
 		URL url = tusURLGlobalParamStore.get("test-metrics-file");
 		Assert.assertNotNull(url);
 		Assert.assertEquals(url.toString(), "http://tus-server/test-metrics-file/part");
-
-	}
-
-
-	@Test
-	public void removeTest1() {
-		
-		GlobalParamRepository gpr = Mockito.mock(GlobalParamRepository.class);
-//		globalParamRepository = applicationContext.getBean(GlobalParamRepository.class);
-		Mockito.doNothing().when(gpr).deleteById(Mockito.any());
-		GlobalParamId globalParamId = new GlobalParamId();
-		globalParamId.getCode();
-		globalParamId.getLangCode();
-		
-        
-//        verify(tusURLGlobalParamStore.getGlobalParamRepository(), times(1)).deleteById(globalParamId);
-         System.out.println(globalParamId);
-	}
-	
+	}	
 
 }
