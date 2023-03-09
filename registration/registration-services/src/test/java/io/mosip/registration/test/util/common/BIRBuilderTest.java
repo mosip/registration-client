@@ -17,6 +17,7 @@ import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.enums.Modality;
 import io.mosip.registration.util.common.BIRBuilder;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
 
@@ -108,4 +109,17 @@ public class BIRBuilderTest {
 		byte[] iso = "slkdalskdjslkajdjadj".getBytes();
 		Assert.assertNotNull(bIRBuilder.buildBir("Face", 2, iso, ProcessedLevelType.INTERMEDIATE));
 	}
+	
+	@Test
+    public void buildBIRWithBiometricsTest() {
+        BiometricsDto biometricsDto = new BiometricsDto();
+        biometricsDto.setBioAttribute("face");
+        biometricsDto.setQualityScore(70.0);
+        biometricsDto.setModalityName(Modality.FACE.name());
+        BIR bir = bIRBuilder.buildBIR(biometricsDto);
+        Assert.assertNotNull(bir);
+        Assert.assertEquals(0, bir.getBdb().length, 0);
+        double scoreInBIR = bir.getBdbInfo().getQuality().getScore();
+        Assert.assertEquals(biometricsDto.getQualityScore(), scoreInBIR, 0);
+    }
 }
