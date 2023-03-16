@@ -17,7 +17,7 @@ jobs:
   build_client:
     runs-on: ubuntu-latest
     env:
-      NAMESPACE: mosipdev
+      NAMESPACE: technogovstack
       SERVICE_NAME: registration-client
       SERVICE_LOCATION: registration
 
