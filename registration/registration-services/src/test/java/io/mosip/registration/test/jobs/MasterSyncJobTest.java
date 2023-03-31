@@ -152,7 +152,91 @@ public class MasterSyncJobTest {
 
 	}
 	
+   
+	@Test
+	public void executeinternalFailurTest() throws JobExecutionException, RegBaseCheckedException {
 
+		SyncJobDef syncJob = new SyncJobDef();
+		syncJob.setId("1");
+		
+		Map<String, SyncJobDef> jobMap=new HashMap<>();
+		
+		jobMap.put(syncJob.getId(), syncJob);
+		
+		syncJob.setId("2");
+		syncJob.setParentSyncJobId("1");
+		
+		
+		jobMap.put("2", syncJob);
+		
+		ResponseDTO responseDTO = new ResponseDTO();
+		SuccessResponseDTO successResponseDTO=new SuccessResponseDTO();
+		responseDTO.setSuccessResponseDTO(null);
+
+		Mockito.when(context.getJobDetail()).thenReturn(jobDetail);
+		Mockito.when(jobDetail.getJobDataMap()).thenReturn(jobDataMap);
+		Mockito.when(jobDataMap.get(Mockito.any())).thenReturn(applicationContext);
+		Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
+		Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
+		Mockito.when(applicationContext.getBean(MasterSyncServiceImpl.class)).thenReturn(masterSyncService);
+		
+		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("1");
+		
+		
+		
+		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(masterSyncJob);
+	
+		Mockito.when(applicationContext.getBean(MasterSyncService.class)).thenReturn(masterSyncService);
+		
+		Mockito.when(masterSyncService.getMasterSync(Mockito.anyString(),Mockito.anyString())).thenReturn(responseDTO);
+
+	
+		masterSyncJob.executeInternal(context);
+		masterSyncJob.executeJob("User", "1");
+
+	}
+	
+	@Test
+	public void executeinternalFailure1Test() throws JobExecutionException, RegBaseCheckedException {
+
+		SyncJobDef syncJob = new SyncJobDef();
+		syncJob.setId("1");
+		
+		Map<String, SyncJobDef> jobMap=new HashMap<>();
+		
+		jobMap.put(syncJob.getId(), syncJob);
+		
+		syncJob.setId("2");
+		syncJob.setParentSyncJobId("1");
+		
+		
+		jobMap.put("2", syncJob);
+		
+		ResponseDTO responseDTO = new ResponseDTO();
+		SuccessResponseDTO successResponseDTO=new SuccessResponseDTO();
+		responseDTO.setSuccessResponseDTO(successResponseDTO);
+
+		Mockito.when(context.getJobDetail()).thenReturn(jobDetail);
+		Mockito.when(jobDetail.getJobDataMap()).thenReturn(jobDataMap);
+		Mockito.when(jobDataMap.get(Mockito.any())).thenReturn(applicationContext);
+		Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
+		Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
+		Mockito.when(applicationContext.getBean(MasterSyncServiceImpl.class)).thenReturn(masterSyncService);
+		
+		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("2");
+		
+		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(masterSyncJob);
+	
+		Mockito.when(applicationContext.getBean(MasterSyncService.class)).thenReturn(masterSyncService);
+		
+		Mockito.when(masterSyncService.getMasterSync(Mockito.anyString(), Mockito.anyString())).thenThrow(RegBaseCheckedException.class);
+	
+		masterSyncJob.executeInternal(context);
+		masterSyncJob.executeJob("User", "2");
+
+	}
+	
+	
 
 	
 	

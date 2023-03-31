@@ -21,6 +21,7 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.registration.dao.SyncJobConfigDAO;
@@ -29,6 +30,7 @@ import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.jobs.JobManager;
 import io.mosip.registration.jobs.SyncManager;
@@ -149,5 +151,108 @@ public class PacketSyncStatusJobTest {
 		packetSyncStatusJob.executeJob("User", "1");
 
 	}
+	
+	@Test
+	public void executeinternalFailureTest() throws JobExecutionException, RegBaseCheckedException, ConnectionException {
+
+		SyncJobDef syncJob = new SyncJobDef();
+		syncJob.setId("1");
+
+		Map<String, SyncJobDef> jobMap = new HashMap<>();
+
+		jobMap.put(syncJob.getId(), syncJob);
+
+		syncJob.setId("2");
+		syncJob.setParentSyncJobId("1");
+
+		jobMap.put("2", syncJob);
+
+		ResponseDTO responseDTO = new ResponseDTO();
+		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
+		responseDTO.setSuccessResponseDTO(null);
+
+		Mockito.when(context.getJobDetail()).thenReturn(jobDetail);
+		Mockito.when(jobDetail.getJobDataMap()).thenReturn(jobDataMap);
+		Mockito.when(jobDataMap.get(Mockito.any())).thenReturn(applicationContext);
+		Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
+		Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
+
+		Mockito.when(applicationContext.getBean(RegPacketStatusService.class)).thenReturn(regPacketStatusService);
+
+		Mockito.when(applicationContext.getBean(RegPacketStatusServiceImpl.class)).thenReturn(regPacketStatusService);
+
+		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("1");
+
+		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(packetSyncStatusJob);
+		Mockito.when(regPacketStatusService.syncServerPacketStatusWithRetryWrapper(Mockito.anyString()))
+				.thenReturn(responseDTO);
+
+		packetSyncStatusJob.executeInternal(context);
+		packetSyncStatusJob.executeJob("User", "1");
+
+	}
+	
+	@Test
+	public void executeinternalFailure1Test() throws JobExecutionException, RegBaseCheckedException, ConnectionException {
+
+		SyncJobDef syncJob = new SyncJobDef();
+		syncJob.setId("1");
+
+		Map<String, SyncJobDef> jobMap = new HashMap<>();
+
+		jobMap.put(syncJob.getId(), syncJob);
+
+		syncJob.setId("2");
+		syncJob.setParentSyncJobId("1");
+
+		jobMap.put("2", syncJob);
+
+		ResponseDTO responseDTO = new ResponseDTO();
+		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
+		responseDTO.setSuccessResponseDTO(successResponseDTO);
+
+		Mockito.when(context.getJobDetail()).thenReturn(jobDetail);
+		Mockito.when(jobDetail.getJobDataMap()).thenReturn(jobDataMap);
+		Mockito.when(jobDataMap.get(Mockito.any())).thenReturn(applicationContext);
+		Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
+		Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
+
+		Mockito.when(applicationContext.getBean(RegPacketStatusService.class)).thenReturn(regPacketStatusService);
+
+		Mockito.when(applicationContext.getBean(RegPacketStatusServiceImpl.class)).thenReturn(regPacketStatusService);
+
+		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("1");
+
+		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(packetSyncStatusJob);
+		Mockito.when(regPacketStatusService.syncServerPacketStatusWithRetryWrapper(Mockito.anyString()))
+				.thenThrow(RegBaseCheckedException.class);
+
+		packetSyncStatusJob.executeInternal(context);
+		packetSyncStatusJob.executeJob("User", "1");
+
+	}
+	
+	
+	@Test(expected = RegBaseUncheckedException.class)
+	public void executejobNoSuchBeanDefinitionExceptionTest() {
+		ResponseDTO responseDTO = new ResponseDTO();
+		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
+		responseDTO.setSuccessResponseDTO(successResponseDTO);
+				
+		Mockito.when(context.getJobDetail()).thenThrow(NoSuchBeanDefinitionException.class);
+		packetSyncStatusJob.executeInternal(context);
+	}
+
+	@Test(expected = RegBaseUncheckedException.class)
+	public void executejobNullPointerExceptionTest() {
+		ResponseDTO responseDTO = new ResponseDTO();
+		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
+		responseDTO.setSuccessResponseDTO(successResponseDTO);
+		Mockito.when(context.getJobDetail()).thenThrow(NullPointerException.class);
+
+		packetSyncStatusJob.executeInternal(context);
+	}
+
+
 
 }

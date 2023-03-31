@@ -23,6 +23,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.retry.ExhaustedRetryException;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.support.RetryTemplate;
+import org.springframework.web.client.RestClientException;
 
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
@@ -92,6 +93,24 @@ public class AuthTokenUtilServiceTest {
 		LoginUserDTO loginUserDTO = new LoginUserDTO();
 		loginUserDTO.setUserId("110012");
 		loginUserDTO.setPassword("test-password");
+		appMap.put(RegistrationConstants.USER_DTO, loginUserDTO);
+		PowerMockito.doReturn(appMap).when(ApplicationContext.class, "map");
+		authTokenUtilService.init();
+	}
+	
+	@Test
+	public void init1() throws Exception {
+		PowerMockito.mockStatic(ApplicationContext.class);
+		PowerMockito.mockStatic(SessionContext.class);
+		Mockito.when(SessionContext.userId()).thenReturn("110012");
+		Map<String,Object> appMap = new HashMap<>();
+		appMap.put("mosip.registration.retry.delay.auth", 1000L);
+		appMap.put("mosip.registration.retry.maxattempts.auth", 2);
+		appMap.put(RegistrationConstants.HTTP_API_READ_TIMEOUT, "1000");
+		appMap.put(RegistrationConstants.HTTP_API_WRITE_TIMEOUT, "1000");
+		appMap.put(RegistrationConstants.REGISTRATION_CLIENT, "REGISTRATIONCLIENT");
+		appMap.put(RegistrationConstants.OTP_CHANNELS, "email");
+		LoginUserDTO loginUserDTO = new LoginUserDTO();
 		appMap.put(RegistrationConstants.USER_DTO, loginUserDTO);
 		PowerMockito.doReturn(appMap).when(ApplicationContext.class, "map");
 		authTokenUtilService.init();
@@ -200,6 +219,80 @@ public class AuthTokenUtilServiceTest {
 		Assert.assertNotNull(authTokenUtilService.fetchAuthToken("test").getCookie());	
 	}
 	
+	
+	@Test
+	public void fetchAuthTokenTest4() throws Exception {
+		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
+		UserToken userToken = new UserToken();
+		userToken.setToken("test-token");
+		userToken.setRefreshToken("test-refresh-token");
+		userToken.setUsrId("10011");
+		userToken.setTokenExpiry(System.currentTimeMillis()/100);
+		
+		Mockito.when(userTokenRepository.findTopByTokenExpiryGreaterThanAndUserDetailIsActiveTrueOrderByTokenExpiryDesc(Mockito.anyLong())).thenReturn(userToken);
+		Mockito.when(userTokenRepository.findTopByRtokenExpiryGreaterThanAndUserDetailIsActiveTrueOrderByRtokenExpiryDesc(Mockito.anyLong())).thenReturn(null);
+		Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
+		Mockito.when(clientCryptoService.signData(Mockito.any())).thenReturn("test".getBytes());
+		Mockito.when(serviceDelegateUtil.prepareURLByHostName(Mockito.anyString())).thenReturn("https://dev.mosip.net/v1/syncdata/authenticate/useridpwd");
+		Mockito.when(environment.getProperty("auth_by_password.service.url")).thenReturn("https://dev.mosip.net/v1/syncdata/authenticate/useridpwd");
+		Map<String, Object> responseMap = new LinkedHashMap<>();
+		Map<String, Object> respBody = new LinkedHashMap<>();
+		respBody.put("response", CryptoUtil.encodeToURLSafeBase64("test-response".getBytes(StandardCharsets.UTF_8)));
+		responseMap.put(RegistrationConstants.REST_RESPONSE_BODY, respBody);
+		Mockito.when(restClientUtil.invokeForToken(Mockito.any())).thenReturn(responseMap);
+		String testPayload = String.format(payload, (System.currentTimeMillis()/1000)+(2*60));
+		testPayload = CryptoUtil.encodeToURLSafeBase64(testPayload.getBytes(StandardCharsets.UTF_8));
+
+		String jsonObjData = "{\n" +
+				"  	\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."+testPayload+".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\",\n" +
+				"	\"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."+testPayload+".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\",\n" +
+				"	\"expiryTime\": 1000,\n" +
+				"	\"refreshExpiryTime\": 1000\n" +
+				"}";
+
+		Mockito.when(clientCryptoFacade.decrypt(Mockito.any())).thenReturn(jsonObjData.getBytes());
+		Mockito.doNothing().when(userDetailDAO).updateUserPwd(Mockito.anyString(), Mockito.anyString());
+		Mockito.doNothing().when(userDetailDAO).updateAuthTokens(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyLong(), Mockito.anyLong());
+		Assert.assertNotNull(authTokenUtilService.fetchAuthToken("test").getCookie());	
+	}
+	
+	
+	@Test
+	public void fetchAuthTokenTest5() throws Exception {
+		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
+		UserToken userToken1 = new UserToken();
+		userToken1.setToken("test-token");
+		userToken1.setRefreshToken("test-refresh-token");
+		userToken1.setUsrId("10011");
+		userToken1.setTokenExpiry(System.currentTimeMillis()/100);
+		
+		Mockito.when(userTokenRepository.findTopByTokenExpiryGreaterThanAndUserDetailIsActiveTrueOrderByTokenExpiryDesc(Mockito.anyLong())).thenReturn(null);
+		Mockito.when(userTokenRepository.findTopByRtokenExpiryGreaterThanAndUserDetailIsActiveTrueOrderByRtokenExpiryDesc(Mockito.anyLong())).thenReturn(userToken1);
+		Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
+		Mockito.when(clientCryptoService.signData(Mockito.any())).thenReturn("test".getBytes());
+		Mockito.when(serviceDelegateUtil.prepareURLByHostName(Mockito.anyString())).thenReturn("https://dev.mosip.net/v1/syncdata/authenticate/useridpwd");
+		Mockito.when(environment.getProperty("auth_by_password.service.url")).thenReturn("https://dev.mosip.net/v1/syncdata/authenticate/useridpwd");
+		Map<String, Object> responseMap = new LinkedHashMap<>();
+		Map<String, Object> respBody = new LinkedHashMap<>();
+		respBody.put("response", CryptoUtil.encodeToURLSafeBase64("test-response".getBytes(StandardCharsets.UTF_8)));
+		responseMap.put(RegistrationConstants.REST_RESPONSE_BODY, respBody);
+		Mockito.when(restClientUtil.invokeForToken(Mockito.any())).thenReturn(responseMap);
+		String testPayload = String.format(payload, (System.currentTimeMillis()/1000)+(2*60));
+		testPayload = CryptoUtil.encodeToURLSafeBase64(testPayload.getBytes(StandardCharsets.UTF_8));
+
+		String jsonObjData = "{\n" +
+				"  	\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."+testPayload+".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\",\n" +
+				"	\"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."+testPayload+".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\",\n" +
+				"	\"expiryTime\": 1000,\n" +
+				"	\"refreshExpiryTime\": 1000\n" +
+				"}";
+
+		Mockito.when(clientCryptoFacade.decrypt(Mockito.any())).thenReturn(jsonObjData.getBytes());
+		Mockito.doNothing().when(userDetailDAO).updateUserPwd(Mockito.anyString(), Mockito.anyString());
+		Mockito.doNothing().when(userDetailDAO).updateAuthTokens(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyLong(), Mockito.anyLong());
+		Assert.assertNotNull(authTokenUtilService.fetchAuthToken("test").getCookie());	
+	}
+	
 	@Test
 	public void sendOtpTest() throws ExhaustedRetryException, Throwable {
 		Mockito.when(retryTemplate.execute(Mockito.any(), Mockito.any(), Mockito.any())).thenAnswer(invocation -> {
@@ -222,5 +315,31 @@ public class AuthTokenUtilServiceTest {
 		Mockito.when(restClientUtil.invokeForToken(Mockito.any())).thenReturn(responseMap);
 		Assert.assertNotNull(authTokenUtilService.sendOtpWithRetryWrapper("test"));
 	}
+	
+	
+	@Test
+	public void sendOtpFailureTest() throws ExhaustedRetryException, RestClientException, Throwable {
+		Mockito.when(retryTemplate.execute(Mockito.any(), Mockito.any(), Mockito.any())).thenAnswer(invocation -> {
+            RetryCallback retry = invocation.getArgument(0);
+            return retry.doWithRetry(null);
+        });
+		Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
+		PowerMockito.mockStatic(CryptoUtil.class);
+		Mockito.when(CryptoUtil.computeFingerPrint(Mockito.any(byte[].class), Mockito.anyString())).thenReturn("test");
+		Mockito.when(clientCryptoService.signData(Mockito.any())).thenReturn("test".getBytes());
+		Mockito.when(CryptoUtil.encodeToURLSafeBase64(Mockito.any())).thenReturn("test");
+		Mockito.when(serviceDelegateUtil.prepareURLByHostName(Mockito.anyString())).thenReturn("https://dev.mosip.net/v1/syncdata/authenticate/sendotp");
+		Mockito.when(environment.getProperty("auth_by_otp.service.url")).thenReturn("https://dev.mosip.net/v1/syncdata/authenticate/sendotp");
+		Map<String, Object> responseMap = new LinkedHashMap<>();
+		Map<String, Object> respBody = new LinkedHashMap<>();
+		LinkedHashMap<String, String> otpMessage = new LinkedHashMap<>();
+		otpMessage.put("message", "OTP Sent");
+		respBody.put("response", otpMessage);
+		responseMap.put(RegistrationConstants.REST_RESPONSE_BODY, respBody);
+		Mockito.when(restClientUtil.invokeForToken(Mockito.any())).thenThrow(RestClientException.class);
+		
+		//Assert.assertNotNull(authTokenUtilService.sendOtpWithRetryWrapper("test"));
+	}
+
 
 }

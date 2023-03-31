@@ -146,6 +146,49 @@ public class PreRegistrationPacketDeletionJobTest {
 
 	}
 	
+	
+	@Test
+	public void executeinternalFailureTest() throws JobExecutionException {
+
+		SyncJobDef syncJob = new SyncJobDef();
+		syncJob.setId("1");
+		
+		Map<String, SyncJobDef> jobMap=new HashMap<>();
+		
+		jobMap.put(syncJob.getId(), syncJob);
+		
+		syncJob.setId("2");
+		syncJob.setParentSyncJobId("1");
+		
+		
+		jobMap.put("2", syncJob);
+		
+		ResponseDTO responseDTO = new ResponseDTO();
+		SuccessResponseDTO successResponseDTO=new SuccessResponseDTO();
+		responseDTO.setSuccessResponseDTO(null);
+
+		Mockito.when(context.getJobDetail()).thenReturn(jobDetail);
+		Mockito.when(jobDetail.getJobDataMap()).thenReturn(jobDataMap);
+		Mockito.when(jobDataMap.get(Mockito.any())).thenReturn(applicationContext);
+		Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
+		Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
+		Mockito.when(applicationContext.getBean(PreRegistrationDataSyncService.class)).thenReturn(preRegistrationDataSyncService);
+		
+//		Mockito.when(jobManager.getChildJobs(Mockito.any())).thenReturn(jobMap);
+		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("1");
+		
+		
+		
+		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(deletionJob);
+	
+		Mockito.when(preRegistrationDataSyncService.fetchAndDeleteRecords()).thenReturn(responseDTO);
+
+	
+		deletionJob.executeInternal(context);
+		deletionJob.executeJob("User", "1");
+
+	}
+	
 
 
 	
@@ -172,8 +215,7 @@ public class PreRegistrationPacketDeletionJobTest {
 	deletionJob.executeInternal(context);
 	}
 	
-	@Ignore
-	@Test
+	@Test(expected = RuntimeException.class)
 	public void executejobRunTimeExceptionTest() {
 		ResponseDTO responseDTO=new ResponseDTO();
 		ErrorResponseDTO errorResponseDTO=new ErrorResponseDTO();
@@ -201,7 +243,7 @@ public class PreRegistrationPacketDeletionJobTest {
 		Mockito.when(applicationContext.getBean(PreRegistrationDataSyncService.class)).thenReturn(preRegistrationDataSyncService);
 		
 //		Mockito.when(jobManager.getChildJobs(Mockito.any())).thenReturn(jobMap);
-		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("1");
+		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("2");
 		
 		
 		
@@ -211,6 +253,7 @@ public class PreRegistrationPacketDeletionJobTest {
 		
 		//assertEquals(responseDTO, deletionJob.executeInternal(context));
 		deletionJob.executeInternal(context);
+		deletionJob.executeJob("User", "2");
 	
 	}
 	
