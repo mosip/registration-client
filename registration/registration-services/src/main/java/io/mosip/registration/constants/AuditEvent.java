@@ -317,7 +317,7 @@ public enum AuditEvent {
 			"<modality> Biometric detail is captured within <time> milliseconds and capture count is <count>"),
 	REG_BIO_CAPTURE_DETAILS_FAILURE("REG-EVT-105", USER_EVENT.getCode(), "REG_BIO_CAPTURE_DETAILS_FAILURE",
 			"<modality> Biometric detail capture is failed and capture count is <count>. Error Message: <errorMessage>"),
-	
+
 	CLIENT_UPGRADE_JARS_DOWNLOADED("REG-UPG-001", USER_EVENT.getCode(), "CLIENT_UPGRADE_JARS_DOWNLOADED",
 			"Client Upgrade: Successfully downloaded all the upgrade jars"),
 	CLIENT_DB_UPGRADE_SCRIPTS("REG-UPG-001", USER_EVENT.getCode(), "CLIENT_DB_UPGRADE_SCRIPTS",

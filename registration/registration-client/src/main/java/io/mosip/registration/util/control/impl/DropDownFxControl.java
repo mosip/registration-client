@@ -95,7 +95,7 @@ public class DropDownFxControl extends FxControl {
 		VBox simpleTypeVBox = new VBox();
 		//simpleTypeVBox.setPrefWidth(200);
 		//simpleTypeVBox.setPrefHeight(95);
-		simpleTypeVBox.setSpacing(5);
+		simpleTypeVBox.setSpacing(18);
 		simpleTypeVBox.setId(fieldName + RegistrationConstants.VBOX);
 
 		/** Title label */

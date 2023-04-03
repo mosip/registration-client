@@ -17,7 +17,9 @@ import io.mosip.commons.packet.constants.CryptomanagerConstant;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
 import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
+import io.mosip.kernel.keymanagerservice.dto.UploadCertificateRequestDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import io.mosip.kernel.signature.constant.SignatureConstant;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.dto.JWTSignatureVerifyResponseDto;
 import io.mosip.kernel.signature.dto.ValidatorResponseDto;
@@ -46,10 +48,13 @@ import org.springframework.web.client.RestTemplate;
 import io.mosip.kernel.core.crypto.spi.CryptoCoreSpec;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.signatureutil.spi.SignatureUtil;
+import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.kernel.keygenerator.bouncycastle.KeyGenerator;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.entity.FileSignature;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.repositories.FileSignatureRepository;
 import io.mosip.registration.util.advice.ResponseSignatureAdvice;
 import io.mosip.registration.util.restclient.RequestHTTPDTO;
 
@@ -84,6 +89,14 @@ public class ResponseSignatureAdviceTest {
 
 	@Mock
 	private PublicKeySyncImpl publicKeySync;
+	
+	@Mock
+	private CryptoCoreSpec cryptoCore;
+	
+	@Mock
+	private FileSignatureRepository fileSignatureRepository;
+	
+
 
 	@Before
 	public void init() throws Exception {
@@ -181,7 +194,7 @@ public class ResponseSignatureAdviceTest {
 		requestHTTPDTO.setIsSignRequired(true);
 		requestHTTPDTO.setUri(new URI("/v1/mosip/test"));
 		Object[] args = new Object[1];
-		args[0] = requestHTTPDTO;
+		args[0] = requestHTTPDTO; 
 		Mockito.when(joinPointMock.getArgs()).thenReturn(args);
 		Map<String, Object> mapResponse = new LinkedHashMap<>();
 		mapResponse.put("lastSyncTime", "2019-04-23T06:20:28.633Z");
@@ -318,4 +331,52 @@ public class ResponseSignatureAdviceTest {
 
 	}
 
+	@Test
+	public void fileSignatureValidationTest() throws RegBaseCheckedException, URISyntaxException, InvalidKeySpecException, NoSuchAlgorithmException {
+		
+		RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
+		requestHTTPDTO.setIsSignRequired(true);
+		requestHTTPDTO.setFileEncrypted(true);
+		requestHTTPDTO.setFilePath(null);
+		requestHTTPDTO.setUri(new URI("/v1/mosip/test"));
+		Object[] args = new Object[1];
+		args[0] = requestHTTPDTO;
+//		Optional<FileSignature> fileSignature = Mockito.mock(fileSignature.getClass());
+//		fileSignature
+		Mockito.when(joinPointMock.getArgs()).thenReturn(args);
+//		Mockito.when(fileSignatureRepository.findByFileName(Mockito.anyString())).thenReturn(fileSignature);
+//		PowerMockito.when(clientCryptoFacade.decrypt()).thenReturn(cryptoCore);
+		JWTSignatureVerifyResponseDto jwtSignatureResponseDto = new JWTSignatureVerifyResponseDto();
+		jwtSignatureResponseDto.setSignatureValid(true);
+		jwtSignatureResponseDto.setMessage(SignatureConstant.VALIDATION_SUCCESSFUL);
+		Mockito.when(signatureService.jwtVerify(Mockito.any())).thenReturn(jwtSignatureResponseDto);
+		
+		//responseSignatureAdvice.fileSignatureValidation(joinPointMock);
+		
+	}
+	
+	/*
+	 * @Test public void checkAndUploadCertificateTest() throws
+	 * RegBaseCheckedException, URISyntaxException, InvalidKeySpecException,
+	 * NoSuchAlgorithmException {
+	 * 
+	 * RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
+	 * requestHTTPDTO.setIsSignRequired(true); requestHTTPDTO.setUri(new
+	 * URI("/v1/mosip/test")); Object[] args = new Object[1]; args[0] =
+	 * requestHTTPDTO; Mockito.when(joinPointMock.getArgs()).thenReturn(args);
+	 * LinkedHashMap<String, Object> mapResponse = new LinkedHashMap<>();
+	 * mapResponse.put("lastSyncTime", "2019-04-23T06:20:28.633Z");
+	 * mapResponse.put("publicKey", null); mapResponse.put("issuedAt", null);
+	 * mapResponse.put("expiryAt", null);
+	 * 
+	 * KeyPairGenerateResponseDto certificateDto = new KeyPairGenerateResponseDto();
+	 * certificateDto.setCertificate("test");
+	 * Mockito.when(keymanagerService.getCertificate(RegistrationConstants.
+	 * RESPONSE_SIGNATURE_PUBLIC_KEY_APP_ID,
+	 * Optional.of(RegistrationConstants.RESPONSE_SIGNATURE_PUBLIC_KEY_REF_ID)))
+	 * .thenReturn(certificateDto); publicKeySync.saveSignPublicKey("test");
+	 * responseSignatureAdvice.checkAndUploadCertificate(mapResponse,
+	 * joinPointMock); }
+	 */
+	
 }

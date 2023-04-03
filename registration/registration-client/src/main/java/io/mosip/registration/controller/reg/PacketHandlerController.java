@@ -177,6 +177,10 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 	@FXML
 	private GridPane registrationGridPane;
+	
+	public GridPane getRegistrationGridPane() {
+		return registrationGridPane;
+	}
 
 	@Autowired
 	private AckReceiptController ackReceiptController;

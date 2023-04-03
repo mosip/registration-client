@@ -680,7 +680,6 @@ Working on new Css by taleev
 	-fx-pref-height: 35.0px;
 	-fx-pref-width: 280.0px;
 	-fx-border-width: 0.0 0.0 1.0 0.0;
-	-fx-border-color: #005baa;
 }
 
 .searchBoxTextStyle {
@@ -1278,6 +1277,27 @@ Working on new Css by taleev
 .modalityLabel {
 	-fx-text-fill: #666666;
 	-fx-font-size: 1.2em;
+}
+
+.mdsQualityLabel {
+	-fx-text-fill: #000000;
+	-fx-font-weight: bold;
+}
+
+.sdkQualityLabel {
+	-fx-text-fill: #800000;
+	-fx-font-weight: bold;
+}
+
+.sdkQualityText {
+	-fx-text-fill: #800000;
+	-fx-font-size: 12.0px;
+}
+
+.biometricTypeLabel {
+	-fx-text-fill: #666666;
+	-fx-font-size: 1.2em;
+	-fx-padding: 0px 0px 0px 60px ;
 }
 
 .paneHeader {

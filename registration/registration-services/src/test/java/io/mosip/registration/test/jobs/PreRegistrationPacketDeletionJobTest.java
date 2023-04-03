@@ -32,6 +32,7 @@ import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.entity.SyncJobDef;
+import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.jobs.JobManager;
@@ -87,7 +88,7 @@ public class PreRegistrationPacketDeletionJobTest {
 		SyncJobDef syncJob = new SyncJobDef();
 		syncJob.setId("1234");
 
-		syncJob.setApiName("packetSyncStatusJob");
+		syncJob.setApiName("deletionJob");
 		syncJob.setSyncFreq("0/5 * * * * ?");
 		syncJobList.add(syncJob);
 
@@ -216,7 +217,7 @@ public class PreRegistrationPacketDeletionJobTest {
 	}
 	
 	@Test(expected = RuntimeException.class)
-	public void executejobRunTimeExceptionTest() {
+	public void executejobRunTimeExceptionTest() throws ConnectionException {
 		ResponseDTO responseDTO=new ResponseDTO();
 		ErrorResponseDTO errorResponseDTO=new ErrorResponseDTO();
 		List<ErrorResponseDTO> errorResponseDTOs=new ArrayList<>();

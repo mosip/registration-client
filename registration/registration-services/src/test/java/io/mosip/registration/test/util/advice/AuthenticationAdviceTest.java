@@ -29,6 +29,7 @@ import io.mosip.registration.dto.UserDTO;
 import io.mosip.registration.dto.UserRoleDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.login.LoginService;
+import io.mosip.registration.service.template.impl.TemplateServiceImpl;
 import io.mosip.registration.util.advice.AuthenticationAdvice;
 import io.mosip.registration.util.advice.PreAuthorizeUserId;
 
@@ -106,6 +107,15 @@ public class AuthenticationAdviceTest {
 	public void canAuthorizeUserIdThrowsExceptionIfSCNA() throws Exception {
 		PowerMockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 
+		authenticationAdvice.authorizeUserId(preAuthorizeUserId);
+	}
+	
+	@Test(expected = RegBaseCheckedException.class)
+	public void authorizeUserId() throws Exception {
+		PowerMockito.when(SessionContext.isSessionContextAvailable()).thenReturn(true);
+		SecurityContext securityContext = SessionContext.securityContext();
+		SecurityContext spyTemp = Mockito.spy(securityContext);
+		securityContext = null;
 		authenticationAdvice.authorizeUserId(preAuthorizeUserId);
 	}
 }
