@@ -1,32 +1,21 @@
 package io.mosip.registration.util.restclient;
 
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.impl.JWTParser;
-import com.auth0.jwt.impl.NullClaim;
-import com.auth0.jwt.interfaces.Claim;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import io.micrometer.core.annotation.Counted;
-import io.micrometer.core.annotation.Timed;
-import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
-import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.kernel.core.util.CryptoUtil;
-import io.mosip.kernel.core.util.DateUtils;
-import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.constants.LoginMode;
-import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.context.SessionContext;
-import io.mosip.registration.dao.UserDetailDAO;
-import io.mosip.registration.dto.AuthTokenDTO;
-import io.mosip.registration.dto.LoginUserDTO;
-import io.mosip.registration.entity.UserToken;
-import io.mosip.registration.exception.ConnectionException;
-import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.exception.RegistrationExceptionConstants;
-import io.mosip.registration.repositories.UserTokenRepository;
-import lombok.SneakyThrows;
+import java.net.URI;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.PostConstruct;
+import javax.validation.constraints.NotNull;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,12 +35,30 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.annotation.PostConstruct;
-import javax.validation.constraints.NotNull;
-import java.net.URI;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.*;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.interfaces.DecodedJWT;
+
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.CryptoUtil;
+import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.registration.config.AppConfig;
+import io.mosip.registration.constants.LoginMode;
+import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.dao.UserDetailDAO;
+import io.mosip.registration.dto.AuthTokenDTO;
+import io.mosip.registration.dto.LoginUserDTO;
+import io.mosip.registration.entity.UserToken;
+import io.mosip.registration.exception.ConnectionException;
+import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RegistrationExceptionConstants;
+import io.mosip.registration.repositories.UserTokenRepository;
+import lombok.SneakyThrows;
 
 
 /**
@@ -63,8 +70,8 @@ public class AuthTokenUtilService {
 
     private static final Logger LOGGER = AppConfig.getLogger(AuthTokenUtilService.class);
     private static final String REALM_ACCESS = "realm_access";
-    private static final String ROLES = "roles";
     private static final String USERNAME = "name";
+    private static final String PREFERRED_USERNAME = "preferred_username";
 
     @Autowired
     private ClientCryptoFacade clientCryptoFacade;
@@ -405,6 +412,9 @@ public class AuthTokenUtilService {
     }
 
     private String getUsername(@NotNull DecodedJWT decodedJWT) {
-        return decodedJWT.getClaim(USERNAME).isNull() ? null : decodedJWT.getClaim(USERNAME).asString().trim();
+    	return decodedJWT.getClaim(USERNAME).isNull()
+				? decodedJWT.getClaim(PREFERRED_USERNAME).isNull() ? null
+						: decodedJWT.getClaim(PREFERRED_USERNAME).asString().trim()
+				: decodedJWT.getClaim(USERNAME).asString().trim();
     }
 }
