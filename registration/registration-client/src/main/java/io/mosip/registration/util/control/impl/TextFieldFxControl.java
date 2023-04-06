@@ -93,8 +93,6 @@ public class TextFieldFxControl extends FxControl {
 
 	@Override
 	public FxControl build(UiFieldDTO uiFieldDTO) {
-		LOGGER.info("Building TextField FxControl");
-		
 		this.uiFieldDTO = uiFieldDTO;
 		this.control = this;
 		create(uiFieldDTO);
