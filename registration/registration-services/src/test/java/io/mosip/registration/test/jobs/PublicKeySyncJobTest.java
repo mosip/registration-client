@@ -1,5 +1,7 @@
 package io.mosip.registration.test.jobs;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -135,6 +137,86 @@ public class PublicKeySyncJobTest {
 
 		Mockito.when(publicKeySyncService.getPublicKey(Mockito.anyString())).thenReturn(responseDTO);
 
+		assertNotNull(responseDTO);
+		publicKeySyncJob.executeInternal(context);
+		publicKeySyncJob.executeJob("User", "1");
+
+	}
+	
+	@Test
+	public void executeinternalFailureTest() throws JobExecutionException, RegBaseCheckedException {
+
+		SyncJobDef syncJob = new SyncJobDef();
+		syncJob.setId("1");
+
+		Map<String, SyncJobDef> jobMap = new HashMap<>();
+
+		jobMap.put(syncJob.getId(), syncJob);
+
+		syncJob.setId("2");
+		syncJob.setParentSyncJobId("1");
+
+		jobMap.put("2", syncJob);
+
+		ResponseDTO responseDTO = new ResponseDTO();
+		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
+		responseDTO.setSuccessResponseDTO(null);
+
+		Mockito.when(context.getJobDetail()).thenReturn(jobDetail);
+		Mockito.when(jobDetail.getJobDataMap()).thenReturn(jobDataMap);
+		Mockito.when(jobDataMap.get(Mockito.any())).thenReturn(applicationContext);
+		Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
+		Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
+		Mockito.when(applicationContext.getBean(PublicKeySync.class)).thenReturn(publicKeySyncService);
+
+//		Mockito.when(jobManager.getChildJobs(Mockito.any())).thenReturn(jobMap);
+		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("1");
+		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(publicKeySyncJob);
+		Mockito.when(applicationContext.getBean(PublicKeySync.class)).thenReturn(publicKeySyncService);
+		Mockito.when(publicKeySyncService.getPublicKey(Mockito.anyString())).thenReturn(responseDTO);
+
+		assertNotNull(responseDTO);
+		publicKeySyncJob.executeInternal(context);
+		publicKeySyncJob.executeJob("User", "1");
+
+	}
+	
+	@Test
+	public void executeinternalFailure1Test() throws JobExecutionException, RegBaseCheckedException {
+
+		SyncJobDef syncJob = new SyncJobDef();
+		syncJob.setId("1");
+
+		Map<String, SyncJobDef> jobMap = new HashMap<>();
+
+		jobMap.put(syncJob.getId(), syncJob);
+
+		syncJob.setId("2");
+		syncJob.setParentSyncJobId("1");
+
+		jobMap.put("2", syncJob);
+
+		ResponseDTO responseDTO = new ResponseDTO();
+		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
+		responseDTO.setSuccessResponseDTO(successResponseDTO);
+
+		Mockito.when(context.getJobDetail()).thenReturn(jobDetail);
+		Mockito.when(jobDetail.getJobDataMap()).thenReturn(jobDataMap);
+		Mockito.when(jobDataMap.get(Mockito.any())).thenReturn(applicationContext);
+		Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
+		Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
+		Mockito.when(applicationContext.getBean(PublicKeySync.class)).thenReturn(publicKeySyncService);
+
+//		Mockito.when(jobManager.getChildJobs(Mockito.any())).thenReturn(jobMap);
+		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("1");
+
+		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(publicKeySyncJob);
+
+		Mockito.when(applicationContext.getBean(PublicKeySync.class)).thenReturn(publicKeySyncService);
+
+		Mockito.when(publicKeySyncService.getPublicKey(Mockito.anyString())).thenThrow(RegBaseCheckedException.class);
+
+		assertNotNull(responseDTO);
 		publicKeySyncJob.executeInternal(context);
 		publicKeySyncJob.executeJob("User", "1");
 
