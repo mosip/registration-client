@@ -1,38 +1,23 @@
 package io.mosip.registration.test.util;
 
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
-
 import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 
+import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
-
+@RunWith(MockitoJUnitRunner.class)
 public class RegistrationSystemPropertiesCheckerTest {
-	
-	@Mock
-	private RegistrationSystemPropertiesChecker registrationSystemPropertiesChecker;
 
 	@Test
-	public void testGetMachineId() throws Exception  {
-		String machineId = RegistrationSystemPropertiesChecker.getMachineId();
-		Assertions.assertNotNull(machineId);
-		
+	public void testGetMachineId() throws UnknownHostException, RegBaseCheckedException {
+		String expected = InetAddress.getLocalHost().getHostName().toLowerCase();
+		String actual = RegistrationSystemPropertiesChecker.getMachineId();
+		assertEquals(expected, actual);
+		assertNotNull(actual);
 	}
-	
-	@Test
-    public void testGetMachineIdException() throws UnknownHostException{
-		
-		String machineId1 = RegistrationSystemPropertiesChecker.getMachineId();
-		
-		machineId1 = "";
-//		assertThrows(UnknownHostException.class, () -> RegistrationSystemPropertiesChecker.getMachineId());
-
-	}
-
 }
