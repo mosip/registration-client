@@ -310,7 +310,7 @@ public class MosipDeviceSpecificationFactory {
 			}
 
 			if (getMdsProvider(deviceSpecificationProviders, latestSpecVersion) == null) {
-				List<String> specVersions = Arrays.asList(specVersion);
+				List<String> specVersions = new ArrayList<>(Arrays.asList(specVersion));
 
 				specVersions.remove(latestSpecVersion);
 

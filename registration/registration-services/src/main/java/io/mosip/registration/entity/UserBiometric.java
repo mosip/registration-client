@@ -31,7 +31,8 @@ public class UserBiometric extends RegistrationCommonFields {
 	
 	@Lob
 	@Column(name = "bio_raw_image")
-	private byte[] bioRawImage;
+	private byte[] bioRawImage;	//This column is not used before 1.2.0.1-B2 release. 
+								//After 1.2.0.1-B2 release, we serialize the complete BIR to XML bytes and store in this column
 	@Column(name = "bio_minutia")
 	private String bioMinutia;
 	@Lob

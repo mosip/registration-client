@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,9 +17,11 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import antlr.StringUtils;
 import io.mosip.registration.dao.TemplateDao;
 import io.mosip.registration.entity.Template;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.service.template.TemplateService;
 import io.mosip.registration.service.template.impl.TemplateServiceImpl;
 
 public class TemplateServiceTest {
@@ -128,4 +131,13 @@ public class TemplateServiceTest {
 
 		spyTemp.getHtmlTemplate("acktemplate", "");
 	}
+	
+	@Test(expected = RegBaseCheckedException.class)
+	public void getHtmlTemplatetemplateTypeCodeNullTest() throws RegBaseCheckedException {
+		TemplateServiceImpl temp = new TemplateServiceImpl();
+		TemplateServiceImpl spyTemp = Mockito.spy(temp);
+
+		spyTemp.getHtmlTemplate("", "eng");
+	}
+	
 }

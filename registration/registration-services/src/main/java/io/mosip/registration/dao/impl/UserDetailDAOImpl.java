@@ -274,7 +274,7 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 			return;
 		}
 
-		userDetail.setName(username);
+		userDetail.setName(username != null ? username : userId);
 
 		List<UserRole> existingRoles = userRoleRepository.findByUserRoleIdUsrId(userId);
 		if(existingRoles != null && !existingRoles.isEmpty()) {

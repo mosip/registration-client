@@ -34,12 +34,15 @@ import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.entity.SyncJobDef;
+import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.jobs.JobManager;
 import io.mosip.registration.jobs.SyncManager;
 import io.mosip.registration.jobs.impl.RegistrationPacketUploadJob;
 import io.mosip.registration.service.config.impl.JobConfigurationServiceImpl;
+import io.mosip.registration.service.operator.UserDetailService;
+import io.mosip.registration.service.operator.impl.UserDetailServiceImpl;
 import io.mosip.registration.service.packet.PacketUploadService;
 
 @RunWith(PowerMockRunner.class)
@@ -130,7 +133,7 @@ public class RegistrationPacketUploadJobTest {
 		Mockito.when(jobDataMap.get(Mockito.any())).thenReturn(applicationContext);
 		Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
 		Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
-		Mockito.when(applicationContext.getBean(PacketUploadService.class)).thenReturn(packetUploadService);
+//		Mockito.when(applicationContext.getBean(PacketUploadService.class)).thenReturn(packetUploadService);
 
 //		Mockito.when(jobManager.getChildJobs(Mockito.any())).thenReturn(jobMap);
 		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("1");

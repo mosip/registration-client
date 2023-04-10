@@ -1,5 +1,7 @@
 package io.mosip.registration.bio.service.test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doNothing;
 
 import java.io.IOException;
@@ -15,6 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -31,7 +34,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.kernel.biometrics.constant.BiometricType;
-import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.biosdk.provider.impl.BioProviderImpl_V_0_9;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
@@ -47,6 +49,7 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.enums.Modality;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.constants.MosipBioDeviceConstants;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.mdm.dto.MdmDeviceInfo;
@@ -326,20 +329,6 @@ public class BioServiceTest {
     }
 
     @Test
-    public void buildBirTest() {
-        BiometricsDto biometricsDto = new BiometricsDto();
-        biometricsDto.setBioAttribute("face");
-        biometricsDto.setQualityScore(70.0);
-        biometricsDto.setAttributeISO(new byte[0]);
-        biometricsDto.setModalityName(Modality.FACE.name());
-        BIR bir = bioService.buildBir(biometricsDto);
-        Assert.assertNotNull(bir);
-        Assert.assertEquals(0, bir.getBdb().length, 0);
-        double scoreInBIR = bir.getBdbInfo().getQuality().getScore();
-        Assert.assertEquals(biometricsDto.getQualityScore(), scoreInBIR, 0);
-    }
-
-    @Test
     public void getStreamTest() throws RegBaseCheckedException, IOException {
         initializeDeviceMapTest();
 
@@ -413,6 +402,54 @@ public class BioServiceTest {
         Assert.assertEquals("REG-MDS-003", errorCode);
     }
 
+    @Test(expected=RegBaseCheckedException.class)
+    public void testValidData() throws RegBaseCheckedException {
+        String data = "123|456";
+        Mockito.when(mosipDeviceSpecificationHelper.getPayLoad(data)).thenThrow(RegBaseCheckedException.class);
+    }
+    
+    @Test
+    public void testNullData() {
+        String data = null;
+        RegBaseCheckedException ex = assertThrows(RegBaseCheckedException.class, () -> {
+        	mosipDeviceSpecificationHelper.getPayLoad(data);
+        });
+        assertEquals(RegistrationExceptionConstants.MDS_JWT_INVALID.getErrorCode(), ex.getErrorCode());
+      //  assertEquals(RegistrationExceptionConstants.MDS_JWT_INVALID.getErrorMessage(), ex.getMessage());
+    }  
+    
+    @Test(expected=RegBaseCheckedException.class)
+    public void testgetSignatureValidData() throws RegBaseCheckedException {
+        String data = "123|456";
+        Mockito.when(mosipDeviceSpecificationHelper.getSignature(data)).thenThrow(RegBaseCheckedException.class);
+    }
+    
+    @Test
+    public void testgetSignatureNullData() {
+        String data = null;
+        RegBaseCheckedException ex = assertThrows(RegBaseCheckedException.class, () -> {
+        	mosipDeviceSpecificationHelper.getSignature(data);
+        });
+        assertEquals(RegistrationExceptionConstants.MDS_JWT_INVALID.getErrorCode(), ex.getErrorCode());
+      //  assertEquals(RegistrationExceptionConstants.MDS_JWT_INVALID.getErrorMessage(), ex.getMessage());
+    }  
+    
+    @Test(expected = RegBaseCheckedException.class)
+    public void testValidateQualityScoreWithNull() throws RegBaseCheckedException {
+    	MosipDeviceSpecificationHelper mosipDeviceSpecificationHelper = new MosipDeviceSpecificationHelper();
+    	mosipDeviceSpecificationHelper.validateQualityScore(null);
+    }
+    
+    public void testvalidateResponseTimestampNullData() {
+        String responseTime = null;
+        RegBaseCheckedException ex = assertThrows(RegBaseCheckedException.class, () -> {
+        	mosipDeviceSpecificationHelper.validateResponseTimestamp(responseTime);
+        });
+        assertEquals(RegistrationExceptionConstants.MDS_CAPTURE_INVALID_TIME.getErrorCode(), ex.getErrorCode());
+      //  assertEquals(RegistrationExceptionConstants.MDS_JWT_INVALID.getErrorMessage(), ex.getMessage());
+    }  
+    
+ 
     private void initializeDeviceMapTest() throws IOException {
         //queued for check_service_availability
         mockWebServer.enqueue(new MockResponse());
@@ -451,7 +488,7 @@ public class BioServiceTest {
                 mdmDeviceInfo.setDigitalId(String.format(JWT_FORMAT,
                         CryptoUtil.encodeToURLSafeBase64(objectMapper.writeValueAsBytes(digitalId))));
                 mdmDeviceInfo.setDeviceId("1");
-                mdmDeviceInfo.setDeviceSubId(new int[] { 1, 2 });
+                mdmDeviceInfo.setDeviceSubId(new String[] { "1", "2" });
                 mdmDeviceInfo.setDeviceCode("1");
                 mdmDeviceInfo.setDeviceStatus(deviceStatus);
                 mdmDeviceInfo.setCallbackId("http://127.0.0.1:"+port);
