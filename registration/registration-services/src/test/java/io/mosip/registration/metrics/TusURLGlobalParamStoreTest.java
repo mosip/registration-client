@@ -7,27 +7,25 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
+
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
+
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.itextpdf.html2pdf.jsoup.helper.Validate;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Optional;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*" })
@@ -68,21 +66,25 @@ public class TusURLGlobalParamStoreTest {
 
 	}
 
-
 	@Test
-	public void removeTest1() {
-		
-		GlobalParamRepository gpr = Mockito.mock(GlobalParamRepository.class);
-//		globalParamRepository = applicationContext.getBean(GlobalParamRepository.class);
-		Mockito.doNothing().when(gpr).deleteById(Mockito.any());
+	public void testRemoveExistingGlobalParam() throws MalformedURLException {
+		TusURLGlobalParamStore tusURLGlobalParamStore = new TusURLGlobalParamStore(applicationContext);
+		String code = "testCode";
+		URL url = new URL("http://www.example.com");
 		GlobalParamId globalParamId = new GlobalParamId();
-		globalParamId.getCode();
-		globalParamId.getLangCode();
-		
-        
-//        verify(tusURLGlobalParamStore.getGlobalParamRepository(), times(1)).deleteById(globalParamId);
-         System.out.println(globalParamId);
+		globalParamId.setCode(code);
+		globalParamId.setLangCode("eng");
+		GlobalParam globalParam = new GlobalParam();
+		globalParam.setGlobalParamId(globalParamId);
+		globalParam.setName(code);
+		globalParam.setVal(url.toString());
+		globalParam.setTyp("INTERNAL");
+		globalParam.setCrBy("SYSTEM");
+		globalParam.setCrDtime(Timestamp.valueOf(LocalDateTime.now()));
+		when(globalParamRepository.getOne(globalParamId)).thenReturn(globalParam);
+		tusURLGlobalParamStore.remove(code);
+		verify(globalParamRepository, times(1)).deleteById(globalParamId);
 	}
-	
 
+	
 }
