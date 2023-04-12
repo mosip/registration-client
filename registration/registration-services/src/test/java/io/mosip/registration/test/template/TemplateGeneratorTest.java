@@ -312,15 +312,6 @@ public class TemplateGeneratorTest {
 				.getSuccessResponseDTO());
 	}
 	
-//	  @Test
-//	    public void testGenerateTemplateIOException() throws RegBaseCheckedException {
-//	        TemplateManagerBuilder templateManagerBuilder = mock(TemplateManagerBuilder.class);
-//	      //  when(templateManagerBuilder.build()).thenThrow(new IOException());
-//	        TemplateGenerator templateGenerator = new TemplateGenerator();
-//	        ResponseDTO responseDTO = templateGenerator.generateTemplate("templateText", new RegistrationDTO(),
-//	            templateManagerBuilder, "templateType", "crossImagePath");
-//	        assertEquals(RegistrationConstants.TEMPLATE_GENERATOR_ACK_RECEIPT_EXCEPTION, responseDTO.getErrorResponseDTOs());
-//	    }
 	  
 	   @Test
 	    public void testGenerateTemplateRuntimeException() throws RegBaseCheckedException {
@@ -329,6 +320,7 @@ public class TemplateGeneratorTest {
 	        TemplateGenerator templateGenerator = new TemplateGenerator();
 	        ResponseDTO responseDTO = templateGenerator.generateTemplate("templateText", new RegistrationDTO(),
 	            templateManagerBuilder, "templateType", "crossImagePath");
+	        assertNotNull(templateGenerator.generateTemplate("templateText", new RegistrationDTO(), templateManagerBuilder, "templateType", "crossImagePath"));
 	        
 	    }
 	   
