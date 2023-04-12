@@ -1,9 +1,11 @@
 package io.mosip.registration.test.login;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -34,11 +36,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 
-import com.amazonaws.services.datapipeline.model.Field;
 
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
@@ -48,11 +50,12 @@ import io.mosip.registration.entity.FileSignature;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.repositories.FileSignatureRepository;
+import io.mosip.registration.service.packet.PacketUploadService;
 import io.mosip.registration.util.restclient.RequestHTTPDTO;
 import io.mosip.registration.util.restclient.RestClientUtil;
 
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
+@PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*" })
 @PrepareForTest({ ApplicationContext.class })
 public class RestClientUtilTest {
 
@@ -64,9 +67,11 @@ public class RestClientUtilTest {
 
 	private RequestHTTPDTO requestHTTPDTO;
 
+	private PacketUploadService downloadService;
+
 	@Mock
 	RestTemplate plainRestTemplate;
-	
+
 	@Mock
 	private FileSignatureRepository fileSignatureRepository;
 
@@ -85,47 +90,41 @@ public class RestClientUtilTest {
 		requestHTTPDTO.setUri(uri);
 		requestHTTPDTO.setRequestBody(otpGeneratorRequestDTO);
 		requestHTTPDTO.setHttpHeaders(new HttpHeaders());
-		
-		Map<String,Object> appMap = new HashMap<>();
+
+		Map<String, Object> appMap = new HashMap<>();
 		appMap.put(RegistrationConstants.HTTP_API_READ_TIMEOUT, "30");
 		appMap.put(RegistrationConstants.HTTP_API_WRITE_TIMEOUT, "30");
 		PowerMockito.mockStatic(ApplicationContext.class);
 		Mockito.when(ApplicationContext.map()).thenReturn(appMap);
-		
+
 		FileSignature fileSignature = new FileSignature();
-		//fileSignature.setSignature("");
-	    
-	    assertEquals(null, fileSignature.getSignature());
-		
-		
 	}
 
-
-	@SuppressWarnings("unchecked")
+	
 	@Test
 	public void invokeHeadersTest() throws RegBaseCheckedException, ConnectionException, URISyntaxException {
 		ResponseEntity<?> response = new ResponseEntity<>("Success", HttpStatus.OK);
-		Mockito.when(plainRestTemplate.exchange(Mockito.any(URI.class), Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class), Mockito.any(Class.class))).thenReturn(response);
+		Mockito.when(plainRestTemplate.exchange(Mockito.any(URI.class), Mockito.any(HttpMethod.class),
+				Mockito.any(HttpEntity.class), Mockito.any(Class.class))).thenReturn(response);
 		Assert.assertNotNull(restClientUtil.invokeURL(requestHTTPDTO));
 	}
-	
-	@SuppressWarnings("unchecked")
+
 	@Test
 	public void invokeForTokenTest() throws URISyntaxException {
 		ResponseEntity<?> response = new ResponseEntity<>("Success", HttpStatus.OK);
-		Mockito.when(plainRestTemplate.exchange(Mockito.any(URI.class), Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class), Mockito.any(Class.class))).thenReturn(response);
+		Mockito.when(plainRestTemplate.exchange(Mockito.any(URI.class), Mockito.any(HttpMethod.class),
+				Mockito.any(HttpEntity.class), Mockito.any(Class.class))).thenReturn(response);
 		Assert.assertNotNull(restClientUtil.invokeForToken(requestHTTPDTO));
 	}
-	
-	@SuppressWarnings("unchecked")
+
 	@Test
 	public void isConnectedToSyncServerTest() throws MalformedURLException, URISyntaxException {
 		ResponseEntity<?> response = new ResponseEntity<>("Success", HttpStatus.OK);
-		Mockito.when(plainRestTemplate.getForEntity(Mockito.any(URI.class), Mockito.any(Class.class))).thenReturn(response);
+		Mockito.when(plainRestTemplate.getForEntity(Mockito.any(URI.class), Mockito.any(Class.class)))
+				.thenReturn(response);
 		Assert.assertTrue(restClientUtil.isConnectedToSyncServer("https://localhost:8080/otpmanager/otps"));
 	}
-	
-	@SuppressWarnings("unchecked")
+
 	@Test
 	public void downloadFileTest() throws Exception {
 		RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
@@ -133,24 +132,16 @@ public class RestClientUtilTest {
 		requestHTTPDTO.setFilePath(file.toPath());
 		requestHTTPDTO.setFileEncrypted(true);
 		FileSignature fileSign = new FileSignature();
-		
+
 		fileSign.setContentLength(10);
 		Optional<FileSignature> fileSignature = Optional.of(fileSign);
 		Mockito.when(fileSignatureRepository.findByFileName(Mockito.anyString())).thenReturn(fileSignature);
 		Mockito.when(fileSignatureRepository.save(Mockito.any(FileSignature.class))).thenReturn(new FileSignature());
-		Mockito.when(restTemplate.execute(Mockito.any(URI.class), Mockito.any(HttpMethod.class), Mockito.any(RequestCallback.class), Mockito.any(ResponseExtractor.class))).thenReturn(file);
+		Mockito.when(restTemplate.execute(Mockito.any(URI.class), Mockito.any(HttpMethod.class),
+				Mockito.any(RequestCallback.class), Mockito.any(ResponseExtractor.class))).thenReturn(file);
 		restClientUtil.downloadFile(requestHTTPDTO);
+		assertNotNull(fileSignature);
 	}
-	
-	@SuppressWarnings("unchecked")
-	@Test
-	public void saveTest(){
-		
-		FileSignature fileSignature = Mockito.mock(FileSignature.class);
-		
-		Mockito.when(fileSignatureRepository.save(Mockito.any(FileSignature.class))).thenReturn(new FileSignature());
-//		verify(fileSignatureRepository, times(1)).save(any());
-	}
-	
+
 
 }
