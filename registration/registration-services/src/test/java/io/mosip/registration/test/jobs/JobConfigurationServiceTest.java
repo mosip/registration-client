@@ -4,6 +4,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.doNothing;
 
+import java.net.ConnectException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
@@ -47,6 +48,7 @@ import io.mosip.registration.entity.GlobalParam;
 import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.entity.SyncTransaction;
+import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.jobs.BaseJob;
 import io.mosip.registration.jobs.impl.PacketSyncStatusJob;
 import io.mosip.registration.repositories.SyncJobDefRepository;
@@ -357,6 +359,49 @@ public class JobConfigurationServiceTest {
 		Mockito.when(syncJobDAO.findAll()).thenReturn(syncControls);
 		Assert.assertNotNull(jobConfigurationService.getLastCompletedSyncJobs().getErrorResponseDTOs());
 	}
+	
+	@Test
+	public void getLastCompletedSyncJobsFailureTest() {
+		initiateJobTest();
+		List<SyncControl> syncControls = new LinkedList<>();
+		SyncControl syncControl = new SyncControl();
+		Mockito.when(syncJobDAO.findAll()).thenReturn(syncControls);
+		Assert.assertNotNull(jobConfigurationService.getLastCompletedSyncJobs());
+	}
+	
+	@Test
+	public void getLastCompletedSyncJobsFailure1Test() {
+		initiateJobTest();
+		List<SyncControl> syncControls = new LinkedList<>();
+		SyncControl syncControl = new SyncControl();
+		syncControl.setUpdDtimes(null);
+		syncControl.setId(null);
+		syncControl.setSyncJobId(null);
+
+		syncControls.add(syncControl);
+		Mockito.when(syncJobDAO.findAll()).thenReturn(syncControls);
+		Assert.assertNotNull(jobConfigurationService.getLastCompletedSyncJobs().getSuccessResponseDTO());
+
+		syncControls.clear();
+
+		Mockito.when(syncJobDAO.findAll()).thenReturn(syncControls);
+		Assert.assertNotNull(jobConfigurationService.getLastCompletedSyncJobs().getErrorResponseDTOs());
+	}
+	
+	@Test
+	public void getLastCompletedSyncJobsFailure2Test() {
+		initiateJobTest();
+		List<SyncControl> syncControls = new LinkedList<>();
+		SyncControl syncControl = new SyncControl();
+		syncControl.setUpdDtimes(new Timestamp(System.currentTimeMillis()));
+		syncControl.setId("1234");
+		syncControl.setSyncJobId("1234");
+
+		syncControls.add(syncControl);
+		Mockito.when(syncJobDAO.findAll()).thenReturn(null);
+		Assert.assertNotNull(jobConfigurationService.getLastCompletedSyncJobs());
+
+	}
 
 	@Test
 	public void getSyncTransactionTest() {
@@ -375,6 +420,57 @@ public class JobConfigurationServiceTest {
 				.thenReturn(syncTransactions);
 
 		Assert.assertNotNull(jobConfigurationService.getSyncJobsTransaction().getSuccessResponseDTO());
+	}
+	
+	
+	@Test
+	public void getSyncTransactionFailureTest() {
+		initiateJobTest();
+		List<SyncTransaction> syncTransactions = new LinkedList<>();
+		SyncTransaction syncTransaction = new SyncTransaction();
+		syncTransaction.setUpdDtimes(new Timestamp(System.currentTimeMillis()));
+		syncTransaction.setId("1234");
+		syncTransaction.setSyncJobId("1234");
+		syncTransaction.setStatusCode("Triggered");
+		syncTransaction.setCrDtime(new Timestamp(System.currentTimeMillis()));
+
+		syncTransactions.add(syncTransaction);
+
+		Mockito.when(syncJobTransactionDAO.getSyncTransactions(Mockito.any(), Mockito.anyString()))
+				.thenReturn(null);
+
+		Assert.assertNotNull(jobConfigurationService.getSyncJobsTransaction().getErrorResponseDTOs());
+	}
+	
+	@Test
+	public void getSyncTransactionFailure1Test() {
+		initiateJobTest();
+		List<SyncTransaction> syncTransactions = new LinkedList<>();
+		SyncTransaction syncTransaction = new SyncTransaction();
+		syncTransaction.setUpdDtimes(new Timestamp(System.currentTimeMillis()));
+		syncTransaction.setId(null);
+		syncTransaction.setSyncJobId(null);
+		syncTransaction.setStatusCode(null);
+		syncTransaction.setCrDtime(new Timestamp(System.currentTimeMillis()));
+
+		syncTransactions.add(syncTransaction);
+
+		Mockito.when(syncJobTransactionDAO.getSyncTransactions(Mockito.any(), Mockito.anyString()))
+				.thenReturn(syncTransactions);
+
+		Assert.assertNotNull(jobConfigurationService.getSyncJobsTransaction().getSuccessResponseDTO());
+	}
+	
+	@Test
+	public void getSyncTransactionFailure2Test() {
+		initiateJobTest();
+		List<SyncTransaction> syncTransactions = new LinkedList<>();
+		SyncTransaction syncTransaction = new SyncTransaction();
+
+		Mockito.when(syncJobTransactionDAO.getSyncTransactions(Mockito.any(), Mockito.anyString()))
+				.thenReturn(syncTransactions);
+
+		Assert.assertNotNull(jobConfigurationService.getSyncJobsTransaction());
 	}
 
 	@Test
@@ -420,6 +516,25 @@ public class JobConfigurationServiceTest {
 		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(packetSyncJob);
 		Mockito.when(packetSyncJob.executeJob(Mockito.anyString(), Mockito.anyString())).thenReturn(responseDTO);
 
+		Assert.assertNotNull(jobConfigurationService.executeAllJobs());
+	}
+	
+	@Test
+	public void executeAllJobsFailureTest() {
+		ResponseDTO responseDTO = new ResponseDTO();
+		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
+		Map<String, Object> otherAttributes = new HashMap<>();
+		otherAttributes.put(RegistrationConstants.ROLES_MODIFIED, "Y");
+		successResponseDTO.setOtherAttributes(otherAttributes );
+		responseDTO.setSuccessResponseDTO(successResponseDTO);
+		initiateJobTest();
+
+		SyncJobDef syncJobDef = new SyncJobDef();
+		syncJobDef.setId("1234");
+		syncJobDef.setApiName("test job");
+		syncJobDef.setIsActive(true);
+		Mockito.when(jobConfigDAO.getSyncJob(Mockito.anyString())).thenThrow(RuntimeException.class);
+		
 		Assert.assertNotNull(jobConfigurationService.executeAllJobs());
 	}
 
