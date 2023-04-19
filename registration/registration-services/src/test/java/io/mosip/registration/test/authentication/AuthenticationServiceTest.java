@@ -1,9 +1,7 @@
 package io.mosip.registration.test.authentication;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.security.NoSuchAlgorithmException;
@@ -17,6 +15,7 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dao.impl.UserDetailDAOImpl;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.util.common.OTPManager;
+import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,9 +37,12 @@ import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.biosdk.provider.impl.BioProviderImpl_V_0_9;
-import io.mosip.kernel.biosdk.provider.spi.iBioProviderApi;
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.kernel.core.util.CryptoUtil;
+import io.mosip.kernel.core.util.HMACUtils2;
+import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.dao.impl.UserDetailDAOImpl;
 import io.mosip.registration.dto.AuthTokenDTO;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
 import io.mosip.registration.dto.UserDTO;
@@ -48,9 +50,12 @@ import io.mosip.registration.dto.UserPasswordDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.entity.UserBiometric;
 import io.mosip.registration.entity.id.UserBiometricId;
-import io.mosip.registration.service.bio.impl.BioServiceImpl;
+import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.security.impl.AuthenticationServiceImpl;
+import io.mosip.registration.util.common.BIRBuilder;
+import io.mosip.registration.util.common.OTPManager;
+import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
@@ -73,7 +78,10 @@ public class AuthenticationServiceTest {
 	private ServiceDelegateUtil serviceDelegateUtil;
 	
 	@Mock
-	private BioServiceImpl bioService;
+	private AuthTokenUtilService authTokenUtilService;
+	
+	@Mock
+	private BIRBuilder birBuilder;
 	
 	@Mock
 	private BioAPIFactory bioAPIFactory;
@@ -223,8 +231,8 @@ public class AuthenticationServiceTest {
 		userBiometrics.add(userBiometric3);
 		
 		Mockito.when(userDetailDaoImpl.getUserSpecificBioDetails(Mockito.anyString(), Mockito.anyString())).thenReturn(userBiometrics);
-		Mockito.when(bioService.buildBir(Mockito.anyString(), Mockito.anyInt(), Mockito.any(byte[].class), Mockito.any(ProcessedLevelType.class))).thenReturn(bir1);
-		Mockito.when(bioService.buildBir(Mockito.any(BiometricsDto.class))).thenReturn(bir2);
+		Mockito.when(birBuilder.buildBir(Mockito.anyString(), Mockito.anyInt(), Mockito.any(byte[].class), Mockito.any(ProcessedLevelType.class))).thenReturn(bir1);
+		Mockito.when(birBuilder.buildBir(Mockito.any(BiometricsDto.class), Mockito.any(ProcessedLevelType.class))).thenReturn(bir2);
 		Mockito.when(bioAPIFactory.getBioProvider(Mockito.any(BiometricType.class), Mockito.any(BiometricFunction.class))).thenReturn(bioProviderImpl);
 		Mockito.when(bioProviderImpl.verify(Mockito.anyList(), Mockito.anyList(), Mockito.any(BiometricType.class), Mockito.isNull())).thenReturn(true);
 		Boolean actualResult = authenticationServiceImpl.authValidator("110003", "IRIS", listOfBios); 

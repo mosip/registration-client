@@ -34,6 +34,8 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.UserDetailDAO;
 import io.mosip.registration.dto.LoginUserDTO;
+import io.mosip.registration.entity.UserDetail;
+import io.mosip.registration.entity.UserPassword;
 import io.mosip.registration.entity.UserToken;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.repositories.UserTokenRepository;
@@ -132,7 +134,13 @@ public class AuthTokenUtilServiceTest {
 	@Test
 	public void hasAnyValidTokenFailureTest() {
 		Mockito.when(userTokenRepository.findTopByTokenExpiryGreaterThanAndUserDetailIsActiveTrueOrderByTokenExpiryDesc(Mockito.anyLong())).thenReturn(null);
-		Mockito.when(userTokenRepository.findTopByRtokenExpiryGreaterThanAndUserDetailIsActiveTrueOrderByRtokenExpiryDesc(Mockito.anyLong())).thenReturn(null);
+		//Mockito.when(userTokenRepository.findTopByRtokenExpiryGreaterThanAndUserDetailIsActiveTrueOrderByRtokenExpiryDesc(Mockito.anyLong())).thenReturn(null);
+		Assert.assertFalse(authTokenUtilService.hasAnyValidToken());
+	}
+	
+	@Test
+	public void hasAnyValidTokenFailureTest2() {
+		Mockito.when(userTokenRepository.findTopByTokenExpiryGreaterThanAndUserDetailIsActiveTrueOrderByTokenExpiryDesc(Mockito.anyLong())).thenReturn(null);
 		Assert.assertFalse(authTokenUtilService.hasAnyValidToken());
 	}
 	
@@ -309,7 +317,7 @@ public class AuthTokenUtilServiceTest {
 		Map<String, Object> responseMap = new LinkedHashMap<>();
 		Map<String, Object> respBody = new LinkedHashMap<>();
 		LinkedHashMap<String, String> otpMessage = new LinkedHashMap<>();
-		otpMessage.put("message", "OTP Sent");
+		otpMessage.put("message", null);
 		respBody.put("response", otpMessage);
 		responseMap.put(RegistrationConstants.REST_RESPONSE_BODY, respBody);
 		Mockito.when(restClientUtil.invokeForToken(Mockito.any())).thenReturn(responseMap);

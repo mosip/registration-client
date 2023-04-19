@@ -93,6 +93,8 @@ public class TextFieldFxControl extends FxControl {
 
 	@Override
 	public FxControl build(UiFieldDTO uiFieldDTO) {
+		LOGGER.info("Building TextField FxControl");
+		
 		this.uiFieldDTO = uiFieldDTO;
 		this.control = this;
 		create(uiFieldDTO);
@@ -161,7 +163,7 @@ public class TextFieldFxControl extends FxControl {
 
 		this.node = simpleTypeVBox;
 		simpleTypeVBox.setId(fieldName + RegistrationConstants.VBOX);
-		simpleTypeVBox.setSpacing(5);
+		simpleTypeVBox.setSpacing(18);
 
 		/** Title label */
 		Label fieldTitle = getLabel(uiFieldDTO.getId() + RegistrationConstants.LABEL, "",

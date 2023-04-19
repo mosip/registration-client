@@ -22,6 +22,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.print.PrinterJob;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -69,6 +70,9 @@ public class AckReceiptController extends BaseController implements Initializabl
 
 	@Autowired
 	private SendNotificationController sendNotificationController;
+	
+	@Autowired
+	private PacketHandlerController packetHandlerController;
 
 	public void setStringWriter(Writer stringWriter) {
 		this.stringWriter = stringWriter;
@@ -95,6 +99,10 @@ public class AckReceiptController extends BaseController implements Initializabl
 		WebEngine engine = webView.getEngine();
 		// loads the generated HTML template content into webview
 		engine.loadContent(stringWriter.toString());
+		
+		Node newRegNode = packetHandlerController.getRegistrationGridPane().lookup(RegistrationConstants.HASH + "NEW");
+		newRegistration.setVisible(newRegNode != null);
+		
 		LOGGER.info("REGISTRATION - UI - ACK-RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 				"Acknowledgement template has been loaded to webview");
 	}
@@ -146,7 +154,7 @@ public class AckReceiptController extends BaseController implements Initializabl
 				RegistrationConstants.APPLICATION_ID, "Going to New Registration Page after packet creation");
 
 		clearRegistrationData();
-		goToHomePageFromRegistration();
+		goToNewRegistration();
 	}
 
 	/**

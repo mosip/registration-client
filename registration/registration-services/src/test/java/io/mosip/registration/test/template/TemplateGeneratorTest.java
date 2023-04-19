@@ -1,6 +1,9 @@
 package io.mosip.registration.test.template;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.awt.image.BufferedImage;
@@ -17,7 +20,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-
 import javax.imageio.ImageIO;
 
 import org.apache.commons.io.IOUtils;
@@ -35,8 +37,11 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.hazelcast.spi.impl.eventservice.impl.Registration;
+
 import io.mosip.biometrics.util.iris.IrisDecoder;
 import io.mosip.kernel.core.qrcodegenerator.spi.QrCodeGenerator;
+import io.mosip.kernel.core.templatemanager.spi.TemplateManagerBuilder;
 import io.mosip.kernel.qrcode.generator.zxing.constant.QrVersion;
 import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderImpl;
 import io.mosip.registration.constants.RegistrationConstants;
@@ -47,6 +52,7 @@ import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.biometric.FingerprintDetailsDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.entity.SyncControl;
 import io.mosip.registration.entity.SyncJobDef;
 import io.mosip.registration.entity.UserDetail;
@@ -62,6 +68,7 @@ import io.mosip.registration.service.sync.PacketSynchService;
 import io.mosip.registration.test.util.datastub.DataProvider;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.acktemplate.TemplateGenerator;
+import junit.framework.Assert;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
@@ -134,10 +141,10 @@ public class TemplateGeneratorTest {
 		when(ImageIO.read(
 				templateGenerator.getClass().getResourceAsStream(RegistrationConstants.TEMPLATE_RIGHT_SLAP_IMAGE_PATH)))
 						.thenReturn(image);
-		/*when(ImageIO.read(
+		when(ImageIO.read(
 				templateGenerator.getClass().getResourceAsStream(RegistrationConstants.TEMPLATE_THUMBS_IMAGE_PATH)))
 						.thenReturn(image);
-		*/
+		
 		PowerMockito.mockStatic(IrisDecoder.class);
 		when(IrisDecoder.convertIrisISOToImageBytes(Mockito.any())).thenReturn("image".getBytes());
 		UserContext userContext = Mockito.mock(SessionContext.UserContext.class);
@@ -180,6 +187,8 @@ public class TemplateGeneratorTest {
 				RegistrationConstants.ACKNOWLEDGEMENT_TEMPLATE, "");
 		assertNotNull(response.getSuccessResponseDTO());
 	}
+	
+	
 	
 	@Test
 	public void generateTemplateWithDemographicFieldsTest() throws  RegBaseCheckedException {
@@ -302,4 +311,27 @@ public class TemplateGeneratorTest {
 				.generateDashboardTemplate("sample text", template, Timestamp.from(Instant.now()).toString())
 				.getSuccessResponseDTO());
 	}
+	
+//	  @Test
+//	    public void testGenerateTemplateIOException() throws RegBaseCheckedException {
+//	        TemplateManagerBuilder templateManagerBuilder = mock(TemplateManagerBuilder.class);
+//	      //  when(templateManagerBuilder.build()).thenThrow(new IOException());
+//	        TemplateGenerator templateGenerator = new TemplateGenerator();
+//	        ResponseDTO responseDTO = templateGenerator.generateTemplate("templateText", new RegistrationDTO(),
+//	            templateManagerBuilder, "templateType", "crossImagePath");
+//	        assertEquals(RegistrationConstants.TEMPLATE_GENERATOR_ACK_RECEIPT_EXCEPTION, responseDTO.getErrorResponseDTOs());
+//	    }
+	  
+	   @Test
+	    public void testGenerateTemplateRuntimeException() throws RegBaseCheckedException {
+	        TemplateManagerBuilder templateManagerBuilder = mock(TemplateManagerBuilder.class);
+	        when(templateManagerBuilder.build()).thenThrow(new RuntimeException());
+	        TemplateGenerator templateGenerator = new TemplateGenerator();
+	        ResponseDTO responseDTO = templateGenerator.generateTemplate("templateText", new RegistrationDTO(),
+	            templateManagerBuilder, "templateType", "crossImagePath");
+	        
+	    }
+	   
+
+	   
 }

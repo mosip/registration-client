@@ -346,7 +346,7 @@ public class AuthenticationController extends BaseController implements Initiali
 			executeFPValidationTask(fpUserId.getText(), operatorAuthenticationPane);
 		}
 
-		authCounter.setText(++fingerPrintAuthCount + "");
+//		authCounter.setText(++fingerPrintAuthCount + "");
 	}
 
 	private void executeFPValidationTask(String userId, GridPane pane) {

@@ -162,7 +162,7 @@ public class GenericController extends BaseController {
 	public static Map<String, FxControl> getFxControlMap() {
 		return fxControlMap;
 	}
-
+	
 	public void disableAuthenticateButton(boolean disable) {
 		authenticate.setDisable(disable);
 	}
@@ -178,7 +178,6 @@ public class GenericController extends BaseController {
 		fields = getAllFields(registrationDTO.getProcessId(), registrationDTO.getIdSchemaVersion());
 		additionalInfoReqIdScreenOrder = null;
 	}
-
 
 	private void fillHierarchicalLevelsByLanguage() {
 		for(String langCode : getConfiguredLangCodes()) {
@@ -212,7 +211,7 @@ public class GenericController extends BaseController {
 		hBox.getChildren().add(textField);
 		Button button = new Button();
 		button.setId("fetchBtn");
-		button.getStyleClass().add("demoGraphicPaneContentButton");
+		button.getStyleClass().add("contiuneButton");
 		button.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("fetch"));
 
@@ -568,6 +567,7 @@ public class GenericController extends BaseController {
 					String invalidScreenName = getInvalidScreenName(tabPane);
 					if(invalidScreenName.equals(EMPTY)) {
 						notification.setVisible(false);
+						tabPane.getTabs().get(oldValue.intValue()).getStyleClass().remove(TAB_LABEL_ERROR_CLASS);
 						loadPreviewOrAuthScreen(tabPane, tabPane.getTabs().get(newValue.intValue()));
 						return;
 					}
@@ -634,7 +634,7 @@ public class GenericController extends BaseController {
 
 			for(UiFieldDTO field : result.get().getFields()) {
 				if(getFxControl(field.getId()) != null && !getFxControl(field.getId()).canContinue()) {
-					LOGGER.error("Screen validation , fieldId : {} has invalid value", field.getId());
+					LOGGER.error("Screen validation , fieldId : {} has invalid value", field.getId()); 
 					String label = getFxControl(field.getId()).getUiSchemaDTO().getLabel().getOrDefault(ApplicationContext.applicationLanguage(), field.getId());
 					showHideErrorNotification(label);
 					isValid = false;
@@ -649,8 +649,16 @@ public class GenericController extends BaseController {
 		}
 		return isValid;
 	}
+	
+	public Label getNotification() {
+		return notification;
+	}
 
-	private void showHideErrorNotification(String fieldName) {
+	public void setNotification(Label notification) {
+		this.notification = notification;
+	}
+
+	public void showHideErrorNotification(String fieldName) {
 		Tooltip toolTip = new Tooltip(fieldName);
 		toolTip.prefWidthProperty().bind(notification.widthProperty());
 		toolTip.setWrapText(true);
@@ -658,7 +666,7 @@ public class GenericController extends BaseController {
 		notification.setText((fieldName == null) ? EMPTY : ApplicationContext.getBundle(ApplicationContext.applicationLanguage(), RegistrationConstants.MESSAGES)
 				.getString("SCREEN_VALIDATION_ERROR") + " [ " + fieldName + " ]");
 	}
-
+	
 	private String getInvalidScreenName(TabPane tabPane) {
 		String errorScreen = EMPTY;
 		for(UiScreenDTO screen : orderedScreens.values()) {
@@ -922,6 +930,7 @@ public class GenericController extends BaseController {
 
 	public void refreshFields() {
 		orderedScreens.values().forEach(screen -> { refreshScreenVisibility(screen.getName()); });
+		showHideErrorNotification(null);
 	}
 
 	/*public List<UiFieldDTO> getProofOfExceptionFields() {

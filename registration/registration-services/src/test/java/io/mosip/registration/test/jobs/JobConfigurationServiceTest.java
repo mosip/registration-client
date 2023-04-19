@@ -297,6 +297,16 @@ public class JobConfigurationServiceTest {
 		Assert.assertSame(RegistrationConstants.CURRENT_JOB_DETAILS_ERROR_MESSAGE,
 				jobConfigurationService.getCurrentRunningJobDetails().getErrorResponseDTOs().get(0).getMessage());
 	}
+	
+	/*
+	 * @Test public void setStartExceptionErrorTest() throws SchedulerException {
+	 * startJobs();
+	 * Mockito.when(schedulerFactoryBean.getScheduler().getCurrentlyExecutingJobs())
+	 * .thenThrow(SchedulerException.class);
+	 * Assert.assertSame(RegistrationConstants.CURRENT_JOB_DETAILS_ERROR_MESSAGE,
+	 * jobConfigurationService.setStartExceptionError().getErrorResponseDTOs().get(0
+	 * ).getMessage()); }
+	 */
 
 	@Test
 	public void executeJobTest() throws SchedulerException {

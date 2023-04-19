@@ -283,7 +283,7 @@ public class MosipDeviceSpecificationHelper {
 				.setSocketTimeout(timeout)
 				.setConnectionRequestTimeout(timeout)
 				.build();
-		CloseableHttpClient client = HttpClients.createDefault();
+		CloseableHttpClient client = HttpClients.createDefault();	//NOSONAR CloseableHttpResponse is used for stream. So it cannot be closed here.
 		StringEntity requestEntity = new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8));
 		HttpUriRequest httpUriRequest = RequestBuilder.create(method)
 				.setConfig(requestConfig)
