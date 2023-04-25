@@ -17,7 +17,7 @@ jobs:
   build_client:
     runs-on: ubuntu-latest
     env:
-      NAMESPACE: technogovstack
+      NAMESPACE: ${{ secrets.dev_namespace_docker_hub }}
       SERVICE_NAME: registration-client
       SERVICE_LOCATION: registration
 
@@ -177,7 +177,7 @@ jobs:
   sonar_analysis:
     runs-on: ubuntu-latest
     env:
-      NAMESPACE: mosipdev
+      NAMESPACE: ${{ secrets.dev_namespace_docker_hub }}
       SERVICE_NAME: registration-client
       SERVICE_LOCATION: registration
 
