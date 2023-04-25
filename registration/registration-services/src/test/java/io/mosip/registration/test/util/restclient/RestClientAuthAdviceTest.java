@@ -1,5 +1,7 @@
 package io.mosip.registration.test.util.restclient;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -255,7 +257,18 @@ public class RestClientAuthAdviceTest {
 
 		Assert.assertNotNull(restClientAuthAdvice.addAuthZToken(proceedingJoinPoint));
 	}
-
+	
+	@Test
+	public void addAuthZTokenToDownloadRequestTest() throws Throwable {
+		RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
+		Object[] args = new Object[1];
+		args[0] = requestHTTPDTO;
+		Mockito.when(proceedingJoinPoint.getArgs()).thenReturn(args);
+		Mockito.when(proceedingJoinPoint.proceed(proceedingJoinPoint.getArgs())).thenReturn(new Object());
+		assertNotNull(args);
+		restClientAuthAdvice.addAuthZTokenToDownloadRequest(proceedingJoinPoint);
+	}
+	
 	@Test(expected=Throwable.class)
 	public void addAuthZTokenException() throws Throwable {
 		RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
