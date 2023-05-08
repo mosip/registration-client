@@ -17,7 +17,6 @@ import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -373,6 +372,12 @@ public class SoftwareUpdateHandler extends BaseService {
 
 		}
 
+		if (version.startsWith("1.2.0")) {
+			String url =  getURL(serverRegClientURL) + version + SLASH + "run_upgrade.bat";
+			org.apache.commons.io.FileUtils.copyURLToFile(new URL(url), new File("run_upgrade.bat"),50000, 0);
+			LOGGER.info("Successfully downloaded the upgrade bat file");
+		}
+		
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Checking of jars completed");
 	}
 

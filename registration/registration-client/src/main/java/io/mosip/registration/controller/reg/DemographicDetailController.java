@@ -428,6 +428,9 @@ public class DemographicDetailController extends BaseController {
 			case RegistrationConstants.BUTTON:
 				content = addContentWithButtons(schemaDTO.getId(), schemaDTO, languageType);
 				break;
+			default:
+				LOGGER.error("Unknown control type found !" + schemaDTO.getId() + " >>> " + schemaDTO.getControlType());
+				break;
 		}
 
 		gridPane.add(content, 1, 2);
