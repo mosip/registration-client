@@ -6,8 +6,6 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -18,8 +16,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import io.mosip.registration.entity.*;
-import io.mosip.registration.entity.id.GlobalParamId;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,6 +46,19 @@ import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.mastersync.ReasonListDto;
 import io.mosip.registration.dto.response.SchemaDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
+import io.mosip.registration.entity.BiometricAttribute;
+import io.mosip.registration.entity.BlacklistedWords;
+import io.mosip.registration.entity.DocumentCategory;
+import io.mosip.registration.entity.DocumentType;
+import io.mosip.registration.entity.Gender;
+import io.mosip.registration.entity.IndividualType;
+import io.mosip.registration.entity.Location;
+import io.mosip.registration.entity.ReasonCategory;
+import io.mosip.registration.entity.ReasonList;
+import io.mosip.registration.entity.SyncControl;
+import io.mosip.registration.entity.SyncJobDef;
+import io.mosip.registration.entity.SyncTransaction;
+import io.mosip.registration.entity.ValidDocument;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.jobs.SyncManager;
@@ -395,12 +404,20 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 
 	@Override
 	public List<GenericDto> getFieldValues(String fieldName, String langCode) throws RegBaseCheckedException {
-		/*
-		 * switch (fieldName) { case "gender": return getGenderDtls(langCode); case
-		 * "residenceStatus": return getIndividualType(langCode); default:
-		 */
-		return getDynamicField(fieldName, langCode);
+		List<GenericDto> fieldValues = getDynamicField(fieldName, langCode);
+		 
+		if (fieldValues != null && !fieldValues.isEmpty()) {
+			return fieldValues;
+		}
 		
+		switch (fieldName) {
+			case "gender":
+				return getGenderDtls(langCode);
+			case "residenceStatus":
+				return getIndividualType(langCode);
+			default:
+				return fieldValues;			
+		}
 	}
 
 	/**
