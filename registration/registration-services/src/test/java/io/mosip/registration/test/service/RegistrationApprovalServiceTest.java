@@ -90,7 +90,7 @@ public class RegistrationApprovalServiceTest {
 		regobject.setCrDtime(time);
 		regobject.setAckFilename("file1");
 
-		regobject.setUserdetail(regUserDetail);
+		//regobject.setUserdetail(regUserDetail);
 		details.add(regobject);
 
 		Mockito.when(registrationDAO.getEnrollmentByStatus("R")).thenReturn(details);
@@ -120,7 +120,7 @@ public class RegistrationApprovalServiceTest {
 		regobject.setApproverRoleCode(SessionContext.userContext().getRoles().get(0));
 		regobject.setAckFilename("file1");
 
-		regobject.setUserdetail(regUserDetail);
+		//regobject.setUserdetail(regUserDetail);
 
 		Mockito.when(registrationDAO.updateRegistration("123456", "", "R")).thenReturn(regobject);
 
