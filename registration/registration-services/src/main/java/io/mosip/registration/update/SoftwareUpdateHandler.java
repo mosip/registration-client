@@ -240,7 +240,7 @@ public class SoftwareUpdateHandler extends BaseService {
 			getServerManifest();
 
 			// Back Current Application
-			backUp = backUpSetup();
+			backUp = backUpSetup(getCurrentVersion());
 			// replace local manifest with Server manifest
 			serverManifest.write(new FileOutputStream(manifestFile));
 
@@ -319,13 +319,13 @@ public class SoftwareUpdateHandler extends BaseService {
 				"Updating latest version started");
 	}
 
-	private Path backUpSetup() throws io.mosip.kernel.core.exception.IOException {
+	private Path backUpSetup(String currentVersion) throws io.mosip.kernel.core.exception.IOException {
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 				"Backup of current version started");
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		String date = timestamp.toString().replace(":", "-") + "Z";
 
-		File backUpFolder = new File(backUpPath + SLASH + getCurrentVersion() + "_" + date);
+		File backUpFolder = new File(backUpPath + SLASH + currentVersion + "_" + date);
 
 		// bin backup folder
 		File bin = new File(backUpFolder.getAbsolutePath() + SLASH + binFolder);
@@ -588,16 +588,18 @@ public class SoftwareUpdateHandler extends BaseService {
 		 */
 		if (versionMappings.containsKey(previousVersion)) {
 			Integer previousVersionReleaseOrder = versionMappings.get(previousVersion).getReleaseOrder();
-			versionMappings.entrySet().removeIf(matches -> matches.getValue().getReleaseOrder() <= previousVersionReleaseOrder);
+			versionMappings.entrySet().removeIf(versionMapping -> versionMapping.getValue().getReleaseOrder() <= previousVersionReleaseOrder);
 		}
 		
 		for (Entry<String, VersionMappings> entry : versionMappings.entrySet()) {
 			try {
 				executeSQL(entry.getValue().getDbVersion());
 				previousVersion = entry.getKey();
+				//Backing up the DB with ongoing upgrade version name
+				backUpSetup(entry.getKey());
 				// Update global param with current version
 				globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, entry.getKey());
-			} catch (RegBaseCheckedException exception) {
+			} catch (RegBaseCheckedException | io.mosip.kernel.core.exception.IOException exception) {
 				// Prepare Error Response
 				setErrorResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_FAILURE, null);
 				// Replace with backup
@@ -714,21 +716,17 @@ public class SoftwareUpdateHandler extends BaseService {
 	}
 
 	private void rollback(ResponseDTO responseDTO, String previousVersion) {
-
 		File file = FileUtils.getFile(backUpPath);
 
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 				"Backup Path found : " + file.exists());
 
 		boolean isBackUpCompleted = false;
-
 		if (file.exists()) {
 			for (File backUpFolder : file.listFiles()) {
 				if (backUpFolder.getName().contains(previousVersion)) {
-
 					try {
 						rollBackSetup(backUpFolder);
-
 						isBackUpCompleted = true;
 						setErrorResponse(responseDTO, RegistrationConstants.BACKUP_PREVIOUS_SUCCESS, null);
 					} catch (io.mosip.kernel.core.exception.IOException exception) {
@@ -738,11 +736,9 @@ public class SoftwareUpdateHandler extends BaseService {
 						setErrorResponse(responseDTO, RegistrationConstants.BACKUP_PREVIOUS_FAILURE, null);
 					}
 					break;
-
 				}
 			}
 		}
-
 		if (!isBackUpCompleted) {
 			setErrorResponse(responseDTO, RegistrationConstants.BACKUP_PREVIOUS_FAILURE, null);
 		}
