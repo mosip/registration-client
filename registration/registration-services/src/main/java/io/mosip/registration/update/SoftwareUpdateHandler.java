@@ -598,6 +598,8 @@ public class SoftwareUpdateHandler extends BaseService {
 		
 		for (Entry<String, VersionMappings> entry : versionMappings.entrySet()) {
 			try {
+				LOGGER.info("DB Script files execution started for the version: " + entry.getKey());
+				
 				executeSQL(entry.getValue().getDbVersion(), previousVersion);
 				previousVersion = entry.getKey();
 				//Backing up the DB with ongoing upgrade version name
