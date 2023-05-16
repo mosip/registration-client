@@ -433,8 +433,8 @@ public class LoginController extends BaseController implements Initializable {
 				 * If the backup path is having only one folder inside, we directly consider the
 				 * version inside Manifest file as the previous version. If the path has
 				 * multiple files, we assume that the entry in version-mappings list with
-				 * releaseOrder as "1" will be among the backup files and that is the previous
-				 * version.
+				 * the least releaseOrder will be among the backup files and that is considered
+				 * as the previous version.
 				 */
 				if (file.listFiles().length == 1 || backupVersion.equals(versionMappings.entrySet().iterator().next().getKey())) {
 					version = backupVersion;
