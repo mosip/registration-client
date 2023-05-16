@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -42,6 +43,8 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.ResponseDTO;
+import io.mosip.registration.dto.VersionMappings;
+import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
 
@@ -548,7 +551,7 @@ public class SoftwareUpdateHandler extends BaseService {
 
 	/**
 	 * This method will check whether any updation needs to be done in the DB
-	 * structure.
+	 * structure based on previous version and the list of version-mappings.
 	 * <p>
 	 * If there is any updates available:
 	 * </p>
@@ -556,88 +559,89 @@ public class SoftwareUpdateHandler extends BaseService {
 	 * Take the back-up of the current DB
 	 * </p>
 	 * <p>
-	 * Run the Update queries from the sql file, which is downloaded from the server
-	 * and available in the local
+	 * Run the upgrade queries from the sql files by iterating through the 
+	 * version-mappings available after previous version. 
+	 * The SQL files are downloaded from the server and available in the 
+	 * local
 	 * </p>
 	 * <p>
 	 * If there is any error occurs during the update,then the rollback query will
 	 * run from the sql file
 	 * </p>
 	 * 
-	 * @param actualLatestVersion
-	 *            latest version
 	 * @param previousVersion
 	 *            previous version
+	 * @param versionMappings 
 	 * @return response of sql execution
 	 * @throws IOException
 	 */
-	public ResponseDTO executeSqlFile(String actualLatestVersion, String previousVersion) throws IOException {
-
-		LOGGER.info("DB-Script files execution started from previous version : {} , To Current Version : {}",previousVersion, currentVersion);
-
-		String newVersion = actualLatestVersion.split("-")[0];
-		previousVersion = previousVersion.split("-")[0];
+	public ResponseDTO executeSqlFile(String previousVersion, Map<String, VersionMappings> versionMappings) throws IOException {
+		LOGGER.info("DB-Script files execution started from previous version : {} , To Current Version : {}", previousVersion, currentVersion);
 		
-
 		ResponseDTO responseDTO = new ResponseDTO();
-
-		// execute sql file
-
-		try {
-
-			LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					"Checking Started : " + newVersion + SLASH + exectionSqlFile);
-
-			execute(SQL + SLASH + newVersion + SLASH + exectionSqlFile);
-
-			LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					"Checking completed : " + newVersion + SLASH + exectionSqlFile);
-
+		
+		/*
+		 * Here, we are removing the entries from version-mappings map, for which, the
+		 * releaseOrder is less than or equal to the previous version, because, we need
+		 * to execute the upgrade scripts only for the versions released after the
+		 * previous version.
+		 */
+		if (versionMappings.containsKey(previousVersion)) {
+			Integer previousVersionReleaseOrder = versionMappings.get(previousVersion).getReleaseOrder();
+			versionMappings.entrySet().removeIf(matches -> matches.getValue().getReleaseOrder() <= previousVersionReleaseOrder);
 		}
-
-		catch (RuntimeException | IOException runtimeException) {
-
-			LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
-
-			// ROLL BACK QUERIES
+		
+		for (Entry<String, VersionMappings> entry : versionMappings.entrySet()) {
 			try {
-
-				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Checking started : " + newVersion + SLASH + rollBackSqlFile);
-
-				execute(SQL + SLASH + newVersion + SLASH + rollBackSqlFile);
-
-				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						"Checking completed : " + newVersion + SLASH + rollBackSqlFile);
-
-			} catch (RuntimeException | IOException exception) {
-
-				LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-						exception.getMessage() + ExceptionUtils.getStackTrace(exception));
-
+				executeSQL(entry.getValue().getDbVersion());
+				previousVersion = entry.getKey();
+				// Update global param with current version
+				globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, entry.getKey());
+			} catch (RegBaseCheckedException exception) {
+				// Prepare Error Response
+				setErrorResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_FAILURE, null);
+				// Replace with backup
+				rollback(responseDTO, previousVersion);
+				return responseDTO;
 			}
-			// Prepare Error Response
-			setErrorResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_FAILURE, null);
-
-			// Replace with backup
-			rollback(responseDTO, previousVersion);
-
-			return responseDTO;
-
 		}
-
-		// Update global param with current version
-		globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, actualLatestVersion);
-
-		//addProperties(latestVersion);
-
+		
 		setSuccessResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_SUCCESS, null);
 
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 				"DB-Script files execution completed");
 
 		return responseDTO;
+	}
+
+	private void executeSQL(String dbVersion) throws RegBaseCheckedException {
+		try {
+			LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
+					"Checking Started : " + dbVersion + SLASH + exectionSqlFile);
+
+			execute(SQL + SLASH + dbVersion + SLASH + exectionSqlFile);
+
+			LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
+					"Checking completed : " + dbVersion + SLASH + exectionSqlFile);
+		} catch (RuntimeException | IOException runtimeException) {		
+			LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
+					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
+
+			// ROLL BACK QUERIES
+			try {
+				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
+						"Checking started : " + dbVersion + SLASH + rollBackSqlFile);
+
+				execute(SQL + SLASH + dbVersion + SLASH + rollBackSqlFile);
+
+				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
+						"Checking completed : " + dbVersion + SLASH + rollBackSqlFile);
+			} catch (RuntimeException | IOException exception) {
+				LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
+						exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+			}
+			throw new RegBaseCheckedException();
+		}
 	}
 
 	private void execute(String path) throws IOException {

@@ -26,18 +26,15 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import io.mosip.registration.controller.reg.*;
-import io.mosip.registration.exception.PreConditionCheckException;
-import io.mosip.registration.exception.RemapException;
-import io.mosip.registration.service.BaseService;
-import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
-import io.mosip.registration.util.restclient.AuthTokenUtilService;
-import javafx.scene.image.PixelWriter;
-import javafx.scene.image.WritableImage;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -55,16 +52,29 @@ import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.device.BiometricsController;
 import io.mosip.registration.controller.device.ScanPopUpViewController;
 import io.mosip.registration.controller.eodapproval.RegistrationApprovalController;
+import io.mosip.registration.controller.reg.AlertController;
+import io.mosip.registration.controller.reg.DemographicDetailController;
+import io.mosip.registration.controller.reg.DocumentScanController;
+import io.mosip.registration.controller.reg.HeaderController;
+import io.mosip.registration.controller.reg.HomeController;
+import io.mosip.registration.controller.reg.PacketHandlerController;
+import io.mosip.registration.controller.reg.RegistrationPreviewController;
+import io.mosip.registration.controller.reg.UserOnboardParentController;
+import io.mosip.registration.controller.reg.Validations;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.VersionMappings;
 import io.mosip.registration.dto.biometric.BiometricExceptionDTO;
 import io.mosip.registration.dto.biometric.BiometricInfoDTO;
 import io.mosip.registration.dto.biometric.FaceDetailsDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RemapException;
 import io.mosip.registration.scheduler.SchedulerUtil;
+import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.service.config.GlobalParamService;
@@ -75,6 +85,8 @@ import io.mosip.registration.service.sync.SyncStatusValidatorService;
 import io.mosip.registration.service.template.TemplateService;
 import io.mosip.registration.util.acktemplate.TemplateGenerator;
 import io.mosip.registration.util.common.PageFlow;
+import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import io.mosip.registration.validator.RequiredFieldValidator;
 import javafx.animation.PauseTransition;
@@ -103,6 +115,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
@@ -1399,6 +1413,37 @@ public class BaseController {
 		return applicationContext.getApplicationMap().containsKey(key)
 				? (String) applicationContext.getApplicationMap().get(key)
 				: null;
+	}
+	
+	/**
+	 * Returns the version-mappings in sorted order. Version-Mappings is the
+	 * configuration which specifies the list of available versions and their
+	 * respective DB version and its release order.
+	 * ReleaseOrder starts with "1" which is considered as the oldest version and
+	 * "n" being the latest version.
+	 * 
+	 * @param key
+	 * @return sorted version-mappings
+	 * @throws JsonMappingException
+	 * @throws JsonProcessingException
+	 */
+	protected Map<String, VersionMappings> getSortedVersionMappings(String key) throws JsonMappingException, JsonProcessingException {
+		String value = getValueFromApplicationContext(key);
+
+		ObjectMapper mapper = new ObjectMapper(); 
+	    TypeReference<HashMap<String,VersionMappings>> typeRef 
+	            = new TypeReference<HashMap<String,VersionMappings>>() {};
+
+	    HashMap<String, VersionMappings> versionMappings = mapper.readValue(value, typeRef); 
+
+		if (versionMappings != null) {
+			return versionMappings.entrySet().stream()
+					.sorted((object1, object2) -> object1.getValue().getReleaseOrder()
+							.compareTo(object2.getValue().getReleaseOrder()))
+					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (object1, object2) -> object1,
+							LinkedHashMap::new));
+		}
+		return versionMappings;	
 	}
 
 	/**
