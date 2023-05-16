@@ -13,11 +13,13 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -421,31 +423,36 @@ public class LoginController extends BaseController implements Initializable {
 				"Backup Path found : " + file.exists());
 		
 		if (!file.exists()) {
+			LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
+					"Backup folder not found, returning the version as the same: " + version);
 			return version;
 		}
-		
+		Map<Integer, String> backupVersions = new TreeMap<>(Collections.reverseOrder());
 		for (File backUpFolder : file.listFiles()) {
 			try {
 				File localManifestFile = new File(backUpFolder.getAbsolutePath() + RegistrationConstants.MANIFEST_PATH);
-				Manifest manifest = new Manifest(new FileInputStream(localManifestFile));
-				String backupVersion = manifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
-				/*
-				 * If the backup path is having only one folder inside, we directly consider the
-				 * version inside Manifest file as the previous version. If the path has
-				 * multiple files, we assume that the entry in version-mappings list with
-				 * the least releaseOrder will be among the backup files and that is considered
-				 * as the previous version.
-				 */
-				if (file.listFiles().length == 1 || backupVersion.equals(versionMappings.entrySet().iterator().next().getKey())) {
-					version = backupVersion;
-					return version;
-				}
+				if (localManifestFile.exists()) {
+					Manifest manifest = new Manifest(new FileInputStream(localManifestFile));
+					String backupVersion = manifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
+					// Looping through all the available manifest versions in backup folder and
+					// preparing a map with key as releaseOrder from version-mappings and value as
+					// manifest version
+					if (versionMappings.containsKey(backupVersion)) {
+						backupVersions.put(versionMappings.get(backupVersion).getReleaseOrder(), backupVersion);
+					}
+				}				
 			} catch (IOException exception) {
 				LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 						"Exception while reading backed up manifest file: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
 			}
 		}
-		return version;	
+		if (!backupVersions.isEmpty()) {
+			// Since we have used treemap with reverse order, the backupVersions map will be
+			// in descending order. The top most entry is considered as the
+			// latest previous version.
+			return backupVersions.entrySet().iterator().next().getValue();
+		}
+		return version;
 	}
 
 	/**
