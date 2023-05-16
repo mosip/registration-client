@@ -68,6 +68,7 @@ public class SoftwareUpdateHandler extends BaseService {
 	private static final String manifestFile = "MANIFEST.MF";
 	private static final String libFolder = "lib/";
 	private static final String binFolder = "bin/";
+	private static final String dbFolder = "db";
 	private static final String lastUpdatedTag = "lastUpdated";
 	private static final String SQL = "sql";
 	private static final String exectionSqlFile = "initial_db_scripts.sql";
@@ -334,13 +335,17 @@ public class SoftwareUpdateHandler extends BaseService {
 		// lib backup folder
 		File lib = new File(backUpFolder.getAbsolutePath() + SLASH + libFolder);
 		lib.mkdirs();
+		
+		// db backup folder
+		File db = new File(backUpFolder.getAbsolutePath() + SLASH + dbFolder);
+		db.mkdirs();
 
 		// manifest backup file
 		File manifest = new File(backUpFolder.getAbsolutePath() + SLASH + manifestFile);
 
 		FileUtils.copyDirectory(new File(binFolder), bin);
 		FileUtils.copyDirectory(new File(libFolder), lib);
-
+		FileUtils.copyDirectory(new File(dbFolder), db);
 		FileUtils.copyFile(new File(manifestFile), manifest);
 
 		for (File backUpFile : new File(backUpPath).listFiles()) {
@@ -593,7 +598,7 @@ public class SoftwareUpdateHandler extends BaseService {
 		
 		for (Entry<String, VersionMappings> entry : versionMappings.entrySet()) {
 			try {
-				executeSQL(entry.getValue().getDbVersion());
+				executeSQL(entry.getValue().getDbVersion(), previousVersion);
 				previousVersion = entry.getKey();
 				//Backing up the DB with ongoing upgrade version name
 				backUpSetup(entry.getKey());
@@ -616,25 +621,30 @@ public class SoftwareUpdateHandler extends BaseService {
 		return responseDTO;
 	}
 
-	private void executeSQL(String dbVersion) throws RegBaseCheckedException {
+	private void executeSQL(String dbVersion, String previousVersion) throws RegBaseCheckedException {
+		boolean isExecutionSuccess = false;
+		boolean isRollBackSuccess = false;
 		try {
 			LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 					"Checking Started : " + dbVersion + SLASH + exectionSqlFile);
 
 			execute(SQL + SLASH + dbVersion + SLASH + exectionSqlFile);
+			isExecutionSuccess = true;
 
 			LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 					"Checking completed : " + dbVersion + SLASH + exectionSqlFile);
 		} catch (RuntimeException | IOException runtimeException) {		
 			LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
-
+					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));			
+		}
+		if (!isExecutionSuccess) {
 			// ROLL BACK QUERIES
 			try {
 				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 						"Checking started : " + dbVersion + SLASH + rollBackSqlFile);
 
 				execute(SQL + SLASH + dbVersion + SLASH + rollBackSqlFile);
+				isRollBackSuccess = true;
 
 				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 						"Checking completed : " + dbVersion + SLASH + rollBackSqlFile);
@@ -642,13 +652,16 @@ public class SoftwareUpdateHandler extends BaseService {
 				LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 						exception.getMessage() + ExceptionUtils.getStackTrace(exception));
 			}
+
+			if (!isRollBackSuccess) {
+				dbRollBackSetup(previousVersion);
+			}
 			throw new RegBaseCheckedException();
 		}
 	}
 
 	private void execute(String path) throws IOException {
 		try (InputStream inputStream = SoftwareUpdateHandler.class.getClassLoader().getResourceAsStream(path)) {
-
 			LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 					inputStream != null ? path + " found" : path + " Not Found");
 
@@ -659,36 +672,28 @@ public class SoftwareUpdateHandler extends BaseService {
 	}
 
 	private void runSqlFile(InputStream inputStream) throws IOException {
-
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Execution started sql file");
 
 		try (InputStreamReader inputStreamReader = new InputStreamReader(inputStream)) {
 			try (BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
-
 				String str;
 				StringBuilder sb = new StringBuilder();
 				while ((str = bufferedReader.readLine()) != null) {
 					sb.append(str + "\n ");
 				}
-
 				List<String> statments = java.util.Arrays.asList(sb.toString().split(";"));
-
 				for (String stat : statments) {
 					if (!stat.trim().equals("")) {
-
 						LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 								"Executing Statment : " + stat);
 
 						jdbcTemplate.execute(stat);
-
 					}
 				}
 			}
-
 		}
 
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Execution completed sql file");
-
 	}
 
 	private void rollBackSetup(File backUpFolder) throws io.mosip.kernel.core.exception.IOException {
@@ -713,6 +718,33 @@ public class SoftwareUpdateHandler extends BaseService {
 		FileUtils.copyFile(new File(backUpFolder.getAbsolutePath() + SLASH + manifestFile), new File(manifestFile));
 		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 				"Replacing Backup of current version completed");
+	}
+	
+	private void dbRollBackSetup(String previousVersion) {
+		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
+				"Replacing DB backup of current version started");
+		
+		File file = FileUtils.getFile(backUpPath);
+
+		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
+				"Backup Path found : " + file.exists());
+		
+		if (file.exists()) {
+			for (File backUpFolder : file.listFiles()) {
+				if (backUpFolder.getName().contains(previousVersion)) {
+					try {
+						FileUtils.copyDirectory(new File(backUpFolder.getAbsolutePath() + SLASH + dbFolder), new File(dbFolder));
+					} catch (io.mosip.kernel.core.exception.IOException exception) {
+						LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
+								"Exception in backing up the DB folder: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+					}
+					break;
+				}
+			}
+		}
+		
+		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
+				"Replacing DB backup of current version completed");
 	}
 
 	private void rollback(ResponseDTO responseDTO, String previousVersion) {
