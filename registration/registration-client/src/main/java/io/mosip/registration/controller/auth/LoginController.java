@@ -5,23 +5,33 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.awt.Desktop;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
-import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
@@ -43,6 +53,7 @@ import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.LoginUserDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.dto.VersionMappings;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
@@ -55,6 +66,7 @@ import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.common.OTPManager;
 import io.mosip.registration.util.common.PageFlow;
 import io.mosip.registration.util.healthcheck.RegistrationAppHealthCheckUtil;
+import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -352,19 +364,32 @@ public class LoginController extends BaseController implements Initializable {
 		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Started Execute SQL file check");
 
 		String version = getValueFromApplicationContext(RegistrationConstants.SERVICES_VERSION_KEY);
+		
+		Map<String, VersionMappings> versionMappings = new LinkedHashMap<>();
+		
+		try {
+			versionMappings = getSortedVersionMappings(RegistrationConstants.VERSION_MAPPINGS_KEY);
+		} catch (JsonProcessingException exception) {
+			LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
+					"Exception in parsing the version-mappings: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.BIOMETRIC_DISABLE_SCREEN_2);
+			new Initialization().stop();
+		}
+		
+		if (version.isEmpty() || version.equals("0")) {
+			version = setupPreviousVersion(version, versionMappings);		
+		}
 
 		try {
 			if (!version.equals("0") && !softwareUpdateHandler.getCurrentVersion().equalsIgnoreCase(version)) {
-
 				LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Software Update found");
 
 				loginRoot.setDisable(true);
-				ResponseDTO responseDTO = softwareUpdateHandler
-						.executeSqlFile(softwareUpdateHandler.getCurrentVersion(), version);
+				ResponseDTO responseDTO = softwareUpdateHandler.executeSqlFile(version, versionMappings);
 				loginRoot.setDisable(false);
 
 				if (responseDTO.getErrorResponseDTOs() != null) {
-
 					ErrorResponseDTO errorResponseDTO = responseDTO.getErrorResponseDTOs().get(0);
 
 					if (RegistrationConstants.BACKUP_PREVIOUS_SUCCESS.equalsIgnoreCase(errorResponseDTO.getMessage())) {
@@ -374,11 +399,8 @@ public class LoginController extends BaseController implements Initializable {
 						SessionContext.destroySession();
 					} else {
 						generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.BIOMETRIC_DISABLE_SCREEN_2);
-
 						new Initialization().stop();
-
 					}
-
 					restartApplication();
 				}
 			}
@@ -387,14 +409,50 @@ public class LoginController extends BaseController implements Initializable {
 					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
 
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.BIOMETRIC_DISABLE_SCREEN_2);
-
 			new Initialization().stop();
-
 		}
 
 		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 				"Completed Execute SQL file check");
+	}
 
+	private String setupPreviousVersion(String version, Map<String, VersionMappings> versionMappings) {
+		File file = FileUtils.getFile(getValueFromApplicationContext(RegistrationConstants.ROLLBACK_FILE_PATH));
+
+		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
+				"Backup Path found : " + file.exists());
+		
+		if (!file.exists()) {
+			LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
+					"Backup folder not found, returning the version as the same: " + version);
+			return version;
+		}
+		Map<Integer, String> backupVersions = new TreeMap<>(Collections.reverseOrder());
+		for (File backUpFolder : file.listFiles()) {
+			try {
+				File localManifestFile = new File(backUpFolder.getAbsolutePath() + RegistrationConstants.MANIFEST_PATH);
+				if (localManifestFile.exists()) {
+					Manifest manifest = new Manifest(new FileInputStream(localManifestFile));
+					String backupVersion = manifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
+					// Looping through all the available manifest versions in backup folder and
+					// preparing a map with key as releaseOrder from version-mappings and value as
+					// manifest version
+					if (versionMappings.containsKey(backupVersion)) {
+						backupVersions.put(versionMappings.get(backupVersion).getReleaseOrder(), backupVersion);
+					}
+				}				
+			} catch (IOException exception) {
+				LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
+						"Exception while reading backed up manifest file: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+			}
+		}
+		if (!backupVersions.isEmpty()) {
+			// Since we have used treemap with reverse order, the backupVersions map will be
+			// in descending order. The top most entry is considered as the
+			// latest previous version.
+			return backupVersions.entrySet().iterator().next().getValue();
+		}
+		return version;
 	}
 
 	/**
