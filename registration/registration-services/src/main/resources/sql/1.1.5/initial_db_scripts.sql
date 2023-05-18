@@ -4,14 +4,14 @@ ALTER TABLE "REG"."CA_CERT_STORE" ADD CONSTRAINT "PK_CACS_ID" PRIMARY KEY ("CERT
 
 ALTER TABLE "REG"."SYNC_JOB_DEF" ADD COLUMN "JOB_TYPE" VARCHAR(128);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.regclient_installed_time','mosip.registration.regclient_installed_time',current timestamp,'CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+MERGE INTO "REG"."GLOBAL_PARAM" gp1 USING "SYSIBM"."SYSDUMMY1" ON gp1.code = 'mosip.registration.regclient_installed_time' WHEN NOT MATCHED THEN INSERT VALUES ('mosip.registration.regclient_installed_time','mosip.registration.regclient_installed_time',current timestamp,'CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.rcapture','mosip.registration.mdm.key.domain.rcapture','DEVICE','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+MERGE INTO "REG"."GLOBAL_PARAM" gp1 USING "SYSIBM"."SYSDUMMY1" ON gp1.code = 'mosip.registration.mdm.trust.domain.rcapture' WHEN NOT MATCHED THEN INSERT VALUES ('mosip.registration.mdm.trust.domain.rcapture','mosip.registration.mdm.key.domain.rcapture','DEVICE','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.digitalId','mosip.registration.mdm.key.domain.digitalId','FTM','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+MERGE INTO "REG"."GLOBAL_PARAM" gp1 USING "SYSIBM"."SYSDUMMY1" ON gp1.code = 'mosip.registration.mdm.trust.domain.digitalId' WHEN NOT MATCHED THEN INSERT VALUES ('mosip.registration.mdm.trust.domain.digitalId','mosip.registration.mdm.key.domain.digitalId','FTM','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 
 UPDATE "REG"."GLOBAL_PARAM" SET val='false' WHERE name='mosip.registration.machinecenterchanged';
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.deviceinfo','mosip.registration.mdm.key.domain.deviceinfo','DEVICE','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+MERGE INTO "REG"."GLOBAL_PARAM" gp1 USING "SYSIBM"."SYSDUMMY1" ON gp1.code = 'mosip.registration.mdm.trust.domain.deviceinfo' WHEN NOT MATCHED THEN INSERT VALUES ('mosip.registration.mdm.trust.domain.deviceinfo','mosip.registration.mdm.key.domain.deviceinfo','DEVICE','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 
 INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES('SERVER-RESPONSE', 1095, true, 'mosipadmin', current timestamp);

@@ -72,6 +72,7 @@ import io.mosip.registration.dto.biometric.FaceDetailsDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.exception.RemapException;
 import io.mosip.registration.scheduler.SchedulerUtil;
 import io.mosip.registration.service.BaseService;
@@ -1427,8 +1428,15 @@ public class BaseController {
 	 * @throws JsonMappingException
 	 * @throws JsonProcessingException
 	 */
-	protected Map<String, VersionMappings> getSortedVersionMappings(String key) throws JsonMappingException, JsonProcessingException {
+	protected Map<String, VersionMappings> getSortedVersionMappings(String key) throws Exception {
 		String value = getValueFromApplicationContext(key);
+		
+		if (value == null || value.isBlank()) {
+			LOGGER.error(LoggerConstants.LOG_REG_BASE, RegistrationConstants.APPLICATION_NAME,
+					RegistrationConstants.APPLICATION_ID, "version-mappings key is found empty / null. Please add proper value to proceed.");
+			throw new RegBaseCheckedException(RegistrationExceptionConstants.VERSION_MAPPINGS_NOT_FOUND.getErrorCode(),
+					RegistrationExceptionConstants.VERSION_MAPPINGS_NOT_FOUND.getErrorMessage());
+		}
 
 		ObjectMapper mapper = new ObjectMapper(); 
 	    TypeReference<HashMap<String,VersionMappings>> typeRef 

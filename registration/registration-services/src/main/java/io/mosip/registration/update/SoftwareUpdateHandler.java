@@ -656,6 +656,9 @@ public class SoftwareUpdateHandler extends BaseService {
 			}
 
 			if (!isRollBackSuccess) {
+				LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
+						"Trying to rollback DB from the backup folder as rollback scripts failed for the version: " + dbVersion);
+				
 				dbRollBackSetup(previousVersion);
 			}
 			throw new RegBaseCheckedException();
@@ -736,7 +739,10 @@ public class SoftwareUpdateHandler extends BaseService {
 				if (backUpFolder.getName().contains(previousVersion)) {
 					try {
 						FileUtils.copyDirectory(new File(backUpFolder.getAbsolutePath() + SLASH + dbFolder), new File(dbFolder));
-					} catch (io.mosip.kernel.core.exception.IOException exception) {
+						
+						LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
+								"Replacing DB backup of current version completed");
+					} catch (Exception exception) {
 						LOGGER.error(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
 								"Exception in backing up the DB folder: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
 					}
@@ -744,9 +750,6 @@ public class SoftwareUpdateHandler extends BaseService {
 				}
 			}
 		}
-		
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-				"Replacing DB backup of current version completed");
 	}
 
 	private void rollback(ResponseDTO responseDTO, String previousVersion) {
