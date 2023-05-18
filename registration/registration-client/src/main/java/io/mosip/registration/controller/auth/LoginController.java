@@ -26,8 +26,6 @@ import java.util.jar.Manifest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
@@ -367,17 +365,8 @@ public class LoginController extends BaseController implements Initializable {
 		
 		Map<String, VersionMappings> versionMappings = new LinkedHashMap<>();
 		
-		try {
-			versionMappings = getSortedVersionMappings(RegistrationConstants.VERSION_MAPPINGS_KEY);
-		} catch (JsonProcessingException exception) {
-			LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
-					"Exception in parsing the version-mappings: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
-
-			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.BIOMETRIC_DISABLE_SCREEN_2);
-			new Initialization().stop();
-		}
-		
 		if (version.isEmpty() || version.equals("0")) {
+			versionMappings = getVersionMappings();
 			version = setupPreviousVersion(version, versionMappings);		
 		}
 
@@ -385,14 +374,20 @@ public class LoginController extends BaseController implements Initializable {
 			if (!version.equals("0") && !softwareUpdateHandler.getCurrentVersion().equalsIgnoreCase(version)) {
 				LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Software Update found");
 
+				if (versionMappings.isEmpty()) {
+					versionMappings = getVersionMappings();
+				}
+				
 				loginRoot.setDisable(true);
 				ResponseDTO responseDTO = softwareUpdateHandler.executeSqlFile(version, versionMappings);
 				loginRoot.setDisable(false);
 
 				if (responseDTO.getErrorResponseDTOs() != null) {
-					ErrorResponseDTO errorResponseDTO = responseDTO.getErrorResponseDTOs().get(0);
-
-					if (RegistrationConstants.BACKUP_PREVIOUS_SUCCESS.equalsIgnoreCase(errorResponseDTO.getMessage())) {
+					boolean isRollBackSuccess = responseDTO.getErrorResponseDTOs().stream().anyMatch(
+							errorDTO -> errorDTO.getMessage() != null && RegistrationConstants.BACKUP_PREVIOUS_SUCCESS
+									.equalsIgnoreCase(errorDTO.getMessage()));
+					
+					if (isRollBackSuccess) {
 						generateAlert(RegistrationConstants.ERROR,
 								RegistrationUIConstants.SQL_EXECUTION_FAILED_AND_REPLACED
 										+ RegistrationUIConstants.RESTART_APPLICATION);
@@ -414,6 +409,20 @@ public class LoginController extends BaseController implements Initializable {
 
 		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 				"Completed Execute SQL file check");
+	}
+
+	private Map<String, VersionMappings> getVersionMappings() {
+		Map<String, VersionMappings> versionMappings = new LinkedHashMap<>();
+		try {
+			versionMappings = getSortedVersionMappings(RegistrationConstants.VERSION_MAPPINGS_KEY);
+		} catch (Exception exception) {
+			LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
+					"Exception in parsing the version-mappings: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+
+			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.BIOMETRIC_DISABLE_SCREEN_2);
+			new Initialization().stop();
+		}
+		return versionMappings;
 	}
 
 	private String setupPreviousVersion(String version, Map<String, VersionMappings> versionMappings) {
