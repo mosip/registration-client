@@ -472,4 +472,4 @@ INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.di
 
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.deviceinfo','mosip.registration.mdm.key.domain.deviceinfo','DEVICE','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.verion.upgrade.version-mappings','mosip.registration.verion.upgrade.version-mappings','{ "1.1.5.5":{ "dbVersion":"1.1.5.5", "releaseOrder":3} }','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.verion.upgrade.version-mappings','mosip.registration.verion.upgrade.version-mappings','{ "1.1.5.5":{ "dbVersion":"1.1.5.5", "releaseOrder":1} }','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
