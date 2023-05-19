@@ -24,6 +24,7 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -216,6 +217,9 @@ public class LoginController extends BaseController implements Initializable {
 
 	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
+	
+	@Value("${mosip.reg.rollback.path}")
+	private String backUpPath;
 
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
@@ -426,7 +430,7 @@ public class LoginController extends BaseController implements Initializable {
 	}
 
 	private String setupPreviousVersion(String version, Map<String, VersionMappings> versionMappings) {
-		File file = FileUtils.getFile(getValueFromApplicationContext(RegistrationConstants.ROLLBACK_FILE_PATH));
+		File file = FileUtils.getFile(backUpPath);
 
 		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
 				"Backup Path found : " + file.exists());
