@@ -213,6 +213,9 @@ public class BaseController {
 
 	@Value("${mosip.registration.css_file_path:}")
 	private String cssName;
+	
+	@Value("${mosip.registration.verion.upgrade.default-version-mappings}")
+	private String defaultVersionMappings;
 
 	@Autowired
 	private BioService bioService;
@@ -1429,7 +1432,9 @@ public class BaseController {
 	 * @throws JsonProcessingException
 	 */
 	protected Map<String, VersionMappings> getSortedVersionMappings(String key) throws Exception {
-		String value = getValueFromApplicationContext(key);
+		String value = applicationContext.getApplicationMap().containsKey(key)
+				? (String) applicationContext.getApplicationMap().get(key)
+				: defaultVersionMappings;
 		
 		if (value == null || value.isBlank()) {
 			LOGGER.error(LoggerConstants.LOG_REG_BASE, RegistrationConstants.APPLICATION_NAME,
@@ -1437,7 +1442,7 @@ public class BaseController {
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.VERSION_MAPPINGS_NOT_FOUND.getErrorCode(),
 					RegistrationExceptionConstants.VERSION_MAPPINGS_NOT_FOUND.getErrorMessage());
 		}
-
+		
 		ObjectMapper mapper = new ObjectMapper(); 
 	    TypeReference<HashMap<String,VersionMappings>> typeRef 
 	            = new TypeReference<HashMap<String,VersionMappings>>() {};
