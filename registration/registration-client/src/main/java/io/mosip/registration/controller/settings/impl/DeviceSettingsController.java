@@ -360,6 +360,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 		mainGridPane.getColumnConstraints().addAll(columnConstraint);
 
 		GridPane subGridPane = new GridPane();
+		subGridPane.getStyleClass().add(RegistrationConstants.SYNC_JOB_STYLE);
 
 		subGridPane.getRowConstraints().add(rowConstraint);
 
