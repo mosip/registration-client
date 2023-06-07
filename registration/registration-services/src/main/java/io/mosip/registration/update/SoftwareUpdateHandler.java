@@ -12,9 +12,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
@@ -45,6 +49,7 @@ import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dto.ResponseDTO;
+import io.mosip.registration.dto.VersionMappings;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.config.GlobalParamService;
@@ -80,7 +85,6 @@ public class SoftwareUpdateHandler extends BaseService {
 	private static final String FEATURE = "http://apache.org/xml/features/disallow-doctype-decl";
 	private static final String EXTERNAL_DTD_FEATURE = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
 
-	private static Map<String, String> CHECKSUM_MAP;
 	private String currentVersion;
 	private String latestVersion;
 	private Manifest localManifest;
@@ -109,12 +113,73 @@ public class SoftwareUpdateHandler extends BaseService {
 	public ResponseDTO updateDerbyDB() {
 		getCurrentVersion();
 		String version = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SERVICES_VERSION_KEY);
-		LOGGER.info("Inside updateDerbyDB currentVersion : {} and {} : {}", currentVersion,
+		LOGGER.info("Inside updateDerbyDB currentVersion: {} and {} : {}", currentVersion,
 				RegistrationConstants.SERVICES_VERSION_KEY, version);
+		
+		Map<String, VersionMappings> versionMappings = new LinkedHashMap<>();
+		try {
+			versionMappings = getVersionMappings();
+		} catch (RegBaseCheckedException exception) {
+			return setErrorResponse(new ResponseDTO(), RegistrationConstants.VERSION_MAPPINGS_ERROR, null);
+		}
+		
+		if (version.isEmpty() || version.equals("0")) {
+			version = setupPreviousVersion(version, versionMappings);	
+		}
+		
 		if(version != null && !version.trim().equals("0") && currentVersion != null && !currentVersion.equalsIgnoreCase(version)) {
-			return executeSqlFile(currentVersion, version);
+			return executeSqlFile(version, versionMappings);
 		}
 		return null;
+	}
+	
+	private Map<String, VersionMappings> getVersionMappings() throws RegBaseCheckedException {
+		Map<String, VersionMappings> versionMappings = new LinkedHashMap<>();
+		try {
+			versionMappings = getSortedVersionMappings(RegistrationConstants.VERSION_MAPPINGS_KEY);
+		} catch (Exception exception) {
+			LOGGER.error("Exception in parsing the version-mappings: ", exception);
+			throw new RegBaseCheckedException(); 
+		}
+		return versionMappings;
+	}
+
+	private String setupPreviousVersion(String version, Map<String, VersionMappings> versionMappings) {
+		File file = FileUtils.getFile(backUpPath);
+
+		LOGGER.info("Backup Path found: ", file.exists());
+		
+		if (!file.exists()) {
+			LOGGER.info("Backup folder not found, returning the version as the same: ", version);
+			return version;
+		}
+		Map<Integer, String> backupVersions = new TreeMap<>(Collections.reverseOrder());
+		for (File backUpFolder : file.listFiles()) {
+			try {
+				File localManifestFile = new File(backUpFolder.getAbsolutePath() + RegistrationConstants.MANIFEST_PATH);
+				if (localManifestFile.exists()) {
+					FileInputStream inputStream = new FileInputStream(localManifestFile);
+					Manifest manifest = new Manifest(inputStream);
+					String backupVersion = manifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
+					// Looping through all the available manifest versions in backup folder and
+					// preparing a map with key as releaseOrder from version-mappings and value as
+					// manifest version
+					if (versionMappings.containsKey(backupVersion)) {
+						backupVersions.put(versionMappings.get(backupVersion).getReleaseOrder(), backupVersion);
+					}
+					inputStream.close();
+				}				
+			} catch (IOException exception) {
+				LOGGER.error("Exception while reading backed up manifest file: ", exception);
+			}
+		}
+		if (!backupVersions.isEmpty()) {
+			// Since we have used treemap with reverse order, the backupVersions map will be
+			// in descending order. The top most entry is considered as the
+			// latest previous version.
+			return backupVersions.entrySet().iterator().next().getValue();
+		}
+		return version;
 	}
 
 
@@ -392,47 +457,118 @@ public class SoftwareUpdateHandler extends BaseService {
 	 *            latest version
 	 * @param previousVersion
 	 *            previous version
+	 * @param versionMappings 
 	 * @return response of sql execution
 	 * @throws IOException
 	 */
 	@Counted(recordFailuresOnly = true)
-	public ResponseDTO executeSqlFile(@MetricTag("newversion") String actualLatestVersion,
-									  @MetricTag("oldversion") String previousVersion) {
+	public ResponseDTO executeSqlFile(@MetricTag("oldversion") String previousVersion, Map<String, VersionMappings> versionMappings) {
 
-		LOGGER.info("DB-Script files execution started from previous version : {} , To Current Version : {}",previousVersion, currentVersion);
-		String newVersion = actualLatestVersion.split("-")[0];
-		previousVersion = previousVersion.split("-")[0];
-
-		ResponseDTO responseDTO = new ResponseDTO();
-		try {
-			LOGGER.info("Checking Started : " + newVersion + SLASH + exectionSqlFile);
-			execute(SQL + SLASH + newVersion + SLASH + exectionSqlFile);
-			LOGGER.info("Checking completed : " + newVersion + SLASH + exectionSqlFile);
-			// Update global param with current version
-			globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, actualLatestVersion);
-			setSuccessResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_SUCCESS, null);
-			LOGGER.info("DB-Script files execution completed");
-			return responseDTO;
-		} catch (Throwable exception) {
-			LOGGER.error("Failed to execute db upgrade scripts", exception);
+		LOGGER.info("DB-Script files execution started from previous version : {} , To Current Version : {}", previousVersion, currentVersion);
+		
+		/*
+		 * Here, we are removing the entries from version-mappings map, for which, the
+		 * releaseOrder is less than or equal to the previous version, because, we need
+		 * to execute the upgrade scripts only for the versions released after the
+		 * previous version.
+		 */
+		if (versionMappings.containsKey(previousVersion)) {
+			Integer previousVersionReleaseOrder = versionMappings.get(previousVersion).getReleaseOrder();
+			versionMappings.entrySet().removeIf(versionMapping -> versionMapping.getValue().getReleaseOrder() <= previousVersionReleaseOrder);
 		}
 
-		// ROLL BACK QUERIES
+		ResponseDTO responseDTO = new ResponseDTO();
+		
+		for (Entry<String, VersionMappings> entry : versionMappings.entrySet()) {
+			try {
+				LOGGER.info("DB Script files execution started for the version : " + entry.getKey());				
+				executeSQL(entry.getValue().getDbVersion(), previousVersion);
+				//Backing up the DB with ongoing upgrade version name
+				String date = new Timestamp(System.currentTimeMillis()).toString().replace(":", "-") + "Z";
+				File backupFolder = new File(backUpPath + SLASH + entry.getKey() + "_" + date);
+				backUpSetup(backupFolder);
+				previousVersion = entry.getKey();
+				// Update global param with current version
+				globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, entry.getKey());
+			} catch (Throwable exception) {
+				// Replace with backup
+				responseDTO = rollBack(responseDTO);
+				// Prepare Error Response
+				setErrorResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_FAILURE, null);
+				return responseDTO;
+			}
+		}
+		
+		setSuccessResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_SUCCESS, null);
+		LOGGER.info("DB-Script files execution completed");
+		return responseDTO;
+	}
+	
+	private ResponseDTO rollBack(ResponseDTO responseDTO) {
 		try {
-			LOGGER.info("Rollback started : " + newVersion + SLASH + rollBackSqlFile);
-			execute(SQL + SLASH + newVersion + SLASH + rollBackSqlFile);
-			LOGGER.info("Rollback completed : " + newVersion + SLASH + rollBackSqlFile);
 			String backupPath = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SOFTWARE_BACKUP_FOLDER);
-			if(backupPath != null) {
+			if (backupPath != null) {
 				rollBackSetup(new File(backupPath));
 				globalParamService.update(RegistrationConstants.SOFTWARE_BACKUP_FOLDER, null);
 			}
+			setErrorResponse(responseDTO, RegistrationConstants.BACKUP_PREVIOUS_SUCCESS, null);
 		} catch (Throwable exception) {
 			LOGGER.error("Failed to execute db rollback scripts", exception);
-		}
-
-		setErrorResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_FAILURE, null);
+		}	
 		return responseDTO;
+	}
+
+	private void executeSQL(String dbVersion, String previousVersion) throws RegBaseCheckedException {
+		boolean isExecutionSuccess = false;
+		boolean isRollBackSuccess = false;
+		try {
+			LOGGER.info("Checking Started : " + dbVersion + SLASH + exectionSqlFile);
+			execute(SQL + SLASH + dbVersion + SLASH + exectionSqlFile);
+			isExecutionSuccess = true;
+			LOGGER.info("Checking completed : " + dbVersion + SLASH + exectionSqlFile);
+		} catch (RuntimeException | IOException exception) {		
+			LOGGER.error("Failed to execute db upgrade scripts", exception);			
+		}
+		if (!isExecutionSuccess) {
+			// ROLL BACK QUERIES
+			try {
+				LOGGER.info("Rollback started : " + dbVersion + SLASH + rollBackSqlFile);
+				execute(SQL + SLASH + dbVersion + SLASH + rollBackSqlFile);
+				isRollBackSuccess = true;
+				LOGGER.info("Rollback completed : " + dbVersion + SLASH + rollBackSqlFile);
+			} catch (RuntimeException | IOException exception) {
+				LOGGER.error("Failed to execute db rollback scripts", exception);
+			}
+
+			if (!isRollBackSuccess) {
+				LOGGER.info("Trying to rollback DB from the backup folder as rollback scripts failed for the version: " + dbVersion);			
+				dbRollBackSetup(previousVersion);
+			}
+			throw new RegBaseCheckedException();
+		}
+	}
+	
+	private void dbRollBackSetup(String previousVersion) {
+		LOGGER.info("Replacing DB backup started for the version: " + previousVersion);	
+		File file = FileUtils.getFile(backUpPath);
+		LOGGER.info("Backup Path found : " + file.exists());
+		
+		if (!file.exists()) {
+			LOGGER.info("Backup folder not found, db backup stopped");
+			return;
+		}
+		
+		for (File backUpFolder : file.listFiles()) {
+			if (backUpFolder.getName().contains(previousVersion)) {
+				try {
+					FileUtils.copyDirectory(new File(backUpFolder.getAbsolutePath() + SLASH + dbFolder), new File(dbFolder));				
+					LOGGER.info("Replacing DB backup completed for the version: " + previousVersion);
+				} catch (Exception exception) {
+					LOGGER.error("Exception in backing up the DB folder: ", exception);
+				}
+				break;
+			}
+		}
 	}
 
 	private void execute(String path) throws IOException {

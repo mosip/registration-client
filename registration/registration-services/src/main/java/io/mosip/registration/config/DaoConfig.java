@@ -1,5 +1,8 @@
 package io.mosip.registration.config;
 
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
+import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,11 +17,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.util.*;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.WeakHashMap;
 
 import javax.sql.DataSource;
 
-import io.mosip.registration.context.ApplicationContext;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,11 +49,11 @@ import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.dataaccess.hibernate.config.HibernateDaoConfig;
 import io.mosip.kernel.dataaccess.hibernate.constant.HibernatePersistenceConstant;
+import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import lombok.SneakyThrows;
-
-import static io.mosip.registration.constants.RegistrationConstants.*;
 
 /**
  *
@@ -76,6 +82,7 @@ public class DaoConfig extends HibernateDaoConfig {
 	private static final String STATE_KEY = "state";
 	private static final String ERROR_STATE = "0";
 	private static final String SAFE_STATE = "1";
+	private static final String dbDir = "db";
 
 	private static Properties keys;
 	private static JdbcTemplate jdbcTemplate;
@@ -272,6 +279,7 @@ public class DaoConfig extends HibernateDaoConfig {
 			Map<String, String> dbConf = getDBConf();
 			if (dbConf.get(STATE_KEY).equals(ERROR_STATE)) {
 				shutdownDatabase(); // We need to shutdown DB before encrypting
+				backupDb();	//Backing up current db and mosipkeys
 				LOGGER.info(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID,
 						"IMP : (Re)Encrypting DB started ......");
 				connection = DriverManager.getConnection("jdbc:derby:" + dbPath + ";" + ENCRYPTION_URL_ATTRIBUTES
@@ -290,6 +298,42 @@ public class DaoConfig extends HibernateDaoConfig {
 		} finally {
 			if (connection != null)
 				connection.close();
+		}
+	}
+	
+	private void backupDb() {
+		LOGGER.info(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID, "Database backup started...");
+		
+		Path dbPath = Paths.get(dbDir);
+		Path mosipkeysPath = Paths.get(ClientCryptoManagerConstant.KEY_PATH, ClientCryptoManagerConstant.KEYS_DIR);
+		
+		if (!dbPath.toFile().exists() || !mosipkeysPath.toFile().exists()) {
+			return;
+		}
+		
+		String backupPath = keys.getProperty("mosip.reg.rollback.path", "../BackUp");
+		File file = FileUtils.getFile(backupPath);
+
+		LOGGER.info(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID, "Backup Path found : " + file.exists());
+		
+		if (!file.exists()) {
+			LOGGER.info(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID, "Backup folder not found, not backing up the database");
+			return;
+		}
+		
+		for (File backUpFolder : file.listFiles()) {
+			try {
+				File backUpManifestFile = new File(backUpFolder.getAbsolutePath() + RegistrationConstants.MANIFEST_PATH);
+				if (backUpManifestFile.exists()) {
+					LOGGER.info(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID, "Copying the database folders to backup folder...");				
+					FileUtils.copyDirectory(dbPath.toFile(), new File(backUpFolder.getAbsolutePath() + File.separator + dbDir));
+					FileUtils.copyDirectory(mosipkeysPath.toFile(), new File(backUpFolder.getAbsolutePath() + File.separator + ClientCryptoManagerConstant.KEYS_DIR));
+					break;
+				}
+			} catch (IOException exception) {
+				LOGGER.error(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID,
+						"Exception while backing up DB files: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+			}
 		}
 	}
 
