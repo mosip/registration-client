@@ -442,10 +442,10 @@ public class LoginController extends BaseController implements Initializable {
 		}
 		Map<Integer, String> backupVersions = new TreeMap<>(Collections.reverseOrder());
 		for (File backUpFolder : file.listFiles()) {
-			try {
-				File localManifestFile = new File(backUpFolder.getAbsolutePath() + RegistrationConstants.MANIFEST_PATH);
-				if (localManifestFile.exists()) {
-					Manifest manifest = new Manifest(new FileInputStream(localManifestFile));
+			File localManifestFile = new File(backUpFolder.getAbsolutePath() + RegistrationConstants.MANIFEST_PATH);
+			if (localManifestFile.exists()) {
+				try (FileInputStream inputStream = new FileInputStream(localManifestFile)) {
+					Manifest manifest = new Manifest(inputStream);
 					String backupVersion = manifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
 					// Looping through all the available manifest versions in backup folder and
 					// preparing a map with key as releaseOrder from version-mappings and value as
@@ -453,10 +453,10 @@ public class LoginController extends BaseController implements Initializable {
 					if (versionMappings.containsKey(backupVersion)) {
 						backupVersions.put(versionMappings.get(backupVersion).getReleaseOrder(), backupVersion);
 					}
-				}				
-			} catch (IOException exception) {
-				LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
-						"Exception while reading backed up manifest file: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+				} catch (IOException exception) {
+					LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
+							"Exception while reading backed up manifest file: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+				}
 			}
 		}
 		if (!backupVersions.isEmpty()) {
