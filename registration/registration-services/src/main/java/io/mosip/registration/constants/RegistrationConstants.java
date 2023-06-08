@@ -1415,6 +1415,9 @@ public class RegistrationConstants {
 	public static final String PUBLIC_KEY_REF_ID = "packet-encryption-key";
 	public static final String USER_DETAIL_SALT_SERVICE_NAME = "user_salt_details";
 	public static final String SERVICES_VERSION_KEY = "mosip.reg.services.current.version";
+	public static final String VERSION_MAPPINGS_KEY = "mosip.registration.verion.upgrade.version-mappings";
+	public static final String VERSION_MAPPINGS_ERROR = "Could not parse version-mappings";
+	public static final String MANIFEST_PATH = "/MANIFEST.MF";
 
 	// TPM
 	public static final byte[] NULL_VECTOR = new byte[0];
