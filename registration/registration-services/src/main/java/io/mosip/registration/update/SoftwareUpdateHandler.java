@@ -146,19 +146,16 @@ public class SoftwareUpdateHandler extends BaseService {
 
 	private String setupPreviousVersion(String version, Map<String, VersionMappings> versionMappings) {
 		File file = FileUtils.getFile(backUpPath);
-
-		LOGGER.info("Backup Path found: ", file.exists());
-		
+		LOGGER.info("Backup Path found: ", file.exists());		
 		if (!file.exists()) {
 			LOGGER.info("Backup folder not found, returning the version as the same: ", version);
 			return version;
 		}
 		Map<Integer, String> backupVersions = new TreeMap<>(Collections.reverseOrder());
 		for (File backUpFolder : file.listFiles()) {
-			try {
-				File localManifestFile = new File(backUpFolder.getAbsolutePath() + RegistrationConstants.MANIFEST_PATH);
-				if (localManifestFile.exists()) {
-					FileInputStream inputStream = new FileInputStream(localManifestFile);
+			File localManifestFile = new File(backUpFolder.getAbsolutePath() + RegistrationConstants.MANIFEST_PATH);
+			if (localManifestFile.exists()) {
+				try (FileInputStream inputStream = new FileInputStream(localManifestFile)) {
 					Manifest manifest = new Manifest(inputStream);
 					String backupVersion = manifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
 					// Looping through all the available manifest versions in backup folder and
@@ -167,10 +164,9 @@ public class SoftwareUpdateHandler extends BaseService {
 					if (versionMappings.containsKey(backupVersion)) {
 						backupVersions.put(versionMappings.get(backupVersion).getReleaseOrder(), backupVersion);
 					}
-					inputStream.close();
-				}				
-			} catch (IOException exception) {
-				LOGGER.error("Exception while reading backed up manifest file: ", exception);
+				} catch (IOException exception) {
+					LOGGER.error("Exception while reading backed up manifest file: ", exception);
+				}
 			}
 		}
 		if (!backupVersions.isEmpty()) {
