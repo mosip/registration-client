@@ -302,7 +302,7 @@ public class DaoConfig extends HibernateDaoConfig {
 	}
 	
 	private void backupDb() {
-		LOGGER.info(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID, "Database backup started...");
+		LOGGER.info("Database backup started...");
 		
 		Path dbPath = Paths.get(dbDir);
 		Path mosipkeysPath = Paths.get(ClientCryptoManagerConstant.KEY_PATH, ClientCryptoManagerConstant.KEYS_DIR);
@@ -314,10 +314,10 @@ public class DaoConfig extends HibernateDaoConfig {
 		String backupPath = keys.getProperty("mosip.reg.rollback.path", "../BackUp");
 		File file = FileUtils.getFile(backupPath);
 
-		LOGGER.info(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID, "Backup Path found : " + file.exists());
+		LOGGER.info("Backup Path found : " + file.exists());
 		
 		if (!file.exists()) {
-			LOGGER.info(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID, "Backup folder not found, not backing up the database");
+			LOGGER.info("Backup folder not found, not backing up the database");
 			return;
 		}
 		
@@ -325,14 +325,13 @@ public class DaoConfig extends HibernateDaoConfig {
 			try {
 				File backUpManifestFile = new File(backUpFolder.getAbsolutePath() + RegistrationConstants.MANIFEST_PATH);
 				if (backUpManifestFile.exists()) {
-					LOGGER.info(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID, "Copying the database folders to backup folder...");				
+					LOGGER.info("Copying the database folders to backup folder...");				
 					FileUtils.copyDirectory(dbPath.toFile(), new File(backUpFolder.getAbsolutePath() + File.separator + dbDir));
 					FileUtils.copyDirectory(mosipkeysPath.toFile(), new File(backUpFolder.getAbsolutePath() + File.separator + ClientCryptoManagerConstant.KEYS_DIR));
 					break;
 				}
 			} catch (IOException exception) {
-				LOGGER.error(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID,
-						"Exception while backing up DB files: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+				LOGGER.error("Exception while backing up DB files: ", exception);
 			}
 		}
 	}
