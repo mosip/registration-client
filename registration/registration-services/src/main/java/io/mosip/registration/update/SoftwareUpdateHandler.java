@@ -487,6 +487,7 @@ public class SoftwareUpdateHandler extends BaseService {
 				// Update global param with current version
 				globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, entry.getKey());
 			} catch (Throwable exception) {
+				LOGGER.error("Error while executing SQL files for upgrade : ", exception);
 				// Replace with backup
 				responseDTO = rollBack(responseDTO);
 				// Prepare Error Response
