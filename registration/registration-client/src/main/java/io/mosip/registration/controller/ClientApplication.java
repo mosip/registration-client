@@ -8,7 +8,24 @@ import java.text.SimpleDateFormat;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.stereotype.Component;
+
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.core.exception.ExceptionUtils;
+import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.registration.audit.AuditManagerSerivceImpl;
+import io.mosip.registration.audit.AuditManagerService;
+import io.mosip.registration.config.AppConfig;
+import io.mosip.registration.constants.AuditEvent;
+import io.mosip.registration.constants.AuditReferenceIdTypes;
+import io.mosip.registration.constants.Components;
+import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
+import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.controller.auth.LoginController;
 import io.mosip.registration.controller.reg.Validations;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
@@ -27,24 +44,6 @@ import io.mosip.registration.update.ClientIntegrityValidator;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.stereotype.Component;
-
-import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
-import io.mosip.kernel.core.exception.ExceptionUtils;
-import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.kernel.core.util.DateUtils;
-import io.mosip.registration.audit.AuditManagerService;
-import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.constants.AuditEvent;
-import io.mosip.registration.constants.AuditReferenceIdTypes;
-import io.mosip.registration.constants.Components;
-import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.context.SessionContext;
-import io.mosip.registration.controller.auth.LoginController;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -68,7 +67,6 @@ public class ClientApplication extends Application {
 	private static String applicationStartTime;
 	private static boolean syncCompleted = false;
 
-	@Autowired
 	private AuditManagerService auditFactory;
 	
 	@Override
@@ -87,6 +85,7 @@ public class ClientApplication extends Application {
 			SessionContext.setApplicationContext(applicationContext);
 			notifyPreloader(new ClientPreLoaderNotification("Created application context."));
 
+			auditFactory = applicationContext.getBean("auditManagerSerivceImpl", AuditManagerSerivceImpl.class);
 			upgradeLocalDatabase();
 
 			setupLanguages();
