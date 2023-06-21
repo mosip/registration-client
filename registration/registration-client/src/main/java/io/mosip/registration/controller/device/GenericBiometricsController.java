@@ -108,7 +108,7 @@ public class GenericBiometricsController extends BaseController {
 
 	@FXML
 	private GridPane biometricBox;
-	
+
 	@FXML
 	private Label biometricType;
 
@@ -266,7 +266,7 @@ public class GenericBiometricsController extends BaseController {
 	@FXML
 	public void initialize() {
 		LOGGER.info("Loading of Guardian Biometric screen started");
-		applicationLabelBundle = applicationContext.getBundle(applicationContext.getApplicationLanguage(),
+		applicationLabelBundle = ApplicationContext.getBundle(applicationContext.getApplicationLanguage(),
 				RegistrationConstants.LABELS);
 		setImage(scanImageView	, RegistrationConstants.SCAN_IMG);
 		setImage(closeButtonImageView	, RegistrationConstants.CLOSE_IMG);
@@ -295,13 +295,14 @@ public class GenericBiometricsController extends BaseController {
 	private void displayBiometric(Modality modality) {
 		LOGGER.info("Displaying biometrics to capture for {}", modality);
 
-		applicationLabelBundle = applicationContext.getBundle(applicationContext.getApplicationLanguage(), RegistrationConstants.LABELS);
+		applicationLabelBundle = ApplicationContext.getBundle(applicationContext.getApplicationLanguage(), RegistrationConstants.LABELS);
 
 		retryBox.setVisible(!isExceptionPhoto(modality));
 		thresholdBox.setVisible(!isExceptionPhoto(modality) && isQualityCheckWithSdkEnabled());
 		GridPane.setMargin(thresholdBox, new Insets(0, 0, isQualityCheckWithSdkEnabled() ? 50 : 0,0));
 
 		biometricBox.setVisible(true);
+		biometricType.setText(applicationLabelBundle.getString(modality.name()));
 		checkBoxPane.getChildren().clear();
 
 		// get List of captured Biometrics based on nonExceptionBio Attributes
@@ -1138,8 +1139,8 @@ public class GenericBiometricsController extends BaseController {
 
 		BiometricType biometricType = BiometricType.fromValue(modality);
 		List<UserBiometric> userBiometrics = userDetailDAO.findAllActiveUsers(biometricType.value());
-		
-		return userBiometrics.isEmpty() ? false : matchBiometrics(biometricType, userBiometrics, biometrics);	
+
+		return userBiometrics.isEmpty() ? false : matchBiometrics(biometricType, userBiometrics, biometrics);
 	}
 
 	private Pane getExceptionImagePane(Modality modality, List<String> configBioAttributes,
