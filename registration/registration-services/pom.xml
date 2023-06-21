@@ -374,7 +374,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-biometrics-api</artifactId>
-			<version>1.2.0.1-B2-SNAPSHOT</version>
+			<version>1.2.0.1-B2</version>
 			<exclusions>
 				<exclusion>
 					<groupId>io.mosip.kernel</groupId>
