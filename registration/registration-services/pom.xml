@@ -6,12 +6,12 @@
 	<parent>
 		<groupId>io.mosip.registration</groupId>
 		<artifactId>registration-client-parent</artifactId>
-		<version>1.2.0.1-B1</version>
+		<version>1.2.0.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>registration-services</artifactId>
 	<name>registration-services</name>
 	<description>Maven project of MOSIP Registration Service</description>
-	<version>1.2.0.1-B2-SNAPSHOT</version>
+	<version>1.2.0.1-SNAPSHOT</version>
 
 	<dependencies>
 		<!-- Lombok -->
@@ -204,8 +204,7 @@
 					<artifactId>spring-boot-starter-test</artifactId>
 				</exclusion>
 			</exclusions>
-			<version>${mosip.core.kernel.version}</version>
-		</dependency>
+			</dependency>
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-dataaccess-hibernate</artifactId>
@@ -374,7 +373,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-biometrics-api</artifactId>
-			<version>1.2.0.1-B2</version>
+			<version>${mosip.core.kernel.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>io.mosip.kernel</groupId>
