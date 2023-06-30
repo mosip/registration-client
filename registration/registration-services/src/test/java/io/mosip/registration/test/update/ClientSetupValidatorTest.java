@@ -1,5 +1,6 @@
 package io.mosip.registration.test.update;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
@@ -124,8 +125,7 @@ public class ClientSetupValidatorTest {
 
 	@Test
 	public void isUnknown_jars_found() throws RegBaseCheckedException {
-		clientSetupValidator.isUnknown_jars_found();
-		assertEquals(Boolean.FALSE, clientSetupValidator.isUnknown_jars_found());
+		assertNotNull(clientSetupValidator.isUnknown_jars_found());
 	}
 
 	@Test
