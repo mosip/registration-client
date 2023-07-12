@@ -91,6 +91,18 @@ chmod -R a+x "${work_dir}"/registration-client/target/jre
 cp "${work_dir}"/build_files/logback.xml "${work_dir}"/registration-client/target/lib/logback.xml
 cp "${work_dir}"/registration-client/target/registration-client-${client_version_env}.jar "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar
 
+echo "@echo off" > "${work_dir}"/registration-client/target/lib/114to1201_run.bat
+echo "if exist .UNKNOWN_JARS (" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
+echo "FOR /F \"tokens=* delims=\" %%x in (.UNKNOWN_JARS) DO DEL /Q lib\%%x" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
+echo ")" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
+echo "if exist .TEMP (" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
+echo "echo Starting Registration Client after Upgrade" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
+echo "xcopy /f/k/y/v/q .TEMP lib && rmdir /s /q .TEMP && start jre\jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
+echo ") else (" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
+echo "echo Starting Registration Client" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
+echo "start jre\jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
+echo ")" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
+
 ## jar signing
 jarsigner -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore_secret} -tsa ${signer_timestamp_url_env} -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar CodeSigning
 jarsigner -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore_secret} -tsa ${signer_timestamp_url_env} -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-services-${client_version_env}.jar CodeSigning
