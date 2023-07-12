@@ -53,7 +53,7 @@ public class AuditDAOImpl implements AuditDAO {
 
 		try {
 			List<Audit> audits;
-			if (timestamp.isEmpty()) {
+			if (timestamp == null || timestamp.isEmpty()) {
 				audits = regAuditRepository.findAllByOrderByActionTimeStampAsc();
 			} else {
 				audits = regAuditRepository.findByActionTimeStampGreaterThanOrderByActionTimeStampAsc(
