@@ -156,7 +156,7 @@ public class RegistrationDTO {
 		return (String)AGE_GROUPS.getOrDefault("ageGroup", null);
 	}
 	public int getAge() {
-		return (int) AGE_GROUPS.getOrDefault("age", null);
+		return (int) AGE_GROUPS.getOrDefault("age", 0);
 	}
 
 	public void setDateField(String fieldId, String dateString, String subType) {
@@ -314,6 +314,14 @@ public class RegistrationDTO {
 		allIdentityDetails.putAll(this.AGE_GROUPS);
 		allIdentityDetails.putAll(this.SELECTED_CODES);
 		allIdentityDetails.put("isBioException", this.biometricExceptions.size() > 0);
+		
+		
+		//Added for migrated ui-spec compatibility
+		allIdentityDetails.put("isChild", (getAge() <= Integer.parseInt((String) ApplicationContext.map().getOrDefault(RegistrationConstants.MIN_AGE, "5"))));
+		allIdentityDetails.put("isNew", this.flowType.equals(FlowType.NEW));
+		allIdentityDetails.put("isUpdate", this.flowType.equals(FlowType.UPDATE));
+		allIdentityDetails.put("isLost", this.flowType.equals(FlowType.LOST));
+
 		return allIdentityDetails;
 	}
 
