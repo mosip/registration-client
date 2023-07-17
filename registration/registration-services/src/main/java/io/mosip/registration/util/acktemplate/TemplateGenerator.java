@@ -341,7 +341,7 @@ public class TemplateGenerator extends BaseService {
 		return data;
 	}
 
-	private Object getFieldLabel(UiFieldDTO field) {
+	private String getFieldLabel(UiFieldDTO field) {
 		List<String> labels = new ArrayList<>();
 		List<String> selectedLanguages = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant();
 		for (String selectedLanguage : selectedLanguages) {
@@ -358,9 +358,14 @@ public class TemplateGenerator extends BaseService {
 		String value = getValue(registration.getDemographics().get(field.getId()));
 		if (value != null && !value.isEmpty()) {
 			data = new HashMap<>();
-			data.put("label", getFieldLabel(field));
-			data.put("value", getFieldValue(field));
-			//data.put("secondaryValue", getSecondaryLanguageValue(registration.getDemographics().get(field.getId())));
+			String fieldLabel = getFieldLabel(field);
+			String fieldValue = getFieldValue(field);
+			data.put("label", fieldLabel);
+			data.put("value", fieldValue);
+
+			//Added for backward compatibility(1.1.5.5 & 1.1.4.*), this support will be removed from next version
+			data.put("primaryLabel", fieldLabel);
+			data.put("primaryValue", fieldValue);
 		}
 		return data;
 	}
