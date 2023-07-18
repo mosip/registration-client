@@ -91,20 +91,22 @@ chmod -R a+x "${work_dir}"/registration-client/target/jre
 cp "${work_dir}"/build_files/logback.xml "${work_dir}"/registration-client/target/lib/logback.xml
 cp "${work_dir}"/registration-client/target/registration-client-${client_version_env}.jar "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar
 
-echo "@echo off" > "${work_dir}"/registration-client/target/lib/114to1201_run.bat
-echo "if exist jre\jre (" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
-echo "xcopy /s /k /y /q jre\jre jre && rmdir /s /q jre\jre" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
-echo ")" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
-echo "if exist .UNKNOWN_JARS (" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
-echo "FOR /F \"tokens=* delims=\" %%x in (.UNKNOWN_JARS) DO DEL /Q lib\%%x" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
-echo ")" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
-echo "if exist .TEMP (" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
-echo "echo Starting Registration Client after Upgrade" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
-echo "xcopy /f/k/y/v/q .TEMP lib && rmdir /s /q .TEMP && start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
-echo ") else (" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
-echo "echo Starting Registration Client" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
-echo "start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
-echo ")" >> "${work_dir}"/registration-client/target/lib/114to1201_run.bat
+echo "@echo off" > "${work_dir}"/registration-client/target/run.bat
+echo "if exist jre\jre (" >> "${work_dir}"/registration-client/target/run.bat
+echo "xcopy /s /k /y /q jre\jre jre && rmdir /s /q jre\jre" >> "${work_dir}"/registration-client/target/run.bat
+echo ")" >> "${work_dir}"/registration-client/target/run.bat
+echo "if exist .UNKNOWN_JARS (" >> "${work_dir}"/registration-client/target/run.bat
+echo "FOR /F \"tokens=* delims=\" %%x in (.UNKNOWN_JARS) DO DEL /Q lib\%%x" >> "${work_dir}"/registration-client/target/run.bat
+echo ")" >> "${work_dir}"/registration-client/target/run.bat
+echo "if exist .TEMP (" >> "${work_dir}"/registration-client/target/run.bat
+echo "echo Starting Registration Client after Upgrade" >> "${work_dir}"/registration-client/target/run.bat
+echo "xcopy /f/k/y/v/q .TEMP lib && rmdir /s /q .TEMP && start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" >> "${work_dir}"/registration-client/target/run.bat
+echo ") else (" >> "${work_dir}"/registration-client/target/run.bat
+echo "echo Starting Registration Client" >> "${work_dir}"/registration-client/target/run.bat
+echo "start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" >> "${work_dir}"/registration-client/target/run.bat
+echo ")" >> "${work_dir}"/registration-client/target/run.bat
+
+cp "${work_dir}"/registration-client/target/run.bat "${work_dir}"/registration-client/target/lib/114to1201_run.bat
 
 ## jar signing
 jarsigner -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore_secret} -tsa ${signer_timestamp_url_env} -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar CodeSigning
@@ -117,21 +119,6 @@ cd "${work_dir}"/registration-client/target/
 echo "Started to create the registration client zip"
 
 ls -ltr lib | grep bc
-
-echo "@echo off" > run.bat
-echo "if exist jre\jre (" >> run.bat
-echo "xcopy /s /k /y /q jre\jre jre && rmdir /s /q jre\jre" >> run.bat
-echo ")" >> run.bat
-echo "if exist .UNKNOWN_JARS (" >> run.bat
-echo "FOR /F \"tokens=* delims=\" %%x in (.UNKNOWN_JARS) DO DEL /Q lib\%%x" >> run.bat
-echo ")" >> run.bat
-echo "if exist .TEMP (" >> run.bat
-echo "echo Starting Registration Client after Upgrade" >> run.bat
-echo "xcopy /f/k/y/v/q .TEMP lib && rmdir /s /q .TEMP && start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" >> run.bat
-echo ") else (" >> run.bat
-echo "echo Starting Registration Client" >> run.bat
-echo "start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* io.mosip.registration.controller.Initialization > startup.log 2>&1" >> run.bat
-echo ")" >> run.bat
 
 /usr/bin/zip -r reg-client.zip jre
 /usr/bin/zip -r reg-client.zip lib
