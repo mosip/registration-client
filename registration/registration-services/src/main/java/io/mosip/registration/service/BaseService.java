@@ -135,8 +135,8 @@ public class BaseService {
 	@Value("${mosip.max-languages.count:0}")
 	private int maxLanguagesCount;
 	
-	@Value("${mosip.registration.verion.upgrade.version-mappings}")
-	private String versionMappings;
+	@Value("${mosip.registration.verion.upgrade.default-version-mappings}")
+	private String defaultVersionMappings;
 
 	public List<String> getMandatoryLanguages() {
 		return mandatoryLanguages.stream()
@@ -786,7 +786,7 @@ public class BaseService {
 	protected Map<String, VersionMappings> getSortedVersionMappings(String key) throws Exception {
 		String value = ApplicationContext.map().containsKey(key)
 				? (String) ApplicationContext.map().get(key)
-				: versionMappings;
+				: defaultVersionMappings;
 		
 		if (value == null || value.isBlank()) {
 			LOGGER.error("version-mappings key is found empty / null. Please add proper value to proceed.");
