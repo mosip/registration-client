@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
@@ -25,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -47,6 +49,7 @@ import io.mosip.kernel.core.util.JsonUtils;
 import io.mosip.kernel.core.util.exception.JsonMappingException;
 import io.mosip.kernel.core.util.exception.JsonParseException;
 import io.mosip.registration.config.AppConfig;
+import io.mosip.registration.config.DaoConfig;
 import io.mosip.registration.constants.PreConditionChecks;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
@@ -134,9 +137,6 @@ public class BaseService {
 
 	@Value("${mosip.max-languages.count:0}")
 	private int maxLanguagesCount;
-	
-	@Value("${mosip.registration.verion.upgrade.default-version-mappings}")
-	private String defaultVersionMappings;
 
 	public List<String> getMandatoryLanguages() {
 		return mandatoryLanguages.stream()
@@ -784,9 +784,19 @@ public class BaseService {
 	 * @throws Exception
 	 */
 	protected Map<String, VersionMappings> getSortedVersionMappings(String key) throws Exception {
-		String value = ApplicationContext.map().containsKey(key)
-				? (String) ApplicationContext.map().get(key)
-				: defaultVersionMappings;
+		String value = null;
+		
+		try (InputStream configKeys = BaseService.class.getClassLoader().getResourceAsStream("spring.properties")) {
+			Properties properties = new Properties();
+			properties.load(configKeys);
+			value = properties.getProperty(key);
+		} catch (Exception exception) {
+			LOGGER.error("Error in reading properties file", exception);
+		}
+				
+		if (value == null && ApplicationContext.map().containsKey(key)) {
+			value = (String) ApplicationContext.map().get(key);
+		}
 		
 		if (value == null || value.isBlank()) {
 			LOGGER.error("version-mappings key is found empty / null. Please add proper value to proceed.");
