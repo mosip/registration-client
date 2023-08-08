@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.Map;
 
 import io.mosip.registration.dto.ResponseDTO;
+import io.mosip.registration.entity.GlobalParam;
 
 /**
  * It interface with the external 'global' service and sync the application specific configuration data from server to local machine. 
@@ -73,5 +74,23 @@ public interface GlobalParamService {
 	 *            value 
 	 */
 	void update(String code, String val);
+	
+	/**
+	 * Return global param with particular key 
+	 * 
+	 * @param code
+	 *            global param code
+	 * @param val
+	 *            value 
+	 * @return {@link GlobalParam}
+	 */
+	GlobalParam getGlobalParam(String key);
+	
+	/**
+	 * Delete global param with particular key 
+	 * 
+	 * @param key - global param code
+	 */           
+	void deleteGlobalParam(String key);
 
 }

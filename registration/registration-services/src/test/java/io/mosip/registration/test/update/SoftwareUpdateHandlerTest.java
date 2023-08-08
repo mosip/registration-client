@@ -78,7 +78,7 @@ public class SoftwareUpdateHandlerTest {
 
 		Mockito.doNothing().when(jdbcTemplate).execute(Mockito.anyString());
 		Map<String, VersionMappings> versionsMap = new LinkedHashMap<>();
-		versionsMap.put("0.11.0", new VersionMappings("0.11.0", 1));
+		versionsMap.put("0.11.0", new VersionMappings("0.11.0", 1, ""));
 		Assert.assertSame(RegistrationConstants.SQL_EXECUTION_SUCCESS,
 				softwareUpdateHandler.executeSqlFile("0.11.0", versionsMap).getSuccessResponseDTO().getMessage());
 	}

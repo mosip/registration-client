@@ -207,4 +207,11 @@ public class GlobalParamDAOImpl implements GlobalParamDAO {
 		
 		return globalParam;
 	}
+
+	@Override
+	public void delete(GlobalParamId globalParamId) {
+		globalParamRepository.deleteById(globalParamId);
+		
+		LOGGER.info("Global param deleted.");
+	}
 }
