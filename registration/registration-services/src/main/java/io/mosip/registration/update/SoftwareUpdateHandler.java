@@ -475,7 +475,7 @@ public class SoftwareUpdateHandler extends BaseService {
 		}
 
 		ResponseDTO responseDTO = new ResponseDTO();
-		List<String> fullSyncEntities = new ArrayList<>();
+		List<String> fullSyncEntitiesList = new ArrayList<>();
 		
 		for (Entry<String, VersionMappings> entry : versionMappings.entrySet()) {
 			try {
@@ -488,7 +488,10 @@ public class SoftwareUpdateHandler extends BaseService {
 				previousVersion = entry.getKey();
 				// Update global param with current version
 				globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, entry.getKey());
-				fullSyncEntities.add(entry.getValue().getFullSyncEntities());
+				String fullSyncEntities = entry.getValue().getFullSyncEntities();
+				if (fullSyncEntities != null && !fullSyncEntities.isBlank()) {
+					fullSyncEntitiesList.add(fullSyncEntities);
+				}
 			} catch (Throwable exception) {
 				LOGGER.error("Error while executing SQL files for upgrade : ", exception);
 				// Replace with backup
@@ -499,9 +502,9 @@ public class SoftwareUpdateHandler extends BaseService {
 			}
 		}
 		
-		if (!fullSyncEntities.isEmpty()) {
+		if (!fullSyncEntitiesList.isEmpty()) {
 			LOGGER.info("Saving the list of fullSyncEntities mentioned in version-mappings..");			
-			globalParamService.update(RegistrationConstants.UPGRADE_FULL_SYNC_ENTITIES, String.join(",", fullSyncEntities));
+			globalParamService.update(RegistrationConstants.UPGRADE_FULL_SYNC_ENTITIES, String.join(",", fullSyncEntitiesList));
 		}	
 		setSuccessResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_SUCCESS, null);
 		LOGGER.info("DB-Script files execution completed");
