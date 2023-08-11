@@ -33,3 +33,9 @@ reg/README_DO_NOT_TOUCH_FILES.txt
 /db/
 /props/
 /MANIFEST.MF
+/applicanttype.mvel
+/bioCorrectionProcess.json
+/SCHEMA_1.0.json
+/updateProcess.json
+/newProcess.json
+/lostProcess.json
