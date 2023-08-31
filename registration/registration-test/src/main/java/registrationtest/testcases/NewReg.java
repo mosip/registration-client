@@ -97,7 +97,7 @@ public class NewReg {
             ExtentReportUtil.test1.info("RegclientScreen Loaded");
 
             ExtentReportUtil.test1.info("Operator Enter Details ");
-
+           
             // Enter userid and password
             loginPage.setUserId(loginUserid);
             flag = loginPage.verifyAuthentication(loginPwd, applicationPrimaryStage1);
@@ -163,7 +163,11 @@ public class NewReg {
             ExtentReportUtil.test1.info("Operator Enter Details ");
 
             // Enter userid and password
+            if (PropertiesUtil.getKeyValue("multilang").equals("Y"))
+            {
             loginPage.selectAppLang();
+            buttons.clickcancelBtn();
+            }
             loginPage.setUserId(operatorUserid);
             flag = loginPage.verifyOnbard(operatorPwd, jsoncontent);
         //    flag2 = loginPage.verifyOnboardBio(jsoncontent);

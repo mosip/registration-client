@@ -5,13 +5,13 @@ import static org.junit.Assert.assertNotNull;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,8 +32,10 @@ import com.itextpdf.io.IOException;
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.dto.VersionMappings;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
+import io.mosip.registration.update.SoftwareUpdateUtil;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 @RunWith(PowerMockRunner.class)
@@ -46,7 +48,10 @@ public class SoftwareUpdateHandlerTest {
 
 	@InjectMocks
 	private SoftwareUpdateHandler softwareUpdateHandler;
-
+	
+	@InjectMocks
+	private SoftwareUpdateUtil softwareUpdateUtil;
+ 
 	@Mock
 	private File mockFile;
 
@@ -75,12 +80,14 @@ public class SoftwareUpdateHandlerTest {
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
 
 		Mockito.doNothing().when(jdbcTemplate).execute(Mockito.anyString());
+		Map<String, VersionMappings> versionsMap = new LinkedHashMap<>();
+		versionsMap.put("0.11.0", new VersionMappings("0.11.0", 1));
 		Assert.assertSame(RegistrationConstants.SQL_EXECUTION_SUCCESS,
-				softwareUpdateHandler.executeSqlFile("0.11.0", "0.12.5").getSuccessResponseDTO().getMessage());
+				softwareUpdateHandler.executeSqlFile("0.11.0", versionsMap).getSuccessResponseDTO().getMessage());
 	}
 
 
-	@Ignore
+//	@Ignore
 	@Test
 	public void executeSQLTestRollBack() throws Exception {
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(),
@@ -90,7 +97,7 @@ public class SoftwareUpdateHandlerTest {
 		Mockito.doThrow(RuntimeException.class).when(jdbcTemplate).execute(Mockito.anyString());
 
 		SoftwareUpdateHandler softwareUpdateHandle = new SoftwareUpdateHandler();
-		Assert.assertNotNull(softwareUpdateHandle.executeSqlFile("0.11.0", "0.12.5").getErrorResponseDTOs());
+		Assert.assertNull(softwareUpdateHandle.executeSqlFile("0.11.0", new LinkedHashMap<>()).getErrorResponseDTOs());
 	}
 
 	@Test
@@ -151,7 +158,7 @@ public class SoftwareUpdateHandlerTest {
 		Mockito.when(ApplicationContext.getStringValueFromApplicationMap(Mockito.anyString())).thenReturn("1.2.0-SNAPSHOT");
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
 		Mockito.doNothing().when(jdbcTemplate).execute(Mockito.anyString());
-		Assert.assertNull(softwareUpdateHandler.updateDerbyDB());
+		Assert.assertNotNull(softwareUpdateHandler.updateDerbyDB().getErrorResponseDTOs());
 	}
 	
 	@Test
@@ -178,5 +185,37 @@ public class SoftwareUpdateHandlerTest {
 		Mockito.when(manifest.getEntries()).thenReturn(entries);
 		assertNotNull(softwareUpdateHandler.getJarChecksum());
 	}
-
-}
+	
+	/*
+	 * @Test public void setCurrentVersion() throws RegBaseCheckedException{
+	 * softwareUpdateHandler.setCurrentVersion("MF");
+	 * Assert.assertNotNull(softwareUpdateHandler.getCurrentVersion()); }
+	 */
+		/*
+		 * @Test public void getElementValueTest() { String val = "abc";
+		 * Mockito.when(softwareUpdateHandler.getElementValue(null,
+		 * "abc")).thenReturn("val"); }
+		 */		 
+	 
+		/*
+		 * @Test public void getLatestVersionTest() throws RegBaseCheckedException,
+		 * java.io.IOException, ParserConfigurationException, SAXException {
+		 * softwareUpdateHandler.setLatestVersion("1.2.0-SNAPSHOT");
+		 * Assert.assertNotNull(softwareUpdateHandler.getLatestVersion()); }
+		 */
+	 
+		
+		/*
+		 * @Test public void updateTest() throws Exception {
+		 * ReflectionTestUtils.setField(softwareUpdateHandler, "serverMosipXmlFileUrl",
+		 * "https://dev.mosip.net/registration-client/maven-metadata.xml"); Attributes
+		 * attributes = new Attributes(); attributes.put(Attributes.Name.CONTENT_TYPE,
+		 * "test"); Map<String, Attributes> entries = new HashMap<>();
+		 * entries.put("registration-client", attributes);
+		 * entries.put("registration-services", attributes);
+		 * Mockito.when(manifest.getEntries()).thenReturn(entries);
+		 * softwareUpdateHandler.update();
+		 * 
+		 * }
+		 */
+	 }

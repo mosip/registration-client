@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import io.mosip.commons.packet.constants.Biometric;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
@@ -44,6 +45,7 @@ import io.mosip.registration.mdm.integrator.MosipDeviceSpecificationProvider;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.bio.BioService;
+import io.mosip.registration.util.common.BIRBuilder;
 import lombok.NonNull;
 
 /**
@@ -71,7 +73,9 @@ public class BioServiceImpl extends BaseService implements BioService {
 	@Autowired
 	private AuditManagerService auditFactory;
 
-
+	@Autowired
+	protected BIRBuilder birBuilder;
+	
 	/**
 	 * Gets the registration DTO from session.
 	 *
@@ -196,7 +200,7 @@ public class BioServiceImpl extends BaseService implements BioService {
 	public double getSDKScore(BiometricsDto biometricsDto) throws BiometricException {
 		BiometricType biometricType = BiometricType
 				.fromValue(Biometric.getSingleTypeByAttribute(biometricsDto.getBioAttribute()).name());
-		BIR bir = buildBir(biometricsDto);
+		BIR bir = birBuilder.buildBir(biometricsDto, ProcessedLevelType.RAW);
 		BIR[] birList = new BIR[] { bir };
 		Map<BiometricType, Float> scoreMap = bioAPIFactory
 				.getBioProvider(biometricType, BiometricFunction.QUALITY_CHECK)

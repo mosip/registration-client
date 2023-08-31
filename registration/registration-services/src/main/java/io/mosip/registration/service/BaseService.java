@@ -1,10 +1,10 @@
 package io.mosip.registration.service;
 
-import static io.mosip.registration.constants.LoggerConstants.BIO_SERVICE;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -16,39 +16,35 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.mosip.registration.entity.RegistrationCenter;
-import io.mosip.registration.repositories.RegistrationCenterRepository;
+import javax.imageio.ImageIO;
+
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import io.mosip.commons.packet.constants.Biometric;
-import io.mosip.commons.packet.constants.PacketManagerConstants;
-import io.mosip.kernel.biometrics.constant.BiometricType;
-import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
-import io.mosip.kernel.biometrics.constant.PurposeType;
-import io.mosip.kernel.biometrics.constant.QualityType;
-import io.mosip.kernel.biometrics.entities.BDBInfo;
-import io.mosip.kernel.biometrics.entities.BIR;
-import io.mosip.kernel.biometrics.entities.BIRInfo;
-import io.mosip.kernel.biometrics.entities.RegistryIDType;
-import io.mosip.kernel.biometrics.entities.SingleAnySubtypeType;
-import io.mosip.kernel.biometrics.entities.VersionType;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.kernel.core.util.JsonUtils;
-import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.kernel.core.util.exception.JsonMappingException;
 import io.mosip.kernel.core.util.exception.JsonParseException;
 import io.mosip.registration.config.AppConfig;
@@ -63,13 +59,15 @@ import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationDataDto;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
-import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.dto.VersionMappings;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.Registration;
+import io.mosip.registration.entity.RegistrationCenter;
 import io.mosip.registration.exception.PreConditionCheckException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.repositories.MachineMasterRepository;
+import io.mosip.registration.repositories.RegistrationCenterRepository;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.service.config.LocalConfigService;
 import io.mosip.registration.service.operator.UserDetailService;
@@ -77,8 +75,6 @@ import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.PolicySyncService;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
-
-import javax.imageio.ImageIO;
 
 /**
  * This is a base class for service package. The common functionality across the
@@ -139,6 +135,9 @@ public class BaseService {
 
 	@Value("${mosip.max-languages.count:0}")
 	private int maxLanguagesCount;
+	
+	@Value("${mosip.registration.verion.upgrade.default-version-mappings}")
+	private String defaultVersionMappings;
 
 	public List<String> getMandatoryLanguages() {
 		return mandatoryLanguages.stream()
@@ -533,97 +532,6 @@ public class BaseService {
 		return (RegistrationDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
 	}
 
-
-
-	public BIR buildBir(String bioAttribute, long qualityScore, byte[] iso, ProcessedLevelType processedLevelType) {
-
-		LOGGER.info(BIO_SERVICE, APPLICATION_NAME, APPLICATION_ID,
-				"Building BIR for captured biometrics to pass them for quality check with SDK");
-
-		BiometricType biometricType = Biometric.getSingleTypeByAttribute(bioAttribute);
-		
-		RegistryIDType birFormat = new RegistryIDType();
-		birFormat.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_FORMAT_ORG);
-		birFormat.setType(String.valueOf(Biometric.getFormatType(biometricType)));
-
-		RegistryIDType birAlgorithm = new RegistryIDType();
-		birAlgorithm.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_ALG_ORG);
-		birAlgorithm.setType(PacketManagerConstants.CBEFF_DEFAULT_ALG_TYPE);
-
-		QualityType qualityType = new QualityType();
-		qualityType.setAlgorithm(birAlgorithm);
-		qualityType.setScore(qualityScore);
-
-		return new BIR.BIRBuilder().withBdb(iso)
-				.withVersion(new VersionType(1, 1))
-				.withCbeffversion(new VersionType(1, 1))
-				.withBirInfo(new BIRInfo.BIRInfoBuilder().withIntegrity(false).build())
-				.withBdbInfo(new BDBInfo.BDBInfoBuilder().withFormat(birFormat).withQuality(qualityType)
-						.withType(Arrays.asList(biometricType)).withSubtype(getSubTypes(biometricType, bioAttribute))
-						.withPurpose(PurposeType.IDENTIFY).withLevel(processedLevelType)
-						.withCreationDate(LocalDateTime.now(ZoneId.of("UTC"))).withIndex(UUID.randomUUID().toString())
-						.build())
-				.build();
-
-	}
-
-	public BIR buildBir(BiometricsDto biometricsDto) {
-		LOGGER.info("Building BIR for captured biometrics to pass them for quality check with SDK");
-
-		BiometricType biometricType = Biometric.getSingleTypeByAttribute(biometricsDto.getBioAttribute());
-
-		RegistryIDType birFormat = new RegistryIDType();
-		birFormat.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_FORMAT_ORG);
-		birFormat.setType(String.valueOf(Biometric.getFormatType(biometricType)));
-
-		RegistryIDType birAlgorithm = new RegistryIDType();
-		birAlgorithm.setOrganization(PacketManagerConstants.CBEFF_DEFAULT_ALG_ORG);
-		birAlgorithm.setType(PacketManagerConstants.CBEFF_DEFAULT_ALG_TYPE);
-
-		QualityType qualityType = new QualityType();
-		qualityType.setAlgorithm(birAlgorithm);
-		qualityType.setScore((long) biometricsDto.getQualityScore());
-
-		return new BIR.BIRBuilder().withBdb(biometricsDto.getAttributeISO())
-				.withVersion(new VersionType(1, 1))
-				.withCbeffversion(new VersionType(1, 1))
-				.withBirInfo(new BIRInfo.BIRInfoBuilder().withIntegrity(false).build())
-				.withBdbInfo(new BDBInfo.BDBInfoBuilder().withFormat(birFormat).withQuality(qualityType)
-						.withType(Arrays.asList(biometricType)).withSubtype(getSubTypes(biometricType, biometricsDto.getBioAttribute()))
-						.withPurpose(PurposeType.IDENTIFY).withLevel(ProcessedLevelType.RAW)
-						.withCreationDate(LocalDateTime.now(ZoneId.of("UTC"))).withIndex(UUID.randomUUID().toString())
-						.build())
-				.build();
-	}
-
-	private List<String> getSubTypes(BiometricType biometricType, String bioAttribute) {
-		List<String> subtypes = new LinkedList<>();
-		switch (biometricType) {
-		case FINGER:
-			subtypes.add(bioAttribute.contains("left") ? SingleAnySubtypeType.LEFT.value()
-					: SingleAnySubtypeType.RIGHT.value());
-			if (bioAttribute.toLowerCase().contains("thumb"))
-				subtypes.add(SingleAnySubtypeType.THUMB.value());
-			else {
-				String val = bioAttribute.toLowerCase().replace("left", "").replace("right", "");
-				subtypes.add(SingleAnySubtypeType.fromValue(StringUtils.capitalizeFirstLetter(val).concat("Finger"))
-						.value());
-			}
-			break;
-		case IRIS:
-			subtypes.add(bioAttribute.contains("left") ? SingleAnySubtypeType.LEFT.value()
-					: SingleAnySubtypeType.RIGHT.value());
-			break;
-		case FACE:
-			subtypes.add(BiometricType.FACE.value());
-			break;
-		default:
-			break;
-		}
-		LOGGER.info("Building BIR with subtypes : {}", subtypes);
-		return subtypes;
-	}
-
 	/**
 	 * Converts string to java.sql.Timestamp
 	 *
@@ -862,5 +770,43 @@ public class BaseService {
 		} catch (PreConditionCheckException e) {
 			throw e;
 		}
+	}
+	
+	/**
+	 * Returns the version-mappings in sorted order. Version-Mappings is the
+	 * configuration which specifies the list of available versions and their
+	 * respective DB version and its release order.
+	 * ReleaseOrder starts with "1" which is considered as the oldest version and
+	 * "n" being the latest version.
+	 * 
+	 * @param key
+	 * @return sorted version-mappings
+	 * @throws Exception
+	 */
+	protected Map<String, VersionMappings> getSortedVersionMappings(String key) throws Exception {
+		String value = ApplicationContext.map().containsKey(key)
+				? (String) ApplicationContext.map().get(key)
+				: defaultVersionMappings;
+		
+		if (value == null || value.isBlank()) {
+			LOGGER.error("version-mappings key is found empty / null. Please add proper value to proceed.");
+			throw new RegBaseCheckedException(RegistrationExceptionConstants.VERSION_MAPPINGS_NOT_FOUND.getErrorCode(),
+					RegistrationExceptionConstants.VERSION_MAPPINGS_NOT_FOUND.getErrorMessage());
+		}
+		
+		ObjectMapper mapper = new ObjectMapper(); 
+	    TypeReference<HashMap<String,VersionMappings>> typeRef 
+	            = new TypeReference<HashMap<String,VersionMappings>>() {};
+
+	    HashMap<String, VersionMappings> versionMappings = mapper.readValue(value, typeRef); 
+
+		if (versionMappings != null) {
+			return versionMappings.entrySet().stream()
+					.sorted((object1, object2) -> object1.getValue().getReleaseOrder()
+							.compareTo(object2.getValue().getReleaseOrder()))
+					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (object1, object2) -> object1,
+							LinkedHashMap::new));
+		}
+		return versionMappings;	
 	}
 }

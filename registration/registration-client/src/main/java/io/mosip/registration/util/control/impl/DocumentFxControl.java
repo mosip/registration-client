@@ -2,11 +2,12 @@ package io.mosip.registration.util.control.impl;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.ResourceBundle;
 
-
-import io.mosip.registration.controller.ClientApplication;
-import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.api.docscanner.DocScannerUtil;
 import io.mosip.registration.audit.AuditManagerService;
@@ -18,17 +19,17 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
+import io.mosip.registration.controller.ClientApplication;
 import io.mosip.registration.controller.FXUtils;
-import io.mosip.registration.controller.Initialization;
+import io.mosip.registration.controller.GenericController;
 import io.mosip.registration.controller.reg.DocumentScanController;
-import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
+import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
+import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.entity.DocumentType;
-import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.service.doc.category.ValidDocumentService;
 import io.mosip.registration.service.sync.MasterSyncService;
-import io.mosip.registration.util.common.ComboBoxAutoComplete;
 import io.mosip.registration.util.control.FxControl;
 import io.mosip.registration.validator.RequiredFieldValidator;
 import javafx.event.ActionEvent;
@@ -59,6 +60,8 @@ public class DocumentFxControl extends FxControl {
 	private DocumentScanController documentScanController;
 
 	private MasterSyncService masterSyncService;
+	
+	private GenericController genericController;
 
 	private ValidDocumentService validDocumentService;
 
@@ -72,6 +75,7 @@ public class DocumentFxControl extends FxControl {
 		documentScanController = applicationContext.getBean(DocumentScanController.class);
 		masterSyncService = applicationContext.getBean(MasterSyncService.class);
 		validDocumentService = applicationContext.getBean(ValidDocumentService.class);
+		genericController = applicationContext.getBean(GenericController.class);
 		this.requiredFieldValidator = applicationContext.getBean(RequiredFieldValidator.class);
 	}
 
@@ -401,6 +405,7 @@ public class DocumentFxControl extends FxControl {
 				label.getStyleClass().clear();
 				label.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL);
 			}
+			genericController.getNotification().setText(RegistrationConstants.EMPTY);
 		} catch (IOException exception) {
 			LOGGER.error("Unable to parse the buffered images to byte array ", exception);
 			getField(uiFieldDTO.getId() + PREVIEW_ICON).setVisible(false);
