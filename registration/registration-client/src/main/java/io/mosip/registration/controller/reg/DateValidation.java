@@ -59,7 +59,7 @@ public class DateValidation extends BaseController {
 				return newValue.length() > 4 ? false : true;
 			case RegistrationConstants.AGE_FIELD:
 				int age = Integer.parseInt(newValue);
-				return (age < 1 || Integer.parseInt(newValue) > Integer
+				return (age < (Integer) ApplicationContext.map().getOrDefault(RegistrationConstants.MINIMUM_AGE, 0) || age > Integer
 						.parseInt(getValueFromApplicationContext(RegistrationConstants.MAX_AGE))) ? false : true;
 			}
 		}
@@ -344,6 +344,9 @@ public class DateValidation extends BaseController {
 					LocalDate afterMaxDays = LocalDate.now().plusDays(maxDays);
 					LocalDate beforeMinDays = LocalDate.now().plusDays(minDays);
 					isValid = (localDate.isAfter(beforeMinDays) && localDate.isBefore(afterMaxDays));
+				}
+				if (isValid) {
+					populateAge(parentPane, fieldId);
 				}
 			}
 			resetFieldStyleClass(parentPane, fieldId, isValid ? null : getErrorMessage(validator, RegistrationConstants.INVALID_DATE_LIMIT,

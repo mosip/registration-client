@@ -171,7 +171,8 @@ public class DOBAgeFxControl extends FxControl {
 
 	@Override
 	public boolean isValid() {
-		return dateValidation.validateDate((Pane) node, uiFieldDTO.getId());
+		return dateValidation.validateDateWithMaxAndMinDays((Pane) getNode(), uiFieldDTO.getId(),
+				getUiSchemaDTO().getMinimum(), getUiSchemaDTO().getMaximum());
 	}
 
 	@Override
@@ -222,7 +223,8 @@ public class DOBAgeFxControl extends FxControl {
 			}
 			boolean isValid = RegistrationConstants.AGE_FIELD.equalsIgnoreCase(dateTyep)
 					? dateValidation.validateAge((Pane) node, uiFieldDTO.getId())
-					: dateValidation.validateDate((Pane) node, uiFieldDTO.getId());
+					: dateValidation.validateDateWithMaxAndMinDays((Pane) getNode(), uiFieldDTO.getId(),
+							getUiSchemaDTO().getMinimum(), getUiSchemaDTO().getMaximum());
 			if (isValid) {
 				setData(null);
 				refreshFields();
