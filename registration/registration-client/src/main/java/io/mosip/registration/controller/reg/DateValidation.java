@@ -56,7 +56,7 @@ public class DateValidation extends BaseController {
 					return newValue.length() > 4 ? false : true;
 				case RegistrationConstants.AGE_FIELD:
 					int age = Integer.parseInt(newValue);
-					int minAge = getValueFromApplicationContext(RegistrationConstants.MINIMUM_AGE) != null ? Integer.parseInt(getValueFromApplicationContext(RegistrationConstants.MAX_AGE)) : 0;
+					int minAge = getValueFromApplicationContext(RegistrationConstants.MINIMUM_AGE) != null ? Integer.parseInt(getValueFromApplicationContext(RegistrationConstants.MINIMUM_AGE)) : 0;
 					return (age < minAge ||
 							age > Integer.parseInt(getValueFromApplicationContext(RegistrationConstants.MAX_AGE)))
 							? false : true;
