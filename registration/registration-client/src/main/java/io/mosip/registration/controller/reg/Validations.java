@@ -614,7 +614,7 @@ public class Validations extends BaseController {
 	 * @return <code>true</code>, if successful, else <code>false</code>
 	 * @throws ParseException 
 	 */
-	public boolean validateExpiryDate(String value, String id, int minDays, int maxDays) throws ParseException {
+	public boolean validateDateWithMaxAndMinDays(String value, String id, int minDays, int maxDays) throws ParseException {
 		
 		SimpleDateFormat dateFormat = new SimpleDateFormat(ApplicationContext.getDateFormat());
 		dateFormat.setLenient(false);
