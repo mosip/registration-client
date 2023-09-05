@@ -55,10 +55,7 @@ public class DateValidation extends BaseController {
 				case RegistrationConstants.YYYY:
 					return newValue.length() > 4 ? false : true;
 				case RegistrationConstants.AGE_FIELD:
-					int age = Integer.parseInt(newValue);
-					return (age < 1 ||
-							Integer.parseInt(newValue) > Integer.parseInt(getValueFromApplicationContext(RegistrationConstants.MAX_AGE)))
-							? false : true;
+					return Integer.parseInt(newValue) < 0 ? false : true;
 			}
 		}
 		return false;
@@ -88,7 +85,7 @@ public class DateValidation extends BaseController {
 		return isValid;
 	}
 	
-	public boolean validateExpiryOfDate(Pane parentPane, String fieldId, int minDate, int maxDate) {
+	public boolean validateDateWithMaxAndMinDays(Pane parentPane, String fieldId, int minDate, int maxDate) {
 		resetFieldStyleClass(parentPane, fieldId, false, minDate+"-"+maxDate);
 		
 		TextField dd = (TextField) getFxElement(parentPane, fieldId+ "__" + RegistrationConstants.DD);
@@ -101,8 +98,9 @@ public class DateValidation extends BaseController {
 				yyyy.getText().matches(RegistrationConstants.NUMBER_REGEX) &&
 				yyyy.getText().matches(RegistrationConstants.FOUR_NUMBER_REGEX)) {
 			isValid = isValidDateContent(parentPane, dd.getText(), mm.getText(), yyyy.getText(), fieldId, minDate, maxDate);
-			if(isValid) {
+			if (isValid) {
 				setLocalDateFields(parentPane, dd, mm, yyyy);
+				populateAge(parentPane, fieldId);
 			}
 		}
 
@@ -191,13 +189,15 @@ public class DateValidation extends BaseController {
 	private void populateAge(Pane parentPane, String fieldId) {
 		LocalDate date = getCurrentSetDate(parentPane, fieldId);
 		TextField ageField = (TextField)getFxElement(parentPane, fieldId + "__" + RegistrationConstants.AGE_FIELD);
-		String age = String.valueOf(Period.between(date, LocalDate.now(ZoneId.of("UTC"))).getYears());
-		if(!age.equals(ageField.getText())) { ageField.setText(age); }
-		Node node = getFxElement(parentPane, ageField.getId()+RegistrationConstants.LOCAL_LANGUAGE);
-		if(node != null) {
-			TextField localTextField = (TextField)node;
-			if(!age.equals(localTextField.getText())) { localTextField.setText(age); }
-		}
+		if (ageField != null) {
+			String age = String.valueOf(Period.between(date, LocalDate.now(ZoneId.of("UTC"))).getYears());
+			if(!age.equals(ageField.getText())) { ageField.setText(age); }
+			Node node = getFxElement(parentPane, ageField.getId()+RegistrationConstants.LOCAL_LANGUAGE);
+			if(node != null) {
+				TextField localTextField = (TextField)node;
+				if(!age.equals(localTextField.getText())) { localTextField.setText(age); }
+			}
+		}		
 	}
 
 	private void populateDateFields(Pane parentPane, String fieldId, int age) {
@@ -245,7 +245,7 @@ public class DateValidation extends BaseController {
 			try {
 				LocalDate date = LocalDate.of(Integer.valueOf(yyyy), Integer.valueOf(mm), Integer.valueOf(dd));
 				String dateContent = date.format(DateTimeFormatter.ofPattern(ApplicationContext.getDateFormat()));
-				return validation.validateExpiryDate(dateContent, fieldId, minDate, maxDate);
+				return validation.validateDateWithMaxAndMinDays(dateContent, fieldId, minDate, maxDate);
 			} catch (Exception ex) {
 				LOGGER.error(LoggerConstants.DATE_VALIDATION, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID, ExceptionUtils.getStackTrace(ex));
 			}
