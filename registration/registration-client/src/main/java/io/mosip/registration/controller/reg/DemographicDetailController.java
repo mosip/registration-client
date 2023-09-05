@@ -462,10 +462,10 @@ public class DemographicDetailController extends BaseController {
 			}
 			boolean isValid = RegistrationConstants.AGE_FIELD.equalsIgnoreCase(type)
 					? dateValidation.validateAge(parentFlowPane, textField)
-					: schema.getMinimum() != 0
-							? dateValidation.validateDateWithMaxAndMinDays(parentFlowPane, schema.getId(),
-									schema.getMinimum(), schema.getMaximum())
-							: dateValidation.validateDate(parentFlowPane, schema.getId());
+					: schema.getMinimum() == schema.getMaximum()
+							? dateValidation.validateDate(parentFlowPane, schema.getId())
+							: dateValidation.validateDateWithMaxAndMinDays(parentFlowPane, schema.getId(),
+									schema.getMinimum(), schema.getMaximum());
 			if(isValid) {
 				refreshDemographicGroups();
 			}
