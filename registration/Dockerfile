@@ -59,9 +59,9 @@ WORKDIR /home/${container_user}
 
 ENV work_dir=/home/${container_user}
 
-ADD registration-client/target ./registration-client/target
+ADD registration/registration-client/target ./registration-client/target
 
-ADD registration-test/target ./registration-test/target
+ADD registration/registration-test/target ./registration-test/target
 
 ADD registration-test/src/main/resources ./registration-test/resources
 
