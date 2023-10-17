@@ -73,7 +73,7 @@ then
 	cp "${work_dir}"/sdkDependency/*.jar "${work_dir}"/registration-client/target/lib/
 else
 	echo "Downloading MOCK SDK..."
-	wget "${artifactory_url}/artifactory/libs-release-local/mock-sdk/1.1.5/mock-sdk.jar" -O "${work_dir}"/registration-client/target/lib/mock-sdk-jar-with-dependencies.jar
+	wget "${artifactory_url}/artifactory/libs-release-local/mock-sdk/1.1.5/mock-sdk.jar" -O "${work_dir}"/registration-client/target/lib/mock-sdk.jar
 fi
 
 wget "${artifactory_url}/artifactory/libs-release-local/icu4j/icu4j.jar" -O "${work_dir}"/registration-client/target/lib/icu4j.jar
