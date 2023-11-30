@@ -6,6 +6,7 @@ import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Callable;
@@ -20,10 +21,11 @@ import javafx.geometry.Bounds;
 import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-
+import registrationtest.pages.DemographicPage;
 
 import org.testfx.util.WaitForAsyncUtils;
 
@@ -35,194 +37,218 @@ import static org.testfx.assertions.api.Assertions.assertThat;
  * @References https://www.codota.com/code/java/classes/org.awaitility.Awaitility
  */
 public class WaitsUtil {
-    private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(WaitsUtil.class);
+	private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(WaitsUtil.class);
 
-    Node node;
-    FxRobot robot;
+	Node node;
+	FxRobot robot;
 
-    public WaitsUtil(FxRobot robot) {
-        this.robot = robot;
-    }
+	public WaitsUtil(FxRobot robot) {
+		this.robot = robot;
+	}
 
-    public WaitsUtil() {
+	public WaitsUtil() {
 
-    }
+	}
 
-    public <T extends Node> T lookupById(final String controlId) {
+	public <T extends Node> T lookupById(final String controlId) {
 
-        // verifyThat(robot.lookup("nodeQuery").tryQuery().orElse(null), isNull());
-        // assertThat(robot.lookup("#loginScreen").tryQuery()).isPresent();
+		// verifyThat(robot.lookup("nodeQuery").tryQuery().orElse(null), isNull());
+		// assertThat(robot.lookup("#loginScreen").tryQuery()).isPresent();
 
-        try {
+		try {
 
-            WaitForAsyncUtils.waitFor(30, TimeUnit.SECONDS, new Callable<Boolean>() {
-                @Override
-                public Boolean call() throws Exception {
-                    Boolean b = robot.lookup(controlId).query().isVisible();
-                    return b;
-                }
-            });
-        } catch (TimeoutException e) {
+			WaitForAsyncUtils.waitFor(30, TimeUnit.SECONDS, new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					Boolean b = robot.lookup(controlId).query().isVisible();
+					return b;
+				}
+			});
+		} catch (TimeoutException e) {
 
-            logger.error("", e);
-            capture();
-        }
-        return robot.lookup(controlId).query();
+			logger.error("", e);
+			capture();
+		}
+		return robot.lookup(controlId).query();
 
-    }
+	}
 
-    public void clickNodeAssert(String id) {
-        node = lookupById(id);
+	public void clickNodeAssert(String id) {
+		node = lookupById(id);
+		assertThat(robot.lookup(id).tryQuery()).isNotNull();
+		robot.moveTo(node);
+		robot.clickOn(node);
 
-        assertThat(robot.lookup(id).tryQuery()).isNotNull();
-        robot.moveTo(node);
-        robot.clickOn(node);
-        
-        
 
-    }
 
-    public void scrollclickNodeAssert(String id) {
-        node = lookupById(id);
+	}
 
-        assertThat(robot.lookup(id).tryQuery()).isNotNull();
-        // scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("proofscroll")));
-        scrollVerticalDirectioncount(10);
+	public void clickNodeAssertcheckbox(String id) throws InterruptedException   {
+		node = lookupById(id);
+		Thread.sleep(10000);
+		assertThat(robot.lookup(id).tryQuery()).isNotNull();
+		Bounds boundsInScreen = node.localToScreen(node.getBoundsInLocal());
+	
+			int a = 0;
+			try {
+				a = Integer.parseInt(PropertiesUtil.getKeyValue("ScrollCheckBox"));
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		int verticalminy=   (int) boundsInScreen.getMinY()/a; 
+		robot.scroll(verticalminy, VerticalDirection.DOWN);
+		robot.moveTo(node);
 
-        robot.moveTo(node);
-        robot.clickOn(node);
+		robot.clickOn(node);
 
-    }
 
-    public void scrollclickNodeAssert1(String id) {
-        node = lookupById(id);
 
-        assertThat(robot.lookup(id).tryQuery()).isNotNull();
+	}
 
-        // Platform.runLater(() -> {
-        ScrollPane scrollPane = lookupById("#scrollPane");
-        scrollPane.setVvalue(scrollPane.getVmax());
+	public void scrollclickNodeAssert(String id) {
+		node = lookupById(id);
 
-        double h = scrollPane.getContent().getBoundsInLocal().getHeight();
-        double y = (node.getBoundsInParent().getMaxY() + node.getBoundsInParent().getMinY()) / 2.0;
-        double v = scrollPane.getViewportBounds().getHeight();
-        scrollPane.setVvalue(scrollPane.getVmax() * ((y - 0.5 * v) / (h - v)));
-        scrollPane.layout();
-        scrollPane.setVvalue(0.5);
-        scrollPane.requestFocus();
-        // });
-        robot.moveTo(node);
+		assertThat(robot.lookup(id).tryQuery()).isNotNull();
+		// scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("proofscroll")));
+		scrollVerticalDirectioncount(10);
 
-        robot.clickOn(node);
+		robot.moveTo(node);
+		robot.clickOn(node);
 
-    }
+	}
 
-    public void scrollclickNodeAssert2(String id)
+	public void scrollclickNodeAssert1(String id)  {
+		node = lookupById(id);
+		assertThat(robot.lookup(id).tryQuery()).isNotNull();
 
-    {
-        node = lookupById(id);
+		// Platform.runLater(() -> {
+		ScrollPane scrollPane = lookupById("#scrollPane");
+		scrollPane.setVvalue(scrollPane.getVmax());
 
-        assertThat(robot.lookup(id).tryQuery()).isNotNull();
-        ScrollPane pane = lookupById("#scrollPane");
+		double h = scrollPane.getContent().getBoundsInLocal().getHeight();
+		double y = (node.getBoundsInParent().getMaxY() + node.getBoundsInParent().getMinY()) / 2.0;
+		double v = scrollPane.getViewportBounds().getHeight();
+		scrollPane.setVvalue(scrollPane.getVmax() * ((y - 0.5 * v) / (h - v)));
+		scrollPane.layout();
+		scrollPane.setVvalue(0.5);
+		scrollPane.requestFocus();
+		// });
+		robot.moveTo(node);
 
-        Bounds viewport = pane.getViewportBounds();
-        double contentHeight = pane.getContent().getBoundsInLocal().getHeight();
-        double contentWidth = pane.getContent().getBoundsInLocal().getWidth();
-        double nodeMinY = node.getBoundsInParent().getMinY();
-        double nodeMaxY = node.getBoundsInParent().getMaxY();
-        double nodeMinX = node.getBoundsInParent().getMinX();
-        double nodeMaxX = node.getBoundsInParent().getMaxX();
-        double viewportMinY = (contentHeight - viewport.getHeight()) * pane.getVvalue();
-        double viewportMaxY = viewportMinY + viewport.getHeight();
-        double viewportMinX = (contentWidth - viewport.getWidth()) * pane.getHvalue();
-        double viewportMaxX = viewportMinX + viewport.getWidth();
-        if (nodeMinY < viewportMinY) {
-            pane.setVvalue(nodeMinY / (contentHeight - viewport.getHeight()));
-        } else if (nodeMaxY > viewportMaxY) {
-            pane.setVvalue((nodeMaxY - viewport.getHeight()) / (contentHeight - viewport.getHeight()));
-        }
-        if (nodeMinX < viewportMinX) {
-            pane.setHvalue(nodeMinX / (contentWidth - viewport.getWidth()));
-        } else if (nodeMaxX > viewportMaxX) {
-            pane.setHvalue((nodeMaxX - viewport.getWidth()) / (contentWidth - viewport.getWidth()));
-        }
+		robot.clickOn(node);
 
-    }
+	}
 
-    private void scrollVerticalDirectioncount(int scrollcount) {
+	public void scrollclickNodeAssert2(String id) 
 
-        try {
-            robot.scroll(scrollcount, VerticalDirection.DOWN);
+	{
+		node = lookupById(id);
 
-        } catch (Exception e) {
-            logger.error("", e);
-        }
+		assertThat(robot.lookup(id).tryQuery()).isNotNull();
+		ScrollPane pane = lookupById("#scrollPane");
 
-    }
+		Bounds viewport = pane.getViewportBounds();
+		double contentHeight = pane.getContent().getBoundsInLocal().getHeight();
+		double contentWidth = pane.getContent().getBoundsInLocal().getWidth();
+		double nodeMinY = node.getBoundsInParent().getMinY();
+		double nodeMaxY = node.getBoundsInParent().getMaxY();
+		double nodeMinX = node.getBoundsInParent().getMinX();
+		double nodeMaxX = node.getBoundsInParent().getMaxX();
+		double viewportMinY = (contentHeight - viewport.getHeight()) * pane.getVvalue();
+		double viewportMaxY = viewportMinY + viewport.getHeight();
+		double viewportMinX = (contentWidth - viewport.getWidth()) * pane.getHvalue();
+		double viewportMaxX = viewportMinX + viewport.getWidth();
+		if (nodeMinY < viewportMinY) {
+			pane.setVvalue(nodeMinY / (contentHeight - viewport.getHeight()));
+		} else if (nodeMaxY > viewportMaxY) {
+			pane.setVvalue((nodeMaxY - viewport.getHeight()) / (contentHeight - viewport.getHeight()));
+		}
+		if (nodeMinX < viewportMinX) {
+			pane.setHvalue(nodeMinX / (contentWidth - viewport.getWidth()));
+		} else if (nodeMaxX > viewportMaxX) {
+			pane.setHvalue((nodeMaxX - viewport.getWidth()) / (contentWidth - viewport.getWidth()));
+		}
 
-    public <T extends Node> TextField lookupByIdTextField(String controlId, FxRobot robot) {
-        try {
-            with().dontCatchUncaughtExceptions().await().pollDelay(2, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS)
-                    .until(() -> (robot.lookup(controlId).queryAs(TextField.class)) != null);
-        } catch (Exception e) {
-            logger.error("", e);
-            capture();
+	}
 
-        }
+	private void scrollVerticalDirectioncount(int scrollcount) {
 
-        return robot.lookup(controlId).queryAs(TextField.class);
-    }
+		try {
+			robot.scroll(scrollcount, VerticalDirection.DOWN);
 
-    
-    public <T extends Node> Label lookupByIdLabel(String controlId, FxRobot robot) {
-        try {
-            with().dontCatchUncaughtExceptions().await().pollDelay(2, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS)
-                    .until(() -> (robot.lookup(controlId).queryAs(Label.class)) != null);
-        } catch (Exception e) {
-            logger.error("", e);
-            capture();
+		} catch (Exception e) {
+			logger.error("", e);
+		}
 
-        }
+	}
 
-        return robot.lookup(controlId).queryAs(Label.class);
-    }
-    
-    public <T extends Node> Button lookupByIdButton(String controlId, FxRobot robot) {
-        try {
+	public <T extends Node> TextField lookupByIdTextField(String controlId, FxRobot robot) {
+		try {
+			with().dontCatchUncaughtExceptions().await().pollDelay(2, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS)
+			.until(() -> (robot.lookup(controlId).queryAs(TextField.class)) != null);
+		} catch (Exception e) {
+			logger.error("", e);
+			capture();
 
-            with().pollInSameThread().await().atMost(60, TimeUnit.SECONDS)
-                    .until(() -> (robot.lookup(controlId).queryAs(Button.class)) != null);
-        } catch (Exception e) {
-            logger.error("", e);
-            capture();
+		}
 
-        }
+		return robot.lookup(controlId).queryAs(TextField.class);
+	}
 
-        return robot.lookup(controlId).queryAs(Button.class);
 
-    }
+	public <T extends Node> Label lookupByIdLabel(String controlId, FxRobot robot) {
+		try {
+			with().dontCatchUncaughtExceptions().await().pollDelay(2, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS)
+			.until(() -> (robot.lookup(controlId).queryAs(Label.class)) != null);
+		} catch (Exception e) {
+			logger.error("", e);
+			capture();
 
-    public static String capture() {
-        String snapshotpath = null;
-        try {
-            Robot rb = new Robot();
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		}
 
-            Rectangle rec = new Rectangle(0, 0, screenSize.width, screenSize.height);
-            BufferedImage image = rb.createScreenCapture(rec);
-            // Image myImage=SwingFXUtils.toFXImage(image, null);
+		return robot.lookup(controlId).queryAs(Label.class);
+	}
 
-            Path SNAPSHOTPATH = Paths.get(System.getProperty("user.dir"), "snapshot",
-                    "snapshot" + DateUtil.getDateTime() + ".jpg");
-            snapshotpath = SNAPSHOTPATH.toString();
-            ImageIO.write(image, "jpg", new File(snapshotpath));
+	public <T extends Node> Button lookupByIdButton(String controlId, FxRobot robot) {
+		try {
 
-        } catch (Exception e) {
-            logger.error("", e);
+			with().pollInSameThread().await().atMost(60, TimeUnit.SECONDS)
+			.until(() -> (robot.lookup(controlId).queryAs(Button.class)) != null);
+		} catch (Exception e) {
+			logger.error("", e);
+			capture();
 
-        }
-        return snapshotpath;
+		}
 
-    }
+		return robot.lookup(controlId).queryAs(Button.class);
+
+	}
+
+	public static String capture() {
+		String snapshotpath = null;
+		try {
+			Robot rb = new Robot();
+			Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+			Rectangle rec = new Rectangle(0, 0, screenSize.width, screenSize.height);
+			BufferedImage image = rb.createScreenCapture(rec);
+			// Image myImage=SwingFXUtils.toFXImage(image, null);
+
+			Path SNAPSHOTPATH = Paths.get(System.getProperty("user.dir"), "snapshot",
+					"snapshot" + DateUtil.getDateTime() + ".jpg");
+			snapshotpath = SNAPSHOTPATH.toString();
+			ImageIO.write(image, "jpg", new File(snapshotpath));
+
+		} catch (Exception e) {
+			logger.error("", e);
+
+		}
+		return snapshotpath;
+
+	}
 
 }

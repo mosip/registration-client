@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.testfx.api.FxRobot;
 
+import javafx.geometry.Bounds;
 import javafx.scene.control.TextField;
 
 import registrationtest.utility.JsonUtil;
@@ -52,6 +53,7 @@ public class UpdatePage {
         }
         for (String attr : updateUINAttributes)
             waitsUtil.clickNodeAssert("#" + attr);
+        
     }
 
 }
