@@ -35,7 +35,7 @@ jobs:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   build-regclient-local:
-    needs: build-regclient
+    #needs: build-regclient
     runs-on: ubuntu-latest
     env:
       SERVICE_NAME: registration
@@ -58,11 +58,6 @@ jobs:
         run: |
           cd ${{ env.SERVICE_LOCATION}}
           mvn -U -B package -Dmaven.wagon.http.retryHandler.count=2 --file pom.xml -s $GITHUB_WORKSPACE/settings.xml
-
-      - name: Copy configuration files to target directory.
-        run: |
-          cp -r ${{ env.SERVICE_LOCATION}}/registration-client/target ${{ env.SERVICE_LOCATION}}/registration-client/target
-          cp -r ${{ env.SERVICE_LOCATION}}/registration-test/target ${{ env.SERVICE_LOCATION}}/registration-test/target
 
       - name: Ready the springboot artifacts
         if: ${{ !contains(github.ref, 'master') || !contains(github.ref, 'main') }}
