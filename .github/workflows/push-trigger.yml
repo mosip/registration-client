@@ -35,7 +35,7 @@ jobs:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   build-regclient-local:
-    #needs: build-regclient
+    needs: build-regclient
     runs-on: ubuntu-latest
     env:
       SERVICE_NAME: registration
