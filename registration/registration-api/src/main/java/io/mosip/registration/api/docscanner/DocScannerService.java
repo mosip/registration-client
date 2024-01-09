@@ -9,7 +9,7 @@ public interface DocScannerService {
 
     String getServiceName();
 
-    BufferedImage scan(DocScanDevice docScanDevice);
+    BufferedImage scan(DocScanDevice docScanDevice, String deviceType);
 
     List<DocScanDevice> getConnectedDevices();
 

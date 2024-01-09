@@ -79,14 +79,14 @@ public class DocScannerFacade {
     }
 
     @Timed
-    public BufferedImage scanDocument(@NonNull DocScanDevice docScanDevice) {
+    public BufferedImage scanDocument(@NonNull DocScanDevice docScanDevice, String deviceType) {
         setDefaults(docScanDevice);
         LOGGER.debug("Selected device details with configuration fully set : {}", docScanDevice);
         Optional<DocScannerService> result = docScannerServiceList.stream()
                 .filter(s -> s.getServiceName().equals(docScanDevice.getServiceName())).findFirst();
 
         if(result.isPresent()) {
-            return result.get().scan(docScanDevice);
+            return result.get().scan(docScanDevice, deviceType);
         }
         return null;
     }

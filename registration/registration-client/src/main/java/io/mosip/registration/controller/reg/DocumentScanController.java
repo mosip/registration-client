@@ -136,7 +136,7 @@ public class DocumentScanController extends BaseController {
 			result.get().setFrame(null);
 			result.get().setWidth(0);
 			result.get().setHeight(0);
-			BufferedImage bufferedImage = docScannerFacade.scanDocument(result.get());
+			BufferedImage bufferedImage = docScannerFacade.scanDocument(result.get(), getValueFromApplicationContext(RegistrationConstants.IMAGING_DEVICE_TYPE));
 
 			if (bufferedImage == null) {
 				LOGGER.error("captured buffered image was null");
@@ -163,7 +163,7 @@ public class DocumentScanController extends BaseController {
 
 		byte[] byteArray = new byte[0];
 		if(!devices.isEmpty()) {
-			BufferedImage bufferedImage = docScannerFacade.scanDocument(devices.get(0));
+			BufferedImage bufferedImage = docScannerFacade.scanDocument(devices.get(0), getValueFromApplicationContext(RegistrationConstants.IMAGING_DEVICE_TYPE));
 			if (bufferedImage != null) {
 				byteArray = DocScannerUtil.getImageBytesFromBufferedImage(bufferedImage);
 			}
