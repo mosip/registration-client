@@ -1991,4 +1991,5 @@ public class RegistrationConstants {
 	public static final String JPG_COMPRESSION_QUALITY = "mosip.registration.doc.jpg.compression";
 	public static final String APPLICANT_TYPE_MVEL_SCRIPT = "mosip.kernel.applicantType.mvel.file";
 	public static final String FIELDS_TO_RETAIN_ON_PRID_FETCH = "mosip.registration.fields.to.retain.post.prid.fetch";
+	public static final String IMAGING_DEVICE_TYPE = "mosip.registration.imagingDeviceType";
 }

@@ -1,6 +1,7 @@
 package io.mosip.registration.ref.morena;
 
 import eu.gnome.morena.Camera;
+import eu.gnome.morena.Configuration;
 import eu.gnome.morena.Device;
 import eu.gnome.morena.Manager;
 import eu.gnome.morena.Scanner;
@@ -28,7 +29,10 @@ public class MorenaDocScanServiceImpl implements DocScannerService {
     }
 
     @Override
-    public BufferedImage scan(DocScanDevice docScanDevice) {
+    public BufferedImage scan(DocScanDevice docScanDevice, String deviceType) {
+    	if (deviceType != null) {
+    		Configuration.addDeviceType(deviceType, true);
+    	}
         Manager manager = Manager.getInstance();
         Optional<Device> result = manager.listDevices().stream()
                 .filter(d -> d.toString().equals(docScanDevice.getName()))
