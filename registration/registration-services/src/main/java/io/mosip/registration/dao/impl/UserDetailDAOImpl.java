@@ -27,7 +27,6 @@ import io.mosip.registration.entity.UserToken;
 import io.mosip.registration.entity.id.UserRoleId;
 import io.mosip.registration.repositories.UserBiometricRepository;
 import io.mosip.registration.repositories.UserDetailRepository;
-import io.mosip.registration.repositories.UserMachineMappingRepository;
 import io.mosip.registration.repositories.UserPwdRepository;
 import io.mosip.registration.repositories.UserRoleRepository;
 import io.mosip.registration.repositories.UserTokenRepository;
@@ -67,9 +66,6 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 
 	@Autowired
 	private UserTokenRepository userTokenRepository;
-	
-	@Autowired
-	private UserMachineMappingRepository userMachineMappingRepository;
 
 	/*
 	 * (non-Javadoc)
@@ -145,13 +141,9 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 			usrPwd.setPwd(userDetail.getUserPassword().getPwd());
 		}
 
-		if(!userStatus) {//delete authtoken and biometrics of inactive users
+		if(!userStatus) {//delete authtoken of inactive users
 			userTokenRepository.deleteByUsrId(userDetailDto.getUserId());
-			userBiometricRepository.deleteByUserBiometricIdUsrId(userDetailDto.getUserId());
-			userMachineMappingRepository.deleteByUserMachineMappingIdUsrId(userDetailDto.getUserId());
 			userDetail.setUserToken(null);
-			userDetail.setUserBiometric(Collections.emptySet());
-			userDetail.setUserMachineMapping(Collections.emptySet());
 		}
 
 		usrPwd.setUsrId(userDetailDto.getUserId());

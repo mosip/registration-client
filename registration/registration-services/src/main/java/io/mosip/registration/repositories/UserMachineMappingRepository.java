@@ -19,6 +19,4 @@ public interface UserMachineMappingRepository extends BaseRepository<UserMachine
 	List<UserMachineMapping>findByIsActiveTrueAndUserMachineMappingIdMachineId(String machineId);
 
 	UserMachineMapping findByUserMachineMappingIdUsrIdIgnoreCase(String userId);
-	
-	void deleteByUserMachineMappingIdUsrId(String userID);
 }
