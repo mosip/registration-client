@@ -1,20 +1,22 @@
 package io.mosip.registration.ref.morena;
 
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 import eu.gnome.morena.Camera;
+import eu.gnome.morena.Configuration;
 import eu.gnome.morena.Device;
 import eu.gnome.morena.Manager;
 import eu.gnome.morena.Scanner;
 import io.mosip.registration.api.docscanner.DeviceType;
 import io.mosip.registration.api.docscanner.DocScannerService;
 import io.mosip.registration.api.docscanner.dto.DocScanDevice;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 @Component
 public class MorenaDocScanServiceImpl implements DocScannerService {
@@ -28,7 +30,10 @@ public class MorenaDocScanServiceImpl implements DocScannerService {
     }
 
     @Override
-    public BufferedImage scan(DocScanDevice docScanDevice) {
+    public BufferedImage scan(DocScanDevice docScanDevice, String deviceType) {
+    	if (deviceType != null) {
+    		Configuration.addDeviceType(deviceType, true);
+    	}
         Manager manager = Manager.getInstance();
         Optional<Device> result = manager.listDevices().stream()
                 .filter(d -> d.toString().equals(docScanDevice.getName()))

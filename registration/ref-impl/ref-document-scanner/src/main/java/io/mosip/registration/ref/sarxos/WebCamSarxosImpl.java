@@ -28,7 +28,7 @@ public class WebCamSarxosImpl implements DocScannerService {
     }
 
     @Override
-    public BufferedImage scan(DocScanDevice docScanDevice) {
+    public BufferedImage scan(DocScanDevice docScanDevice, String deviceType) {
         Optional<Webcam> result = Webcam.getWebcams().stream()
                 .filter(c -> c.getName().equals(docScanDevice.getName()))
                 .findFirst();
