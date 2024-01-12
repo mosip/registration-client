@@ -2,13 +2,16 @@ package io.mosip.registration.dao.impl;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
 
-import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
+import javax.validation.constraints.NotNull;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
@@ -27,11 +30,10 @@ import io.mosip.registration.entity.UserToken;
 import io.mosip.registration.entity.id.UserRoleId;
 import io.mosip.registration.repositories.UserBiometricRepository;
 import io.mosip.registration.repositories.UserDetailRepository;
+import io.mosip.registration.repositories.UserMachineMappingRepository;
 import io.mosip.registration.repositories.UserPwdRepository;
 import io.mosip.registration.repositories.UserRoleRepository;
 import io.mosip.registration.repositories.UserTokenRepository;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * The implementation class of {@link UserDetailDAO}.
@@ -66,6 +68,9 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 
 	@Autowired
 	private UserTokenRepository userTokenRepository;
+	
+	@Autowired
+	private UserMachineMappingRepository userMachineMappingRepository;
 
 	/*
 	 * (non-Javadoc)
@@ -141,9 +146,13 @@ public class UserDetailDAOImpl implements UserDetailDAO {
 			usrPwd.setPwd(userDetail.getUserPassword().getPwd());
 		}
 
-		if(!userStatus) {//delete authtoken of inactive users
+		if(!userStatus) {//delete authtoken and biometrics of inactive users
 			userTokenRepository.deleteByUsrId(userDetailDto.getUserId());
+			userBiometricRepository.deleteByUserBiometricIdUsrId(userDetailDto.getUserId());
+			userMachineMappingRepository.deleteByUserMachineMappingIdUsrId(userDetailDto.getUserId());
 			userDetail.setUserToken(null);
+			userDetail.setUserBiometric(Collections.emptySet());
+			userDetail.setUserMachineMapping(Collections.emptySet());
 		}
 
 		usrPwd.setUsrId(userDetailDto.getUserId());
