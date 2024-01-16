@@ -124,7 +124,8 @@ public class BaseServiceTest {
 		Map<String, Object> map = new HashMap<>();
 		map.put(RegistrationConstants.MACHINE_CENTER_REMAP_FLAG, false);
 		map.put(RegistrationConstants.AGE_GROUP_CONFIG, "{'INFANT':'0-5','MINOR':'6-17','ADULT':'18-200'}");
-		ApplicationContext.getInstance().setApplicationMap(map);	
+		ApplicationContext.getInstance();
+		ApplicationContext.setApplicationMap(map);	
 		List<String> mandatoryLanguages = getMandaoryLanguages();
 		List<String> optionalLanguages = getOptionalLanguages();
 		int minLanguagesCount = 1;
@@ -675,7 +676,7 @@ public class BaseServiceTest {
 		device.setId("SCANNER_001");
 		device.setName("SCANNER_001");
 		device.setServiceName("Test-Scanner");
-		BufferedImage image = facade.scanDocument(device);
+		BufferedImage image = facade.scanDocument(device, ".*");
 		return image;
 	}
 	private List<String> getMandaoryLanguages() {
@@ -735,7 +736,7 @@ public class BaseServiceTest {
 	            }
 
 	            @Override
-	            public BufferedImage scan(DocScanDevice docScanDevice) {
+	            public BufferedImage scan(DocScanDevice docScanDevice, String deviceType) {
 	                try {
 	                    return ImageIO.read(this.getClass().getResourceAsStream("/images/stubdoc.png"));
 	                } catch (IOException e) { }
