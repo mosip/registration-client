@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.junit.After;
@@ -111,8 +110,6 @@ public class PreRegistrationDataSyncServiceTest {
 
 	static Map<String, Object> preRegData = new HashMap<>();
 	
-	private ExecutorService executorServiceForPreReg;
-	
 	@Before
 	public void dtoInitalization() {
 		PreRegistrationDTO preRegistrationDTO = new PreRegistrationDTO();
@@ -134,7 +131,7 @@ public class PreRegistrationDataSyncServiceTest {
 
 	@Before
 	public void initiate() throws Exception {
-		executorServiceForPreReg = Executors.newFixedThreadPool(2);
+		Executors.newFixedThreadPool(2);
 		Map<String, Object> applicationMap = new HashMap<>();
 		applicationMap.put(RegistrationConstants.PRE_REG_DELETION_CONFIGURED_DAYS, "45");
 		applicationMap.put(RegistrationConstants.PRE_REG_DAYS_LIMIT, "5");
@@ -298,7 +295,6 @@ public class PreRegistrationDataSyncServiceTest {
 		preRegistrationDTO.setPreRegId("70694681371453");
 		Mockito.when(preRegZipHandlingService
 		.encryptAndSavePreRegPacket(Mockito.anyString(), Mockito.any())).thenReturn(preRegistrationDTO);
-		RegistrationDTO reg = new RegistrationDTO();
 		Mockito.when(preRegZipHandlingService.extractPreRegZipFile(Mockito.any())).thenThrow(RegBaseCheckedException.class);
 		
 		PreRegistrationList preRegList = new PreRegistrationList();
@@ -474,6 +470,17 @@ public class PreRegistrationDataSyncServiceTest {
 
 		assertTrue(preRegistration.getId().equals("123456789"));
 		assertTrue(preRegistration.getPreRegId().equals("987654321"));
+	}
+	
+	@Test
+	public void getPreRegistrationRecordForDeletionFailureTest() throws java.io.IOException {
+		PreRegistrationList preRegistrationList = new PreRegistrationList();
+		preRegistrationList.setId("123456789");
+		preRegistrationList.setPreRegId(null);
+		Mockito.when(preRegistrationDAO.get(Mockito.anyString())).thenReturn(preRegistrationList);
+		PreRegistrationList preRegistration = preRegistrationDataSyncServiceImpl
+				.getPreRegistrationRecordForDeletion(null);
+		Assert.assertNull(preRegistration);
 	}
 	
 	@Test

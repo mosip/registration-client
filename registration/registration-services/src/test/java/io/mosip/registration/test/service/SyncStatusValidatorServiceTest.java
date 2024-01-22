@@ -16,7 +16,6 @@ import java.util.Map;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -113,8 +112,7 @@ public class SyncStatusValidatorServiceTest {
 		PowerMockito.mockStatic(ApplicationContext.class);
 	}
 
-	//Needs to be corrected
-	//@Test
+	@Test(expected = RegBaseUncheckedException.class)
 	public void testValidateSyncStatusFailureCase() {
 		SyncControl syncControl1 = new SyncControl();
 		syncControl1.setSyncJobId("MDS_J00001");
@@ -164,6 +162,11 @@ public class SyncStatusValidatorServiceTest {
 		applicationMap.put(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ, "0");
 		when(ApplicationContext.map()).thenReturn(applicationMap);
 
+		GeoPosition geoPosition = new GeoPosition(); 
+		geoPosition.setLatitude(00);
+		geoPosition.setLongitude(00);
+		Mockito.when(geoPositionFacade.getMachineGeoPosition(Mockito.any())).thenReturn(geoPosition);
+		
 		Mockito.when(globalParamDAO.get(globalParamId)).thenReturn(globalParam);
 
 		Mockito.when(syncJobDAO.getRegistrationDetails()).thenReturn(registrationList);
@@ -653,7 +656,6 @@ public class SyncStatusValidatorServiceTest {
 		assertEquals("REG_PKT_APPRVL_CNT_EXCEED", errorResponseDTOs.get(0).getMessage());
 	}
 
-	@Ignore
 	@Test
 	public void testValidatePacketDurationFailureCase() {
 		SyncControl syncControl1 = new SyncControl();
