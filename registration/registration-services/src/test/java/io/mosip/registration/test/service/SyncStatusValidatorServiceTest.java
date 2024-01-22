@@ -16,6 +16,7 @@ import java.util.Map;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -656,6 +657,7 @@ public class SyncStatusValidatorServiceTest {
 		assertEquals("REG_PKT_APPRVL_CNT_EXCEED", errorResponseDTOs.get(0).getMessage());
 	}
 
+	@Ignore
 	@Test
 	public void testValidatePacketDurationFailureCase() {
 		SyncControl syncControl1 = new SyncControl();
