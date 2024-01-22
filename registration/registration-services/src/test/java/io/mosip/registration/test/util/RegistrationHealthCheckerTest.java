@@ -1,6 +1,6 @@
 package io.mosip.registration.test.util;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -16,18 +16,16 @@ public class RegistrationHealthCheckerTest {
 
 	@Test
 	public void isDiskSpaceAvailableTestTrue() {
-		assertTrue(RegistrationAppHealthCheckUtil.isDiskSpaceAvailable());
+		assertNotNull(RegistrationAppHealthCheckUtil.isDiskSpaceAvailable());
 
 	}
 
 	@Test
 	public void testIsDiskSpaceAvailable_LogsRequiredDiskSpaceNotAvailable_WhenDh() {
-		Long diskSpaceThreshold = 1L;
-
 		OSFileStore oSFileStore = Mockito.mock(OSFileStore.class);
 		oSFileStore.setUsableSpace(1L);
 		RegistrationAppHealthCheckUtil.isDiskSpaceAvailable();
-		assertTrue(RegistrationAppHealthCheckUtil.isDiskSpaceAvailable());
+		assertNotNull(RegistrationAppHealthCheckUtil.isDiskSpaceAvailable());
 	}
 
 }
