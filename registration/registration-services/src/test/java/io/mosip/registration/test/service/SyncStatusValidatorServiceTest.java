@@ -113,8 +113,7 @@ public class SyncStatusValidatorServiceTest {
 		PowerMockito.mockStatic(ApplicationContext.class);
 	}
 
-	//Needs to be corrected
-	//@Test
+	@Test(expected = RegBaseUncheckedException.class)
 	public void testValidateSyncStatusFailureCase() {
 		SyncControl syncControl1 = new SyncControl();
 		syncControl1.setSyncJobId("MDS_J00001");
@@ -164,6 +163,11 @@ public class SyncStatusValidatorServiceTest {
 		applicationMap.put(RegistrationConstants.SOFTWARE_UPDATE_MAX_CONFIGURED_FREQ, "0");
 		when(ApplicationContext.map()).thenReturn(applicationMap);
 
+		GeoPosition geoPosition = new GeoPosition(); 
+		geoPosition.setLatitude(00);
+		geoPosition.setLongitude(00);
+		Mockito.when(geoPositionFacade.getMachineGeoPosition(Mockito.any())).thenReturn(geoPosition);
+		
 		Mockito.when(globalParamDAO.get(globalParamId)).thenReturn(globalParam);
 
 		Mockito.when(syncJobDAO.getRegistrationDetails()).thenReturn(registrationList);
