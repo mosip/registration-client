@@ -67,7 +67,7 @@ public class MapperUtils {
 	private static final String FIELD_MISSING_ERROR_MESSAGE = "Field %s not found in data";
 	
 	private static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";	
-	private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat(DATE_TIME_FORMAT);
+	private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat(DATE_TIME_FORMAT); //NOSONAR getting SimpleDateFormat here.
 	
 	private MapperUtils() {
 		super();

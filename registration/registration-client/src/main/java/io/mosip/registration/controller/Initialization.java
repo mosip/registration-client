@@ -11,7 +11,7 @@ public class Initialization {
     public static void main(String[] args) throws Exception {
         System.setProperty("java.net.useSystemProxies", "true");
         System.setProperty("file.encoding", "UTF-8");
-        System.setProperty("logback.configurationFile", Path.of("lib", "logback.xml").toFile().getCanonicalPath());
+        System.setProperty("logback.configurationFile", Path.of("lib", "logback.xml").toFile().getCanonicalPath());   //NOSONAR Setting logger configuration file path here.
         LauncherImpl.launchApplication(ClientApplication.class, ClientPreLoader.class, args);
     }
 }

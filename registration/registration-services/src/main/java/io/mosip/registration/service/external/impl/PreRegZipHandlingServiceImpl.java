@@ -107,7 +107,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 
 			try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(preRegZipFile))) {
 				ZipEntry zipEntry;
-				while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+				while ((zipEntry = zipInputStream.getNextEntry()) != null) {    //NOSONAR Adding Next ZipEntry here.
 					totalEntries++;
 					if (zipEntry.getName().equalsIgnoreCase("ID.json")) {
 						byte[] idjson = IOUtils.toByteArray(zipInputStream);
@@ -141,7 +141,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 
 			try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(preRegZipFile))) {
 				ZipEntry zipEntry;
-				while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+				while ((zipEntry = zipInputStream.getNextEntry()) != null) {    //NOSONAR Adding Next ZipEntry here.
 					totalEntries++;
 
 					String fileName = zipEntry.getName();
