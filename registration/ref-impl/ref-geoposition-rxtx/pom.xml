@@ -6,7 +6,7 @@
 
     <groupId>io.mosip.registration</groupId>
     <artifactId>ref-geoposition-rxtx</artifactId>
-    <version>1.2.0.1-SNAPSHOT</version>
+    <version>1.2.0.1</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -20,7 +20,7 @@
         <dependency>
             <groupId>io.mosip.registration</groupId>
             <artifactId>registration-api</artifactId>
-            <version>1.2.0.1-SNAPSHOT</version>
+            <version>1.2.0.1</version>
             <scope>compile</scope>
         </dependency>
 
