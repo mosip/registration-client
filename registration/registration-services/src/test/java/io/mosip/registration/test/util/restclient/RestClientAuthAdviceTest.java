@@ -307,4 +307,15 @@ public class RestClientAuthAdviceTest {
 		Mockito.when(authTokenUtilService.fetchAuthToken(Mockito.anyString())).thenThrow(RegBaseCheckedException.class);
 		Assert.assertNotNull(restClientAuthAdvice.addAuthZToken(proceedingJoinPoint));
 	}
+	
+	@Test
+	public void addAuthZTokenToDownloadRequestTest() throws Throwable {
+		RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
+		Object[] args = new Object[1];
+		args[0] = requestHTTPDTO;
+		Mockito.when(proceedingJoinPoint.getArgs()).thenReturn(args);
+		Mockito.when(proceedingJoinPoint.proceed(proceedingJoinPoint.getArgs())).thenReturn(new Object());
+		restClientAuthAdvice.addAuthZTokenToDownloadRequest(proceedingJoinPoint);
+		Assert.assertNotNull(args);
+	}
 }

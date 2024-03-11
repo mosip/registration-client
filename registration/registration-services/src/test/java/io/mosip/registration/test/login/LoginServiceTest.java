@@ -248,7 +248,9 @@ public class LoginServiceTest {
 	
 	@Test
 	public void getModesOfLoginNegativeTest() {
-		Set<String> roleSet = new HashSet<>();		
+		Set<String> roleSet = new HashSet<>();
+		Mockito.when(authTokenUtilService.hasAnyValidToken()).thenReturn(false);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);		
 		loginServiceImpl.getModesOfLogin("LOGIN", roleSet);		
 	}
 	
@@ -462,7 +464,6 @@ public class LoginServiceTest {
 	
 	@Test
 	public void validateUserTest() throws Exception {
-		ResponseDTO responseDTO = new ResponseDTO();
 		UserDetail userDetail = new UserDetail();
 		userDetail.setStatusCode("ACTIVE");
 		Set<UserMachineMapping> userMachineMappings = new HashSet<>();

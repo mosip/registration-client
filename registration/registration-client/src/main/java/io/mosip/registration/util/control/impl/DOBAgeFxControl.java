@@ -7,14 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-import io.mosip.registration.controller.ClientApplication;
 import org.springframework.context.ApplicationContext;
 
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.controller.ClientApplication;
 import io.mosip.registration.controller.FXUtils;
-import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.controller.reg.DateValidation;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
@@ -171,7 +170,10 @@ public class DOBAgeFxControl extends FxControl {
 
 	@Override
 	public boolean isValid() {
-		return dateValidation.validateDate((Pane) node, uiFieldDTO.getId());
+		return getUiSchemaDTO().getMinimum() == getUiSchemaDTO().getMaximum()
+				? dateValidation.validateDate((Pane) node, uiFieldDTO.getId())
+				: dateValidation.validateDateWithMaxAndMinDays((Pane) getNode(), uiFieldDTO.getId(),
+						getUiSchemaDTO().getMinimum(), getUiSchemaDTO().getMaximum());
 	}
 
 	@Override
@@ -222,7 +224,10 @@ public class DOBAgeFxControl extends FxControl {
 			}
 			boolean isValid = RegistrationConstants.AGE_FIELD.equalsIgnoreCase(dateTyep)
 					? dateValidation.validateAge((Pane) node, uiFieldDTO.getId())
-					: dateValidation.validateDate((Pane) node, uiFieldDTO.getId());
+					: getUiSchemaDTO().getMaximum() == getUiSchemaDTO().getMinimum()
+							? dateValidation.validateDate((Pane) node, uiFieldDTO.getId())
+							: dateValidation.validateDateWithMaxAndMinDays((Pane) getNode(), uiFieldDTO.getId(),
+									getUiSchemaDTO().getMinimum(), getUiSchemaDTO().getMaximum());
 			if (isValid) {
 				setData(null);
 				refreshFields();

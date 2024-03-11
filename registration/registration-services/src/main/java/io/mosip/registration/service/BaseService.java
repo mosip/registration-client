@@ -36,6 +36,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
@@ -56,6 +59,7 @@ import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationDataDto;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
+import io.mosip.registration.dto.VersionMappings;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.entity.RegistrationCenter;
@@ -131,6 +135,9 @@ public class BaseService {
 
 	@Value("${mosip.max-languages.count:0}")
 	private int maxLanguagesCount;
+	
+	@Value("${mosip.registration.verion.upgrade.default-version-mappings}")
+	private String defaultVersionMappings;
 
 	public List<String> getMandatoryLanguages() {
 		return mandatoryLanguages.stream()
@@ -763,5 +770,43 @@ public class BaseService {
 		} catch (PreConditionCheckException e) {
 			throw e;
 		}
+	}
+	
+	/**
+	 * Returns the version-mappings in sorted order. Version-Mappings is the
+	 * configuration which specifies the list of available versions and their
+	 * respective DB version and its release order.
+	 * ReleaseOrder starts with "1" which is considered as the oldest version and
+	 * "n" being the latest version.
+	 * 
+	 * @param key
+	 * @return sorted version-mappings
+	 * @throws Exception
+	 */
+	protected Map<String, VersionMappings> getSortedVersionMappings(String key) throws Exception {
+		String value = ApplicationContext.map().containsKey(key)
+				? (String) ApplicationContext.map().get(key)
+				: defaultVersionMappings;
+		
+		if (value == null || value.isBlank()) {
+			LOGGER.error("version-mappings key is found empty / null. Please add proper value to proceed.");
+			throw new RegBaseCheckedException(RegistrationExceptionConstants.VERSION_MAPPINGS_NOT_FOUND.getErrorCode(),
+					RegistrationExceptionConstants.VERSION_MAPPINGS_NOT_FOUND.getErrorMessage());
+		}
+		
+		ObjectMapper mapper = new ObjectMapper(); 
+	    TypeReference<HashMap<String,VersionMappings>> typeRef 
+	            = new TypeReference<HashMap<String,VersionMappings>>() {};
+
+	    HashMap<String, VersionMappings> versionMappings = mapper.readValue(value, typeRef); 
+
+		if (versionMappings != null) {
+			return versionMappings.entrySet().stream()
+					.sorted((object1, object2) -> object1.getValue().getReleaseOrder()
+							.compareTo(object2.getValue().getReleaseOrder()))
+					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (object1, object2) -> object1,
+							LinkedHashMap::new));
+		}
+		return versionMappings;	
 	}
 }
