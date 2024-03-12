@@ -158,7 +158,7 @@ public class SoftwareUpdateHandlerTest {
 		Mockito.when(ApplicationContext.getStringValueFromApplicationMap(Mockito.anyString())).thenReturn("1.2.0-SNAPSHOT");
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
 		Mockito.doNothing().when(jdbcTemplate).execute(Mockito.anyString());
-		Assert.assertNotNull(softwareUpdateHandler.updateDerbyDB().getErrorResponseDTOs());
+		Assert.assertNull(softwareUpdateHandler.updateDerbyDB());
 	}
 	
 	@Test
