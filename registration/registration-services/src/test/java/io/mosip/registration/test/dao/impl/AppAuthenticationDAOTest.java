@@ -60,6 +60,24 @@ public class AppAuthenticationDAOTest {
 	}
 	
 	@Test
+	public void getModesOfLoginSuccess1Test() throws RegBaseCheckedException {
+
+		List<AppAuthenticationDetails> loginList = new ArrayList<AppAuthenticationDetails>();
+
+		List<AppRolePriorityDetails> roleList = new ArrayList<AppRolePriorityDetails>();
+
+		Set<String> roleSet = new HashSet<>();
+		roleSet.add("DEFAULT");
+		Mockito.when(appRolePriorityRepository.findByAppRolePriorityIdProcessIdAndAppRolePriorityIdRoleCodeInOrderByPriority("login", roleSet)).thenReturn(roleList);
+		Mockito.when(appAuthenticationRepository.findByIsActiveTrueAndAppAuthenticationMethodIdProcessIdAndAppAuthenticationMethodIdRoleCodeInOrderByMethodSequence("login",roleSet)).thenReturn(loginList);
+
+		List<String> modes = new ArrayList<>();
+		loginList.stream().map(loginMethod -> loginMethod.getAppAuthenticationMethodId().getAuthMethodCode()).collect(Collectors.toList());
+
+		assertEquals(modes, appAuthenticationDAOImpl.getModesOfLogin("login", roleSet));
+	}
+	
+	@Test
 	public void getModesOfLoginMultipleRoleTest() throws RegBaseCheckedException {
 
 		
@@ -105,7 +123,7 @@ public class AppAuthenticationDAOTest {
 		List<AppRolePriorityDetails> roleList = new ArrayList<AppRolePriorityDetails>();
 		
 		Set<String> roleSet = null;
-		Mockito.when(appRolePriorityRepository.findByAppRolePriorityIdProcessIdAndAppRolePriorityIdRoleCodeInOrderByPriority("login", roleSet)).thenReturn(roleList);
+		Mockito.when(appRolePriorityRepository.findByAppRolePriorityIdProcessIdAndAppRolePriorityIdRoleCodeInOrderByPriority("login", roleSet)).thenReturn(null);
 		Mockito.when(appAuthenticationRepository.findByIsActiveTrueAndAppAuthenticationMethodIdProcessIdAndAppAuthenticationMethodIdRoleCodeInOrderByMethodSequence("login",roleSet)).thenReturn(loginList);
 
 		loginList.stream().map(loginMethod -> loginMethod.getAppAuthenticationMethodId().getAuthMethodCode()).collect(Collectors.toList());
