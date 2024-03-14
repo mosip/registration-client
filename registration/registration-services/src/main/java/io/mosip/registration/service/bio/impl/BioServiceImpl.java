@@ -5,14 +5,13 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.io.InputStream;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.temporal.ValueRange;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import io.mosip.registration.dto.schema.UiFieldDTO;
+import io.mosip.registration.enums.Modality;
+import io.mosip.registration.service.IdentitySchemaService;
+import lombok.NonNull;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,18 +24,12 @@ import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
 import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.constants.AuditEvent;
-import io.mosip.registration.constants.AuditReferenceIdTypes;
-import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
-import io.mosip.registration.dto.schema.UiFieldDTO;
-import io.mosip.registration.enums.Modality;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
@@ -46,7 +39,6 @@ import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.bio.BioService;
 import io.mosip.registration.util.common.BIRBuilder;
-import lombok.NonNull;
 
 /**
  * This class {@code BioServiceImpl} handles all the biometric captures and
@@ -69,13 +61,10 @@ public class BioServiceImpl extends BaseService implements BioService {
 
 	@Autowired
 	private MosipDeviceSpecificationFactory deviceSpecificationFactory;
-	
-	@Autowired
-	private AuditManagerService auditFactory;
 
 	@Autowired
-	protected BIRBuilder birBuilder;
-	
+	private BIRBuilder birBuilder;
+
 	/**
 	 * Gets the registration DTO from session.
 	 *
@@ -87,15 +76,8 @@ public class BioServiceImpl extends BaseService implements BioService {
 
 	@Override
 	public List<BiometricsDto> captureModality(MDMRequestDto mdmRequestDto) throws RegBaseCheckedException {
-
-		Instant captureStartTime = Instant.now();
-		LOGGER.info("Entering into captureModality method.. {}", captureStartTime.toEpochMilli());
-
+		LOGGER.info("Entering into captureModality method.. {}", System.currentTimeMillis());
 		List<BiometricsDto> list = new ArrayList<BiometricsDto>();
-
-		Map<String, String> map = new HashMap<String, String>();
-		map.put("<modality>", mdmRequestDto.getModality());
-		map.put("<count>", String.valueOf(mdmRequestDto.getCount()));
 
 		try {
 			MdmBioDevice bioDevice = deviceSpecificationFactory.getDeviceInfoByModality(mdmRequestDto.getModality());
@@ -108,10 +90,8 @@ public class BioServiceImpl extends BaseService implements BioService {
 					continue;
 				}
 
-				if (!ValueRange.of(0, RegistrationConstants.MAX_BIO_QUALITY_SCORE)
-						.isValidValue((long) biometricsDto.getQualityScore()))
-					throw new RegBaseCheckedException(
-							RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_SCORE_RANGE_ERROR.getErrorCode(),
+				if (!ValueRange.of(0, RegistrationConstants.MAX_BIO_QUALITY_SCORE).isValidValue((long) biometricsDto.getQualityScore()))
+					throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_SCORE_RANGE_ERROR.getErrorCode(),
 							RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_SCORE_RANGE_ERROR.getErrorMessage());
 
 				if (RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map()
@@ -120,38 +100,20 @@ public class BioServiceImpl extends BaseService implements BioService {
 						biometricsDto.setSdkScore(getSDKScore(biometricsDto));
 					} catch (BiometricException e) {
 						LOGGER.error("Unable to fetch SDK Score ", e);
-						throw new RegBaseCheckedException(
-								RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorCode(),
+						throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorCode(),
 								RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorMessage());
 					}
 				}
 				list.add(biometricsDto);
 			}
 		} catch (RegBaseCheckedException e) {
-			map.put("<errorMessage>", e.getMessage());
-			auditFactory.auditWithParams(AuditEvent.REG_BIO_CAPTURE_DETAILS_FAILURE, Components.PACKET_HANDLER,
-					RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.REGISTRATION_ID.getReferenceTypeId(),
-					map);
 			throw e;
 		} catch (Throwable t) {
 			LOGGER.error("Failed in rcapture", t);
-			map.put("<errorMessage>", t.getMessage());
-			auditFactory.auditWithParams(AuditEvent.REG_BIO_CAPTURE_DETAILS_FAILURE, Components.PACKET_HANDLER,
-					RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.REGISTRATION_ID.getReferenceTypeId(),
-					map);
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorCode(),
 					RegistrationExceptionConstants.MDS_RCAPTURE_ERROR.getErrorMessage());
 		}
-
-		Instant captureEndTime = Instant.now();
-		LOGGER.info("Ended captureModality method.. {}", captureEndTime.toEpochMilli());
-
-		Duration timeElapsed = Duration.between(captureStartTime, captureEndTime);
-		map.put("<time>", String.valueOf(timeElapsed.toMillis()));
-
-		auditFactory.auditWithParams(AuditEvent.REG_BIO_CAPTURE_DETAILS, Components.PACKET_HANDLER,
-				RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.REGISTRATION_ID.getReferenceTypeId(),
-				map);
+		LOGGER.info("Ended captureModality method.. {}" , System.currentTimeMillis());
 		return list;
 	}
 
@@ -207,8 +169,6 @@ public class BioServiceImpl extends BaseService implements BioService {
 				.getModalityQuality(birList, null);
 		
 		return scoreMap.get(biometricType);
-
-		
 	}
 
 	@Override

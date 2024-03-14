@@ -91,4 +91,11 @@ public interface GlobalParamDAO {
 	 * @return {@link GlobalParam}
 	 */
 	GlobalParam upsertServerProfile(String profileName);
+
+	/**
+	 * This method is used to delete a globalparam using id.
+	 * 
+	 * @param globalParamId
+	 */
+	void delete(GlobalParamId globalParamId);
 }

@@ -142,7 +142,7 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 					bioDevice.getCallbackId() + MosipBioDeviceConstants.STREAM_ENDPOINT, "STREAM", request);
 
 			InputStream urlStream = null;
-			if (response.getEntity() != null) {
+			if (response != null && response.getEntity() != null) {
 				urlStream = response.getEntity().getContent();
 			}
 

@@ -758,7 +758,7 @@ public class BaseServiceTest {
 		device.setId("SCANNER_001");
 		device.setName("SCANNER_001");
 		device.setServiceName("Test-Scanner");
-		BufferedImage image = facade.scanDocument(device);
+		BufferedImage image = facade.scanDocument(device, ".*");
 		return image;
 	}
 	private List<String> getMandaoryLanguages() {
@@ -818,7 +818,7 @@ public class BaseServiceTest {
 	            }
 
 	            @Override
-	            public BufferedImage scan(DocScanDevice docScanDevice) {
+	            public BufferedImage scan(DocScanDevice docScanDevice, String deviceType) {
 	                try {
 	                    return ImageIO.read(this.getClass().getResourceAsStream("/images/stubdoc.png"));
 	                } catch (IOException e) { }

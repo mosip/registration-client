@@ -109,7 +109,7 @@ public class BIRBuilderTest {
 		byte[] iso = "slkdalskdjslkajdjadj".getBytes();
 		Assert.assertNotNull(bIRBuilder.buildBir("Face", 2, iso, ProcessedLevelType.INTERMEDIATE));
 	}
-	
+
 	@Test
     public void buildBIRWithBiometricsTest() {
         BiometricsDto biometricsDto = new BiometricsDto();

@@ -36,7 +36,7 @@ public class ScannerStubImpl implements DocScannerService {
     }
 
     @Override
-    public BufferedImage scan(DocScanDevice docScanDevice) {
+    public BufferedImage scan(DocScanDevice docScanDevice, String deviceType) {
         try(InputStream inputStream = this.getClass().getResourceAsStream(getStubPath())) {
             BufferedImage bufferedImage = ImageIO.read(inputStream);
 

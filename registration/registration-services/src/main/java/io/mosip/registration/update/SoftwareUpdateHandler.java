@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -474,6 +475,8 @@ public class SoftwareUpdateHandler extends BaseService {
 		}
 
 		ResponseDTO responseDTO = new ResponseDTO();
+
+		List<String> fullSyncEntitiesList = new ArrayList<>();
 		
 		for (Entry<String, VersionMappings> entry : versionMappings.entrySet()) {
 			try {
@@ -486,6 +489,10 @@ public class SoftwareUpdateHandler extends BaseService {
 				previousVersion = entry.getKey();
 				// Update global param with current version
 				globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, entry.getKey());
+				String fullSyncEntities = entry.getValue().getFullSyncEntities();
+				if (fullSyncEntities != null && !fullSyncEntities.isBlank()) {
+					fullSyncEntitiesList.add(fullSyncEntities);
+				}
 			} catch (Throwable exception) {
 				LOGGER.error("Error while executing SQL files for upgrade : ", exception);
 				// Replace with backup
@@ -496,6 +503,10 @@ public class SoftwareUpdateHandler extends BaseService {
 			}
 		}
 		
+		if (!fullSyncEntitiesList.isEmpty()) {
+			LOGGER.info("Saving the list of fullSyncEntities mentioned in version-mappings..");			
+			globalParamService.update(RegistrationConstants.UPGRADE_FULL_SYNC_ENTITIES, String.join(",", fullSyncEntitiesList));
+		}
 		setSuccessResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_SUCCESS, null);
 		LOGGER.info("DB-Script files execution completed");
 		return responseDTO;

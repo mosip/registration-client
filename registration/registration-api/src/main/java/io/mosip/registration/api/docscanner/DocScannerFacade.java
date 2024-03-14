@@ -1,18 +1,22 @@
 package io.mosip.registration.api.docscanner;
 
-import io.micrometer.core.annotation.Timed;
-import io.mosip.registration.api.docscanner.dto.DocScanDevice;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
-import java.awt.image.BufferedImage;
-import java.util.*;
-import java.util.stream.Collectors;
+import io.micrometer.core.annotation.Timed;
+import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 
 @Component
 public class DocScannerFacade {
@@ -79,14 +83,14 @@ public class DocScannerFacade {
     }
 
     @Timed
-    public BufferedImage scanDocument(@NonNull DocScanDevice docScanDevice) {
+    public BufferedImage scanDocument(@NonNull DocScanDevice docScanDevice, String deviceType) {
         setDefaults(docScanDevice);
         LOGGER.debug("Selected device details with configuration fully set : {}", docScanDevice);
         Optional<DocScannerService> result = docScannerServiceList.stream()
                 .filter(s -> s.getServiceName().equals(docScanDevice.getServiceName())).findFirst();
 
         if(result.isPresent()) {
-            return result.get().scan(docScanDevice);
+            return result.get().scan(docScanDevice, deviceType);
         }
         return null;
     }
