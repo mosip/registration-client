@@ -8,15 +8,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
-import io.mosip.kernel.core.util.HMACUtils2;
-import io.mosip.registration.constants.RegistrationConstants;
-import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.dao.impl.UserDetailDAOImpl;
-import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.util.common.OTPManager;
-import io.mosip.registration.util.restclient.AuthTokenUtilService;
-import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -55,6 +46,7 @@ import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.security.impl.AuthenticationServiceImpl;
 import io.mosip.registration.util.common.BIRBuilder;
 import io.mosip.registration.util.common.OTPManager;
+import io.mosip.registration.util.restclient.AuthTokenUtilService;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 @RunWith(PowerMockRunner.class)

@@ -16,8 +16,6 @@
 	<name>registration-client</name>
 	<description>Maven project of MOSIP Registration UI</description>
 
-
-
 	<dependencies>
 		<dependency>
 			<groupId>io.mosip.registration</groupId>

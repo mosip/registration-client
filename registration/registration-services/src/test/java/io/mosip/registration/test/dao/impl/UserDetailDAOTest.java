@@ -34,6 +34,7 @@ import io.mosip.registration.entity.UserPassword;
 import io.mosip.registration.entity.UserRole;
 import io.mosip.registration.repositories.UserBiometricRepository;
 import io.mosip.registration.repositories.UserDetailRepository;
+import io.mosip.registration.repositories.UserMachineMappingRepository;
 import io.mosip.registration.repositories.UserPwdRepository;
 import io.mosip.registration.repositories.UserRoleRepository;
 import io.mosip.registration.repositories.UserTokenRepository;
@@ -67,6 +68,9 @@ public class UserDetailDAOTest {
 	
 	@Mock
 	private UserTokenRepository userTokenRepository;
+	
+	@Mock
+	private UserMachineMappingRepository userMachineMappingRepository;
 	
 	@Before
 	public void initialize() throws Exception {

@@ -137,7 +137,7 @@ public class AuditManagerSerivceImpl extends BaseService implements AuditManager
 
 		String val = getGlobalConfigValueOf(RegistrationConstants.AUDIT_TIMESTAMP);
 
-		if (val != null) {
+		if (val != null && !val.isEmpty()) {
 			try {
 				/* Delete Audits before given Time */
 				auditDAO.deleteAudits(DateUtils.parseToLocalDateTime(val));

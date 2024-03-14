@@ -101,10 +101,10 @@
 					<groupId>org.springframework.cloud</groupId>
 					<artifactId>spring-cloud-starter-config</artifactId>
 				</exclusion>
-				<!-- <exclusion>
+				<!--<exclusion>
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-starter-actuator</artifactId>
-				</exclusion> -->
+				</exclusion>-->
 				<exclusion>
 					<groupId>io.mosip.kernel</groupId>
 					<artifactId>kernel-logger-logback</artifactId>
@@ -182,7 +182,6 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.module</groupId>
@@ -395,7 +394,7 @@
 		<dependency>
 			<groupId>io.mosip.commons</groupId>
 			<artifactId>commons-packet-manager</artifactId>
-			<version>${mosip.core.kernel.version}</version>
+			<version>${mosip.commons.packet.manager.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
@@ -526,6 +525,26 @@
 						<version>2.12.4</version>
 						<!--<configuration><skipTests>true</skipTests></configuration>-->
 					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>3.0.0</version>
+						<executions>
+							<execution>
+								<id>make-jar-executable</id>
+								<phase>package</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<target>
+										<!-- Create a shell script to run the JAR file with executable permission -->
+										<chmod file="${project.build.directory}/*.jar" perm="ugo+rx"/>
+									</target>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
 				</plugins>
 			</build>
 		</profile>
@@ -547,7 +566,27 @@
 							</excludes>
 						</configuration>
 					</plugin>
-				</plugins>
+				                    <plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>3.0.0</version>
+						<executions>
+							<execution>
+								<id>make-jar-executable</id>
+								<phase>package</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<target>
+										<!-- Create a shell script to run the JAR file with executable permission -->
+										<chmod file="${project.build.directory}/*.jar" perm="ugo+rx"/>
+									</target>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+</plugins>
 			</build>
 		</profile>
 	</profiles>
@@ -582,26 +621,26 @@
 					<useDefaultDelimiters>false</useDefaultDelimiters>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<version>3.0.0</version>
-				<executions>
-					<execution>
-						<id>make-jar-executable</id>
-						<phase>package</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-							<target>
-								<!-- Create a shell script to run the JAR file with executable permission -->
-								<chmod file="${project.build.directory}/*.jar" perm="ugo+rx"/>
-							</target>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
+		                    <plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>3.0.0</version>
+						<executions>
+							<execution>
+								<id>make-jar-executable</id>
+								<phase>package</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<target>
+										<!-- Create a shell script to run the JAR file with executable permission -->
+										<chmod file="${project.build.directory}/*.jar" perm="ugo+rx"/>
+									</target>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+</plugins>
 	</build>
 </project>

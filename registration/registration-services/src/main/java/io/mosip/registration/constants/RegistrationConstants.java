@@ -1416,6 +1416,7 @@ public class RegistrationConstants {
 	public static final String USER_DETAIL_SALT_SERVICE_NAME = "user_salt_details";
 	public static final String SERVICES_VERSION_KEY = "mosip.reg.services.current.version";
 	public static final String VERSION_MAPPINGS_KEY = "mosip.registration.verion.upgrade.version-mappings";
+	public static final String UPGRADE_FULL_SYNC_ENTITIES = "mosip.registration.upgrade.full-sync-entities";
 	public static final String VERSION_MAPPINGS_ERROR = "Could not parse version-mappings";
 	public static final String MANIFEST_PATH = "/MANIFEST.MF";
 
@@ -1990,4 +1991,5 @@ public class RegistrationConstants {
 	public static final String JPG_COMPRESSION_QUALITY = "mosip.registration.doc.jpg.compression";
 	public static final String APPLICANT_TYPE_MVEL_SCRIPT = "mosip.kernel.applicantType.mvel.file";
 	public static final String FIELDS_TO_RETAIN_ON_PRID_FETCH = "mosip.registration.fields.to.retain.post.prid.fetch";
+	public static final String IMAGING_DEVICE_TYPE = "mosip.registration.imagingDeviceType";
 }

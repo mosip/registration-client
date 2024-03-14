@@ -14,5 +14,6 @@ public class VersionMappings {
 
 	private String dbVersion;
 	private Integer releaseOrder;
+	private String fullSyncEntities;
 	
 }

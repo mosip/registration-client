@@ -10,16 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-import io.mosip.biometrics.util.ConvertRequestDto;
-import io.mosip.biometrics.util.face.FaceDecoder;
-import io.mosip.biometrics.util.finger.FingerDecoder;
-import io.mosip.biometrics.util.iris.IrisDecoder;
-import io.mosip.kernel.biometrics.constant.*;
-import io.mosip.kernel.biometrics.entities.*;
-import io.mosip.registration.dto.schema.UiFieldDTO;
-import io.mosip.registration.service.BaseService;
-import javafx.geometry.Insets;
-import javafx.scene.layout.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -42,10 +32,6 @@ import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
-import io.mosip.registration.controller.FXUtils;
-import io.mosip.registration.controller.GenericController;
-import io.mosip.registration.controller.reg.DocumentScanController;
-import io.mosip.registration.controller.reg.RegistrationController;
 import io.mosip.registration.dao.UserDetailDAO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.entity.UserBiometric;
@@ -66,6 +52,7 @@ import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -174,20 +161,12 @@ public class GenericBiometricsController extends BaseController {
 	@FXML
 	private Label captureTimeValue;
 
-	/** The registration controller. */
-	@Autowired
-	private RegistrationController registrationController;
-
 	/** The iris facade. */
 	@Autowired
 	private BioService bioService;
 
 	@Autowired
 	private BaseService baseService;
-
-	private String bioValue;
-
-	private FXUtils fxUtils;
 
 	public ImageView getBiometricImage() {
 		return biometricImage;
@@ -219,12 +198,6 @@ public class GenericBiometricsController extends BaseController {
 	@FXML
 	private GridPane parentProgressPane;
 
-	@Autowired
-	private DocumentScanController documentScanController;
-
-	@Autowired
-	private GenericController genericController;
-
 	private Service<List<BiometricsDto>> rCaptureTaskService;
 
 	private Service<MdmBioDevice> deviceSearchTask;
@@ -232,8 +205,6 @@ public class GenericBiometricsController extends BaseController {
 	public Modality getCurrentModality() {
 		return currentModality;
 	}
-
-	private Node exceptionVBox;
 
 	private BiometricFxControl fxControl;
 
@@ -306,7 +277,6 @@ public class GenericBiometricsController extends BaseController {
 		checkBoxPane.getChildren().clear();
 
 		// get List of captured Biometrics based on nonExceptionBio Attributes
-		List<BiometricsDto> capturedBiometrics = null;
 		List<String> nonExceptionBioAttributes = isFace(modality) ? RegistrationConstants.faceUiAttributes : null;
 		if (!isFace(modality) && !isExceptionPhoto(modality)) {
 			setExceptionImg();
@@ -860,7 +830,6 @@ public class GenericBiometricsController extends BaseController {
 	private void updateBiometric(Modality bioType, String bioImage, double biometricThreshold, int retryCount) {
 		LOGGER.info("Updating biometrics and clearing previous data");
 
-		bioValue = bioType.name();
 		try {
 			biometricImage.setImage(getImage(bioImage,true));
 		} catch (RegBaseCheckedException e) {
@@ -1001,7 +970,7 @@ public class GenericBiometricsController extends BaseController {
 		if (getRegistrationDTOFromSession() != null && getRegistrationDTOFromSession().getSelectedLanguagesByApplicant() != null) {
 			langCode = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0);
 		}
-		thresholdLabel.setText(applicationContext.getBundle(langCode, RegistrationConstants.LABELS).getString("threshold").concat("  ").concat(String.valueOf(biometricThreshold))
+		thresholdLabel.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS).getString("threshold").concat("  ").concat(String.valueOf(biometricThreshold))
 				.concat(RegistrationConstants.PERCENTAGE));
 		thresholdPane1.setPercentWidth(biometricThreshold);
 		thresholdPane2.setPercentWidth(100.00 - (biometricThreshold));
