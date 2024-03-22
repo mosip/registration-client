@@ -108,7 +108,7 @@
 
 		<mosip.core.kernel.version>1.2.0.1</mosip.core.kernel.version>
 		<mosip.commons.packet.manager.version>1.2.0.1</mosip.commons.packet.manager.version>
-		<mosip.biometric.util.version>1.2.0.1</mosip.biometric.util.version>
+		<mosip.biometric.util.version>1.2.0.2</mosip.biometric.util.version>
 		<mosip.kernel.virusscanner.version>1.1.3</mosip.kernel.virusscanner.version>
 		<!-- Derby Version -->
 		<apache.derby.version>10.13.1.1</apache.derby.version>
