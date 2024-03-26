@@ -6,7 +6,7 @@
 
     <groupId>io.mosip.registration</groupId>
     <artifactId>ref-document-scanner</artifactId>
-    <version>1.2.0.1</version>
+    <version>1.2.0.2-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -20,7 +20,7 @@
         <dependency>
             <groupId>io.mosip.registration</groupId>
             <artifactId>registration-api</artifactId>
-            <version>1.2.0.1</version>
+            <version>1.2.0.2-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
