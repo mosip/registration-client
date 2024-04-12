@@ -1,20 +1,22 @@
 FROM mosipdev/javafx-reg-client-openjdk:latest
 
-ARG SOURCE
-ARG COMMIT_HASH
-ARG COMMIT_ID
-ARG BUILD_TIME
-
-LABEL source=${SOURCE}
-LABEL commit_hash=${COMMIT_HASH}
-LABEL commit_id=${COMMIT_ID}
-LABEL build_time=${BUILD_TIME}
-
 ARG client_version
 ARG healthcheck_url
 ARG client_upgrade_server
 ARG cert_server_URL
 ARG keystore_secret
+
+# can be passed during Docker build as build time environment for github branch to pickup configuration from.
+ARG container_user=mosip
+ARG container_user_group=mosip
+ARG container_user_uid=1001
+ARG container_user_gid=1001
+
+# can be passed during Docker build as build time environment for label related addition to docker.
+ARG SOURCE
+ARG COMMIT_HASH
+ARG COMMIT_ID
+ARG BUILD_TIME
 
 ENV client_version_env=${client_version}
 ENV healthcheck_url_env=${healthcheck_url}
@@ -25,11 +27,11 @@ ENV host_name_env=${host_name}
 ENV keystore_secret_env=${keystore_secret}
 ENV signer_timestamp_url_env=${signer_timestamp_url}
 
-# can be passed during Docker build as build time environment for github branch to pickup configuration from.
-ARG container_user=mosip
-ARG container_user_group=mosip
-ARG container_user_uid=1001
-ARG container_user_gid=1001
+# can be passed during Docker build as build time environment for label.
+LABEL source=${SOURCE}
+LABEL commit_hash=${COMMIT_HASH}
+LABEL commit_id=${COMMIT_ID}
+LABEL build_time=${BUILD_TIME}
 
 # set working directory for the user
 WORKDIR /home/${container_user}
