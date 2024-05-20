@@ -1,9 +1,10 @@
 package io.mosip.registration.test.jobs;
 
+import static org.junit.Assert.assertNotNull;
+import java.util.ArrayList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import static org.mockito.Mockito.when;
-
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -163,7 +164,94 @@ public class KeyPolicySyncJobTest {
 		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(keyPolicySyncJob);
 
 		Mockito.when(policySyncService.fetchPolicy()).thenReturn(responseDTO);
+		
+		assertNotNull(responseDTO);
+		keyPolicySyncJob.executeInternal(context);
+		keyPolicySyncJob.executeJob("User", "1");
 
+	}
+	
+	
+	@Test
+	public void executeinternalFailureTest() throws JobExecutionException, RegBaseCheckedException {
+
+		SyncJobDef syncJob = new SyncJobDef();
+		syncJob.setId("1");
+
+		Map<String, SyncJobDef> jobMap = new HashMap<>();
+
+		jobMap.put(syncJob.getId(), syncJob);
+
+		syncJob.setId("2");
+		syncJob.setParentSyncJobId("1");
+
+		jobMap.put("2", syncJob);
+
+		ResponseDTO responseDTO = new ResponseDTO();
+		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
+		responseDTO.setSuccessResponseDTO(null);
+
+		Mockito.when(sessionContext.getUserContext()).thenReturn(userContext);
+		Mockito.when(userContext.getRegistrationCenterDetailDTO()).thenReturn(registrationCenterDetailDTO);
+		Mockito.when(registrationCenterDetailDTO.getRegistrationCenterId()).thenReturn("CNTR123");
+
+		Mockito.when(context.getJobDetail()).thenReturn(jobDetail);
+		Mockito.when(jobDetail.getJobDataMap()).thenReturn(jobDataMap);
+		Mockito.when(jobDataMap.get(Mockito.any())).thenReturn(applicationContext);
+		Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
+		Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
+		Mockito.when(applicationContext.getBean(PolicySyncService.class)).thenReturn(policySyncService);
+
+//		Mockito.when(jobManager.getChildJobs(Mockito.any())).thenReturn(jobMap);
+		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("1");
+
+		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(keyPolicySyncJob);
+
+		Mockito.when(policySyncService.fetchPolicy()).thenReturn(responseDTO);
+
+		assertNotNull(responseDTO);
+		keyPolicySyncJob.executeInternal(context);
+		keyPolicySyncJob.executeJob("User", "1");
+
+	}
+	
+	@Test
+	public void executeinternalFailure1Test() throws JobExecutionException, RegBaseCheckedException {
+
+		SyncJobDef syncJob = new SyncJobDef();
+		syncJob.setId("1");
+
+		Map<String, SyncJobDef> jobMap = new HashMap<>();
+
+		jobMap.put(syncJob.getId(), syncJob);
+
+		syncJob.setId("2");
+		syncJob.setParentSyncJobId("1");
+
+		jobMap.put("2", syncJob);
+
+		ResponseDTO responseDTO = new ResponseDTO();
+		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
+		responseDTO.setSuccessResponseDTO(null);
+
+		Mockito.when(sessionContext.getUserContext()).thenReturn(userContext);
+		Mockito.when(userContext.getRegistrationCenterDetailDTO()).thenReturn(registrationCenterDetailDTO);
+		Mockito.when(registrationCenterDetailDTO.getRegistrationCenterId()).thenReturn("CNTR123");
+
+		Mockito.when(context.getJobDetail()).thenReturn(jobDetail);
+		Mockito.when(jobDetail.getJobDataMap()).thenReturn(jobDataMap);
+		Mockito.when(jobDataMap.get(Mockito.any())).thenReturn(applicationContext);
+		Mockito.when(applicationContext.getBean(SyncManager.class)).thenReturn(syncManager);
+		Mockito.when(applicationContext.getBean(JobManager.class)).thenReturn(jobManager);
+		Mockito.when(applicationContext.getBean(PolicySyncService.class)).thenReturn(policySyncService);
+
+		Mockito.when(jobManager.getJobId(Mockito.any(JobExecutionContext.class))).thenReturn("1");
+
+		Mockito.when(applicationContext.getBean(Mockito.anyString())).thenReturn(keyPolicySyncJob);
+
+		Mockito.when(policySyncService.fetchPolicy()).thenThrow(RegBaseCheckedException.class);
+
+		assertNotNull(responseDTO);
 		keyPolicySyncJob.executeInternal(context);
 		keyPolicySyncJob.executeJob("User", "1");
 

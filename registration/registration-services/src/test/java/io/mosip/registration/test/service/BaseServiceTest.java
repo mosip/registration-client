@@ -35,9 +35,11 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.test.util.ReflectionTestUtils;
-
+import com.fasterxml.jackson.core.JsonParseException;
+import io.mosip.kernel.biometrics.constant.ProcessedLevelType;
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.kernel.core.util.JsonUtils;
+import io.mosip.kernel.core.util.exception.JsonMappingException;
 import io.mosip.registration.api.docscanner.DeviceType;
 import io.mosip.registration.api.docscanner.DocScannerFacade;
 import io.mosip.registration.api.docscanner.DocScannerService;
@@ -158,6 +160,13 @@ public class BaseServiceTest {
 	 */
 
 	@Test
+	public void getUserIdFailureTest() {
+		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
+		Mockito.when(SessionContext.userId()).thenReturn("MYUSERID");
+		assertNotNull(baseService.getUserIdFromSession());
+	}
+	
+	@Test
 	public void getDefaultUserIdTest() throws Exception{
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(true);
 		PowerMockito.doReturn("NA").when(SessionContext.class, "userId");
@@ -174,7 +183,6 @@ public class BaseServiceTest {
 	@Test
 	public void isNullTest() {
 		Assert.assertSame(baseService.isNull(null), true);
-
 	}
 
 	@Test
@@ -219,8 +227,7 @@ public class BaseServiceTest {
 		assertTrue(baseService.getOptionalLanguages().size() > 0);
 	}
 
-	@Ignore
-	@Test
+	@Test(expected = PreConditionCheckException.class)
 	public void getOptionalLanguagesFailureTest() throws PreConditionCheckException {
 		List<String> mandatoryLanguages = new ArrayList<String>();
 		List<String> optionalLanguages = new ArrayList<String>();
@@ -316,6 +323,22 @@ public class BaseServiceTest {
 		Mockito.when(FileUtils.getFile(Mockito.anyString())).thenReturn(new File("../pom.xml"));
 		Assert.assertNotNull(baseService.preparePacketStatusDto(registration));
 	}
+	
+	/*
+	 * @Test(expected = JsonParseException.class) public void
+	 * getPreparePacketStatusDtoFailureTest() throws IOException,
+	 * io.mosip.kernel.core.util.exception.JsonParseException, JsonMappingException,
+	 * io.mosip.kernel.core.exception.IOException { Registration registration =
+	 * getRegistration(); PowerMockito.mockStatic(JsonUtils.class);
+	 * PowerMockito.mockStatic(FileUtils.class); RegistrationDataDto
+	 * registrationDataDto = getRegistrationDto();
+	 * Mockito.when(JsonUtils.jsonStringToJavaObject(Mockito.any(),
+	 * Mockito.anyString())).thenThrow(JsonParseException.class);
+	 * PowerMockito.mockStatic(FileUtils.class);
+	 * Mockito.when(FileUtils.getFile(Mockito.anyString())).thenThrow(IOException.
+	 * class);
+	 * Assert.assertNotNull(baseService.preparePacketStatusDto(registration)); }
+	 */
 	
 	@Test
 	public void getConfiguredLangCodesTest() throws Throwable,IOException  {
@@ -670,6 +693,16 @@ public class BaseServiceTest {
 	
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithReRegistrationMachineIdTest() throws PreConditionCheckException, Exception {	
+		Mockito.when(SessionContext.userId()).thenReturn("110011");
+		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
+		Mockito.when(userDetailService.isValidUser(Mockito.anyString())).thenReturn(true);
+
+		Mockito.when(baseService.getStationId()).thenReturn(null);
+		baseService.proceedWithReRegistration();
+	}
+	
+	@Test(expected = PreConditionCheckException.class)
+	public void proceedWithReRegistrationMachineIdFailTest() throws PreConditionCheckException, Exception {	
 		Mockito.when(SessionContext.userId()).thenReturn("110011");
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(true);
 		Mockito.when(userDetailService.isValidUser(Mockito.anyString())).thenReturn(false);
