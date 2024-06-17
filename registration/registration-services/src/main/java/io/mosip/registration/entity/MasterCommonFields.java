@@ -2,10 +2,9 @@ package io.mosip.registration.entity;
 
 import java.sql.Timestamp;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
-
-import org.hibernate.annotations.Type;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * The Entity Class for MasterCommonFields.
@@ -27,7 +26,7 @@ public class MasterCommonFields {
 	@Column(name = "upd_dtimesz")
 	private Timestamp updatedTimesZone;
 	@Column(name = "is_deleted")
-	@Type(type = "true_false")
+	@Convert(converter = org.hibernate.type.TrueFalseConverter.class)
 	private Boolean isDeleted;
 	@Column(name = "del_dtimesz")
 	private Timestamp deletedTimesZone;

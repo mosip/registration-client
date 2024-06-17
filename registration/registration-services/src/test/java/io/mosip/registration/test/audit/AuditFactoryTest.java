@@ -1,16 +1,9 @@
 package io.mosip.registration.test.audit;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,7 +28,6 @@ import io.mosip.kernel.core.auditmanager.spi.AuditHandler;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.audit.AuditManagerSerivceImpl;
 import io.mosip.registration.constants.AuditEvent;
-import io.mosip.registration.constants.AuditReferenceIdTypes;
 import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
@@ -50,7 +42,7 @@ import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecke
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*" })
-@PrepareForTest({ InetAddress.class, SessionContext.class, ApplicationContext.class, DateUtils.class })
+@PrepareForTest({ SessionContext.class, ApplicationContext.class, DateUtils.class })
 public class AuditFactoryTest {
 
 	@Mock
@@ -96,7 +88,7 @@ public class AuditFactoryTest {
 
 	@Before
 	public void init() throws Exception {
-		PowerMockito.mockStatic(InetAddress.class, SessionContext.class);
+		PowerMockito.mockStatic(SessionContext.class);
 		PowerMockito.when(SessionContext.securityContext()).thenReturn(securityContext);
 		Map<String, Object> value = new HashMap<>();
 		value.put(RegistrationConstants.REGISTRATION_DATA, new RegistrationDTO());
@@ -116,7 +108,6 @@ public class AuditFactoryTest {
 
 	@Test
 	public void auditTest() throws Exception {
-		PowerMockito.when(InetAddress.getLocalHost()).thenCallRealMethod();
 		PowerMockito.doReturn("userId").when(SessionContext.class, "userId");
 		PowerMockito.doReturn("userName").when(SessionContext.class, "userName");
 		when(auditHandler.addAudit(Mockito.any(AuditRequestDto.class))).thenReturn(true);
@@ -151,8 +142,6 @@ public class AuditFactoryTest {
 
 	@Test
 	public void auditTestWithDefaultValues() throws Exception {
-		PowerMockito.mockStatic(InetAddress.class);
-		PowerMockito.when(InetAddress.getLocalHost()).thenThrow(new UnknownHostException("Unknown"));
 		when(auditHandler.addAudit(Mockito.any(AuditRequestDto.class))).thenReturn(true);
 
 		auditFactory.audit(AuditEvent.PACKET_APPROVED, Components.PACKET_CREATOR, "id", "ref");
@@ -167,8 +156,6 @@ public class AuditFactoryTest {
 		map.put("<time>", "1");
 		map.put("<count>", "1");
 		
-		PowerMockito.mockStatic(InetAddress.class);
-		PowerMockito.when(InetAddress.getLocalHost()).thenThrow(new UnknownHostException("Unknown"));
 		when(auditHandler.addAudit(Mockito.any(AuditRequestDto.class))).thenReturn(true);
 
 		auditFactory.auditWithParams(AuditEvent.REG_BIO_CAPTURE_DETAILS, Components.PACKET_HANDLER, "id", "ref",map);

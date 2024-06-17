@@ -57,7 +57,7 @@ import io.mosip.registration.service.external.impl.PreRegZipHandlingServiceImpl;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*", "javax.crypto.*"})
 @PrepareForTest({ FileUtils.class, SessionContext.class, KeyGeneratorUtils.class, javax.crypto.KeyGenerator.class, ApplicationContext.class })
 public class PreRegZipHandlingServiceTest {
 

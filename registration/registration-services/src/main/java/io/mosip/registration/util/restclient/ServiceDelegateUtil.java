@@ -138,7 +138,7 @@ public class ServiceDelegateUtil {
 			}
 
 			if (hasPathParams) {
-				requestHTTPDTO.setUri(UriComponentsBuilder.fromUriString(url).build(requestParams));
+				requestHTTPDTO.setUri(UriComponentsBuilder.fromUriString(url).buildAndExpand(requestParams).toUri());
 				url = requestHTTPDTO.getUri().toString();
 			}
 
@@ -292,8 +292,9 @@ public class ServiceDelegateUtil {
 	 * @param object
 	 *            request type
 	 * @return RequestHTTPDTO requestHTTPDTO with required data
+	 * @throws RegBaseCheckedException 
 	 */
-	private RequestHTTPDTO preparePOSTRequest(final String serviceName, final Object object) {
+	private RequestHTTPDTO preparePOSTRequest(final String serviceName, final Object object) throws RegBaseCheckedException {
 		LOGGER.debug("Preparing post request for web-service");
 
 		// DTO need to to be prepared
@@ -306,8 +307,17 @@ public class ServiceDelegateUtil {
 		setURI(requestHTTPDTO, null, getEnvironmentProperty(serviceName, RegistrationConstants.SERVICE_URL));
 
 		// RequestType
-		requestHTTPDTO.setClazz(Object.class);
-
+		Class<?> responseClass = null;
+		try {
+			String requestType = getEnvironmentProperty(serviceName, RegistrationConstants.REQUEST_TYPE);
+			responseClass = requestType != null ? Class.forName(requestType) : Object.class;
+		} catch (ClassNotFoundException classNotFoundException) {
+			throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_CLASS_NOT_FOUND_ERROR_CODE.getErrorCode(),
+							RegistrationExceptionConstants.REG_CLASS_NOT_FOUND_ERROR_CODE.getErrorMessage(),
+							classNotFoundException);
+		}
+		requestHTTPDTO.setClazz(responseClass);
+		
 		LOGGER.debug("Completed preparing post request for web-service");
 
 		return requestHTTPDTO;

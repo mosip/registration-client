@@ -1,12 +1,6 @@
 package io.mosip.registration.test.login;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -23,10 +17,8 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.internal.util.reflection.Whitebox;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import org.mockito.stubbing.OngoingStubbing;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -50,7 +42,6 @@ import io.mosip.registration.entity.FileSignature;
 import io.mosip.registration.exception.ConnectionException;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.repositories.FileSignatureRepository;
-import io.mosip.registration.service.packet.PacketUploadService;
 import io.mosip.registration.util.restclient.RequestHTTPDTO;
 import io.mosip.registration.util.restclient.RestClientUtil;
 
@@ -66,8 +57,6 @@ public class RestClientUtilTest {
 	RestClientUtil restClientUtil;
 
 	private RequestHTTPDTO requestHTTPDTO;
-
-	private PacketUploadService downloadService;
 
 	@Mock
 	RestTemplate plainRestTemplate;
@@ -96,8 +85,6 @@ public class RestClientUtilTest {
 		appMap.put(RegistrationConstants.HTTP_API_WRITE_TIMEOUT, "30");
 		PowerMockito.mockStatic(ApplicationContext.class);
 		Mockito.when(ApplicationContext.map()).thenReturn(appMap);
-
-		FileSignature fileSignature = new FileSignature();
 	}
 
 	

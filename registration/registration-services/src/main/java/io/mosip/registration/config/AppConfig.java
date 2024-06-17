@@ -2,8 +2,9 @@ package io.mosip.registration.config;
 
 import javax.sql.DataSource;
 
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -89,8 +90,8 @@ public class AppConfig {
 	@Bean
 	@Primary
 	public RestTemplate restTemplate() {
-		HttpClientBuilder httpClientBuilder = HttpClients.custom().setMaxConnPerRoute(defaultMaxConnectionPerRoute)
-				.setMaxConnTotal(defaultTotalMaxConnection).disableCookieManagement();
+		HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManager(PoolingHttpClientConnectionManagerBuilder.create().setMaxConnPerRoute(defaultMaxConnectionPerRoute)
+				.setMaxConnTotal(defaultTotalMaxConnection).build()).disableCookieManagement();
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		requestFactory.setHttpClient(httpClientBuilder.build());
 
@@ -99,8 +100,8 @@ public class AppConfig {
 
 	@Bean
 	public RestTemplate selfTokenRestTemplate() {
-		HttpClientBuilder httpClientBuilder = HttpClients.custom().setMaxConnPerRoute(selfTokenMaxConnectionPerRoute)
-				.setMaxConnTotal(selfTokenTotalMaxConnection).disableCookieManagement();
+		HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManager(PoolingHttpClientConnectionManagerBuilder.create().setMaxConnPerRoute(selfTokenMaxConnectionPerRoute)
+				.setMaxConnTotal(selfTokenTotalMaxConnection).build()).disableCookieManagement();
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		requestFactory.setHttpClient(httpClientBuilder.build());
 

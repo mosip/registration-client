@@ -291,9 +291,16 @@ public class TemplateGenerator extends BaseService {
 
 		String key = String.format("%s_%s", field.getId(), Modality.EXCEPTION_PHOTO.getAttributes().get(0));
 		if (registration.getBiometrics().containsKey(key)) {
-			setBiometricImage(templateValues, RegistrationConstants.TEMPLATE_EXCEPTION_IMAGE_SOURCE,
-					null, getImageFromISO(Modality.EXCEPTION_PHOTO,
-							Arrays.asList(registration.getBiometrics().get(key))).get(0));
+			if ("applicant".equalsIgnoreCase(registration.getBiometrics().get(key).getSubType())) {
+				setBiometricImage(templateValues, RegistrationConstants.TEMPLATE_EXCEPTION_IMAGE_SOURCE,
+						null, getImageFromISO(Modality.EXCEPTION_PHOTO,
+								Arrays.asList(registration.getBiometrics().get(key))).get(0));
+			}
+			if ("introducer".equalsIgnoreCase(registration.getBiometrics().get(key).getSubType())) {
+				setBiometricImage(templateValues, RegistrationConstants.TEMPLATE_INTRODUCER_EXCEPTION_IMAGE_SOURCE,
+						null, getImageFromISO(Modality.EXCEPTION_PHOTO,
+								Arrays.asList(registration.getBiometrics().get(key))).get(0));
+			}
 		}
 		return bio_data;
 	}

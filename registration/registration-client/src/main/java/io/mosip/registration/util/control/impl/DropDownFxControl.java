@@ -149,7 +149,7 @@ public class DropDownFxControl extends FxControl {
 					.lowerEntry(this.hierarchyLevel);
 			if(parentEntry == null) { //first parent
 				parentEntry = GenericController.hierarchyLevels.get(langCode).lowerEntry(this.hierarchyLevel);
-				Assert.notNull(parentEntry);
+				Assert.notNull(parentEntry, "Parent entry is null");
 				List<Location> locations = masterSyncDao.getLocationDetails(parentEntry.getValue(), langCode);
 				fieldSubType = locations != null && !locations.isEmpty() ? locations.get(0).getCode() : null;
 			}

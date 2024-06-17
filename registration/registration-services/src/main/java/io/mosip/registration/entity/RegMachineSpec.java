@@ -2,7 +2,7 @@ package io.mosip.registration.entity;
 
 import java.io.Serializable;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * The Entity Class for Reg Machine Spec.

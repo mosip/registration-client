@@ -310,7 +310,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 				"Updating the packet details in the Registration table");
 
 		Timestamp timestamp = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
-		Registration reg = registrationRepository.getOne(packet.getPacketId());
+		Registration reg = registrationRepository.findById(Registration.class, packet.getPacketId());
 		// reg.setStatusCode(packet.getPacketClientStatus());
 		reg.setClientStatusCode(packet.getPacketClientStatus());
 		reg.setIsActive(true);

@@ -228,7 +228,7 @@ public class RegistrationDAOTest {
 		reg.setApproverRoleCode("SUPERADMIN");
 		reg.setAckFilename("file1");
 		
-		when(registrationRepository.getOne(Mockito.anyString())).thenReturn(regobjectrequest);
+		when(registrationRepository.findById(Mockito.any(), Mockito.anyString())).thenReturn(regobjectrequest);
 		when(registrationRepository.update(Mockito.any())).thenReturn(reg);
 
 		assertSame(reg.getClientStatusCode(), registrationDAOImpl.updatePacketSyncStatus(packetStatusDTO).getClientStatusCode());

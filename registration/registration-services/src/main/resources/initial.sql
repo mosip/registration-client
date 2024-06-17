@@ -252,7 +252,7 @@ INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.applicant.type.age.limit'
 
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.jsonvalidator.file-storage-uri','mosip.kernel.jsonvalidator.file-storage-uri','LOCAL','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.symmetric-algorithm-name','mosip.kernel.crypto.symmetric-algorithm-name','AES/GCM/PKCS5Padding','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.symmetric-algorithm-name','mosip.kernel.crypto.symmetric-algorithm-name','AES/GCM/NoPadding','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.keygenerator.symmetric-key-length','mosip.kernel.keygenerator.symmetric-key-length','256','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 

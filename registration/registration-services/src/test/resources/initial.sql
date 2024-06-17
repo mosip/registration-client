@@ -136,178 +136,175 @@ CREATE UNIQUE INDEX IF NOT EXISTS "REG"."UK_ROLEPRT_ID" ON "REG"."APP_ROLE_PRIOR
 -- DDL Statements for keys
 -- ----------------------------------------------
 
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.applicant.type.age.limit','mosip.kernel.applicant.type.age.limit','5','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.jsonvalidator.file-storage-uri','mosip.kernel.jsonvalidator.file-storage-uri','LOCAL','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
--- FOREIGN
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.applicant.type.age.limit','mosip.kernel.applicant.type.age.limit','5','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.symmetric-algorithm-name','mosip.kernel.crypto.symmetric-algorithm-name','AES/GCM/NoPadding','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.jsonvalidator.file-storage-uri','mosip.kernel.jsonvalidator.file-storage-uri','LOCAL','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.keygenerator.symmetric-key-length','mosip.kernel.keygenerator.symmetric-key-length','256','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.symmetric-algorithm-name','mosip.kernel.crypto.symmetric-algorithm-name','AES/GCM/PKCS5Padding','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.keygenerator.asymmetric-key-length','mosip.kernel.keygenerator.asymmetric-key-length','2048','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.keygenerator.symmetric-key-length','mosip.kernel.keygenerator.symmetric-key-length','256','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.prid.restricted-numbers','mosip.kernel.prid.restricted-numbers','786,666','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.keygenerator.asymmetric-key-length','mosip.kernel.keygenerator.asymmetric-key-length','2048','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.prid.length','mosip.kernel.prid.length','14','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.prid.restricted-numbers','mosip.kernel.prid.restricted-numbers','786,666','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.prid.sequence-limit','mosip.kernel.prid.sequence-limit','3','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.prid.length','mosip.kernel.prid.length','14','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.prid.repeating-block-limit','mosip.kernel.prid.repeating-block-limit','3','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.prid.sequence-limit','mosip.kernel.prid.sequence-limit','3','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.prid.repeating-limit','mosip.kernel.prid.repeating-limit','2','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.prid.repeating-block-limit','mosip.kernel.prid.repeating-block-limit','3','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.prid.not-start-with','mosip.kernel.prid.not-start-with','0,1','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.prid.repeating-limit','mosip.kernel.prid.repeating-limit','2','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.uin.restricted-numbers','mosip.kernel.uin.restricted-numbers','786,666','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.prid.not-start-with','mosip.kernel.prid.not-start-with','0,1','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.uin.length.repeating-block-limit','mosip.kernel.uin.length.repeating-block-limit','2','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.uin.restricted-numbers','mosip.kernel.uin.restricted-numbers','786,666','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.uin.length.sequence-limit','mosip.kernel.uin.length.sequence-limit','3','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.uin.length.repeating-block-limit','mosip.kernel.uin.length.repeating-block-limit','2','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.uin.length.repeating-limit','mosip.kernel.uin.length.repeating-limit','2','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.uin.length.sequence-limit','mosip.kernel.uin.length.sequence-limit','3','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.uin.length.conjugative-even-digits-limit','mosip.kernel.uin.length.conjugative-even-digits-limit','3','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.uin.length.repeating-limit','mosip.kernel.uin.length.repeating-limit','2','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.transliteration.arabic-language-code','mosip.kernel.transliteration.arabic-language-code','ara','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.uin.length.conjugative-even-digits-limit','mosip.kernel.uin.length.conjugative-even-digits-limit','3','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.transliteration.franch-language-code','mosip.kernel.transliteration.franch-language-code','fra','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.transliteration.arabic-language-code','mosip.kernel.transliteration.arabic-language-code','ara','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.virus-scanner.host','mosip.kernel.virus-scanner.host','104.211.209.102','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.transliteration.franch-language-code','mosip.kernel.transliteration.franch-language-code','fra','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.virus-scanner.port','mosip.kernel.virus-scanner.port','3310','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.virus-scanner.host','mosip.kernel.virus-scanner.host','104.211.209.102','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.jsonvalidator.property-source','mosip.kernel.jsonvalidator.property-source','LOCAL','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.virus-scanner.port','mosip.kernel.virus-scanner.port','3310','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.xsdstorage-uri','mosip.kernel.xsdstorage-uri','LOCAL','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.jsonvalidator.property-source','mosip.kernel.jsonvalidator.property-source','LOCAL','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.xsdfile','mosip.kernel.xsdfile','LOCAL','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.xsdstorage-uri','mosip.kernel.xsdstorage-uri','LOCAL','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.jsonvalidator.schema-name','mosip.kernel.jsonvalidator.schema-name','mosip-identity-json-schema.json','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.xsdfile','mosip.kernel.xsdfile','LOCAL','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.machinecenterchanged','mosip.registration.machinecenterchanged','false','CONFIGURATION','eng',true,'System',current_timestamp,'SYSTEM',current_timestamp, false, current_timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.machine.inactive','mosip.registration.machine.inactive','false','CONFIGURATION','eng',true,'System',current_timestamp,'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.jsonvalidator.schema-name','mosip.kernel.jsonvalidator.schema-name','mosip-identity-json-schema.json','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.initial_setup','mosip.registration.initial_setup','Y','CONFIGURATION','eng',true,'System',current_timestamp,'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.machinecenterchanged','mosip.registration.machinecenterchanged','false','CONFIGURATION','eng',true,'System',current timestamp,'SYSTEM',current timestamp, false, current timestamp);
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.machine.inactive','mosip.registration.machine.inactive','false','CONFIGURATION','eng',true,'System',current timestamp,'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.is_software_update_available','mosip.registration.is_software_update_available','N','CONFIGURATION','eng',true,'System',current_timestamp,'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.initial_setup','mosip.registration.initial_setup','Y','CONFIGURATION','eng',true,'System',current timestamp,'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.reg.services.current.version','mosip.reg.services.current.version','0','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.is_software_update_available','mosip.registration.is_software_update_available','N','CONFIGURATION','eng',true,'System',current timestamp,'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.keygenerator.asymmetric-algorithm-name','mosip.kernel.keygenerator.asymmetric-algorithm-name','RSA','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.reg.services.current.version','mosip.reg.services.current.version','0','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.keygenerator.symmetric-algorithm-name','mosip.kernel.keygenerator.symmetric-algorithm-name','AES','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.keygenerator.asymmetric-algorithm-name','mosip.kernel.keygenerator.asymmetric-algorithm-name','RSA','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.asymmetric-algorithm-name','mosip.kernel.crypto.asymmetric-algorithm-name','RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.keygenerator.symmetric-algorithm-name','mosip.kernel.keygenerator.symmetric-algorithm-name','AES','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.signature.signature-request-id','mosip.kernel.signature.signature-request-id','SIGNATURE.REQUEST','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.asymmetric-algorithm-name','mosip.kernel.crypto.asymmetric-algorithm-name','RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.signature.signature-version-id','mosip.kernel.signature.signature-version-id','v1.0','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.signature.signature-request-id','mosip.kernel.signature.signature-request-id','SIGNATURE.REQUEST','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.signed.header','mosip.signed.header','response-signature','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.signature.signature-version-id','mosip.kernel.signature.signature-version-id','v1.0','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('auth.role.prefix','auth.role.prefix','ROLE_','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.signed.header','mosip.signed.header','response-signature','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('auth.header.name','auth.header.name','Authorization','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('auth.role.prefix','auth.role.prefix','ROLE_','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.idobjectvalidator.schema-name','mosip.kernel.idobjectvalidator.schema-name','mosip-identity-json-schema.json','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('auth.header.name','auth.header.name','Authorization','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.idobjectvalidator.file-storage-uri','mosip.kernel.idobjectvalidator.file-storage-uri','LOCAL','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.idobjectvalidator.schema-name','mosip.kernel.idobjectvalidator.schema-name','mosip-identity-json-schema.json','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.idobjectvalidator.property-source','mosip.kernel.idobjectvalidator.property-source','LOCAL','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.idobjectvalidator.file-storage-uri','mosip.kernel.idobjectvalidator.file-storage-uri','LOCAL','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.new-registration','mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.new-registration','fullName,dateOfBirth|age,gender,addressLine1,region,province,city,zone,postalCode,residenceStatus,referenceIdentityNumber','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.idobjectvalidator.property-source','mosip.kernel.idobjectvalidator.property-source','LOCAL','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.child-registration','mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.child-registration','fullName,dateOfBirth|age,gender,addressLine1,region,province,city,zone,postalCode,residenceStatus,referenceIdentityNumber,parentOrGuardianName,parentOrGuardianRID|parentOrGuardianUIN,parentOrGuardianBiometrics','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.new-registration','mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.new-registration','fullName,dateOfBirth|age,gender,addressLine1,region,province,city,zone,postalCode,residenceStatus,referenceIdentityNumber','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.lost-uin','mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.lost-uin','','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.child-registration','mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.child-registration','fullName,dateOfBirth|age,gender,addressLine1,region,province,city,zone,postalCode,residenceStatus,referenceIdentityNumber,parentOrGuardianName,parentOrGuardianRID|parentOrGuardianUIN,parentOrGuardianBiometrics','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.update-uin','mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.update-uin','','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.lost-uin','mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.lost-uin','','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.dateOfBirth','mosip.id.validation.identity.dateOfBirth','^\\d{4}/([0]\\d|1[0-2])/([0-2]\\d|3[01])$','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.update-uin','mosip.kernel.idobjectvalidator.mandatory-attributes.reg-client.update-uin','','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.phone','mosip.id.validation.identity.phone','^([6-9]{1})([0-9]{9})$','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.dateOfBirth','mosip.id.validation.identity.dateOfBirth','^\\d{4}/([0]\\d|1[0-2])/([0-2]\\d|3[01])$','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.email','mosip.id.validation.identity.email','^[\\w-\\+]+(\\.[\\w]+)*@[\\w-]+(\\.[\\w]+)*(\\.[a-z]{2,})$','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.phone','mosip.id.validation.identity.phone','^([6-9]{1})([0-9]{9})$','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.postalCode','mosip.id.validation.identity.postalCode','^[(?i)A-Z0-9]{5}$','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.email','mosip.id.validation.identity.email','^[\\w-\\+]+(\\.[\\w]+)*@[\\w-]+(\\.[\\w]+)*(\\.[a-z]{2,})$','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.referenceIdentityNumber','mosip.id.validation.identity.referenceIdentityNumber','^([0-9]{10,30})$','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.postalCode','mosip.id.validation.identity.postalCode','^[(?i)A-Z0-9]{5}$','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.age','mosip.id.validation.identity.age','^(150|1[0-4][0-9]|[1-9]?[0-9])$','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.referenceIdentityNumber','mosip.id.validation.identity.referenceIdentityNumber','^([0-9]{10,30})$','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.fullName.[*].value','mosip.id.validation.identity.fullName.[*].value','^(?=.{0,50}$).*','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.age','mosip.id.validation.identity.age','^(150|1[0-4][0-9]|[1-9]?[0-9])$','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.addressLine1.[*].value','mosip.id.validation.identity.addressLine1.[*].value','^(?=.{0,50}$).*','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.fullName.[*].value','mosip.id.validation.identity.fullName.[*].value','^(?=.{0,50}$).*','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.addressLine2.[*].value','mosip.id.validation.identity.addressLine2.[*].value','^(?=.{0,50}$).*','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.addressLine1.[*].value','mosip.id.validation.identity.addressLine1.[*].value','^(?=.{0,50}$).*','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.addressLine3.[*].value','mosip.id.validation.identity.addressLine3.[*].value','^(?=.{0,50}$).*','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.addressLine2.[*].value','mosip.id.validation.identity.addressLine2.[*].value','^(?=.{0,50}$).*','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.region.[*].value','mosip.id.validation.identity.region.[*].value','^(?=.{0,50}$).*','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.addressLine3.[*].value','mosip.id.validation.identity.addressLine3.[*].value','^(?=.{0,50}$).*','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.province.[*].value','mosip.id.validation.identity.province.[*].value','^(?=.{0,50}$).*','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.region.[*].value','mosip.id.validation.identity.region.[*].value','^(?=.{0,50}$).*','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.city.[*].value','mosip.id.validation.identity.city.[*].value','^(?=.{0,50}$).*','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.province.[*].value','mosip.id.validation.identity.province.[*].value','^(?=.{0,50}$).*','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.country.code','mosip.country.code','MOR','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.id.validation.identity.city.[*].value','mosip.id.validation.identity.city.[*].value','^(?=.{0,50}$).*','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.app.id','mosip.registration.app.id','registrationclient','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.country.code','mosip.country.code','MOR','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.otp.expiry-time','mosip.kernel.otp.expiry-time','180','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.app.id','mosip.registration.app.id','registrationclient','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('auth.jwt.secret','auth.jwt.secret','authjwtsecret','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.otp.expiry-time','mosip.kernel.otp.expiry-time','180','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('auth.jwt.base','auth.jwt.base','Mosip-Token','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('auth.jwt.secret','auth.jwt.secret','authjwtsecret','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.pdf_owner_password','mosip.kernel.pdf_owner_password','{cipher}AQBUgUNlaJfAh44K+n1DenAzBAHaYh42nHxYd4kgYlSTh+Jgs5KOxKpNfW6TFpbpokiE+qM29J2aww5o1HDWKUhboLfpRfIkssNKxThaOI9crKE6LSNQK0mmDejcvOoyj1OuY5imX+bIgLRdunBJtyZljGPquw7l0oqcHSolYaWCnt2UgX5Hdx1aovSrP+sgGUEZs23ASzEXTTAA8GQKZJxYsqz6sMyzvD6bCkU1FMSxN04d+j5N71GsSh1WzoUNSy09ydq997WEi8TLOZHTnZ6W142cYJoNvVSOhZuDT9FZogxQKaZ6mgxcO9aF/k2cYLVsy2axGbBm8Vba04/AyfK2pgRcnE4M5pvUJsNydOZvmcgQNial4+PAAz9xqKLURMA=','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('auth.jwt.base','auth.jwt.base','Mosip-Token','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.gcm-tag-length','mosip.kernel.crypto.gcm-tag-length','128','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.pdf_owner_password','mosip.kernel.pdf_owner_password','{cipher}AQBUgUNlaJfAh44K+n1DenAzBAHaYh42nHxYd4kgYlSTh+Jgs5KOxKpNfW6TFpbpokiE+qM29J2aww5o1HDWKUhboLfpRfIkssNKxThaOI9crKE6LSNQK0mmDejcvOoyj1OuY5imX+bIgLRdunBJtyZljGPquw7l0oqcHSolYaWCnt2UgX5Hdx1aovSrP+sgGUEZs23ASzEXTTAA8GQKZJxYsqz6sMyzvD6bCkU1FMSxN04d+j5N71GsSh1WzoUNSy09ydq997WEi8TLOZHTnZ6W142cYJoNvVSOhZuDT9FZogxQKaZ6mgxcO9aF/k2cYLVsy2axGbBm8Vba04/AyfK2pgRcnE4M5pvUJsNydOZvmcgQNial4+PAAz9xqKLURMA=','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.hash-symmetric-key-length','mosip.kernel.crypto.hash-symmetric-key-length','256','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.gcm-tag-length','mosip.kernel.crypto.gcm-tag-length','128','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.hash-algorithm-name','mosip.kernel.crypto.hash-algorithm-name','PBKDF2WithHmacSHA512','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.hash-symmetric-key-length','mosip.kernel.crypto.hash-symmetric-key-length','256','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.sign-algorithm-name','mosip.kernel.crypto.sign-algorithm-name','SHA512withRSA','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.hash-algorithm-name','mosip.kernel.crypto.hash-algorithm-name','PBKDF2WithHmacSHA512','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.hash-iteration','mosip.kernel.crypto.hash-iteration','100000','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.sign-algorithm-name','mosip.kernel.crypto.sign-algorithm-name','SHA512withRSA','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.data-key-splitter','mosip.kernel.data-key-splitter','#KEY_SPLITTER#','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.crypto.hash-iteration','mosip.kernel.crypto.hash-iteration','100000','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.HTTP_API_READ_TIMEOUT','mosip.registration.HTTP_API_READ_TIMEOUT','60000','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.data-key-splitter','mosip.kernel.data-key-splitter','#KEY_SPLITTER#','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.HTTP_API_WRITE_TIMEOUT','mosip.registration.HTTP_API_WRITE_TIMEOUT','60000','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.HTTP_API_READ_TIMEOUT','mosip.registration.HTTP_API_READ_TIMEOUT','60000','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.last_software_update','mosip.registration.last_software_update','-','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.HTTP_API_WRITE_TIMEOUT','mosip.registration.HTTP_API_WRITE_TIMEOUT','60000','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.regclient_installed_time','mosip.registration.regclient_installed_time',current_timestamp,'CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.last_software_update','mosip.registration.last_software_update','-','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.rcapture','mosip.registration.mdm.key.domain.rcapture','DEVICE','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.regclient_installed_time','mosip.registration.regclient_installed_time',current timestamp,'CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.digitalId','mosip.registration.mdm.key.domain.digitalId','DEVICE','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.rcapture','mosip.registration.mdm.key.domain.rcapture','DEVICE','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.deviceinfo','mosip.registration.mdm.key.domain.deviceinfo','DEVICE','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.digitalId','mosip.registration.mdm.key.domain.digitalId','DEVICE','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.restricted-numbers','mosip.kernel.vid.restricted-numbers','786,666','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.mdm.trust.domain.deviceinfo','mosip.registration.mdm.key.domain.deviceinfo','DEVICE','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.not-start-with','mosip.kernel.vid.not-start-with','0,1','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.restricted-numbers','mosip.kernel.vid.restricted-numbers','786,666','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.repeating-limit','mosip.kernel.vid.length.repeating-limit','2','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.not-start-with','mosip.kernel.vid.not-start-with','0,1','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.repeating-block-limit','mosip.kernel.vid.length.repeating-block-limit','2','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.repeating-limit','mosip.kernel.vid.length.repeating-limit','2','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.sequence-limit','mosip.kernel.vid.length.sequence-limit','3','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.repeating-block-limit','mosip.kernel.vid.length.repeating-block-limit','2','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length','mosip.kernel.vid.length','16','CONFIGURATION','eng',true,'SYSTEM',current_timestamp, 'SYSTEM',current_timestamp, false, current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.sequence-limit','mosip.kernel.vid.length.sequence-limit','3','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION","PRE_EXPIRE_DAYS", "ACCESS_ALLOWED", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES ('REGISTRATION', 1095, 50, 'NA', true, 'mosipadmin', current_timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length','mosip.kernel.vid.length','16','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION","PRE_EXPIRE_DAYS", "ACCESS_ALLOWED", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES('KERNEL', 1095, 50, 'NA', true, 'mosipadmin', current_timestamp);
 
-INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION","PRE_EXPIRE_DAYS", "ACCESS_ALLOWED", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES ('REGISTRATION', 1095, 50, 'NA', true, 'mosipadmin', current timestamp);
+INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION","PRE_EXPIRE_DAYS", "ACCESS_ALLOWED", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES('SERVER-RESPONSE', 1095, 50, 'NA', true, 'mosipadmin', current_timestamp);
 
-INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION","PRE_EXPIRE_DAYS", "ACCESS_ALLOWED", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES('KERNEL', 1095, 50, 'NA', true, 'mosipadmin', current timestamp);
+INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION","PRE_EXPIRE_DAYS", "ACCESS_ALLOWED", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES('IDA', 1095, 50, 'NA', true, 'mosipadmin', current_timestamp);
 
-INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION","PRE_EXPIRE_DAYS", "ACCESS_ALLOWED", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES('SERVER-RESPONSE', 1095, 50, 'NA', true, 'mosipadmin', current timestamp);
-
-INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION","PRE_EXPIRE_DAYS", "ACCESS_ALLOWED", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES('IDA', 1095, 50, 'NA', true, 'mosipadmin', current timestamp);
-
-INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION","PRE_EXPIRE_DAYS", "ACCESS_ALLOWED", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES('BASE', 730, 20, 'NA', true, 'mosipadmin', current timestamp);
+INSERT INTO "REG"."KEY_POLICY_DEF" ("APP_ID", "KEY_VALIDITY_DURATION","PRE_EXPIRE_DAYS", "ACCESS_ALLOWED", "IS_ACTIVE", "CR_BY", "CR_DTIMES") VALUES('BASE', 730, 20, 'NA', true, 'mosipadmin', current_timestamp);

@@ -2,10 +2,9 @@ package io.mosip.registration.entity.id;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-
-import org.hibernate.annotations.Type;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embeddable;
 
 /**
  * Composite key for GenericId.
@@ -22,7 +21,7 @@ public class GenericId implements Serializable {
 	@Column(name = "code")
 	private String code;
 	@Column(name = "is_active")
-	@Type(type = "true_false")
+	@Convert(converter = org.hibernate.type.TrueFalseConverter.class)
 	private Boolean isActive;
 
 	/**

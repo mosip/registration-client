@@ -2,9 +2,7 @@ package io.mosip.registration.entity;
 
 import java.io.Serializable;
 
-import javax.persistence.*;
-
-import io.mosip.registration.entity.id.CodeAndLanguageCodeID;
+import jakarta.persistence.*;
 
 /**
  * This Entity Class contains list of machine types[Desktop,Laptop...] with respect to language code.
