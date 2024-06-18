@@ -10,7 +10,9 @@
 		<version>1.2.1-java21-SNAPSHOT</version>
 	</parent>
 
+	<groupId>io.mosip.registration</groupId>
     <artifactId>registration-api-stub-impl</artifactId>
+    <version>1.2.1-java21-SNAPSHOT</version>
     
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

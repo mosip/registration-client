@@ -8,6 +8,7 @@
   <artifactId>registration-test</artifactId>
   <name>registration-test</name>
   <description>Maven project of MOSIP Registration Test</description>
+  <version>1.2.1-java21-SNAPSHOT</version>
    
    <properties>
       <maven.compiler.source>21</maven.compiler.source>
