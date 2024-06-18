@@ -46,25 +46,25 @@
         <dependency>
             <groupId>morena7</groupId>
             <artifactId>morena7</artifactId>
-            <scope>system</scope>
+            <!--<scope>system</scope>-->
             <version>1.0</version>
-           <systemPath>C:\Users\61044292\Downloads\morena-7.1.36\lib\morena7.jar</systemPath>
+           <!-- <systemPath>${basedir}/lib/morena/morena7.jar</systemPath>-->
         </dependency>
 
         <dependency>
             <groupId>morena7-license</groupId>
             <artifactId>morena7-license</artifactId>
-            <scope>system</scope>
+            <!--<scope>system</scope>-->
             <version>1.0</version>
-            <systemPath>C:\Users\61044292\Downloads\morena-7.1.36\lib\morena_license.jar</systemPath>
+            <!--<systemPath>${basedir}/lib/morena/morena_license.jar</systemPath>-->
         </dependency>
 
         <dependency>
             <groupId>morena7-win</groupId>
             <artifactId>morena7-win</artifactId>
-           <scope>system</scope>
+           <!--<scope>system</scope>-->
             <version>1.0</version>
-           <systemPath>C:\Users\61044292\Downloads\morena-7.1.36\lib\morena7_win.jar</systemPath>
+           <!-- <systemPath>${basedir}/lib/morena/morena7_win.jar</systemPath>-->
         </dependency>
 
         <!--<dependency>
