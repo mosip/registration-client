@@ -12,6 +12,7 @@
 
 	<artifactId>registration-client</artifactId>
 	<packaging>jar</packaging>
+	<version>1.2.1-java21-SNAPSHOT</version>
 	<name>registration-client</name>
 	<description>Maven project of MOSIP Registration UI</description>
 
