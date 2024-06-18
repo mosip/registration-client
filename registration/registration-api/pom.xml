@@ -11,6 +11,7 @@
 	</parent>
  
     <artifactId>registration-api</artifactId>
+    <version>1.2.1-java21-SNAPSHOT</version>
     
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
