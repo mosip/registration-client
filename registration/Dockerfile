@@ -1,4 +1,4 @@
-FROM mosipdev/javafx-reg-client-openjdk:latest
+FROM mosipdev/openjdk-21-jre:latest
 
 ARG SOURCE
 ARG COMMIT_HASH
