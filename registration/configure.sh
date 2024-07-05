@@ -100,10 +100,10 @@ echo "FOR /F \"tokens=* delims=\" %%x in (.UNKNOWN_JARS) DO DEL /Q lib\%%x" >> "
 echo ")" >> "${work_dir}"/registration-client/target/run.bat
 echo "if exist .TEMP (" >> "${work_dir}"/registration-client/target/run.bat
 echo "echo Starting Registration Client after Upgrade" >> "${work_dir}"/registration-client/target/run.bat
-echo "xcopy /f/k/y/v/q .TEMP lib && rmdir /s /q .TEMP && start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* --add-modules=javafx.controls,javafx.fxml --add-exports javafx.graphics/com.sun.javafx.application=ALL-UNNAMED io.mosip.registration.controller.Initialization > startup.log 2>&1" >> "${work_dir}"/registration-client/target/run.bat
+echo "xcopy /f/k/y/v/q .TEMP lib && rmdir /s /q .TEMP && start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* --add-modules=javafx.controls,javafx.fxml --add-exports javafx.graphics/com.sun.javafx.application=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED io.mosip.registration.controller.Initialization > startup.log 2>&1" >> "${work_dir}"/registration-client/target/run.bat
 echo ") else (" >> "${work_dir}"/registration-client/target/run.bat
 echo "echo Starting Registration Client" >> "${work_dir}"/registration-client/target/run.bat
-echo "start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* --add-modules=javafx.controls,javafx.fxml --add-exports javafx.graphics/com.sun.javafx.application=ALL-UNNAMED io.mosip.registration.controller.Initialization > startup.log 2>&1" >> "${work_dir}"/registration-client/target/run.bat
+echo "start jre\bin\javaw -Xmx2048m -Xms2048m -Dfile.encoding=UTF-8 -cp lib/*;/* --add-modules=javafx.controls,javafx.fxml --add-exports javafx.graphics/com.sun.javafx.application=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED io.mosip.registration.controller.Initialization > startup.log 2>&1" >> "${work_dir}"/registration-client/target/run.bat
 echo ")" >> "${work_dir}"/registration-client/target/run.bat
 
 cp "${work_dir}"/registration-client/target/run.bat "${work_dir}"/registration-client/target/lib/1201to121_run.bat
