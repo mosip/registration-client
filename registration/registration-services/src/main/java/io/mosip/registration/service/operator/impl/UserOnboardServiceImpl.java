@@ -466,7 +466,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 					.get(RegistrationConstants.ERRORS);
 			LinkedHashMap<String, Object> responseMap = (LinkedHashMap<String, Object>) onBoardResponseMap
 					.get(RegistrationConstants.RESPONSE);
-			userOnbaordFlag = (Boolean) responseMap.get(RegistrationConstants.ON_BOARD_AUTH_STATUS);
+			userOnbaordFlag = responseMap != null ? (Boolean) responseMap.get(RegistrationConstants.ON_BOARD_AUTH_STATUS) : false;
 			LOGGER.error(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID, listOfFailureResponse.toString());
 			setErrorResponse(responseDTO,
 					listOfFailureResponse.size() > 0 ? (String) listOfFailureResponse.get(0).get("errorMessage")
