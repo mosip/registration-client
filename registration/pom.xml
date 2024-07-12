@@ -11,7 +11,7 @@
 	</parent>-->
 
 	<groupId>io.mosip.registration</groupId>
-	<version>1.2.1-java21-SNAPSHOT</version>
+	<version>1.2.1-SNAPSHOT</version>
 	<artifactId>registration-client-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>MOSIP Registration Client</name>
@@ -105,10 +105,10 @@
 		<!-- Jackson -->
 		<jackson.version>2.15.4</jackson.version>
 		<jackson.mapper.asl.version>1.9.7</jackson.mapper.asl.version>
-		<mosip.registration.client.version>1.2.1-java21-SNAPSHOT</mosip.registration.client.version>
-		<mosip.core.kernel.version>1.2.1-java21-SNAPSHOT</mosip.core.kernel.version>
-		<mosip.biometric.util.version>1.2.1-java21-SNAPSHOT</mosip.biometric.util.version>
-		<mosip.commons.packet.manager.version>1.2.1-java21-SNAPSHOT</mosip.commons.packet.manager.version>
+		<mosip.registration.client.version>1.2.1-SNAPSHOT</mosip.registration.client.version>
+		<mosip.core.kernel.version>1.2.1-SNAPSHOT</mosip.core.kernel.version>
+		<mosip.biometric.util.version>1.2.1-SNAPSHOT</mosip.biometric.util.version>
+		<mosip.commons.packet.manager.version>1.2.1-SNAPSHOT</mosip.commons.packet.manager.version>
 		<mosip.kernel.virusscanner.version>1.1.3</mosip.kernel.virusscanner.version>
 		<!-- Derby Version -->
 		<apache.derby.version>10.17.1.0</apache.derby.version>

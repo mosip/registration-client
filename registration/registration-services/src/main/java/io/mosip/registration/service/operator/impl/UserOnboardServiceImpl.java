@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.sql.Timestamp;
@@ -509,7 +510,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 
 			LOGGER.info(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID, "Getting Symmetric Key.....");
 			// Symmetric key alias session key
-			KeyGenerator keyGenerator = KeyGeneratorUtils.getKeyGenerator("AES", 256);
+			KeyGenerator keyGenerator = KeyGeneratorUtils.getKeyGenerator("AES", 256, new SecureRandom());
 			// Generate AES Session Key
 			final SecretKey symmentricKey = keyGenerator.generateKey();
 
