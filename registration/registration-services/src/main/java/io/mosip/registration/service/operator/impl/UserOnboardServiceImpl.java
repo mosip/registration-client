@@ -836,6 +836,6 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 			return secureRandom;
 		}
 		secureRandom = new SecureRandom();
-		return secureRandom; 
+		return secureRandom;
 	}
 }
