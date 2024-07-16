@@ -137,7 +137,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - SERVICE_LOCATION: 'regclient-openssl-1.1.1'
+          - SERVICE_LOCATION: 'regclient-openssl'
             SERVICE_NAME: 'regclient-keystore'
             BASE_IMAGE_BUILD: true
       fail-fast: false
