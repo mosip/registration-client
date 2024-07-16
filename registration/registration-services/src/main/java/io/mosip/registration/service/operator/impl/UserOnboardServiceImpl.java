@@ -110,6 +110,8 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 	@Autowired
 	private BIRBuilder birBuilder;
 	
+	private SecureRandom secureRandom;
+	
 	/**
 	 * logger for logging
 	 */
@@ -510,7 +512,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 
 			LOGGER.info(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID, "Getting Symmetric Key.....");
 			// Symmetric key alias session key
-			KeyGenerator keyGenerator = KeyGeneratorUtils.getKeyGenerator("AES", 256, new SecureRandom());
+			KeyGenerator keyGenerator = KeyGeneratorUtils.getKeyGenerator("AES", 256, getSecureRandom());
 			// Generate AES Session Key
 			final SecretKey symmentricKey = keyGenerator.generateKey();
 
@@ -827,5 +829,13 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 					ExceptionUtils.getStackTrace(e));
 		}
 		return new byte[]{};
+	}
+	
+	private SecureRandom getSecureRandom() {
+		if (Objects.nonNull(secureRandom)) {
+			return secureRandom;
+		}
+		secureRandom = new SecureRandom();
+		return secureRandom; 
 	}
 }

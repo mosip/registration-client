@@ -479,12 +479,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>io.mosip.registration</groupId>
-			<artifactId>registration-api-stub-impl</artifactId>
-			<version>${mosip.registration.client.version}</version>
-		</dependency>
-
-		<dependency>
 			<groupId>io.mosip.biometric.util</groupId>
 			<artifactId>biometrics-util</artifactId>
 			<version>${mosip.biometric.util.version}</version>

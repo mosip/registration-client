@@ -88,6 +88,11 @@ mkdir -p "${work_dir}"/registration-client/target/jre
 mv "${work_dir}"/zulu21.34.19-ca-fx-jre21.0.3-win_x64/* "${work_dir}"/registration-client/target/jre/
 chmod -R a+x "${work_dir}"/registration-client/target/jre
 
+#unzip registration-api-impl jars
+wget "${artifactory_url}/artifactory/libs-release-local/registration-client/registration-api-impl.zip" -O "${work_dir}"/registration-api-impl.zip
+/usr/bin/unzip "${work_dir}"/registration-api-impl.zip
+mv "${work_dir}"/registration-api-impl/* "${work_dir}"/registration-client/target/lib/
+
 cp "${work_dir}"/build_files/logback.xml "${work_dir}"/registration-client/target/lib/logback.xml
 cp "${work_dir}"/registration-client/target/registration-client-${client_version_env}.jar "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar
 
