@@ -90,7 +90,8 @@ chmod -R a+x "${work_dir}"/registration-client/target/jre
 
 #unzip registration-api-impl jars
 wget "${artifactory_url}/artifactory/libs-release-local/registration-client/registration-api-impl.zip" -O "${work_dir}"/registration-api-impl.zip
-/usr/bin/unzip "${work_dir}"/registration-api-impl.zip
+mkdir -p "${work_dir}"/registration-client/target/registration-api-impl
+/usr/bin/unzip "${work_dir}"/registration-api-impl.zip -d "${work_dir}"/registration-client/target/registration-api-impl
 mv "${work_dir}"/registration-api-impl/* "${work_dir}"/registration-client/target/lib/
 
 cp "${work_dir}"/build_files/logback.xml "${work_dir}"/registration-client/target/lib/logback.xml
