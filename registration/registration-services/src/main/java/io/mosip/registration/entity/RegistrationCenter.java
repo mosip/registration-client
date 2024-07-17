@@ -2,14 +2,10 @@ package io.mosip.registration.entity;
 
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.List;
-
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 import io.mosip.registration.entity.id.RegistartionCenterId;
 import lombok.Getter;

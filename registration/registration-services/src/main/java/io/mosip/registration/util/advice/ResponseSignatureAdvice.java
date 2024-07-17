@@ -123,8 +123,10 @@ public class ResponseSignatureAdvice {
 			if (null == requestDto || !requestDto.getIsSignRequired())
 				return restClientResponse;
 
-			LinkedHashMap<String, Object> responseBodyMap = (LinkedHashMap<String, Object>) restClientResponse
-					.get(RegistrationConstants.REST_RESPONSE_BODY);
+			Object responseBody = restClientResponse.get(RegistrationConstants.REST_RESPONSE_BODY);
+			LinkedHashMap<String, Object> responseBodyMap = (responseBody instanceof String) ? new ObjectMapper().readValue((String)responseBody, LinkedHashMap.class) : ((LinkedHashMap<String, Object>) responseBody);
+			String responseBodyAsString = (responseBody instanceof String) ? (String) responseBody : new ObjectMapper().writeValueAsString(responseBodyMap);
+			
 			if (null != responseBodyMap && responseBodyMap.size() > 0
 					&& null != responseBodyMap.get(RegistrationConstants.RESPONSE)) {
 
@@ -139,7 +141,7 @@ public class ResponseSignatureAdvice {
 				if (responseHeader != null && responseHeader.containsKey(RegistrationConstants.RESPONSE_SIGNATURE)) {
 					List<String> responseSignature = responseHeader.get(RegistrationConstants.RESPONSE_SIGNATURE);
 					if (responseSignature != null && !responseSignature.isEmpty() && isResponseSignatureValid(
-							responseSignature.get(0), new ObjectMapper().writeValueAsString(responseBodyMap))) {
+							responseSignature.get(0), responseBodyAsString)) {
 						LOGGER.info("Response signature is valid... {}", requestDto.getUri());
 						return restClientResponse;
 					} else {
@@ -202,7 +204,7 @@ public class ResponseSignatureAdvice {
 		jwtSignatureVerifyRequestDto.setActualData(CryptoUtil.encodeToURLSafeBase64(actualData.getBytes(StandardCharsets.UTF_8)));
 		jwtSignatureVerifyRequestDto.setCertificateData(certificateDto.getCertificate());
 
-		JWTSignatureVerifyResponseDto verifyResponseDto =  signatureService.jwtVerify(jwtSignatureVerifyRequestDto);
+		JWTSignatureVerifyResponseDto verifyResponseDto = signatureService.jwtVerify(jwtSignatureVerifyRequestDto);
 		return verifyResponseDto.isSignatureValid();
 	}
 

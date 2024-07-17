@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +31,7 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.retry.support.RetryTemplateBuilder;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 
 import io.mosip.commons.packet.spi.IPacketCryptoService;
@@ -346,8 +347,8 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 		ResponseDTO responseDTO = new ResponseDTO();
 
 		try {
-			LinkedHashMap<String, Object> response = (LinkedHashMap<String, Object>) serviceDelegateUtil
-					.post(packetIdExists ? RegistrationConstants.PACKET_SYNC_V2 : RegistrationConstants.PACKET_SYNC, javaObjectToJsonString(encodedString), triggerPoint);
+			Object responseBody = serviceDelegateUtil.post(packetIdExists ? RegistrationConstants.PACKET_SYNC_V2 : RegistrationConstants.PACKET_SYNC, javaObjectToJsonString(encodedString), triggerPoint);
+			LinkedHashMap<String, Object> response = (responseBody instanceof String) ? new ObjectMapper().readValue((String)responseBody, LinkedHashMap.class) : ((LinkedHashMap<String, Object>) responseBody);
 			if (response.get("response") != null) {
 				SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
 				Map<String, Object> statusMap = new LinkedHashMap<>();
@@ -367,11 +368,11 @@ public class PacketSynchServiceImpl extends BaseService implements PacketSynchSe
 			}
 		} catch (ConnectionException e) {
 			throw e;
-		} catch (JsonProcessingException | RuntimeException e) {
+		} catch (JsonProcessingException | RuntimeException | com.fasterxml.jackson.core.JsonProcessingException e) {
 			LOGGER.error(e.getMessage(), e);
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_PACKET_SYNC_EXCEPTION.getErrorCode(),
 					RegistrationExceptionConstants.REG_PACKET_SYNC_EXCEPTION.getErrorMessage());
-		}
+		} 
 		return responseDTO;
 	}
 }

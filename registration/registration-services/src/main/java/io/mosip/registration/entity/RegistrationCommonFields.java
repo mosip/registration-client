@@ -2,8 +2,8 @@ package io.mosip.registration.entity;
 
 import java.sql.Timestamp;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 
 import io.mosip.kernel.core.util.DateUtils;
 

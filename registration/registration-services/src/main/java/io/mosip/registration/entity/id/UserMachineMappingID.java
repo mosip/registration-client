@@ -2,8 +2,8 @@ package io.mosip.registration.entity.id;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 import io.mosip.registration.entity.UserMachineMapping;
 import lombok.Data;

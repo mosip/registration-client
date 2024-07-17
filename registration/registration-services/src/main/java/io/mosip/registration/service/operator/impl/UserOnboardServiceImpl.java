@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.sql.Timestamp;
@@ -108,6 +109,8 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 
 	@Autowired
 	private BIRBuilder birBuilder;
+	
+	private SecureRandom secureRandom;
 	
 	/**
 	 * logger for logging
@@ -466,7 +469,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 					.get(RegistrationConstants.ERRORS);
 			LinkedHashMap<String, Object> responseMap = (LinkedHashMap<String, Object>) onBoardResponseMap
 					.get(RegistrationConstants.RESPONSE);
-			userOnbaordFlag = (Boolean) responseMap.get(RegistrationConstants.ON_BOARD_AUTH_STATUS);
+			userOnbaordFlag = responseMap != null ? (Boolean) responseMap.get(RegistrationConstants.ON_BOARD_AUTH_STATUS) : false;
 			LOGGER.error(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID, listOfFailureResponse.toString());
 			setErrorResponse(responseDTO,
 					listOfFailureResponse.size() > 0 ? (String) listOfFailureResponse.get(0).get("errorMessage")
@@ -509,7 +512,7 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 
 			LOGGER.info(LOG_REG_USER_ONBOARD, APPLICATION_NAME, APPLICATION_ID, "Getting Symmetric Key.....");
 			// Symmetric key alias session key
-			KeyGenerator keyGenerator = KeyGeneratorUtils.getKeyGenerator("AES", 256);
+			KeyGenerator keyGenerator = KeyGeneratorUtils.getKeyGenerator("AES", 256, getSecureRandom());
 			// Generate AES Session Key
 			final SecretKey symmentricKey = keyGenerator.generateKey();
 
@@ -826,5 +829,13 @@ public class UserOnboardServiceImpl extends BaseService implements UserOnboardSe
 					ExceptionUtils.getStackTrace(e));
 		}
 		return new byte[]{};
+	}
+	
+	private SecureRandom getSecureRandom() {
+		if (Objects.nonNull(secureRandom)) {
+			return secureRandom;
+		}
+		secureRandom = new SecureRandom();
+		return secureRandom;
 	}
 }

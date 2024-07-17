@@ -7,7 +7,7 @@ import io.mosip.registration.entity.UserBiometric;
 import io.mosip.registration.entity.UserDetail;
 import io.mosip.registration.entity.UserRole;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * This class is used to get respective user details by providing their id from

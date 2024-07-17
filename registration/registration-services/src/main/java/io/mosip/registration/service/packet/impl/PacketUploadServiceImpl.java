@@ -5,7 +5,7 @@ import java.sql.Timestamp;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import javax.transaction.Transactional;
 
 import io.mosip.kernel.core.util.DateUtils;

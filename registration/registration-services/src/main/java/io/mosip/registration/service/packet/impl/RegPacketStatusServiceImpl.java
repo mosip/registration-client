@@ -1,6 +1,8 @@
 package io.mosip.registration.service.packet.impl;
 
 
+import static io.mosip.kernel.core.util.JsonUtils.javaObjectToJsonString;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,7 +13,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,6 +29,10 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.retry.support.RetryTemplateBuilder;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.commons.packet.spi.IPacketCryptoService;
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -320,9 +326,10 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 				List<LinkedHashMap<String, String>> registrations = null;
 				
 				/* Obtain RegistrationStatusDTO from service delegate util */
-				LinkedHashMap<String, Object> packetStatusResponse = (LinkedHashMap<String, Object>) serviceDelegateUtil
+				Object packetStatusResponseBody = serviceDelegateUtil
 						.post(packetIdExists ? RegistrationConstants.PACKET_EXTERNAL_STATUS_SYNC_SERVICE_NAME : RegistrationConstants.PACKET_STATUS_SYNC_SERVICE_NAME, packetStatusReaderDTO, triggerPoint);
-
+				LinkedHashMap<String, Object> packetStatusResponse = (packetStatusResponseBody instanceof String) ? new ObjectMapper().readValue((String) packetStatusResponseBody, LinkedHashMap.class) : ((LinkedHashMap<String, Object>) packetStatusResponseBody);
+				
 				registrations = (List<LinkedHashMap<String, String>>) packetStatusResponse
 						.get(RegistrationConstants.RESPONSE);
 
@@ -341,7 +348,7 @@ public class RegPacketStatusServiceImpl extends BaseService implements RegPacket
 				return true;
 			} catch (ConnectionException e) {
 				throw e;
-			} catch (RuntimeException | RegBaseCheckedException e) {
+			} catch (RuntimeException | RegBaseCheckedException | JsonProcessingException e) {
 				LOGGER.error(e.getMessage(), e);
 				return false;
 			}

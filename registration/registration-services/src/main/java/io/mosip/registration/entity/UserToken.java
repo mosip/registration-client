@@ -3,7 +3,7 @@ package io.mosip.registration.entity;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(schema = "reg", name = "user_token")

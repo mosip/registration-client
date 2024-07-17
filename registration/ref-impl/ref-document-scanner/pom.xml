@@ -9,8 +9,8 @@
     <version>1.2.1-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <spring.boot.version>2.0.2.RELEASE</spring.boot.version>
         <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
     </properties>
@@ -62,7 +62,7 @@
         <dependency>
             <groupId>morena7-win</groupId>
             <artifactId>morena7-win</artifactId>
-           <!-- <scope>system</scope>-->
+           <!--<scope>system</scope>-->
             <version>1.0</version>
            <!-- <systemPath>${basedir}/lib/morena/morena7_win.jar</systemPath>-->
         </dependency>

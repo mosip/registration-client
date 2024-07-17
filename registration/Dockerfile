@@ -1,4 +1,4 @@
-FROM mosipdev/javafx-reg-client-openjdk:latest
+FROM mosipdev/openjdk-21-jdk:latest
 
 ARG SOURCE
 ARG COMMIT_HASH
@@ -48,12 +48,6 @@ ARG container_user_uid=1001
 # can be passed during Docker build as build time environment for github branch to pickup configuration from.
 ARG container_user_gid=1001
 
-# install packages and create user
-RUN apt-get -y update \
-&& apt-get install -y unzip zip nginx \
-&& groupadd -g ${container_user_gid} ${container_user_group} \
-&& useradd -u ${container_user_uid} -g ${container_user_group} -s /bin/sh -m ${container_user}
-
 # set working directory for the user
 WORKDIR /home/${container_user}
 
@@ -67,15 +61,17 @@ ADD registration-test/src/main/resources ./registration-test/resources
 
 ADD configure.sh configure.sh
 
-RUN chmod a+x configure.sh \
- && rm -f ./registration-client/target/registration-client-*-javadoc.jar \
- && rm -f ./registration-client/target/registration-client-*-sources.jar
-
-# change permissions of file inside working dir
-RUN chown -R ${container_user}:${container_user} /home/${container_user}
-RUN chown -R ${container_user}:${container_user} /var/www
+# install packages and create user
+RUN apt-get -y update \
+&& apt-get install -y unzip zip nginx \
+&& groupadd -g ${container_user_gid} ${container_user_group} \
+&& useradd -u ${container_user_uid} -g ${container_user_group} -s /bin/bash -m ${container_user} \
+&& chmod a+x configure.sh && touch /run/nginx.pid && mkdir -p /var/cache/nginx /var/lib/nginx /var/run /var/log/nginx \
+&& rm -f ./registration-client/target/registration-client-*-javadoc.jar \
+&& rm -f ./registration-client/target/registration-client-*-sources.jar \
+&& chown -R ${container_user}:${container_user} /home/${container_user} /var/www /var/lib/nginx /var/cache/nginx /var/run /etc/nginx /var/log/nginx /run/nginx.pid
 
 # select container user for all tasks
-#USER ${container_user_uid}:${container_user_gid}
+USER ${container_user_uid}:${container_user_gid}
 
 ENTRYPOINT ["./configure.sh" ]

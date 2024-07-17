@@ -6,7 +6,7 @@ import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
 import io.mosip.kernel.core.crypto.spi.CryptoCoreSpec;
 
 import javax.crypto.SecretKey;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.io.*;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;

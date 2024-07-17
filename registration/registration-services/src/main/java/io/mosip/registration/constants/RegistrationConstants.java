@@ -518,6 +518,7 @@ public class RegistrationConstants {
 	public static final String TEMPLATE_LEFT_EYE_LABEL = "LeftEyeLabel";
 	public static final String TEMPLATE_RIGHT_EYE_LABEL = "RightEyeLabel";
 	public static final String TEMPLATE_EXCEPTION_IMAGE_SOURCE = "ExceptionImageSource";
+	public static final String TEMPLATE_INTRODUCER_EXCEPTION_IMAGE_SOURCE = "IntroducerExceptionImageSource";
 	public static final String TEMPLATE_LEFT_EYE = "LeftEye";
 	public static final String TEMPLATE_EYE_IMAGE_SOURCE = "EyeImageSource";
 	public static final String TEMPLATE_RIGHT_EYE = "RightEye";

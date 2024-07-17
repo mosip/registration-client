@@ -16,10 +16,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 
 import java.time.Instant;
 import java.time.LocalDate;

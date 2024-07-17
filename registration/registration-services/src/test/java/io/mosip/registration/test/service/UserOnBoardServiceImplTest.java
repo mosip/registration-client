@@ -245,7 +245,7 @@ public class UserOnBoardServiceImplTest {
 		
 		PowerMockito.mockStatic(KeyGeneratorUtils.class);
 		KeyGenerator keyGenerator = PowerMockito.mock(KeyGenerator.class);
-		PowerMockito.when(KeyGeneratorUtils.getKeyGenerator(Mockito.anyString(), Mockito.anyInt())).thenReturn(keyGenerator);
+		PowerMockito.when(KeyGeneratorUtils.getKeyGenerator(Mockito.anyString(), Mockito.anyInt(), Mockito.any())).thenReturn(keyGenerator);
 		SecretKey symmentricKey = PowerMockito.mock(SecretKey.class);
 		PowerMockito.doReturn(symmentricKey).when(keyGenerator).generateKey();
 		
@@ -327,7 +327,7 @@ public class UserOnBoardServiceImplTest {
 		
 		PowerMockito.mockStatic(KeyGeneratorUtils.class);
 		KeyGenerator keyGenerator = PowerMockito.mock(KeyGenerator.class);
-		PowerMockito.when(KeyGeneratorUtils.getKeyGenerator(Mockito.anyString(), Mockito.anyInt())).thenReturn(keyGenerator);
+		PowerMockito.when(KeyGeneratorUtils.getKeyGenerator(Mockito.anyString(), Mockito.anyInt(), Mockito.any())).thenReturn(keyGenerator);
 		SecretKey symmentricKey = PowerMockito.mock(SecretKey.class);
 		PowerMockito.doReturn(symmentricKey).when(keyGenerator).generateKey();
 		

@@ -2,12 +2,14 @@ package io.mosip.registration.test.config;
 
 import java.io.InputStream;
 import java.util.Properties;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.kernel.signature.service.impl.SignatureServiceImpl;
+import io.mosip.registration.api.docscanner.DocScannerService;
+import io.mosip.registration.api.geoposition.GeoPositionService;
 import io.mosip.registration.audit.AuditManagerSerivceImpl;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.DaoConfig;
@@ -28,6 +30,9 @@ import org.springframework.orm.jpa.vendor.HibernateJpaDialect;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 
 import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.test.mock.impl.DocScannerServiceImpl;
+import io.mosip.registration.test.mock.impl.GeoPositionServiceImpl;
+
 import org.springframework.transaction.PlatformTransactionManager;
 
 
@@ -187,5 +192,14 @@ public class TestDaoConfig extends DaoConfig {
 		return Mockito.mock(AuditManagerSerivceImpl.class);
 	}
 
+	@Bean
+	public DocScannerService docScannerService() {
+		return new DocScannerServiceImpl();
+	}
+	
+	@Bean 
+	public GeoPositionService geoPositionService() {
+		return new GeoPositionServiceImpl();
+	}
 
 }

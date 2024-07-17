@@ -18,7 +18,7 @@ import io.mosip.registration.entity.GlobalParam;
 import io.mosip.registration.entity.id.GlobalParamId;
 import io.mosip.registration.repositories.GlobalParamRepository;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * The implementation class of {@link GlobalParamDAO}.
