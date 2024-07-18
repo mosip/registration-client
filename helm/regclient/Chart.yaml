@@ -1,0 +1,21 @@
+apiVersion: v2
+name: regclient
+description: A Helm chart to installed Downloader for Regstration Client Application
+type: application
+version: 12.0.2-develop
+appVersion: ""
+dependencies:
+  - name: common
+    repository: https://charts.bitnami.com/bitnami
+    tags:
+      - bitnami-common
+    version: 1.x.x
+home: https://mosip.io
+keywords:
+  - mosip
+  - regclient
+  - registration
+  - client
+maintainers:
+  - email: info@mosip.io
+    name: MOSIP
