@@ -10,12 +10,13 @@ import java.util.Set;
 
 /**
  * Class contains the constants used in Registration application
- * 
+ *
  * @author Balaji Sridharan
  * @since 1.0.0
  *
  */
 public class RegistrationConstants {
+
 	/**
 	 * private constructor
 	 */
@@ -275,6 +276,11 @@ public class RegistrationConstants {
 	public static final String CHECKBOX = "checkbox";
 	public static final String TEXTBOX = "textbox";
 	public static final String BUTTON = "button";
+	public static final String RETRY_BUTTON = "Retry";
+	public static final String CONFIRM_BUTTON = "Confirm";
+	public static final String RETRY_BUTTON_NAME = "retry-button";
+	public static final String CONFIRM_BUTTON_NAME = "confirm-button";
+	public static final String PROOF_OF_SIGNATURE = "POS";
 	public static final String RESIDENCE_STATUS = "residenceStatus";
 	public static final String PRIMARY = "primary";
 	public static final String SECONDARY = "secondary";
@@ -282,6 +288,7 @@ public class RegistrationConstants {
 	public static final String Parent = "Parent";
 	public static final String updateUinCheckBox = "updateUinCheckBox";
 
+	public static final String REGISTRATION_DATA_DEMO = "registrationDTOContentDemo";
 	public static final String APPLICATION_LANGUAGE = "application_language";
 	public static final String REGISTRATION_LOCAL_LANGUAGE = "local_language";
 	//public static final String PACKET_TYPE_NEW = "New";
@@ -495,7 +502,7 @@ public class RegistrationConstants {
 	public static final String TEMPLATE_UIN_HEADER_TABLE = "uinHeaderTable";
 	public static final String TEMPLATE_UIN_LABEL = "UINLabel";
 	public static final String TEMPLATE_UIN = "UIN";
-	
+
 	public static final String TEMPLATE_RID_LABEL = "RIDLabel";
 	public static final String TEMPLATE_RID = "RID";
 	public static final String TEMPLATE_APPLICATION_ID_LABEL = "ApplicationIDLabel";
@@ -678,7 +685,7 @@ public class RegistrationConstants {
 
 	public static final String UPLOAD_STATUS = "status";
 	public static final List<String> PACKET_UPLOAD_STATUS = Arrays.asList("SYNCED", "EXPORTED", "RESEND", "E");
-	
+
 	public static final List<String> PACKET_JOBS = Arrays.asList("RPS_J00006", "RSJ_J00014", "PUJ_J00017");
 
 	public static final String PACKET_UPLOAD = "packet_upload";
@@ -914,9 +921,9 @@ public class RegistrationConstants {
 	public static final List<String> PACKET_STATUS_UPLOAD = Arrays.asList("APPROVED", "REJECTED", "SYNCED", "EXPORTED");
 
 	public static final List<String> PACKET_EXPORT_STATUS = Arrays.asList("APPROVED", "EXPORTED", "SYNCED");
-	
+
 	public static final List<String> PACKET_PROCESSED_STATUS = Arrays.asList("PROCESSED", "ACCEPTED");
-	
+
 	public static final List<String> PACKET_REJECTED_STATUS = Arrays.asList("REREGISTER", "REJECTED");
 
 	// Pre Registration
@@ -1414,6 +1421,10 @@ public class RegistrationConstants {
 	public static final String PUBLIC_KEY_REF_ID = "packet-encryption-key";
 	public static final String USER_DETAIL_SALT_SERVICE_NAME = "user_salt_details";
 	public static final String SERVICES_VERSION_KEY = "mosip.reg.services.current.version";
+	public static final String VERSION_MAPPINGS_KEY = "mosip.registration.verion.upgrade.version-mappings";
+	public static final String UPGRADE_FULL_SYNC_ENTITIES = "mosip.registration.upgrade.full-sync-entities";
+	public static final String VERSION_MAPPINGS_ERROR = "Could not parse version-mappings";
+	public static final String MANIFEST_PATH = "/MANIFEST.MF";
 
 	// TPM
 	public static final byte[] NULL_VECTOR = new byte[0];
@@ -1801,7 +1812,7 @@ public class RegistrationConstants {
 	public static final String BIOMETRIC_FXML = "/fxml/GenericBiometricFXML.fxml";
 	public static final String DEVICE_STATUS_READY = "Ready";
 
-//	Code CleanUp 
+	//	Code CleanUp
 	public static final String LABELS = "labels";
 	public static final String MESSAGES = "messages";
 	public static final String Resident_Information = "Resident_Information";
@@ -1870,7 +1881,7 @@ public class RegistrationConstants {
 	public static final String CANT_INFORM_IMG = "cantInform.png";
 	public static final String STREAM_IMG = "stream.png";
 	public static final String CROP_IMG = "crop.png";
-//    public static final String REJECT_IMG ="reject.png";
+	//    public static final String REJECT_IMG ="reject.png";
 	public static final String HOVER_IMG = "hover.png";
 	public static final String EMAIL_IMG = "Email.png";
 	public static final String MOBILE_IMG = "EnterMobile.png";
@@ -1913,11 +1924,11 @@ public class RegistrationConstants {
 	public static final String LEFTEYE_IMG = "exceptionmarks/lightBlueCrossMark.png";
 	public static final String DEFAULT_EXCEPTION_IMG = "ExceptionPhoto.png";
 	public static final String IMAGES = "images";
-	
+
 	public static final String MOSIP_HOSTNAME = "mosip.hostname";
 	public static final String MOSIP_UPGRADE_SERVER_URL = "mosip.client.upgrade.server.url";
 	public static final String HEALTH_CHECK_URL = "mosip.reg.healthcheck.url";
-	
+
 	/** Moved To Here from UiConstants file */
 	public static final String REGEX_TYPE = "REGEX";
 
@@ -1930,9 +1941,9 @@ public class RegistrationConstants {
 	public static final String PAYLOAD = "PAYLOAD";
 	public static final String SPEC_VERSION = "SPEC_VERSION";
 
-	
-  public static final String PACKET_APPLICATION_ID = "applicationId";
-  
+
+	public static final String PACKET_APPLICATION_ID = "applicationId";
+
 	/** Settings Page Labels & CSS styles */
 	public static final String SYNC_JOB_STYLE = "syncJobStyle";
 	public static final String RUN_NOW_LABEL = "runNow";
@@ -1964,27 +1975,45 @@ public class RegistrationConstants {
 	public static final String SHORTCUT_ICON = "shortcut.png";
 	public static final String DEVICE_SETTINGS_NAME = "devices";
 	public static final String DEVICES_SHORTCUT_PREFERENCE_NAME = "devices_shortcut";
-	
+
 	public static final String PERMITTED_JOB_TYPE = "JOB";
 	public static final String PERMITTED_CONFIG_TYPE = "CONFIGURATION";
 	public static final String PERMITTED_SHORTCUT = "SHORTCUT";
-	
+
 	public static final String QUIT_NOW = "QUIT_NOW";
 	public static final String QUIT_LATER = "QUIT_LATER";
 
 	public static final String RESPONSE_SIGNATURE_PUBLIC_KEY_APP_ID = "SERVER-RESPONSE";
 	public static final String RESPONSE_SIGNATURE_PUBLIC_KEY_REF_ID = "SIGN-VERIFY";
-	
+
 	public static final String  BIOVALUE_KEY  = "bioValue";
 	public static final String BIOVALUE_PLACEHOLDER = "\"<bioValue>\"";
-	
+
 	public static final String AUDIT_TIMESTAMP = "mosip.registration.audit_timestamp";
 	public static final String AGE_GROUP_CONFIG = "mosip.regproc.packet.classifier.tagging.agegroup.ranges";
-	
+
 	public static final String LOGOUT = "Logout";
 	public static final String ROLES_MODIFIED = "Roles Modified";
 
 	public static final String JPG_COMPRESSION_QUALITY = "mosip.registration.doc.jpg.compression";
 	public static final String APPLICANT_TYPE_MVEL_SCRIPT = "mosip.kernel.applicantType.mvel.file";
 	public static final String FIELDS_TO_RETAIN_ON_PRID_FETCH = "mosip.registration.fields.to.retain.post.prid.fetch";
+
+	public static final String DEMOGRAPHIC_GROUP = "demographicGroup";
+	public static final String DEMOGRAPHIC_FIELD = "demographicField";
+	public static final String DEMOGRAPHIC_GROUP_LABEL = "demographicGroupLabel";
+
+	public static final String DOCUMENT_COMBOBOX_FIELD = "documentComboboxField";
+
+	public static final String PRE_REG_WRONG_PROCESS_FLOW = "PRE_REG_WRONG_PROCESS_FLOW";
+
+	public static final String IMAGING_DEVICE_TYPE = "mosip.registration.imagingDeviceType";
+
+	//printer configurations
+	public static final String PRINT_ACK_A4 = "mosip.registration.ack.a4.default.printer";
+	public static final String PRINT_ACK_A6 = "mosip.registration.ack.a6.default.printer";
+	public static final String PRINT_ACK_A6_WIDTH = "mosip.registration.ack.printer.a6.width";
+	public static final String PRINT_ACK_A6_HEIGHT = "mosip.registration.ack.printer.a6.height";
+	public static final String A6_ACKNOWLEDGEMENT_TEMPLATE_CODE = "reg_ack_a6slip_template_part";
+
 }

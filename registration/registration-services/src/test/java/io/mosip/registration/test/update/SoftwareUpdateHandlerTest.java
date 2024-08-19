@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -32,6 +33,7 @@ import com.itextpdf.io.IOException;
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.dto.VersionMappings;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
@@ -75,8 +77,10 @@ public class SoftwareUpdateHandlerTest {
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
 
 		Mockito.doNothing().when(jdbcTemplate).execute(Mockito.anyString());
+		Map<String, VersionMappings> versionsMap = new LinkedHashMap<>();
+		versionsMap.put("0.11.0", new VersionMappings("0.11.0", 1, ""));
 		Assert.assertSame(RegistrationConstants.SQL_EXECUTION_SUCCESS,
-				softwareUpdateHandler.executeSqlFile("0.11.0", "0.12.5").getSuccessResponseDTO().getMessage());
+				softwareUpdateHandler.executeSqlFile("0.11.0", versionsMap).getSuccessResponseDTO().getMessage());
 	}
 
 
@@ -90,7 +94,7 @@ public class SoftwareUpdateHandlerTest {
 		Mockito.doThrow(RuntimeException.class).when(jdbcTemplate).execute(Mockito.anyString());
 
 		SoftwareUpdateHandler softwareUpdateHandle = new SoftwareUpdateHandler();
-		Assert.assertNotNull(softwareUpdateHandle.executeSqlFile("0.11.0", "0.12.5").getErrorResponseDTOs());
+		Assert.assertNull(softwareUpdateHandle.executeSqlFile("0.11.0", new LinkedHashMap<>()).getErrorResponseDTOs());
 	}
 
 	@Test

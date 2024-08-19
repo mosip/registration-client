@@ -1,9 +1,9 @@
 package io.mosip.registration.ref.sarxos;
 
 import com.github.sarxos.webcam.Webcam;
-import io.mosip.registration.api.docscanner.DeviceType;
 import io.mosip.registration.api.docscanner.DocScannerService;
-import io.mosip.registration.api.docscanner.dto.DocScanDevice;
+import io.mosip.registration.dto.DeviceType;
+import io.mosip.registration.dto.ScanDevice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -28,7 +28,7 @@ public class WebCamSarxosImpl implements DocScannerService {
     }
 
     @Override
-    public BufferedImage scan(DocScanDevice docScanDevice) {
+    public BufferedImage scan(ScanDevice docScanDevice, String deviceType) {
         Optional<Webcam> result = Webcam.getWebcams().stream()
                 .filter(c -> c.getName().equals(docScanDevice.getName()))
                 .findFirst();
@@ -60,10 +60,10 @@ public class WebCamSarxosImpl implements DocScannerService {
     }
 
     @Override
-    public List<DocScanDevice> getConnectedDevices() {
-        List<DocScanDevice> devices = new ArrayList<>();
+    public List<ScanDevice> getConnectedDevices() {
+        List<ScanDevice> devices = new ArrayList<>();
         for(Webcam webcam : Webcam.getWebcams()) {
-            DocScanDevice docScanDevice = new DocScanDevice();
+            ScanDevice docScanDevice = new ScanDevice();
             docScanDevice.setDeviceType(DeviceType.CAMERA);
             docScanDevice.setName(webcam.getName());
             docScanDevice.setServiceName(getServiceName());
@@ -74,7 +74,7 @@ public class WebCamSarxosImpl implements DocScannerService {
     }
 
     @Override
-    public void stop(DocScanDevice docScanDevice) {
+    public void stop(ScanDevice docScanDevice) {
         Optional<Webcam> result = Webcam.getWebcams().stream()
                 .filter(c -> c.getName().equals(docScanDevice.getName()))
                 .findFirst();

@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import javax.imageio.ImageIO;
 
+import io.mosip.registration.dto.*;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -38,10 +39,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.kernel.core.util.JsonUtils;
-import io.mosip.registration.api.docscanner.DeviceType;
 import io.mosip.registration.api.docscanner.DocScannerFacade;
 import io.mosip.registration.api.docscanner.DocScannerService;
-import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
@@ -49,9 +48,6 @@ import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dao.RegistrationCenterDAO;
 import io.mosip.registration.dao.UserDetailDAO;
 import io.mosip.registration.dao.UserOnboardDAO;
-import io.mosip.registration.dto.RegistrationDataDto;
-import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.entity.RegistrationCenter;
@@ -124,7 +120,8 @@ public class BaseServiceTest {
 		Map<String, Object> map = new HashMap<>();
 		map.put(RegistrationConstants.MACHINE_CENTER_REMAP_FLAG, false);
 		map.put(RegistrationConstants.AGE_GROUP_CONFIG, "{'INFANT':'0-5','MINOR':'6-17','ADULT':'18-200'}");
-		ApplicationContext.getInstance().setApplicationMap(map);	
+		ApplicationContext.getInstance();
+		ApplicationContext.setApplicationMap(map);	
 		List<String> mandatoryLanguages = getMandaoryLanguages();
 		List<String> optionalLanguages = getOptionalLanguages();
 		int minLanguagesCount = 1;
@@ -670,12 +667,12 @@ public class BaseServiceTest {
 		DocScannerFacade facade = new DocScannerFacade();
 		DocScannerService serviceImpl = getMockDocScannerService();
 		ReflectionTestUtils.setField(facade, "docScannerServiceList", Collections.singletonList(serviceImpl));
-		DocScanDevice device = new DocScanDevice();
+		ScanDevice device = new ScanDevice();
 		device.setDeviceType(DeviceType.SCANNER);
 		device.setId("SCANNER_001");
 		device.setName("SCANNER_001");
 		device.setServiceName("Test-Scanner");
-		BufferedImage image = facade.scanDocument(device);
+		BufferedImage image = facade.scanDocument(device, ".*");
 		return image;
 	}
 	private List<String> getMandaoryLanguages() {
@@ -735,7 +732,7 @@ public class BaseServiceTest {
 	            }
 
 	            @Override
-	            public BufferedImage scan(DocScanDevice docScanDevice) {
+	            public BufferedImage scan(ScanDevice docScanDevice, String deviceType) {
 	                try {
 	                    return ImageIO.read(this.getClass().getResourceAsStream("/images/stubdoc.png"));
 	                } catch (IOException e) { }
@@ -743,15 +740,15 @@ public class BaseServiceTest {
 	            }
 
 	            @Override
-	            public List<DocScanDevice> getConnectedDevices() {
-	                List<DocScanDevice> devices = new ArrayList<>();
-	                DocScanDevice device1 = new DocScanDevice();
+	            public List<ScanDevice> getConnectedDevices() {
+	                List<ScanDevice> devices = new ArrayList<>();
+	                ScanDevice device1 = new ScanDevice();
 	                device1.setDeviceType(DeviceType.SCANNER);
 	                device1.setId("SCANNER_001");
 	                device1.setName("SCANNER_001");
 	                device1.setServiceName(getServiceName());
 	                devices.add(device1);
-	                DocScanDevice device2 = new DocScanDevice();
+	                ScanDevice device2 = new ScanDevice();
 	                device2.setDeviceType(DeviceType.CAMERA);
 	                device2.setId("CAMERA_001");
 	                device2.setName("CAMERA_001");
@@ -761,7 +758,7 @@ public class BaseServiceTest {
 	            }
 
 	            @Override
-	            public void stop(DocScanDevice docScanDevice) {
+	            public void stop(ScanDevice docScanDevice) {
 	                //Do nothing
 	            }
 	        };

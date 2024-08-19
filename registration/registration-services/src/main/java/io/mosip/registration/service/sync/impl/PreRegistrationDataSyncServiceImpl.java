@@ -197,7 +197,7 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 				byte[] decryptedPacket = preRegZipHandlingService.decryptPreRegPacket(
 						preRegistration.getPacketSymmetricKey(),
 						FileUtils.readFileToByteArray(FileUtils.getFile(preRegistration.getPacketPath())));
-				setPacketToResponse(responseDTO, decryptedPacket, preRegistrationId);
+				setPacketToResponse(responseDTO, decryptedPacket, preRegistrationId, preRegistration.getPreRegType());
 				return responseDTO;
 			}
 		} catch (RegBaseCheckedException regBaseCheckedException) {
@@ -262,6 +262,7 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 
 			preRegistrationList.setLastUpdatedPreRegTimeStamp(lastUpdatedTimeStamp == null ?
 					Timestamp.valueOf(DateUtils.getUTCCurrentDateTime()) : lastUpdatedTimeStamp);
+			 preRegistrationList.setPreRegType(mainResponseDTO.getResponse().getBookingType());
 
 			if (preRegistration == null) {
 				preRegistration = preRegistrationDAO.save(preRegistrationList);
@@ -289,7 +290,7 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 	 * @param preRegistrationId the pre registration id
 	 */
 	@SuppressWarnings("unused")
-	private void setPacketToResponse(ResponseDTO responseDTO, byte[] decryptedPacket, String preRegistrationId) {
+	private void setPacketToResponse(ResponseDTO responseDTO, byte[] decryptedPacket, String preRegistrationId, String preRegType) {
 
 		try {
 			/* create attributes */
@@ -297,6 +298,7 @@ public class PreRegistrationDataSyncServiceImpl extends BaseService implements P
 			registrationDTO.setPreRegistrationId(preRegistrationId);
 			Map<String, Object> attributes = new WeakHashMap<>();
 			attributes.put("registrationDto", registrationDTO);
+			attributes.put("preRegType", preRegType);
 			setSuccessResponse(responseDTO, RegistrationConstants.PRE_REG_SUCCESS_MESSAGE, attributes);
 		} catch (RegBaseCheckedException exception) {
 			LOGGER.info("REGISTRATION - PRE_REGISTRATION_DATA_SYNC - PRE_REGISTRATION_DATA_SYNC_SERVICE_IMPL",

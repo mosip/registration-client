@@ -374,4 +374,18 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 		}
 		return null;
 	}
+	
+	public GlobalParam getGlobalParam(String key) {
+		GlobalParamId globalParamId = new GlobalParamId();
+		globalParamId.setCode(key);
+		globalParamId.setLangCode(RegistrationConstants.ENGLISH_LANG_CODE);
+		return globalParamDAO.get(globalParamId);
+	}
+	
+	public void deleteGlobalParam(String key) {
+		GlobalParamId globalParamId = new GlobalParamId();
+		globalParamId.setCode(key);
+		globalParamId.setLangCode(RegistrationConstants.ENGLISH_LANG_CODE);
+		globalParamDAO.delete(globalParamId);
+	}
 }

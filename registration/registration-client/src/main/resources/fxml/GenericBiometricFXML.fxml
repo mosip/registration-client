@@ -172,16 +172,16 @@
                                           </GridPane>
                                           <GridPane GridPane.columnIndex="1" GridPane.rowIndex="2">
                                              <children>
-                                                <Button fx:id="scanBtn" mnemonicParsing="false" onAction="#scan" styleClass="onboardScanBtn" text="%scan" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.valignment="TOP">
-                                                   <graphic>
-                                                      <ImageView fx:id="scanImageView" fitHeight="15.0" fitWidth="15.0" layoutY="50.0" pickOnBounds="true" preserveRatio="true">
-                                                         <image>
-                                                            <Image url="@../images/scan.png" />
-                                                         </image>
-                                                      </ImageView>
-                                                   </graphic>
-                                                </Button>
-                                             </children>
+                                                         <Button fx:id="scanBtn" mnemonicParsing="false" onAction="#scan" styleClass="onboardScanBtn" text="%scan" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.valignment="TOP">
+                                                             <graphic>
+                                                                 <ImageView fx:id="scanImageView" fitHeight="15.0" fitWidth="15.0" layoutY="50.0" pickOnBounds="true" preserveRatio="true">
+                                                                     <image>
+                                                                         <Image url="@../images/scan.png" />
+                                                                     </image>
+                                                                 </ImageView>
+                                                             </graphic>
+                                                         </Button>
+                                              </children>
                                              <columnConstraints>
                                                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="19.0" prefWidth="100.0" />
                                                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="81.0" />

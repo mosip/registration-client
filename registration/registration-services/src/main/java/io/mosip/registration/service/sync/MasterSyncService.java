@@ -127,4 +127,27 @@ public interface MasterSyncService {
 	 * @return
 	 */
 	public List<SyncJobDef> getSyncJobs();
+
+	/**
+	 * Find proviance by hierarchy code.
+	 *
+	 * @param code the code
+	 * @param langCode the lang code
+	 * @param hierarchyName
+	 * @return the list holds the Province data to be displayed in the UI.
+	 * @throws RegBaseCheckedException
+	 */
+	List<GenericDto> findLocationByParentHierarchyCode(String code, String hierarchyName, String
+			langCode) throws RegBaseCheckedException;
+	/**
+	 *
+	 * @param fieldName
+	 * @param hierarchyLevelName
+	 * @param langCode
+	 * @return
+	 * @throws RegBaseCheckedException
+	 */
+	List<GenericDto> getFieldValues(String fieldName, String hierarchyLevelName, String langCode,
+									boolean isHierarchical);
+
 }

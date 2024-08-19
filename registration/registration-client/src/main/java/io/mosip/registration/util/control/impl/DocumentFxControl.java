@@ -65,6 +65,7 @@ public class DocumentFxControl extends FxControl {
 	private String PREVIEW_ICON = "previewIcon";
 
 	private String CLEAR_ID = "clear";
+	private String currentDocSubType = null;
 
 	public DocumentFxControl() {
 		org.springframework.context.ApplicationContext applicationContext = ClientApplication.getApplicationContext();
@@ -79,6 +80,7 @@ public class DocumentFxControl extends FxControl {
 	public FxControl build(UiFieldDTO uiFieldDTO) {
 		this.uiFieldDTO = uiFieldDTO;
 		this.control = this;
+		this.currentDocSubType = uiFieldDTO.getSubType();
 
 		HBox hBox = new HBox();
 		hBox.setSpacing(20);
@@ -200,7 +202,7 @@ public class DocumentFxControl extends FxControl {
 			return;
 		}
 
-		documentScanController.scanDocument(uiFieldDTO.getId(), this,	isPreviewOnly);
+		documentScanController.scanDocument(uiFieldDTO.getId(), this,	isPreviewOnly, currentDocSubType);
 	}
 
 	private VBox createDocRef(String id) {

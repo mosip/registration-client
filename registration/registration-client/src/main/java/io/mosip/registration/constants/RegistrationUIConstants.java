@@ -8,6 +8,11 @@ import io.mosip.registration.context.ApplicationContext;
 
 public class RegistrationUIConstants {
 
+	public static final String UNABLE_LOAD_QR_SCAN_POPUP = "UNABLE_LOAD_QR_SCAN_POPUP";
+	public static final String ERROR_DECODING_QR_CODE = "ERROR_DECODING_QR_CODE";
+	public static final String NO_DEVICES_DETECTED = "NO_DEVICES_DETECTED";
+	public static final String SCAN_QR_CODE_TITLE = "SCAN_QR_CODE_TITLE";
+	public static final String QR_CODE_SCAN_SUCCESS = "QR_CODE_SCAN_SUCCESS";
 	/**
 	 * Instance of {@link Logger}
 	 */

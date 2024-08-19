@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
@@ -25,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,6 +37,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
@@ -44,6 +49,7 @@ import io.mosip.kernel.core.util.JsonUtils;
 import io.mosip.kernel.core.util.exception.JsonMappingException;
 import io.mosip.kernel.core.util.exception.JsonParseException;
 import io.mosip.registration.config.AppConfig;
+import io.mosip.registration.config.DaoConfig;
 import io.mosip.registration.constants.PreConditionChecks;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
@@ -55,6 +61,7 @@ import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationDataDto;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
+import io.mosip.registration.dto.VersionMappings;
 import io.mosip.registration.entity.MachineMaster;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.entity.RegistrationCenter;
@@ -525,6 +532,10 @@ public class BaseService {
 		return (RegistrationDTO) SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA);
 	}
 
+	protected Map<String, Object> getRegistrationDTODemographics() {
+		return (Map<String, Object>)SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA_DEMO);
+	}
+
 	/**
 	 * Converts string to java.sql.Timestamp
 	 *
@@ -763,5 +774,53 @@ public class BaseService {
 		} catch (PreConditionCheckException e) {
 			throw e;
 		}
+	}
+	
+	/**
+	 * Returns the version-mappings in sorted order. Version-Mappings is the
+	 * configuration which specifies the list of available versions and their
+	 * respective DB version and its release order.
+	 * ReleaseOrder starts with "1" which is considered as the oldest version and
+	 * "n" being the latest version.
+	 * 
+	 * @param key
+	 * @return sorted version-mappings
+	 * @throws Exception
+	 */
+	protected Map<String, VersionMappings> getSortedVersionMappings(String key) throws Exception {
+		String value = null;
+		
+		try (InputStream configKeys = BaseService.class.getClassLoader().getResourceAsStream("spring.properties")) {
+			Properties properties = new Properties();
+			properties.load(configKeys);
+			value = properties.getProperty(key);
+		} catch (Exception exception) {
+			LOGGER.error("Error in reading properties file", exception);
+		}
+				
+		if (value == null && ApplicationContext.map().containsKey(key)) {
+			value = (String) ApplicationContext.map().get(key);
+		}
+		
+		if (value == null || value.isBlank()) {
+			LOGGER.error("version-mappings key is found empty / null. Please add proper value to proceed.");
+			throw new RegBaseCheckedException(RegistrationExceptionConstants.VERSION_MAPPINGS_NOT_FOUND.getErrorCode(),
+					RegistrationExceptionConstants.VERSION_MAPPINGS_NOT_FOUND.getErrorMessage());
+		}
+		
+		ObjectMapper mapper = new ObjectMapper(); 
+	    TypeReference<HashMap<String,VersionMappings>> typeRef 
+	            = new TypeReference<HashMap<String,VersionMappings>>() {};
+
+	    HashMap<String, VersionMappings> versionMappings = mapper.readValue(value, typeRef); 
+
+		if (versionMappings != null) {
+			return versionMappings.entrySet().stream()
+					.sorted((object1, object2) -> object1.getValue().getReleaseOrder()
+							.compareTo(object2.getValue().getReleaseOrder()))
+					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (object1, object2) -> object1,
+							LinkedHashMap::new));
+		}
+		return versionMappings;	
 	}
 }

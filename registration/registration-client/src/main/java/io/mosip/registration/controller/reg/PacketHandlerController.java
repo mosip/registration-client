@@ -1,9 +1,7 @@
 package io.mosip.registration.controller.reg;
 
 import static io.mosip.registration.constants.LoggerConstants.PACKET_HANDLER;
-import static io.mosip.registration.constants.RegistrationConstants.ACKNOWLEDGEMENT_TEMPLATE_CODE;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
+import static io.mosip.registration.constants.RegistrationConstants.*;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -436,6 +434,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 				case NEW:
 				case LOST:
 				case CORRECTION:
+				case RENEWAL:
 					Parent createRoot = getRoot(RegistrationConstants.CREATE_PACKET_PAGE);
 					getScene(createRoot).setRoot(createRoot);
 					getScene(createRoot).getStylesheets().add(ClassLoader.getSystemClassLoader().getResource(getCssName()).toExternalForm());
@@ -461,13 +460,28 @@ public class PacketHandlerController extends BaseController implements Initializ
 		generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_REG_PAGE));
 	}
 
-
-
 	public void showReciept() {
 		try {
 			RegistrationDTO registrationDTO = getRegistrationDTOFromSession();
 			LOGGER.info("Showing receipt Started for process", registrationDTO.getProcessId());
 			String platformLanguageCode = ApplicationContext.applicationLanguage();
+
+			//slip acknowledgement
+			String slipAckTemplateText = templateService.getHtmlTemplate(A6_ACKNOWLEDGEMENT_TEMPLATE_CODE,
+					platformLanguageCode);
+
+			if (slipAckTemplateText != null && !slipAckTemplateText.isEmpty()) {
+
+				ResponseDTO templateResponse = templateGenerator.generateTemplate(slipAckTemplateText, registrationDTO,
+						templateManagerBuilder, RegistrationConstants.ACKNOWLEDGEMENT_TEMPLATE, getImagePath(RegistrationConstants.CROSS_IMG, true));
+				if (templateResponse != null && templateResponse.getSuccessResponseDTO() != null) {
+					Writer stringWriter = (Writer) templateResponse.getSuccessResponseDTO().getOtherAttributes()
+							.get(RegistrationConstants.TEMPLATE_NAME);
+					ackReceiptController.setSlipStringWriter(stringWriter);
+				}
+			}
+
+			//A4 ack
 			String ackTemplateText = templateService.getHtmlTemplate(ACKNOWLEDGEMENT_TEMPLATE_CODE,
 					platformLanguageCode);
 

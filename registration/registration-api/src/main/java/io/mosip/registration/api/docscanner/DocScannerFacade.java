@@ -1,18 +1,23 @@
 package io.mosip.registration.api.docscanner;
 
-import io.micrometer.core.annotation.Timed;
-import io.mosip.registration.api.docscanner.dto.DocScanDevice;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import io.mosip.registration.dto.DeviceType;
+import io.mosip.registration.dto.ScanDevice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
-import java.awt.image.BufferedImage;
-import java.util.*;
-import java.util.stream.Collectors;
+import io.micrometer.core.annotation.Timed;
 
 @Component
 public class DocScannerFacade {
@@ -36,19 +41,20 @@ public class DocScannerFacade {
 
     /**
      * Provides all the devices including both SCANNER and CAMERA devices
+     *
      * @return
      */
-    public List<DocScanDevice> getConnectedDevices() {
-        List<DocScanDevice> allDevices = new ArrayList<>();
-        if(docScannerServiceList == null || docScannerServiceList.isEmpty()) {
+    public List<ScanDevice> getConnectedDevices() {
+        List<ScanDevice> allDevices = new ArrayList<>();
+        if (docScannerServiceList == null || docScannerServiceList.isEmpty()) {
             LOGGER.warn("** NO DOCUMENT SCANNER SERVICE IMPLEMENTATIONS FOUND!! **");
             return allDevices;
         }
 
-        for(DocScannerService service : docScannerServiceList) {
+        for (DocScannerService service : docScannerServiceList) {
             try {
                 Objects.requireNonNull(service.getConnectedDevices()).forEach(device -> {
-                        allDevices.add(setDefaults(device));
+                    allDevices.add(setDefaults(device));
                 });
             } catch (Throwable t) {
                 LOGGER.error("Failed to get connected device list from service " + service.getServiceName(), t);
@@ -59,16 +65,17 @@ public class DocScannerFacade {
 
     /**
      * Returns only devices of CAMERA DeviceType
+     *
      * @return
      */
-    public List<DocScanDevice> getConnectedCameraDevices() {
-        List<DocScanDevice> allDevices = new ArrayList<>();
-        if(docScannerServiceList == null || docScannerServiceList.isEmpty()) {
+    public List<ScanDevice> getConnectedCameraDevices() {
+        List<ScanDevice> allDevices = new ArrayList<>();
+        if (docScannerServiceList == null || docScannerServiceList.isEmpty()) {
             LOGGER.warn("** NO DOCUMENT SCANNER SERVICE IMPLEMENTATIONS FOUND!! **");
             return allDevices;
         }
 
-        for(DocScannerService service : docScannerServiceList) {
+        for (DocScannerService service : docScannerServiceList) {
             allDevices.addAll(service.getConnectedDevices()
                     .stream()
                     .filter(d -> d.getDeviceType().equals(DeviceType.CAMERA))
@@ -79,39 +86,39 @@ public class DocScannerFacade {
     }
 
     @Timed
-    public BufferedImage scanDocument(@NonNull DocScanDevice docScanDevice) {
+    public BufferedImage scanDocument(@NonNull ScanDevice docScanDevice, String deviceType) {
         setDefaults(docScanDevice);
         LOGGER.debug("Selected device details with configuration fully set : {}", docScanDevice);
         Optional<DocScannerService> result = docScannerServiceList.stream()
                 .filter(s -> s.getServiceName().equals(docScanDevice.getServiceName())).findFirst();
 
-        if(result.isPresent()) {
-            return result.get().scan(docScanDevice);
+        if (result.isPresent()) {
+            return result.get().scan(docScanDevice, deviceType);
         }
         return null;
     }
 
-    private DocScanDevice setDefaults(@NonNull DocScanDevice docScanDevice) {
-        if(id != null && docScanDevice.getId() != null) {
-            Optional<String> result = id.keySet().stream().filter( k -> docScanDevice.getId().matches(id.get(k)) ).findFirst();
-            if(result.isPresent()) {
-                docScanDevice.setDpi(dpi.getOrDefault(result.get(),0));
-                docScanDevice.setWidth(width.getOrDefault(result.get(),0));
-                docScanDevice.setHeight(height.getOrDefault(result.get(),0));
+    private ScanDevice setDefaults(@NonNull ScanDevice docScanDevice) {
+        if (id != null && docScanDevice.getId() != null) {
+            Optional<String> result = id.keySet().stream().filter(k -> docScanDevice.getId().matches(id.get(k))).findFirst();
+            if (result.isPresent()) {
+                docScanDevice.setDpi(dpi.getOrDefault(result.get(), 0));
+                docScanDevice.setWidth(width.getOrDefault(result.get(), 0));
+                docScanDevice.setHeight(height.getOrDefault(result.get(), 0));
             }
         }
         return docScanDevice;
     }
 
-    public void stopDevice(@NonNull DocScanDevice docScanDevice) {
+    public void stopDevice(@NonNull ScanDevice docScanDevice) {
         try {
-            if(docScannerServiceList == null || docScannerServiceList.isEmpty())
+            if (docScannerServiceList == null || docScannerServiceList.isEmpty())
                 return;
 
             Optional<DocScannerService> result = docScannerServiceList.stream()
                     .filter(s -> s.getServiceName().equals(docScanDevice.getServiceName())).findFirst();
 
-            if(result.isPresent())
+            if (result.isPresent())
                 result.get().stop(docScanDevice);
         } catch (Exception e) {
             LOGGER.error("Error while stopping device {}", docScanDevice.getId(), e);

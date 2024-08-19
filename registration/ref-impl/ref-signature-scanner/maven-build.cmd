@@ -1,0 +1,4 @@
+call mvn install:install-file -Dfile=${project.basedir}/lib/stpad-lib-9.4.1.jar -DgroupId=de.signotec.stpad -DartifactId=stpad-lib -Dversion=0.0.1-SNAPSHOT -Dpackaging=jar -DgeneratePom=true
+call mvn install:install-file -Dfile=${project.basedir}/lib/stpad-native-8.0.41.3.jar -DgroupId=de.signotec.stpad -DartifactId=stpad-native -Dversion=0.0.1-SNAPSHOT -Dpackaging=jar -DgeneratePom=true
+call mvn install:install-file -Dfile=${project.basedir}/lib/stlic-lib-2.1.0.jar -DgroupId=de.signotec.stlic -DartifactId=stlic-lib -Dversion=0.0.1-SNAPSHOT -Dpackaging=jar -DgeneratePom=true
+call mvn clean install -Dgpg.skip=true -Dmaven.test.skip=true

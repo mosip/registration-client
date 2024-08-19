@@ -1,8 +1,8 @@
 package io.mosip.registration.api.impl.scanner;
 
-import io.mosip.registration.api.docscanner.DeviceType;
 import io.mosip.registration.api.docscanner.DocScannerService;
-import io.mosip.registration.api.docscanner.dto.DocScanDevice;
+import io.mosip.registration.dto.DeviceType;
+import io.mosip.registration.dto.ScanDevice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -36,7 +36,7 @@ public class ScannerStubImpl implements DocScannerService {
     }
 
     @Override
-    public BufferedImage scan(DocScanDevice docScanDevice) {
+    public BufferedImage scan(ScanDevice docScanDevice, String deviceType) {
         try(InputStream inputStream = this.getClass().getResourceAsStream(getStubPath())) {
             BufferedImage bufferedImage = ImageIO.read(inputStream);
 
@@ -52,8 +52,8 @@ public class ScannerStubImpl implements DocScannerService {
     }
 
     @Override
-    public List<DocScanDevice> getConnectedDevices() {
-        DocScanDevice docScanDevice = new DocScanDevice();
+    public List<ScanDevice> getConnectedDevices() {
+        ScanDevice docScanDevice = new ScanDevice();
         docScanDevice.setServiceName(getServiceName());
         docScanDevice.setDeviceType(DeviceType.SCANNER);
         docScanDevice.setName(DEVICE_NAME);
@@ -62,7 +62,7 @@ public class ScannerStubImpl implements DocScannerService {
     }
 
     @Override
-    public void stop(DocScanDevice docScanDevice) {
+    public void stop(ScanDevice docScanDevice) {
         //Do nothing
     }
 

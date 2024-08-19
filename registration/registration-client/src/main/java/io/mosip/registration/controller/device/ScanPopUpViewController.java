@@ -1,43 +1,34 @@
 package io.mosip.registration.controller.device;
 
-import static io.mosip.registration.constants.LoggerConstants.LOG_REG_IRIS_CAPTURE_CONTROLLER;
-import static io.mosip.registration.constants.LoggerConstants.LOG_REG_SCAN_CONTROLLER;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
-
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.Buffer;
 import java.util.ResourceBundle;
 
-import io.mosip.registration.api.docscanner.DocScannerFacade;
-import io.mosip.registration.api.docscanner.DocScannerUtil;
-import io.mosip.registration.api.docscanner.dto.DocScanDevice;
-import io.mosip.registration.util.common.RectangleSelection;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.concurrent.Task;
-import javafx.event.EventHandler;
-import javafx.scene.control.*;
-import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.StackPane;
+import io.mosip.registration.dto.ScanDevice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.registration.api.docscanner.DocScannerFacade;
+import io.mosip.registration.api.docscanner.DocScannerUtil;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.reg.DocumentScanController;
-import io.mosip.registration.util.control.FxControl;
+import io.mosip.registration.util.common.RectangleSelection;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Bounds;
@@ -45,12 +36,17 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 @Controller
 public class ScanPopUpViewController extends BaseController implements Initializable {
@@ -127,10 +123,9 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	private Thread streamer_thread = null;
 	private Stage popupStage;
 	public TextField streamerValue;
-	private FxControl fxControl;
 	private boolean isWebCamStream;
 	private boolean isStreamPaused;
-	public DocScanDevice docScanDevice;
+	public ScanDevice docScanDevice;
 	private RectangleSelection rectangleSelection = null;
 	final DoubleProperty zoomProperty = new SimpleDoubleProperty(200);
 
@@ -358,6 +353,9 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		// Enable Auto-Logout
 		SessionContext.setAutoLogout(true);
 		try {
+			BufferedImage bufferedImage = documentScanController.saveSignature();
+			if(bufferedImage != null)
+				documentScanController.getScannedPages().add(bufferedImage);
 
 			if(rectangleSelection != null) {
 				String docNumber = docCurrentPageNumber.getText();
@@ -369,7 +367,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 			documentScanController.getScannedPages().clear();
 			popupStage.close();
 
-		} catch (RuntimeException exception) {
+		} catch (RuntimeException | IOException exception) {
 			LOGGER.error("Failed to set data in documentDTO", exception);
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOCUMENT_ERROR));
 		}
@@ -655,7 +653,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 				while (isWebCamStream()) {
 					try {
 						if (!isStreamPaused()) {
-							getScanImage().setImage(DocScannerUtil.getImage(docScannerFacade.scanDocument(docScanDevice)));
+							getScanImage().setImage(DocScannerUtil.getImage(docScannerFacade.scanDocument(docScanDevice, getValueFromApplicationContext(RegistrationConstants.IMAGING_DEVICE_TYPE))));
 						}
 					} catch (Throwable t) {
 						LOGGER.error("Error while streaming the captured photo", t);

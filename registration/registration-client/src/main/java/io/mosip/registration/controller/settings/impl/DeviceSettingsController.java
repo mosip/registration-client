@@ -5,15 +5,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import io.mosip.registration.dto.DeviceType;
+import io.mosip.registration.dto.ScanDevice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.registration.api.docscanner.DeviceType;
 import io.mosip.registration.api.docscanner.DocScannerFacade;
-import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
@@ -270,7 +270,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 			});
 			Map<String, List<MdmBioDevice>> biometricDevices = MosipDeviceSpecificationFactory.getAvailableDeviceInfo();
 			columnsCount = biometricDevices.size();
-			List<DocScanDevice> scannerDevices = docScannerFacade.getConnectedDevices();
+			List<ScanDevice> scannerDevices = docScannerFacade.getConnectedDevices();
 			if (!scannerDevices.isEmpty()) {
 				++columnsCount;
 			}
@@ -323,7 +323,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 	}
 
 	private void addContentToGridPane(GridPane gridPane, Map<String, List<MdmBioDevice>> biometricDevices,
-			List<DocScanDevice> scannerDevices) throws RegBaseCheckedException {
+			List<ScanDevice> scannerDevices) throws RegBaseCheckedException {
 		int rowIndex = 0;
 		int columnIndex = 0;
 		for (Entry<String, List<MdmBioDevice>> entry : biometricDevices.entrySet()) {
@@ -347,7 +347,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 	}
 
 	private GridPane createDevicePane(String type, String key, List<MdmBioDevice> bioDevices,
-			List<DocScanDevice> scannerDevices) throws RegBaseCheckedException {
+			List<ScanDevice> scannerDevices) throws RegBaseCheckedException {
 		GridPane mainGridPane = new GridPane();
 		mainGridPane.getStyleClass().add(RegistrationConstants.SYNC_JOB_STYLE);
 
@@ -465,12 +465,12 @@ public class DeviceSettingsController extends BaseController implements Settings
 		return null;
 	}
 
-	private void addScannerDetails(VBox deviceDetailsVbox, List<DocScanDevice> scannerDevices) {
+	private void addScannerDetails(VBox deviceDetailsVbox, List<ScanDevice> scannerDevices) {
 		if (scannerDevices.size() > 1) {
 			ComboBox<ScanDeviceInfo> comboBox = new ComboBox<>();
 			comboBox.getStyleClass().add("deviceDetailsComboBox");
 
-			for (DocScanDevice device : scannerDevices) {
+			for (ScanDevice device : scannerDevices) {
 				comboBox.getItems().add(convertToScanDeviceInfo(device));
 			}
 			comboBox.getSelectionModel().select(getSelectedScanDevice(scannerDevices));
@@ -504,10 +504,10 @@ public class DeviceSettingsController extends BaseController implements Settings
 		}
 	}
 
-	private ScanDeviceInfo getSelectedScanDevice(List<DocScanDevice> scannerDevices) {
+	private ScanDeviceInfo getSelectedScanDevice(List<ScanDevice> scannerDevices) {
 		String selectedScanDevice = documentScanController.getSelectedScanDeviceName();
 		if (selectedScanDevice != null && !selectedScanDevice.isBlank()) {
-			Optional<DocScanDevice> docScanDevice = scannerDevices.stream().filter(device -> device.getId().equalsIgnoreCase(selectedScanDevice)).findFirst();
+			Optional<ScanDevice> docScanDevice = scannerDevices.stream().filter(device -> device.getId().equalsIgnoreCase(selectedScanDevice)).findFirst();
 			if (docScanDevice.isPresent()) 
 				return convertToScanDeviceInfo(docScanDevice.get());
 		}
@@ -515,7 +515,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 		return convertToScanDeviceInfo(scannerDevices.get(0));
 	}
 
-	private ScanDeviceInfo convertToScanDeviceInfo(DocScanDevice device) {
+	private ScanDeviceInfo convertToScanDeviceInfo(ScanDevice device) {
 		ScanDeviceInfo deviceInfo = new ScanDeviceInfo();
 		deviceInfo.setId(device.getId());
 		deviceInfo.setName(device.getName());

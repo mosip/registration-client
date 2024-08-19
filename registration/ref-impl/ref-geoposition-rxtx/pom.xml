@@ -6,7 +6,7 @@
 
     <groupId>io.mosip.registration</groupId>
     <artifactId>ref-geoposition-rxtx</artifactId>
-    <version>1.2.0.1-B1</version>
+    <version>1.2.0.2-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -20,7 +20,7 @@
         <dependency>
             <groupId>io.mosip.registration</groupId>
             <artifactId>registration-api</artifactId>
-            <version>1.2.0.1-B1</version>
+            <version>1.2.0.2</version>
             <scope>compile</scope>
         </dependency>
 
@@ -77,6 +77,26 @@
                         <goals>
                             <goal>single</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>make-jar-executable</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- Create a shell script to run the JAR file with executable permission -->
+                                <chmod file="${project.build.directory}/*.jar" perm="ugo+rx"/>
+                            </target>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

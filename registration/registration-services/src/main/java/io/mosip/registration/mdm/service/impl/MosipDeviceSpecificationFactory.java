@@ -311,9 +311,7 @@ public class MosipDeviceSpecificationFactory {
 
 			if (getMdsProvider(deviceSpecificationProviders, latestSpecVersion) == null) {
 				List<String> specVersions = Arrays.asList(specVersion);
-
-				specVersions.remove(latestSpecVersion);
-
+				    specVersions.remove(latestSpecVersion);    //NOSONAR removing latestSpecVersion here.
 				if (!specVersions.isEmpty()) {
 					latestSpecVersion = getLatestSpecVersion(specVersions.toArray(new String[0]));
 				}
@@ -333,7 +331,7 @@ public class MosipDeviceSpecificationFactory {
 			if (key != null && selectedDeviceInfoMap.containsKey(key))
 				return selectedDeviceInfoMap.get(key);
 
-			initializeDeviceMap(true);
+				initializeDeviceMap(true);
 
 			if (key != null && selectedDeviceInfoMap.containsKey(key))
 				return selectedDeviceInfoMap.get(key);

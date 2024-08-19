@@ -8,19 +8,15 @@ import static java.io.File.separator;
 import java.io.*;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import io.mosip.registration.context.SessionContext;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
@@ -107,7 +103,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 
 			try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(preRegZipFile))) {
 				ZipEntry zipEntry;
-				while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+				while ((zipEntry = zipInputStream.getNextEntry()) != null) {    //NOSONAR Adding Next ZipEntry here.
 					totalEntries++;
 					if (zipEntry.getName().equalsIgnoreCase("ID.json")) {
 						byte[] idjson = IOUtils.toByteArray(zipInputStream);
@@ -141,7 +137,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 
 			try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(preRegZipFile))) {
 				ZipEntry zipEntry;
-				while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+				while ((zipEntry = zipInputStream.getNextEntry()) != null) {    //NOSONAR Adding Next ZipEntry here.
 					totalEntries++;
 
 					String fileName = zipEntry.getName();
@@ -219,6 +215,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 		try {
 			if (!StringUtils.isEmpty(jsonString) && validateDemographicInfoObject()) {
 				JSONObject jsonObject = (JSONObject) new JSONObject(jsonString).get("identity");
+				SessionContext.map().put(RegistrationConstants.REGISTRATION_DATA_DEMO, new HashMap<String,Object>());
 				//Always use latest schema, ignoring missing / removed fields
 				RegistrationDTO registrationDTO = getRegistrationDTOFromSession();
 				List<UiFieldDTO> fieldList = identitySchemaService.getAllFieldSpec(registrationDTO.getProcessId(), registrationDTO.getIdSchemaVersion());
@@ -261,6 +258,7 @@ public class PreRegZipHandlingServiceImpl extends BaseService implements PreRegZ
 									break;
 								default:
 									getRegistrationDTOFromSession().getDemographics().put(field.getId(), fieldValue);
+									getRegistrationDTODemographics().put(field.getId(), fieldValue);
 							}
 						}
 						break;

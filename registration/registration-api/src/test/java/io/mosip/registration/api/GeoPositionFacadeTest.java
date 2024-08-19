@@ -15,7 +15,7 @@ public class GeoPositionFacadeTest {
     public void getDistanceTest() {
         GeoPositionFacade facade = new GeoPositionFacade();
         double distance = facade.getDistance(-6.453278, 34.52117,
-                -6.453278	, 34.52117);
+                -6.453278, 34.52117);
         Assert.assertEquals(0, distance, 0);
     }
 

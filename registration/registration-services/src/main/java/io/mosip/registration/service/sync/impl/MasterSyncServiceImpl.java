@@ -34,6 +34,7 @@ import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.mastersync.ReasonListDto;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.DocumentType;
+import io.mosip.registration.entity.GlobalParam;
 import io.mosip.registration.entity.Location;
 import io.mosip.registration.entity.LocationHierarchy;
 import io.mosip.registration.entity.ReasonCategory;
@@ -115,7 +116,9 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 		LOGGER.info("Initiating the Master Sync");
 
 		if (masterSyncFieldsValidate(masterSyncDtls, triggerPoint)) {
-			Map<String, String> requestParamMap = getRequestParamsForClientSettingsSync(masterSyncDtls);
+			GlobalParam upgradeFullSyncEntities = globalParamService.getGlobalParam(RegistrationConstants.UPGRADE_FULL_SYNC_ENTITIES);
+			
+			Map<String, String> requestParamMap = getRequestParamsForClientSettingsSync(masterSyncDtls, upgradeFullSyncEntities);
 			ResponseDTO responseDto = syncClientSettings(masterSyncDtls, triggerPoint,
 					requestParamMap);
 
@@ -128,6 +131,10 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 							DateUtils.formatToISOString(masterSyncDetails.getLastSyncDtimes().toLocalDateTime()));
 				}
 				responseDto = syncClientSettings(masterSyncDtls, triggerPoint, requestParamMap);
+			}
+			if (responseDto.getSuccessResponseDTO() != null && upgradeFullSyncEntities != null) {
+				LOGGER.info("Deleting the list of fullSyncEntities saved during DB upgrade..");
+				globalParamService.deleteGlobalParam(RegistrationConstants.UPGRADE_FULL_SYNC_ENTITIES);
 			}
 			return responseDto;
 		} else {
@@ -365,14 +372,21 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	 * collects request params required for client settings sync.
 	 * 
 	 * @param masterSyncDtls
+	 * @param upgradeFullSyncEntities 
 	 * @return
 	 * @throws RegBaseCheckedException
 	 */
-	private Map<String, String> getRequestParamsForClientSettingsSync(String masterSyncDtls) {
+	private Map<String, String> getRequestParamsForClientSettingsSync(String masterSyncDtls, GlobalParam upgradeFullSyncEntities) {
 		Map<String, String> requestParamMap = new HashMap<String, String>();
 		requestParamMap.put(RegistrationConstants.KEY_INDEX.toLowerCase(),
 				CryptoUtil.computeFingerPrint(clientCryptoFacade.getClientSecurity().getEncryptionPublicPart(), null));
 		requestParamMap.put("version", softwareUpdateHandler.getCurrentVersion());
+		
+		String fullSyncEntities = RegistrationConstants.EMPTY;
+			
+		if (upgradeFullSyncEntities != null) {
+			fullSyncEntities = upgradeFullSyncEntities.getVal();
+		}
 
 		if (!isInitialSync()) {
 			// getting Last Sync date from Data from sync table
@@ -387,8 +401,11 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 				requestParamMap.put(RegistrationConstants.MASTER_CENTER_PARAM, registrationCenterId);
 		}
 		if (masterSyncDao.getLocationHierarchyCount() <= 0) {
-			requestParamMap.put(RegistrationConstants.MASTER_FULLSYNC_ENTITIES, LocationHierarchy.class.getSimpleName());
+			fullSyncEntities = fullSyncEntities.isBlank() ? LocationHierarchy.class.getSimpleName() : fullSyncEntities + "," + LocationHierarchy.class.getSimpleName();
 		}
+		
+		requestParamMap.put(RegistrationConstants.MASTER_FULLSYNC_ENTITIES, fullSyncEntities);
+		
 		return requestParamMap;
 	}
 
@@ -501,4 +518,43 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 	public DocumentType getDocumentType(String docCode, String langCode) {
 		return  masterSyncDao.getDocumentType(docCode, langCode);
 	}
+
+	@Override
+	public List<GenericDto> findLocationByParentHierarchyCode(String code, String hierarchyName,
+															  String langCode) throws RegBaseCheckedException {
+		List<GenericDto> locationDto = new ArrayList<>();
+		if (codeAndlangCodeNullCheck(code, langCode)) {
+			List<Location> masterLocation = masterSyncDao.findLocationByParentLocCode(code,
+					hierarchyName, langCode);
+			for (Location masLocation : masterLocation) {
+				GenericDto location = new GenericDto();
+				location.setCode(masLocation.getCode());
+				location.setName(masLocation.getName());
+				location.setLangCode(masLocation.getLangCode());
+				locationDto.add(location);
+			}
+		} else {
+			LOGGER.info(LOG_REG_MASTER_SYNC, APPLICATION_NAME, APPLICATION_ID,
+					RegistrationConstants.CODE_AND_LANG_CODE_MANDATORY);
+			throw new RegBaseCheckedException(
+					RegistrationExceptionConstants.REG_MASTER_SYNC_SERVICE_IMPL_CODE_AND_LANGCODE.getErrorCode(),
+					RegistrationExceptionConstants.REG_MASTER_SYNC_SERVICE_IMPL_CODE_AND_LANGCODE.getErrorMessage());
+		}
+		return locationDto;
+	}
+	@Override
+	public List<GenericDto> getFieldValues(String fieldName, String hierarchyName, String langCode,
+										   boolean isHierarchical) {
+		try {
+			if(isHierarchical) {
+				return findLocationByParentHierarchyCode(fieldName, hierarchyName,
+						langCode);
+			}
+			return getDynamicField(fieldName, langCode);
+		} catch (RegBaseCheckedException exception) {
+			LOGGER.error("Failed to fetch values for field : " + fieldName, exception);
+		}
+		return Collections.EMPTY_LIST;
+	}
+
 }

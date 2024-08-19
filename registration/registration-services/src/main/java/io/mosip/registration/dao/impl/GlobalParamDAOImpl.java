@@ -63,7 +63,7 @@ public class GlobalParamDAOImpl implements GlobalParamDAO {
 	 *
 	 * @see io.mosip.registration.dao.GlobalParamDAO#getGlobalParams(String)
 	 */
-	public Map<String, Object> getGlobalParams(@NotNull String pattern) {
+	public Map<String, Object> getGlobalParams(String pattern) {
 
 		LOGGER.info("Fetching list of global params with key pattern {}", pattern);
 
@@ -206,5 +206,12 @@ public class GlobalParamDAOImpl implements GlobalParamDAO {
 				RegistrationConstants.APPLICATION_ID, "Upserts server active profile ended.");
 		
 		return globalParam;
+	}
+
+	@Override
+	public void delete(GlobalParamId globalParamId) {
+		globalParamRepository.deleteById(globalParamId);
+		
+		LOGGER.info("Global param deleted.");
 	}
 }

@@ -16,7 +16,7 @@ public class DocScannerUtilTest {
 
     @Test
     public void conversionTest() throws IOException {
-        try(InputStream in = this.getClass().getResourceAsStream("/images/stubdoc.png")) {
+        try (InputStream in = this.getClass().getResourceAsStream("/images/stubdoc.png")) {
             byte[] stubImageBytes = in.readAllBytes();
             BufferedImage bufferedImage = DocScannerUtil.getBufferedImageFromBytes(stubImageBytes);
             Assert.assertNotNull(bufferedImage);
@@ -42,7 +42,7 @@ public class DocScannerUtilTest {
 
     @Test
     public void pdfConversionTest() throws IOException {
-        try(InputStream in = this.getClass().getResourceAsStream("/images/stubdoc.png")) {
+        try (InputStream in = this.getClass().getResourceAsStream("/images/stubdoc.png")) {
             BufferedImage bufferedImage = DocScannerUtil.getBufferedImageFromBytes(in.readAllBytes());
 
             List<BufferedImage> bufferedImageList = new ArrayList<>();

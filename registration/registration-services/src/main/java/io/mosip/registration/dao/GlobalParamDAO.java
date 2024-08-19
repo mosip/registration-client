@@ -7,6 +7,8 @@ import java.util.Map;
 import io.mosip.registration.entity.GlobalParam;
 import io.mosip.registration.entity.id.GlobalParamId;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * This class is used to fetch/save/update the Global Parameter.
  * 
@@ -28,7 +30,7 @@ public interface GlobalParamDAO {
 	 * @param pattern
 	 * @return
 	 */
-	Map<String, Object> getGlobalParams(String pattern);
+	Map<String, Object> getGlobalParams( String pattern);
 
 	/**
 	 * This method is used to save all the list of global parameters
@@ -91,4 +93,11 @@ public interface GlobalParamDAO {
 	 * @return {@link GlobalParam}
 	 */
 	GlobalParam upsertServerProfile(String profileName);
+
+	/**
+	 * This method is used to delete a globalparam using id.
+	 * 
+	 * @param globalParamId
+	 */
+	void delete(GlobalParamId globalParamId);
 }

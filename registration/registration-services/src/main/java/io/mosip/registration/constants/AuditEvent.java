@@ -28,6 +28,8 @@ public enum AuditEvent {
 
 	// Navigation
 	NAV_LOST_UIN("REG-EVT-001", USER_EVENT.getCode(), "NAV_LOST_UIN", "Click of navigation link: Lost UIN"),
+	// New process added to update applicant details @cifu
+	NAV_RENEW_UIN("REG-EVT-008", USER_EVENT.getCode(), "NAV_RENEW_UIN", "Click of navigation link: Renew UIN"),
 	NAV_NEW_REG("REG-EVT-002", USER_EVENT.getCode(), "NAV_NEW_REG", "Click of navigation link: New Registration"),
 	NAV_UIN_UPDATE("REG-EVT-003", USER_EVENT.getCode(), "NAV_UIN_UPDATE", "Navigation link: UIN Update"),
 	NAV_APPROVE_REG("REG-EVT-004", USER_EVENT.getCode(), "NAV_APPROVE_REG", "Navigation link: Approve Registration"),

@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.scene.control.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -33,11 +36,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
@@ -92,9 +90,16 @@ public class UpdateUINController extends BaseController implements Initializable
 	private HashMap<String, Object> checkBoxKeeper;
 
 	private Map<String, List<UiFieldDTO>> groupedMap;
+
+	private Map<String, List<String>> groupedProcess;
 	private Map<String, Map<String, String>> groupLabels;
 
 	private FXUtils fxUtils;
+	@FXML
+	private RadioButton renewCheckbox;
+
+	@FXML
+	private RadioButton updateCheckbox;
 
 	/*
 	 * (non-Javadoc)
@@ -113,6 +118,7 @@ public class UpdateUINController extends BaseController implements Initializable
 
 		groupedMap = new HashMap<>();
 		groupLabels = new HashMap<>();
+		groupedProcess = new HashMap<>();
 		ProcessSpecDto processSpecDto = getProcessSpec(getRegistrationDTOFromSession().getProcessId(), getRegistrationDTOFromSession().getIdSchemaVersion());
 		processSpecDto.getScreens().forEach(screen -> {
 			screen.getFields().forEach(field -> {
@@ -120,13 +126,69 @@ public class UpdateUINController extends BaseController implements Initializable
 					List<UiFieldDTO> fields = groupedMap.getOrDefault(field.getGroup(), new ArrayList<>());
 					fields.add(field);
 					groupedMap.put(field.getGroup(), fields);
+
+					if(field.getGroupProcess() != null)
+						for(String process : field.getGroupProcess())
+							if(groupedProcess.containsKey(process)) {
+								List<String> groups = groupedProcess.get(process);
+								if(!groups.contains(field.getGroup()))
+									groups.add(field.getGroup());
+								groupedProcess.put(process, groups);
+							} else {
+								List<String> groups = new ArrayList<>();
+								groups.add(field.getGroup());
+								groupedProcess.put(process, groups);
+							}
+
 					if(field.getGroupLabel() != null) {
 						groupLabels.put(field.getGroup(), field.getGroupLabel());
 					}
 				}
 			});
 		});
-		
+
+		renewCheckbox.selectedProperty().addListener(new ChangeListener<Boolean>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+				getRegistrationDTOFromSession().setPreRegType("RENEWAL");
+
+				for(Object object : checkBoxKeeper.values()) {
+					CheckBox checkBox = (CheckBox) object;
+					checkBox.setSelected(false);
+					checkBox.setDisable(true);
+				}
+
+				if(newValue) {
+					String process = renewCheckbox.getId();
+					for(String group : groupedProcess.get(process)){
+						((CheckBox)checkBoxKeeper.get(group)).setSelected(true);
+						((CheckBox)checkBoxKeeper.get(group)).setDisable(false);
+					}
+				}
+			}
+		});
+
+		updateCheckbox.selectedProperty().addListener(new ChangeListener<Boolean>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+				getRegistrationDTOFromSession().setPreRegType("UPDATE");
+				for(Object object : checkBoxKeeper.values()) {
+					CheckBox checkBox = (CheckBox) object;
+					checkBox.setSelected(false);
+					checkBox.setDisable(true);
+				}
+
+				if(newValue) {
+					String process = updateCheckbox.getId();
+					for(String group : groupedProcess.get(process)){
+						((CheckBox)checkBoxKeeper.get(group)).setSelected(true);
+						((CheckBox)checkBoxKeeper.get(group)).setDisable(false);
+					}
+				}
+			}
+		});
+
+
 		scrollPane.prefWidthProperty().bind(demographicHBox.widthProperty());
 		
 		parentFlow = parentFlowPane.getChildren();
@@ -159,6 +221,7 @@ public class UpdateUINController extends BaseController implements Initializable
 		checkBox.setTooltip(new Tooltip(groupLabel));
 		checkBox.getStyleClass().add(RegistrationConstants.updateUinCheckBox);
 		fxUtils.listenOnSelectedCheckBox(checkBox);
+		checkBox.setDisable(true);
 		checkBoxKeeper.put(groupName, checkBox);
 		
 		GridPane gridPane = new GridPane();

@@ -4,15 +4,21 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>io.mosip.registration</groupId>
+        <artifactId>registration-client-parent</artifactId>
+        <version>1.2.0.2-SNAPSHOT</version>
+    </parent>
+
     <groupId>io.mosip.registration</groupId>
     <artifactId>registration-api</artifactId>
-    <version>1.2.0.1-B1</version>
+    <version>1.2.0.2-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <spring.version>5.0.6.RELEASE</spring.version>
-        <mosip.core.kernel.version>1.2.0</mosip.core.kernel.version>
+        <mosip.core.kernel.version>1.2.0.1</mosip.core.kernel.version>
         <openjfx.version>11.0.2</openjfx.version>
         <spring-cloud-config.version>2.0.4.RELEASE</spring-cloud-config.version>
     </properties>
@@ -24,13 +30,13 @@
             <version>RELEASE</version>
             <scope>compile</scope>
         </dependency>
-        
+
         <dependency>
-			<groupId>org.openjfx</groupId>
-			<artifactId>javafx-graphics</artifactId>
-			<version>${openjfx.version}</version>
-			<scope>compile</scope>
-		</dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${openjfx.version}</version>
+            <scope>compile</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework</groupId>
@@ -42,7 +48,7 @@
         <dependency>
             <groupId>io.mosip.kernel</groupId>
             <artifactId>kernel-logger-logback</artifactId>
-            <version>1.2.0</version>
+            <version>${mosip.core.kernel.version}</version>
             <scope>compile</scope>
         </dependency>
 
@@ -67,82 +73,102 @@
         </dependency>
 
     </dependencies>
-	
-         <build>
-             <plugins>
-              <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-source-plugin</artifactId>
-                  <inherited>true</inherited>
-                  <version>2.2.1</version>
-                  <executions>
-                        <execution>
-                          <id>attach-sources</id>
-                          <goals>
-                                <goal>jar-no-fork</goal>
-                          </goals>
-                        </execution>
-                  </executions>
-                </plugin>
-                  <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-javadoc-plugin</artifactId>
-                  <version>3.2.0</version>
-                  <executions>
-                        <execution>
-                          <id>attach-javadocs</id>
-                          <goals>
-                                <goal>jar</goal>
-                          </goals>
-                        </execution>
-                  </executions>
-                  <configuration>
-                          <doclint>none</doclint>
-                  </configuration>
-                </plugin>
-                  <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-gpg-plugin</artifactId>
-                  <version>1.5</version>
-                  <executions>
-                        <execution>
-                          <id>sign-artifacts</id>
-                          <phase>verify</phase>
-                          <goals>
-                                <goal>sign</goal>
-                          </goals>
-		          <configuration>
-                		<gpgArguments>
-                    			<arg>--pinentry-mode</arg>
-                    			<arg>loopback</arg>
-                		</gpgArguments>
-            		 </configuration>
-                        </execution>
-                  </executions>
-                </plugin>
-                 </plugins>
-        </build>
-		<scm>
-                <connection>scm:git:git://github.com/mosip/registration-client.git</connection>
-                <developerConnection>scm:git:ssh://github.com:mosip/registration-client.git</developerConnection>
-                <url>https://github.com/mosip/registration-client</url>
-                <tag>HEAD</tag>
-        </scm>
-		<licenses>
-          <license>
-                <name>MPL 2.0</name>
-                <url>https://www.mozilla.org/en-US/MPL/2.0/</url>
-          </license>
-        </licenses>
-		<developers>
-                <developer>
-                  <name>Mosip</name>
-                  <email>mosip.emailnotifier@gmail.com</email>
-                  <organization>io.mosip</organization>
-                  <organizationUrl>https://github.com/mosip/registration-client</organizationUrl>
-                </developer>
-        </developers>
-		<name>Registration-api-stub-impl</name>
-		<description>Registration-api-stub-impl implementation</description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <inherited>true</inherited>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <doclint>none</doclint>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>make-jar-executable</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- Create a shell script to run the JAR file with executable permission -->
+                                <chmod file="${project.build.directory}/*.jar" perm="ugo+rx"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <scm>
+        <connection>scm:git:git://github.com/mosip/registration-client.git</connection>
+        <developerConnection>scm:git:ssh://github.com:mosip/registration-client.git</developerConnection>
         <url>https://github.com/mosip/registration-client</url>
+        <tag>HEAD</tag>
+    </scm>
+    <licenses>
+        <license>
+            <name>MPL 2.0</name>
+            <url>https://www.mozilla.org/en-US/MPL/2.0/</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Mosip</name>
+            <email>mosip.emailnotifier@gmail.com</email>
+            <organization>io.mosip</organization>
+            <organizationUrl>https://github.com/mosip/registration-client</organizationUrl>
+        </developer>
+    </developers>
+    <name>Registration-api-stub-impl</name>
+    <description>Registration-api-stub-impl implementation</description>
+    <url>https://github.com/mosip/registration-client</url>
 </project>

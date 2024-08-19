@@ -35,4 +35,6 @@ public class PreRegArchiveDTO {
 	@JsonProperty("zip-bytes")
 	private byte[] zipBytes;
 
+	@JsonProperty("bookingType")
+	private String bookingType;
 }

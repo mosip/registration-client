@@ -1,20 +1,22 @@
 package io.mosip.registration.ref.morena;
 
-import eu.gnome.morena.Camera;
-import eu.gnome.morena.Device;
-import eu.gnome.morena.Manager;
-import eu.gnome.morena.Scanner;
-import io.mosip.registration.api.docscanner.DeviceType;
-import io.mosip.registration.api.docscanner.DocScannerService;
-import io.mosip.registration.api.docscanner.dto.DocScanDevice;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import io.mosip.registration.dto.DeviceType;
+import io.mosip.registration.dto.ScanDevice;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import eu.gnome.morena.Camera;
+import eu.gnome.morena.Configuration;
+import eu.gnome.morena.Device;
+import eu.gnome.morena.Manager;
+import eu.gnome.morena.Scanner;
+import io.mosip.registration.api.docscanner.DocScannerService;
 
 @Component
 public class MorenaDocScanServiceImpl implements DocScannerService {
@@ -28,7 +30,10 @@ public class MorenaDocScanServiceImpl implements DocScannerService {
     }
 
     @Override
-    public BufferedImage scan(DocScanDevice docScanDevice) {
+    public BufferedImage scan(ScanDevice docScanDevice, String deviceType) {
+    	if (deviceType != null) {
+    		Configuration.addDeviceType(deviceType, true);
+    	}
         Manager manager = Manager.getInstance();
         Optional<Device> result = manager.listDevices().stream()
                 .filter(d -> d.toString().equals(docScanDevice.getName()))
@@ -58,14 +63,14 @@ public class MorenaDocScanServiceImpl implements DocScannerService {
     }
 
     @Override
-    public List<DocScanDevice> getConnectedDevices() {
+    public List<ScanDevice> getConnectedDevices() {
         Manager manager = Manager.getInstance();
         List<Device> connectedDevices = manager.listDevices();
         LOGGER.info("connectedDevices >>> {}", connectedDevices);
 
-        List<DocScanDevice> devices = new ArrayList<>();
+        List<ScanDevice> devices = new ArrayList<>();
         connectedDevices.forEach(device -> {
-            DocScanDevice docScanDevice = new DocScanDevice();
+            ScanDevice docScanDevice = new ScanDevice();
             docScanDevice.setId(SERVICE_NAME+":"+device.toString());
             docScanDevice.setName(device.toString());
             docScanDevice.setServiceName(getServiceName());
@@ -77,7 +82,7 @@ public class MorenaDocScanServiceImpl implements DocScannerService {
     }
 
     @Override
-    public void stop(DocScanDevice docScanDevice) {
+    public void stop(ScanDevice docScanDevice) {
 
     }
 }

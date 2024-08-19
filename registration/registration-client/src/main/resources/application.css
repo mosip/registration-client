@@ -245,7 +245,7 @@
 }
 
 #commonHeader {
-	-fx-background-color: #d9d9d9;
+	-fx-background-color: #bf212f;
 }
 
 .selectedResidence {
@@ -285,7 +285,7 @@
 }
 
 .genderSelectedButton {
-	-fx-background-color: #005baa;
+	-fx-background-color: #bf212f;
 	-fx-border-color: #005baa;
 	-fx-text-fill: #FFFFFF;
 	-fx-font-size: 12.0px;
@@ -527,26 +527,26 @@
 }
 
 .loginSubmitStyle:hover {
-	-fx-background-color: #004887;
-	-fx-border-color: #004887;
+	-fx-background-color: #FADCD9;
+	-fx-border-color: #005baa;
 	-fx-text-fill: #FFFFFF;
 }
 
 .loginSubmitStyle:pressed {
-	-fx-background-color: #004887;
-	-fx-border-color: #004887;
+	-fx-background-color: #fadcd9;
+	-fx-border-color: #005baa;
 	-fx-text-fill: #FFFFFF;
 }
 
 .loginSubmitStyle1:hover {
-	-fx-background-color: #004887;
-	-fx-border-color: #004887;
+	-fx-background-color: #FADCD9;
+	-fx-border-color: #005baa;
 	-fx-text-fill: #FFFFFF;
 }
 
 .loginSubmitStyle1:pressed {
-	-fx-background-color: #004887;
-	-fx-border-color: #004887;
+	-fx-background-color: #fadcd9;
+	-fx-border-color: #005baa;
 	-fx-text-fill: #FFFFFF;
 }
 
@@ -586,12 +586,12 @@
 }
 
 .reRegCantInformToggle:hover {
-	-fx-background-color: #004887;
+	-fx-background-color: #62bade;
 	-fx-border-color: #004887;
 }
 
 .reRegCantInformToggle:pressed {
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 }
 
@@ -630,13 +630,13 @@
 Working on new Css by taleev
 */
 #loginScreen {
-	-fx-background-image: url('/images/LoginBackGround.png');
+	-fx-background-image: url('/images/LoginBackGround.jpg');
 	-fx-background-size: cover, auto;
 	-fx-background-position: left top, center;
 }
 
 #header-section {
-	-fx-background-color: rgb(11.0, 106.0, 130.0, 0.3);
+	-fx-background-color: #ff5a5a;
 	-fx-pref-height: 30.0px;
 	-fx-pref-width: 1920.0px;
 }
@@ -726,7 +726,7 @@ Working on new Css by taleev
 .loginSubmitStyle {
 	-fx-pref-height: 35.0px;
 	-fx-pref-width: 312.0px;
-	-fx-background-color: #005baa
+	-fx-background-color: #bf212f;
 }
 
 .loginOtpValidStyle {
@@ -803,13 +803,13 @@ Working on new Css by taleev
 }
 
 .demoGraphicPaneContentButton:hover {
-	-fx-background-color: #004887;
+	-fx-background-color: #bf212f;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
 
 .demoGraphicPaneContentButton:pressed {
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
@@ -820,20 +820,20 @@ Working on new Css by taleev
 
 .documentContentButton {
 	-fx-border-width: 1.0 1.0 1.0 1.0;
-	-fx-border-color: #005baa;
+	-fx-border-color: #bf212f;
 	-fx-background-color: #FFFFFF;
 	-fx-border-radius: 3.0, 3.0, 3.0, 3.0;
 	-fx-font-size: 1.2em;
 }
 
 .documentContentButton:hover {
-	-fx-background-color: #004887;
+	-fx-background-color: #bf212f;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
 
 .documentContentButton:pressed {
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
@@ -845,7 +845,7 @@ Working on new Css by taleev
 }
 
 .contiuneButton {
-	-fx-background-color: #005baa;
+	-fx-background-color: bf212f;
 	-fx-border-width: 1.0 1.0 1.0 1.0;
 	-fx-border-color: #005baa;
 	-fx-text-fill: #FFFFFF;
@@ -854,17 +854,17 @@ Working on new Css by taleev
 }
 
 .contiuneButton:hover {
-	-fx-background-color: #004887;
-	-fx-border-color: #004887;
+	-fx-background-color:#FADCD9;
+	-fx-border-color: #005baa;
 }
 
 .contiuneButton:pressed {
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 }
 
 .contiuneButton:disabled {
-	-fx-background-color: #C9C9C9;
+	-fx-background-color: #FADCD9;
 	-fx-border-color: #C9C9C9;
 	-fx-text-fill: #666666;
 }
@@ -879,13 +879,13 @@ Working on new Css by taleev
 }
 
 .backButton:hover {
-	-fx-background-color: #004887;
+	-fx-background-color: #bf212f;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
 
 .backButton:pressed {
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
@@ -1275,6 +1275,32 @@ Working on new Css by taleev
 	-fx-font-size: 1.5em;
 }
 
+.modalityLabel {
+	-fx-text-fill: #666666;
+	-fx-font-size: 1.2em;
+}
+
+.mdsQualityLabel {
+	-fx-text-fill: #000000;
+	-fx-font-weight: bold;
+}
+
+.sdkQualityLabel {
+	-fx-text-fill: #800000;
+	-fx-font-weight: bold;
+}
+
+.sdkQualityText {
+	-fx-text-fill: #800000;
+	-fx-font-size: 12.0px;
+}
+
+.biometricTypeLabel {
+	-fx-text-fill: #666666;
+	-fx-font-size: 1.2em;
+	-fx-padding: 0px 0px 0px 60px ;
+}
+
 .paneHeader {
 	-fx-text-fill: #005baa;
 	-fx-font-size: 22.0px;
@@ -1320,13 +1346,13 @@ Working on new Css by taleev
 }
 
 .scanButton:hover {
-	-fx-background-color: #004887;
+	-fx-background-color: #005baa ;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
 
 .scanButton:pressed {
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
@@ -1596,7 +1622,7 @@ Working on new Css by taleev
 }
 
 #saveToDevice, #formValidationButton, #uploadBtn {
-	-fx-background-color: #005baa;
+	-fx-background-color: #bf212f ;
 }
 /*Upload Packet page design ends */
 
@@ -1681,18 +1707,18 @@ Working on new Css by taleev
 .approveButton {
 	-fx-border-width: 1.0 1.0 1.0 1.0;
 	-fx-border-radius: 3.0, 3.0, 3.0, 3.0;
-	-fx-background-color: #005baa;
+	-fx-background-color: #bf212f;
 	-fx-text-fill: #FFFFFF;
 	-fx-font-family: Roboto;
 }
 
 .approveButton:hover {
-	-fx-background-color: #004887;
+	-fx-background-color: #005baa;
 	-fx-border-color: #004887;
 }
 
 .approveButton:pressed {
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 }
 
@@ -1711,13 +1737,13 @@ Working on new Css by taleev
 }
 
 .rejectButton:hover {
-	-fx-background-color: #004887;
+	-fx-background-color: #FADCD9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
 
 .rejectButton:pressed {
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
@@ -1761,13 +1787,13 @@ Working on new Css by taleev
 }
 
 .RegbuttonStyle:hover {
-	-fx-background-color: #004887;
+	-fx-background-color: #FADCD9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
 
 .RegbuttonStyle:pressed {
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
@@ -1789,13 +1815,13 @@ Working on new Css by taleev
 }
 
 .ackBackButton:hover {
-	-fx-background-color: #004887;
+	-fx-background-color: #FADCD9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
 
 .ackBackButton:pressed {
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
@@ -1803,18 +1829,18 @@ Working on new Css by taleev
 .ackPageButton {
 	-fx-border-width: 1.0 1.0 1.0 1.0;
 	-fx-border-radius: 3.0, 3.0, 3.0, 3.0;
-	-fx-background-color: #005baa;
+	-fx-background-color: #bf212f;
 	-fx-text-fill: white;
 	-fx-font-family: Roboto;
 }
 
 .ackPageButton:hover {
-	-fx-background-color: #004887;
+	-fx-background-color: #bf212f;
 	-fx-border-color: #004887;
 }
 
 .ackPageButton:pressed {
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 }
 
@@ -1829,11 +1855,11 @@ Working on new Css by taleev
 	-fx-border-color: #F4F4F4;
 	-fx-border-width: 1.0 1.0 0.0 1.0;
 	-fx-text-fill: white;
-	-fx-background-color: #0B6A82
+	-fx-background-color: #bf212f;
 }
 
 .headerDetails {
-	-fx-background-color: #175768;
+	-fx-background-color: #bf212f;
 }
 
 .registrationOfficerIdPane {
@@ -1977,7 +2003,7 @@ Working on new Css by taleev
 }
 
 .uinUpdateStyle:pressed, .uinUpdateStyle:pressed .label {
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
@@ -2007,7 +2033,7 @@ Working on new Css by taleev
 
 .operationalPaneDetailsSync:pressed, .operationalPaneDetailsSync:pressed .label
 	{
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
@@ -2022,7 +2048,7 @@ Working on new Css by taleev
 }
 
 .syncJobButton {
-	-fx-background-color: #005baa;
+	-fx-background-color: #bf212f;
 	-fx-border-width: 1.0 1.0 1.0 1.0;
 	-fx-border-color: #005baa;
 	-fx-text-fill: #FFFFFF;
@@ -2081,14 +2107,14 @@ Working on new Css by taleev
 
 .operationalPaneDetailsPreReg:hover, .operationalPaneDetailsPreReg:hover .label
 	{
-	-fx-background-color: #004887;
-	-fx-border-color: #004887;
-	-fx-text-fill: #FFFFFF;
+	-fx-background-color: #000000;
+	-fx-border-color: #000000;
+	-fx-text-fill: #ffffff;
 }
 
 .operationalPaneDetailsPreReg:pressed, .operationalPaneDetailsPreReg:pressed .label
 	{
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
@@ -2107,7 +2133,7 @@ Working on new Css by taleev
 
 .operationalPaneDetails:pressed, .operationalPaneDetails:pressed .label
 	{
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
@@ -2129,7 +2155,7 @@ Working on new Css by taleev
 
 .operationalPaneDetailsBioUpdate:pressed,
 	.operationalPaneDetailsBioUpdate:pressed .label {
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
@@ -2197,13 +2223,13 @@ Working on new Css by taleev
 }
 
 .onboardUserPaneStyle:pressed, .onboardUserPaneStyle:pressed .label {
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
 
 .useronBoardLink {
-	-fx-text-fill: #005baa;
+	-fx-text-fill: #fadcd9;
 	-fx-font-family: Roboto;
 }
 
@@ -2293,7 +2319,7 @@ Working on new Css by taleev
 }
 
 .onboardScanBtn:pressed {
-	-fx-background-color: #004887;
+	-fx-background-color: #fadcd9;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
 }
@@ -2482,7 +2508,7 @@ Working on new Css by taleev
 }
 
 .dialog-pane .button {
-	-fx-background-color: #005baa;
+	-fx-background-color: #bf212f;
 	-fx-text-fill: white;
 	-fx-wrap-text: true;
 	-fx-cursor: hand;
@@ -2673,3 +2699,35 @@ Working on new Css by taleev
     -fx-text-fill: #FF0000;
     -fx-font-weight: bold;
 }
+.demographicGroupLabel{
+-fx-text-fill: #FF0000;
+ -fx-font-weight: bold;
+}
+.demographicGroup{
+-fx-border-color: black;
+-fx-border-width: 1.0 1.0 1.0 1.0;
+
+}
+<<<<<<< Updated upstream
+
+=======
+>>>>>>> Stashed changes
+.demographicField{
+-fx-border-width: 0.0 0.0 2.0 0.0;
+-fx-pref-width: 50.0px;
+}
+<<<<<<< Updated upstream
+.demoGraphicCustomLabel {
+
+    -fx-border-width: 0.0;
+    -fx-text-fill: #020F59;
+    -fx-font-size: 1.5em;
+    -fx-font-weight: 800;
+}
+.preRegParentPaneSection {
+    -fx-border-color:#020F59;
+    -fx-border-radius: 10.0 10.0 10.0 10.0;
+}
+
+=======
+>>>>>>> Stashed changes

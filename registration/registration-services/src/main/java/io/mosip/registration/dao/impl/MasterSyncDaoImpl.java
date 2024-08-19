@@ -255,4 +255,12 @@ public class MasterSyncDaoImpl implements MasterSyncDao {
 	public Long getLocationHierarchyCount() {
 		return locationHierarchyRepository.count();
 	}
+
+	@Override
+	public List<Location> findLocationByParentLocCode(String parentLocCode, String hierarchyName,
+													  String langCode) {
+		return
+				locationRepository.findByIsActiveTrueAndParentLocCodeAndHierarchyNameAndLangCode(parentLocCode,
+						hierarchyName, langCode);
+	}
 }

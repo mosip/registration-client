@@ -460,7 +460,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			String bioAttribute = key.split("_")[1];
 			BIR bir = birBuilder.buildBIR(new BiometricsDto(bioAttribute, null, 0));
 			capturedBiometrics.getOrDefault(fieldId, new ArrayList<>()).add(bir);
-			exceptionMetaInfo.getOrDefault(fieldId, new HashMap<>()).put(bioAttribute,
+			exceptionMetaInfo.computeIfAbsent(fieldId, field -> new HashMap<>()).put(bioAttribute,
 					registrationDTO.getBiometricExceptions().get(key));
 		}
 

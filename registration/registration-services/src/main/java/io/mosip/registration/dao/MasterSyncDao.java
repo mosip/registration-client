@@ -161,4 +161,14 @@ public interface MasterSyncDao {
 	 * @return count of {@link LocationHierarchy}
 	 */
 	Long getLocationHierarchyCount();
+	/**
+	 * Find location by parent loc code.
+	 *
+	 * @param parentLocCode the parent loc code
+	 * @param hierarchyName
+	 * @param langCode the lang code
+	 * @return the list
+	 */
+	List<Location> findLocationByParentLocCode(String parentLocCode, String hierarchyName, String
+			langCode);
 }
