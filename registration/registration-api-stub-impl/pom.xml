@@ -19,7 +19,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <spring.version>5.0.6.RELEASE</spring.version>
         <mosip.core.kernel.version>1.2.0.1</mosip.core.kernel.version>
-        <mosip.registration.api.version>1.2.0.2</mosip.registration.api.version>
+        <mosip.registration.api.version>1.2.0.2-SNAPSHOT</mosip.registration.api.version>
     </properties>
 
     <dependencies>
