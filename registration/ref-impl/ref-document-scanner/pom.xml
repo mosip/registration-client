@@ -20,7 +20,7 @@
         <dependency>
             <groupId>io.mosip.registration</groupId>
             <artifactId>registration-api</artifactId>
-            <version>1.2.0.2</version>
+            <version>1.2.0.2-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
@@ -46,9 +46,9 @@
         <dependency>
             <groupId>morena7</groupId>
             <artifactId>morena7</artifactId>
-            <!--<scope>system</scope>-->
+            <scope>system</scope>
             <version>1.0</version>
-           <!-- <systemPath>${basedir}/lib/morena/morena7.jar</systemPath>-->
+            <systemPath>${basedir}/lib/morena/morena7.jar</systemPath>
         </dependency>
 
         <dependency>
