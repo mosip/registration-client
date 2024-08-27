@@ -361,7 +361,7 @@
 		<dependency>
 			<groupId>com.googlecode.jfreesane</groupId>
 			<artifactId>jfreesane</artifactId>
-			<version>1.0</version>
+			<version>0.98</version>
 		</dependency>
 		<dependency>
 			<groupId>com.cronutils</groupId>
