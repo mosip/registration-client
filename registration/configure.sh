@@ -79,7 +79,7 @@ fi
 wget "${artifactory_url}/artifactory/libs-release-local/icu4j/icu4j.jar" -O "${work_dir}"/registration-client/target/lib/icu4j.jar
 wget "${artifactory_url}/artifactory/libs-release-local/icu4j/kernel-transliteration-icu4j.jar" -O "${work_dir}"/registration-client/target/lib/kernel-transliteration-icu4j.jar
 wget "${artifactory_url}/artifactory/libs-release-local/clamav/clamav.jar" -O "${work_dir}"/registration-client/target/lib/clamav.jar
-wget "${artifactory_url}/artifactory/libs-release-local/clamav/java21/kernel-virusscanner-clamav.jar" -O "${work_dir}"/registration-client/target/lib/kernel-virusscanner-clamav.jar
+wget "${artifactory_url}/artifactory/libs-release-local/clamav/kernel-virusscanner-clamav.jar" -O "${work_dir}"/registration-client/target/lib/kernel-virusscanner-clamav.jar
 
 #unzip Jre to be bundled
 wget "${artifactory_url}/artifactory/libs-release-local/zulu21.34.19-ca-fx-jre21.0.3-win_x64.zip" -O "${work_dir}"/zulu21.34.19-ca-fx-jre21.0.3-win_x64.zip
