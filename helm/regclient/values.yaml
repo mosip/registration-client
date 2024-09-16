@@ -66,13 +66,14 @@ image:
   #   - myRegistryKeySecretName
 # Configuration for the keystoreJob
 job:
-  name: keystorejob
-  registry: docker.io
-  image: mosipdev/regclient-keystore
-  tag: develop
-  pullPolicy: Always
-  rolename: keystorerole
-  rolebindingname: keystorerolebinding
+  image:
+    name: keystorejob
+    registry: docker.io
+    repository: mosipdev/regclient-keystore
+    tag: develop
+    pullPolicy: Always
+    rolename: keystorerole
+    rolebindingname: keystorerolebinding
 
 regclient:
   version: 1.2.1-SNAPSHOT
