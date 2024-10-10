@@ -97,7 +97,7 @@ startupProbe:
   initialDelaySeconds: 0
   periodSeconds: 30
   timeoutSeconds: 5
-  failureThreshold: 10
+  failureThreshold: 60
   successThreshold: 1
 
 livenessProbe:
@@ -108,7 +108,7 @@ livenessProbe:
   initialDelaySeconds: 20
   periodSeconds: 60
   timeoutSeconds: 5
-  failureThreshold: 2
+  failureThreshold: 60
   successThreshold: 1
 
 readinessProbe:
@@ -119,7 +119,7 @@ readinessProbe:
   initialDelaySeconds: 0
   periodSeconds: 60
   timeoutSeconds: 5
-  failureThreshold: 2
+  failureThreshold: 60
   successThreshold: 1
 
 ##
