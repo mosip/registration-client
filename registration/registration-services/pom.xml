@@ -382,7 +382,7 @@
 		<dependency>
 			<artifactId>kernel-biosdk-provider</artifactId>
 			<groupId>io.mosip.kernel</groupId>
-			<version>${mosip.bio-utils.version}</version>
+			<version>${mosip.biometric.util.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>io.mosip.kernel</groupId>
@@ -554,6 +554,7 @@
 								--add-exports java.desktop/sun.java2d=ALL-UNNAMED
 								--illegal-access=debug
 								--enable-preview
+
 							</argLine>
 						</configuration>
 						<!--<configuration><skipTests>true</skipTests></configuration>-->
