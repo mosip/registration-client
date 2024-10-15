@@ -554,7 +554,6 @@
 								--add-exports java.desktop/sun.java2d=ALL-UNNAMED
 								--illegal-access=debug
 								--enable-preview
-
 							</argLine>
 						</configuration>
 						<!--<configuration><skipTests>true</skipTests></configuration>-->
