@@ -17,7 +17,7 @@ function installing_regclient() {
   kubectl label ns $NS istio-injection=enabled --overwrite
   helm repo update
 
-  read -p "Is values.yaml for data-archive chart set correctly as part of Pre-requisites?(Y/n) " yn
+  read -p "Is values.yaml for regclinet chart set correctly as part of Pre-requisites?(Y/n) " yn
   if [[ "$yn" != "Y" ]]; then
     echo "ERROR: values.yaml not set correctly; EXITING."
     exit 1
