@@ -7,14 +7,19 @@
 	<parent>
 		<groupId>io.mosip.registration</groupId>
 		<artifactId>registration-client-parent</artifactId>
-		<version>1.3.0-SNAPSHOT</version>
+		<version>1.3.0-RC</version>
 	</parent>
 
 	<artifactId>registration-client</artifactId>
 	<packaging>jar</packaging>
-	<version>1.3.0-SNAPSHOT</version>
+	<version>1.3.0-RC</version>
 	<name>registration-client</name>
 	<description>Maven project of MOSIP Registration UI</description>
+
+	<properties>
+		<maven.deploy.plugin.version>3.1.1</maven.deploy.plugin.version>
+		<nexus.staging.maven.plugin.version>1.6.14</nexus.staging.maven.plugin.version>
+	</properties>
 
 	<dependencies>
 		<dependency>
@@ -135,6 +140,25 @@
 								<!-- Create a shell script to run the JAR file with executable permission -->
 								<chmod file="${project.build.directory}/*.jar" perm="ugo+rx"/>
 							</target>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<version>${maven.deploy.plugin.version}</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+				<executions>
+					<execution>
+						<id>default-deploy</id>
+						<phase>none</phase>
+						<goals>
+							<goal>deploy</goal>
+						</goals>
+						<configuration>
+							<skip>true</skip>
 						</configuration>
 					</execution>
 				</executions>
