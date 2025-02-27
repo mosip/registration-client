@@ -7,8 +7,6 @@ import org.testfx.api.FxRobot;
 import javafx.scene.control.TextField;
 import registrationtest.controls.Alerts;
 
-//import com.itextpdf.text.log.SysoCounter;
-
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.RobotActions;
 import registrationtest.utility.WaitsUtil;
