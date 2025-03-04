@@ -1,17 +1,13 @@
 package io.mosip.registration.test.update;
 
 import io.mosip.kernel.core.util.FileUtils;
-import io.mosip.registration.exception.RegBaseCheckedException;
-import io.mosip.registration.test.service.PreRegZipHandlingServiceTest;
 import io.mosip.registration.update.ClientIntegrityValidator;
 import io.mosip.registration.update.ClientSetupValidator;
 import io.mosip.registration.update.ManifestCreator;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -56,10 +52,9 @@ public class ManifestCreatorTest extends ManifestCreator {
     }
 
 
-    @Ignore //Skipped due to trusted certificate is expired
     @Test
     public void integrityCheckTest() throws IOException {
-        URL url = ManifestCreatorTest.class.getResource("/setup/registration-api-1.2.0-SNAPSHOT.jar");
+        URL url = ManifestCreatorTest.class.getResource("/setup/registration-api-1.3.0-SNAPSHOT.jar");
         X509Certificate certificate =  ClientIntegrityValidator.getCertificate();
         JarFile jarFile = new JarFile(url.getFile());
         ClientIntegrityValidator.verifyIntegrity(certificate, jarFile);
