@@ -35,17 +35,19 @@ public class SoftwareUpdateUtil {
         Objects.requireNonNull(dir.listFiles(), "No files found in libs");
         File[] libraries = dir.listFiles();
         Map<String, Attributes> entries = localManifest.getEntries();
+
         for (File file : libraries) {
-            if(!entries.containsKey(file.getName())) {
-                LOGGER.error("Unknown file found {}", file.getName());
+            // Ignore non-JAR files
+            if (file.getName().endsWith(".jar") && !entries.containsKey(file.getName())) {
+                LOGGER.error("Unknown JAR file found {}", file.getName());
                 deleteFile(file.getCanonicalPath());
                 builder.append(file.getName());
                 builder.append("\n");
             }
         }
 
-        byte[] bytes =  builder.toString().trim().getBytes(StandardCharsets.UTF_8);
-        if(bytes.length > 0) {
+        byte[] bytes = builder.toString().trim().getBytes(StandardCharsets.UTF_8);
+        if (bytes.length > 0) {
             LOGGER.error("Writing the unknown jar names");
             FileUtils.writeByteArrayToFile(new File(UNKNOWN_JARS), bytes);
             return true;
