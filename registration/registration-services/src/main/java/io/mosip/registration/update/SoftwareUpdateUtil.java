@@ -36,21 +36,10 @@ public class SoftwareUpdateUtil {
         File[] libraries = dir.listFiles();
         Map<String, Attributes> entries = localManifest.getEntries();
 
-        // Debugging: Print files in libFolder
-        System.out.println("Files in libFolder:");
         for (File file : libraries) {
-            System.out.println(file.getName());
-        }
-
-        // Debugging: Print entries in localManifest
-        System.out.println("Entries in localManifest:");
-        for (String key : entries.keySet()) {
-            System.out.println(key);
-        }
-
-        for (File file : libraries) {
-            if (!entries.containsKey(file.getName())) {
-                LOGGER.error("Unknown file found {}", file.getName());
+            // Ignore non-JAR files
+            if (file.getName().endsWith(".jar") && !entries.containsKey(file.getName())) {
+                LOGGER.error("Unknown JAR file found {}", file.getName());
                 deleteFile(file.getCanonicalPath());
                 builder.append(file.getName());
                 builder.append("\n");
