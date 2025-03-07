@@ -35,8 +35,21 @@ public class SoftwareUpdateUtil {
         Objects.requireNonNull(dir.listFiles(), "No files found in libs");
         File[] libraries = dir.listFiles();
         Map<String, Attributes> entries = localManifest.getEntries();
+
+        // Debugging: Print files in libFolder
+        System.out.println("Files in libFolder:");
         for (File file : libraries) {
-            if(!entries.containsKey(file.getName())) {
+            System.out.println(file.getName());
+        }
+
+        // Debugging: Print entries in localManifest
+        System.out.println("Entries in localManifest:");
+        for (String key : entries.keySet()) {
+            System.out.println(key);
+        }
+
+        for (File file : libraries) {
+            if (!entries.containsKey(file.getName())) {
                 LOGGER.error("Unknown file found {}", file.getName());
                 deleteFile(file.getCanonicalPath());
                 builder.append(file.getName());
@@ -44,8 +57,8 @@ public class SoftwareUpdateUtil {
             }
         }
 
-        byte[] bytes =  builder.toString().trim().getBytes(StandardCharsets.UTF_8);
-        if(bytes.length > 0) {
+        byte[] bytes = builder.toString().trim().getBytes(StandardCharsets.UTF_8);
+        if (bytes.length > 0) {
             LOGGER.error("Writing the unknown jar names");
             FileUtils.writeByteArrayToFile(new File(UNKNOWN_JARS), bytes);
             return true;
