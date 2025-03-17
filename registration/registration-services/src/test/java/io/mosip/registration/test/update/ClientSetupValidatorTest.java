@@ -11,6 +11,9 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 import org.junit.*;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -38,7 +41,7 @@ import io.mosip.registration.update.SoftwareUpdateUtil;
  * @author Rama Devi
  *
  */
-
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*" })
 @PrepareForTest({ Manifest.class, ApplicationContext.class, FileUtils.class, HMACUtils2.class })
@@ -84,6 +87,7 @@ public class ClientSetupValidatorTest {
 		ClientSetupValidator clntSetupValidator = new ClientSetupValidator();
 	}
 
+	@Order(2)
 	@Test
 	public void validateBuildSetupExceptionTest() throws RegBaseCheckedException {
 		clientSetupValidator.validateBuildSetup();
@@ -119,6 +123,7 @@ public class ClientSetupValidatorTest {
 		assertEquals(Boolean.FALSE, clientSetupValidator.isPatch_downloaded());
 	}
 
+	@Order(1)
 	@Test
 	public void isUnknown_jars_found() throws RegBaseCheckedException {
 		clientSetupValidator.isUnknown_jars_found();
