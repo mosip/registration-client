@@ -1,6 +1,7 @@
 package io.mosip.registration.test.update;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,6 +12,7 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 import org.junit.*;
+import org.junit.jupiter.api.Order;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -32,6 +34,8 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.update.ClientSetupValidator;
 import io.mosip.registration.update.SoftwareUpdateUtil;
+
+import javax.validation.constraints.AssertTrue;
 
 /**
  * 
@@ -119,6 +123,7 @@ public class ClientSetupValidatorTest {
 		assertEquals(Boolean.FALSE, clientSetupValidator.isPatch_downloaded());
 	}
 
+	@Order(1)
 	@Test
 	public void isUnknown_jars_found() throws RegBaseCheckedException {
 		boolean value=clientSetupValidator.isUnknown_jars_found();
