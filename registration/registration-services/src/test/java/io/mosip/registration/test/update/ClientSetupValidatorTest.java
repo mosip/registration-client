@@ -121,8 +121,8 @@ public class ClientSetupValidatorTest {
 
 	@Test
 	public void isUnknown_jars_found() throws RegBaseCheckedException {
-		clientSetupValidator.isUnknown_jars_found();
-		assertEquals(Boolean.FALSE, clientSetupValidator.isUnknown_jars_found());
+		boolean value=clientSetupValidator.isUnknown_jars_found();
+		assertEquals(Boolean.FALSE, value);
 	}
 
 	@Test
