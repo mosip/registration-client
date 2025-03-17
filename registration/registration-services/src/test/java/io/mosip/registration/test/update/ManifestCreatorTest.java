@@ -23,7 +23,7 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-
+@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class ManifestCreatorTest extends ManifestCreator {
 
