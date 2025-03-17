@@ -12,7 +12,9 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 import org.junit.*;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -42,7 +44,7 @@ import javax.validation.constraints.AssertTrue;
  * @author Rama Devi
  *
  */
-
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*" })
 @PrepareForTest({ Manifest.class, ApplicationContext.class, FileUtils.class, HMACUtils2.class })
