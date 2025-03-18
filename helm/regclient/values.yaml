@@ -45,8 +45,8 @@ service:
   externalTrafficPolicy: Cluster
 image:
   registry: docker.io
-  repository: mosipqa/registration-client
-  tag: 1.3.x
+  repository: mosipid/registration-client
+  tag: 1.3.0-beta.1
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -63,8 +63,8 @@ job:
   image:
     name: keystorejob
     registry: docker.io
-    repository: mosipqa/regclient-keystore
-    tag: 1.3.x
+    repository: mosipid/regclient-keystore
+    tag: 1.3.0-beta.1
     pullPolicy: Always
     rolename: keystorerole
     rolebindingname: keystorerolebinding
