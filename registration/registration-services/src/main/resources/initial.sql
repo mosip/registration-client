@@ -247,6 +247,8 @@ ALTER TABLE "REG"."CA_CERT_STORE" ADD CONSTRAINT "UK_CERT_THUMBPRINT" UNIQUE ("C
 
 ALTER TABLE "REG"."KEY_ALIAS" ADD CONSTRAINT "UK_UNI_IDENT" UNIQUE ("UNI_IDENT");
 
+ALTER TABLE IF EXISTS "REG"."CA_CERT_STORE" ADD COLUMN "CA_CERT_TYPE" VARCHAR(10);
+
 -- FOREIGN
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.applicant.type.age.limit','mosip.kernel.applicant.type.age.limit','5','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 
