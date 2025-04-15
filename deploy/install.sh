@@ -7,7 +7,7 @@ if [ $# -ge 1 ] ; then
 fi
 
 NS=regclient
-CHART_VERSION=1.3.0-beta.1-develop
+CHART_VERSION=0.0.1-develop
 
 echo Create $NS namespace
 kubectl create ns $NS
@@ -17,7 +17,7 @@ function installing_regclient() {
   kubectl label ns $NS istio-injection=enabled --overwrite
   helm repo update
 
-  read -p "Is values.yaml for regclinet chart set correctly as part of Pre-requisites?(Y/n) " yn
+  read -p "Is values.yaml for data-archive chart set correctly as part of Pre-requisites?(Y/n) " yn
   if [[ "$yn" != "Y" ]]; then
     echo "ERROR: values.yaml not set correctly; EXITING."
     exit 1
