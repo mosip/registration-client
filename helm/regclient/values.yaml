@@ -69,7 +69,7 @@ job:
     rolename: keystorerole
     rolebindingname: keystorerolebinding
 regclient:
-  version: 1.3.0-beta.1
+  version: 1.3.0-beta.2
   mountDir: /home/mosip/build_files/
   upgradeServerUrl: https://regclient.sandbox.xzy.net
   hostName: https://api-internal.sandbox.mosip.net
@@ -146,7 +146,11 @@ containerSecurityContext:
   runAsNonRoot: true
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
 ##
-podSecurityContext:
+podSecurityContext:@Preeti Hongal
+
+We won’t be able to do the release as per the approach suggested by @Chandra Keshav Mishra sir. Initially, we had agreed to release 1.3.0-rc1-SNAPSHOT.
+
+However, the inji-verify module depends on vc-verifier, and it tries to fetch this dependency from Maven Central. Since we do not publish SNAPSHOT versions to Maven Central, the build for inji-verify will fail due to the missing dependency.
   enabled: false
   fsGroup: 1001
 ## Pod affinity preset
