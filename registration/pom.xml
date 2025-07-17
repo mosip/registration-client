@@ -71,7 +71,7 @@
 
 	<properties>
 		<main.basedir>${project.basedir}</main.basedir>
-		<maven.jacoco.version>0.8.11</maven.jacoco.version>
+		<maven.jacoco.version>0.8.12</maven.jacoco.version>
 		<javafx.version>2.2</javafx.version>
 		<maven.sonar.plugin.version>3.7.0.1746</maven.sonar.plugin.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
