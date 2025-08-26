@@ -14,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.kernel.core.util.DateUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -276,7 +277,8 @@ public class PacketHandlerServiceTest {
 		Audit audit = new Audit();
 		audit.setId("TEST");
 		audit.setCreatedAt(LocalDateTime.now());
-		audit.setActionTimeStamp(LocalDateTime.now());
+		audit.setActionTimeStamp(DateUtils.getUTCCurrentDateTime());
+		audit.setCreatedBy(SessionContext.userName());
 		audits.add(audit);
 		Mockito.when(auditDAO.getAudits(Mockito.anyString(), Mockito.anyString())).thenReturn(audits);
 		
