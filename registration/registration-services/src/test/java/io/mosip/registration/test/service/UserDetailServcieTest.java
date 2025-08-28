@@ -169,8 +169,10 @@ public class UserDetailServcieTest {
 		userDetailsList.add(userDetailsMap);
 
 		Map<String, Object> usrDetailMap = new LinkedHashMap<>();
+		ObjectMapper objectMapper = new ObjectMapper();
 		usrDetailMap.put("userDetails", CryptoUtil.encodeToURLSafeBase64(
 				objectMapper.writeValueAsString(userDetailsList).getBytes()));
+
 		responseMap.put("response", usrDetailMap);
 
 		Mockito.when(objectMapper.readValue(Mockito.any(byte[].class), Mockito.any(TypeReference.class)))
