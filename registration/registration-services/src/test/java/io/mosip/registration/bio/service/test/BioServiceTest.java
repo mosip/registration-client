@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.kernel.pdfgenerator.impl.PDFGeneratorImpl;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -99,6 +100,9 @@ public class BioServiceTest {
     
     @Autowired
 	private AuditManagerService auditFactory;
+    
+    @Autowired
+    private PDFGeneratorImpl pdfGenerator;
 
     private static MockWebServer mockWebServer;
 
