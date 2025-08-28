@@ -25,9 +25,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -100,8 +102,8 @@ public class BioServiceTest {
     
     @Autowired
 	private AuditManagerService auditFactory;
-    
-    @Autowired
+
+    @MockBean
     private PDFGeneratorImpl pdfGenerator;
 
     private static MockWebServer mockWebServer;
