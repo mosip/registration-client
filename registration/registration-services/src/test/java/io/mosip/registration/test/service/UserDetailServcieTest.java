@@ -173,6 +173,12 @@ public class UserDetailServcieTest {
 				CryptoUtil.encodeToURLSafeBase64("[{\"userId\":\"110011\"}]".getBytes())
 		);
 
+		byte[] encodedUserDetails = "[{\"userId\":\"110011\"}]".getBytes();
+
+		Mockito.when(clientCryptoFacade.decrypt(Mockito.any()))
+				.thenReturn(encodedUserDetails);
+
+
 		responseMap.put("response", usrDetailMap);
 
 		Mockito.when(objectMapper.readValue(Mockito.any(byte[].class), Mockito.any(TypeReference.class)))
