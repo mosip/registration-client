@@ -107,6 +107,9 @@ public class UserDetailServcieTest {
 
 	private ObjectMapper mapper = new ObjectMapper();
 
+	String[] input = {"testUser1", "testUser2"};
+
+
 	@Before
 	public void init() throws Exception {
 		PowerMockito.mockStatic(ApplicationContext.class, RegistrationAppHealthCheckUtil.class, SessionContext.class);
@@ -183,8 +186,13 @@ public class UserDetailServcieTest {
 		doNothing().when(userDetailDAO).deleteUser(Mockito.any());
 		
 		doNothing().when(userDetailDAO).save(Mockito.any());
-		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
-				.thenReturn(responseMap);
+		Mockito.when(serviceDelegateUtil.get(
+				Mockito.anyString(),
+				Mockito.<Map<String, String>>any(),
+				Mockito.anyBoolean(),
+				Mockito.anyString()
+		)).thenReturn(responseMap);
+
 		doNothing().when(baseService).proceedWithMasterAndKeySync(Mockito.any());
 
 		userDetailServiceImpl.save("System");
