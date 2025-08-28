@@ -169,9 +169,9 @@ public class UserDetailServcieTest {
 		userDetailsList.add(userDetailsMap);
 
 		Map<String, Object> usrDetailMap = new LinkedHashMap<>();
-
-		Mockito.when(objectMapper.readValue(Mockito.any(byte[].class), Mockito.any(TypeReference.class)))
-				.thenReturn(list);
+		usrDetailMap.put("userDetails",
+				CryptoUtil.encodeToURLSafeBase64("[{\"userId\":\"110011\"}]".getBytes())
+		);
 
 		responseMap.put("response", usrDetailMap);
 
@@ -179,6 +179,7 @@ public class UserDetailServcieTest {
 				.thenReturn(list);
 		Mockito.when(objectMapper.writeValueAsString(Mockito.any()))
 				.thenReturn("[{\"userId\":\"110011\"}]");
+
 
 		List<UserDetail> existingUserDetails = new ArrayList<>();
 		UserDetail existing = new UserDetail();
