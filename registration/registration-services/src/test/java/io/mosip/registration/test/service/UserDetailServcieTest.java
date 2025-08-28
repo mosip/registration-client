@@ -146,17 +146,14 @@ public class UserDetailServcieTest {
 		List<UserDetailDto> list = new ArrayList<>();
 		UserDetailDto userDetails = new UserDetailDto();
 		userDetails.setUserId("110011");
-		//userDetails.setName("SUPERADMIN");
 		userDetails.setRegCenterId("10011");
 		List<String> roles = new ArrayList<>();
 		roles.add("REGISTRATION_OFFICER");
 		roles.add("REGISTRATION_SUPERVISOR");
-		//userDetails.setRoles(roles);
 		list.add(userDetails);
 		userDetail.setUserDetails(list);
-		Map<String, String> map = new HashMap<>();
-		map.put(RegistrationConstants.USER_CENTER_ID, "10011");
-		LinkedHashMap<String, Object> responseMap=new LinkedHashMap<>();
+
+		LinkedHashMap<String, Object> responseMap = new LinkedHashMap<>();
 		Map<String, Object> userDetailsMap = new HashMap<>();
 		List<String> rolesList = new ArrayList<>();
 		List<Object> userDetailsList = new ArrayList<>();
@@ -170,31 +167,32 @@ public class UserDetailServcieTest {
 		userDetailsMap.put("roles", rolesList);
 		userDetailsMap.put("regCenterId", "10011");
 		userDetailsList.add(userDetailsMap);
+
 		Map<String, Object> usrDetailMap = new LinkedHashMap<>();
 		usrDetailMap.put("userDetails", CryptoUtil.encodeToURLSafeBase64(
-				mapper.writeValueAsString(userDetailsList).getBytes()));
+				objectMapper.writeValueAsString(userDetailsList).getBytes()));
 		responseMap.put("response", usrDetailMap);
-		
-		Mockito.when(objectMapper.readValue(Mockito.any(byte[].class), Mockito.any(TypeReference.class))).thenReturn(list);
+
+		Mockito.when(objectMapper.readValue(Mockito.any(byte[].class), Mockito.any(TypeReference.class)))
+				.thenReturn(list);
 		Mockito.when(objectMapper.writeValueAsString(Mockito.any()))
 				.thenReturn("[{\"userId\":\"110011\"}]");
 
-
 		List<UserDetail> existingUserDetails = new ArrayList<>();
-		UserDetail user = new UserDetail();
-		user.setId("110012");
-		existingUserDetails.add(user);
-		
+		UserDetail existing = new UserDetail();
+		existing.setId("110012");
+		existingUserDetails.add(existing);
+
 		Mockito.when(userDetailDAO.getAllUsers()).thenReturn(existingUserDetails);
-		doNothing().when(userDetailDAO).deleteUser(Mockito.any());
-		
-		doNothing().when(userDetailDAO).save(Mockito.any());
-		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
+		Mockito.doNothing().when(userDetailDAO).deleteUser(Mockito.any());
+		Mockito.doNothing().when(userDetailDAO).save(Mockito.any());
+		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(), Mockito.anyString()))
 				.thenReturn(responseMap);
-		doNothing().when(baseService).proceedWithMasterAndKeySync(Mockito.any());
+		Mockito.doNothing().when(baseService).proceedWithMasterAndKeySync(Mockito.any());
 
 		userDetailServiceImpl.save("System");
 	}
+
 
 	@Test
 	public void userDtlsException() throws RegBaseCheckedException, ConnectionException {
