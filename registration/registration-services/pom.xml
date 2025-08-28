@@ -546,6 +546,7 @@
 								--add-opens java.base/java.util.zip=ALL-UNNAMED
 								--add-opens java.base/java.lang.reflect=ALL-UNNAMED
 								--add-opens java.base/sun.security.util=ALL-UNNAMED
+								--add-opens java.base/java.time.format=ALL-UNNAMED
 								--add-exports java.base/jdk.internal.access=ALL-UNNAMED
 								--add-exports java.base/jdk.internal.util=ALL-UNNAMED
 								--add-exports java.desktop/sun.awt=ALL-UNNAMED
@@ -614,6 +615,7 @@
 								--add-opens java.base/java.util.zip=ALL-UNNAMED
 								--add-opens java.base/java.lang.reflect=ALL-UNNAMED
 								--add-opens java.base/sun.security.util=ALL-UNNAMED
+								--add-opens java.base/java.time.format=ALL-UNNAMED
 								--add-exports java.base/jdk.internal.access=ALL-UNNAMED
 								--add-exports java.base/jdk.internal.util=ALL-UNNAMED
 								--add-exports java.desktop/sun.awt=ALL-UNNAMED
