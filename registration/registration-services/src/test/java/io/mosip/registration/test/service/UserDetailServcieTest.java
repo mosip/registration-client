@@ -176,7 +176,10 @@ public class UserDetailServcieTest {
 		responseMap.put("response", usrDetailMap);
 		
 		Mockito.when(objectMapper.readValue(Mockito.any(byte[].class), Mockito.any(TypeReference.class))).thenReturn(list);
-		
+		Mockito.when(objectMapper.writeValueAsString(Mockito.any()))
+				.thenReturn("[{\"userId\":\"110011\"}]");
+
+
 		List<UserDetail> existingUserDetails = new ArrayList<>();
 		UserDetail user = new UserDetail();
 		user.setId("110012");
@@ -186,13 +189,8 @@ public class UserDetailServcieTest {
 		doNothing().when(userDetailDAO).deleteUser(Mockito.any());
 		
 		doNothing().when(userDetailDAO).save(Mockito.any());
-		Mockito.when(serviceDelegateUtil.get(
-				Mockito.anyString(),
-				Mockito.<Map<String, String>>any(),
-				Mockito.anyBoolean(),
-				Mockito.anyString()
-		)).thenReturn(responseMap);
-
+		Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(),Mockito.anyString()))
+				.thenReturn(responseMap);
 		doNothing().when(baseService).proceedWithMasterAndKeySync(Mockito.any());
 
 		userDetailServiceImpl.save("System");
