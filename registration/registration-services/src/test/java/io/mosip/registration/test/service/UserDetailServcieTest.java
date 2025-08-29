@@ -3,9 +3,7 @@ package io.mosip.registration.test.service;
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
-import static org.springframework.test.util.AssertionErrors.assertEquals;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,7 +19,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -64,7 +61,7 @@ import io.mosip.registration.util.restclient.ServiceDelegateUtil;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@PrepareForTest({ RegistrationAppHealthCheckUtil.class,UserDetailDAO.class, ApplicationContext.class, SessionContext.class })
+@PrepareForTest({ RegistrationAppHealthCheckUtil.class,UserDetailDAO.class, ApplicationContext.class, SessionContext.class, CryptoUtil.class })
 public class UserDetailServcieTest {
 
 	@Rule
