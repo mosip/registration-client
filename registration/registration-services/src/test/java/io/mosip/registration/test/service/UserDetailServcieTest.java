@@ -305,36 +305,36 @@ public class UserDetailServcieTest {
 
 
 	@Test
-    public void userDtlsTestFail() throws RegBaseCheckedException, ConnectionException {
-        // mock static method of RegistrationAppHealthCheckUtil
-        PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-        Mockito.when(RegistrationAppHealthCheckUtil.isDiskSpaceAvailable()).thenReturn(true);
+	public void userDtlsTestFail() throws RegBaseCheckedException, ConnectionException {
+		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
+		Mockito.when(RegistrationAppHealthCheckUtil.isDiskSpaceAvailable()).thenReturn(true);
 
-        LinkedHashMap<String, Object> responseMap = new LinkedHashMap<>();
-        Map<String, Object> errorDetails = new LinkedHashMap<>();
-        errorDetails.put("errorCode", "KER-SNC-303");
-        errorDetails.put("message", "Registration center user not found ");
-        List<Map<String, Object>> errorList = new ArrayList<>();
-        errorList.add(errorDetails);
-        responseMap.put("errors", errorList);
+		LinkedHashMap<String, Object> responseMap = new LinkedHashMap<>();
+		Map<String, Object> errorDetails = new LinkedHashMap<>();
+		errorDetails.put("errorCode", "KER-SNC-303");
+		errorDetails.put("message", "Registration center user not found ");
+		List<Map<String, Object>> errorList = new ArrayList<>();
+		errorList.add(errorDetails);
+		responseMap.put("errors", errorList);
 
-        Mockito.when(serviceDelegateUtil.get(
-                        Mockito.anyString(),
-                        Mockito.any(),
-                        Mockito.anyBoolean(),
-                        Mockito.anyString()))
-                .thenReturn(responseMap);
+		Mockito.when(serviceDelegateUtil.get(
+						Mockito.anyString(),
+						Mockito.any(),
+						Mockito.anyBoolean(),
+						Mockito.anyString()))
+				.thenReturn(responseMap);
 
-        Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
-        userDetailServiceImpl.save("System");
+		userDetailServiceImpl.save("System");
 
-        // verify save is NOT called since it's a failure response
-        Mockito.verify(userDetailDAO, Mockito.never()).save(Mockito.any());
-    }
+		// verify save is NOT called since it's a failure response
+		Mockito.verify(userDetailDAO, Mockito.never()).save(Mockito.any());
+	}
 
 
-    @Test
+
+	@Test
 	public void userDtlsFailNetwork() throws RegBaseCheckedException, ConnectionException, JsonProcessingException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
