@@ -216,6 +216,7 @@ public class UserDetailServcieTest {
 	@Test
 	public void userDtlsException1() throws Exception {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
+		PowerMockito.mockStatic(CryptoUtil.class); // 👈 add this
 
 		List<UserDetailDto> list = new ArrayList<>();
 		UserDetailDto userDetails = new UserDetailDto();
@@ -230,13 +231,20 @@ public class UserDetailServcieTest {
 
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
-		// Accept null for input byte[]
+		// 👇 Fix: stub CryptoUtil and decrypt so data is not null
+		Mockito.when(CryptoUtil.decodeURLSafeBase64(Mockito.anyString()))
+				.thenReturn("dummy".getBytes());
+		Mockito.when(clientCryptoFacade.decrypt(Mockito.any(byte[].class)))
+				.thenReturn("some-json".getBytes());
+
+		// Now Jackson gets non-null byte[]
 		Mockito.when(objectMapper.readValue(
-						Mockito.nullable(byte[].class), Mockito.any(TypeReference.class)))
+						Mockito.any(byte[].class), Mockito.any(TypeReference.class)))
 				.thenReturn(list);
 
 		userDetailServiceImpl.save("System");  // act
 	}
+
 
 
 
