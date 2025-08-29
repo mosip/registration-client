@@ -316,7 +316,8 @@ public class UserDetailServcieTest {
 		List<Map<String, Object>> errorList = new ArrayList<>();
 		errorList.add(errorDetails);
 		responseMap.put("errors", errorList);
-
+		responseMap.put("response", null);  
+		
 		Mockito.when(serviceDelegateUtil.get(
 						Mockito.anyString(),
 						Mockito.any(),
