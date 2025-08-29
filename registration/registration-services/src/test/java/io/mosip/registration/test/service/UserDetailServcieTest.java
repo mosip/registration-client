@@ -316,8 +316,10 @@ public class UserDetailServcieTest {
 		List<Map<String, Object>> errorList = new ArrayList<>();
 		errorList.add(errorDetails);
 		responseMap.put("errors", errorList);
-		responseMap.put("response", null);  
-		
+
+		// 👇 instead of null, use empty array or list
+		responseMap.put("response", new UserDetailDto[0]);
+
 		Mockito.when(serviceDelegateUtil.get(
 						Mockito.anyString(),
 						Mockito.any(),
@@ -332,6 +334,7 @@ public class UserDetailServcieTest {
 		// verify save is NOT called since it's a failure response
 		Mockito.verify(userDetailDAO, Mockito.never()).save(Mockito.any());
 	}
+
 
 
 
