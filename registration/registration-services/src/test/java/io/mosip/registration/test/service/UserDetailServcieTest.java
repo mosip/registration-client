@@ -143,56 +143,37 @@ public class UserDetailServcieTest {
 	}
 
 	@SuppressWarnings("unchecked")
-    @Test
-    public void userDtls() throws Exception {
-        // Mock static
-        PowerMockito.mockStatic(CryptoUtil.class);
-        PowerMockito.when(CryptoUtil.decodeURLSafeBase64(Mockito.anyString()))
-                .thenReturn("[{\"userId\":\"110011\"}]".getBytes());
+	@Test
+	public void userDtlsTestFail() throws Exception {
+		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
+		Mockito.when(RegistrationAppHealthCheckUtil.isDiskSpaceAvailable()).thenReturn(true);
 
-        // Prepare input list
-        List<UserDetailDto> list = new ArrayList<>();
-        UserDetailDto userDetails = new UserDetailDto();
-        userDetails.setUserId("110011");
-        userDetails.setRegCenterId("10011");
-        list.add(userDetails);
+		// mock error response
+		LinkedHashMap<String, Object> serviceResponse = new LinkedHashMap<>();
+		Map<String, Object> errorDetails = new LinkedHashMap<>();
+		errorDetails.put("errorCode", "KER-SNC-303");
+		errorDetails.put("message", "Registration center user not found");
+		List<Map<String, Object>> errorList = new ArrayList<>();
+		errorList.add(errorDetails);
+		serviceResponse.put("errors", errorList);
 
-        // Prepare DAO existing user
-        List<UserDetail> existingUserDetails = new ArrayList<>();
-        UserDetail existing = new UserDetail();
-        existing.setId("110012"); // should get deleted
-        existingUserDetails.add(existing);
+		// RESPONSE exists but is empty (not null)
+		Map<String, Object> responseMap = new HashMap<>();
+		// no "userDetails" key here
+		serviceResponse.put(RegistrationConstants.RESPONSE, responseMap);
 
-        // Stub dependencies
-        Mockito.when(clientCryptoFacade.decrypt(Mockito.any()))
-                .thenReturn("[{\"userId\":\"110011\"}]".getBytes());
-        Mockito.when(objectMapper.readValue(Mockito.any(byte[].class), Mockito.any(TypeReference.class)))
-                .thenReturn(list);
-        Mockito.when(userDetailDAO.getAllUsers()).thenReturn(existingUserDetails);
-        Mockito.doNothing().when(userDetailDAO).deleteUser(Mockito.any());
-        Mockito.doNothing().when(userDetailDAO).save(Mockito.any());
-        Mockito.doNothing().when(baseService).proceedWithMasterAndKeySync(Mockito.any());
+		Mockito.when(serviceDelegateUtil.get(
+						Mockito.anyString(),
+						Mockito.any(),
+						Mockito.anyBoolean(),
+						Mockito.anyString()))
+				.thenReturn(serviceResponse);
 
-        Map<String, Object> usrDetailMap = new LinkedHashMap<>();
-        usrDetailMap.put("userDetails", "dummyBase64"); // value doesn’t matter, gets mocked
-        LinkedHashMap<String, Object> responseMap = new LinkedHashMap<>();
-        responseMap.put("response", usrDetailMap);
+		userDetailServiceImpl.save("System");
 
-        Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(), Mockito.anyString()))
-                .thenReturn(responseMap);
-
-        // Call method
-        ResponseDTO response = userDetailServiceImpl.save("System");
-
-        // Assertions
-        assertNotNull(response);
-
-        // Verify interactions
-        Mockito.verify(userDetailDAO).deleteUser(Mockito.any(UserDetail.class));
-        Mockito.verify(userDetailDAO).save(Mockito.any(UserDetailDto.class));
-    }
-
-
+		// verify DAO never called
+		Mockito.verify(userDetailDAO, Mockito.never()).save(Mockito.any());
+	}
 
 	@Test
 	public void HttpClientErrorExceptionHandled() throws Exception {
