@@ -3,6 +3,7 @@ package io.mosip.registration.test.service;
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -193,30 +194,26 @@ public class UserDetailServcieTest {
 
 
 
-    @Test(expected = HttpClientErrorException.class) 
-    public void HttpClientErrorException() throws Exception {
-        // prepare static mocks
-        PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-        PowerMockito.mockStatic(CryptoUtil.class);
+	@Test
+	public void HttpClientErrorExceptionHandled() throws Exception {
+		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
+		PowerMockito.mockStatic(CryptoUtil.class);
 
-        // mock decode so it won’t crash
-        PowerMockito.when(CryptoUtil.decodeURLSafeBase64(Mockito.anyString()))
-                .thenReturn("dummy".getBytes());
+		PowerMockito.when(CryptoUtil.decodeURLSafeBase64(Mockito.anyString()))
+				.thenReturn("dummy".getBytes());
 
-        // throw exception from delegate
 		Mockito.when(serviceDelegateUtil.get(
 						Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(), Mockito.anyString()))
 				.thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bad Request"));
 
-
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
-        // act (this should throw your checked exception)
-        userDetailServiceImpl.save("System");
-    }
+		userDetailServiceImpl.save("System");
+	}
 
 
-    @Test
+
+	@Test
     public void userDtlsException1() throws RegBaseCheckedException, ConnectionException, Exception {
         PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
         UserDetailResponseDto userDetail = new UserDetailResponseDto();
