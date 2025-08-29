@@ -301,9 +301,9 @@ public class UserDetailServcieTest {
 
 		userDetailServiceImpl.save("System");  // act
 	}
-	
+
 	@Test
-	public void userDtlsTestFail() throws RegBaseCheckedException, ConnectionException {
+	public void userDtlsTestFail() throws Exception {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		Mockito.when(RegistrationAppHealthCheckUtil.isDiskSpaceAvailable()).thenReturn(true);
 
@@ -317,7 +317,7 @@ public class UserDetailServcieTest {
 		errorList.add(errorDetails);
 		serviceResponse.put("errors", errorList);
 
-		// 👇 RESPONSE explicitly set to null
+		// 👇 Force RESPONSE to null, not a map
 		serviceResponse.put(RegistrationConstants.RESPONSE, null);
 
 		Mockito.when(serviceDelegateUtil.get(
@@ -335,7 +335,8 @@ public class UserDetailServcieTest {
 		Mockito.verify(userDetailDAO, Mockito.never()).save(Mockito.any());
 	}
 
-    @Test
+
+	@Test
 	public void userDtlsFailNetwork() throws RegBaseCheckedException, ConnectionException, JsonProcessingException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
