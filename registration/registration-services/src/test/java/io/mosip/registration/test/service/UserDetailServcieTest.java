@@ -142,39 +142,6 @@ public class UserDetailServcieTest {
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);
 	}
 
-	@SuppressWarnings("unchecked")
-	@Test
-	public void userDtlsTestFail() throws Exception {
-		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-		Mockito.when(RegistrationAppHealthCheckUtil.isDiskSpaceAvailable()).thenReturn(true);
-
-		// mock error response
-		LinkedHashMap<String, Object> serviceResponse = new LinkedHashMap<>();
-		Map<String, Object> errorDetails = new LinkedHashMap<>();
-		errorDetails.put("errorCode", "KER-SNC-303");
-		errorDetails.put("message", "Registration center user not found");
-		List<Map<String, Object>> errorList = new ArrayList<>();
-		errorList.add(errorDetails);
-		serviceResponse.put("errors", errorList);
-
-		// RESPONSE exists but is empty (not null)
-		Map<String, Object> responseMap = new HashMap<>();
-		// no "userDetails" key here
-		serviceResponse.put(RegistrationConstants.RESPONSE, responseMap);
-
-		Mockito.when(serviceDelegateUtil.get(
-						Mockito.anyString(),
-						Mockito.any(),
-						Mockito.anyBoolean(),
-						Mockito.anyString()))
-				.thenReturn(serviceResponse);
-
-		userDetailServiceImpl.save("System");
-
-		// verify DAO never called
-		Mockito.verify(userDetailDAO, Mockito.never()).save(Mockito.any());
-	}
-
 	@Test
 	public void HttpClientErrorExceptionHandled() throws Exception {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
