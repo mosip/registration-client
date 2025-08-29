@@ -222,22 +222,22 @@ public class UserDetailServcieTest {
 		userDetails.setUserId("110011");
 		list.add(userDetails);
 
-		// save() should not crash when DAO is called
 		doNothing().when(userDetailDAO).save(Mockito.any());
 
-		// throw a real exception instance
 		Mockito.when(serviceDelegateUtil.get(
 						Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(), Mockito.anyString()))
 				.thenThrow(new ConnectionException());
 
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
-		// avoid NPE from objectMapper
-		Mockito.when(objectMapper.readValue(Mockito.any(byte[].class), Mockito.any(TypeReference.class)))
+		// Accept null for input byte[]
+		Mockito.when(objectMapper.readValue(
+						Mockito.nullable(byte[].class), Mockito.any(TypeReference.class)))
 				.thenReturn(list);
 
 		userDetailServiceImpl.save("System");  // act
 	}
+
 
 
 
