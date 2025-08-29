@@ -301,44 +301,41 @@ public class UserDetailServcieTest {
 
 		userDetailServiceImpl.save("System");  // act
 	}
-
-
-
+	
 	@Test
 	public void userDtlsTestFail() throws RegBaseCheckedException, ConnectionException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		Mockito.when(RegistrationAppHealthCheckUtil.isDiskSpaceAvailable()).thenReturn(true);
 
-		LinkedHashMap<String, Object> responseMap = new LinkedHashMap<>();
+		LinkedHashMap<String, Object> serviceResponse = new LinkedHashMap<>();
+
+		// errors
 		Map<String, Object> errorDetails = new LinkedHashMap<>();
 		errorDetails.put("errorCode", "KER-SNC-303");
-		errorDetails.put("message", "Registration center user not found ");
+		errorDetails.put("message", "Registration center user not found");
 		List<Map<String, Object>> errorList = new ArrayList<>();
 		errorList.add(errorDetails);
-		responseMap.put("errors", errorList);
+		serviceResponse.put("errors", errorList);
 
-		// 👇 instead of null, use empty array or list
-		responseMap.put("response", new UserDetailDto[0]);
+		// 👇 RESPONSE explicitly set to null
+		serviceResponse.put(RegistrationConstants.RESPONSE, null);
 
 		Mockito.when(serviceDelegateUtil.get(
 						Mockito.anyString(),
 						Mockito.any(),
 						Mockito.anyBoolean(),
 						Mockito.anyString()))
-				.thenReturn(responseMap);
+				.thenReturn(serviceResponse);
 
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
 		userDetailServiceImpl.save("System");
 
-		// verify save is NOT called since it's a failure response
+		// verify save() never called
 		Mockito.verify(userDetailDAO, Mockito.never()).save(Mockito.any());
 	}
 
-
-
-
-	@Test
+    @Test
 	public void userDtlsFailNetwork() throws RegBaseCheckedException, ConnectionException, JsonProcessingException {
 		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 		UserDetailResponseDto userDetail = new UserDetailResponseDto();
