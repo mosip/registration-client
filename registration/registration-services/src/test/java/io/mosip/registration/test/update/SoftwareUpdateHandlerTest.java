@@ -138,9 +138,9 @@ public class SoftwareUpdateHandlerTest {
 		Mockito.when(ApplicationContext.getStringValueFromApplicationMap(Mockito.anyString())).thenReturn("1.2.0-SNAPSHOT");
 		Mockito.when(ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SOFTWARE_BACKUP_FOLDER)).thenReturn("src/test/resources/sql");
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
-		Mockito.doThrow(IOException.class).when(jdbcTemplate).execute("----- create new tables\n" + 
-				" \n" + 
-				" CREATE TABLE \"REG\".\"LOC_HIERARCHY_LIST\"(\"HIERARCHY_LEVEL\" INTEGER NOT NULL, \"HIERARCHY_LEVEL_NAME\" VARCHAR(36) NOT NULL, \"LANG_CODE\" VARCHAR(3) NOT NULL, \"IS_ACTIVE\" BOOLEAN NOT NULL, \"CR_BY\" VARCHAR(256) NOT NULL, \"CR_DTIMES\" TIMESTAMP NOT NULL, \"UPD_BY\" VARCHAR(256), \"UPD_DTIMES\" TIMESTAMP)");
+		Mockito.doThrow(new RuntimeException(new IOException("Mock IO Exception", "Mock")))
+				.when(jdbcTemplate).execute(Mockito.anyString());
+
 		PowerMockito.doNothing().when(FileUtils.class, "copyDirectory", Mockito.any(File.class), Mockito.any(File.class));
 		File backUpFile = new File("src/test/resources/sql");
 		PowerMockito.doNothing().when(FileUtils.class, "copyFile", new File(backUpFile.getAbsolutePath() + "/MANIFEST.MF"), new File("MANIFEST.MF"));
