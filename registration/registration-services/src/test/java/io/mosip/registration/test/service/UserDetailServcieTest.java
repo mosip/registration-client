@@ -26,6 +26,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -203,11 +204,12 @@ public class UserDetailServcieTest {
                 .thenReturn("dummy".getBytes());
 
         // throw exception from delegate
-        Mockito.when(serviceDelegateUtil.get(
-                        Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(), Mockito.anyString()))
-                .thenThrow(HttpClientErrorException.class);
+		Mockito.when(serviceDelegateUtil.get(
+						Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(), Mockito.anyString()))
+				.thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bad Request"));
 
-        Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
+
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
         // act (this should throw your checked exception)
         userDetailServiceImpl.save("System");
