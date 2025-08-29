@@ -214,34 +214,34 @@ public class UserDetailServcieTest {
 
 
 	@Test
-    public void userDtlsException1() throws RegBaseCheckedException, ConnectionException, Exception {
-        PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
-        UserDetailResponseDto userDetail = new UserDetailResponseDto();
-        List<UserDetailDto> list = new ArrayList<>();
-        UserDetailDto userDetails = new UserDetailDto();
-        userDetails.setUserId("110011");
-        list.add(userDetails);
-        userDetail.setUserDetails(list);
+	public void userDtlsException1() throws Exception {
+		PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
 
-        Map<String, String> map = new HashMap<>();
-        map.put(RegistrationConstants.USER_CENTER_ID, "10011");
+		List<UserDetailDto> list = new ArrayList<>();
+		UserDetailDto userDetails = new UserDetailDto();
+		userDetails.setUserId("110011");
+		list.add(userDetails);
 
-        doNothing().when(userDetailDAO).save(Mockito.any());
+		// save() should not crash when DAO is called
+		doNothing().when(userDetailDAO).save(Mockito.any());
 
-        // mock exception path
-        Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(), Mockito.anyString()))
-                .thenThrow(ConnectionException.class);
-        Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
+		// throw a real exception instance
+		Mockito.when(serviceDelegateUtil.get(
+						Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(), Mockito.anyString()))
+				.thenThrow(new ConnectionException());
 
-        // prevent NPE from objectMapper.readValue
-        Mockito.when(objectMapper.readValue(Mockito.any(byte[].class), Mockito.any(TypeReference.class)))
-                .thenReturn(list);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 
-        userDetailServiceImpl.save("System");
-    }
+		// avoid NPE from objectMapper
+		Mockito.when(objectMapper.readValue(Mockito.any(byte[].class), Mockito.any(TypeReference.class)))
+				.thenReturn(list);
+
+		userDetailServiceImpl.save("System");  // act
+	}
 
 
-    @SuppressWarnings("unchecked")
+
+	@SuppressWarnings("unchecked")
     @Test
     public void userDtlsFail() throws RegBaseCheckedException, ConnectionException, JsonProcessingException, Exception {
         PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
