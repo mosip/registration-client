@@ -192,7 +192,7 @@ public class UserDetailServcieTest {
 
 
 
-    @Test(expected = RegBaseCheckedException.class) 
+    @Test(expected = HttpClientErrorException.class) 
     public void HttpClientErrorException() throws Exception {
         // prepare static mocks
         PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
