@@ -192,8 +192,8 @@ public class UserDetailServcieTest {
 
 
 
-    @Test(expected = RegBaseCheckedException.class) // if your method throws this
-    public void userDtlsException() throws Exception {
+    @Test(expected = RegBaseCheckedException.class) 
+    public void HttpClientErrorException() throws Exception {
         // prepare static mocks
         PowerMockito.mockStatic(RegistrationAppHealthCheckUtil.class);
         PowerMockito.mockStatic(CryptoUtil.class);
