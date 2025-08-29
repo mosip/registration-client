@@ -90,18 +90,16 @@ public class RestClientAuthAdviceTest {
 
 
 	@Test
-	public void addRequestSignatureTest() {
+	public void addRequestSignatureTest() throws Exception {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		MachineMaster machineMaster = Mockito.mock(MachineMaster.class);
 		String signedData = "signedData";
 
-		PowerMockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
-		PowerMockito.when(clientCryptoService.signData(Mockito.any())).thenReturn(signedData.getBytes(StandardCharsets.UTF_8));
-		PowerMockito.when(machineMappingDAO.getKeyIndexByMachineName(Mockito.anyString())).thenReturn("keyIndex");
-		PowerMockito.when(machineMaster.getKeyIndex()).thenReturn(signedData);
+		Mockito.when(clientCryptoFacade.getClientSecurity()).thenReturn(clientCryptoService);
+		Mockito.when(clientCryptoService.signData(Mockito.any()))
+				.thenReturn(signedData.getBytes(StandardCharsets.UTF_8));
 
 		ReflectionTestUtils.invokeMethod(restClientAuthAdvice, "addRequestSignature", httpHeaders, signedData);
-		
+
 		Assert.assertTrue(httpHeaders.containsKey("request-signature"));
 		Assert.assertTrue(httpHeaders.containsKey(RegistrationConstants.KEY_INDEX));
 	}
