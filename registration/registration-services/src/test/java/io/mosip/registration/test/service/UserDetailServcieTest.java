@@ -309,7 +309,7 @@ public class UserDetailServcieTest {
 
 		LinkedHashMap<String, Object> serviceResponse = new LinkedHashMap<>();
 
-		// errors
+		// errors section
 		Map<String, Object> errorDetails = new LinkedHashMap<>();
 		errorDetails.put("errorCode", "KER-SNC-303");
 		errorDetails.put("message", "Registration center user not found");
@@ -317,7 +317,7 @@ public class UserDetailServcieTest {
 		errorList.add(errorDetails);
 		serviceResponse.put("errors", errorList);
 
-		// 👇 Force RESPONSE to null, not a map
+		// 👇 force RESPONSE to be null so decrypt is never hit
 		serviceResponse.put(RegistrationConstants.RESPONSE, null);
 
 		Mockito.when(serviceDelegateUtil.get(
@@ -331,7 +331,7 @@ public class UserDetailServcieTest {
 
 		userDetailServiceImpl.save("System");
 
-		// verify save() never called
+		// verify DAO never called
 		Mockito.verify(userDetailDAO, Mockito.never()).save(Mockito.any());
 	}
 
