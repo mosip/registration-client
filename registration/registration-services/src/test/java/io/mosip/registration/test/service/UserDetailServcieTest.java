@@ -166,14 +166,22 @@ public class UserDetailServcieTest {
 		userDetailsMap.put("name", "superadmin");
 		userDetailsMap.put("roles", rolesList);
 		userDetailsMap.put("regCenterId", "10011");
-		userDetailsList.add(userDetailsMap);
+        userDetailsMap.put("userDetails",
+                (String) CryptoUtil.encodeToURLSafeBase64("[{\"userId\":\"110011\"}]".getBytes())
+        );
+
+        userDetailsList.add(userDetailsMap);
 
 		Map<String, Object> usrDetailMap = new LinkedHashMap<>();
 		usrDetailMap.put("userDetails",
 				CryptoUtil.encodeToURLSafeBase64("[{\"userId\":\"110011\"}]".getBytes())
 		);
+        Mockito.mockStatic(CryptoUtil.class);
+        Mockito.when(CryptoUtil.decodeURLSafeBase64(Mockito.anyString()))
+                .thenReturn("[{\"userId\":\"110011\"}]".getBytes());
 
-		byte[] encodedUserDetails = "[{\"userId\":\"110011\"}]".getBytes();
+
+        byte[] encodedUserDetails = "[{\"userId\":\"110011\"}]".getBytes();
 
 		Mockito.when(clientCryptoFacade.decrypt(Mockito.any()))
 				.thenReturn(encodedUserDetails);
