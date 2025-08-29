@@ -147,51 +147,50 @@ public class UserDetailServcieTest {
     @Test
     public void userDtls() throws Exception {
         // Mock static
-        try (MockedStatic<CryptoUtil> mockedStatic = Mockito.mockStatic(CryptoUtil.class)) {
-            mockedStatic.when(() -> CryptoUtil.decodeURLSafeBase64(Mockito.anyString()))
-                    .thenReturn("[{\"userId\":\"110011\"}]".getBytes());
+        PowerMockito.mockStatic(CryptoUtil.class);
+        PowerMockito.when(CryptoUtil.decodeURLSafeBase64(Mockito.anyString()))
+                .thenReturn("[{\"userId\":\"110011\"}]".getBytes());
 
-            // Prepare input list
-            List<UserDetailDto> list = new ArrayList<>();
-            UserDetailDto userDetails = new UserDetailDto();
-            userDetails.setUserId("110011");
-            userDetails.setRegCenterId("10011");
-            list.add(userDetails);
+        // Prepare input list
+        List<UserDetailDto> list = new ArrayList<>();
+        UserDetailDto userDetails = new UserDetailDto();
+        userDetails.setUserId("110011");
+        userDetails.setRegCenterId("10011");
+        list.add(userDetails);
 
-            // Prepare DAO existing user
-            List<UserDetail> existingUserDetails = new ArrayList<>();
-            UserDetail existing = new UserDetail();
-            existing.setId("110012"); // should get deleted
-            existingUserDetails.add(existing);
+        // Prepare DAO existing user
+        List<UserDetail> existingUserDetails = new ArrayList<>();
+        UserDetail existing = new UserDetail();
+        existing.setId("110012"); // should get deleted
+        existingUserDetails.add(existing);
 
-            // Stub dependencies
-            Mockito.when(clientCryptoFacade.decrypt(Mockito.any()))
-                    .thenReturn("[{\"userId\":\"110011\"}]".getBytes());
-            Mockito.when(objectMapper.readValue(Mockito.any(byte[].class), Mockito.any(TypeReference.class)))
-                    .thenReturn(list);
-            Mockito.when(userDetailDAO.getAllUsers()).thenReturn(existingUserDetails);
-            Mockito.doNothing().when(userDetailDAO).deleteUser(Mockito.any());
-            Mockito.doNothing().when(userDetailDAO).save(Mockito.any());
-            Mockito.doNothing().when(baseService).proceedWithMasterAndKeySync(Mockito.any());
+        // Stub dependencies
+        Mockito.when(clientCryptoFacade.decrypt(Mockito.any()))
+                .thenReturn("[{\"userId\":\"110011\"}]".getBytes());
+        Mockito.when(objectMapper.readValue(Mockito.any(byte[].class), Mockito.any(TypeReference.class)))
+                .thenReturn(list);
+        Mockito.when(userDetailDAO.getAllUsers()).thenReturn(existingUserDetails);
+        Mockito.doNothing().when(userDetailDAO).deleteUser(Mockito.any());
+        Mockito.doNothing().when(userDetailDAO).save(Mockito.any());
+        Mockito.doNothing().when(baseService).proceedWithMasterAndKeySync(Mockito.any());
 
-            Map<String, Object> usrDetailMap = new LinkedHashMap<>();
-            usrDetailMap.put("userDetails", "dummyBase64"); // value doesn’t matter, gets mocked
-            LinkedHashMap<String, Object> responseMap = new LinkedHashMap<>();
-            responseMap.put("response", usrDetailMap);
+        Map<String, Object> usrDetailMap = new LinkedHashMap<>();
+        usrDetailMap.put("userDetails", "dummyBase64"); // value doesn’t matter, gets mocked
+        LinkedHashMap<String, Object> responseMap = new LinkedHashMap<>();
+        responseMap.put("response", usrDetailMap);
 
-            Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(), Mockito.anyString()))
-                    .thenReturn(responseMap);
+        Mockito.when(serviceDelegateUtil.get(Mockito.anyString(), Mockito.any(), Mockito.anyBoolean(), Mockito.anyString()))
+                .thenReturn(responseMap);
 
-            // Call method
-            ResponseDTO response = userDetailServiceImpl.save("System");
+        // Call method
+        ResponseDTO response = userDetailServiceImpl.save("System");
 
-            // Assertions
-            assertNotNull(response);
+        // Assertions
+        assertNotNull(response);
 
-            // Verify interactions
-            Mockito.verify(userDetailDAO).deleteUser(Mockito.any(UserDetail.class));
-            Mockito.verify(userDetailDAO).save(Mockito.any(UserDetailDto.class));
-        }
+        // Verify interactions
+        Mockito.verify(userDetailDAO).deleteUser(Mockito.any(UserDetail.class));
+        Mockito.verify(userDetailDAO).save(Mockito.any(UserDetailDto.class));
     }
 
 
