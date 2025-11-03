@@ -15,27 +15,27 @@
 	<artifactId>registration-client-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>MOSIP Registration Client</name>
-        <description>Mosip Registration Client Project</description>	
+        <description>Mosip Registration Client Project</description>
         <url>https://github.com/mosip/registration-client</url>
-        <licenses>	
-          <license>	
-                <name>MPL 2.0</name>	
-                <url>https://www.mozilla.org/en-US/MPL/2.0/</url>	
-          </license>	
-        </licenses>	
-                <scm>	
-                <connection>scm:git:git://github.com/mosip/registration-client.git</connection>	
-                <developerConnection>scm:git:ssh://github.com:mosip/registration-client.git</developerConnection>	
-                <url>https://github.com/mosip/registration-client</url>	
-                <tag>HEAD</tag>	
-        </scm>	
-        <developers>	
-                <developer>	
-                  <name>Mosip</name>	
-                  <email>mosip.emailnotifier@gmail.com</email>	
-                  <organization>io.mosip</organization>	
-                  <organizationUrl>https://github.com/mosip/registration-client</organizationUrl>	
-                </developer>	
+        <licenses>
+          <license>
+                <name>MPL 2.0</name>
+                <url>https://www.mozilla.org/en-US/MPL/2.0/</url>
+          </license>
+        </licenses>
+                <scm>
+                <connection>scm:git:git://github.com/mosip/registration-client.git</connection>
+                <developerConnection>scm:git:ssh://github.com:mosip/registration-client.git</developerConnection>
+                <url>https://github.com/mosip/registration-client</url>
+                <tag>HEAD</tag>
+        </scm>
+        <developers>
+                <developer>
+                  <name>Mosip</name>
+                  <email>mosip.emailnotifier@gmail.com</email>
+                  <organization>io.mosip</organization>
+                  <organizationUrl>https://github.com/mosip/registration-client</organizationUrl>
+                </developer>
      </developers>
          <repositories>
 			 <repository>
@@ -128,7 +128,7 @@
 
 		<!-- powermock-api-mockito2 version -->
 		<powermock.version>2.0.9</powermock.version>
-		
+
 		<mockito-version>3.4.3</mockito-version>
 
 		<!-- TSS Version -->
@@ -167,7 +167,7 @@
 		<!--<module>ref-impl/ref-document-scanner</module>
 		<module>ref-impl/ref-geoposition-rxtx</module>-->
 		<module>registration-test</module>
-		
+
 	</modules>
 
 	<dependencyManagement>
@@ -224,14 +224,14 @@
 				<artifactId>commons-dbcp2</artifactId>
 				<version>${apache.commons.dpce.version}</version>
 			</dependency>
-			<!-- <dependency> <groupId>io.mosip</groupId> <artifactId>kernel-utils</artifactId> 
+			<!-- <dependency> <groupId>io.mosip</groupId> <artifactId>kernel-utils</artifactId>
 				<version>${project.version}</version> </dependency> -->
 			<dependency>
 				<groupId>io.mosip.kernel</groupId>
 				<artifactId>kernel-logger-logback</artifactId>
 				<version>${mosip.core.kernel.version}</version>
 			</dependency>
-			<!-- <dependency> <groupId>io.mosip</groupId> <artifactId>kernel-security</artifactId> 
+			<!-- <dependency> <groupId>io.mosip</groupId> <artifactId>kernel-security</artifactId>
 				<version>${project.version}</version> </dependency> -->
 			<dependency>
 				<groupId>io.mosip.kernel</groupId>
@@ -363,7 +363,7 @@
 				<artifactId>kernel-applicanttype-api</artifactId>
 				<version>${mosip.core.kernel.version}</version>
 			</dependency>
-			
+
 			<!-- https://mvnrepository.com/artifact/com.github.microsoft/TSS.Java -->
 			<dependency>
 				<groupId>com.github.microsoft</groupId>
@@ -444,6 +444,15 @@
 	</dependencyManagement>
 
 	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-maven-plugin</artifactId>
+					<version>3.2.3</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -488,21 +497,21 @@
 					<maxmem>2024m</maxmem>
 				</configuration>
 			</plugin>
-	                <plugin>	
-                  <groupId>org.apache.maven.plugins</groupId>	
-                  <artifactId>maven-javadoc-plugin</artifactId>	
-                  <version>3.2.0</version>	
-                  <executions>	
-                        <execution>	
-                          <id>attach-javadocs</id>	
-                          <goals>	
-                                <goal>jar</goal>	
-                          </goals>	
-                        </execution>	
-                  </executions>	
-                  <configuration>	
-                     <doclint>none</doclint>	
-                  </configuration>	
+	                <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-javadoc-plugin</artifactId>
+                  <version>3.2.0</version>
+                  <executions>
+                        <execution>
+                          <id>attach-javadocs</id>
+                          <goals>
+                                <goal>jar</goal>
+                          </goals>
+                        </execution>
+                  </executions>
+                  <configuration>
+                     <doclint>none</doclint>
+                  </configuration>
                         </plugin>
 
 
