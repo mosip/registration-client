@@ -45,7 +45,7 @@ service:
   externalTrafficPolicy: Cluster
 image:
   registry: docker.io
-  repository: mosipid/registration-client
+  repository: mosipqa/registration-client
   tag: 1.3.x
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
