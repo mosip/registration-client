@@ -292,7 +292,7 @@
 			</dependency>
 			<dependency>
 				<groupId>io.mosip.kernel</groupId>
-				<artifactId>kernel-pdfgenerator-itext</artifactId>
+				<artifactId>kernel-pdfgenerator</artifactId>
 				<version>${mosip.core.kernel.version}</version>
 			</dependency>
 			<dependency>
