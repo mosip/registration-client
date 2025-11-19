@@ -551,6 +551,8 @@ public class MapperUtils {
 				dfield.set(destination,  jsonObject.get(dfield.getName()));
 				break;
 			case "java.sql.Time":
+				System.out.println("DEBUG perKioskProcessTime = " + jsonObject.get(dfield.getName()));
+                System.out.println("Type = " + jsonObject.get(dfield.getName()).getClass());
 				dfield.set(destination, java.sql.Time.valueOf(jsonObject.getString(dfield.getName())));
 				break;
 			case "[B" :
