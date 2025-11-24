@@ -1,3 +1,4 @@
+\c mosip_reg
 -- Upgrade script for version 1.3.0-B2
 
 ALTER TABLE "REG"."CA_CERT_STORE" ADD COLUMN "CA_CERT_TYPE" VARCHAR(25);
