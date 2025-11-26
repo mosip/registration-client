@@ -1,0 +1,251 @@
+THIRD-PARTY-NOTICES
+
+This project includes third-party packages that are distributed under various open-source licenses. Below is a list of packages and their associated licenses.
+
+================================================================================
+Package: Spring Framework & Spring Ecosystem 
+         (6.1.x family – spring-web, spring-context, spring-context-support, spring-orm, spring-aspects;
+          4.1.0 – spring-cloud-starter-config;
+          3.2.3 – spring-boot-maven-plugin;
+          1.3.1 – spring-retry)
+License: Apache License 2.0
+Homepage: https://spring.io/projects/spring-framework
+================================================================================
+
+================================================================================
+Package: Jackson JSON & XML Stack 
+         (2.15.4 family – jackson-core, jackson-databind, jackson-datatype-jsr310, jackson-dataformat-xml, jackson-module-jaxb-annotations;
+          1.9.7 – org.codehaus.jackson:jackson-mapper-asl)
+License: Apache License 2.0
+Homepage: https://github.com/FasterXML/jackson
+================================================================================
+
+================================================================================
+Package: MOSIP Kernel, Commons & Registration Stack 
+         (1.3.0-SNAPSHOT family – kernel-core, kernel-dataaccess-hibernate, kernel-idvalidator-uin,
+          kernel-idvalidator-vid, kernel-idvalidator-prid, kernel-idvalidator-rid, kernel-idobjectvalidator,
+          kernel-idgenerator-rid, kernel-idgenerator-prid, kernel-applicanttype-api, kernel-biometrics-api,
+          kernel-biosdk-provider, kernel-bioapi-provider, kernel-auditmanager-api, kernel-qrcodegenerator-zxing,
+          kernel-pdfgenerator, kernel-templatemanager-velocity, kernel-logger-logback;
+          commons-packet-manager; registration-api; registration-client; biometrics-util)
+License: Mozilla Public License 2.0 (Inferred from project’s official repository)
+Homepage: https://github.com/mosip
+================================================================================
+
+================================================================================
+Package: Apache Derby Database 
+         (10.17.1.0 – derby, derbyclient, derbytools)
+License: Apache License 2.0
+Homepage: https://db.apache.org/derby/
+================================================================================
+
+================================================================================
+Package: Apache Commons & DBCP 
+         (3.3.2 – commons-lang3;
+          2.6 – commons-io;
+          1.11 – commons-codec;
+          2.1.1 – commons-dbcp2)
+License: Apache License 2.0
+Homepage: https://commons.apache.org/
+================================================================================
+
+================================================================================
+Package: Apache HttpComponents 
+         (4.5.7 – httpclient, httpmime)
+License: Apache License 2.0
+Homepage: https://hc.apache.org/
+================================================================================
+
+================================================================================
+Package: Apache Velocity & MOSIP Velocity Template Manager 
+         (1.7 – org.apache.velocity:velocity;
+          1.3.0-SNAPSHOT – io.mosip.kernel:kernel-templatemanager-velocity)
+License: 
+  - Velocity: Apache License 2.0
+  - MOSIP kernel-templatemanager-velocity: Mozilla Public License 2.0 (Inferred from project’s official repository)
+Homepage: https://velocity.apache.org/
+================================================================================
+
+================================================================================
+Package: Apache PDFBox & MOSIP PDF/QR/Imaging Utilities 
+         (2.0.23 – org.apache.pdfbox:pdfbox;
+          1.3.0-SNAPSHOT – kernel-pdfgenerator, kernel-qrcodegenerator-zxing;
+          1.3.0 – com.github.jai-imageio:jai-imageio-jpeg2000;
+          0.98 – com.googlecode.jfreesane:jfreesane)
+License: 
+  - PDFBox, kernel-pdfgenerator, kernel-qrcodegenerator-zxing, jfreesane: Apache License 2.0
+  - jai-imageio-jpeg2000: BSD 3-Clause (No Nuclear License)
+Homepage: https://pdfbox.apache.org/
+================================================================================
+
+================================================================================
+Package: Logging & Instrumentation Stack 
+         (1.6.6 – org.slf4j:slf4j-api;
+          1.4.14 – ch.qos.logback:logback-core;
+          1.3.0-SNAPSHOT – io.mosip.kernel:kernel-logger-logback;
+          4.0.3 – org.awaitility:awaitility)
+License:
+  - SLF4J: MIT License
+  - Logback-core: GNU Lesser General Public License 2.1
+  - kernel-logger-logback: Mozilla Public License 2.0 (Inferred from project’s official repository)
+  - Awaitility: Apache License 2.0
+Homepage: https://www.slf4j.org/
+================================================================================
+
+================================================================================
+Package: JSON Utilities 
+         (20180813, 20200518 – org.json:json;
+          1.1.1 – com.googlecode.json-simple:json-simple)
+License:
+  - org.json: JSON License
+  - json-simple: Apache License 2.0
+Homepage: 
+  - org.json: https://github.com/stleary/JSON-java
+  - json-simple: https://github.com/fangyidong/json-simple
+================================================================================
+
+================================================================================
+Package: Scheduling & Cron Utilities 
+         (2.2.1 – org.quartz-scheduler:quartz;
+          8.0.0 – com.cronutils:cron-utils)
+License: Apache License 2.0
+Homepage: 
+  - Quartz: https://www.quartz-scheduler.org/
+  - cron-utils: https://github.com/jmrozanec/cron-utils
+================================================================================
+
+================================================================================
+Package: Mapping, Bytecode & Code Generation Utilities 
+         (1.4.6 and 1.x – ma.glasnost.orika:orika-core;
+          net.bytebuddy:byte-buddy;
+          3.27.0-GA – org.javassist:javassist;
+          1.18.32 – org.projectlombok:lombok)
+License:
+  - Orika, Byte Buddy: Apache License 2.0
+  - Javassist: Apache License 2.0 OR LGPL 2.1-or-later OR MPL 1.1
+  - Lombok: MIT License
+Homepage:
+  - Orika: https://github.com/orika-mapper/orika
+  - Byte Buddy: https://bytebuddy.net/
+  - Javassist: https://www.javassist.org/
+  - Lombok: https://projectlombok.org/
+================================================================================
+
+================================================================================
+Package: JavaFX UI & TestFX Stack 
+         (15, 21.0.3 – org.openjfx:javafx-graphics;
+          org.testfx:openjfx-monocle;
+          4.0.16-alpha – org.testfx:testfx-junit5)
+License:
+  - JavaFX: GNU General Public License 2.0 only with Classpath Exception
+  - TestFX components: Apache License 2.0 (Inferred from project’s official repository)
+Homepage:
+  - JavaFX: https://openjfx.io/
+  - TestFX: https://github.com/TestFX/TestFX
+================================================================================
+
+================================================================================
+Package: JAXB & Activation APIs 
+         (2.3.1 – javax.xml.bind:jaxb-api, com.sun.xml.bind:jaxb-core, com.sun.xml.bind:jaxb-impl;
+          4.0.1 – jakarta.xml.bind:jakarta.xml.bind-api;
+          1.2.0 – com.sun.activation:javax.activation)
+License:
+  - javax.xml.bind:* and javax.activation: CDDL 1.1 and GPL 2.0 with Classpath Exception (dual-licensed)
+  - jakarta.xml.bind-api: BSD 3-Clause License
+Homepage:
+  - JAXB (Jakarta): https://jakarta.ee/specifications/xml-binding/
+  - Legacy JAXB/Activation: https://javaee.github.io/jaxb-v2/
+================================================================================
+
+================================================================================
+Package: Testing & QA Stack 
+         (4.12 – junit:junit;
+          5.5.1 / 5.6.2 / 5.10.2 – junit-jupiter-api, junit-jupiter-engine, junit-jupiter-params, junit-vintage-engine;
+          3.11.2, 3.4.4 – mockito-core, mockito-all;
+          2.0.9 – powermock-core, powermock-api-mockito, powermock-api-mockito2, powermock-module-junit4;
+          4.0.16-alpha – testfx-junit5;
+          3.14.4 – com.squareup.okhttp3:mockwebserver;
+          4.3.3 – io.rest-assured:rest-assured;
+          0.8.11 – org.jacoco:jacoco-maven-plugin)
+License:
+  - JUnit 4: Eclipse Public License 1.0
+  - JUnit 5: Eclipse Public License 2.0 (with some Apache 2.0-licensed components)
+  - Mockito: MIT License
+  - PowerMock: Apache License 2.0
+  - TestFX: Apache License 2.0 (Inferred from project’s official repository)
+  - OkHttp MockWebServer, Rest-Assured: Apache License 2.0
+  - JaCoCo: Eclipse Public License 2.0
+Homepage:
+  - JUnit: https://junit.org/
+  - Mockito: https://site.mockito.org/
+  - PowerMock: https://github.com/powermock/powermock
+  - TestFX: https://github.com/TestFX/TestFX
+  - OkHttp: https://square.github.io/okhttp/
+  - Rest-Assured: https://rest-assured.io/
+  - JaCoCo: https://www.jacoco.org/jacoco/
+================================================================================
+
+================================================================================
+Package: Build & Maven Plugin Tooling 
+         (3.8.0 – maven-compiler-plugin;
+          3.2.0 – maven-javadoc-plugin;
+          2.2.1 – maven-source-plugin;
+          2.7, 2.22.0 and related – maven-resources-plugin, maven-surefire-plugin;
+          1.3 – maven-filtering;
+          3.0.1 – git-commit-id-plugin;
+          0.7.0 – central-publishing-maven-plugin;
+          3.7.0.1746 – sonar-maven-plugin;
+          0.8.11 – jacoco-maven-plugin;
+          3.2.3 – spring-boot-maven-plugin)
+License:
+  - Apache Maven plugins, Spring Boot Maven plugin, git-commit-id-plugin, central-publishing-maven-plugin: Apache License 2.0
+  - Sonar Maven Plugin: GNU Lesser General Public License 3.0
+  - JaCoCo Maven Plugin: Eclipse Public License 2.0
+Homepage:
+  - Maven Plugins: https://maven.apache.org/plugins/
+  - Spring Boot Maven Plugin: https://spring.io/projects/spring-boot
+  - Sonar Maven: https://docs.sonarsource.com/
+  - JaCoCo Maven: https://www.jacoco.org/jacoco/
+================================================================================
+
+================================================================================
+Package: Rxtx Serial Communication Library 
+         (2.1.7 – org.rxtx:rxtx)
+License: GNU Lesser General Public License 2.0 or later
+Homepage: https://github.com/rxtx/rxtx
+================================================================================
+
+================================================================================
+Package: Internationalization & Country/Region Utilities 
+         (1.29 – com.neovisionaries:nv-i18n)
+License: Apache License 2.0
+Homepage: https://github.com/TakahikoKawasaki/nv-i18n
+================================================================================
+
+================================================================================
+Package: CSV & Reporting Libraries 
+         (3.5 – com.opencsv:opencsv;
+          3.1.5 – com.aventstack:extentreports)
+License:
+  - OpenCSV: Apache License 2.0
+  - ExtentReports: BSD 3-Clause License
+Homepage:
+  - OpenCSV: http://opencsv.sourceforge.net/
+  - ExtentReports: https://github.com/extent-framework/extentreports-java
+================================================================================
+
+================================================================================
+Package: Tus Java Client 
+         (0.4.3 – io.tus.java.client:tus-java-client)
+License: Apache License 2.0 (Inferred from project’s official repository)
+Homepage: https://github.com/tus/tus-java-client
+================================================================================
+
+================================================================================
+Package: Microsoft TSS.Java TPM Library 
+         (0.3.0 – com.github.microsoft:TSS.Java)
+License: MIT License
+Homepage: https://github.com/Microsoft/TSS.MSR
+================================================================================
+
+Full license texts and additional details for each of the above packages are available in the license/ directory of this repository. Please refer to those files or the original source of each package for complete legal terms and conditions.
