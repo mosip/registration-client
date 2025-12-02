@@ -158,57 +158,6 @@ Homepage:
 ================================================================================
 
 ================================================================================
-Package: Testing & QA Stack 
-         (4.12 – junit:junit;
-          5.5.1 / 5.6.2 / 5.10.2 – junit-jupiter-api, junit-jupiter-engine, junit-jupiter-params, junit-vintage-engine;
-          3.11.2, 3.4.4 – mockito-core, mockito-all;
-          2.0.9 – powermock-core, powermock-api-mockito, powermock-api-mockito2, powermock-module-junit4;
-          4.0.16-alpha – testfx-junit5;
-          3.14.4 – com.squareup.okhttp3:mockwebserver;
-          4.3.3 – io.rest-assured:rest-assured;
-          0.8.11 – org.jacoco:jacoco-maven-plugin)
-License:
-  - JUnit 4: Eclipse Public License 1.0
-  - JUnit 5: Eclipse Public License 2.0 (with some Apache 2.0-licensed components)
-  - Mockito: MIT License
-  - PowerMock: Apache License 2.0
-  - TestFX: Apache License 2.0 (Inferred from project’s official repository)
-  - OkHttp MockWebServer, Rest-Assured: Apache License 2.0
-  - JaCoCo: Eclipse Public License 2.0
-Homepage:
-  - JUnit: https://junit.org/
-  - Mockito: https://site.mockito.org/
-  - PowerMock: https://github.com/powermock/powermock
-  - TestFX: https://github.com/TestFX/TestFX
-  - OkHttp: https://square.github.io/okhttp/
-  - Rest-Assured: https://rest-assured.io/
-  - JaCoCo: https://www.jacoco.org/jacoco/
-================================================================================
-
-================================================================================
-Package: Build & Maven Plugin Tooling 
-         (3.8.0 – maven-compiler-plugin;
-          3.2.0 – maven-javadoc-plugin;
-          2.2.1 – maven-source-plugin;
-          2.7, 2.22.0 and related – maven-resources-plugin, maven-surefire-plugin;
-          1.3 – maven-filtering;
-          3.0.1 – git-commit-id-plugin;
-          0.7.0 – central-publishing-maven-plugin;
-          3.7.0.1746 – sonar-maven-plugin;
-          0.8.11 – jacoco-maven-plugin;
-          3.2.3 – spring-boot-maven-plugin)
-License:
-  - Apache Maven plugins, Spring Boot Maven plugin, git-commit-id-plugin, central-publishing-maven-plugin: Apache License 2.0
-  - Sonar Maven Plugin: GNU Lesser General Public License 3.0
-  - JaCoCo Maven Plugin: Eclipse Public License 2.0
-Homepage:
-  - Maven Plugins: https://maven.apache.org/plugins/
-  - Spring Boot Maven Plugin: https://spring.io/projects/spring-boot
-  - Sonar Maven: https://docs.sonarsource.com/
-  - JaCoCo Maven: https://www.jacoco.org/jacoco/
-================================================================================
-
-================================================================================
 Package: Rxtx Serial Communication Library 
          (2.1.7 – org.rxtx:rxtx)
 License: GNU Lesser General Public License 2.0 or later
