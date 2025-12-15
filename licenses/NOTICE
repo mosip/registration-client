@@ -11,7 +11,7 @@ Apache License 2.0 Components
 --------------------------------------------------------------------------------
 
 Spring Framework
-  Copyright 2002-2024 the original author or authors
+  Copyright 2002-2024 the original author
   Copyright (c) 2002-2024 Pivotal, Inc.
   Copyright (c) 2012-2024 VMware, Inc.
 
@@ -74,7 +74,7 @@ JUnit 4
 JUnit Jupiter (JUnit 5)
   Copyright (c) 2015-2024 The JUnit Team
 
-Logback (dual-licensed: EPL-1.0 OR LGPL-2.1)
+  EPL-1.0
   Copyright (C) 1999-2015, QOS.ch
 
 OSHI (Operating System & Hardware Information)
@@ -88,7 +88,7 @@ BSD License Components
 --------------------------------------------------------------------------------
 
 Jakarta XML Binding (JAXB) - BSD-3-Clause
-  Copyright (c) 2003, 2021 Oracle and/or its affiliates
+  Copyright (c) 2003, 2021 Oracle
 
 ExtentReports - BSD-3-Clause
   Copyright (c) 2015-2018 Anshoo Arora
@@ -101,10 +101,10 @@ JAI ImageIO JPEG2000 - BSD-3-Clause-No-Nuclear-License
 LGPL License Components
 --------------------------------------------------------------------------------
 
-RXTX - LGPL-2.0-or-later
+RXTX - LGPL-2.0
   Copyright 1997-2007 by Trent Jarvi tjarvi@qbang.org
 
-Logback - LGPL-2.1 OR EPL-1.0 (dual-licensed)
+Logback - LGPL-2.1
   Copyright (C) 1999-2015, QOS.ch
 
 SonarQube Maven Plugin - LGPL-3.0
@@ -115,13 +115,13 @@ CDDL License Components (with Classpath Exception)
 --------------------------------------------------------------------------------
 
 JAXB Implementation (com.sun.xml.bind)
-  Copyright (c) 1997-2017 Oracle and/or its affiliates
+  Copyright (c) 1997-2017 Oracle
 
 javax.xml.bind:jaxb-api
-  Copyright (c) 2003-2017 Oracle and/or its affiliates
+  Copyright (c) 2003-2017 Oracle
 
 JavaFX (openjfx) - GPL-2.0 WITH Classpath Exception
-  Copyright (c) 2013, 2021 Oracle and/or its affiliates
+  Copyright (c) 2013, 2021 Oracle
 
 --------------------------------------------------------------------------------
 JSON License Components
