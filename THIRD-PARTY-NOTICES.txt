@@ -122,7 +122,7 @@ Package: Mapping, Bytecode & Code Generation Utilities
           1.18.32 – org.projectlombok:lombok)
 License:
   - Orika, Byte Buddy: Apache License 2.0
-  - Javassist: Apache License 2.0 OR LGPL 2.1-or-later OR MPL 1.1
+  - Javassist: Apache License 2.0 
   - Lombok: MIT License
 Homepage:
   - Orika: https://github.com/orika-mapper/orika
