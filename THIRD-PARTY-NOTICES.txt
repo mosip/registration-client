@@ -160,7 +160,7 @@ Homepage:
 ================================================================================
 Package: Rxtx Serial Communication Library 
          (2.1.7 – org.rxtx:rxtx)
-License: GNU Lesser General Public License 2.0 or later
+License: GNU Lesser General Public License 2.0
 Homepage: https://github.com/rxtx/rxtx
 ================================================================================
 
