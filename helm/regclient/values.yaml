@@ -51,8 +51,8 @@ service:
 
 image:
   registry: docker.io
-  repository: mosipid/registration-client
-  tag: 1.2.0.2
+  repository: mosipqa/registration-client
+  tag: 1.2.0.x
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -67,14 +67,14 @@ image:
 job:
   name: keystorejob
   registry: docker.io
-  image: mosipdev/regclient-keystore
+  image: mosipqa/regclient-keystore
   tag: 1.2.0.x
   pullPolicy: Always
   rolename: keystorerole
   rolebindingname: keystorerolebinding
 
 regclient:
-  version: 1.2.0.2
+  version: 1.2.0.3-SNAPSHOT
   mountDir: /home/mosip/build_files/
   upgradeServerUrl: https://regclient.sandbox.xzy.net
   hostName: https://api-internal.sandbox.mosip.net
