@@ -2,7 +2,7 @@ apiVersion: v2
 name: regclient
 description: A Helm chart to installed Downloader for Regstration Client Application
 type: application
-version: 12.0.2-develop
+version: 12.0.3-develop
 appVersion: ""
 dependencies:
   - name: common
