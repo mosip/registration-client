@@ -17,6 +17,12 @@ function installing_regclient() {
   kubectl label ns $NS istio-injection=enabled --overwrite
   helm repo update
 
+  read -p "Is values.yaml for regclinet chart set correctly as part of Pre-requisites?(Y/n) " yn
+  if [[ "$yn" != "Y" ]]; then
+    echo "ERROR: values.yaml not set correctly; EXITING."
+    exit 1
+  fi
+
   echo Copy configmaps
   sed -i 's/\r$//' copy_cm.sh
   ./copy_cm.sh
@@ -26,7 +32,7 @@ function installing_regclient() {
   HEALTH_URL=https://$INTERNAL_HOST/v1/syncdata/actuator/health
 
   echo Installing reg client downloader. This may take a few minutes ..
-  helm -n $NS install regclient mosip/regclient \
+  helm -n $NS install regclient mosip/regclient -f values.yaml \
     --set regclient.upgradeServerUrl=https://$REGCLIENT_HOST \
     --set regclient.healthCheckUrl=$HEALTH_URL \
     --set regclient.hostName=$INTERNAL_HOST \
