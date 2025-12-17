@@ -67,14 +67,14 @@ image:
 job:
   name: keystorejob
   registry: docker.io
-  image: mosipdev/regclient-keystore
+  image: mosipqa/regclient-keystore
   tag: 1.2.0.x
   pullPolicy: Always
   rolename: keystorerole
   rolebindingname: keystorerolebinding
 
 regclient:
-  version: 1.2.0.2
+  version: 1.2.0.3-SNAPSHOT
   mountDir: /home/mosip/build_files/
   upgradeServerUrl: https://regclient.sandbox.xzy.net
   hostName: https://api-internal.sandbox.mosip.net
