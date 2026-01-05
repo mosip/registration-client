@@ -1,0 +1,141 @@
+================================================================================
+COPYRIGHT NOTICES
+================================================================================
+
+This software includes third-party libraries with the following copyright
+notices. All copyright notices must be preserved as required by their
+respective licenses.
+
+--------------------------------------------------------------------------------
+Apache License 2.0 Components
+--------------------------------------------------------------------------------
+
+Spring Framework
+  Copyright 2002-2024 the original author
+  Copyright (c) 2002-2024 Pivotal, Inc.
+  Copyright (c) 2012-2024 VMware, Inc.
+
+Jackson (FasterXML)
+  Copyright 2007-2023, Tatu Saloranta (tatu.saloranta@iki.fi)
+
+Apache Commons (commons-lang3, commons-io, commons-codec, commons-dbcp2)
+  Copyright 2001-2017 The Apache Software Foundation
+
+Apache HttpComponents (httpclient, httpmime)
+  Copyright 1999-2018 The Apache Software Foundation
+
+Apache Derby
+  Copyright 1997-2021 The Apache Software Foundation
+
+Apache Velocity
+  Copyright (c) 2000-2007 The Apache Software Foundation
+
+Apache PDFBox
+  Copyright 2014-2020 The Apache Software Foundation
+
+Quartz Scheduler
+  Copyright 2001-2011 Terracotta, Inc.
+
+JFreeSane
+  Copyright 2011-2016 James Ring
+
+NeoVisionaries nv-i18n
+  Copyright (C) 2012-2017 Neo Visionaries Inc.
+
+json-simple
+  Copyright 2006-2009 Yidong Fang
+
+--------------------------------------------------------------------------------
+MIT License Components
+--------------------------------------------------------------------------------
+
+Project Lombok
+  Copyright (c) 2009-2021 The Project Lombok Authors
+
+Mockito
+  Copyright (c) 2007 Mockito contributors
+
+SLF4J
+  Copyright (c) 2004-2017 QOS.ch
+
+TSS.Java (Microsoft TPM 2.0 Library)
+  Copyright (c) 2015-2018 Microsoft Corporation
+
+Webcam Capture (Sarxos)
+  Copyright (C) 2012-2017 Bartosz Firyn
+
+--------------------------------------------------------------------------------
+Eclipse Public License (EPL-1.0 / EPL-2.0) Components
+--------------------------------------------------------------------------------
+
+JUnit 4
+  Copyright (c) 2002-2020 JUnit Team
+
+JUnit Jupiter (JUnit 5)
+  Copyright (c) 2015-2024 The JUnit Team
+
+  EPL-1.0
+  Copyright (C) 1999-2015, QOS.ch
+
+OSHI (Operating System & Hardware Information)
+  Copyright (c) 2010-2018 The Oshi Project Team
+
+JaCoCo
+  Copyright (c) 2009, 2023 Mountainminds GmbH & Co. KG and Contributors
+
+--------------------------------------------------------------------------------
+BSD License Components
+--------------------------------------------------------------------------------
+
+Jakarta XML Binding (JAXB) - BSD-3-Clause
+  Copyright (c) 2003, 2021 Oracle
+
+ExtentReports - BSD-3-Clause
+  Copyright (c) 2015-2018 Anshoo Arora
+
+JAI ImageIO JPEG2000 - BSD-3-Clause-No-Nuclear-License
+  Copyright (c) 2005 Sun Microsystems, Inc.
+  Copyright (c) 1999/2000 JJ2000
+
+--------------------------------------------------------------------------------
+LGPL License Components
+--------------------------------------------------------------------------------
+
+RXTX - LGPL-2.0
+  Copyright 1997-2007 by Trent Jarvi tjarvi@qbang.org
+
+Logback - LGPL-2.1
+  Copyright (C) 1999-2015, QOS.ch
+
+SonarQube Maven Plugin - LGPL-3.0
+  Copyright (C) 2011-2024 SonarSource SA
+
+--------------------------------------------------------------------------------
+CDDL License Components (with Classpath Exception)
+--------------------------------------------------------------------------------
+
+JAXB Implementation (com.sun.xml.bind)
+  Copyright (c) 1997-2017 Oracle
+
+javax.xml.bind:jaxb-api
+  Copyright (c) 2003-2017 Oracle
+
+JavaFX (openjfx) - GPL-2.0 WITH Classpath Exception
+  Copyright (c) 2013, 2021 Oracle
+
+--------------------------------------------------------------------------------
+JSON License Components
+--------------------------------------------------------------------------------
+
+org.json:json
+  Copyright (c) 2002 JSON.org
+  Note: This library includes the "Good, not Evil" clause
+
+--------------------------------------------------------------------------------
+Mozilla Public License 2.0 (MPL-2.0) Components
+--------------------------------------------------------------------------------
+
+MOSIP Kernel, Commons, Registration Modules
+  Copyright (c) 2018-2024 MOSIP
+
+================================================================================
