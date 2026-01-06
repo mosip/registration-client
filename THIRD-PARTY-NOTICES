@@ -1,0 +1,166 @@
+THIRD-PARTY-NOTICES
+
+This project includes third-party open-source software components.
+Each component is licensed under its respective license, as listed below.
+
+================================================================================
+Package: Spring Framework & Spring Ecosystem
+         (spring-web, spring-context, spring-context-support, spring-orm,
+          spring-aspects, spring-cloud-starter-config,
+          spring-boot-maven-plugin, spring-retry)
+License: Apache License 2.0
+Homepage: https://spring.io/projects/spring-framework
+================================================================================
+
+================================================================================
+Package: Jackson JSON & XML Stack
+         (jackson-core, jackson-databind, jackson-datatype-jsr310,
+          jackson-dataformat-xml, jackson-module-jaxb-annotations,
+          org.codehaus.jackson:jackson-mapper-asl)
+License: Apache License 2.0
+Homepage: https://github.com/FasterXML/jackson
+================================================================================
+
+================================================================================
+Package: Apache Derby Database
+         (derby, derbyclient, derbytools)
+License: Apache License 2.0
+Homepage: https://db.apache.org/derby/
+================================================================================
+
+================================================================================
+Package: Apache Commons & DBCP
+         (commons-lang3, commons-io, commons-codec, commons-dbcp2)
+License: Apache License 2.0
+Homepage: https://commons.apache.org/
+================================================================================
+
+================================================================================
+Package: Apache HttpComponents
+         (httpclient, httpmime)
+License: Apache License 2.0
+Homepage: https://hc.apache.org/
+================================================================================
+
+================================================================================
+Package: Apache Velocity
+License: Apache License 2.0
+Homepage: https://velocity.apache.org/
+================================================================================
+
+================================================================================
+Package: Apache PDFBox
+License: Apache License 2.0
+Homepage: https://pdfbox.apache.org/
+================================================================================
+
+================================================================================
+Package: Flying Saucer PDF Renderer (OpenPDF backend)
+         (flying-saucer-pdf-openpdf)
+License: GNU Lesser General Public License 2.1
+Homepage: https://github.com/flyingsaucerproject/flyingsaucer
+================================================================================
+
+================================================================================
+Package: OpenPDF
+License: GNU Lesser General Public License 2.1 OR Mozilla Public License 2.0
+Homepage: https://github.com/LibrePDF/OpenPDF
+================================================================================
+
+================================================================================
+Package: Logging Stack
+         (slf4j-api, logback-core, awaitility)
+License:
+  - SLF4J: MIT License
+  - Logback-core: GNU Lesser General Public License 2.1
+  - Awaitility: Apache License 2.0
+Homepage:
+  - https://www.slf4j.org/
+  - https://logback.qos.ch/
+================================================================================
+
+================================================================================
+Package: JSON Utilities
+         (org.json:json, json-simple)
+License:
+  - org.json: JSON License (non-OSI approved)
+  - json-simple: Apache License 2.0
+Homepage:
+  - https://github.com/stleary/JSON-java
+  - https://github.com/fangyidong/json-simple
+================================================================================
+
+================================================================================
+Package: Scheduling Utilities
+         (quartz, cron-utils)
+License: Apache License 2.0
+Homepage:
+  - https://www.quartz-scheduler.org/
+  - https://github.com/jmrozanec/cron-utils
+================================================================================
+
+================================================================================
+Package: Bytecode & Code Generation Utilities
+         (orika-core, byte-buddy, javassist, lombok)
+License:
+  - Orika, Byte Buddy, Javassist: Apache License 2.0
+  - Lombok: MIT License
+Homepage:
+  - https://github.com/orika-mapper/orika
+  - https://bytebuddy.net/
+  - https://www.javassist.org/
+  - https://projectlombok.org/
+================================================================================
+
+================================================================================
+Package: JavaFX & TestFX
+License:
+  - JavaFX: GPL 2.0 with Classpath Exception
+  - TestFX: Apache License 2.0
+Homepage:
+  - https://openjfx.io/
+  - https://github.com/TestFX/TestFX
+================================================================================
+
+================================================================================
+Package: JAXB & Activation APIs
+License:
+  - javax.xml.bind / javax.activation: CDDL 1.1 OR GPL 2.0 with Classpath Exception
+  - jakarta.xml.bind-api: BSD 3-Clause License
+Homepage:
+  - https://jakarta.ee/specifications/xml-binding/
+================================================================================
+
+================================================================================
+Package: RXTX Serial Communication Library
+License: GNU Lesser General Public License 2.0
+Homepage: https://github.com/rxtx/rxtx
+================================================================================
+
+================================================================================
+Package: CSV & Reporting Libraries
+         (opencsv, extentreports)
+License:
+  - OpenCSV: Apache License 2.0
+  - ExtentReports: BSD 3-Clause License
+Homepage:
+  - http://opencsv.sourceforge.net/
+  - https://github.com/extent-framework/extentreports-java
+================================================================================
+
+================================================================================
+Package: Tus Java Client
+License: Apache License 2.0
+Homepage: https://github.com/tus/tus-java-client
+================================================================================
+
+================================================================================
+Package: Microsoft TSS.Java TPM Library
+License: MIT License
+Homepage: https://github.com/Microsoft/TSS.MSR
+================================================================================
+
+LGPL NOTICE:
+This project uses LGPL-licensed libraries as unmodified, dynamically linked
+dependencies. No modifications have been made to these libraries.
+Source code for LGPL components is available from their respective homepages.
