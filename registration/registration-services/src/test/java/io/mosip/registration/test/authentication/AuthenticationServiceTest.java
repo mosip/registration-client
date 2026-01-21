@@ -111,8 +111,8 @@ public class AuthenticationServiceTest {
 		authenticationValidatorDTO.setUserId("mosip");
 		authenticationValidatorDTO.setPassword("mosip");
 		PowerMockito.mockStatic(CryptoUtil.class, HMACUtils2.class);
-		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
-		Mockito.when(loginService.getUserDetail("mosip")).thenReturn(userDTO);		
+		Mockito.when(loginService.getUserDetail("mosip")).thenReturn(userDTO);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(false);
 		Mockito.when(ClientCryptoUtils.decodeBase64Data("salt")).thenReturn("salt".getBytes());
 		Mockito.when(HMACUtils2.digestAsPlainTextWithSalt("mosip".getBytes(), "salt".getBytes())).thenReturn("mosip");
 		
@@ -132,7 +132,8 @@ public class AuthenticationServiceTest {
 		authenticationValidatorDTO.setUserId("mosip");
 		authenticationValidatorDTO.setPassword("mosip");
 		
-		Mockito.when(loginService.getUserDetail("mosip")).thenReturn(userDTO);		
+		Mockito.when(loginService.getUserDetail("mosip")).thenReturn(userDTO);
+		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(ClientCryptoUtils.decodeBase64Data("salt")).thenReturn("salt".getBytes());
 		Mockito.when(HMACUtils2.digestAsPlainTextWithSalt("mosip1".getBytes(), "salt".getBytes())).thenReturn("mosip1");
 
@@ -230,5 +231,111 @@ public class AuthenticationServiceTest {
 		
 		assertEquals(expectedResult, actualResult);
 	}
+	
+	@Test
+	public void authValidatorNegative() throws BiometricException {
+
+		Boolean expectedResult = false;
+		byte[] bioAttributesBytes = "slkdalskdjslkajdjadj".getBytes();
+		List<BiometricsDto> listOfBios = new ArrayList<>();
+		BiometricsDto bio1 = new BiometricsDto("leftEye", bioAttributesBytes, 84.5);
+		BiometricsDto bio2 = new BiometricsDto("rightEye", bioAttributesBytes, 84.5);
+		listOfBios.add(bio1);
+		listOfBios.add(bio2);
+
+		List<BIR> listBirs = new ArrayList<>();
+		BIR bir1 = new BIR();
+		BIR bir2 = new BIR();
+		listBirs.add(bir1);
+		listBirs.add(bir2);
+
+
+		List<UserBiometric> userBiometrics = new ArrayList<>();
+		UserBiometric userBiometric1 = new UserBiometric();
+		userBiometric1.setBioIsoImage(bioAttributesBytes);
+		userBiometric1.setQualityScore(85);
+		UserBiometricId id1 = new UserBiometricId();
+		id1.setBioAttributeCode("leftEye");
+		userBiometric1.setUserBiometricId(id1);
+		UserBiometric userBiometric2 = new UserBiometric();
+		userBiometric2.setBioIsoImage(bioAttributesBytes);
+		userBiometric2.setQualityScore(85);
+		UserBiometricId id2 = new UserBiometricId();
+		id2.setBioAttributeCode("leftEye");
+		userBiometric2.setUserBiometricId(id2);
+		UserBiometric userBiometric3 = new UserBiometric();
+		userBiometric3.setBioIsoImage(bioAttributesBytes);
+		userBiometric3.setQualityScore(85);
+		UserBiometricId id3 = new UserBiometricId();
+		id1.setBioAttributeCode("leftEye");
+		userBiometric3.setUserBiometricId(id3);
+
+		/*
+		 * userBiometrics.add(userBiometric1); userBiometrics.add(userBiometric2);
+		 * userBiometrics.add(userBiometric3);
+		 */
+
+		Mockito.when(userDetailDaoImpl.getUserSpecificBioDetails(Mockito.anyString(), Mockito.anyString())).thenReturn(userBiometrics);
+		Mockito.when(birBuilder.buildBir(Mockito.anyString(), Mockito.anyInt(), Mockito.any(byte[].class), Mockito.any(ProcessedLevelType.class))).thenReturn(bir1);
+		Mockito.when(birBuilder.buildBIR(Mockito.any(BiometricsDto.class))).thenReturn(bir2);
+		Mockito.when(bioAPIFactory.getBioProvider(Mockito.any(BiometricType.class), Mockito.any(BiometricFunction.class))).thenReturn(bioProviderImpl);
+		Mockito.when(bioProviderImpl.verify(Mockito.anyList(), Mockito.anyList(), Mockito.any(BiometricType.class), Mockito.isNull())).thenReturn(true);
+		Boolean actualResult = authenticationServiceImpl.authValidator("110003", "IRIS", listOfBios); 
+
+		assertEquals(expectedResult, actualResult);
+	}
+
+
+	@Test
+	public void authValidatorNegative1() throws BiometricException {
+
+		Boolean expectedResult = false;
+		byte[] bioAttributesBytes = "slkdalskdjslkajdjadj".getBytes();
+		List<BiometricsDto> listOfBios = new ArrayList<>();
+		BiometricsDto bio1 = new BiometricsDto("leftEye", bioAttributesBytes, 84.5);
+		BiometricsDto bio2 = new BiometricsDto("rightEye", bioAttributesBytes, 84.5);
+		listOfBios.add(bio1);
+		listOfBios.add(bio2);
+
+		List<BIR> listBirs = new ArrayList<>();
+		BIR bir1 = new BIR();
+		BIR bir2 = new BIR();
+		listBirs.add(bir1);
+		listBirs.add(bir2);
+
+
+		List<UserBiometric> userBiometrics = new ArrayList<>();
+		UserBiometric userBiometric1 = new UserBiometric();
+		userBiometric1.setBioIsoImage(bioAttributesBytes);
+		userBiometric1.setQualityScore(85);
+		UserBiometricId id1 = new UserBiometricId();
+		id1.setBioAttributeCode("leftEye");
+		userBiometric1.setUserBiometricId(id1);
+		UserBiometric userBiometric2 = new UserBiometric();
+		userBiometric2.setBioIsoImage(bioAttributesBytes);
+		userBiometric2.setQualityScore(85);
+		UserBiometricId id2 = new UserBiometricId();
+		id2.setBioAttributeCode("leftEye");
+		userBiometric2.setUserBiometricId(id2);
+		UserBiometric userBiometric3 = new UserBiometric();
+		userBiometric3.setBioIsoImage(bioAttributesBytes);
+		userBiometric3.setQualityScore(85);
+		UserBiometricId id3 = new UserBiometricId();
+		id1.setBioAttributeCode("leftEye");
+		userBiometric3.setUserBiometricId(id3);
+
+		userBiometrics.add(userBiometric1);
+		userBiometrics.add(userBiometric2);
+		userBiometrics.add(userBiometric3);
+
+		Mockito.when(userDetailDaoImpl.getUserSpecificBioDetails(Mockito.anyString(), Mockito.anyString())).thenThrow(RuntimeException.class);
+		Mockito.when(birBuilder.buildBir(Mockito.anyString(), Mockito.anyInt(), Mockito.any(byte[].class), Mockito.any(ProcessedLevelType.class))).thenReturn(bir1);
+		Mockito.when(birBuilder.buildBIR(Mockito.any(BiometricsDto.class))).thenReturn(bir2);
+		Mockito.when(bioAPIFactory.getBioProvider(Mockito.any(BiometricType.class), Mockito.any(BiometricFunction.class))).thenReturn(bioProviderImpl);
+		Mockito.when(bioProviderImpl.verify(Mockito.anyList(), Mockito.anyList(), Mockito.any(BiometricType.class), Mockito.isNull())).thenReturn(false);
+		Boolean actualResult = authenticationServiceImpl.authValidator("110003", "IRIS", listOfBios); 
+
+		assertEquals(expectedResult, actualResult);
+	}	
 
 }
