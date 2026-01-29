@@ -470,6 +470,12 @@
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-pdfgenerator</artifactId>
 			<version>${mosip.core.kernel.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>io.mosip.kernel</groupId>
+					<artifactId>kernel-logger-logback</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
