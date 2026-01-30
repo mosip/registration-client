@@ -420,3 +420,5 @@ INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.repeating-bloc
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length.sequence-limit','mosip.kernel.vid.length.sequence-limit','3','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length','mosip.kernel.vid.length','16','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.partner.cacertificate.upload.minimumvalidity.month', 'mosip.kernel.partner.cacertificate.upload.minimumvalidity.month', '1', 'CONFIGURATION', 'eng', true, 'SYSTEM', current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
