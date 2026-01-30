@@ -25,10 +25,9 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import com.itextpdf.io.IOException;
 
 import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.constants.RegistrationConstants;
@@ -138,7 +137,7 @@ public class SoftwareUpdateHandlerTest {
 		Mockito.when(ApplicationContext.getStringValueFromApplicationMap(Mockito.anyString())).thenReturn("1.2.0-SNAPSHOT");
 		Mockito.when(ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SOFTWARE_BACKUP_FOLDER)).thenReturn("src/test/resources/sql");
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
-		Mockito.doThrow(IOException.class).when(jdbcTemplate).execute("----- create new tables\n" + 
+		Mockito.doThrow(DataAccessResourceFailureException.class).when(jdbcTemplate).execute("----- create new tables\n" +
 				" \n" + 
 				" CREATE TABLE \"REG\".\"LOC_HIERARCHY_LIST\"(\"HIERARCHY_LEVEL\" INTEGER NOT NULL, \"HIERARCHY_LEVEL_NAME\" VARCHAR(36) NOT NULL, \"LANG_CODE\" VARCHAR(3) NOT NULL, \"IS_ACTIVE\" BOOLEAN NOT NULL, \"CR_BY\" VARCHAR(256) NOT NULL, \"CR_DTIMES\" TIMESTAMP NOT NULL, \"UPD_BY\" VARCHAR(256), \"UPD_DTIMES\" TIMESTAMP)");
 		PowerMockito.doNothing().when(FileUtils.class, "copyDirectory", Mockito.any(File.class), Mockito.any(File.class));
