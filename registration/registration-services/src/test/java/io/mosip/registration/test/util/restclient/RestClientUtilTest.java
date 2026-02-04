@@ -87,14 +87,23 @@ public class RestClientUtilTest {
         dto.setHttpMethod(HttpMethod.POST);
         dto.setClazz(Map.class);
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
         dto.setHttpHeaders(headers);
         dto.setRequestBody(Collections.singletonMap("a", "b"));
 
         Map<String, Object> body = new HashMap<>();
         body.put("token", "t");
-        ResponseEntity<Map> response = new ResponseEntity<>(body, new HttpHeaders(), HttpStatus.OK);
-        when(plainRestTemplate.exchange(eq(dto.getUri()), eq(HttpMethod.POST), any(HttpEntity.class), eq(Map.class)))
+
+        ResponseEntity<Map> response =
+                new ResponseEntity<>(body, new HttpHeaders(), HttpStatus.OK);
+
+        when(plainRestTemplate.exchange(
+                eq(dto.getUri()),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(Map.class)))
                 .thenReturn(response);
 
         Map<String, Object> map = restClientUtil.invokeForToken(dto);

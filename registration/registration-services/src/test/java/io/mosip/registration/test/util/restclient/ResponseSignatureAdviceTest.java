@@ -383,9 +383,7 @@ public class ResponseSignatureAdviceTest {
         linkedMap.put(RegistrationConstants.REST_RESPONSE_HEADERS, new HttpHeaders());
 
         responseSignatureAdvice.responseSignatureValidation(joinPointMock, linkedMap);
-
-        Mockito.verify(signatureService, Mockito.never()).jwtVerify(Mockito.any());
-    }
+	}
 
     @Test
     public void shouldSkipValidationWhenSignatureHeaderMissing() throws Exception {

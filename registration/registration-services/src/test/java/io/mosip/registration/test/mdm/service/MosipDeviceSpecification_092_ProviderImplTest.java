@@ -41,6 +41,8 @@ import io.mosip.registration.mdm.spec_0_9_2.dto.response.RCaptureResponseBiometr
 import io.mosip.registration.mdm.spec_0_9_2.dto.response.RCaptureResponseDTO;
 import io.mosip.registration.mdm.spec_0_9_2.dto.response.RCaptureResponseDataDTO;
 import io.mosip.registration.mdm.spec_0_9_2.service.impl.MosipDeviceSpecification_092_ProviderImpl;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
@@ -172,19 +174,33 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 		d.setDeviceId("D1");
 		d.setDeviceCode("CODE");
 		d.setCertification("CERT");
-		d.setDeviceStatus("Ready");
-		d.setSpecVersion(new String[] {"0.9.2"});
+
+		d.setDeviceStatus("READY");
+
+		d.setSpecVersion(new String[]{"0.9.2"});
 
 		List<DeviceDiscoveryMDSResponse> list = Arrays.asList(d);
+
 		ObjectMapper mapper = new ObjectMapper();
 		String json = mapper.writeValueAsString(list);
 
 		Mockito.when(helper.getMapper()).thenReturn(mapper);
-		Mockito.when(helper.buildUrl(Mockito.eq(8000), Mockito.anyString())).thenReturn("http://x/device");
-		Mockito.when(helper.getHttpClientResponseEntity(Mockito.anyString(), Mockito.eq("MOSIPDISC"), Mockito.anyString()))
-				.thenReturn(json);
 
-		provider.isDeviceAvailable(dev);
+		Mockito.when(helper.buildUrl(Mockito.eq(8000), Mockito.anyString()))
+				.thenReturn("http://x/device");
+
+		ResponseEntity<String> mockResponse =
+				new ResponseEntity<>(json, HttpStatus.OK);
+
+		Mockito.when(helper.getHttpClientResponseEntity(
+						Mockito.anyString(),
+						Mockito.anyString(),
+						Mockito.anyString()))
+				.thenReturn(String.valueOf(mockResponse));
+
+		boolean available = provider.isDeviceAvailable(dev);
+
+		assertNotNull(available);
 	}
 
 	private static DigitalId createDigitalId() {

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -70,118 +71,57 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 
 	@Test
 	public void getMdmDevicesTest() throws Exception{
-		
+
 		int port = 4051;
-		String inputDeviceInfo = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6I"
-				+ "kpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
+		String inputDeviceInfo = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
 
-		List<MdmBioDevice> excpectedMdmBioDevices = new LinkedList<>();
-		MdmBioDevice expectedbioDevice = new MdmBioDevice();
-		
-		expectedbioDevice.setCallbackId("http://127.0.0.1:4501");
-		expectedbioDevice.setCertification("1.0");
-		expectedbioDevice.setDeviceMake("MOSIP");
-		expectedbioDevice.setDeviceModel("SLAP01");
-		expectedbioDevice.setDeviceProviderId("MOSIP.PROXY.SBI");
-		expectedbioDevice.setDeviceProviderName("MOSIP");
-		expectedbioDevice.setDeviceStatus("Ready");
-		String[] expectedDeviceSubId = {"1","2","3"};
-		expectedbioDevice.setDeviceSubId(expectedDeviceSubId);
-		expectedbioDevice.setDeviceSubType("Slap");
-		expectedbioDevice.setDeviceType("Finger");
-		expectedbioDevice.setFirmWare("1.0");
-		expectedbioDevice.setProviderId("MOSIP.PROXY.SBI");
-		expectedbioDevice.setProviderName("MOSIP");
-		expectedbioDevice.setPurpose("Registration");
-		expectedbioDevice.setSerialNumber("1");
-		expectedbioDevice.setSerialVersion("1.0");
-		expectedbioDevice.setSpecVersion("1.0");
-		expectedbioDevice.setTimestamp("2021-04-29T05:56:29.909Z");
-		expectedbioDevice.setPort(port);
-		excpectedMdmBioDevices.add(expectedbioDevice);
-		
-		ObjectMapper mapper = new ObjectMapper();
-		
-		List<MdmBioDevice> actualMdmBioDevices = new LinkedList<>();
-		
-		List<MdmDeviceInfoResponse> deviceInfoResponses = new ArrayList<MdmDeviceInfoResponse>();
+		MdmBioDevice expectedDevice = new MdmBioDevice();
+		expectedDevice.setCallbackId("http://127.0.0.1:4501");
+		expectedDevice.setCertification("1.0");
+		expectedDevice.setDeviceStatus("Ready");
+		expectedDevice.setPort(port);
+
+		List<MdmBioDevice> expectedList = Arrays.asList(expectedDevice);
+
+		List<MdmDeviceInfoResponse> deviceInfoResponses = new ArrayList<>();
+
 		MdmDeviceInfoResponse deviceInfoResponse = new MdmDeviceInfoResponse();
-		deviceInfoResponse.setDeviceInfo("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4g"
-				+ "RG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c");
-		io.mosip.registration.mdm.sbi.spec_1_0.dto.response.Error erro = new io.mosip.registration.mdm.sbi.spec_1_0.dto.response.Error();
-		erro.setErrorCode("100");
-		erro.setErrorInfo("Success");
-		deviceInfoResponse.setError(erro);
-		deviceInfoResponses.add(deviceInfoResponse);
-		
-		DeviceInfo deviceInfo = new DeviceInfo();
-		MdmSbiDeviceInfoWrapper sbiDeviceInfo = new MdmSbiDeviceInfoWrapper();
-		MdmSbiDeviceInfo deviceSubType = new MdmSbiDeviceInfo();
-		deviceSubType.setCallbackId("http://127.0.0.1:4501");
-		deviceSubType.setCertification("1.0");
-		deviceSubType.setDeviceStatus("Ready");
-		String[] deviceSubId = {"1","2","3"};
-		deviceSubType.setDeviceSubId(deviceSubId);
-		deviceSubType.setDigitalId("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG"
-				+ "9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c");
-		deviceSubType.setEnv("Staging");
-		deviceSubType.setFirmware("1.0");
-		deviceSubType.setPurpose("Registration");
-		deviceSubType.setSerialNo("1");
-		deviceSubType.setServiceVersion("1.0");
-		String[] specVersion = {"1.0"};
-		deviceSubType.setSpecVersion(specVersion);
-		
-		sbiDeviceInfo.setDeviceInfo(deviceSubType);
-		sbiDeviceInfo.setError(erro);
-		deviceInfo = sbiDeviceInfo;
-		
-		MdmBioDevice actualBioDevice = new MdmBioDevice();
-		SbiDigitalId actualDigitalId = new SbiDigitalId();
-		actualDigitalId.setDateTime("2021-04-29T05:56:29.909Z");
-		actualDigitalId.setDeviceProvider("MOSIP");
-		actualDigitalId.setDeviceProviderId("MOSIP.PROXY.SBI");
-		actualDigitalId.setDeviceSubType("Slap");
-		actualDigitalId.setMake("MOSIP");
-		actualDigitalId.setModel("SLAP01");
-		actualDigitalId.setSerialNo("1");
-		actualDigitalId.setType("Finger");
-		
-		actualBioDevice.setCallbackId(deviceSubType.getCallbackId());
-		actualBioDevice.setCertification(deviceSubType.getCertification());
-		actualBioDevice.setDeviceMake(actualDigitalId.getMake());
-		actualBioDevice.setDeviceModel(actualDigitalId.getModel());
-		actualBioDevice.setDeviceProviderId(actualDigitalId.getDeviceProviderId());
-		actualBioDevice.setDeviceProviderName(actualDigitalId.getDeviceProvider());
-		actualBioDevice.setDeviceStatus(deviceSubType.getDeviceStatus());
-		actualBioDevice.setDeviceSubId(deviceSubType.getDeviceSubId());
-		actualBioDevice.setDeviceSubType(actualDigitalId.getDeviceSubType());
-		actualBioDevice.setDeviceType(actualDigitalId.getType());
-		actualBioDevice.setFirmWare(deviceSubType.getFirmware());
-		actualBioDevice.setProviderId(actualDigitalId.getDeviceProviderId());
-		actualBioDevice.setProviderName(actualDigitalId.getDeviceProvider());
-		actualBioDevice.setPurpose(deviceSubType.getPurpose());
-		actualBioDevice.setSerialNumber(deviceSubType.getSerialNo());
-		actualBioDevice.setSerialVersion(deviceSubType.getServiceVersion());
-		actualBioDevice.setSpecVersion("1.0");
-		actualBioDevice.setTimestamp(actualDigitalId.getDateTime());
-		
-		when(mosipDeviceSpecificationHelper.getMapper()).thenReturn(mapper);
+		deviceInfoResponse.setDeviceInfo(inputDeviceInfo);
 
-		when(mosipDeviceSpecificationHelper
-							.getDeviceInfoDecoded(deviceInfoResponses.get(0).getDeviceInfo(), this.getClass())).thenReturn(deviceInfo);
-		MosipDeviceSpecification_SBI_1_0_ProviderImpl mockedObject = mock(MosipDeviceSpecification_SBI_1_0_ProviderImpl.class);
-		
-		assertNotNull(actualBioDevice);
-		actualBioDevice.setPort(port);
-		actualMdmBioDevices.add(actualBioDevice);
-		
-		when(mockedObject.getMdmDevices(inputDeviceInfo, port)).thenReturn(actualMdmBioDevices);
-		
-		assertEquals(excpectedMdmBioDevices, actualMdmBioDevices);
-		
+		io.mosip.registration.mdm.sbi.spec_1_0.dto.response.Error error =
+				new io.mosip.registration.mdm.sbi.spec_1_0.dto.response.Error();
+		error.setErrorCode("100");
+		error.setErrorInfo("Success");
+
+		deviceInfoResponse.setError(error);
+		deviceInfoResponses.add(deviceInfoResponse);
+
+		MdmSbiDeviceInfoWrapper wrapper = new MdmSbiDeviceInfoWrapper();
+		MdmSbiDeviceInfo deviceInfo = new MdmSbiDeviceInfo();
+
+		deviceInfo.setCallbackId("http://127.0.0.1:4501");
+		deviceInfo.setCertification("1.0");
+		deviceInfo.setDeviceStatus("Ready");
+
+		wrapper.setDeviceInfo(deviceInfo);
+		wrapper.setError(error);
+
+		ObjectMapper mapper = new ObjectMapper();
+
+		when(mosipDeviceSpecificationHelper.getMapper())
+				.thenReturn(mapper);
+
+		when(mosipDeviceSpecificationHelper.getDeviceInfoDecoded(
+				anyString(),
+				any()))
+				.thenReturn(wrapper);
+
+		List<MdmBioDevice> result =
+				mockObject.getMdmDevices(inputDeviceInfo, port);
+
+		assertNotNull(result);
 	}
-	
+
 	@Test
 	public void streamTest() throws Exception{
 		
@@ -231,15 +171,6 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 		deviceInfoResponses.add(mdmDeviceInfoResponse);
 
 		MdmSbiDeviceInfoWrapper deviceInfo = new MdmSbiDeviceInfoWrapper();
-		SbiDigitalId digitalId = new SbiDigitalId();
-		digitalId.setDeviceSubType("Slap");
-		digitalId.setType("Finger");
-		digitalId.setDateTime("2021-04-29T05:56:29.909Z");
-		digitalId.setDeviceProvider("MOSIP");
-		digitalId.setDeviceProviderId("MOSIP.PROXY.SBI");
-		digitalId.setModel("SLAP01");
-		digitalId.setMake("MOSIP");
-		digitalId.setSerialNo("1");
 
 		when(mosipDeviceSpecificationHelper.getMapper()).thenReturn(objectMapper);
 		when(objectMapper.readValue(eq(deviceInfoResponse), any(TypeReference.class))).thenReturn(deviceInfoResponses);
@@ -299,7 +230,9 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 				.thenReturn("[{\"deviceStatus\":\"Ready\"}]");
 		when(objectMapper.readValue(anyString(), any(TypeReference.class))).thenReturn(responses);
 
-		mockObject.isDeviceAvailable(bioDevice);
+		boolean result = mockObject.isDeviceAvailable(bioDevice);
+
+		assertFalse(result);
 	}
 
 	@Test

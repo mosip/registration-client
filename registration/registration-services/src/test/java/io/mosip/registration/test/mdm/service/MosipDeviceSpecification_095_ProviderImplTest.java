@@ -3,9 +3,11 @@ package io.mosip.registration.test.mdm.service;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.mdm.spec_0_9_5.service.impl.MosipDeviceSpecification_095_ProviderImpl;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.lang.reflect.Method;
@@ -15,6 +17,11 @@ public class MosipDeviceSpecification_095_ProviderImplTest {
 
     @InjectMocks
     private MosipDeviceSpecification_095_ProviderImpl mockObject;
+
+    @Before
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
 
     @Test
