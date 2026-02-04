@@ -93,6 +93,14 @@ public class MosipDeviceSpecificationFactoryTest {
                 methodName,
                 paramTypes
         );
+
+        if (method == null) {
+            throw new IllegalArgumentException(
+                    "Method not found: " + methodName +
+                            " with parameter types: " + Arrays.toString(paramTypes)
+            );
+        }
+
         ReflectionUtils.makeAccessible(method);
         return (T) ReflectionUtils.invokeMethod(method, target, args);
     }

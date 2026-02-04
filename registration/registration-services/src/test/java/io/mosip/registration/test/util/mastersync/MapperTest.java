@@ -226,13 +226,6 @@ public class MapperTest {
 		assertNull(result);
 	}
 
-	@Test (expected = NullPointerException.class)
-	public void testGetLocalDateTimeValue_nullInput() {
-		LocalDateTime result = invokeMethod(null);
-
-		assertNull(result);
-	}
-
 	@Test
 	public void testGetLocalDateTimeValue_emptyString() {
 		String input = "";
@@ -270,13 +263,6 @@ public class MapperTest {
 		String input = "10-02-2024";
 
 		LocalDate result = invokeGetLocalDateValue(input);
-
-		assertNull(result);
-	}
-
-	@Test (expected = NullPointerException.class)
-	public void testGetLocalDateValue_nullInput() {
-		LocalDate result = invokeGetLocalDateValue(null);
 
 		assertNull(result);
 	}

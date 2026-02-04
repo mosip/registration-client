@@ -35,9 +35,13 @@ public class SoftwareUpdateUtilTest extends SoftwareUpdateUtil {
     }
 
     private static void deleteDir(File dir) throws Exception {
-        if (dir.exists()) {
-            for (File f : dir.listFiles()) {
-                f.delete();
+        if (dir != null && dir.exists()) {
+            File[] files = dir.listFiles();
+
+            if (files != null) {
+                for (File f : files) {
+                    f.delete();
+                }
             }
             dir.delete();
         }
