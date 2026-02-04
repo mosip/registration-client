@@ -171,15 +171,6 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 		deviceInfoResponses.add(mdmDeviceInfoResponse);
 
 		MdmSbiDeviceInfoWrapper deviceInfo = new MdmSbiDeviceInfoWrapper();
-		SbiDigitalId digitalId = new SbiDigitalId();
-		digitalId.setDeviceSubType("Slap");
-		digitalId.setType("Finger");
-		digitalId.setDateTime("2021-04-29T05:56:29.909Z");
-		digitalId.setDeviceProvider("MOSIP");
-		digitalId.setDeviceProviderId("MOSIP.PROXY.SBI");
-		digitalId.setModel("SLAP01");
-		digitalId.setMake("MOSIP");
-		digitalId.setSerialNo("1");
 
 		when(mosipDeviceSpecificationHelper.getMapper()).thenReturn(objectMapper);
 		when(objectMapper.readValue(eq(deviceInfoResponse), any(TypeReference.class))).thenReturn(deviceInfoResponses);
@@ -241,7 +232,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 
 		boolean result =mockObject.isDeviceAvailable(bioDevice);
 
-		assertNotNull(result);
+		assertFalse(result);
 	}
 
 	@Test
