@@ -239,7 +239,9 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 				.thenReturn("[{\"deviceStatus\":\"Ready\"}]");
 		when(objectMapper.readValue(anyString(), any(TypeReference.class))).thenReturn(responses);
 
-		mockObject.isDeviceAvailable(bioDevice);
+		boolean result =mockObject.isDeviceAvailable(bioDevice);
+
+		assertNotNull(result);
 	}
 
 	@Test
@@ -503,6 +505,5 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 
 		assertNull(result);
 	}
-
 
 }
