@@ -3,12 +3,16 @@ package io.mosip.registration.test.util.mastersync;
 import static io.mosip.registration.util.mastersync.MapperUtils.map;
 import static io.mosip.registration.util.mastersync.MetaDataUtils.setCreateMetaData;
 import static io.mosip.registration.util.mastersync.MetaDataUtils.setUpdateMetaData;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
+import java.io.IOException;
+import java.lang.reflect.Method;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -33,6 +37,7 @@ import io.mosip.registration.entity.RegistrationCommonFields;
 import io.mosip.registration.entity.UserRole;
 import io.mosip.registration.entity.id.AppAuthenticationMethodId;
 import io.mosip.registration.util.mastersync.MapperUtils;
+import org.springframework.util.ReflectionUtils;
 
 /**
  * 
@@ -185,5 +190,169 @@ public class MapperTest {
 		dto.setCode("code");
 		return dto;
 	}
-	
+
+	private LocalDateTime invokeMethod(String value) {
+		Method method = ReflectionUtils.findMethod(
+				MapperUtils.class,
+				"getLocalDateTimeValue",
+				String.class
+		);
+		assertNotNull(method);
+		method.setAccessible(true);
+		return (LocalDateTime) ReflectionUtils.invokeMethod(method, null, value);
+	}
+
+	@Test
+	public void testGetLocalDateTimeValue_validInstant() {
+		String input = "2024-01-15T10:20:30Z";
+
+		LocalDateTime result = invokeMethod(input);
+
+		assertNotNull(result);
+		assertEquals(2024, result.getYear());
+		assertEquals(Month.JANUARY, result.getMonth());
+		assertEquals(15, result.getDayOfMonth());
+		assertEquals(10, result.getHour());
+		assertEquals(20, result.getMinute());
+		assertEquals(30, result.getSecond());
+	}
+
+	@Test
+	public void testGetLocalDateTimeValue_invalidFormat() {
+		String input = "invalid-date-time";
+
+		LocalDateTime result = invokeMethod(input);
+
+		assertNull(result);
+	}
+
+	@Test (expected = NullPointerException.class)
+	public void testGetLocalDateTimeValue_nullInput() {
+		LocalDateTime result = invokeMethod(null);
+
+		assertNull(result);
+	}
+
+	@Test
+	public void testGetLocalDateTimeValue_emptyString() {
+		String input = "";
+
+		LocalDateTime result = invokeMethod(input);
+
+		assertNull(result);
+	}
+
+	private LocalDate invokeGetLocalDateValue(String value) {
+		Method method = ReflectionUtils.findMethod(
+				MapperUtils.class,
+				"getLocalDateValue",
+				String.class
+		);
+		assertNotNull(method);
+		method.setAccessible(true);
+		return (LocalDate) ReflectionUtils.invokeMethod(method, null, value);
+	}
+
+	@Test
+	public void testGetLocalDateValue_validDate() {
+		String input = "2024-02-10";
+
+		LocalDate result = invokeGetLocalDateValue(input);
+
+		assertNotNull(result);
+		assertEquals(2024, result.getYear());
+		assertEquals(Month.FEBRUARY, result.getMonth());
+		assertEquals(10, result.getDayOfMonth());
+	}
+
+	@Test
+	public void testGetLocalDateValue_invalidFormat() {
+		String input = "10-02-2024";
+
+		LocalDate result = invokeGetLocalDateValue(input);
+
+		assertNull(result);
+	}
+
+	@Test (expected = NullPointerException.class)
+	public void testGetLocalDateValue_nullInput() {
+		LocalDate result = invokeGetLocalDateValue(null);
+
+		assertNull(result);
+	}
+
+	@Test
+	public void testGetLocalDateValue_emptyString() {
+		String input = "";
+
+		LocalDate result = invokeGetLocalDateValue(input);
+
+		assertNull(result);
+	}
+
+	static class TestDto {
+		private String name;
+		private int age;
+
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		public int getAge() {
+			return age;
+		}
+		public void setAge(int age) {
+			this.age = age;
+		}
+	}
+
+
+	@Test
+	public void testConvertJSONStringToDto_success() throws IOException {
+		String json = "{\"name\":\"User\",\"age\":28}";
+
+		TestDto dto = MapperUtils.convertJSONStringToDto(
+				json,
+				new TypeReference<>() {}
+		);
+
+		assertNotNull(dto);
+		assertEquals("User", dto.getName());
+		assertEquals(28, dto.getAge());
+	}
+
+	@Test(expected = IOException.class)
+	public void testConvertJSONStringToDto_invalidJson() throws IOException {
+		String invalidJson = "{name:User, age:28}";
+
+		MapperUtils.convertJSONStringToDto(
+				invalidJson,
+				new TypeReference<TestDto>() {}
+		);
+	}
+
+	@Test
+	public void testConvertObjectToJsonString_success() throws IOException {
+		TestDto dto = new TestDto();
+		dto.setName("MOSIP");
+		dto.setAge(10);
+
+		String json = MapperUtils.convertObjectToJsonString(dto);
+
+		assertNotNull(json);
+		assertTrue(json.contains("\"name\":\"MOSIP\""));
+		assertTrue(json.contains("\"age\":10"));
+	}
+
+	@Test(expected = IOException.class)
+	public void testConvertObjectToJsonString_invalidObject() throws IOException {
+		Object invalidObject = new Object() {
+			Object self = this;
+		};
+
+		MapperUtils.convertObjectToJsonString(invalidObject);
+	}
+
 }
