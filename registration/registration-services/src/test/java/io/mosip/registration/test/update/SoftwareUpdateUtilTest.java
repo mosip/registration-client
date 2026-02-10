@@ -48,7 +48,7 @@ public class SoftwareUpdateUtilTest extends SoftwareUpdateUtil {
     }
 
     @Test
-    public void deleteUnknownJars_unknownFilePresent() throws Exception {
+    public void deleteUnknownJars_unknownFilePresent_returnsTrueAndCreatesMarker() throws Exception {
         File unknownJar = new File(LIB_DIR, "unknown.jar");
         Files.write(unknownJar.toPath(), "test".getBytes());
 
@@ -86,7 +86,7 @@ public class SoftwareUpdateUtilTest extends SoftwareUpdateUtil {
     }
 
     @Test
-    public void validateJarChecksum_nullAttributes() {
+    public void validateJarChecksum_nullAttributes_returnsFalse() {
         assertFalse(softwareUpdateUtil.validateJarChecksum(new File("dummy"), null));
     }
 
@@ -109,7 +109,7 @@ public class SoftwareUpdateUtilTest extends SoftwareUpdateUtil {
     }
 
     @Test(expected = RegBaseCheckedException.class)
-    public void download_stream_invalidUrl() throws Exception {
+    public void download_stream_invalidUrl_throwsException() throws Exception {
         softwareUpdateUtil.download("http://invalid.invalid/file");
     }
 
@@ -139,4 +139,3 @@ public class SoftwareUpdateUtilTest extends SoftwareUpdateUtil {
         assertFalse(temp.exists());
     }
 }
-

@@ -61,31 +61,31 @@ public class MapperTest {
 	}
 
 	@Test(expected = NullPointerException.class)
-	public void testMapSourceNull() {
+	public void map_sourceNull_throwsNullPointerException() {
 		map(null, new Language());
 	}
 	
 	@Test(expected = NullPointerException.class)
-	public void testMapMetaDataDestinationNull() {
+	public void setCreateMetaData_destinationNull_throwsNullPointerException() {
 		setCreateMetaData(new LanguageDto(), null);
 	}
 
 	@Test
-	public void testMapSource() {
+	public void map_languageDto_returnsEntityNotNull() {
 		LanguageDto dto = getLanguageDto();
 		assertNotNull(map(dto, new Language()));
 
 	}
 
 	@Test
-	public void testMapSourceDTO() {
+	public void map_userRoleDto_returnsEntityNotNull() {
 		UserRoleDto userRoleDto = new UserRoleDto();
 		userRoleDto.setRole("role");
 		assertNotNull(map(userRoleDto, new UserRole()));
 	}
 
 	@Test
-	public void testMapSourceDTOGenerics() {
+	public void map_userRoleDto_generics_returnsEntityNotNull() {
 		UserRoleDto userRoleDto = new UserRoleDto();
 		userRoleDto.setRole("role");
 		RegistrationCommonFields userRoleObj = new UserRole();
@@ -94,7 +94,7 @@ public class MapperTest {
 	}
 
 	@Test
-	public void testMapSourceEmbededId() {
+	public void map_embeddedId_returnsDtoNotNull() {
 		AppAuthenticationMethod appAuth = new AppAuthenticationMethod();
 		AppAuthenticationMethodId appAuthId = new AppAuthenticationMethodId();
 		appAuthId.setAppId("appId");
@@ -106,7 +106,7 @@ public class MapperTest {
 	}
 
 	@Test
-	public void testMapJSONObjectToEntity() throws Exception {
+	public void mapJSONObjectToEntity_validJson_returnsEntityNotNull() throws Exception {
 		JSONObject jsonObject = getJsonObject();
 		AppAuthenticationMethod appAuthenticationMethod = new AppAuthenticationMethod();
 		Class<?> appAuthenticationMethodClass = appAuthenticationMethod.getClass();
@@ -114,7 +114,7 @@ public class MapperTest {
 	}
 
 	@Test
-	public void testMapJSONObjectToEntityFields() throws Exception {
+	public void mapJSONObjectToEntity_fields_returnsEntityNotNull() throws Exception {
 		JSONObject jsonObject = getJsonObject();
 		AppAuthenticationMethod appAuthenticationMethod = new AppAuthenticationMethod();
 		Class<?> appAuthenticationMethodClass = appAuthenticationMethod.getClass();
@@ -122,7 +122,7 @@ public class MapperTest {
 	}
 
 	@Test
-	public void testMapJSONObjectToEntitySqltimeStamp() throws Exception {
+	public void mapJSONObjectToEntity_sqlTimestamp_returnsEntityNotNull() throws Exception {
 		JSONObject jsonObject = getSqlTimeJsonObject();
 		GlobalParam globalParam = new GlobalParam();
 		Class<?> globalParamClass = globalParam.getClass();
@@ -131,7 +131,7 @@ public class MapperTest {
 
 	@Ignore
 	@Test
-	public void testMapJSONObjectToEntityLocaltimeStamp() throws Exception {
+	public void mapJSONObjectToEntity_localTimestamp_returnsEntityNotNull() throws Exception {
 		JSONObject jsonObject = getLocalTimeJsonObject();
 		MachineMaster machineMaster = new MachineMaster();
 		Class<?> machineMasterClass = machineMaster.getClass();
@@ -139,7 +139,7 @@ public class MapperTest {
 	}
 
 	@Test
-	public void testSetUpdateMetaData() {
+	public void setUpdateMetaData_withDto_updatesEntityFields() {
 		LanguageDto dto = new LanguageDto();
 		Language entity = new Language();
 
@@ -196,14 +196,14 @@ public class MapperTest {
 				MapperUtils.class,
 				"getLocalDateTimeValue",
 				String.class
-		);
+			);
 		assertNotNull(method);
 		method.setAccessible(true);
 		return (LocalDateTime) ReflectionUtils.invokeMethod(method, null, value);
 	}
 
 	@Test
-	public void testGetLocalDateTimeValue_validInstant() {
+	public void getLocalDateTimeValue_validInstant_returnsLocalDateTime() {
 		String input = "2024-01-15T10:20:30Z";
 
 		LocalDateTime result = invokeMethod(input);
@@ -218,7 +218,7 @@ public class MapperTest {
 	}
 
 	@Test
-	public void testGetLocalDateTimeValue_invalidFormat() {
+	public void getLocalDateTimeValue_invalidFormat_returnsNull() {
 		String input = "invalid-date-time";
 
 		LocalDateTime result = invokeMethod(input);
@@ -227,7 +227,7 @@ public class MapperTest {
 	}
 
 	@Test
-	public void testGetLocalDateTimeValue_emptyString() {
+	public void getLocalDateTimeValue_emptyString_returnsNull() {
 		String input = "";
 
 		LocalDateTime result = invokeMethod(input);
@@ -240,14 +240,14 @@ public class MapperTest {
 				MapperUtils.class,
 				"getLocalDateValue",
 				String.class
-		);
+			);
 		assertNotNull(method);
 		method.setAccessible(true);
 		return (LocalDate) ReflectionUtils.invokeMethod(method, null, value);
 	}
 
 	@Test
-	public void testGetLocalDateValue_validDate() {
+	public void getLocalDateValue_validDate_returnsLocalDate() {
 		String input = "2024-02-10";
 
 		LocalDate result = invokeGetLocalDateValue(input);
@@ -259,7 +259,7 @@ public class MapperTest {
 	}
 
 	@Test
-	public void testGetLocalDateValue_invalidFormat() {
+	public void getLocalDateValue_invalidFormat_returnsNull() {
 		String input = "10-02-2024";
 
 		LocalDate result = invokeGetLocalDateValue(input);
@@ -268,7 +268,7 @@ public class MapperTest {
 	}
 
 	@Test
-	public void testGetLocalDateValue_emptyString() {
+	public void getLocalDateValue_emptyString_returnsNull() {
 		String input = "";
 
 		LocalDate result = invokeGetLocalDateValue(input);
@@ -296,13 +296,13 @@ public class MapperTest {
 
 
 	@Test
-	public void testConvertJSONStringToDto_success() throws IOException {
+	public void convertJSONStringToDto_validJson_returnsDto() throws IOException {
 		String json = "{\"name\":\"User\",\"age\":28}";
 
 		TestDto dto = MapperUtils.convertJSONStringToDto(
 				json,
 				new TypeReference<>() {}
-		);
+			);
 
 		assertNotNull(dto);
 		assertEquals("User", dto.getName());
@@ -310,17 +310,17 @@ public class MapperTest {
 	}
 
 	@Test(expected = IOException.class)
-	public void testConvertJSONStringToDto_invalidJson() throws IOException {
+	public void convertJSONStringToDto_invalidJson_throwsIOException() throws IOException {
 		String invalidJson = "{name:User, age:28}";
 
 		MapperUtils.convertJSONStringToDto(
 				invalidJson,
 				new TypeReference<TestDto>() {}
-		);
+			);
 	}
 
 	@Test
-	public void testConvertObjectToJsonString_success() throws IOException {
+	public void convertObjectToJsonString_validDto_returnsJson() throws IOException {
 		TestDto dto = new TestDto();
 		dto.setName("MOSIP");
 		dto.setAge(10);
@@ -333,7 +333,7 @@ public class MapperTest {
 	}
 
 	@Test(expected = IOException.class)
-	public void testConvertObjectToJsonString_invalidObject() throws IOException {
+	public void convertObjectToJsonString_invalidObject_throwsIOException() throws IOException {
 		Object invalidObject = new Object() {
 			Object self = this;
 		};

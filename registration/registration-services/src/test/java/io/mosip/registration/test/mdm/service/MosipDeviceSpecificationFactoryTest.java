@@ -54,17 +54,17 @@ public class MosipDeviceSpecificationFactoryTest {
     }
 
     @Test
-    public void testGetDeviceInfoByModality_DeviceNotFound() {
+    public void getDeviceInfoByModality_unknown_throwsRegBaseCheckedException() {
         assertThrows(RegBaseCheckedException.class, () -> factory.getDeviceInfoByModality("unknown"));
     }
 
     @Test
-    public void testIsDeviceAvailable_DeviceNotFound() {
+    public void isDeviceAvailable_null_throwsRegBaseCheckedException() {
         assertThrows(RegBaseCheckedException.class, () -> factory.isDeviceAvailable((MdmBioDevice) null));
     }
 
     @Test
-    public void testModifySelectedDeviceInfo() {
+    public void modifySelectedDeviceInfo_keySerial_updatesDeviceRegistry() {
         MdmBioDevice bioDevice = new MdmBioDevice();
         bioDevice.setSerialNumber("12345");
         List<MdmBioDevice> devices = new ArrayList<>();
@@ -77,7 +77,7 @@ public class MosipDeviceSpecificationFactoryTest {
     }
 
     @Test
-    public void testAwaitTerminationAfterShutdown() {
+    public void awaitTerminationAfterShutdown_executor_completes() {
         factory.awaitTerminationAfterShutdown(mock(ExecutorService.class));
     }
 
@@ -106,13 +106,13 @@ public class MosipDeviceSpecificationFactoryTest {
     }
 
     @Test
-    public void testFingerByFingerWord_getDeviceType() {
+    public void getDeviceType_fingerprint_returnsFinger() {
         String result = invokePrivate(factory, "getDeviceType", "FINGERPRINT");
         assertEquals(SingleType.FINGER.value(), result);
     }
 
     @Test
-    public void testFingerByFir_getDeviceType() {
+    public void getDeviceType_firDevice_returnsFinger() {
         assertEquals(
                 SingleType.FINGER.value(),
                 invokePrivate(factory, "getDeviceType", "fir-device")
@@ -120,7 +120,7 @@ public class MosipDeviceSpecificationFactoryTest {
     }
 
     @Test
-    public void testIrisByIris_getDeviceType() {
+    public void getDeviceType_irisScanner_returnsIris() {
         assertEquals(
                 SingleType.IRIS.value(),
                 invokePrivate(factory, "getDeviceType", "IRIS-SCANNER")
@@ -128,7 +128,7 @@ public class MosipDeviceSpecificationFactoryTest {
     }
 
     @Test
-    public void testIrisByIir_getDeviceType() {
+    public void getDeviceType_iirDevice_returnsIris() {
         assertEquals(
                 SingleType.IRIS.value(),
                 invokePrivate(factory, "getDeviceType", "iir-device")
@@ -136,7 +136,7 @@ public class MosipDeviceSpecificationFactoryTest {
     }
 
     @Test
-    public void testFace_getDeviceType() {
+    public void getDeviceType_faceCam_returnsFace() {
         assertEquals(
                 SingleType.FACE.value(),
                 invokePrivate(factory, "getDeviceType", "FACE-CAM")
@@ -144,90 +144,90 @@ public class MosipDeviceSpecificationFactoryTest {
     }
 
     @Test
-    public void testUnknown_getDeviceType() {
+    public void getDeviceType_unknown_returnsNull() {
         assertNull(invokePrivate(factory, "getDeviceType", "UNKNOWN"));
     }
 
     @Test
-    public void testSlabBySlabWord_getDeviceSubType() {
+    public void getDeviceSubType_slabScanner_returnsSlab() {
         String result = invokePrivate(factory, "getDeviceSubType", "SLAB-SCANNER");
         assertEquals("slab", result);
     }
 
     @Test
-    public void testSlabBySlapWord_getDeviceSubType() {
+    public void getDeviceSubType_slapDevice_returnsSlab() {
         String result = invokePrivate(factory, "getDeviceSubType", "SLAP-DEVICE");
         assertEquals("slab", result);
     }
 
     @Test
-    public void testSingle_getDeviceSubType() {
+    public void getDeviceSubType_singleFinger_returnsSingle() {
         String result = invokePrivate(factory, "getDeviceSubType", "SINGLE-FINGER");
         assertEquals("single", result);
     }
 
     @Test
-    public void testDouble_getDeviceSubType() {
+    public void getDeviceSubType_doubleFinger_returnsDouble() {
         String result = invokePrivate(factory, "getDeviceSubType", "DOUBLE-FINGER");
         assertEquals("double", result);
     }
 
     @Test
-    public void testFace_getDeviceSubType() {
+    public void getDeviceSubType_faceCamera_returnsFace() {
         String result = invokePrivate(factory, "getDeviceSubType", "FACE-CAMERA");
         assertEquals("face", result);
     }
 
     @Test
-    public void testUnknownSubType_getDeviceSubType() {
+    public void getDeviceSubType_unknown_returnsNull() {
         String result = invokePrivate(factory, "getDeviceSubType", "UNKNOWN");
         assertNull(result);
     }
 
     @Test
-    public void testEqualVersions() {
+    public void getLatestVersion_equal_returnsFirstVersion() {
         String result = invokePrivate(factory, "getLatestVersion", "1.2.3", "1.2.3");
         assertEquals("1.2.3", result);
     }
 
     @Test
-    public void testVersion1GreaterThanVersion2() {
+    public void getLatestVersion_version1Greater_returnsVersion1() {
         String result = invokePrivate(factory, "getLatestVersion", "2.0.0", "1.9.9");
         assertEquals("2.0.0", result);
     }
 
     @Test
-    public void testVersion2GreaterThanVersion1() {
+    public void getLatestVersion_version2Greater_returnsVersion2() {
         String result = invokePrivate(factory, "getLatestVersion", "1.2.3", "1.3.0");
         assertEquals("1.3.0", result);
     }
 
     @Test
-    public void testMultiDigitVersions() {
+    public void getLatestVersion_multiDigit_correctComparison() {
         String result = invokePrivate(factory, "getLatestVersion", "1.12.3", "1.2.10");
         assertEquals("1.12.3", result);
     }
 
     @Test
-    public void testSingleNumberVersions() {
+    public void getLatestVersion_singleNumber_returnsGreater() {
         String result = invokePrivate(factory, "getLatestVersion", "2", "1");
         assertEquals("2", result);
     }
 
     @Test
-    public void testDifferentLengthVersions() {
+    public void getLatestVersion_differentLength_returnsLonger() {
         String result = invokePrivate(factory, "getLatestVersion", "1.0.0", "1.0");
         assertEquals("1.0.0", result);
     }
 
     @Test
-    public void testVersionWithTrailingZeros() {
+    public void getLatestVersion_withTrailingZeros_returnsCorrectLatest() {
         String result = invokePrivate(factory, "getLatestVersion", "1.0.0", "1.0.1");
         assertEquals("1.0.1", result);
     }
 
     @Test
-    public void testGetSpecVersionByModality_deviceExists() throws Exception {
+    public void getSpecVersionByModality_deviceExists_returnsSpecVersion() throws Exception {
         String modality = "FINGERPRINT";
         MdmBioDevice device = mock(MdmBioDevice.class);
         when(device.getSpecVersion()).thenReturn("v1.2.3");
@@ -241,7 +241,7 @@ public class MosipDeviceSpecificationFactoryTest {
     }
 
     @Test
-    public void testGetSpecVersionByModality_deviceNotFound() throws Exception {
+    public void getSpecVersionByModality_deviceNotFound_throwsRegBaseCheckedException() throws Exception {
         String modality = "UNKNOWN";
 
         MosipDeviceSpecificationFactory spyFactory = spy(factory);
@@ -257,7 +257,7 @@ public class MosipDeviceSpecificationFactoryTest {
     }
 
     @Test
-    public void testGetSpecVersionByModality_deviceNotFound_throwsException() {
+    public void getSpecVersionByModality_deviceNotFound_factoryThrowsRegBaseCheckedException() {
         String modality = "UNKNOWNMOD";
 
         try {

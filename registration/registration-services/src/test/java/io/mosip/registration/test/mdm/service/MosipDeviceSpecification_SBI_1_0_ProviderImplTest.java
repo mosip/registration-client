@@ -70,7 +70,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void getMdmDevicesTest() throws Exception{
+	public void getMdmDevices_withWrapper_returnsDevices() throws Exception{
 
 		int port = 4051;
 		String inputDeviceInfo = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
@@ -117,14 +117,14 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 				.thenReturn(wrapper);
 
 		List<MdmBioDevice> result =
-				mockObject.getMdmDevices(inputDeviceInfo, port);
+			mockObject.getMdmDevices(inputDeviceInfo, port);
 
 		assertNotNull(result);
 	}
 
 	@Test
-	public void streamTest() throws Exception{
-		
+	public void stream_whenMocked_returnsMockInputStream() throws Exception{
+
 		int port = 4501;
 		String str = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAoHCBUVFRgWFRISERgYHBUYGBIS";
 		byte[] byteData = new byte[str.length()];
@@ -160,7 +160,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testGetMdmDevices() throws Exception {
+	public void getMdmDevices_withJson_returnsDevices() throws Exception {
 		String deviceInfoResponse = "[{\"deviceInfo\":\"encodedDeviceInfo\"}]";
 		int port = 4501;
 
@@ -182,7 +182,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test (expected = RegBaseCheckedException.class)
-	public void testStream_withException() throws Exception {
+	public void stream_withHelper_returnsJpeg_throwsRegBaseCheckedException() throws Exception {
 		MdmBioDevice bioDevice = new MdmBioDevice();
 		bioDevice.setPort(4501);
 		bioDevice.setSerialNumber("12345");
@@ -194,7 +194,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testRCapture() throws Exception {
+	public void rCapture_withEmptyBiometrics_returnsEmptyList() throws Exception {
 		MdmBioDevice bioDevice = new MdmBioDevice();
 		bioDevice.setPort(4501);
 		bioDevice.setSerialNumber("12345");
@@ -212,7 +212,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testIsDeviceAvailable() throws Exception {
+	public void isDeviceAvailable_withReadyResponse_returnsFalse() throws Exception {
 		MdmBioDevice bioDevice = new MdmBioDevice();
 		bioDevice.setPort(4501);
 		bioDevice.setDeviceType("Finger");
@@ -236,7 +236,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testGetRCaptureRequest() throws Exception {
+	public void getRCaptureRequest_withValidInput_returnsRequest() throws Exception {
 		MdmBioDevice bioDevice = new MdmBioDevice();
 		bioDevice.setDeviceType("Finger");
 		bioDevice.setSerialNumber("12345");
@@ -253,7 +253,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testIsDeviceAvailable_NoDevices() throws Exception {
+	public void isDeviceAvailable_withNoDevices_returnsFalse() throws Exception {
 		MdmBioDevice bioDevice = new MdmBioDevice();
 		bioDevice.setPort(4501);
 		bioDevice.setDeviceType("Finger");
@@ -267,7 +267,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testGetDevicCode_Fingerprint() throws Exception {
+	public void getDevicCode_fingerprint_returnsFIR() throws Exception {
 
 		String result = Whitebox.invokeMethod(
 				MosipDeviceSpecification_SBI_1_0_ProviderImpl.class,
@@ -279,7 +279,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testGetDevicCode_Iris() throws Exception {
+	public void getDevicCode_iris_returnsIIR() throws Exception {
 
 		String result = Whitebox.invokeMethod(
 				MosipDeviceSpecification_SBI_1_0_ProviderImpl.class,
@@ -291,7 +291,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testGetDevicCode_Default() throws Exception {
+	public void getDevicCode_default_returnsFACE() throws Exception {
 
 		String result = Whitebox.invokeMethod(
 				MosipDeviceSpecification_SBI_1_0_ProviderImpl.class,
@@ -303,7 +303,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testGetSbiDigitalId_Success() throws Exception {
+	public void getSbiDigitalId_withValidToken_returnsSbiDigitalId() throws Exception {
 
 		String digitalId = "dummy.jwt.token";
 		String payload = "encodedPayload";
@@ -328,7 +328,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 
 		Mockito.doNothing()
 				.when(mosipDeviceSpecificationHelper)
-				.validateJWTResponse(anyString(), anyString());
+					.validateJWTResponse(anyString(), anyString());
 
 		SbiDigitalId result = Whitebox.invokeMethod(
 				mockObject,
@@ -341,7 +341,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testGetExceptions_NullInput() throws Exception {
+	public void getExceptions_nullInput_returnsNull() throws Exception {
 
 		String[] result = Whitebox.invokeMethod(
 				mockObject,
@@ -353,7 +353,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testGetExceptions_SingleValue() throws Exception {
+	public void getExceptions_singleValue_returnsTransformed() throws Exception {
 
 		PowerMockito.mockStatic(io.mosip.registration.mdm.dto.Biometric.class);
 
@@ -361,8 +361,8 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 
 		PowerMockito.when(
 				io.mosip.registration.mdm.dto.Biometric
-						.getmdmRequestAttributeName(eq("LEFT_THUMB"), anyString())
-		).thenReturn("FINGER_LEFT_THUMB");
+					.getmdmRequestAttributeName(eq("LEFT_THUMB"), anyString())
+			).thenReturn("FINGER_LEFT_THUMB");
 
 		String[] result = Whitebox.invokeMethod(
 				mockObject,
@@ -376,7 +376,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testGetExceptions_MultipleValues() throws Exception {
+	public void getExceptions_multipleValues_returnsTransformed() throws Exception {
 
 		PowerMockito.mockStatic(io.mosip.registration.mdm.dto.Biometric.class);
 
@@ -384,13 +384,13 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 
 		PowerMockito.when(
 				io.mosip.registration.mdm.dto.Biometric
-						.getmdmRequestAttributeName(eq("LEFT"), anyString())
-		).thenReturn("FINGER_LEFT");
+					.getmdmRequestAttributeName(eq("LEFT"), anyString())
+			).thenReturn("FINGER_LEFT");
 
 		PowerMockito.when(
 				io.mosip.registration.mdm.dto.Biometric
-						.getmdmRequestAttributeName(eq("RIGHT"), anyString())
-		).thenReturn("FINGER_RIGHT");
+					.getmdmRequestAttributeName(eq("RIGHT"), anyString())
+			).thenReturn("FINGER_RIGHT");
 
 		String[] result = Whitebox.invokeMethod(
 				mockObject,
@@ -404,12 +404,12 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testGetSpecVersion() {
+	public void getSpecVersion_called_returns1_0() {
 		assertEquals("1.0", mockObject.getSpecVersion());
 	}
 
 	@Test
-	public void testGetDeviceType() throws Exception {
+	public void getDeviceType_called_returnsSame() throws Exception {
 		String result = Whitebox.invokeMethod(
 				mockObject,
 				"getDeviceType",
@@ -420,27 +420,27 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testGetDeviceSubId_Left() throws Exception {
+	public void getDeviceSubId_left_returns1() throws Exception {
 		assertEquals("1", Whitebox.invokeMethod(mockObject, "getDeviceSubId", "left_index"));
 	}
 
 	@Test
-	public void testGetDeviceSubId_Right() throws Exception {
+	public void getDeviceSubId_right_returns2() throws Exception {
 		assertEquals("2", Whitebox.invokeMethod(mockObject, "getDeviceSubId", "right_thumb"));
 	}
 
 	@Test
-	public void testGetDeviceSubId_Double() throws Exception {
+	public void getDeviceSubId_double_returns3() throws Exception {
 		assertEquals("3", Whitebox.invokeMethod(mockObject, "getDeviceSubId", "double_finger"));
 	}
 
 	@Test
-	public void testGetDeviceSubId_Default() throws Exception {
+	public void getDeviceSubId_default_returns0() throws Exception {
 		assertEquals("0", Whitebox.invokeMethod(mockObject, "getDeviceSubId", "face"));
 	}
 
 	@Test
-	public void testGetRCaptureRequest_BioDeviceNull() throws Exception {
+	public void getRCaptureRequest_bioDeviceNull_returnsNull() throws Exception {
 		MDMRequestDto mdmRequestDto = new MDMRequestDto("FINGERPRINT_SLAP_RIGHT", new String[] {}, "Registration", "dev", 5000, 1, 22);
 
 		SbiRCaptureRequestDTO result = Whitebox.invokeMethod(
@@ -454,7 +454,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testGetRCaptureRequest_Valid() throws Exception {
+	public void getRCaptureRequest_validInput_returnsRequestWithEnv() throws Exception {
 		MdmBioDevice bioDevice = new MdmBioDevice();
 		bioDevice.setDeviceType("Finger");
 		bioDevice.setSerialNumber("123");
@@ -484,7 +484,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void testGetBioDevice_DeviceInfoNull() throws Exception {
+	public void getBioDevice_withNullDeviceInfo_returnsNull() throws Exception {
 		MdmSbiDeviceInfoWrapper wrapper = new MdmSbiDeviceInfoWrapper();
 		wrapper.deviceInfo = null;
 
