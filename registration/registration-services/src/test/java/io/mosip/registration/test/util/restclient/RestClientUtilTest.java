@@ -63,7 +63,7 @@ public class RestClientUtilTest {
     }
 
     @Test
-    public void invokeURL_returnsBodyAndHeaders() throws Exception {
+    public void invokeURL_withGet_returnsBodyAndHeaders() throws Exception {
         RequestHTTPDTO dto = new RequestHTTPDTO();
         dto.setUri(new URI("https://example.com/api"));
         dto.setHttpMethod(HttpMethod.GET);
@@ -81,7 +81,7 @@ public class RestClientUtilTest {
     }
 
     @Test
-    public void invokeForToken_buildsEntityAndReturnsMap() throws Exception {
+    public void invokeForToken_withPost_returnsBodyMap() throws Exception {
         RequestHTTPDTO dto = new RequestHTTPDTO();
         dto.setUri(new URI("https://example.com/token"));
         dto.setHttpMethod(HttpMethod.POST);
@@ -111,14 +111,14 @@ public class RestClientUtilTest {
     }
 
     @Test
-    public void isConnectedToSyncServer_success2xx() throws Exception {
+    public void isConnectedToSyncServer_when2xx_returnsTrue() throws Exception {
         ResponseEntity<String> response = new ResponseEntity<>("pong", HttpStatus.OK);
         when(plainRestTemplate.getForEntity(any(URI.class), eq(String.class))).thenReturn(response);
         assertTrue(restClientUtil.isConnectedToSyncServer("https://example.com/health"));
     }
 
     @Test
-    public void downloadFile_savesSignatureAndSupportsResume() throws Exception {
+    public void downloadFile_whenResumable_savesSignatureAndSupportsResume() throws Exception {
         File tempFile = File.createTempFile("restclient", ".bin");
         if (tempFile.exists()) {
             tempFile.delete();
@@ -176,7 +176,7 @@ public class RestClientUtilTest {
     }
 
     @Test
-    public void getHttpRequestFactory_appliesTimeouts() {
+    public void getHttpRequestFactory_appliesTimeouts_returnsFactory() {
         SimpleClientHttpRequestFactory factory = restClientUtil.getHttpRequestFactory();
         assertNotNull(factory);
     }

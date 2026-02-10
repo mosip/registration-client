@@ -25,7 +25,7 @@ public class MosipDeviceSpecification_095_ProviderImplTest {
 
 
     @Test
-    public void testGetExceptions_withNullInput() throws Exception {
+    public void getExceptions_nullInput_returnsNull() throws Exception {
         Method method = MosipDeviceSpecification_095_ProviderImpl.class
                 .getDeclaredMethod("getExceptions", String[].class);
         method.setAccessible(true);
@@ -36,7 +36,7 @@ public class MosipDeviceSpecification_095_ProviderImplTest {
     }
 
     @Test
-    public void testGetExceptions_withEmptyArray() throws Exception {
+    public void getExceptions_emptyArray_returnsEmptyArray() throws Exception {
         Method method = MosipDeviceSpecification_095_ProviderImpl.class
                 .getDeclaredMethod("getExceptions", String[].class);
         method.setAccessible(true);
@@ -49,7 +49,7 @@ public class MosipDeviceSpecification_095_ProviderImplTest {
     }
 
     @Test
-    public void testGetExceptions_withValidValues() throws Exception {
+    public void getExceptions_validValues_returnsTransformedValues() throws Exception {
         Method method = MosipDeviceSpecification_095_ProviderImpl.class
                 .getDeclaredMethod("getExceptions", String[].class);
         method.setAccessible(true);
@@ -73,43 +73,43 @@ public class MosipDeviceSpecification_095_ProviderImplTest {
     }
 
     @Test
-    public void testGetDeviceSubId_Left() throws Exception {
+    public void getDeviceSubId_leftIndex_returns1() throws Exception {
         String result = invokeGetDeviceSubId("LEFT_INDEX");
         Assert.assertEquals("1", result);
     }
 
     @Test
-    public void testGetDeviceSubId_Right() throws Exception {
+    public void getDeviceSubId_rightIndex_returns2() throws Exception {
         String result = invokeGetDeviceSubId("RIGHT_INDEX");
         Assert.assertEquals("2", result);
     }
 
     @Test
-    public void testGetDeviceSubId_Double() throws Exception {
+    public void getDeviceSubId_irisDouble_returns3() throws Exception {
         String result = invokeGetDeviceSubId("IRIS_DOUBLE");
         Assert.assertEquals("3", result);
     }
 
     @Test
-    public void testGetDeviceSubId_Thumbs() throws Exception {
+    public void getDeviceSubId_thumbs_returns3() throws Exception {
         String result = invokeGetDeviceSubId("FINGERPRINT_THUMBS");
         Assert.assertEquals("3", result);
     }
 
     @Test
-    public void testGetDeviceSubId_Two() throws Exception {
+    public void getDeviceSubId_twoFingers_returns3() throws Exception {
         String result = invokeGetDeviceSubId("TWO_FINGERS");
         Assert.assertEquals("3", result);
     }
 
     @Test
-    public void testGetDeviceSubId_Default() throws Exception {
+    public void getDeviceSubId_default_returns0() throws Exception {
         String result = invokeGetDeviceSubId("FACE");
         Assert.assertEquals("0", result);
     }
 
     @Test
-    public void testGetDeviceSubId_CaseInsensitive() throws Exception {
+    public void getDeviceSubId_caseInsensitive_returns1() throws Exception {
         String result = invokeGetDeviceSubId("LeFt_ThUmB");
         Assert.assertEquals("1", result);
     }
@@ -122,43 +122,43 @@ public class MosipDeviceSpecification_095_ProviderImplTest {
     }
 
     @Test
-    public void testGetDefaultCount_NullModality() throws Exception {
+    public void getDefaultCount_nullModality_returns1() throws Exception {
         int result = invokeGetDefaultCount(null);
         Assert.assertEquals(1, result);
     }
 
     @Test
-    public void testGetDefaultCount_FaceFullFace() throws Exception {
+    public void getDefaultCount_faceFullFace_returns1() throws Exception {
         int result = invokeGetDefaultCount(RegistrationConstants.FACE_FULLFACE);
         Assert.assertEquals(1, result);
     }
 
     @Test
-    public void testGetDefaultCount_IrisDouble() throws Exception {
+    public void getDefaultCount_irisDouble_returns2() throws Exception {
         int result = invokeGetDefaultCount(RegistrationConstants.IRIS_DOUBLE);
         Assert.assertEquals(2, result);
     }
 
     @Test
-    public void testGetDefaultCount_FingerprintSlabRight() throws Exception {
+    public void getDefaultCount_fingerprintSlabRight_returns4() throws Exception {
         int result = invokeGetDefaultCount(RegistrationConstants.FINGERPRINT_SLAB_RIGHT);
         Assert.assertEquals(4, result);
     }
 
     @Test
-    public void testGetDefaultCount_FingerprintSlabLeft() throws Exception {
+    public void getDefaultCount_fingerprintSlabLeft_returns4() throws Exception {
         int result = invokeGetDefaultCount(RegistrationConstants.FINGERPRINT_SLAB_LEFT);
         Assert.assertEquals(4, result);
     }
 
     @Test
-    public void testGetDefaultCount_FingerprintSlabThumbs() throws Exception {
+    public void getDefaultCount_fingerprintSlabThumbs_returns2() throws Exception {
         int result = invokeGetDefaultCount(RegistrationConstants.FINGERPRINT_SLAB_THUMBS);
         Assert.assertEquals(2, result);
     }
 
     @Test
-    public void testGetDefaultCount_UnknownModality() throws Exception {
+    public void getDefaultCount_unknownModality_returns1() throws Exception {
         int result = invokeGetDefaultCount("UNKNOWN_MODALITY");
         Assert.assertEquals(1, result);
     }

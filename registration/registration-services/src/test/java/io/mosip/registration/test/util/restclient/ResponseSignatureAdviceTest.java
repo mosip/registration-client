@@ -370,7 +370,7 @@ public class ResponseSignatureAdviceTest {
 	 */
 
     @Test(expected = RegBaseCheckedException.class)
-    public void shouldSkipValidationWhenSignRequiredIsNull() throws Exception {
+    public void shouldSkipValidation_signRequiredNull_throwsRegBaseCheckedException() throws Exception {
         RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
         requestHTTPDTO.setUri(new URI("/v1/mosip/test"));
         Object[] args = new Object[] { requestHTTPDTO };
@@ -383,10 +383,10 @@ public class ResponseSignatureAdviceTest {
         linkedMap.put(RegistrationConstants.REST_RESPONSE_HEADERS, new HttpHeaders());
 
         responseSignatureAdvice.responseSignatureValidation(joinPointMock, linkedMap);
-	}
+    }
 
     @Test
-    public void shouldSkipValidationWhenSignatureHeaderMissing() throws Exception {
+    public void shouldSkipValidation_signatureHeaderMissing_skipsVerification() throws Exception {
         RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
         requestHTTPDTO.setIsSignRequired(true);
         requestHTTPDTO.setUri(new URI("/v1/mosip/test"));
@@ -409,7 +409,7 @@ public class ResponseSignatureAdviceTest {
     }
 
     @Test
-    public void shouldHandleMissingResponseBodyMapGracefully() throws Exception {
+    public void shouldHandleMissingResponseBody_nullBody_handlesGracefully() throws Exception {
         RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
         requestHTTPDTO.setIsSignRequired(true);
         requestHTTPDTO.setUri(new URI("/v1/mosip/test"));
@@ -426,10 +426,10 @@ public class ResponseSignatureAdviceTest {
 		Mockito.when(signatureService.jwtVerify(Mockito.any())).thenReturn(new JWTSignatureVerifyResponseDto());
 
         responseSignatureAdvice.responseSignatureValidation(joinPointMock, linkedMap);
-	}
+    }
 
     @Test
-    public void shouldHandleMalformedSignatureHeaderGracefully() throws Exception {
+    public void shouldHandleMalformedSignatureHeader_invalidJwt_handlesGracefully() throws Exception {
         RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
         requestHTTPDTO.setIsSignRequired(true);
         requestHTTPDTO.setUri(new URI("/v1/mosip/test"));
@@ -455,7 +455,7 @@ public class ResponseSignatureAdviceTest {
     }
 
     @Test
-    public void shouldUseNewPublicKeyFromResponseWhenProvided() throws Exception {
+    public void shouldUseNewPublicKey_responseContainsPublicKey_verifiesWithNewKey() throws Exception {
         RequestHTTPDTO requestHTTPDTO = new RequestHTTPDTO();
         requestHTTPDTO.setIsSignRequired(true);
         requestHTTPDTO.setUri(new URI("/v1/mosip/test"));
@@ -514,7 +514,7 @@ public class ResponseSignatureAdviceTest {
     }
 
 	@Test(expected = RegBaseCheckedException.class)
-	public void fileSignatureValidation_noSignatureRecord() throws Exception {
+	public void fileSignatureValidation_noSignatureRecord_throwsException() throws Exception {
 
 		Path file = createTempFileWithContent("test".getBytes());
 

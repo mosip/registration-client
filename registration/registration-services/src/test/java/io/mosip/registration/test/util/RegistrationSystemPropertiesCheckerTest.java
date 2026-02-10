@@ -22,7 +22,7 @@ public class RegistrationSystemPropertiesCheckerTest {
 	}
 
 	@Test
-	public void getMachineId_success_realCall() {
+	public void getMachineId_realCall_returnSuccess() {
 		String machineId = RegistrationSystemPropertiesChecker.getMachineId();
 
 		assertNotNull(machineId);

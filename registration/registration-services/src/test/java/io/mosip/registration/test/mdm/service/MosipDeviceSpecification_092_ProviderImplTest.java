@@ -2,7 +2,6 @@ package io.mosip.registration.test.mdm.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
@@ -56,12 +55,12 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 	private MosipDeviceSpecification_092_ProviderImpl provider;
 
 	@Test
-	public void shouldReturnSpecVersion() {
+	public void getSpecVersion_whenCalled_returns092() {
 		assertEquals("0.9.2", provider.getSpecVersion());
 	}
 
 	@Test
-	public void shouldParseDeviceInfoAndReturnMdmDevices() throws Exception {
+	public void getMdmDevices_withValidDeviceInfoResponse_returnsMdmDevices() throws Exception {
 		int port = 5055;
 
 		List<MdmDeviceInfoResponse> responses = new LinkedList<>();
@@ -97,7 +96,7 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 	}
 
 	@Test
-	public void shouldReturnStreamWhenDeviceAvailableAndResponseHasEntity() throws Exception {
+	public void stream_whenDeviceAvailableAndResponseHasEntity_returnsInputStream() throws Exception {
 		MdmBioDevice dev = new MdmBioDevice();
 		dev.setDeviceId("DEV");
 		dev.setPort(6000);
@@ -122,7 +121,7 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 	}
 
 	@Test (expected = RegBaseCheckedException.class)
-	public void shouldThrowExceptionWhenRCaptureReturnsNoBiometrics() throws Exception {
+	public void rCapture_whenNoBiometricsInResponse_throwsRegBaseCheckedException() throws Exception {
 		MdmBioDevice dev = new MdmBioDevice();
 		dev.setDeviceId("DEV");
 		dev.setPort(7000);
@@ -163,7 +162,7 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 	}
 
 	@Test
-	public void shouldReturnTrueWhenDeviceAvailableMatches() throws Exception {
+	public void isDeviceAvailable_whenDiscoveryMatches_returnsTrue() throws Exception {
 		MdmBioDevice dev = new MdmBioDevice();
 		dev.setDeviceId("D1");
 		dev.setCertification("CERT");
@@ -193,10 +192,10 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 				new ResponseEntity<>(json, HttpStatus.OK);
 
 		Mockito.when(helper.getHttpClientResponseEntity(
-						Mockito.anyString(),
-						Mockito.anyString(),
-						Mockito.anyString()))
-				.thenReturn(String.valueOf(mockResponse));
+				Mockito.anyString(),
+				Mockito.anyString(),
+				Mockito.anyString()))
+					.thenReturn(String.valueOf(mockResponse));
 
 		boolean available = provider.isDeviceAvailable(dev);
 
@@ -216,7 +215,7 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 	}
 
 	@Test
-	public void shouldReturnNullStreamWhenEntityIsNull() throws Exception {
+	public void stream_whenEntityNull_returnsNullStream() throws Exception {
 		MdmBioDevice dev = new MdmBioDevice();
 		dev.setDeviceId("DEV");
 		dev.setPort(6001);
@@ -237,7 +236,7 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 	}
 
 	@Test(expected = RegBaseCheckedException.class)
-	public void shouldThrowStreamWhenDeviceNotAvailable() throws Exception {
+	public void stream_whenDeviceNotAvailable_throwsRegBaseCheckedException() throws Exception {
 		MdmBioDevice dev = new MdmBioDevice();
 		dev.setDeviceId("DEV");
 		dev.setPort(6002);
@@ -249,7 +248,7 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 	}
 
 	@Test(expected = RegBaseCheckedException.class)
-	public void shouldWrapExceptionInStream() throws Exception {
+	public void stream_whenHelperThrows_wrapsAndThrowsRegBaseCheckedException() throws Exception {
 		MdmBioDevice dev = new MdmBioDevice();
 		dev.setDeviceId("DEV");
 		dev.setPort(6003);
@@ -262,7 +261,7 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 	}
 
 	@Test(expected = RegBaseCheckedException.class)
-	public void shouldWrapExceptionInRCapture() throws Exception {
+	public void rCapture_whenHelperThrows_wrapsAndThrowsRegBaseCheckedException() throws Exception {
 		MdmBioDevice dev = new MdmBioDevice();
 		dev.setDeviceId("DEV");
 		dev.setPort(7001);
@@ -277,7 +276,7 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 	}
 
 	@Test
-	public void shouldReturnEmptyListWhenGetMdmDevicesInvalidJson() {
+	public void getMdmDevices_withInvalidJson_returnsEmptyList() {
 		ObjectMapper mapper = new ObjectMapper();
 		Mockito.when(helper.getMapper()).thenReturn(mapper);
 
@@ -286,7 +285,7 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 	}
 
 	@Test
-	public void shouldIgnoreEntriesWithNullDeviceInfo() throws Exception {
+	public void getMdmDevices_withNullDeviceInfo_ignoresEntry_returnsEmptyList() throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
 		Mockito.when(helper.getMapper()).thenReturn(mapper);
 
@@ -301,7 +300,7 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 	}
 
 	@Test
-	public void shouldSetLatestSpecVersionFromFactory() throws Exception {
+	public void getMdmDevices_withFactoryLatestSpecVersion_returnsMdmDevices() throws Exception {
 		int port = 5056;
 		List<MdmDeviceInfoResponse> responses = new LinkedList<>();
 		MdmDeviceInfoResponse resp = new MdmDeviceInfoResponse();
@@ -335,7 +334,7 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 	}
 
 	@Test
-	public void shouldReturnFalseWhenDeviceAvailableDoesNotMatch() throws Exception {
+	public void isDeviceAvailable_whenDiscoveryDoesNotMatch_returnsFalse() throws Exception {
 		MdmBioDevice dev = new MdmBioDevice();
 		dev.setDeviceId("D1");
 		dev.setCertification("CERT");
@@ -363,7 +362,7 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 	}
 
 	@Test
-	public void shouldReturnFalseWhenDeviceAvailableThrowsException() throws Exception {
+	public void isDeviceAvailable_whenHelperThrows_returnsFalse() throws Exception {
 		MdmBioDevice dev = new MdmBioDevice();
 		dev.setDeviceId("D2");
 		dev.setCertification("CERT");
