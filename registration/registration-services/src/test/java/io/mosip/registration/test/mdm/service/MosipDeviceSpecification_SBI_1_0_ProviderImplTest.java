@@ -258,7 +258,11 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 		bioDevice.setPort(4501);
 		bioDevice.setDeviceType("Finger");
 
-		when(mosipDeviceSpecificationHelper.getHttpClientResponseEntity(anyString(), anyString(), anyString()))
+		when(mosipDeviceSpecificationHelper.buildUrl(anyInt(), anyString()))
+				.thenReturn("http://localhost/device");
+
+		when(mosipDeviceSpecificationHelper.getHttpClientResponseEntity(
+				anyString(), anyString(), anyString()))
 				.thenReturn("[]");
 
 		boolean result = mockObject.isDeviceAvailable(bioDevice);
