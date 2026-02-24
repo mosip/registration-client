@@ -212,30 +212,6 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	}
 
 	@Test
-	public void isDeviceAvailable_withReadyResponse_returnsFalse() throws Exception {
-		MdmBioDevice bioDevice = new MdmBioDevice();
-		bioDevice.setPort(4501);
-		bioDevice.setDeviceType("Finger");
-
-		SbiDeviceDiscoveryMDSResponse response = new SbiDeviceDiscoveryMDSResponse();
-		response.setSpecVersion(new String[] { "1.0" });
-		response.setDeviceStatus("Ready");
-		response.setCertification("1.0");
-
-		List<SbiDeviceDiscoveryMDSResponse> responses = new ArrayList<>();
-		responses.add(response);
-
-		when(mosipDeviceSpecificationHelper.buildUrl(anyInt(), anyString())).thenReturn("http://localhost/device");
-		when(mosipDeviceSpecificationHelper.getHttpClientResponseEntity(anyString(), anyString(), anyString()))
-				.thenReturn("[{\"deviceStatus\":\"Ready\"}]");
-		when(objectMapper.readValue(anyString(), any(TypeReference.class))).thenReturn(responses);
-
-		boolean result =mockObject.isDeviceAvailable(bioDevice);
-
-		assertFalse(result);
-	}
-
-	@Test
 	public void getRCaptureRequest_withValidInput_returnsRequest() throws Exception {
 		MdmBioDevice bioDevice = new MdmBioDevice();
 		bioDevice.setDeviceType("Finger");

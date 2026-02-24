@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.powermock.api.mockito.PowerMockito;
@@ -26,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -176,9 +178,28 @@ public class RestClientUtilTest {
     }
 
     @Test
-    public void getHttpRequestFactory_appliesTimeouts_returnsFactory() {
-        SimpleClientHttpRequestFactory factory = restClientUtil.getHttpRequestFactory();
+    public void getHttpRequestFactory_appliesTimeouts_returnsFactory() throws Exception {
+
+        ApplicationContext.map().put(
+                RegistrationConstants.HTTP_API_READ_TIMEOUT, "5000");
+        ApplicationContext.map().put(
+                RegistrationConstants.HTTP_API_WRITE_TIMEOUT, "3000");
+
+        SimpleClientHttpRequestFactory factory =
+                restClientUtil.getHttpRequestFactory();
+
         assertNotNull(factory);
+
+        Field readTimeoutField =
+                SimpleClientHttpRequestFactory.class.getDeclaredField("readTimeout");
+        readTimeoutField.setAccessible(true);
+
+        Field connectTimeoutField =
+                SimpleClientHttpRequestFactory.class.getDeclaredField("connectTimeout");
+        connectTimeoutField.setAccessible(true);
+
+        assertEquals(5000, readTimeoutField.get(factory));
+        assertEquals(3000, connectTimeoutField.get(factory));
     }
 
 }
