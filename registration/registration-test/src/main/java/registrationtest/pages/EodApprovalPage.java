@@ -3,7 +3,9 @@ package registrationtest.pages;
 
 
 import org.testfx.api.FxRobot;
+import org.testfx.util.WaitForAsyncUtils;
 
+import javafx.scene.control.TextField;
 import registrationtest.utility.WaitsUtil;
 
 public class EodApprovalPage {
@@ -27,9 +29,15 @@ public class EodApprovalPage {
     }
 
     public void enterFilterDetails(String rid) {
+
         logger.info("enterFilterDetails RID " + rid);
-        // TODO Auto-generated method stub
-        robot.write(rid);
+
+        TextField textfieldpwd =
+                waitsUtil.waitForNode(filterField, TextField.class);
+
+        WaitForAsyncUtils.asyncFx(() -> {
+            textfieldpwd.setText(rid);
+        });
     }
 
     public void clickOnApprovalBtn() {

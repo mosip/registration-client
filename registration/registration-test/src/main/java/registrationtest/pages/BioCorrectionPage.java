@@ -39,7 +39,7 @@ public class BioCorrectionPage {
 		logger.info("set additional info ");
 
 		try {
-			additionalInfoTextBox = waitsUtil.lookupByIdTextField(additionalInfoRequestId, robot);
+			additionalInfoTextBox = waitsUtil.waitForNode(additionalInfoRequestId, TextField.class);
 
 			assertNotNull(additionalInfoTextBox, "additionalInfoTextBox Not Present");
 
