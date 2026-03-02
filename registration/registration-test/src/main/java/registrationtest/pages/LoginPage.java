@@ -262,8 +262,9 @@ public class LoginPage {
             }
             ExtentReportUtil.test1.info("Successfully Screen Loaded");
 
-        }  catch (Exception e) {
-        	logger.error("", e);
+		} catch (Exception e) {
+			logger.error("Failed to load login scene", e);
+			throw (e instanceof RuntimeException) ? (RuntimeException) e : new RuntimeException(e);
 		}
 
     }

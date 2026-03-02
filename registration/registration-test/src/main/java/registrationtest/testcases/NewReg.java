@@ -246,7 +246,7 @@ public class NewReg {
             rid2 = null;
             result = false;
             // Load Login screen
-//            buttons.clickcancelBtn();
+            buttons.clickcancelBtn();
             loginPage.loadLoginScene(applicationPrimaryStage1);
 
             // Enter userid and password
