@@ -27,7 +27,7 @@ public class HomePage {
     Alerts alerts;
     String homeimg = "#homeImgView";
     String exit = "#exit";
-    String success = "#context";
+    String success = "#alertGridPane";
 
     // operationalTasks
     String syncDataImageView = "#syncDataImageView", downloadPreRegDataImageView = "#downloadPreRegDataImageView",
@@ -66,14 +66,9 @@ public class HomePage {
     public void clickSynchronizeData() {
         try {
             waitsUtil.clickNodeAssert(syncDataImageView);
-            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
-
             waitsUtil.clickNodeAssert(success);
             waitsUtil.clickNodeAssert(exit);
 
-        } catch (InterruptedException e) {
-            logger.error("", e);
-            Thread.currentThread().interrupt();
         } catch (Exception e) {
             logger.error("", e);
         }

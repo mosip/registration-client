@@ -25,15 +25,6 @@ public class ComboBoxUtil {
                         comboBox.getSelectionModel().selectFirst();
                     else
                         comboBox.getSelectionModel().select(op.get());
-
-                    try {
-                        Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
-                    } catch (InterruptedException e) {
-                        logger.error("", e);
-                        Thread.currentThread().interrupt();
-                    } catch (Exception e) {
-                        logger.error("", e);
-                    }
                 }
             });
         } catch (Exception e) {
@@ -65,11 +56,7 @@ public class ComboBoxUtil {
         taskThread.start();
         try {
             taskThread.join();
-            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
-        } catch (InterruptedException e) {
-            logger.error("", e);
-            Thread.currentThread().interrupt();
-        } catch (Exception e) {
+        }  catch (Exception e) {
             logger.error("", e);
         }
 
