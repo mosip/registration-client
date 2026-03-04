@@ -5,7 +5,7 @@
 	"documentUploadAttributes":["POB","POR","POA","POI"],
 	"UIN":"5931539704",
 	   "profile":"Default",
-	    "score1":"10",
+	    "score1":"90",
 	    "score2":"20",
 	    "score3":"90",
 	    "score4":"90",
@@ -166,7 +166,19 @@
 		"rightThumb"
 		
 	],
-	"bioAuthAttributes":["rightThumb"],
+	"bioAuthAttributes":[	"leftEye",
+	      "rightEye",
+	      "rightIndex",
+	      "rightLittle",
+	      "rightRing",
+	      "rightMiddle",
+	      "leftIndex",
+	      "leftLittle",
+	      "leftRing",
+	      "leftMiddle",
+	      "leftThumb",
+	      "rightThumb",
+	      "face"],
 	 "bioAttributes": [
 		
 			"face"

@@ -25,13 +25,13 @@ public class AuthenticationPage {
 
     public void enterPassword(String pwd) {
         logger.info("enterPassword");
-        TextField textfieldpwd = waitsUtil.lookupByIdTextField(password, robot);
+        TextField textfieldpwd = waitsUtil.waitForNode(password, TextField.class);
         textfieldpwd.setText(pwd);
     }
 
     public void enterUserName(String userid) {
         logger.info("enterUserName");
-        TextField textfielduserid = waitsUtil.lookupByIdTextField(username, robot);
+        TextField textfielduserid = waitsUtil.waitForNode(username, TextField.class);
         textfielduserid.setText(userid);
     }
 

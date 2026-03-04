@@ -58,7 +58,7 @@ public class UploadPacketPage {
     public void selectPacket(String rid) {
 
         logger.info("selectPacket" + rid);
-        filterField = waitsUtil.lookupByIdTextField(filterField1, robot);
+        filterField = waitsUtil.waitForNode(filterField1, TextField.class);
         filterField.setText(rid);
         waitsUtil.clickNodeAssert(selectAll);
 //		robot.moveTo(rid);
@@ -74,7 +74,6 @@ public class UploadPacketPage {
         Boolean result = false;
         logger.info("verifyPacketUpload" + rid);
         try {
-            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("PacketUploadTimeWait")));
            
             waitsUtil.clickNodeAssert(uploaded);
 
@@ -82,11 +81,6 @@ public class UploadPacketPage {
             result = true;
             robotActions.closeWindow();
            // alerts.clickAlertexit();
-        } catch (InterruptedException e) {
-            logger.error("Failure Unable to upload", e);
-            robotActions.closeWindow();
-            result = false;
-            Thread.currentThread().interrupt();
         } catch (Exception e) {
         	logger.error("Failure Unable to upload", e);
             robotActions.closeWindow();

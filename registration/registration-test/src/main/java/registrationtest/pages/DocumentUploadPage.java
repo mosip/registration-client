@@ -73,15 +73,7 @@ public class DocumentUploadPage {
                         comboBox.getSelectionModel().selectFirst();
                     else
                         comboBox.getSelectionModel().select(op.get());
-
-                    try {
-                        Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
-                    } catch (InterruptedException e) {
-                        logger.error("", e);
-                        Thread.currentThread().interrupt();
-                    } catch (Exception e) {
-                        logger.error("", e);
-                    }
+                 
                 }
             });
         } catch (Exception e) {
@@ -100,7 +92,7 @@ public class DocumentUploadPage {
                     user_selects_combo_itemdoc(id, mapDropValue.get(dropkeys.iterator().next()));
                     String scanBtn = id + "button";
 
-                    Button scanButton = waitsUtil.lookupByIdButton(scanBtn, robot);
+                    Button scanButton = waitsUtil.waitForNode(scanBtn, Button.class);
                     robot.moveTo(scanButton);
                     robot.clickOn(scanButton);
                     selectDocumentScan();
