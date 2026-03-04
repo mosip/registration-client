@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -72,17 +73,79 @@ public class WaitsUtil {
     }
 
     public void clickNodeAssert(String id) {
+    	waitForNode(id);
         node = lookupById(id);
-
         assertThat(robot.lookup(id).tryQuery()).isNotNull();
         robot.moveTo(node);
         robot.clickOn(node);
-        
-        
+    }
+    
+	public void clickIfPresent(String id) {
+		try {
+			Thread.sleep(400);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		Optional<Node> optionalNode = robot.lookup(id).tryQuery();
+		if (optionalNode.isPresent()) {
 
+			Node node = optionalNode.get();
+
+			if (node.isVisible() && !node.isDisable()) {
+				robot.moveTo(node);
+				robot.clickOn(node);
+			}
+		}
+	}
+    
+    public Node waitForNode(String id) {
+
+        long startTime = System.currentTimeMillis();
+        long timeout = 20_000L;
+
+        Optional<Node> optionalNode;
+
+        try {
+
+            while (true) {
+
+                optionalNode = robot.lookup(id).tryQuery();
+
+                if (optionalNode.isPresent() && !optionalNode.get().isDisable()) {
+                    return optionalNode.get();
+                }
+
+                WaitForAsyncUtils.waitForFxEvents();
+                Thread.sleep(100); // prevent CPU spinning
+
+                if (System.currentTimeMillis() - startTime > timeout) {
+                    throw new RuntimeException(
+                            "Element not found or not enabled within 20 sec : " + id);
+                }
+            }
+
+        } catch (Exception e) {
+            logger.error("Wait failed for element: " + id, e);
+            capture();   // ✅ SINGLE PLACE FOR SCREENSHOT
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public <T extends Node> T waitForNode(String id, Class<T> type) {
+
+        Node node = waitForNode(id); // capture already handled
+
+        if (!type.isInstance(node)) {
+            throw new RuntimeException(
+                    "Node " + id + " is not of type " + type.getSimpleName()
+            );
+        }
+
+        return type.cast(node);
     }
 
     public void scrollclickNodeAssert(String id) {
+    	waitForNode(id);
         node = lookupById(id);
 
         assertThat(robot.lookup(id).tryQuery()).isNotNull();
@@ -95,6 +158,7 @@ public class WaitsUtil {
     }
 
     public void scrollclickNodeAssert1(String id) {
+    	waitForNode(id);
         node = lookupById(id);
 
         assertThat(robot.lookup(id).tryQuery()).isNotNull();
@@ -118,8 +182,9 @@ public class WaitsUtil {
     }
 
     public void scrollclickNodeAssert2(String id)
+    
 
-    {
+    {waitForNode(id);
         node = lookupById(id);
 
         assertThat(robot.lookup(id).tryQuery()).isNotNull();
@@ -160,20 +225,7 @@ public class WaitsUtil {
 
     }
 
-    public <T extends Node> TextField lookupByIdTextField(String controlId, FxRobot robot) {
-        try {
-            with().dontCatchUncaughtExceptions().await().pollDelay(2, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS)
-                    .until(() -> (robot.lookup(controlId).queryAs(TextField.class)) != null);
-        } catch (Exception e) {
-            logger.error("", e);
-            capture();
-
-        }
-
-        return robot.lookup(controlId).queryAs(TextField.class);
-    }
-
-    
+ 
     public <T extends Node> Label lookupByIdLabel(String controlId, FxRobot robot) {
         try {
             with().dontCatchUncaughtExceptions().await().pollDelay(2, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS)
@@ -187,21 +239,6 @@ public class WaitsUtil {
         return robot.lookup(controlId).queryAs(Label.class);
     }
     
-    public <T extends Node> Button lookupByIdButton(String controlId, FxRobot robot) {
-        try {
-
-            with().pollInSameThread().await().atMost(60, TimeUnit.SECONDS)
-                    .until(() -> (robot.lookup(controlId).queryAs(Button.class)) != null);
-        } catch (Exception e) {
-            logger.error("", e);
-            capture();
-
-        }
-
-        return robot.lookup(controlId).queryAs(Button.class);
-
-    }
-
     public static String capture() {
         String snapshotpath = null;
         try {

@@ -8,6 +8,7 @@ import io.mosip.registration.dto.mastersync.GenericDto;
 
 
 import org.testfx.api.FxRobot;
+import org.testfx.util.WaitForAsyncUtils;
 
 import javafx.application.Platform;
 import javafx.scene.Node;
@@ -73,29 +74,19 @@ public class LoginPage {
     public void selectAppLang() {
         try {
            String str = PropertiesUtil.getKeyValue("appLanguage");
-            Platform.runLater(new Runnable() {
-                public void run() {
+           Platform.runLater(() -> {
 
-                    ComboBox comboBox = waitsUtil.lookupById(appLanguage);
+        	   ComboBox<GenericDto> comboBox = waitsUtil.lookupById(appLanguage);
 
-                    // comboBox.getSelectionModel().select(dto);
-                    Optional<GenericDto> op = comboBox.getItems().stream()
-                            .filter(i -> ((GenericDto) i).getName().equalsIgnoreCase(str)).findFirst();
-                    if (op.isEmpty())
-                        comboBox.getSelectionModel().selectFirst();
-                    else
-                        comboBox.getSelectionModel().select(op.get());
+        	    Optional<GenericDto> op = comboBox.getItems().stream()
+        	    		.filter(i -> i.getName().equalsIgnoreCase(str))
+        	            .findFirst();
 
-                    try {
-                        Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
-                    } catch (InterruptedException e) {
-                        logger.error("", e);
-                        Thread.currentThread().interrupt();
-                    } catch (Exception e) {
-                        logger.error("", e);
-                    }
-                }
-            });
+        	    comboBox.getSelectionModel().select(
+        	            op.orElse(comboBox.getItems().get(0)));
+        	});
+
+        	WaitForAsyncUtils.waitForFxEvents();
         } catch (Exception e) {
 
             logger.error("", e);
@@ -113,30 +104,19 @@ public class LoginPage {
 
         try {
 
-            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait6")));
+        	userIdTextField = waitsUtil.waitForNode(userId, TextField.class);
+        	assertNotNull(userIdTextField, "userIdTextField not present");
 
-            userIdTextField = waitsUtil.lookupByIdTextField(userId, robot);
+        	Platform.runLater(() -> {
+        	    userIdTextField.clear();
+        	    userIdTextField.setText(userIdText);
+        	});
 
-            assertNotNull(userIdTextField, "userIdTextField not present");
-
-            // robot.clickOn(userIdTextField);
-
-            userIdTextField.clear();
-
-            userIdTextField.setText(userIdText);
-
-            System.out.println("User id Entered ");
-            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("wait2")));
-
+        	org.testfx.util.WaitForAsyncUtils.waitForFxEvents();
             waitsUtil.clickNodeAssert("#sub1");
-            
-            
 
             assertEquals(userIdText, userIdTextField.getText(), "User id is not as same as entered");
 
-        } catch (InterruptedException e) {
-            logger.error("", e);
-            Thread.currentThread().interrupt();
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -156,7 +136,7 @@ public class LoginPage {
 
         try {
 
-            passwordTextField = waitsUtil.lookupByIdTextField(password, robot);
+            passwordTextField = waitsUtil.waitForNode(password, TextField.class);
 
             assertNotNull(passwordTextField, "passwordTextField Not Present");
 
@@ -182,7 +162,7 @@ public class LoginPage {
     public boolean verifyAuthentication(String pwd, Stage applicationPrimaryStage) {
         boolean flag = false;
         try {
-            passwordTextField = waitsUtil.lookupByIdTextField(password, robot);
+            passwordTextField = waitsUtil.waitForNode(password, TextField.class);
 
             assertNotNull(passwordTextField, "passwordTextField Not Present");
 
@@ -191,16 +171,10 @@ public class LoginPage {
             // if home else fail or check the #context
 
             waitsUtil.clickNodeAssert("#sub2");
-
-            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
-            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
-            
+    
             waitsUtil.clickNodeAssert(success);
 
             flag = true;
-        } catch (InterruptedException e) {
-            logger.error("", e);
-            Thread.currentThread().interrupt();
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -211,7 +185,7 @@ public class LoginPage {
     public boolean verifyOnbard(String pwd, String identity) {
         boolean flag = false;
         try {
-            passwordTextField = waitsUtil.lookupByIdTextField(password, robot);
+            passwordTextField = waitsUtil.waitForNode(password, TextField.class);
 
             assertNotNull(passwordTextField, "passwordTextField Not Present");
 
@@ -221,7 +195,6 @@ public class LoginPage {
 
             waitsUtil.clickNodeAssert("#sub2");
 
-            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
             waitsUtil.clickNodeAssert("#homeImgView");
             flag = true;
             try {
@@ -233,11 +206,7 @@ public class LoginPage {
                
             }
            
-        } catch (InterruptedException e) {
-            logger.error("", e);
-            flag = false;
-            Thread.currentThread().interrupt();
-        } catch (Exception e) {
+        }catch (Exception e) {
         	logger.error("", e);
             flag = false;
 		}
@@ -256,14 +225,9 @@ public class LoginPage {
 
             waitsUtil.clickNodeAssert("#continueBtn");
 
-            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SyncWait")));
 
             waitsUtil.clickNodeAssert(userOnboardMessage);
             flag = true;
-        } catch (InterruptedException e) {
-            logger.error("", e);
-            flag = false;
-            Thread.currentThread().interrupt();
         } catch (Exception e) {
         	logger.error("", e);
             flag = false;
@@ -278,26 +242,29 @@ public class LoginPage {
         try {
             // alerts.clickAlertCancel();
 
-            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("Loginwait")));
-
             waitsUtil.clickNodeAssert(loginScreen);
 
             scene = applicationPrimaryStage.getScene();
             node = scene.lookup(loginScreen);
-            while (node.isDisable()) {
-                Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
-
-                System.out.println("Disable login screen waiting to get it on");
-            }
+            node = scene.lookup(loginScreen);
             assertNotNull(node, "Login Page is not shown");
 
+            long startTime = System.currentTimeMillis();
+            long timeout = 20000; // 20 seconds
+
+            while (node.isDisable()) {
+
+                org.testfx.util.WaitForAsyncUtils.waitForFxEvents();
+
+                if (System.currentTimeMillis() - startTime > timeout) {
+                    throw new RuntimeException("Login screen stayed disabled too long");
+                }
+            }
             ExtentReportUtil.test1.info("Successfully Screen Loaded");
 
-        } catch (InterruptedException e) {
-            logger.error("", e);
-            Thread.currentThread().interrupt();
-        } catch (Exception e) {
-        	logger.error("", e);
+		} catch (Exception e) {
+			logger.error("Failed to load login scene", e);
+			throw (e instanceof RuntimeException) ? (RuntimeException) e : new RuntimeException(e);
 		}
 
     }

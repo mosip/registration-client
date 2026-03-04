@@ -146,13 +146,6 @@ public class DemographicPage {
 
                         logger.info(" textfield is visible and setting the text in " + id + "= " + value);
                         demoTextFieldvar.setText(appendDateTime ? value + DateUtil.getDateTime() : value);
-
-//                        try {
-//                            Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SetTextTimeWait")));
-//                        } catch (Exception e) {
-//
-//                            logger.error("", e);
-//                        }
                     }
                 } catch (Exception e) {
                     logger.error("", e);
@@ -184,11 +177,7 @@ public class DemographicPage {
                         logger.info(" textfield is visible and setting the text in " + id + "= " + value);
                         demoTextFieldvar.setText(appendDateTime ? value + DateUtil.getDateTime() : value);
 
-                        Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SetTextTimeWait")));
                     }
-                } catch (InterruptedException e) {
-                    logger.error("", e);
-                    Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     logger.error("", e);
                 }
@@ -242,16 +231,7 @@ public class DemographicPage {
             logger.info("Order" + screens.getOrder() + " Fields" + screens.getFields());
             fieldsList = screens.getFields();
 
-            nameTab = screens.getName();
-            try {
-                Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("SetTextTimeWait")));
-                logger.info("SetTextTimeWait Done");
-            } catch (InterruptedException e) {
-                logger.error("", e);
-                Thread.currentThread().interrupt();
-            } catch (Exception e) {
-                logger.error("", e);
-            }
+            nameTab = screens.getName();       
             waitsUtil.clickNodeAssert("#" + nameTab + "_tab");
             // waitsUtil.clickNodeAssert("#"+nameTab);
             robot.moveTo("#" + nameTab);
@@ -623,16 +603,13 @@ public class DemographicPage {
                     scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("authscroll")));
 
                     System.out.println("");
-                    Thread.sleep(400);
+//                   Thread.sleep (400);
                     biometricUploadPage.newRegbioUpload(schema.getSubType(),
                             biometricUploadPage.bioAuthAttributeList(identity), id, identity, ageGroup);
                 }
             }
 
-        } catch (InterruptedException e) {
-            logger.error("", e);
-            Thread.currentThread().interrupt();
-        } catch (Exception e) {
+        }  catch (Exception e) {
             logger.error("", e);
         }
     }
@@ -690,7 +667,7 @@ public class DemographicPage {
                                 biometricUploadPage.bioAttributeList(identity), id, identity, ageGroup);
                     } else if (ageGroup.equalsIgnoreCase("ADULT")) {
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
-                        Thread.sleep(400);
+//                        Thread.sleep(400);
                         // bioattributes=fetchbioAttr(schema,ageGroup,process);
 
                         biometricUploadPage.newRegbioUpload(schema.getSubType(),
@@ -706,7 +683,7 @@ public class DemographicPage {
                 } else
                     scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
 
-                Thread.sleep(400);
+//                Thread.sleep(400);
                 biometricUploadPage.newRegbioUpload(schema.getSubType(),
                         biometricUploadPage.bioAuthAttributeList(identity), id, identity, ageGroup);
 
@@ -765,7 +742,7 @@ public class DemographicPage {
                     } else
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
 
-                    Thread.sleep(400);
+//                    Thread.sleep(400);
 
                     biometricUploadPage.newRegbioUpload(schema.getSubType(),
                             biometricUploadPage.bioAuthAttributeList(identity), id, identity, ageGroup);
@@ -804,7 +781,7 @@ public class DemographicPage {
                                 biometricUploadPage.bioAttributeList(identity), id, identity, ageGroup);
                     } else if (ageGroup.equalsIgnoreCase("ADULT")) {
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
-                        Thread.sleep(400);
+//                        Thread.sleep(400);
                         // bioattributes=fetchbioAttr(schema,ageGroup,process);
 
                         biometricUploadPage.newRegbioUpload(schema.getSubType(),
@@ -907,16 +884,7 @@ public class DemographicPage {
                     if (op.isEmpty())
                         comboBox.getSelectionModel().selectFirst();
                     else
-                        comboBox.getSelectionModel().select(op.get());
-
-                    try {
-                        Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ComboItemTimeWait")));
-                    } catch (InterruptedException e) {
-                        logger.error("", e);
-                        Thread.currentThread().interrupt();
-                    } catch (Exception e) {
-                        logger.error("", e);
-                    }
+                        comboBox.getSelectionModel().select(op.get());              
                 }
             });
         } catch (Exception e) {
@@ -1159,8 +1127,8 @@ public class DemographicPage {
                         String idk = id + ky;
                         String v = mapValue.get(ky);
                         setTextFields(id, idk, v);
-                        if (transliterate == true)
-                            return;
+//                        if (transliterate == true)
+//                            return;
                     }
                 }
             }

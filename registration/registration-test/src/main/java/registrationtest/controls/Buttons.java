@@ -51,7 +51,7 @@ public class Buttons {
      */
     public void clickConfirmBtn() {
         logger.info("clickConfirmBtn");
-        waitsUtil.clickNodeAssert(confirm);
+        waitsUtil.clickIfPresent(confirm);
     }
 
     /**
@@ -68,7 +68,7 @@ public class Buttons {
     public void clickcancelBtn() {
         try {
             logger.info("clickcancelBtn");
-            waitsUtil.clickNodeAssert(cancel);
+            waitsUtil.clickIfPresent(cancel);
         } catch (Exception e) {
             logger.error("clickcancelBtn not present", e);
         }

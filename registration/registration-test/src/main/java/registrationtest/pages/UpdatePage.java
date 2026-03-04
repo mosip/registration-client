@@ -38,7 +38,7 @@ public class UpdatePage {
      * Enter uinId -
      */
     public void enterUinId(String uinNumber) {
-        TextField useruin = waitsUtil.lookupByIdTextField(uinId, robot);
+        TextField useruin = waitsUtil.waitForNode(uinId, TextField.class);
         useruin.setText(uinNumber);
         logger.info("enterUinId");
     }
