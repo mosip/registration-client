@@ -84,7 +84,7 @@ public class Initialization {
         System.setProperty("logback.configurationFile", Path.of("lib", "logback.xml").toFile().getCanonicalPath());   //NOSONAR Setting logger configuration file path here.
         
         // Logic to detect if the JRE is 11 or 21 and perform the necessary actions to swap the JRE and rewrite run.bat.
-        String javaVersion = System.getProperty("java.version");
+        //String javaVersion = fetch version based on the jre being used by the application.
         if (javaVersion.startsWith("11")) {
             // Verifies the signed hash of the jre21.zip, lib21.zip, launcher.jar in the MANIFEST.MF to ensure integrity before proceeding with the migration.
             // Note: Launcher.jar holds the certificate to verify the integrity of the files part of the upgrade process.
