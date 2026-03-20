@@ -3,12 +3,16 @@ package io.mosip.registration.test.util.mastersync;
 import static io.mosip.registration.util.mastersync.MapperUtils.map;
 import static io.mosip.registration.util.mastersync.MetaDataUtils.setCreateMetaData;
 import static io.mosip.registration.util.mastersync.MetaDataUtils.setUpdateMetaData;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
+import java.io.IOException;
+import java.lang.reflect.Method;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -33,6 +37,7 @@ import io.mosip.registration.entity.RegistrationCommonFields;
 import io.mosip.registration.entity.UserRole;
 import io.mosip.registration.entity.id.AppAuthenticationMethodId;
 import io.mosip.registration.util.mastersync.MapperUtils;
+import org.springframework.util.ReflectionUtils;
 
 /**
  * 
@@ -56,31 +61,31 @@ public class MapperTest {
 	}
 
 	@Test(expected = NullPointerException.class)
-	public void testMapSourceNull() {
+	public void map_sourceNull_throwsNullPointerException() {
 		map(null, new Language());
 	}
 	
 	@Test(expected = NullPointerException.class)
-	public void testMapMetaDataDestinationNull() {
+	public void setCreateMetaData_destinationNull_throwsNullPointerException() {
 		setCreateMetaData(new LanguageDto(), null);
 	}
 
 	@Test
-	public void testMapSource() {
+	public void map_languageDto_returnsEntityNotNull() {
 		LanguageDto dto = getLanguageDto();
 		assertNotNull(map(dto, new Language()));
 
 	}
 
 	@Test
-	public void testMapSourceDTO() {
+	public void map_userRoleDto_returnsEntityNotNull() {
 		UserRoleDto userRoleDto = new UserRoleDto();
 		userRoleDto.setRole("role");
 		assertNotNull(map(userRoleDto, new UserRole()));
 	}
 
 	@Test
-	public void testMapSourceDTOGenerics() {
+	public void map_userRoleDto_generics_returnsEntityNotNull() {
 		UserRoleDto userRoleDto = new UserRoleDto();
 		userRoleDto.setRole("role");
 		RegistrationCommonFields userRoleObj = new UserRole();
@@ -89,7 +94,7 @@ public class MapperTest {
 	}
 
 	@Test
-	public void testMapSourceEmbededId() {
+	public void map_embeddedId_returnsDtoNotNull() {
 		AppAuthenticationMethod appAuth = new AppAuthenticationMethod();
 		AppAuthenticationMethodId appAuthId = new AppAuthenticationMethodId();
 		appAuthId.setAppId("appId");
@@ -101,7 +106,7 @@ public class MapperTest {
 	}
 
 	@Test
-	public void testMapJSONObjectToEntity() throws Exception {
+	public void mapJSONObjectToEntity_validJson_returnsEntityNotNull() throws Exception {
 		JSONObject jsonObject = getJsonObject();
 		AppAuthenticationMethod appAuthenticationMethod = new AppAuthenticationMethod();
 		Class<?> appAuthenticationMethodClass = appAuthenticationMethod.getClass();
@@ -109,7 +114,7 @@ public class MapperTest {
 	}
 
 	@Test
-	public void testMapJSONObjectToEntityFields() throws Exception {
+	public void mapJSONObjectToEntity_fields_returnsEntityNotNull() throws Exception {
 		JSONObject jsonObject = getJsonObject();
 		AppAuthenticationMethod appAuthenticationMethod = new AppAuthenticationMethod();
 		Class<?> appAuthenticationMethodClass = appAuthenticationMethod.getClass();
@@ -117,7 +122,7 @@ public class MapperTest {
 	}
 
 	@Test
-	public void testMapJSONObjectToEntitySqltimeStamp() throws Exception {
+	public void mapJSONObjectToEntity_sqlTimestamp_returnsEntityNotNull() throws Exception {
 		JSONObject jsonObject = getSqlTimeJsonObject();
 		GlobalParam globalParam = new GlobalParam();
 		Class<?> globalParamClass = globalParam.getClass();
@@ -126,7 +131,7 @@ public class MapperTest {
 
 	@Ignore
 	@Test
-	public void testMapJSONObjectToEntityLocaltimeStamp() throws Exception {
+	public void mapJSONObjectToEntity_localTimestamp_returnsEntityNotNull() throws Exception {
 		JSONObject jsonObject = getLocalTimeJsonObject();
 		MachineMaster machineMaster = new MachineMaster();
 		Class<?> machineMasterClass = machineMaster.getClass();
@@ -134,7 +139,7 @@ public class MapperTest {
 	}
 
 	@Test
-	public void testSetUpdateMetaData() {
+	public void setUpdateMetaData_withDto_updatesEntityFields() {
 		LanguageDto dto = new LanguageDto();
 		Language entity = new Language();
 
@@ -185,5 +190,155 @@ public class MapperTest {
 		dto.setCode("code");
 		return dto;
 	}
-	
+
+	private LocalDateTime invokeMethod(String value) {
+		Method method = ReflectionUtils.findMethod(
+				MapperUtils.class,
+				"getLocalDateTimeValue",
+				String.class
+			);
+		assertNotNull(method);
+		method.setAccessible(true);
+		return (LocalDateTime) ReflectionUtils.invokeMethod(method, null, value);
+	}
+
+	@Test
+	public void getLocalDateTimeValue_validInstant_returnsLocalDateTime() {
+		String input = "2024-01-15T10:20:30Z";
+
+		LocalDateTime result = invokeMethod(input);
+
+		assertNotNull(result);
+		assertEquals(2024, result.getYear());
+		assertEquals(Month.JANUARY, result.getMonth());
+		assertEquals(15, result.getDayOfMonth());
+		assertEquals(10, result.getHour());
+		assertEquals(20, result.getMinute());
+		assertEquals(30, result.getSecond());
+	}
+
+	@Test
+	public void getLocalDateTimeValue_invalidFormat_returnsNull() {
+		String input = "invalid-date-time";
+
+		LocalDateTime result = invokeMethod(input);
+
+		assertNull(result);
+	}
+
+	@Test
+	public void getLocalDateTimeValue_emptyString_returnsNull() {
+		String input = "";
+
+		LocalDateTime result = invokeMethod(input);
+
+		assertNull(result);
+	}
+
+	private LocalDate invokeGetLocalDateValue(String value) {
+		Method method = ReflectionUtils.findMethod(
+				MapperUtils.class,
+				"getLocalDateValue",
+				String.class
+			);
+		assertNotNull(method);
+		method.setAccessible(true);
+		return (LocalDate) ReflectionUtils.invokeMethod(method, null, value);
+	}
+
+	@Test
+	public void getLocalDateValue_validDate_returnsLocalDate() {
+		String input = "2024-02-10";
+
+		LocalDate result = invokeGetLocalDateValue(input);
+
+		assertNotNull(result);
+		assertEquals(2024, result.getYear());
+		assertEquals(Month.FEBRUARY, result.getMonth());
+		assertEquals(10, result.getDayOfMonth());
+	}
+
+	@Test
+	public void getLocalDateValue_invalidFormat_returnsNull() {
+		String input = "10-02-2024";
+
+		LocalDate result = invokeGetLocalDateValue(input);
+
+		assertNull(result);
+	}
+
+	@Test
+	public void getLocalDateValue_emptyString_returnsNull() {
+		String input = "";
+
+		LocalDate result = invokeGetLocalDateValue(input);
+
+		assertNull(result);
+	}
+
+	static class TestDto {
+		private String name;
+		private int age;
+
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		public int getAge() {
+			return age;
+		}
+		public void setAge(int age) {
+			this.age = age;
+		}
+	}
+
+
+	@Test
+	public void convertJSONStringToDto_validJson_returnsDto() throws IOException {
+		String json = "{\"name\":\"User\",\"age\":28}";
+
+		TestDto dto = MapperUtils.convertJSONStringToDto(
+				json,
+				new TypeReference<>() {}
+			);
+
+		assertNotNull(dto);
+		assertEquals("User", dto.getName());
+		assertEquals(28, dto.getAge());
+	}
+
+	@Test(expected = IOException.class)
+	public void convertJSONStringToDto_invalidJson_throwsIOException() throws IOException {
+		String invalidJson = "{name:User, age:28}";
+
+		MapperUtils.convertJSONStringToDto(
+				invalidJson,
+				new TypeReference<TestDto>() {}
+			);
+	}
+
+	@Test
+	public void convertObjectToJsonString_validDto_returnsJson() throws IOException {
+		TestDto dto = new TestDto();
+		dto.setName("MOSIP");
+		dto.setAge(10);
+
+		String json = MapperUtils.convertObjectToJsonString(dto);
+
+		assertNotNull(json);
+		assertTrue(json.contains("\"name\":\"MOSIP\""));
+		assertTrue(json.contains("\"age\":10"));
+	}
+
+	@Test(expected = IOException.class)
+	public void convertObjectToJsonString_invalidObject_throwsIOException() throws IOException {
+		Object invalidObject = new Object() {
+			Object self = this;
+		};
+
+		MapperUtils.convertObjectToJsonString(invalidObject);
+	}
+
 }
