@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
+import io.mosip.registration.dto.ResponseDTO;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -72,7 +73,7 @@ public class SoftwareUpdateHandlerTest {
 	}
 
 	@Test
-	public void executeSQLTest() throws Exception {
+	public void executeSql_withValidVersion_returnsSuccess() throws Exception {
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
 
 		Mockito.doNothing().when(jdbcTemplate).execute(Mockito.anyString());
@@ -85,7 +86,7 @@ public class SoftwareUpdateHandlerTest {
 
 	@Ignore
 	@Test
-	public void executeSQLTestRollBack() throws Exception {
+	public void executeSql_withRollback_returnsNullOnError() throws Exception {
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(),
 		Mockito.anyString());
 
@@ -97,18 +98,18 @@ public class SoftwareUpdateHandlerTest {
 	}
 
 	@Test
-	public void setTimestapTest() {
+	public void setLatestVersionReleaseTimestamp_withValue_returnsNotNull() {
 		softwareUpdateHandler.setLatestVersionReleaseTimestamp("20190520091122");
 		Assert.assertNotNull(softwareUpdateHandler.getLatestVersionReleaseTimestamp());
 	}
 	
 	@Test
-	public void hasUpdateTest() {
+	public void hasUpdate_withNoServerConfig_returnsFalse() {
 		Assert.assertFalse(softwareUpdateHandler.hasUpdate());
 	}
 	
 	@Test
-	public void hasUpdateSuccessTest() {
+	public void hasUpdate_withServerAndManifest_returnsFalse() {
 		ReflectionTestUtils.setField(softwareUpdateHandler, "serverMosipXmlFileUrl", "https://dev.mosip.net/registration-client/maven-metadata.xml");
 		Attributes attributes = new Attributes();
 		attributes.put(Attributes.Name.MANIFEST_VERSION, "1.2.0-rc2-SNAPSHOT");
@@ -119,7 +120,7 @@ public class SoftwareUpdateHandlerTest {
 	}
 
 	@Test
-	public void updateDerbyDBTest() {
+	public void updateDerbyDB_withValidManifest_returnsNotNull() {
 		Attributes attributes = new Attributes();
 		attributes.put(Attributes.Name.MANIFEST_VERSION, "1.2.0-rc2-SNAPSHOT");
 		Mockito.when(manifest.getMainAttributes()).thenReturn(attributes);
@@ -128,9 +129,9 @@ public class SoftwareUpdateHandlerTest {
 		Mockito.doNothing().when(jdbcTemplate).execute(Mockito.anyString());
 		Assert.assertNotNull(softwareUpdateHandler.updateDerbyDB());
 	}
-	
+
 	@Test
-	public void updateDerbyDBRollBackTest() throws Exception {
+	public void updateDerbyDB_withSqlError_handlesRollback_returnsNotNull() throws Exception {
 		Attributes attributes = new Attributes();
 		attributes.put(Attributes.Name.MANIFEST_VERSION, "1.2.0-rc2-SNAPSHOT");
 		Mockito.when(manifest.getMainAttributes()).thenReturn(attributes);
@@ -147,7 +148,7 @@ public class SoftwareUpdateHandlerTest {
 	}
 	
 	@Test
-	public void updateDerbyDBNullResponseTest() {
+	public void updateDerbyDB_withSnapshot_returnsNull() {
 		Attributes attributes = new Attributes();
 		attributes.put(Attributes.Name.MANIFEST_VERSION, "1.2.0-SNAPSHOT");
 		Mockito.when(manifest.getMainAttributes()).thenReturn(attributes);
@@ -158,7 +159,7 @@ public class SoftwareUpdateHandlerTest {
 	}
 	
 	@Test
-	public void doSoftwareUpgradeTest() throws Exception {
+	public void doSoftwareUpgrade_withBackupAndServer_executes() throws Exception {
 		Attributes attributes = new Attributes();
 		attributes.put(Attributes.Name.MANIFEST_VERSION, "1.2.0-SNAPSHOT");
 		Mockito.when(manifest.getMainAttributes()).thenReturn(attributes);
@@ -172,7 +173,7 @@ public class SoftwareUpdateHandlerTest {
 	}
 	
 	@Test
-	public void getJarChecksumTest() {
+	public void getJarChecksum_withManifestEntries_returnsNotNull() {
 		Attributes attributes = new Attributes();
 		attributes.put(Attributes.Name.CONTENT_TYPE, "test");
 		Map<String, Attributes> entries = new HashMap<>();
@@ -180,6 +181,24 @@ public class SoftwareUpdateHandlerTest {
 		entries.put("registration-services", attributes);
 		Mockito.when(manifest.getEntries()).thenReturn(entries);
 		assertNotNull(softwareUpdateHandler.getJarChecksum());
+	}
+
+	@Test
+	public void updateDerbyDB_withVersionMappingsParseError_returnsResponse() throws Exception {
+		SoftwareUpdateHandler spyHandler = PowerMockito.spy(softwareUpdateHandler);
+		Attributes attributes = new Attributes();
+		attributes.put(Attributes.Name.MANIFEST_VERSION, "1.2.3");
+		ReflectionTestUtils.setField(spyHandler, "localManifest", manifest);
+		Mockito.when(manifest.getMainAttributes()).thenReturn(attributes);
+		Mockito.when(ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SERVICES_VERSION_KEY))
+				.thenReturn("0");
+
+		PowerMockito.doThrow(new RuntimeException("parse error")).when(spyHandler, "getSortedVersionMappings",
+				RegistrationConstants.VERSION_MAPPINGS_KEY);
+
+		ResponseDTO response = spyHandler.updateDerbyDB();
+
+		Assert.assertNotNull(response);
 	}
 
 }

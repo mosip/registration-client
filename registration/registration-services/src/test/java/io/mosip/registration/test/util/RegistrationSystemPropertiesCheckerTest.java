@@ -20,4 +20,13 @@ public class RegistrationSystemPropertiesCheckerTest {
 		assertEquals(expected, actual);
 		assertNotNull(actual);
 	}
+
+	@Test
+	public void getMachineId_realCall_returnSuccess() {
+		String machineId = RegistrationSystemPropertiesChecker.getMachineId();
+
+		assertNotNull(machineId);
+		assertEquals(machineId.toLowerCase(), machineId);
+	}
+
 }
