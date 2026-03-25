@@ -3,6 +3,10 @@ package registrationtest.utility;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Properties;
 
 
@@ -26,6 +30,31 @@ public class PropertiesUtil {
             return p.getProperty(key);
         }
 
+    }
+    
+    public static void deleteFolder(String folderPath) {
+        Path path = Paths.get(folderPath);
+        try {
+            if (Files.exists(path)) {
+                Files.walk(path)
+                        .sorted(Comparator.reverseOrder())
+                        .forEach(p -> {
+                            try {
+                                Files.delete(p);
+                            } catch (IOException e) {
+                                System.err.println("Failed to delete: " + p);
+                                e.printStackTrace();
+                            }
+                        });
+
+                System.out.println("Folder deleted successfully: " + folderPath);
+            } else {
+                System.out.println("Folder does not exist: " + folderPath);
+            }
+        } catch (IOException e) {
+            System.err.println("Error deleting folder: " + folderPath);
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) throws IOException {

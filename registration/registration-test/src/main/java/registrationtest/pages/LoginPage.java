@@ -43,7 +43,7 @@ public class LoginPage {
     String logout = "#logout";
     String submit = "#submit1";
     String userOnboardMessage = "#userOnboardMessage";
-    String success = "Success";
+    String success = "#success";
     String exit = "#exit";
     String appLanguage = "#appLanguage";
 
@@ -171,7 +171,7 @@ public class LoginPage {
             // if home else fail or check the #context
 
             waitsUtil.clickNodeAssert("#sub2");
-    
+            Thread.sleep(15000);
             waitsUtil.clickNodeAssert(success);
 
             flag = true;
