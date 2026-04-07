@@ -1,4 +1,4 @@
-# MOSIP Registration Client: Java 11 to Java 21 Migration Design
+# MOSIP Registration Client: Revamp of full & patch upgrades including Java 11 to Java 21 Migration approach
 
 ## Problem Statement
 
