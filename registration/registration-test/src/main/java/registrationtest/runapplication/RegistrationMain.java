@@ -178,6 +178,65 @@ public class RegistrationMain {
 
         LauncherImpl.launchApplication(ClientApplication.class, ClientPreLoader.class, args);
     }
+    
+    public static void invokeRegClientInitialLaunch(String operatorId, String operatorPwd, String supervisorId, String supervisorPwd,
+			String reviewerUserid, String reviewerpwd) {
+		NewReg loginNewRegLogout = new NewReg();
+		ManualReg manualReg = new ManualReg();
+		WaitsUtil waitsUtil = new WaitsUtil();
+		Thread thread = new Thread() {
+			@Override
+			public void run() {
+				try {
+
+					// loop until application primary stage is not loaded
+					while (ClientApplication.getPrimaryStage() == null) {
+						Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait")));
+					}
+
+					logger.info("Application primary stage setup completed " + DateUtil.getDateTime());
+					Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait")));
+
+					robot = new FxRobot();
+					ExtentReportUtil.ExtentSetting();
+
+					String manualFlag = PropertiesUtil.getKeyValue("manual");
+					if (manualFlag.equalsIgnoreCase("Y")) {
+						manualReg.manualRegistration(robot, operatorId, operatorPwd, supervisorId, supervisorPwd,
+								ClientApplication.getPrimaryStage(), ClientApplication.getApplicationContext());
+					}
+
+					try {
+
+						Boolean flag = false;
+						flag = loginNewRegLogout.initialRegclientSet(robot, operatorId, operatorPwd, "1initallaunch",
+								ClientApplication.getPrimaryStage());
+						logger.info("Operator Onboarding status=" + flag);
+						ExtentReportUtil.reports.flush();
+
+					} catch (Exception e) {
+
+						logger.error("", e);
+
+						ExtentReportUtil.test1.log(Status.FAIL, "TESTCASE FAIL");
+						ExtentReportUtil.reports.flush();
+						waitsUtil.capture();
+					}
+
+					if (!manualFlag.equalsIgnoreCase("Y"))
+						System.exit(0);
+				}  catch (Exception e) {
+					logger.error("", e);
+					ExtentReportUtil.reports.flush();
+					waitsUtil.capture();
+				}
+			}
+
+		};
+		thread.start();
+		String args[] = {};
+		LauncherImpl.launchApplication(ClientApplication.class, ClientPreLoader.class, args);
+	}
 
 
     public static void main(String[] args) {
@@ -186,17 +245,16 @@ public class RegistrationMain {
             System.setProperty("file.encoding", "UTF-8");
             System.setProperty("derby.ui.codeset", "UTF-8");
             System.setProperty("jdbc.drivers", "org.apache.derby.jdbc.EmbeddedDriver");
-           // System.setProperty("mosip.hostname", PropertiesUtil.getKeyValue("mosip.hostname"));
-
-//				//if (Boolean.getBoolean("headless")) {
-//				    System.setProperty("testfx.robot", "glass");
-//				    System.setProperty("testfx.headless", "true");
-//				    System.setProperty("prism.order", "sw");
-//				    System.setProperty("prism.text", "t2k");
-//				    System.setProperty("java.awt.headless", "true");
-//				    System.setProperty("glass.platform","Monocle");
-//				    System.setProperty("monocle.platform","Headless");
-				    
+            
+            if ("initiallaunch".equalsIgnoreCase(System.getProperty("module.run")))  {
+            	PropertiesUtil.deleteFolder(System.getProperty("user.dir")+"/logs");
+            	PropertiesUtil.deleteFolder(System.getProperty("user.dir")+"/db");
+            	PropertiesUtil.deleteFolder(System.getProperty("user.dir")+"/.mosipkeys");
+            	invokeRegClientInitialLaunch(PropertiesUtil.getKeyValue("operatorId"), PropertiesUtil.getKeyValue("operatorPwd"),
+						PropertiesUtil.getKeyValue("supervisorUserid"), PropertiesUtil.getKeyValue("supervisorUserpwd"),
+						PropertiesUtil.getKeyValue("reviewmvn clean install -DskipTests -Dgpg.skip=trueerUserid"), PropertiesUtil.getKeyValue("reviewerpwd"));
+				return;
+            }   
 
             invokeRegClient(PropertiesUtil.getKeyValue("operatorId"), PropertiesUtil.getKeyValue("operatorPwd"),
                     PropertiesUtil.getKeyValue("supervisorUserid"), PropertiesUtil.getKeyValue("supervisorUserpwd"),
