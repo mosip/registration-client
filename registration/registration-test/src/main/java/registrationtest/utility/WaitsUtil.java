@@ -80,6 +80,44 @@ public class WaitsUtil {
         robot.clickOn(node);
     }
     
+    public void assertNodeDisabled(String id) {
+
+        Node node = waitForNodePresent(id);
+
+        assertThat(node)
+                .as("Node not found: " + id)
+                .isNotNull();
+
+        assertThat(node.isDisable())
+                .as("Expected node '" + id + "' to be disabled")
+                .isTrue();
+    }
+    
+    public void assertNodeEnabled(String id) {
+
+        Node node = waitForNodePresent(id);
+
+        assertThat(node)
+                .as("Node not found: " + id)
+                .isNotNull();
+
+        assertThat(node.isDisable())
+                .as("Expected node '" + id + "' to be enabled")
+                .isFalse();
+    }
+    
+    public Node waitForNodePresent(String id) {
+        try {
+			WaitForAsyncUtils.waitFor(20, TimeUnit.SECONDS, () -> {
+			    return robot.lookup(id).tryQuery().isPresent();
+			});
+		} catch (TimeoutException e) {
+			e.printStackTrace();
+		}
+
+        return robot.lookup(id).query();
+    }
+
 	public void clickIfPresent(String id) {
 		try {
 			Thread.sleep(400);
