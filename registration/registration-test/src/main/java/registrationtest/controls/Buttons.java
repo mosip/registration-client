@@ -11,7 +11,7 @@ public class Buttons {
 
     private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(Buttons.class);
     String continueBtn = "#continueBtn", backBtn = "#backBtn", confirm = "#confirm", uploadBtn = "#uploadBtn",
-            cancel = "#cancel", submit = "#submit", next = "#next", authenticate = "#authenticate", print = "#print";
+            cancel = "#cancel", submit = "#submit", next = "#next", authenticate = "#authenticate", print = "#print" , nextbtn = "#next";
 
     WaitsUtil waitsUtil;
     FxRobot robot;
@@ -34,6 +34,12 @@ public class Buttons {
     public void clickContinueBtn() {
         logger.info("clickContinueBtn");
         waitsUtil.clickNodeAssert(continueBtn);
+
+    }
+    
+    public void clickNextBtn() {
+        logger.info("clickContinueBtn");
+        waitsUtil.clickNodeAssert(nextbtn);
 
     }
 
@@ -97,5 +103,15 @@ public class Buttons {
         logger.info("clickAuthenticateBtn");
         waitsUtil.clickNodeAssert(authenticate);
 
+    }
+    
+    public void verifySubmitButtonDisabled() {
+        logger.info("verifySubmitButtonDisabled");
+        waitsUtil.assertNodeDisabled(submit);
+    }
+    
+    public void verifySubmitButtonEnabled() {
+        logger.info("verifySubmitButtonEnabled");
+        waitsUtil.assertNodeEnabled(submit);
     }
 }

@@ -2,6 +2,7 @@ package registrationtest.utility;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -51,6 +52,18 @@ public class JsonUtil {
             logger.error("", e);
         }
         return payload;
+    }
+    
+    public static String getIdentityValue(String identity,String key){
+    	String value=null;
+    	try{
+    		ObjectMapper mapper=new ObjectMapper();
+    		JsonNode rootNode=mapper.readTree(identity);
+    		value=rootNode.path("identity").path(key).asText();
+    	}catch(Exception e){
+    		logger.error("",e);
+    	}
+    	return value;
     }
 
     public static LinkedHashMap<String, String> JsonObjSimpleParsing(String jsonIdentity, String idfield)
