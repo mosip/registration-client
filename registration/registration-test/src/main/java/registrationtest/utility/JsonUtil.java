@@ -54,17 +54,20 @@ public class JsonUtil {
         return payload;
     }
     
-    public static String getIdentityValue(String identity,String key){
-    	String value=null;
-    	try{
-    		ObjectMapper mapper=new ObjectMapper();
-    		JsonNode rootNode=mapper.readTree(identity);
-    		value=rootNode.path("identity").path(key).asText();
-    	}catch(Exception e){
-    		logger.error("",e);
-    	}
-    	return value;
-    }
+	public static String getIdentityValue(String identity, String key) {
+		try {
+			JsonNode identityNode = mapper.readTree(identity).path(PropertiesUtil.getKeyValue("jsonObjName"));
+
+			if (identityNode.isMissingNode() || !identityNode.hasNonNull(key)) {
+				throw new IllegalArgumentException("Missing identity key: " + key);
+			}
+
+			return identityNode.get(key).asText();
+		} catch (IOException e) {
+			logger.error("Failed to parse identity JSON", e);
+			throw new IllegalArgumentException("Invalid identity JSON", e);
+		}
+	}
 
     public static LinkedHashMap<String, String> JsonObjSimpleParsing(String jsonIdentity, String idfield)
             throws Exception {
