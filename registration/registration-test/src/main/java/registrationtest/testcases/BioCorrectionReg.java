@@ -129,11 +129,11 @@ public class BioCorrectionReg {
             
             webViewDocument = demographicPage.screensFlow(jsonContent, process, ageGroup);
 
-            buttons.clicknextBtn();
+            buttons.clickNextBtn();
 
             rid1 = webViewDocument.acceptPreview(process);
 
-            buttons.clicknextBtn();
+            buttons.clickNextBtn();
 
             if (!rid1.rid.trim().isEmpty()) {
                 ExtentReportUtil.test1.info("Demo, Doc, Bio - Done");

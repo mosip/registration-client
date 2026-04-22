@@ -145,7 +145,8 @@ public class NewReg {
         try {
           
             ExtentReportUtil.test1 = ExtentReportUtil.reports.createTest("Onboard " + operatorUserid +  " "+filename);
-
+            String username = JsonUtil.getIdentityValue(jsoncontent, "username");
+            String password = JsonUtil.getIdentityValue(jsoncontent, "password");
             loginPage = new LoginPage(robot);
             buttons = new Buttons(robot);
             authenticationPage = new AuthenticationPage(robot);
@@ -168,10 +169,25 @@ public class NewReg {
             loginPage.selectAppLang();
             buttons.clickcancelBtn();
             }
-            loginPage.setUserId(operatorUserid);
-            flag = loginPage.verifyOnbard(operatorPwd, jsoncontent);
-        //    flag2 = loginPage.verifyOnboardBio(jsoncontent);
-            
+            if(username.equalsIgnoreCase("invalid")){
+            	loginPage.submitWithoutUserId();
+            	loginPage.setInvalidUserId(operatorUserid);
+//            	alerts.clickAlertexit();
+            	loginPage.setUserId(operatorUserid);
+            }else
+            	loginPage.setUserId(operatorUserid);
+
+            if(password.equalsIgnoreCase("invalid")){
+            	loginPage.verifyBackButtonFunctionality();
+            	loginPage.submitWithoutPassword();
+            	loginPage.setInvalidPassword(operatorPwd);
+//            	alerts.clickAlertexit();
+            	loginPage.setPassword(operatorPwd);
+            }else
+            	loginPage.setPassword(operatorPwd);
+            flag = loginPage.verifyOnbard(jsoncontent);
+            homePage.clickNewRegistration();
+            buttons.clickcancelBtn();
             ExtentReportUtil.test1.info("Operator logs in");
 
             if (flag == true ) {
@@ -270,17 +286,19 @@ public class NewReg {
             demographicPage = homePage.clickNewRegistration();
 
             if (PropertiesUtil.getKeyValue("multilang").equals("Y")) {
+            	buttons.verifySubmitButtonDisabled();
                 selectLanguagePage.selectLang();
+                buttons.verifySubmitButtonEnabled();
                 buttons.clicksubmitBtn();
             }
 
             webViewDocument = demographicPage.screensFlow(jsonContent, process, ageGroup);
 
-            buttons.clicknextBtn();
+            buttons.clickNextBtn();
 
             rid1 = webViewDocument.acceptPreview(process);
 
-            buttons.clicknextBtn();
+            buttons.clickNextBtn();
             
             if (!rid1.rid.trim().isEmpty()) {
                 ExtentReportUtil.test1.info("Demo, Doc, Bio - Done");
