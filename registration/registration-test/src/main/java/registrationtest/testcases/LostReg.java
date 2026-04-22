@@ -120,11 +120,11 @@ public class LostReg {
 
             webViewDocument = demographicPage.screensFlow(jsonContent, flow, ageGroup);
 
-            buttons.clicknextBtn();
+            buttons.clickNextBtn();
 
             rid1 = webViewDocument.acceptPreview(flow); // return thread and wait on thread
 
-            buttons.clicknextBtn();
+            buttons.clickNextBtn();
 
             if (!rid1.rid.trim().isEmpty()) {
                 ExtentReportUtil.test1.info("Demo, Doc, Bio - Done");
