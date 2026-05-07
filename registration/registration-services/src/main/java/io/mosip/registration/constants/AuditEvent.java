@@ -280,6 +280,13 @@ public enum AuditEvent {
 	MDM_NO_DEVICE_AVAILABLE("REG-EVT-087", USER_EVENT.getCode(), "DEVICE_NOT_FOUND", "No device is available"),
 	MDM_DEVICE_FOUND("REG-EVT-088", USER_EVENT.getCode(), "MDM_DEVICE_FOUND", "Device is found"),
 
+	// SDK Quality Evaluation
+	SDK_QUALITY_SUCCESS("REG-EVT-104", SYSTEM_EVENT.getCode(), "SDK_QUALITY_SUCCESS", "SDK biometric quality evaluation succeeded"),
+	SDK_QUALITY_FAILED("REG-EVT-105", SYSTEM_EVENT.getCode(), "SDK_QUALITY_FAILED", "SDK biometric quality evaluation failed, registration blocked"),
+	SDK_FALLBACK_TO_SBI("REG-EVT-106", SYSTEM_EVENT.getCode(), "SDK_FALLBACK_TO_SBI", "SDK unavailable, fell back to SBI quality score"),
+	SDK_QUALITY_DISABLED("REG-EVT-107", SYSTEM_EVENT.getCode(), "SDK_QUALITY_DISABLED", "SDK quality evaluation disabled, using SBI score"),
+	NO_VALID_QUALITY_SCORE("REG-EVT-108", SYSTEM_EVENT.getCode(), "NO_VALID_QUALITY_SCORE", "No valid quality score from SDK or SBI, registration blocked"),
+
 	REG_DOC_SCAN("REG-EVT-089", USER_EVENT.getCode(), "REG_DOC_SCAN", "Doc: Click of Scan"),
 	REG_DOC_VIEW("REG-EVT-090", USER_EVENT.getCode(), "REG_DOC_VIEW", "Doc: View"),
 	REG_DOC_DELETE("REG-EVT-091", USER_EVENT.getCode(), "REG_DOC_DELETE", "Doc: Delete"),
