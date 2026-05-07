@@ -20,6 +20,7 @@ public class BiometricsDto {
 	private boolean isCaptured;
 	private String subType;
 	private double sdkScore;
+	private String qualitySource;
 	private String payLoad;
 	private String signature;
 	private String specVersion;

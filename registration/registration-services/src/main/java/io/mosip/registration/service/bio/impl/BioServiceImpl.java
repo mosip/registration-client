@@ -7,6 +7,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import java.io.InputStream;
 import java.time.temporal.ValueRange;
 import java.util.*;
+import java.util.concurrent.*;
 
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.enums.Modality;
@@ -29,6 +30,7 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dto.RegistrationDTO;
+import io.mosip.registration.dto.biometric.QualityEvaluationResult;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
@@ -68,6 +70,8 @@ public class BioServiceImpl extends BaseService implements BioService {
 	@Autowired
 	private BIRBuilder birBuilder;
 
+	private final ExecutorService sdkExecutor = Executors.newSingleThreadExecutor();
+
 	/**
 	 * Gets the registration DTO from session.
 	 *
@@ -97,16 +101,11 @@ public class BioServiceImpl extends BaseService implements BioService {
 					throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_SCORE_RANGE_ERROR.getErrorCode(),
 							RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_SCORE_RANGE_ERROR.getErrorMessage());
 
-				if (RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map()
-						.getOrDefault(RegistrationConstants.QUALITY_CHECK_WITH_SDK, RegistrationConstants.DISABLE))) {
-					try {
-						biometricsDto.setSdkScore(getSDKScore(biometricsDto));
-					} catch (BiometricException e) {
-						LOGGER.error("Unable to fetch SDK Score ", e);
-						throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorCode(),
-								RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorMessage());
-					}
-				}
+				QualityEvaluationResult result = evaluateQuality(biometricsDto);
+				biometricsDto.setSdkScore(result.getScore());
+				biometricsDto.setQualitySource(result.getSource());
+				LOGGER.info("Quality evaluation complete: score={}, source={}, fallback={}",
+						result.getScore(), result.getSource(), result.isFallback());
 				list.add(biometricsDto);
 			}
 		} catch (RegBaseCheckedException e) {
@@ -161,6 +160,111 @@ public class BioServiceImpl extends BaseService implements BioService {
 				RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
 	}
 
+	/**
+	 * Orchestrates biometric quality evaluation across SDK and SBI sources.
+	 *
+	 * Decision rules:
+	 * - SDK disabled in config: use SBI score (AS-03)
+	 * - SDK enabled but provider unbound: fall back to SBI score (AS-02)
+	 * - SDK enabled, provider bound, call fails (timeout/null/exception): block, no fallback
+	 */
+	private QualityEvaluationResult evaluateQuality(BiometricsDto biometricsDto) throws RegBaseCheckedException {
+		boolean sdkEnabled = RegistrationConstants.ENABLE.equalsIgnoreCase(
+				(String) ApplicationContext.map().getOrDefault(
+						RegistrationConstants.QUALITY_CHECK_WITH_SDK, RegistrationConstants.DISABLE));
+
+		if (!sdkEnabled) {
+			LOGGER.info("SDK quality evaluation disabled, using SBI score for {}", biometricsDto.getBioAttribute());
+			return new QualityEvaluationResult(biometricsDto.getQualityScore(), "SBI", false);
+		}
+
+		BiometricType biometricType = BiometricType
+				.fromValue(io.mosip.commons.packet.constants.Biometric
+						.getSingleTypeByAttribute(biometricsDto.getBioAttribute()).name());
+
+		// Check provider availability before committing to SDK path
+		Object provider = null;
+		try {
+			provider = bioAPIFactory.getBioProvider(biometricType, BiometricFunction.QUALITY_CHECK);
+		} catch (Exception e) {
+			LOGGER.warn("SDK provider not available for {}, falling back to SBI", biometricType);
+		}
+
+		if (provider == null) {
+			LOGGER.info("SDK provider unbound, falling back to SBI score for {}", biometricsDto.getBioAttribute());
+			double sbiScore = biometricsDto.getQualityScore();
+			if (sbiScore <= 0) {
+				LOGGER.error("SBI score also unavailable for {}", biometricsDto.getBioAttribute());
+				throw new RegBaseCheckedException(
+						RegistrationExceptionConstants.REG_SBI_SCORE_MISSING.getErrorCode(),
+						RegistrationExceptionConstants.REG_SBI_SCORE_MISSING.getErrorMessage());
+			}
+			return new QualityEvaluationResult(sbiScore, "SBI", true);
+		}
+
+		// SDK provider is bound - call with timeout. Any failure here blocks registration.
+		long timeoutMs = getSdkTimeoutMs();
+		BIR bir = birBuilder.buildBir(biometricsDto, ProcessedLevelType.RAW);
+		BIR[] birList = new BIR[]{bir};
+
+		Future<Double> future = sdkExecutor.submit(() -> {
+			try {
+				Map<BiometricType, Float> scoreMap = bioAPIFactory
+						.getBioProvider(biometricType, BiometricFunction.QUALITY_CHECK)
+						.getModalityQuality(birList, null);
+				return (scoreMap != null && scoreMap.get(biometricType) != null)
+						? scoreMap.get(biometricType).doubleValue()
+						: null;
+			} catch (Exception e) {
+				LOGGER.error("SDK provider threw during quality check", e);
+				throw new RuntimeException(e);
+			}
+		});
+
+		try {
+			Double score = future.get(timeoutMs, TimeUnit.MILLISECONDS);
+			if (score == null) {
+				LOGGER.error("SDK returned null quality score for {}", biometricsDto.getBioAttribute());
+				throw new RegBaseCheckedException(
+						RegistrationExceptionConstants.REG_SDK_NULL_RESPONSE.getErrorCode(),
+						RegistrationExceptionConstants.REG_SDK_NULL_RESPONSE.getErrorMessage());
+			}
+			LOGGER.info("SDK quality score {} received for {}", score, biometricsDto.getBioAttribute());
+			return new QualityEvaluationResult(score, "SDK", false);
+
+		} catch (TimeoutException e) {
+			future.cancel(true);
+			LOGGER.error("SDK quality evaluation timed out after {}ms for {}", timeoutMs, biometricsDto.getBioAttribute());
+			throw new RegBaseCheckedException(
+					RegistrationExceptionConstants.REG_SDK_TIMEOUT.getErrorCode(),
+					RegistrationExceptionConstants.REG_SDK_TIMEOUT.getErrorMessage());
+
+		} catch (ExecutionException e) {
+			LOGGER.error("SDK runtime error during quality evaluation for {}", biometricsDto.getBioAttribute(), e);
+			throw new RegBaseCheckedException(
+					RegistrationExceptionConstants.REG_SDK_RUNTIME_ERROR.getErrorCode(),
+					RegistrationExceptionConstants.REG_SDK_RUNTIME_ERROR.getErrorMessage());
+
+		} catch (RegBaseCheckedException e) {
+			throw e;
+
+		} catch (Exception e) {
+			LOGGER.error("Unexpected error during SDK quality evaluation", e);
+			throw new RegBaseCheckedException(
+					RegistrationExceptionConstants.REG_SDK_RUNTIME_ERROR.getErrorCode(),
+					RegistrationExceptionConstants.REG_SDK_RUNTIME_ERROR.getErrorMessage());
+		}
+	}
+
+	private long getSdkTimeoutMs() {
+		String configured = getGlobalConfigValueOf(RegistrationConstants.SDK_QUALITY_TIMEOUT);
+		try {
+			return configured != null ? Long.parseLong(configured) : RegistrationConstants.SDK_QUALITY_TIMEOUT_DEFAULT_MS;
+		} catch (NumberFormatException e) {
+			return RegistrationConstants.SDK_QUALITY_TIMEOUT_DEFAULT_MS;
+		}
+	}
+
 	@Override
 	public double getSDKScore(BiometricsDto biometricsDto) throws BiometricException {
 		BiometricType biometricType = BiometricType
@@ -196,7 +300,15 @@ public class BioServiceImpl extends BaseService implements BioService {
 						capturedContext.put(attribute, true);
 						continue;
 					}
-					quality = quality + biometricsDto.getQualityScore();
+					double effectiveScore = (biometricsDto.getSdkScore() > 0)
+							? biometricsDto.getSdkScore()
+							: biometricsDto.getQualityScore();
+					if (effectiveScore <= 0) {
+						LOGGER.warn("No valid quality score available for attribute {}", attribute);
+						capturedContext.put(attribute, false);
+						continue;
+					}
+					quality = quality + effectiveScore;
 					capturedAttributes.add(attribute);
 				}
 				//if some attributes are captured, determine capture status based on threshold check
