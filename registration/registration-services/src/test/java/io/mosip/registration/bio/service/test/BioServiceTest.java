@@ -320,6 +320,77 @@ public class BioServiceTest {
     }
 
     @Test
+    public void sdkQualityEvaluationEnabledTest() throws BiometricException {
+        // Enable SDK quality check
+        ApplicationContext.map().put(RegistrationConstants.QUALITY_CHECK_WITH_SDK, RegistrationConstants.ENABLE);
+
+        Map<BiometricType, Float> qualityMap = new HashMap<>();
+        qualityMap.put(BiometricType.FACE, Float.valueOf("85.0"));
+        BioProviderImpl_V_0_9 providerImpl_v_0_9 = Mockito.mock(BioProviderImpl_V_0_9.class);
+        Mockito.when(bioAPIFactory.getBioProvider(Mockito.any(), Mockito.any())).thenReturn(providerImpl_v_0_9);
+        Mockito.when(providerImpl_v_0_9.getModalityQuality(Mockito.any(), Mockito.any())).thenReturn(qualityMap);
+
+        BiometricsDto biometricsDto = new BiometricsDto();
+        biometricsDto.setBioAttribute("face");
+        biometricsDto.setQualityScore(70.0);
+        biometricsDto.setAttributeISO(new byte[]{1, 2, 3});
+        biometricsDto.setModalityName(Modality.FACE.name());
+
+        double sdkScore = bioService.getSDKScore(biometricsDto);
+        Assert.assertEquals(85.0, sdkScore, 0);
+
+        // Cleanup
+        ApplicationContext.map().remove(RegistrationConstants.QUALITY_CHECK_WITH_SDK);
+    }
+
+    @Test
+    public void sdkQualityDisabledFallbackToSbiTest() {
+        // Ensure SDK is disabled
+        ApplicationContext.map().put(RegistrationConstants.QUALITY_CHECK_WITH_SDK, RegistrationConstants.DISABLE);
+
+        boolean sdkEnabled = RegistrationConstants.ENABLE.equalsIgnoreCase(
+                (String) ApplicationContext.map().getOrDefault(
+                        RegistrationConstants.QUALITY_CHECK_WITH_SDK, RegistrationConstants.DISABLE));
+        Assert.assertFalse("SDK should be disabled, SBI fallback expected", sdkEnabled);
+
+        // Cleanup
+        ApplicationContext.map().remove(RegistrationConstants.QUALITY_CHECK_WITH_SDK);
+    }
+
+    @Test(expected = BiometricException.class)
+    public void sdkQualityEvaluationExceptionTest() throws BiometricException {
+        BioProviderImpl_V_0_9 providerImpl_v_0_9 = Mockito.mock(BioProviderImpl_V_0_9.class);
+        Mockito.when(bioAPIFactory.getBioProvider(Mockito.any(), Mockito.any())).thenReturn(providerImpl_v_0_9);
+        Mockito.when(providerImpl_v_0_9.getModalityQuality(Mockito.any(), Mockito.any()))
+                .thenThrow(new BiometricException("SDK_ERR", "SDK evaluation failed"));
+
+        BiometricsDto biometricsDto = new BiometricsDto();
+        biometricsDto.setBioAttribute("face");
+        biometricsDto.setQualityScore(70.0);
+        biometricsDto.setAttributeISO(new byte[]{1, 2, 3});
+        biometricsDto.setModalityName(Modality.FACE.name());
+
+        bioService.getSDKScore(biometricsDto);
+    }
+
+    @Test
+    public void sdkTimeoutConfigurationTest() {
+        // Test default timeout when not configured
+        Integer timeout = ApplicationContext.getIntValueFromApplicationMap(
+                RegistrationConstants.SDK_QUALITY_EVALUATION_TIMEOUT);
+        Assert.assertNull("Default timeout config should be null", timeout);
+
+        // Test configured timeout
+        ApplicationContext.map().put(RegistrationConstants.SDK_QUALITY_EVALUATION_TIMEOUT, "5000");
+        timeout = ApplicationContext.getIntValueFromApplicationMap(
+                RegistrationConstants.SDK_QUALITY_EVALUATION_TIMEOUT);
+        Assert.assertEquals(Integer.valueOf(5000), timeout);
+
+        // Cleanup
+        ApplicationContext.map().remove(RegistrationConstants.SDK_QUALITY_EVALUATION_TIMEOUT);
+    }
+
+    @Test
     public void buildBirTest() {
         BiometricsDto biometricsDto = new BiometricsDto();
         biometricsDto.setBioAttribute("face");
