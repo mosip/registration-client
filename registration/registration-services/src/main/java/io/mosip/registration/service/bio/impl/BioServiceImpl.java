@@ -264,6 +264,7 @@ public class BioServiceImpl extends BaseService implements BioService {
 			case IRIS_DOUBLE:
 				thresholdScore = getGlobalConfigValueOf(RegistrationConstants.IRIS_THRESHOLD);
 				break;
+			case EXCEPTION_PHOTO:
 			case FACE:
 				thresholdScore = getGlobalConfigValueOf(RegistrationConstants.FACE_THRESHOLD);
 				break;
