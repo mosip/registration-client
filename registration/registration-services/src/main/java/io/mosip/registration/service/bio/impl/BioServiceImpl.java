@@ -170,8 +170,13 @@ public class BioServiceImpl extends BaseService implements BioService {
 		Map<BiometricType, Float> scoreMap = bioAPIFactory
 				.getBioProvider(biometricType, BiometricFunction.QUALITY_CHECK)
 				.getModalityQuality(birList, null);
-		
-		return scoreMap.get(biometricType);
+
+		Float score = scoreMap.get(biometricType);
+		if (score == null) {
+			throw new BiometricException("SDK_SCORE_NULL",
+					"SDK did not return quality score for " + biometricType);
+		}
+		return score.doubleValue();
 	}
 
 	@Override

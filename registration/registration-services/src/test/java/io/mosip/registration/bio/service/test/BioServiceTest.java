@@ -319,6 +319,40 @@ public class BioServiceTest {
         Assert.assertEquals(45, score, 0);
     }
 
+    @Test(expected = BiometricException.class)
+    public void getSDKScoreMissingModalityKeyThrowsTest() throws BiometricException {
+        // SDK returns a map that does not contain the queried modality key
+        Map<BiometricType, Float> qualityMap = new HashMap<>();
+        qualityMap.put(BiometricType.FINGER, Float.valueOf("60.0")); // FACE key absent
+        BioProviderImpl_V_0_9 providerImpl_v_0_9 = Mockito.mock(BioProviderImpl_V_0_9.class);
+
+        Mockito.when(bioAPIFactory.getBioProvider(Mockito.any(), Mockito.any())).thenReturn(providerImpl_v_0_9);
+        Mockito.when(providerImpl_v_0_9.getModalityQuality(Mockito.any(), Mockito.any())).thenReturn(qualityMap);
+
+        BiometricsDto biometricsDto = new BiometricsDto();
+        biometricsDto.setBioAttribute("face");
+        biometricsDto.setQualityScore(70.0);
+        biometricsDto.setAttributeISO(new byte[0]);
+        biometricsDto.setModalityName(Modality.FACE.name());
+        bioService.getSDKScore(biometricsDto); // must throw BiometricException, not NPE
+    }
+
+    @Test(expected = BiometricException.class)
+    public void getSDKScoreEmptyMapThrowsTest() throws BiometricException {
+        // SDK returns an empty map — no entries at all
+        BioProviderImpl_V_0_9 providerImpl_v_0_9 = Mockito.mock(BioProviderImpl_V_0_9.class);
+
+        Mockito.when(bioAPIFactory.getBioProvider(Mockito.any(), Mockito.any())).thenReturn(providerImpl_v_0_9);
+        Mockito.when(providerImpl_v_0_9.getModalityQuality(Mockito.any(), Mockito.any())).thenReturn(Collections.emptyMap());
+
+        BiometricsDto biometricsDto = new BiometricsDto();
+        biometricsDto.setBioAttribute("face");
+        biometricsDto.setQualityScore(70.0);
+        biometricsDto.setAttributeISO(new byte[0]);
+        biometricsDto.setModalityName(Modality.FACE.name());
+        bioService.getSDKScore(biometricsDto); // must throw BiometricException, not NPE
+    }
+
     @Test
     public void buildBirTest() {
         BiometricsDto biometricsDto = new BiometricsDto();
