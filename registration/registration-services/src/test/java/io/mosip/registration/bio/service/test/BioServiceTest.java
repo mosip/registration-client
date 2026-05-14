@@ -133,6 +133,28 @@ public class BioServiceTest {
     }
 
     @Test
+    public void getHttpClientResponseReturnsStreamAndClosesTest() throws IOException {
+        MockResponse mockResponse = new MockResponse().setBody("stream-data");
+        mockWebServer.enqueue(mockResponse);
+
+        String url = mosipDeviceSpecificationHelper.buildUrl(4501, "stream");
+        InputStream stream = mosipDeviceSpecificationHelper.getHttpClientResponse(url, "GET", "");
+        Assert.assertNotNull(stream);
+        stream.close(); // must not throw; closes response and client
+    }
+
+    @Test
+    public void getHttpClientResponseNullOnNoEntityTest() throws IOException {
+        // Server returns 204 No Content — entity will be null
+        MockResponse mockResponse = new MockResponse().setResponseCode(204);
+        mockWebServer.enqueue(mockResponse);
+
+        String url = mosipDeviceSpecificationHelper.buildUrl(4501, "stream");
+        InputStream stream = mosipDeviceSpecificationHelper.getHttpClientResponse(url, "GET", "");
+        Assert.assertNull(stream);
+    }
+
+    @Test
     public void checkServiceAvailabilityTest() throws IOException {
         mockWebServer.enqueue(new MockResponse());
         String serviceUrl = mosipDeviceSpecificationHelper.buildUrl(4501, MosipBioDeviceConstants.DEVICE_INFO_ENDPOINT);
