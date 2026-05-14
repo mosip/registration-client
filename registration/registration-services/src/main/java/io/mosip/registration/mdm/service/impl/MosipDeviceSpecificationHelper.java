@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -275,7 +276,7 @@ public class MosipDeviceSpecificationHelper {
 		}
 	}
 	
-	public CloseableHttpResponse getHttpClientResponse(String url, String method, String body) throws IOException {
+	public InputStream getHttpClientResponse(String url, String method, String body) throws IOException {
 		int timeout = getMDMConnectionTimeout(method);
 		LOGGER.debug("MDM HTTP CALL method : {}  with timeout {}", method, timeout);
 		RequestConfig requestConfig = RequestConfig.custom()
@@ -284,12 +285,36 @@ public class MosipDeviceSpecificationHelper {
 				.setConnectionRequestTimeout(timeout)
 				.build();
 		CloseableHttpClient client = HttpClients.createDefault();
-		StringEntity requestEntity = new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8));
-		HttpUriRequest httpUriRequest = RequestBuilder.create(method)
-				.setConfig(requestConfig)
-				.setUri(url)
-				.setEntity(requestEntity)
-				.build();
-		return client.execute(httpUriRequest);
+		try {
+			StringEntity requestEntity = new StringEntity(body, ContentType.create("Content-Type", Consts.UTF_8));
+			HttpUriRequest httpUriRequest = RequestBuilder.create(method)
+					.setConfig(requestConfig)
+					.setUri(url)
+					.setEntity(requestEntity)
+					.build();
+			CloseableHttpResponse response = client.execute(httpUriRequest);
+			if (response == null || response.getEntity() == null) {
+				response.close();
+				client.close();
+				return null;
+			}
+			return new FilterInputStream(response.getEntity().getContent()) {
+				@Override
+				public void close() throws IOException {
+					try {
+						super.close();
+					} finally {
+						try {
+							response.close();
+						} finally {
+							client.close();
+						}
+					}
+				}
+			};
+		} catch (IOException e) {
+			client.close();
+			throw e;
+		}
 	}
 }

@@ -14,7 +14,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -138,13 +137,8 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 					timeout);
 
 			String request = objectMapper.writeValueAsString(streamRequestDTO);
-			CloseableHttpResponse response = mosipDeviceSpecificationHelper.getHttpClientResponse(
+			InputStream urlStream = mosipDeviceSpecificationHelper.getHttpClientResponse(
 					bioDevice.getCallbackId() + MosipBioDeviceConstants.STREAM_ENDPOINT, "STREAM", request);
-
-			InputStream urlStream = null;
-			if (response != null && response.getEntity() != null) {
-				urlStream = response.getEntity().getContent();
-			}
 
 			try {
 				byte[] byteArray = mosipDeviceSpecificationHelper.getJPEGByteArray(urlStream,
