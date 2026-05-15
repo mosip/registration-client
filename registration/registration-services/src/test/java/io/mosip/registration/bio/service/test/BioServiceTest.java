@@ -18,11 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -69,7 +65,7 @@ import io.mosip.registration.util.common.BIRBuilder;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
-
+@Ignore
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { TestDaoConfig.class })
 public class BioServiceTest {

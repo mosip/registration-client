@@ -272,6 +272,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-auditmanager-api</artifactId>
+			<version>1.3.0</version>
 			<exclusions>
 				<exclusion>
 					<groupId>io.mosip.kernel</groupId>
