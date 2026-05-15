@@ -6,6 +6,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -36,7 +37,7 @@ public class ApplicationContext {
 	private static ApplicationContext applicationContext;
 
 	/** The application map. */
-	private static Map<String, Object> applicationMap = new HashMap<>();
+	private static Map<String, Object> applicationMap = new ConcurrentHashMap<>();
 
 	/** The application languge. */
 	private String applicationLanguge;
@@ -60,7 +61,7 @@ public class ApplicationContext {
 		this.optionalLanguages = optionalLanguages;
 	}
 
-	private static Map<String, ResourceBundle> resourceBundleMap = new HashMap<>();
+	private static Map<String, ResourceBundle> resourceBundleMap = new ConcurrentHashMap<>();
 
 	/**
 	 * Checks if is primary language right to left.
@@ -174,7 +175,7 @@ public class ApplicationContext {
 	 *
 	 * @return single instance of ApplicationContext
 	 */
-	public static ApplicationContext getInstance() {
+	public static synchronized ApplicationContext getInstance() {
 		if (applicationContext == null) {
 			applicationContext = new ApplicationContext();
 			applicationContext.authTokenDTO = new AuthTokenDTO();
