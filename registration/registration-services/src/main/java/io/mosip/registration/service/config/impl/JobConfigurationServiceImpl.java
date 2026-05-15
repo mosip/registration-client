@@ -17,6 +17,8 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.WeakHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import org.quartz.CronExpression;
@@ -140,6 +142,12 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 	private BaseJob baseJob;
 
 	private List<String> restartableJobList;
+
+	/**
+	 * Bounded thread pool for executing missed job triggers asynchronously.
+	 * Limits concurrent threads to prevent resource exhaustion.
+	 */
+	private final ExecutorService missedTriggerExecutor = Executors.newFixedThreadPool(5);
 
 	/**
 	 * create a parser based on provided definition
@@ -732,7 +740,7 @@ public class JobConfigurationServiceImpl extends BaseService implements JobConfi
 			String syncFrequency = getSyncFrequency(syncJob);
 			if (!isNull(syncFrequency) && !isNull(syncJob.getApiName())) {
 				/* An A-sync task to complete missed trigger */
-				new Thread(() -> executeMissedTrigger(jobId, syncFrequency)).start();
+				missedTriggerExecutor.submit(() -> executeMissedTrigger(jobId, syncFrequency));
 			}
 
 		});
