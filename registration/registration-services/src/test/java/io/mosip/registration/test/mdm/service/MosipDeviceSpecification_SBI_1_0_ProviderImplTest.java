@@ -675,7 +675,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 		bioDevice.setSpecVersion("1.0");
 		bioDevice.setPurpose("Registration");
 
-		MDMRequestDto req = new MDMRequestDto("FINGERPRINT_SLAB_LEFT", null, "Registration", "dev", 5000, 1, 70);
+		MDMRequestDto req = new MDMRequestDto("FINGERPRINT_SLAP_LEFT", null, "Registration", "dev", 5000, 1, 70);
 
 		String bioPayloadJson = "{\"bioSubType\":\"Left IndexFinger\",\"qualityScore\":\"80.0\"," +
 				"\"bioValue\":\"dGVzdA==\",\"transactionId\":\"TXN1\",\"timestamp\":\"2021-04-29T05:56:29\"}";

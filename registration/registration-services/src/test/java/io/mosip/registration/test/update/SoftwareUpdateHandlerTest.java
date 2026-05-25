@@ -22,9 +22,11 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -51,6 +53,9 @@ public class SoftwareUpdateHandlerTest {
 	
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
+
+	@Rule
+	public TemporaryFolder tempFolder = new TemporaryFolder();
 
 	@InjectMocks
 	private SoftwareUpdateHandler softwareUpdateHandler;
@@ -83,7 +88,8 @@ public class SoftwareUpdateHandlerTest {
 
 	@After
 	public void cleanup() {
-		// Remove MANIFEST.MF artifacts created by doSoftwareUpgrade tests so they don't bleed between tests
+		// MANIFEST.MF at the project root is written by the production update() method;
+		// tempFolder handles cleanup of all test-created directory trees automatically.
 		new File("MANIFEST.MF").delete();
 	}
 
@@ -94,7 +100,7 @@ public class SoftwareUpdateHandlerTest {
 		Mockito.doNothing().when(jdbcTemplate).execute(Mockito.anyString());
 		Map<String, VersionMappings> versionsMap = new LinkedHashMap<>();
 		versionsMap.put("0.11.0", new VersionMappings("0.11.0", 1, ""));
-		Assert.assertSame(RegistrationConstants.SQL_EXECUTION_SUCCESS,
+		Assert.assertEquals(RegistrationConstants.SQL_EXECUTION_SUCCESS,
 				softwareUpdateHandler.executeSqlFile("0.11.0", versionsMap).getSuccessResponseDTO().getMessage());
 	}
 
@@ -210,10 +216,11 @@ public class SoftwareUpdateHandlerTest {
 		versionsMap.put("0.11.0", new VersionMappings("0.11.0", 2, null));
 
 		ResponseDTO response = softwareUpdateHandler.executeSqlFile("0.9.0", versionsMap);
-		Assert.assertSame(RegistrationConstants.SQL_EXECUTION_SUCCESS,
+		Assert.assertEquals(RegistrationConstants.SQL_EXECUTION_SUCCESS,
 				response.getSuccessResponseDTO().getMessage());
-		Mockito.verify(globalParamService, Mockito.atLeast(2))
-				.update(Mockito.eq(RegistrationConstants.SERVICES_VERSION_KEY), Mockito.anyString());
+		InOrder inOrder = Mockito.inOrder(globalParamService);
+		inOrder.verify(globalParamService).update(RegistrationConstants.SERVICES_VERSION_KEY, "0.10.0");
+		inOrder.verify(globalParamService).update(RegistrationConstants.SERVICES_VERSION_KEY, "0.11.0");
 	}
 
 	@Test
@@ -242,7 +249,7 @@ public class SoftwareUpdateHandlerTest {
 
 		// previousVersion is "0.11.0" → releaseOrder 2; only entries with order > 2 run → none
 		ResponseDTO response = softwareUpdateHandler.executeSqlFile("0.11.0", versionsMap);
-		Assert.assertSame(RegistrationConstants.SQL_EXECUTION_SUCCESS,
+		Assert.assertEquals(RegistrationConstants.SQL_EXECUTION_SUCCESS,
 				response.getSuccessResponseDTO().getMessage());
 		Mockito.verify(globalParamService, Mockito.never())
 				.update(Mockito.eq(RegistrationConstants.SERVICES_VERSION_KEY), Mockito.anyString());
@@ -274,12 +281,23 @@ public class SoftwareUpdateHandlerTest {
 		Attributes attributes = new Attributes();
 		attributes.put(Attributes.Name.MANIFEST_VERSION, "1.2.0-SNAPSHOT");
 		Mockito.when(manifest.getMainAttributes()).thenReturn(attributes);
-		ReflectionTestUtils.setField(softwareUpdateHandler, "backUpPath", "src/test/resources/sql");
+		// Use tempFolder so bin/lib/db mkdirs() inside backUpSetup don't leave real dirs behind
+		ReflectionTestUtils.setField(softwareUpdateHandler, "backUpPath", tempFolder.getRoot().getAbsolutePath());
 		ReflectionTestUtils.setField(softwareUpdateHandler, "serverRegClientURL", "https://dev.mosip.net/reg/");
 		ReflectionTestUtils.setField(softwareUpdateHandler, "latestVersion", "");
-		// FileUtils is already statically mocked in @Before; no explicit doNothing needed
+		// First copyDirectory call (backup) throws; rollBackSetup's calls do nothing so the
+		// second catch(IOException) in doSoftwareUpgrade is never bypassed by a RuntimeException.
+		// doThrow().doNothing() chaining doesn't work for PowerMockito static stubs, so use doAnswer.
+		boolean[] backupAttempted = {false};
+		PowerMockito.doAnswer(inv -> {
+			if (!backupAttempted[0]) { backupAttempted[0] = true; throw new RuntimeException("backup failed"); }
+			return null;
+		}).when(FileUtils.class, "copyDirectory", Mockito.any(File.class), Mockito.any(File.class));
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
 		softwareUpdateHandler.doSoftwareUpgrade();
+		// update() was never reached, so the IS_SOFTWARE_UPDATE_AVAILABLE flag must not have been set
+		Mockito.verify(globalParamService, Mockito.never())
+				.update(Mockito.eq(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE), Mockito.anyString());
 	}
 
 	@Test
@@ -315,29 +333,29 @@ public class SoftwareUpdateHandlerTest {
 
 	@Test
 	public void updateDerbyDB_versionZero_backupFolderWithManifest_returnsNull() throws Exception {
-		// Create a backup subfolder with a real MANIFEST.MF to cover setupPreviousVersion() reading branch
-		File testBackupDir = new File("src/test/resources/sql/testbackup_coverage");
-		File testManifestFile = new File("src/test/resources/sql/testbackup_coverage/MANIFEST.MF");
-		testBackupDir.mkdirs();
-		try {
-			Manifest backupManifest = new Manifest();
-			backupManifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.2.1-SNAPSHOT");
-			try (FileOutputStream fos = new FileOutputStream(testManifestFile)) {
-				backupManifest.write(fos);
-			}
-			Attributes attributes = new Attributes();
-			attributes.put(Attributes.Name.MANIFEST_VERSION, "1.2.1-SNAPSHOT");
-			Mockito.when(manifest.getMainAttributes()).thenReturn(attributes);
-			Mockito.when(ApplicationContext.getStringValueFromApplicationMap(Mockito.anyString())).thenReturn("0");
-			ReflectionTestUtils.setField(softwareUpdateHandler, "backUpPath", "src/test/resources/sql");
-			PowerMockito.when(FileUtils.getFile("src/test/resources/sql")).thenReturn(new File("src/test/resources/sql"));
-			// setupPreviousVersion reads the MANIFEST.MF, finds "1.2.1-SNAPSHOT" in versionMappings (spring.properties)
-			// currentVersion = "1.2.1-SNAPSHOT" == version → updateDerbyDB returns null
-			Assert.assertNull(softwareUpdateHandler.updateDerbyDB());
-		} finally {
-			testManifestFile.delete();
-			testBackupDir.delete();
+		// Create isolated backup tree inside tempFolder so no shared test-resource dirs are mutated.
+		// setupPreviousVersion() scans backUpPath's subdirectories for MANIFEST.MF files.
+		File testBackupDir = tempFolder.newFolder("testbackup_coverage");
+		File testManifestFile = new File(testBackupDir, "MANIFEST.MF");
+
+		Manifest backupManifest = new Manifest();
+		backupManifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.2.1-SNAPSHOT");
+		try (FileOutputStream fos = new FileOutputStream(testManifestFile)) {
+			backupManifest.write(fos);
 		}
+
+		Attributes attributes = new Attributes();
+		attributes.put(Attributes.Name.MANIFEST_VERSION, "1.2.1-SNAPSHOT");
+		Mockito.when(manifest.getMainAttributes()).thenReturn(attributes);
+		Mockito.when(ApplicationContext.getStringValueFromApplicationMap(Mockito.anyString())).thenReturn("0");
+
+		String backupRoot = tempFolder.getRoot().getAbsolutePath();
+		ReflectionTestUtils.setField(softwareUpdateHandler, "backUpPath", backupRoot);
+		PowerMockito.when(FileUtils.getFile(backupRoot)).thenReturn(tempFolder.getRoot());
+
+		// setupPreviousVersion reads the MANIFEST.MF, finds "1.2.1-SNAPSHOT" in versionMappings
+		// currentVersion == version → updateDerbyDB returns null
+		Assert.assertNull(softwareUpdateHandler.updateDerbyDB());
 	}
 
 	@Test
@@ -386,6 +404,11 @@ public class SoftwareUpdateHandlerTest {
 
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
 		softwareUpdateHandler.doSoftwareUpgrade();
+		// update() calls globalParamService.update(IS_SOFTWARE_UPDATE_AVAILABLE, DISABLE) at the very
+		// end — verifying this confirms the entire update path ran (manifest fetched, files processed)
+		Mockito.verify(globalParamService).update(
+				Mockito.eq(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE),
+				Mockito.eq(RegistrationConstants.DISABLE));
 	}
 
 	@Test
@@ -404,6 +427,8 @@ public class SoftwareUpdateHandlerTest {
 		PowerMockito.when(FileUtils.getFile(Mockito.anyString())).thenReturn(new File("nonexistent_db_backup_xyz"));
 		ResponseDTO response = softwareUpdateHandler.updateDerbyDB();
 		Assert.assertNotNull(response);
+		// jdbcTemplate.execute is stubbed to throw; verify it was invoked (upgrade SQL attempted)
+		Mockito.verify(jdbcTemplate, Mockito.atLeastOnce()).execute(Mockito.anyString());
 	}
 
 	@Test
@@ -421,6 +446,9 @@ public class SoftwareUpdateHandlerTest {
 		// SoftwareUpdateUtil.download returns null by default → new Manifest(null) → NPE caught in setServerManifest → serverManifest stays pre-set
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
 		softwareUpdateHandler.doSoftwareUpgrade();
+		// update() ran to completion — IS_SOFTWARE_UPDATE_AVAILABLE and LAST_SOFTWARE_UPDATE must have been set
+		Mockito.verify(globalParamService, Mockito.atLeastOnce())
+				.update(Mockito.anyString(), Mockito.anyString());
 	}
 
 }

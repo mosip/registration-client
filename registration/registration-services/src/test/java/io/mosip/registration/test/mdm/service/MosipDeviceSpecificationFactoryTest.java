@@ -20,6 +20,7 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationHelper;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,6 +63,17 @@ public class MosipDeviceSpecificationFactoryTest {
             ctor.setAccessible(true);
             acField.set(null, ctor.newInstance());
         }
+    }
+
+    @AfterAll
+    static void tearDownApplicationContext() throws Exception {
+        Field mapField = ApplicationContext.class.getDeclaredField("applicationMap");
+        mapField.setAccessible(true);
+        ((java.util.Map<?, ?>) mapField.get(null)).clear();
+
+        Field acField = ApplicationContext.class.getDeclaredField("applicationContext");
+        acField.setAccessible(true);
+        acField.set(null, null);
     }
 
     @BeforeEach

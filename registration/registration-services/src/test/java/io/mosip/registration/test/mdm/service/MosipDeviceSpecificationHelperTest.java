@@ -221,8 +221,12 @@ public class MosipDeviceSpecificationHelperTest {
     // ─── getMDMConnectionTimeout ──────────────────────────────────────────────
 
     @Test
-    public void getMDMConnectionTimeout_allNull_returnsDefault10000() {
-        assertEquals(10000, MosipDeviceSpecificationHelper.getMDMConnectionTimeout("MOSIPDINFO"));
+    public void getMDMConnectionTimeout_allNull_returnsDefault10000() throws Exception {
+        withApplicationMap(map -> {
+            map.remove(String.format(RegistrationConstants.METHOD_BASED_MDM_CONNECTION_TIMEOUT, "MOSIPDINFO"));
+            map.remove(RegistrationConstants.MDM_CONNECTION_TIMEOUT);
+            assertEquals(10000, MosipDeviceSpecificationHelper.getMDMConnectionTimeout("MOSIPDINFO"));
+        });
     }
 
     @Test
@@ -231,7 +235,6 @@ public class MosipDeviceSpecificationHelperTest {
             String key = String.format(RegistrationConstants.METHOD_BASED_MDM_CONNECTION_TIMEOUT, "TESTMTD");
             map.put(key, "3000");
             assertEquals(3000, MosipDeviceSpecificationHelper.getMDMConnectionTimeout("testmtd"));
-            return key;
         });
     }
 
@@ -240,7 +243,6 @@ public class MosipDeviceSpecificationHelperTest {
         withApplicationMap(map -> {
             map.put(RegistrationConstants.MDM_CONNECTION_TIMEOUT, "7000");
             assertEquals(7000, MosipDeviceSpecificationHelper.getMDMConnectionTimeout("MOSIPDINFO"));
-            return RegistrationConstants.MDM_CONNECTION_TIMEOUT;
         });
     }
 
@@ -260,7 +262,6 @@ public class MosipDeviceSpecificationHelperTest {
         withApplicationMap(map -> {
             map.put(RegistrationConstants.MDS_RESP_ALLOWED_LAG_MINS, "5");
             helper.validateResponseTimestamp(responseTime);
-            return RegistrationConstants.MDS_RESP_ALLOWED_LAG_MINS;
         });
     }
 
@@ -275,7 +276,6 @@ public class MosipDeviceSpecificationHelperTest {
         withApplicationMap(map -> {
             map.put(RegistrationConstants.MDS_RESP_ALLOWED_LAG_MINS, "5");
             helper.validateResponseTimestamp(responseTime);
-            return RegistrationConstants.MDS_RESP_ALLOWED_LAG_MINS;
         });
     }
 
@@ -363,7 +363,7 @@ public class MosipDeviceSpecificationHelperTest {
 
     @FunctionalInterface
     interface MapOp {
-        String apply(Map<String, Object> map) throws Exception;
+        void apply(Map<String, Object> map) throws Exception;
     }
 
     @SuppressWarnings("unchecked")
@@ -371,11 +371,12 @@ public class MosipDeviceSpecificationHelperTest {
         Field f = ApplicationContext.class.getDeclaredField("applicationMap");
         f.setAccessible(true);
         Map<String, Object> map = (Map<String, Object>) f.get(null);
-        String key = null;
+        Map<String, Object> snapshot = new java.util.HashMap<>(map);
         try {
-            key = op.apply(map);
+            op.apply(map);
         } finally {
-            if (key != null) map.remove(key);
+            map.clear();
+            map.putAll(snapshot);
         }
     }
 }

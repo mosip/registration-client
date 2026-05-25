@@ -16,11 +16,7 @@ import java.util.*;
 
 import io.mosip.registration.service.bio.impl.BioServiceImpl;
 import okio.Buffer;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -165,6 +161,22 @@ public class BioServiceTest {
         Mockito.when(bioService.getMDMQualityThreshold(Modality.FINGERPRINT_SLAB_LEFT)).thenReturn(90.0);
         Mockito.when(bioService.getMDMQualityThreshold(Modality.FINGERPRINT_SLAB_RIGHT)).thenReturn(95.0);
         Mockito.when(bioService.getMDMQualityThreshold(Modality.FINGERPRINT_SLAB_THUMBS)).thenReturn(98.0);
+    }
+
+    @After
+    public void cleanUpApplicationContext() {
+        ApplicationContext.map().remove(RegistrationConstants.QUALITY_CHECK_WITH_SDK);
+        ApplicationContext.map().remove(RegistrationConstants.LEFTSLAP_FINGERPRINT_THRESHOLD);
+        ApplicationContext.map().remove(RegistrationConstants.RIGHTSLAP_FINGERPRINT_THRESHOLD);
+        ApplicationContext.map().remove(RegistrationConstants.THUMBS_FINGERPRINT_THRESHOLD);
+        ApplicationContext.map().remove(RegistrationConstants.IRIS_THRESHOLD);
+        ApplicationContext.map().remove(RegistrationConstants.FACE_THRESHOLD);
+        ApplicationContext.map().remove(RegistrationConstants.FACE_RETRY_COUNT);
+        ApplicationContext.map().remove(RegistrationConstants.IRIS_RETRY_COUNT);
+        ApplicationContext.map().remove(RegistrationConstants.FINGERPRINT_RETRIES_COUNT);
+        ApplicationContext.map().remove(RegistrationConstants.PHOTO_RETRY_COUNT);
+        ApplicationContext.map().remove(RegistrationConstants.CAPTURE_TIME_OUT);
+        ApplicationContext.map().remove(RegistrationConstants.INITIAL_SETUP);
     }
 
 
