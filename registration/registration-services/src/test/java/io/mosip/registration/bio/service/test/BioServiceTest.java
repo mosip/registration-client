@@ -703,7 +703,7 @@ public class BioServiceTest {
     // ── getMDMQualityThreshold on impl ────────────────────────────────────────
 
     @Test
-    public void getMDMQualityThreshold_allModalities_onImpl() {
+    public void getMDMQualityThreshold_allModalitiesConfigured_returnsCorrectThreshold() {
         ApplicationContext.map().put(RegistrationConstants.LEFTSLAP_FINGERPRINT_THRESHOLD, "90.0");
         ApplicationContext.map().put(RegistrationConstants.RIGHTSLAP_FINGERPRINT_THRESHOLD, "95.0");
         ApplicationContext.map().put(RegistrationConstants.THUMBS_FINGERPRINT_THRESHOLD, "98.0");
@@ -726,7 +726,7 @@ public class BioServiceTest {
     // ── getRetryCount on impl ─────────────────────────────────────────────────
 
     @Test
-    public void getRetryCount_allModalities_onImpl() {
+    public void getRetryCount_allModalitiesConfigured_returnsCorrectCount() {
         ApplicationContext.map().put(RegistrationConstants.FACE_RETRY_COUNT, "3");
         ApplicationContext.map().put(RegistrationConstants.IRIS_RETRY_COUNT, "6");
         ApplicationContext.map().put(RegistrationConstants.FINGERPRINT_RETRIES_COUNT, "1");
@@ -749,7 +749,7 @@ public class BioServiceTest {
     // ── getSupportedBioAttributes on impl ────────────────────────────────────
 
     @Test
-    public void getSupportedBioAttributes_allModalities_onImpl() {
+    public void getSupportedBioAttributes_allModalities_returnsPopulatedMap() {
         List<String> modalities = java.util.Arrays.asList(
                 RegistrationConstants.FINGERPRINT_SLAB_LEFT,
                 RegistrationConstants.FINGERPRINT_SLAB_RIGHT,
