@@ -7,15 +7,14 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.exception.RegBaseCheckedException;
+import io.mosip.registration.mdm.dto.Biometric;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.request.SbiRCaptureRequestDTO;
 import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.*;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -38,21 +37,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.kernel.core.exception.IOException;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.mdm.sbi.spec_1_0.dto.response.SbiDeviceDiscoveryMDSResponse;
+import org.apache.http.HttpEntity;
 import io.mosip.registration.mdm.dto.DeviceInfo;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.mdm.dto.MdmBioDevice;
 import io.mosip.registration.mdm.sbi.spec_1_0.service.impl.MosipDeviceSpecification_SBI_1_0_ProviderImpl;
+import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationHelper;
 import org.powermock.reflect.Whitebox;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@PrepareForTest(value = {MosipDeviceSpecification_SBI_1_0_ProviderImpl.class, MosipDeviceSpecificationHelper.class, CryptoUtil.class, io.mosip.registration.mdm.dto.Biometric.class})
+@PrepareForTest(value = {CryptoUtil.class, Biometric.class})
 public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 	
 	@Mock
 	private MosipDeviceSpecificationHelper mosipDeviceSpecificationHelper;
-	
+
+	@Mock
+	private MosipDeviceSpecificationFactory deviceSpecificationFactory;
+
 	@InjectMocks
 	private MosipDeviceSpecification_SBI_1_0_ProviderImpl mockObject;
 
@@ -475,6 +480,238 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 		);
 
 		assertNull(result);
+	}
+
+	// ── stream happy-path & edge cases ───────────────────────────────────────
+
+	@Test
+	public void stream_whenEntityNull_returnsNull() throws Exception {
+		MdmBioDevice bioDevice = new MdmBioDevice();
+		bioDevice.setPort(4502);
+		bioDevice.setSerialNumber("SN1");
+
+		MosipDeviceSpecification_SBI_1_0_ProviderImpl spy = Mockito.spy(mockObject);
+		Mockito.doReturn(true).when(spy).isDeviceAvailable(bioDevice);
+
+		when(mosipDeviceSpecificationHelper.buildUrl(anyInt(), anyString())).thenReturn("http://localhost/stream");
+
+		CloseableHttpResponse httpResponse = Mockito.mock(CloseableHttpResponse.class);
+		when(httpResponse.getEntity()).thenReturn(null);
+		when(mosipDeviceSpecificationHelper.getHttpClientResponse(anyString(), anyString(), anyString()))
+				.thenReturn(httpResponse);
+		when(mosipDeviceSpecificationHelper.getJPEGByteArray(any(), anyLong())).thenReturn(null);
+
+		InputStream result = spy.stream(bioDevice, "FACE");
+		assertNull(result);
+	}
+
+	@Test
+	public void stream_whenEntityHasContent_andJpegNull_returnsUrlStream() throws Exception {
+		MdmBioDevice bioDevice = new MdmBioDevice();
+		bioDevice.setPort(4503);
+		bioDevice.setSerialNumber("SN2");
+
+		MosipDeviceSpecification_SBI_1_0_ProviderImpl spy = Mockito.spy(mockObject);
+		Mockito.doReturn(true).when(spy).isDeviceAvailable(bioDevice);
+
+		when(mosipDeviceSpecificationHelper.buildUrl(anyInt(), anyString())).thenReturn("http://localhost/stream");
+
+		byte[] bytes = new byte[]{1, 2, 3};
+		InputStream urlStream = new ByteArrayInputStream(bytes);
+		HttpEntity entity = Mockito.mock(HttpEntity.class);
+		when(entity.getContent()).thenReturn(urlStream);
+
+		CloseableHttpResponse httpResponse = Mockito.mock(CloseableHttpResponse.class);
+		when(httpResponse.getEntity()).thenReturn(entity);
+		when(mosipDeviceSpecificationHelper.getHttpClientResponse(anyString(), anyString(), anyString()))
+				.thenReturn(httpResponse);
+		when(mosipDeviceSpecificationHelper.getJPEGByteArray(any(), anyLong())).thenReturn(null);
+
+		InputStream result = spy.stream(bioDevice, "FACE");
+		assertNotNull(result);
+	}
+
+	// ── rCapture exception wrapping ───────────────────────────────────────────
+
+	@Test(expected = RegBaseCheckedException.class)
+	public void rCapture_whenHelperThrows_wrapsException() throws Exception {
+		MdmBioDevice bioDevice = new MdmBioDevice();
+		bioDevice.setPort(4504);
+
+		MDMRequestDto req = new MDMRequestDto("FACE", null, "Registration", "dev", 5000, 1, 70);
+
+		when(mosipDeviceSpecificationHelper.buildUrl(anyInt(), anyString())).thenThrow(new RuntimeException("boom"));
+
+		mockObject.rCapture(bioDevice, req);
+	}
+
+	// ── isDeviceAvailable returning true branches ─────────────────────────────
+
+	@Test
+	public void isDeviceAvailable_specVersionMatches_returnsTrue() throws Exception {
+		MdmBioDevice bioDevice = new MdmBioDevice();
+		bioDevice.setPort(4505);
+		bioDevice.setDeviceType("Finger");
+		bioDevice.setCertification("OTHER");
+
+		SbiDeviceDiscoveryMDSResponse resp = new SbiDeviceDiscoveryMDSResponse();
+		resp.setSpecVersion(new String[]{"1.0"});
+		resp.setDeviceStatus("NotReady");
+		resp.setCertification("CERT_OTHER");
+
+		ObjectMapper mapper = new ObjectMapper();
+		String json = mapper.writeValueAsString(Arrays.asList(resp));
+
+		when(mosipDeviceSpecificationHelper.buildUrl(anyInt(), anyString())).thenReturn("http://localhost/device");
+		when(mosipDeviceSpecificationHelper.getMapper()).thenReturn(mapper);
+		when(mosipDeviceSpecificationHelper.getHttpClientResponseEntity(anyString(), anyString(), anyString()))
+				.thenReturn(json);
+
+		assertTrue(mockObject.isDeviceAvailable(bioDevice));
+	}
+
+	@Test
+	public void isDeviceAvailable_deviceStatusReady_returnsTrue() throws Exception {
+		MdmBioDevice bioDevice = new MdmBioDevice();
+		bioDevice.setPort(4506);
+		bioDevice.setDeviceType("Finger");
+		bioDevice.setCertification("X");
+
+		SbiDeviceDiscoveryMDSResponse resp = new SbiDeviceDiscoveryMDSResponse();
+		resp.setSpecVersion(new String[]{"9.9"});
+		resp.setDeviceStatus("Ready");
+		resp.setCertification("Y");
+
+		ObjectMapper mapper = new ObjectMapper();
+		String json = mapper.writeValueAsString(Arrays.asList(resp));
+
+		when(mosipDeviceSpecificationHelper.buildUrl(anyInt(), anyString())).thenReturn("http://localhost/device");
+		when(mosipDeviceSpecificationHelper.getMapper()).thenReturn(mapper);
+		when(mosipDeviceSpecificationHelper.getHttpClientResponseEntity(anyString(), anyString(), anyString()))
+				.thenReturn(json);
+
+		assertTrue(mockObject.isDeviceAvailable(bioDevice));
+	}
+
+	@Test
+	public void isDeviceAvailable_certificationMatches_returnsTrue() throws Exception {
+		MdmBioDevice bioDevice = new MdmBioDevice();
+		bioDevice.setPort(4507);
+		bioDevice.setDeviceType("Finger");
+		bioDevice.setCertification("CERT_MATCH");
+
+		SbiDeviceDiscoveryMDSResponse resp = new SbiDeviceDiscoveryMDSResponse();
+		resp.setSpecVersion(new String[]{"9.9"});
+		resp.setDeviceStatus("NotReady");
+		resp.setCertification("CERT_MATCH");
+
+		ObjectMapper mapper = new ObjectMapper();
+		String json = mapper.writeValueAsString(Arrays.asList(resp));
+
+		when(mosipDeviceSpecificationHelper.buildUrl(anyInt(), anyString())).thenReturn("http://localhost/device");
+		when(mosipDeviceSpecificationHelper.getMapper()).thenReturn(mapper);
+		when(mosipDeviceSpecificationHelper.getHttpClientResponseEntity(anyString(), anyString(), anyString()))
+				.thenReturn(json);
+
+		assertTrue(mockObject.isDeviceAvailable(bioDevice));
+	}
+
+	@Test
+	public void isDeviceAvailable_whenHelperThrows_returnsFalse() throws Exception {
+		MdmBioDevice bioDevice = new MdmBioDevice();
+		bioDevice.setPort(4508);
+		bioDevice.setDeviceType("Finger");
+
+		when(mosipDeviceSpecificationHelper.buildUrl(anyInt(), anyString())).thenReturn("http://localhost/device");
+		when(mosipDeviceSpecificationHelper.getHttpClientResponseEntity(anyString(), anyString(), anyString()))
+				.thenThrow(new RuntimeException("connection refused"));
+
+		assertFalse(mockObject.isDeviceAvailable(bioDevice));
+	}
+
+	// ── getBioDevice happy path ───────────────────────────────────────────────
+
+	@Test
+	public void getBioDevice_withValidDeviceInfo_populatesFields() throws Exception {
+		String digitalIdPayload = "{\"type\":\"Finger\",\"deviceSubType\":\"Slap\",\"make\":\"MOSIP\"," +
+				"\"model\":\"SLAP01\",\"serialNo\":\"SN123\",\"deviceProvider\":\"MOSIP\"," +
+				"\"deviceProviderId\":\"MOSIP.PROXY.SBI\",\"dateTime\":\"2021-04-29T05:56:29Z\"}";
+		String base64Payload = Base64.getUrlEncoder().withoutPadding()
+				.encodeToString(digitalIdPayload.getBytes(StandardCharsets.UTF_8));
+		String jwtToken = "header." + base64Payload + ".sig";
+
+		MdmSbiDeviceInfo deviceInfo = new MdmSbiDeviceInfo();
+		deviceInfo.setFirmware("FW1.0");
+		deviceInfo.setCertification("L1");
+		deviceInfo.setServiceVersion("1.0");
+		deviceInfo.setSpecVersion(new String[]{"1.0"});
+		deviceInfo.setPurpose("Registration");
+		deviceInfo.setCallbackId("http://127.0.0.1:4501");
+		deviceInfo.setDigitalId(jwtToken);
+
+		MdmSbiDeviceInfoWrapper wrapper = new MdmSbiDeviceInfoWrapper();
+		wrapper.deviceInfo = deviceInfo;
+
+		Mockito.doNothing().when(mosipDeviceSpecificationHelper).validateJWTResponse(anyString(), anyString());
+		when(mosipDeviceSpecificationHelper.getPayLoad(anyString())).thenReturn(base64Payload);
+		when(mosipDeviceSpecificationHelper.getMapper()).thenReturn(new ObjectMapper());
+		when(deviceSpecificationFactory.getLatestSpecVersion(any())).thenReturn("1.0");
+
+		MdmBioDevice result = Whitebox.invokeMethod(mockObject, "getBioDevice", wrapper);
+
+		assertNotNull(result);
+		assertEquals("FW1.0", result.getFirmWare());
+		assertEquals("L1", result.getCertification());
+	}
+
+	// ── rCapture happy path with biometric data ───────────────────────────────
+
+	@Test
+	public void rCapture_withBiometricData_returnsPopulatedList() throws Exception {
+		MdmBioDevice bioDevice = new MdmBioDevice();
+		bioDevice.setPort(4509);
+		bioDevice.setSerialNumber("SN99");
+		bioDevice.setDeviceType("Finger");
+		bioDevice.setSpecVersion("1.0");
+		bioDevice.setPurpose("Registration");
+
+		MDMRequestDto req = new MDMRequestDto("FINGERPRINT_SLAP_LEFT", null, "Registration", "dev", 5000, 1, 70);
+
+		String bioPayloadJson = "{\"bioSubType\":\"Left IndexFinger\",\"qualityScore\":\"80.0\"," +
+				"\"bioValue\":\"dGVzdA==\",\"transactionId\":\"TXN1\",\"timestamp\":\"2021-04-29T05:56:29\"}";
+		String base64Payload = Base64.getUrlEncoder().withoutPadding()
+				.encodeToString(bioPayloadJson.getBytes(StandardCharsets.UTF_8));
+
+		SbiRCaptureResponseBiometricsDTO bio = new SbiRCaptureResponseBiometricsDTO();
+		bio.setData("header." + base64Payload + ".sig");
+		bio.setSpecVersion("1.0");
+
+		SbiRCaptureResponseDTO captureResponse = new SbiRCaptureResponseDTO();
+		captureResponse.setBiometrics(Arrays.asList(bio));
+
+		ObjectMapper mapper = new ObjectMapper();
+		String responseJson = mapper.writeValueAsString(captureResponse);
+
+		when(mosipDeviceSpecificationHelper.buildUrl(anyInt(), anyString())).thenReturn("http://localhost/rcapture");
+		when(mosipDeviceSpecificationHelper.getHttpClientResponseEntity(anyString(), anyString(), anyString()))
+				.thenReturn(responseJson);
+		when(mosipDeviceSpecificationHelper.generateMDMTransactionId()).thenReturn("TXN1");
+		Mockito.doNothing().when(mosipDeviceSpecificationHelper).validateJWTResponse(anyString(), anyString());
+		when(mosipDeviceSpecificationHelper.getPayLoad(anyString())).thenReturn(base64Payload);
+		when(mosipDeviceSpecificationHelper.getSignature(anyString())).thenReturn("sig");
+
+		PowerMockito.mockStatic(CryptoUtil.class);
+		PowerMockito.when(CryptoUtil.decodeURLSafeBase64(base64Payload))
+				.thenReturn(bioPayloadJson.getBytes(StandardCharsets.UTF_8));
+
+		PowerMockito.mockStatic(Biometric.class);
+		PowerMockito.when(Biometric.getUiSchemaAttributeName(Mockito.anyString(), Mockito.anyString()))
+				.thenReturn("leftIndex");
+
+		List<BiometricsDto> result = mockObject.rCapture(bioDevice, req);
+		assertNotNull(result);
+		assertFalse(result.isEmpty());
+		assertEquals("leftIndex", result.get(0).getBioAttribute());
 	}
 
 }

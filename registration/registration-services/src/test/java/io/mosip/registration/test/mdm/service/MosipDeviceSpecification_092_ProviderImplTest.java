@@ -4,14 +4,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 
+import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.mdm.dto.Biometric;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.junit.Test;
@@ -40,12 +44,14 @@ import io.mosip.registration.mdm.spec_0_9_2.dto.response.RCaptureResponseBiometr
 import io.mosip.registration.mdm.spec_0_9_2.dto.response.RCaptureResponseDTO;
 import io.mosip.registration.mdm.spec_0_9_2.dto.response.RCaptureResponseDataDTO;
 import io.mosip.registration.mdm.spec_0_9_2.service.impl.MosipDeviceSpecification_092_ProviderImpl;
+import io.mosip.kernel.core.util.CryptoUtil;
+import org.powermock.reflect.Whitebox;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@PrepareForTest({MosipDeviceSpecification_092_ProviderImpl.class, MosipDeviceSpecificationHelper.class})
+@PrepareForTest({CryptoUtil.class, Biometric.class})
 public class MosipDeviceSpecification_092_ProviderImplTest {
 
 	@Mock
@@ -359,6 +365,168 @@ public class MosipDeviceSpecification_092_ProviderImplTest {
 
 		boolean available = provider.isDeviceAvailable(dev);
 		assertFalse(available);
+	}
+
+	// ── getExceptions private method ──────────────────────────────────────────
+
+	@Test
+	public void getExceptions_nullInput_returnsNull() throws Exception {
+		String[] result = Whitebox.invokeMethod(provider, "getExceptions", new Object[]{null});
+		assertNull(result);
+	}
+
+	@Test
+	public void getExceptions_withValues_returnsMapped() throws Exception {
+		PowerMockito.mockStatic(Biometric.class);
+		PowerMockito.when(Biometric.getmdmRequestAttributeName(Mockito.eq("leftIndex"), Mockito.anyString()))
+				.thenReturn("Left IndexFinger");
+
+		String[] result = Whitebox.invokeMethod(provider, "getExceptions", new Object[]{new String[]{"leftIndex"}});
+		assertNotNull(result);
+		assertEquals("Left IndexFinger", result[0]);
+	}
+
+	// ── getDeviceType private method ──────────────────────────────────────────
+
+	@Test
+	public void getDeviceType_fingerprint_returnsFIR() throws Exception {
+		String result = Whitebox.invokeMethod(provider, "getDeviceType", "fingerprint");
+		assertEquals("FIR", result);
+	}
+
+	@Test
+	public void getDeviceType_iris_returnsIIR() throws Exception {
+		String result = Whitebox.invokeMethod(provider, "getDeviceType", "iris");
+		assertEquals("IIR", result);
+	}
+
+	@Test
+	public void getDeviceType_face_returnsFace() throws Exception {
+		String result = Whitebox.invokeMethod(provider, "getDeviceType", "face");
+		assertEquals("face", result);
+	}
+
+	// ── getDeviceSubId private method ─────────────────────────────────────────
+
+	@Test
+	public void getDeviceSubId_left_returns1() throws Exception {
+		assertEquals("1", Whitebox.invokeMethod(provider, "getDeviceSubId", "left_index"));
+	}
+
+	@Test
+	public void getDeviceSubId_right_returns2() throws Exception {
+		assertEquals("2", Whitebox.invokeMethod(provider, "getDeviceSubId", "right_thumb"));
+	}
+
+	@Test
+	public void getDeviceSubId_thumbs_returns3() throws Exception {
+		assertEquals("3", Whitebox.invokeMethod(provider, "getDeviceSubId", "double_thumb"));
+	}
+
+	@Test
+	public void getDeviceSubId_face_returns0() throws Exception {
+		assertEquals("0", Whitebox.invokeMethod(provider, "getDeviceSubId", "face"));
+	}
+
+	// ── getBioDevice with null deviceInfo ─────────────────────────────────────
+
+	@Test
+	public void getBioDevice_nullDeviceInfo_returnsNull() throws Exception {
+		MdmBioDevice result = Whitebox.invokeMethod(provider, "getBioDevice", (MdmDeviceInfo) null);
+		assertNull(result);
+	}
+
+	// ── getMdmDevices exception during parse ──────────────────────────────────
+
+	@Test
+	public void getMdmDevices_exceptionDuringDeviceDecode_returnsEmptyList() throws Exception {
+		ObjectMapper mapper = new ObjectMapper();
+		Mockito.when(helper.getMapper()).thenReturn(mapper);
+
+		List<MdmDeviceInfoResponse> responses = new LinkedList<>();
+		MdmDeviceInfoResponse resp = new MdmDeviceInfoResponse();
+		resp.setDeviceInfo("some.jwt.token");
+		responses.add(resp);
+		String json = mapper.writeValueAsString(responses);
+
+		Mockito.when(helper.getDeviceInfoDecoded(Mockito.anyString(), Mockito.any()))
+				.thenThrow(new RuntimeException("decode failed"));
+
+		List<MdmBioDevice> devices = provider.getMdmDevices(json, 5057);
+		assertEquals(0, devices.size());
+	}
+
+	// ── isDeviceAvailable READY status ────────────────────────────────────────
+
+	@Test
+	public void isDeviceAvailable_readyStatus_allMatch_returnsTrue() throws Exception {
+		MdmBioDevice dev = new MdmBioDevice();
+		dev.setDeviceId("D1");
+		dev.setCertification("CERT");
+		dev.setDeviceCode("CODE");
+		dev.setPort(8003);
+
+		DeviceDiscoveryMDSResponse d = new DeviceDiscoveryMDSResponse();
+		d.setDeviceId("D1");
+		d.setDeviceCode("CODE");
+		d.setCertification("CERT");
+		d.setDeviceStatus("Ready");
+		d.setSpecVersion(new String[]{"0.9.2"});
+
+		ObjectMapper mapper = new ObjectMapper();
+		String json = mapper.writeValueAsString(Arrays.asList(d));
+
+		Mockito.when(helper.getMapper()).thenReturn(mapper);
+		Mockito.when(helper.buildUrl(Mockito.eq(8003), Mockito.anyString())).thenReturn("http://x/device");
+		Mockito.when(helper.getHttpClientResponseEntity(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
+				.thenReturn(json);
+
+		assertTrue(provider.isDeviceAvailable(dev));
+	}
+
+	// ── rCapture happy path ───────────────────────────────────────────────────
+
+	@Test
+	public void rCapture_withBiometricData_returnsPopulatedList() throws Exception {
+		MdmBioDevice dev = new MdmBioDevice();
+		dev.setDeviceId("DEV");
+		dev.setPort(7002);
+		dev.setDeviceType("fingerprint");
+
+		MDMRequestDto req = new MDMRequestDto("FINGERPRINT_LEFT", null, "Registration", "dev", 5000, 1, 70);
+
+		String bioPayload = "{\"bioSubType\":\"Left IndexFinger\",\"qualityScore\":\"80.0\"," +
+				"\"bioValue\":\"dGVzdA==\",\"timestamp\":\"2021-04-29T05:56:29\"}";
+		String base64Payload = Base64.getUrlEncoder().withoutPadding()
+				.encodeToString(bioPayload.getBytes(StandardCharsets.UTF_8));
+
+		RCaptureResponseBiometricsDTO bio = new RCaptureResponseBiometricsDTO();
+		bio.setData("header." + base64Payload + ".sig");
+		bio.setSpecVersion("0.9.2");
+
+		RCaptureResponseDTO responseDTO = new RCaptureResponseDTO();
+		responseDTO.setBiometrics(Arrays.asList(bio));
+		String responseJson = new ObjectMapper().writeValueAsString(responseDTO);
+
+		Mockito.when(helper.buildUrl(Mockito.anyInt(), Mockito.anyString())).thenReturn("http://localhost/rcapture");
+		Mockito.when(helper.getHttpClientResponseEntity(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
+				.thenReturn(responseJson);
+		Mockito.doNothing().when(helper).validateJWTResponse(Mockito.anyString(), Mockito.anyString());
+		Mockito.when(helper.getPayLoad(Mockito.anyString())).thenReturn(base64Payload);
+		Mockito.when(helper.getSignature(Mockito.anyString())).thenReturn("sig");
+		Mockito.when(helper.generateMDMTransactionId()).thenReturn("TXN1");
+
+		PowerMockito.mockStatic(CryptoUtil.class);
+		PowerMockito.when(CryptoUtil.decodeURLSafeBase64(base64Payload))
+				.thenReturn(bioPayload.getBytes(StandardCharsets.UTF_8));
+
+		PowerMockito.mockStatic(Biometric.class);
+		PowerMockito.when(Biometric.getUiSchemaAttributeName(Mockito.anyString(), Mockito.anyString()))
+				.thenReturn("leftIndex");
+
+		List<BiometricsDto> result = provider.rCapture(dev, req);
+		assertNotNull(result);
+		assertFalse(result.isEmpty());
 	}
 
 	@Test

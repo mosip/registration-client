@@ -12,7 +12,6 @@ import java.util.jar.Manifest;
 
 import org.junit.*;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
@@ -32,6 +31,7 @@ import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.config.GlobalParamService;
 import io.mosip.registration.update.ClientSetupValidator;
 import io.mosip.registration.update.SoftwareUpdateUtil;
+import org.powermock.reflect.Whitebox;
 
 /**
  * 
@@ -69,19 +69,33 @@ public class ClientSetupValidatorTest {
 	@Mock
 	private Manifest manifest;
 
-	@InjectMocks
 	private ClientSetupValidator clientSetupValidator;
 
 	@Before
 	public void initialize() throws Exception {
 		PowerMockito.mockStatic(ApplicationContext.class, FileUtils.class);
 		PowerMockito.mockStatic(HMACUtils2.class);
+		// Bypass the constructor (which reads MANIFEST.MF from the filesystem) so
+		// tests are not sensitive to whether the file exists on disk.
+		clientSetupValidator = Whitebox.newInstance(ClientSetupValidator.class);
+		resetStaticFields();
+	}
+
+	private void resetStaticFields() {
+		ReflectionTestUtils.setField(ClientSetupValidator.class, "environment", null);
+		ReflectionTestUtils.setField(ClientSetupValidator.class, "localManifest", null);
+		ReflectionTestUtils.setField(ClientSetupValidator.class, "serverManifest", null);
+		ReflectionTestUtils.setField(ClientSetupValidator.class, "serverRegClientURL", null);
+		ReflectionTestUtils.setField(ClientSetupValidator.class, "latestVersion", null);
+		ReflectionTestUtils.setField(ClientSetupValidator.class, "validation_failed", false);
+		ReflectionTestUtils.setField(ClientSetupValidator.class, "patch_downloaded", false);
+		ReflectionTestUtils.setField(ClientSetupValidator.class, "unknown_jars_found", false);
 	}
 	
 
 	@Test
 	public void clientSetupValidatorTest() throws RegBaseCheckedException {
-		ClientSetupValidator clntSetupValidator = new ClientSetupValidator();
+		ClientSetupValidator clntSetupValidator = Whitebox.newInstance(ClientSetupValidator.class);
 	}
 
 	@Test
@@ -99,17 +113,17 @@ public class ClientSetupValidatorTest {
 
 	@Test
 	public void validateBuildSetupEnvironmentTest() throws RegBaseCheckedException {
-		ClientSetupValidator clntSetUpValidator = new ClientSetupValidator();
-		ReflectionTestUtils.setField(clntSetUpValidator, "environment", "LOCAL");
+		ClientSetupValidator clntSetUpValidator = Whitebox.newInstance(ClientSetupValidator.class);
+		ReflectionTestUtils.setField(ClientSetupValidator.class, "environment", "LOCAL");
 		clntSetUpValidator.validateBuildSetup();
 	}
 
 	@Test
 	public void validateBuildSetupsetServerManifestTest() throws RegBaseCheckedException {
-		ClientSetupValidator clntSetUpValidator = new ClientSetupValidator();
-		ReflectionTestUtils.setField(clntSetUpValidator, "serverRegClientURL",
+		ClientSetupValidator clntSetUpValidator = Whitebox.newInstance(ClientSetupValidator.class);
+		ReflectionTestUtils.setField(ClientSetupValidator.class, "serverRegClientURL",
 				"https://dev.mosip.net/registration-client");
-		ReflectionTestUtils.setField(clntSetUpValidator, "latestVersion", "");
+		ReflectionTestUtils.setField(ClientSetupValidator.class, "latestVersion", "");
 		clntSetUpValidator.validateBuildSetup();
 	}
 
@@ -126,7 +140,7 @@ public class ClientSetupValidatorTest {
 
 	@After
 	public void tear() throws Exception {
-		ClientSetupValidator clntSetUpValidator = null;
+		resetStaticFields();
 	}
 
 	@Test
