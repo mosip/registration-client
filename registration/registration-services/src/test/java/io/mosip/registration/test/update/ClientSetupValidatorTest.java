@@ -95,7 +95,7 @@ public class ClientSetupValidatorTest {
 
 	@Test
 	public void clientSetupValidatorTest() throws RegBaseCheckedException {
-		ClientSetupValidator clntSetupValidator = Whitebox.newInstance(ClientSetupValidator.class);
+		Assert.assertNotNull(Whitebox.newInstance(ClientSetupValidator.class));
 	}
 
 	@Test

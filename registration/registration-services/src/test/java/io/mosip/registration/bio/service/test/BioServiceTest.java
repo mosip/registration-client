@@ -848,7 +848,7 @@ public class BioServiceTest {
         Mockito.when(registrationDTO.getBiometric("face", "face")).thenReturn(dto);
 
         Map<String, Boolean> result = bioServiceImpl.getCapturedBiometrics(fieldDto, 1.0, registrationDTO);
-        Assert.assertTrue(result.containsKey("face"));
+        Assert.assertTrue(result.get("face"));
     }
 
     private String getRCaptureResponse() throws JsonProcessingException {

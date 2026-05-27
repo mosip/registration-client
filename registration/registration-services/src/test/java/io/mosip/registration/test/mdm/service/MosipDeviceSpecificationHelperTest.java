@@ -30,13 +30,13 @@ import io.mosip.registration.mdm.dto.DeviceInfo;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationHelper;
 import io.mosip.registration.mdm.sbi.spec_1_0.service.impl.MosipDeviceSpecification_SBI_1_0_ProviderImpl;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
 /**
@@ -60,12 +60,14 @@ public class MosipDeviceSpecificationHelperTest {
     /** Full JWT whose payload decodes to "{}" */
     private static final String JWT_EMPTY = "header." + B64_EMPTY_JSON + ".signature";
 
+    private static Object originalApplicationContext;
+
     @BeforeClass
     public static void setupApplicationContext() throws Exception {
-        // Make applicationContext non-null so ApplicationContext.map() doesn't NPE
         Field acField = ApplicationContext.class.getDeclaredField("applicationContext");
         acField.setAccessible(true);
-        if (acField.get(null) == null) {
+        originalApplicationContext = acField.get(null);
+        if (originalApplicationContext == null) {
             Constructor<ApplicationContext> ctor =
                     ApplicationContext.class.getDeclaredConstructor();
             ctor.setAccessible(true);
@@ -73,9 +75,11 @@ public class MosipDeviceSpecificationHelperTest {
         }
     }
 
-    @Before
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
+    @AfterClass
+    public static void tearDownApplicationContext() throws Exception {
+        Field acField = ApplicationContext.class.getDeclaredField("applicationContext");
+        acField.setAccessible(true);
+        acField.set(null, originalApplicationContext);
     }
 
     // ─── getPayLoad ────────────────────────────────────────────────────────────
