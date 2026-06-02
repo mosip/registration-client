@@ -3,8 +3,11 @@ package io.mosip.registration.bio.service.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -12,18 +15,15 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import io.mosip.registration.service.bio.impl.BioServiceImpl;
+import io.mosip.registration.service.config.GlobalParamService;
+import io.mosip.registration.service.config.LocalConfigService;
+import org.junit.*;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +55,10 @@ import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.constants.MosipBioDeviceConstants;
 import io.mosip.registration.mdm.dto.MDMRequestDto;
 import io.mosip.registration.mdm.dto.MdmDeviceInfo;
+import io.mosip.registration.dto.RegistrationDTO;
+import io.mosip.registration.dto.schema.UiFieldDTO;
+import io.mosip.registration.mdm.dto.MdmBioDevice;
+import io.mosip.registration.mdm.integrator.MosipDeviceSpecificationProvider;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationHelper;
 import io.mosip.registration.mdm.spec_0_9_5.dto.response.DeviceDiscoveryMDSResponse;
@@ -68,6 +72,7 @@ import io.mosip.registration.test.config.TestDaoConfig;
 import io.mosip.registration.util.common.BIRBuilder;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.springframework.test.util.ReflectionTestUtils;
 
 
 @RunWith(SpringRunner.class)
@@ -75,6 +80,12 @@ import okhttp3.mockwebserver.MockWebServer;
 public class BioServiceTest {
 
     private static final String JWT_FORMAT = "header.%s.signature";
+
+    @Mock
+    private MosipDeviceSpecificationProvider deviceSpecificationProvider;
+
+    @Mock
+    private MosipDeviceSpecificationFactory mockDeviceFactory;
 
     @Autowired
     private BioAPIFactory bioAPIFactory; //mock bean created in TestDaoConfig
@@ -84,6 +95,9 @@ public class BioServiceTest {
 
     @Autowired
     private BioService bioService;
+
+    @InjectMocks
+    private BioServiceImpl bioServiceImpl;
     
     @Autowired
     private BIRBuilder birBuilder;
@@ -99,6 +113,12 @@ public class BioServiceTest {
     
     @Autowired
 	private AuditManagerService auditFactory;
+
+    @Mock
+    private GlobalParamService globalParamService;
+
+    @Mock
+    private LocalConfigService localConfigService;
 
     private static MockWebServer mockWebServer;
 
@@ -118,8 +138,32 @@ public class BioServiceTest {
     }
 
     @Before
-    public void init() {
-        MockitoAnnotations.initMocks(this);
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+        ApplicationContext.getInstance();
+        lenient().when(globalParamService.getGlobalParams()).thenReturn(new HashMap<>());
+        lenient().when(localConfigService.getLocalConfigurations()).thenReturn(new HashMap<>());
+        ReflectionTestUtils.setField(bioServiceImpl, "globalParamService", globalParamService);
+        ReflectionTestUtils.setField(bioServiceImpl, "localConfigService", localConfigService);
+        ReflectionTestUtils.setField(bioServiceImpl, "deviceSpecificationFactory", mockDeviceFactory);
+    }
+
+    @After
+    public void cleanUpApplicationContext() {
+        ApplicationContext.map().remove(RegistrationConstants.QUALITY_CHECK_WITH_SDK);
+        ApplicationContext.map().remove(RegistrationConstants.LEFTSLAP_FINGERPRINT_THRESHOLD);
+        ApplicationContext.map().remove(RegistrationConstants.RIGHTSLAP_FINGERPRINT_THRESHOLD);
+        ApplicationContext.map().remove(RegistrationConstants.THUMBS_FINGERPRINT_THRESHOLD);
+        ApplicationContext.map().remove(RegistrationConstants.IRIS_THRESHOLD);
+        ApplicationContext.map().remove(RegistrationConstants.FACE_THRESHOLD);
+        ApplicationContext.map().remove(RegistrationConstants.FACE_RETRY_COUNT);
+        ApplicationContext.map().remove(RegistrationConstants.IRIS_RETRY_COUNT);
+        ApplicationContext.map().remove(RegistrationConstants.FINGERPRINT_RETRIES_COUNT);
+        ApplicationContext.map().remove(RegistrationConstants.PHOTO_RETRY_COUNT);
+        ApplicationContext.map().remove(RegistrationConstants.CAPTURE_TIME_OUT);
+        ApplicationContext.map().remove(RegistrationConstants.INITIAL_SETUP);
+        ApplicationContext.map().remove(RegistrationConstants.MDM_START_PORT_RANGE);
+        ApplicationContext.map().remove(RegistrationConstants.MDM_END_PORT_RANGE);
     }
 
 
@@ -531,6 +575,280 @@ public class BioServiceTest {
         deviceDiscoveryMDSResponse.setDeviceStatus(status);
         responseList.add(deviceDiscoveryMDSResponse);
         return  objectMapper.writeValueAsString(responseList);
+    }
+
+    // ── captureModality ──────────────────────────────────────────────────────
+
+    @Test
+    public void captureModality_happyPath_returnsListWithOneBiometric() throws Exception {
+        MdmBioDevice device = new MdmBioDevice();
+        device.setSpecVersion("0.9.5");
+
+        BiometricsDto dto = new BiometricsDto();
+        dto.setBioAttribute("face");
+        dto.setQualityScore(80.0);
+        dto.setAttributeISO(new byte[0]);
+        dto.setModalityName("FACE");
+
+        Mockito.when(mockDeviceFactory.getDeviceInfoByModality(Mockito.anyString())).thenReturn(device);
+        Mockito.when(mockDeviceFactory.getMdsProvider(Mockito.anyString())).thenReturn(deviceSpecificationProvider);
+        Mockito.when(deviceSpecificationProvider.rCapture(Mockito.any(), Mockito.any())).thenReturn(java.util.Arrays.asList(dto));
+
+        ApplicationContext.map().remove(RegistrationConstants.QUALITY_CHECK_WITH_SDK);
+
+        MDMRequestDto req = new MDMRequestDto("FACE", new String[0], "REGISTRATION", "TEST", 5000, 1, 70);
+        List<BiometricsDto> result = bioServiceImpl.captureModality(req);
+
+        Assert.assertEquals(1, result.size());
+    }
+
+    @Test(expected = RegBaseCheckedException.class)
+    public void captureModality_qualityOutOfRange_throwsException() throws Exception {
+        MdmBioDevice device = new MdmBioDevice();
+        device.setSpecVersion("0.9.5");
+
+        BiometricsDto dto = new BiometricsDto();
+        dto.setBioAttribute("face");
+        dto.setQualityScore(-1.0);
+        dto.setAttributeISO(new byte[0]);
+
+        Mockito.when(mockDeviceFactory.getDeviceInfoByModality(Mockito.anyString())).thenReturn(device);
+        Mockito.when(mockDeviceFactory.getMdsProvider(Mockito.anyString())).thenReturn(deviceSpecificationProvider);
+        Mockito.when(deviceSpecificationProvider.rCapture(Mockito.any(), Mockito.any())).thenReturn(java.util.Arrays.asList(dto));
+
+        MDMRequestDto req = new MDMRequestDto("FACE", new String[0], "REGISTRATION", "TEST", 5000, 1, 70);
+        bioServiceImpl.captureModality(req);
+    }
+
+    @Test(expected = RegBaseCheckedException.class)
+    public void captureModality_providerThrowsRuntimeException_wrapsToRegBaseCheckedException() throws Exception {
+        MdmBioDevice device = new MdmBioDevice();
+        device.setSpecVersion("0.9.5");
+
+        Mockito.when(mockDeviceFactory.getDeviceInfoByModality(Mockito.anyString())).thenReturn(device);
+        Mockito.when(mockDeviceFactory.getMdsProvider(Mockito.anyString())).thenReturn(deviceSpecificationProvider);
+        Mockito.when(deviceSpecificationProvider.rCapture(Mockito.any(), Mockito.any())).thenThrow(new RuntimeException("device error"));
+
+        MDMRequestDto req = new MDMRequestDto("FACE", new String[0], "REGISTRATION", "TEST", 5000, 1, 70);
+        bioServiceImpl.captureModality(req);
+    }
+
+    @Test
+    public void captureModality_nullBiometricInList_skipped() throws Exception {
+        MdmBioDevice device = new MdmBioDevice();
+        device.setSpecVersion("0.9.5");
+
+        Mockito.when(mockDeviceFactory.getDeviceInfoByModality(Mockito.anyString())).thenReturn(device);
+        Mockito.when(mockDeviceFactory.getMdsProvider(Mockito.anyString())).thenReturn(deviceSpecificationProvider);
+        Mockito.when(deviceSpecificationProvider.rCapture(Mockito.any(), Mockito.any()))
+                .thenReturn(Arrays.asList((BiometricsDto) null));
+
+        ApplicationContext.map().remove(RegistrationConstants.QUALITY_CHECK_WITH_SDK);
+        MDMRequestDto req = new MDMRequestDto("FACE", new String[0], "REGISTRATION", "TEST", 5000, 1, 70);
+        List<BiometricsDto> result = bioServiceImpl.captureModality(req);
+        Assert.assertTrue(result.isEmpty());
+    }
+
+    // ── captureModalityForAuth ────────────────────────────────────────────────
+
+    @Test
+    public void captureModalityForAuth_deviceAvailable_returnsCapture() throws Exception {
+        MdmBioDevice device = new MdmBioDevice();
+        device.setSpecVersion("0.9.5");
+
+        BiometricsDto dto = new BiometricsDto();
+        dto.setBioAttribute("face");
+        dto.setQualityScore(80.0);
+        dto.setAttributeISO(new byte[0]);
+        dto.setModalityName("FACE");
+
+        Mockito.when(mockDeviceFactory.isDeviceAvailable(Mockito.anyString())).thenReturn(true);
+        Mockito.when(mockDeviceFactory.getDeviceInfoByModality(Mockito.anyString())).thenReturn(device);
+        Mockito.when(mockDeviceFactory.getMdsProvider(Mockito.anyString())).thenReturn(deviceSpecificationProvider);
+        Mockito.when(deviceSpecificationProvider.rCapture(Mockito.any(), Mockito.any())).thenReturn(java.util.Arrays.asList(dto));
+
+        ApplicationContext.map().remove(RegistrationConstants.QUALITY_CHECK_WITH_SDK);
+        MDMRequestDto req = new MDMRequestDto("FACE", new String[0], "REGISTRATION", "TEST", 5000, 1, 70);
+        List<BiometricsDto> result = bioServiceImpl.captureModalityForAuth(req);
+        Assert.assertFalse(result.isEmpty());
+    }
+
+    @Test(expected = RegBaseCheckedException.class)
+    public void captureModalityForAuth_deviceNotAvailable_throwsException() throws Exception {
+        Mockito.when(mockDeviceFactory.isDeviceAvailable(Mockito.anyString())).thenReturn(false);
+        MDMRequestDto req = new MDMRequestDto("FACE", new String[0], "REGISTRATION", "TEST", 5000, 1, 70);
+        bioServiceImpl.captureModalityForAuth(req);
+    }
+
+    // ── getStream ─────────────────────────────────────────────────────────────
+
+    @Test(expected = RegBaseCheckedException.class)
+    public void getStream_byModality_factoryThrows_propagatesException() throws Exception {
+        Mockito.when(mockDeviceFactory.getDeviceInfoByModality(Mockito.anyString()))
+                .thenThrow(new RegBaseCheckedException("ERR", "device not found"));
+        bioServiceImpl.getStream("FACE");
+    }
+
+    @Test(expected = RegBaseCheckedException.class)
+    public void getStream_byBioDevice_deviceNotAvailable_throwsException() throws Exception {
+        MdmBioDevice device = new MdmBioDevice();
+        device.setSpecVersion("0.9.5");
+
+        Mockito.when(mockDeviceFactory.isDeviceAvailable(device)).thenReturn(false);
+        bioServiceImpl.getStream(device, "FACE");
+    }
+
+    @Test(expected = RegBaseCheckedException.class)
+    public void getStream_byBioDevice_deviceAvailable_providerThrows_throwsException() throws Exception {
+        MdmBioDevice device = new MdmBioDevice();
+        device.setSpecVersion("0.9.5");
+
+        Mockito.when(mockDeviceFactory.isDeviceAvailable(device)).thenReturn(true);
+        Mockito.when(mockDeviceFactory.getMdsProvider(Mockito.anyString())).thenReturn(deviceSpecificationProvider);
+        Mockito.when(deviceSpecificationProvider.stream(Mockito.any(), Mockito.anyString()))
+                .thenThrow(new RuntimeException("stream failed"));
+        bioServiceImpl.getStream(device, "FACE");
+    }
+
+    @Test
+    public void getStream_byBioDevice_deviceAvailable_returnsStream() throws Exception {
+        MdmBioDevice device = new MdmBioDevice();
+        device.setSpecVersion("0.9.5");
+
+        InputStream mockStream = new ByteArrayInputStream(new byte[]{1, 2, 3});
+        Mockito.when(mockDeviceFactory.isDeviceAvailable(device)).thenReturn(true);
+        Mockito.when(mockDeviceFactory.getMdsProvider(Mockito.anyString())).thenReturn(deviceSpecificationProvider);
+        Mockito.when(deviceSpecificationProvider.stream(Mockito.any(), Mockito.anyString())).thenReturn(mockStream);
+
+        InputStream result = bioServiceImpl.getStream(device, "FACE");
+        Assert.assertNotNull(result);
+    }
+
+    // ── getMDMQualityThreshold on impl ────────────────────────────────────────
+
+    @Test
+    public void getMDMQualityThreshold_allModalitiesConfigured_returnsCorrectThreshold() {
+        ApplicationContext.map().put(RegistrationConstants.LEFTSLAP_FINGERPRINT_THRESHOLD, "90.0");
+        ApplicationContext.map().put(RegistrationConstants.RIGHTSLAP_FINGERPRINT_THRESHOLD, "95.0");
+        ApplicationContext.map().put(RegistrationConstants.THUMBS_FINGERPRINT_THRESHOLD, "98.0");
+        ApplicationContext.map().put(RegistrationConstants.IRIS_THRESHOLD, "70.0");
+        ApplicationContext.map().put(RegistrationConstants.FACE_THRESHOLD, "60.0");
+
+        Assert.assertEquals(90.0, bioServiceImpl.getMDMQualityThreshold(Modality.FINGERPRINT_SLAB_LEFT), 0.001);
+        Assert.assertEquals(95.0, bioServiceImpl.getMDMQualityThreshold(Modality.FINGERPRINT_SLAB_RIGHT), 0.001);
+        Assert.assertEquals(98.0, bioServiceImpl.getMDMQualityThreshold(Modality.FINGERPRINT_SLAB_THUMBS), 0.001);
+        Assert.assertEquals(70.0, bioServiceImpl.getMDMQualityThreshold(Modality.IRIS_DOUBLE), 0.001);
+        Assert.assertEquals(60.0, bioServiceImpl.getMDMQualityThreshold(Modality.FACE), 0.001);
+    }
+
+    @Test
+    public void getMDMQualityThreshold_nullConfigValue_returnsZero() {
+        ApplicationContext.map().remove(RegistrationConstants.FACE_THRESHOLD);
+        Assert.assertEquals(0.0, bioServiceImpl.getMDMQualityThreshold(Modality.FACE), 0.001);
+    }
+
+    // ── getRetryCount on impl ─────────────────────────────────────────────────
+
+    @Test
+    public void getRetryCount_allModalitiesConfigured_returnsCorrectCount() {
+        ApplicationContext.map().put(RegistrationConstants.FACE_RETRY_COUNT, "3");
+        ApplicationContext.map().put(RegistrationConstants.IRIS_RETRY_COUNT, "6");
+        ApplicationContext.map().put(RegistrationConstants.FINGERPRINT_RETRIES_COUNT, "1");
+        ApplicationContext.map().put(RegistrationConstants.PHOTO_RETRY_COUNT, "9");
+
+        Assert.assertEquals(3, bioServiceImpl.getRetryCount(Modality.FACE));
+        Assert.assertEquals(6, bioServiceImpl.getRetryCount(Modality.IRIS_DOUBLE));
+        Assert.assertEquals(1, bioServiceImpl.getRetryCount(Modality.FINGERPRINT_SLAB_LEFT));
+        Assert.assertEquals(1, bioServiceImpl.getRetryCount(Modality.FINGERPRINT_SLAB_RIGHT));
+        Assert.assertEquals(1, bioServiceImpl.getRetryCount(Modality.FINGERPRINT_SLAB_THUMBS));
+        Assert.assertEquals(9, bioServiceImpl.getRetryCount(Modality.EXCEPTION_PHOTO));
+    }
+
+    @Test
+    public void getRetryCount_nullConfigValue_returnsZero() {
+        ApplicationContext.map().remove(RegistrationConstants.FACE_RETRY_COUNT);
+        Assert.assertEquals(0, bioServiceImpl.getRetryCount(Modality.FACE));
+    }
+
+    // ── getSupportedBioAttributes on impl ────────────────────────────────────
+
+    @Test
+    public void getSupportedBioAttributes_allModalities_returnsPopulatedMap() {
+        List<String> modalities = java.util.Arrays.asList(
+                RegistrationConstants.FINGERPRINT_SLAB_LEFT,
+                RegistrationConstants.FINGERPRINT_SLAB_RIGHT,
+                RegistrationConstants.FINGERPRINT_SLAB_THUMBS,
+                RegistrationConstants.IRIS,
+                RegistrationConstants.IRIS_DOUBLE,
+                RegistrationConstants.FACE,
+                RegistrationConstants.FACE_FULLFACE
+        );
+        Map<String, List<String>> result = bioServiceImpl.getSupportedBioAttributes(modalities);
+        Assert.assertFalse(result.isEmpty());
+        Assert.assertEquals(RegistrationConstants.leftHandUiAttributes, result.get(RegistrationConstants.FINGERPRINT_SLAB_LEFT));
+        Assert.assertEquals(RegistrationConstants.rightHandUiAttributes, result.get(RegistrationConstants.FINGERPRINT_SLAB_RIGHT));
+        Assert.assertEquals(RegistrationConstants.twoThumbsUiAttributes, result.get(RegistrationConstants.FINGERPRINT_SLAB_THUMBS));
+        Assert.assertEquals(RegistrationConstants.faceUiAttributes, result.get(RegistrationConstants.FACE));
+    }
+
+    @Test
+    public void getSupportedBioAttributes_emptyModalities_returnsEmptyMap() {
+        Map<String, List<String>> result = bioServiceImpl.getSupportedBioAttributes(Collections.emptyList());
+        Assert.assertTrue(result.isEmpty());
+    }
+
+    // ── getCapturedBiometrics ─────────────────────────────────────────────────
+
+    @Test
+    public void getCapturedBiometrics_forceCaptured_returnsTrue() {
+        UiFieldDTO fieldDto = new UiFieldDTO();
+        fieldDto.setId("face");
+        fieldDto.setBioAttributes(Arrays.asList("face"));
+
+        BiometricsDto dto = new BiometricsDto();
+        dto.setBioAttribute("face");
+        dto.setQualityScore(80.0);
+        dto.setForceCaptured(true);
+
+        RegistrationDTO registrationDTO = Mockito.mock(RegistrationDTO.class);
+        Mockito.when(registrationDTO.getBiometric("face", "face")).thenReturn(dto);
+
+        Map<String, Boolean> result = bioServiceImpl.getCapturedBiometrics(fieldDto, 1.0, registrationDTO);
+        Assert.assertTrue(result.get("face"));
+    }
+
+    @Test
+    public void getCapturedBiometrics_biometricNull_exceptionAvailable_returnsTrue() {
+        UiFieldDTO fieldDto = new UiFieldDTO();
+        fieldDto.setId("face");
+        fieldDto.setBioAttributes(Arrays.asList("face"));
+
+        RegistrationDTO registrationDTO = Mockito.mock(RegistrationDTO.class);
+        Mockito.when(registrationDTO.getBiometric("face", "face")).thenReturn(null);
+        Mockito.when(registrationDTO.isBiometricExceptionAvailable("face", "face")).thenReturn(true);
+
+        Map<String, Boolean> result = bioServiceImpl.getCapturedBiometrics(fieldDto, 1.0, registrationDTO);
+        Assert.assertTrue(result.get("face"));
+    }
+
+    @Test
+    public void getCapturedBiometrics_qualityAboveThreshold_returnsTrue() {
+        ApplicationContext.map().put(RegistrationConstants.FACE_THRESHOLD, "60.0");
+
+        UiFieldDTO fieldDto = new UiFieldDTO();
+        fieldDto.setId("face");
+        fieldDto.setBioAttributes(Arrays.asList("face"));
+
+        BiometricsDto dto = new BiometricsDto();
+        dto.setBioAttribute("face");
+        dto.setQualityScore(80.0);
+        dto.setForceCaptured(false);
+
+        RegistrationDTO registrationDTO = Mockito.mock(RegistrationDTO.class);
+        Mockito.when(registrationDTO.getBiometric("face", "face")).thenReturn(dto);
+
+        Map<String, Boolean> result = bioServiceImpl.getCapturedBiometrics(fieldDto, 1.0, registrationDTO);
+        Assert.assertTrue(result.get("face"));
     }
 
     private String getRCaptureResponse() throws JsonProcessingException {
