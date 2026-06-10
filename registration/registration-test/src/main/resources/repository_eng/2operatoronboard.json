@@ -2,7 +2,8 @@
   "identity": {
 	  "BELOW_ARE_STATIC_KEYWORDS":"",
     "process": "OperatorOnboard",
-   	 
+	"username": "Invalid",
+	"password": "Invalid",
 		  "bioAttributes": [
 				 "leftEye",
 					"rightEye",

@@ -36,7 +36,7 @@ public class Buttons {
         waitsUtil.clickNodeAssert(continueBtn);
 
     }
-
+    
     /**
      * {@summary} Back Button Click
      */
@@ -85,7 +85,7 @@ public class Buttons {
     /**
      * Continue Click
      */
-    public void clicknextBtn() {
+    public void clickNextBtn() {
         logger.info("clicknextBtn");
         waitsUtil.clickNodeAssert(next);
     }
@@ -97,5 +97,15 @@ public class Buttons {
         logger.info("clickAuthenticateBtn");
         waitsUtil.clickNodeAssert(authenticate);
 
+    }
+    
+    public void verifySubmitButtonDisabled() {
+        logger.info("verifySubmitButtonDisabled");
+        waitsUtil.assertNodeDisabled(submit);
+    }
+    
+    public void verifySubmitButtonEnabled() {
+        logger.info("verifySubmitButtonEnabled");
+        waitsUtil.assertNodeEnabled(submit);
     }
 }
