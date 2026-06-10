@@ -2,6 +2,7 @@ package registrationtest.utility;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -52,6 +53,21 @@ public class JsonUtil {
         }
         return payload;
     }
+    
+	public static String getIdentityValue(String identity, String key) {
+		try {
+			JsonNode identityNode = mapper.readTree(identity).path(PropertiesUtil.getKeyValue("jsonObjName"));
+
+			if (identityNode.isMissingNode() || !identityNode.hasNonNull(key)) {
+				throw new IllegalArgumentException("Missing identity key: " + key);
+			}
+
+			return identityNode.get(key).asText();
+		} catch (IOException e) {
+			logger.error("Failed to parse identity JSON", e);
+			throw new IllegalArgumentException("Invalid identity JSON", e);
+		}
+	}
 
     public static LinkedHashMap<String, String> JsonObjSimpleParsing(String jsonIdentity, String idfield)
             throws Exception {
