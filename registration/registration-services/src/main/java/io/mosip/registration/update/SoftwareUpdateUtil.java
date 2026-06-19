@@ -137,7 +137,7 @@ public class SoftwareUpdateUtil {
                     getTimeout(READ_TIMEOUT, DEFAULT_READ_TIMEOUT));
         } catch (IOException e) {
             LOGGER.error("Failed to download {}", url, e);
-            throw new RegBaseCheckedException("REG-BUILD-005", "Failed to download " + url);
+            throw new RegBaseCheckedException("REG-BUILD-005", "Failed to download " + url, e);
         }
     }
 
@@ -154,7 +154,7 @@ public class SoftwareUpdateUtil {
         try {
             ResumableDownloader.ensureSpace(targetDir, requiredBytes);
         } catch (IOException e) {
-            throw new RegBaseCheckedException("REG-BUILD-004", e.getMessage());
+            throw new RegBaseCheckedException("REG-BUILD-004", e.getMessage(), e);
         }
     }
 

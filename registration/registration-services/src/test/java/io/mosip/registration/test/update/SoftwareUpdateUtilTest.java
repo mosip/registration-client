@@ -303,6 +303,17 @@ public class SoftwareUpdateUtilTest extends SoftwareUpdateUtil {
         downloadResumable("http://invalid.invalid/file", TEMP_DIR.getAbsolutePath(), "x.bin");
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void downloadResumable_pathTraversalName_rejected() throws Exception {
+        // A malicious manifest entry must not be able to write outside the target directory.
+        downloadResumable("http://localhost/file", TEMP_DIR.getAbsolutePath(), "..\\..\\evil.bin");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void downloadResumable_separatorInName_rejected() throws Exception {
+        downloadResumable("http://localhost/file", TEMP_DIR.getAbsolutePath(), "sub/evil.bin");
+    }
+
     @Test(expected = RegBaseCheckedException.class)
     public void downloadResumable_unexpectedStatus_throws() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);

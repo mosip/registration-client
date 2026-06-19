@@ -57,7 +57,10 @@ public final class ResumableDownloader {
      * @param fileName       the final file name within {@code targetDir}
      * @param connectTimeout connection timeout in milliseconds
      * @param readTimeout    read timeout in milliseconds (0 = infinite)
-     * @throws IOException if the download cannot be completed
+     * @throws IOException              if the download cannot be completed
+     * @throws IllegalArgumentException if {@code fileName} is blank or contains a path separator or a
+     *                                  {@code ..} sequence (guards against path-traversal writes outside
+     *                                  {@code targetDir})
      */
     public static void download(String url, String targetDir, String fileName,
                                 int connectTimeout, int readTimeout) throws IOException {
@@ -343,6 +346,12 @@ public final class ResumableDownloader {
         private final File meta;
 
         private Artifact(File dir, String name) {
+            if (name == null || name.isEmpty()
+                    || name.indexOf('/') >= 0 || name.indexOf('\\') >= 0
+                    || name.contains("..")) {
+                throw new IllegalArgumentException(
+                        "Illegal download file name (path traversal attempt?): " + name);
+            }
             this.dir = dir;
             this.name = name;
             this.target = new File(dir, name);
