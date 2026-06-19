@@ -30,6 +30,9 @@ public class SoftwareUpdateUtil {
     private static final String TEMP_DIRECTORY = ".TEMP";
     private static final String MANIFEST_FILE_NAME = "MANIFEST.MF";
     private static final String MANIFEST_SIG_FILE_NAME = MANIFEST_FILE_NAME + ".sig";
+    public static final String ARTIFACTS_DIRECTORY = ".artifacts";
+    private static final int DEFAULT_CONNECTION_TIMEOUT = 50000;
+    private static final int DEFAULT_READ_TIMEOUT = 0;
 
     protected static boolean deleteUnknownJars(Manifest localManifest) throws IOException {
         StringBuilder builder = new StringBuilder();
@@ -115,6 +118,57 @@ public class SoftwareUpdateUtil {
         throw new RegBaseCheckedException("REG-BUILD-005", "Failed to download " + url);
     }
 
+    /**
+     * Downloads {@code url} into {@code targetDir/fileName} with resume support.
+     * <p>
+     * Delegates to {@link ResumableDownloader}, supplying the configured timeouts and translating the
+     * low-level {@link IOException} into the service-layer {@link RegBaseCheckedException}. Used by
+     * {@code softwareUpdateHandler} to stage upgrade artifacts into {@link #ARTIFACTS_DIRECTORY}.
+     *
+     * @param url       the source URL
+     * @param targetDir the directory the file should be written into (created if missing)
+     * @param fileName  the final file name within {@code targetDir}
+     * @throws RegBaseCheckedException if the download cannot be completed
+     */
+    protected static void downloadResumable(String url, String targetDir, String fileName) throws RegBaseCheckedException {
+        try {
+            ResumableDownloader.download(url, targetDir, fileName,
+                    getTimeout(CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT),
+                    getTimeout(READ_TIMEOUT, DEFAULT_READ_TIMEOUT));
+        } catch (IOException e) {
+            LOGGER.error("Failed to download {}", url, e);
+            throw new RegBaseCheckedException("REG-BUILD-005", "Failed to download " + url);
+        }
+    }
+
+    /**
+     * Guards against starting a download that cannot fit on the target's partition. Delegates to
+     * {@link ResumableDownloader#ensureSpace(File, long)} and translates the low-level
+     * {@link IOException} into the service-layer {@link RegBaseCheckedException}.
+     *
+     * @param targetDir     the directory the download will be written to
+     * @param requiredBytes the number of bytes about to be written
+     * @throws RegBaseCheckedException if there is insufficient usable space
+     */
+    protected static void ensureSpace(File targetDir, long requiredBytes) throws RegBaseCheckedException {
+        try {
+            ResumableDownloader.ensureSpace(targetDir, requiredBytes);
+        } catch (IOException e) {
+            throw new RegBaseCheckedException("REG-BUILD-004", e.getMessage());
+        }
+    }
+
+    private static int getTimeout(String key, int defaultValue) {
+        try {
+            Integer value = ApplicationContext.getIntValueFromApplicationMap(key);
+            return value == null ? defaultValue : value;
+        } catch (RuntimeException e) {
+            // e.g. a non-numeric configured value -> NumberFormatException; fall back to the default
+            LOGGER.warn("Invalid value for {}, using default {} : {}", key, defaultValue, e.getMessage());
+            return defaultValue;
+        }
+    }
+
     protected static boolean deleteFile(String filePath) {
         LOGGER.info("Deleting file {}", filePath);
         Path path = Path.of(filePath);
@@ -150,11 +204,4 @@ public class SoftwareUpdateUtil {
             LOGGER.error("Failed to clean and delete temp", e);
         }
     }
-
-    /*private static boolean hasSpace(int bytes) throws RegBaseCheckedException {
-        boolean hasSpace = bytes < new File(File.separator).getFreeSpace();
-        if(!hasSpace)
-            throw new RegBaseCheckedException("REG-BUILD-004", "Not enough space available");
-        return true;
-    }*/
 }

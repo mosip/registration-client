@@ -319,8 +319,10 @@ public class SoftwareUpdateHandler extends BaseService {
 		serverManifest.write(new FileOutputStream(manifestFile));
 		setLocalManifest();
 
-		SoftwareUpdateUtil.clearTempDirectory();
-
+		// From 1.3.0 the handler is download-and-record only: artifacts are staged into .artifacts/
+		// (resumable, never into lib/) and the .artifacts/ directory is intentionally NOT cleared so an
+		// interrupted download can resume from its .part file on the next run. Unzipping and applying to
+		// lib/ is the launcher's / run.bat's job (T2), not the handler's.
 		Map<String, Attributes> localAttributes = localManifest.getEntries();
 		for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
 			File file = new File(libFolder + SLASH + entry.getKey());
@@ -328,14 +330,14 @@ public class SoftwareUpdateHandler extends BaseService {
 
 			if(!file.exists()) {
 				LOGGER.info("{} file doesn't exists, downloading it", entry.getKey());
-				SoftwareUpdateUtil.download(url, entry.getKey());
+				SoftwareUpdateUtil.downloadResumable(url, SoftwareUpdateUtil.ARTIFACTS_DIRECTORY, entry.getKey());
 				LOGGER.info("Successfully downloaded the file : {}", entry.getKey());
 				continue;
 			}
 
 			if(!SoftwareUpdateUtil.validateJarChecksum(file, entry.getValue())) {
 				LOGGER.info("{} file checksum validation failed, downloading it", entry.getKey());
-				SoftwareUpdateUtil.download(url, entry.getKey());
+				SoftwareUpdateUtil.downloadResumable(url, SoftwareUpdateUtil.ARTIFACTS_DIRECTORY, entry.getKey());
 				LOGGER.info("Successfully downloaded the latest file : {}", entry.getKey());
 			}
 		}
