@@ -109,14 +109,13 @@ public class WaitsUtil {
     
     public Node waitForNodePresent(String id) {
         try {
-			WaitForAsyncUtils.waitFor(20, TimeUnit.SECONDS, () -> {
-			    return robot.lookup(id).tryQuery().isPresent();
-			});
-		} catch (TimeoutException e) {
-			e.printStackTrace();
-		}
-
-        return robot.lookup(id).query();
+            WaitForAsyncUtils.waitFor(20, TimeUnit.SECONDS, () -> robot.lookup(id).tryQuery().isPresent());
+            return robot.lookup(id).query();
+        } catch (TimeoutException e) {
+            logger.error("Element not found within timeout: " + id, e);
+            capture();
+            throw new RuntimeException("Element not found within 20 sec: " + id, e);
+        }
     }
 
 	public void clickIfPresent(String id) {
