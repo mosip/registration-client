@@ -364,7 +364,7 @@ public class LoginPage {
             // if home else fail or check the #context
 
             waitsUtil.clickNodeAssert("#sub2");
-            Thread.sleep(15000);
+            Thread.sleep(35000);
             waitsUtil.clickNodeAssert(success);
 
             flag = true;

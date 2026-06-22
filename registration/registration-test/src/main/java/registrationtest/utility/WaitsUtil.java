@@ -9,6 +9,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -182,6 +183,108 @@ public class WaitsUtil {
         return type.cast(node);
     }
 
+    public Node findVisibleNodeInAnyWindow(String selector) {
+        Set<Node> nodes = robot.lookup(selector).queryAll();
+        for (Node node : nodes) {
+            if (node != null && node.isVisible() && !node.isDisable()) {
+                return node;
+            }
+        }
+        return null;
+    }
+
+    public Node waitForFirstVisibleNode(String selector, long timeoutMs) {
+        long startTime = System.currentTimeMillis();
+        try {
+            while (System.currentTimeMillis() - startTime < timeoutMs) {
+                Node node = findVisibleNodeInAnyWindow(selector);
+                if (node != null) {
+                    return node;
+                }
+                WaitForAsyncUtils.waitForFxEvents();
+                Thread.sleep(50);
+            }
+            throw new RuntimeException(
+                    "Element not found within " + (timeoutMs / 1000) + " sec : " + selector);
+        } catch (RuntimeException e) {
+            logger.error("Wait failed for visible element: " + selector, e);
+            capture();
+            throw e;
+        } catch (Exception e) {
+            logger.error("Wait failed for visible element: " + selector, e);
+            capture();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Node waitForVisibleAuthPassword(long timeoutMs) {
+        long startTime = System.currentTimeMillis();
+        try {
+            while (System.currentTimeMillis() - startTime < timeoutMs) {
+                Set<Node> panes = robot.lookup("#pwdBasedLogin").queryAll();
+                for (Node pane : panes) {
+                    if (pane != null && pane.isVisible() && !pane.isDisable()) {
+                        Node password = pane.lookup("#password");
+                        if (password != null && password.isVisible() && !password.isDisable()) {
+                            return password;
+                        }
+                    }
+                }
+                WaitForAsyncUtils.waitForFxEvents();
+                Thread.sleep(50);
+            }
+            throw new RuntimeException(
+                    "Operator auth password field not found within " + (timeoutMs / 1000) + " sec");
+        } catch (RuntimeException e) {
+            logger.error("Wait failed for operator auth password field", e);
+            capture();
+            throw e;
+        } catch (Exception e) {
+            logger.error("Wait failed for operator auth password field", e);
+            capture();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Node waitForVisibleAuthUsername(long timeoutMs) {
+        long startTime = System.currentTimeMillis();
+        try {
+            while (System.currentTimeMillis() - startTime < timeoutMs) {
+                Set<Node> panes = robot.lookup("#pwdBasedLogin").queryAll();
+                for (Node pane : panes) {
+                    if (pane != null && pane.isVisible() && !pane.isDisable()) {
+                        Node username = pane.lookup("#username");
+                        if (username != null && username.isVisible() && !username.isDisable()) {
+                            return username;
+                        }
+                    }
+                }
+                WaitForAsyncUtils.waitForFxEvents();
+                Thread.sleep(50);
+            }
+            throw new RuntimeException(
+                    "Operator auth username field not found within " + (timeoutMs / 1000) + " sec");
+        } catch (RuntimeException e) {
+            logger.error("Wait failed for operator auth username field", e);
+            capture();
+            throw e;
+        } catch (Exception e) {
+            logger.error("Wait failed for operator auth username field", e);
+            capture();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Node waitForVisibleNodeInAnyWindow(String selector, long timeoutMs) {
+        return waitForFirstVisibleNode(selector, timeoutMs);
+    }
+
+    public void clickVisibleNodeInAnyWindow(String selector, long timeoutMs) {
+        Node node = waitForVisibleNodeInAnyWindow(selector, timeoutMs);
+        robot.moveTo(node);
+        robot.clickOn(node);
+    }
+
     public void scrollclickNodeAssert(String id) {
     	waitForNode(id);
         node = lookupById(id);
@@ -290,7 +393,12 @@ public class WaitsUtil {
             Path SNAPSHOTPATH = Paths.get(System.getProperty("user.dir"), "snapshot",
                     "snapshot" + DateUtil.getDateTime() + ".jpg");
             snapshotpath = SNAPSHOTPATH.toString();
-            ImageIO.write(image, "jpg", new File(snapshotpath));
+            File snapshotFile = SNAPSHOTPATH.toFile();
+            File snapshotDir = snapshotFile.getParentFile();
+            if (snapshotDir != null && !snapshotDir.exists()) {
+                snapshotDir.mkdirs();
+            }
+            ImageIO.write(image, "jpg", snapshotFile);
 
         } catch (Exception e) {
             logger.error("", e);

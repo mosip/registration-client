@@ -54,6 +54,19 @@ public class JsonUtil {
         return payload;
     }
     
+	public static String getOptionalIdentityValue(String identity, String key) {
+		try {
+			JSONObject json = new JSONObject(identity);
+			JSONObject identityObj = json.getJSONObject(PropertiesUtil.getKeyValue("jsonObjName"));
+			if (identityObj.has(key) && !identityObj.isNull(key)) {
+				return identityObj.getString(key);
+			}
+		} catch (Exception e) {
+			logger.debug("Optional identity key not found: {}", key);
+		}
+		return null;
+	}
+
 	public static String getIdentityValue(String identity, String key) {
 		try {
 			JsonNode identityNode = mapper.readTree(identity).path(PropertiesUtil.getKeyValue("jsonObjName"));
@@ -187,6 +200,25 @@ public class JsonUtil {
 
         return value;
     }
+
+	public static List<String> getOptionalIdentityArrayList(String identity, String key) {
+		try {
+			JSONObject json = new JSONObject(identity);
+			JSONObject identityObj = json.getJSONObject(PropertiesUtil.getKeyValue("jsonObjName"));
+			if (!identityObj.has(key) || identityObj.isNull(key)) {
+				return null;
+			}
+			JSONArray identityitems = identityObj.getJSONArray(key);
+			List<String> list = new LinkedList<>();
+			for (int i = 0; i < identityitems.length(); i++) {
+				list.add(identityitems.getString(i));
+			}
+			return list;
+		} catch (Exception e) {
+			logger.debug("Optional identity array not found: {}", key);
+		}
+		return null;
+	}
 
     public static List<String> JsonObjArrayListParsing(String jsonIdentity, String idfield) throws Exception {
         List<String> list = new LinkedList<String>();
