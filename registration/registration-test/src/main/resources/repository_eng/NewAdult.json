@@ -18,6 +18,8 @@
 	    ],
 	"ageGroup":"ADULT",
 	"process":"New",
+	"previewTests":["ALL"],
+	"verifyPreviewEdit":"Y",
 	"preferredLang":"English",
 	   "profile":"Default",
 	    "score1":"90",
