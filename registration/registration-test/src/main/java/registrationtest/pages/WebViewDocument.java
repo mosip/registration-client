@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.testfx.api.FxRobot;
@@ -17,6 +18,7 @@ import org.testfx.api.FxRobot;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.image.ImageView;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
@@ -328,9 +330,14 @@ public class WebViewDocument {
                     latch.countDown();
                 }
             });
-            latch.await();
+            if (!latch.await(30, TimeUnit.SECONDS)) {
+                throw new AssertionError("Timed out while reading preview HTML");
+            }
         } catch (Exception e) {
             logger.error("Failed to read preview HTML", e);
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
         }
         return htmlRef.get();
     }
@@ -405,16 +412,16 @@ public class WebViewDocument {
         try {
             List<String> uploadedDocs = JsonUtil.JsonObjArrayListParsing(jsonContent, "documentUploadAttributes");
             if (uploadedDocs != null && !uploadedDocs.isEmpty()) {
-                boolean anyFound = false;
+                List<String> missingDocs = new ArrayList<>();
                 for (String docType : uploadedDocs) {
                     if (html.contains(docType) || hasDocumentLabel(html, jsonContent, docType)) {
-                        anyFound = true;
                         ExtentReportUtil.test1.info("Document verified on preview: " + docType);
                     } else {
                         logger.info("Document type not visible on preview: {}", docType);
+                        missingDocs.add(docType);
                     }
                 }
-                assertTrue(anyFound, "No uploaded documents found on preview");
+                assertTrue(missingDocs.isEmpty(), "Uploaded documents missing on preview: " + missingDocs);
                 return;
             }
         } catch (Exception e) {
@@ -452,7 +459,7 @@ public class WebViewDocument {
                     return;
                 }
             }
-            logger.info("{} label not shown on preview; document section is present", label);
+            throw new AssertionError(label + " not found on preview");
         } catch (Exception e) {
             logger.debug("Skipping document field {}: {}", field, e.getMessage());
         }
@@ -564,9 +571,14 @@ public class WebViewDocument {
                     latch.countDown();
                 }
             });
-            latch.await();
+            if (!latch.await(30, TimeUnit.SECONDS)) {
+                throw new AssertionError("Timed out while checking preview edit restriction");
+            }
         } catch (Exception e) {
             logger.error("Failed to verify preview edit restriction", e);
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
             throw new AssertionError("Preview edit restriction check failed", e);
         }
 
@@ -606,7 +618,12 @@ public class WebViewDocument {
         String[] editableNodes = { "#individualBiometricsScanBtn", "#fullName", "#proofOfAddress",
                 "#introducerBiometricsScanBtn" };
         for (String nodeId : editableNodes) {
-            if (robot.lookup(nodeId).tryQuery().isPresent()) {
+            Node editableNode = robot.lookup(nodeId).tryQuery().orElse(null);
+            if (editableNode != null
+                    && editableNode.isVisible()
+                    && !editableNode.isDisable()
+                    && (!(editableNode instanceof TextInputControl)
+                            || ((TextInputControl) editableNode).isEditable())) {
                 return true;
             }
         }

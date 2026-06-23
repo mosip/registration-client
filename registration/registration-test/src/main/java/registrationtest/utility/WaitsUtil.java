@@ -193,84 +193,67 @@ public class WaitsUtil {
     }
 
     public Node waitForFirstVisibleNode(String selector, long timeoutMs) {
-        long startTime = System.currentTimeMillis();
         try {
-            while (System.currentTimeMillis() - startTime < timeoutMs) {
-                Node node = findVisibleNodeInAnyWindow(selector);
-                if (node != null) {
-                    return node;
-                }
-                WaitForAsyncUtils.waitForFxEvents();
-                Thread.sleep(50);
-            }
+            WaitForAsyncUtils.waitFor(timeoutMs, TimeUnit.MILLISECONDS,
+                    () -> findVisibleNodeInAnyWindow(selector) != null);
+            return findVisibleNodeInAnyWindow(selector);
+        } catch (TimeoutException e) {
+            logger.error("Wait failed for visible element: " + selector, e);
+            capture();
             throw new RuntimeException(
-                    "Element not found within " + (timeoutMs / 1000) + " sec : " + selector);
-        } catch (RuntimeException e) {
-            logger.error("Wait failed for visible element: " + selector, e);
-            capture();
-            throw e;
-        } catch (Exception e) {
-            logger.error("Wait failed for visible element: " + selector, e);
-            capture();
-            throw new RuntimeException(e);
+                    "Element not found within " + (timeoutMs / 1000) + " sec : " + selector, e);
         }
+    }
+
+    private Node findVisibleAuthPassword() {
+        Set<Node> panes = robot.lookup("#pwdBasedLogin").queryAll();
+        for (Node pane : panes) {
+            if (pane != null && pane.isVisible() && !pane.isDisable()) {
+                Node password = pane.lookup("#password");
+                if (password != null && password.isVisible() && !password.isDisable()) {
+                    return password;
+                }
+            }
+        }
+        return null;
     }
 
     public Node waitForVisibleAuthPassword(long timeoutMs) {
-        long startTime = System.currentTimeMillis();
         try {
-            while (System.currentTimeMillis() - startTime < timeoutMs) {
-                Set<Node> panes = robot.lookup("#pwdBasedLogin").queryAll();
-                for (Node pane : panes) {
-                    if (pane != null && pane.isVisible() && !pane.isDisable()) {
-                        Node password = pane.lookup("#password");
-                        if (password != null && password.isVisible() && !password.isDisable()) {
-                            return password;
-                        }
-                    }
-                }
-                WaitForAsyncUtils.waitForFxEvents();
-                Thread.sleep(50);
-            }
+            WaitForAsyncUtils.waitFor(timeoutMs, TimeUnit.MILLISECONDS,
+                    () -> findVisibleAuthPassword() != null);
+            return findVisibleAuthPassword();
+        } catch (TimeoutException e) {
+            logger.error("Wait failed for operator auth password field", e);
+            capture();
             throw new RuntimeException(
-                    "Operator auth password field not found within " + (timeoutMs / 1000) + " sec");
-        } catch (RuntimeException e) {
-            logger.error("Wait failed for operator auth password field", e);
-            capture();
-            throw e;
-        } catch (Exception e) {
-            logger.error("Wait failed for operator auth password field", e);
-            capture();
-            throw new RuntimeException(e);
+                    "Operator auth password field not found within " + (timeoutMs / 1000) + " sec", e);
         }
     }
 
-    public Node waitForVisibleAuthUsername(long timeoutMs) {
-        long startTime = System.currentTimeMillis();
-        try {
-            while (System.currentTimeMillis() - startTime < timeoutMs) {
-                Set<Node> panes = robot.lookup("#pwdBasedLogin").queryAll();
-                for (Node pane : panes) {
-                    if (pane != null && pane.isVisible() && !pane.isDisable()) {
-                        Node username = pane.lookup("#username");
-                        if (username != null && username.isVisible() && !username.isDisable()) {
-                            return username;
-                        }
-                    }
+    private Node findVisibleAuthUsername() {
+        Set<Node> panes = robot.lookup("#pwdBasedLogin").queryAll();
+        for (Node pane : panes) {
+            if (pane != null && pane.isVisible() && !pane.isDisable()) {
+                Node username = pane.lookup("#username");
+                if (username != null && username.isVisible() && !username.isDisable()) {
+                    return username;
                 }
-                WaitForAsyncUtils.waitForFxEvents();
-                Thread.sleep(50);
             }
+        }
+        return null;
+    }
+
+    public Node waitForVisibleAuthUsername(long timeoutMs) {
+        try {
+            WaitForAsyncUtils.waitFor(timeoutMs, TimeUnit.MILLISECONDS,
+                    () -> findVisibleAuthUsername() != null);
+            return findVisibleAuthUsername();
+        } catch (TimeoutException e) {
+            logger.error("Wait failed for operator auth username field", e);
+            capture();
             throw new RuntimeException(
-                    "Operator auth username field not found within " + (timeoutMs / 1000) + " sec");
-        } catch (RuntimeException e) {
-            logger.error("Wait failed for operator auth username field", e);
-            capture();
-            throw e;
-        } catch (Exception e) {
-            logger.error("Wait failed for operator auth username field", e);
-            capture();
-            throw new RuntimeException(e);
+                    "Operator auth username field not found within " + (timeoutMs / 1000) + " sec", e);
         }
     }
 
