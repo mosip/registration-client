@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.testfx.api.FxRobot;
 
+import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.constants.RegistrationUIConstants;
+
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import registrationtest.utility.ExtentReportUtil;
@@ -79,9 +82,14 @@ public class Alerts {
         String actualMessage = contextLabel.getText().trim();
         logger.info("Print acknowledgement popup message: {}", actualMessage);
         ExtentReportUtil.test1.info("Print acknowledgement popup: " + actualMessage);
-        assertTrue(actualMessage.contains("Print initiated successfully"),
-                "Expected 'Print initiated successfully' but got: " + actualMessage);
-        ExtentReportUtil.test1.pass("Print initiated successfully popup verified");
+        String expectedMessage = RegistrationUIConstants
+                .getMessageLanguageSpecific(RegistrationUIConstants.PRINT_INITIATION_SUCCESS);
+        String expectedText = expectedMessage.split(RegistrationConstants.SPLITTER)[0].trim();
+        assertTrue(actualMessage.contains(expectedText),
+                "Expected print success message containing '" + expectedText + "' but got: " + actualMessage);
+        Node successIcon = waitsUtil.waitForVisibleNodeInAnyWindow(alertImage, 5_000L);
+        assertNotNull(successIcon, "Print success alert icon not displayed");
+        ExtentReportUtil.test1.pass("Print success alert verified");
         waitsUtil.clickVisibleNodeInAnyWindow(exit, 10_000L);
         logger.info("Dismissed print success alert");
     }

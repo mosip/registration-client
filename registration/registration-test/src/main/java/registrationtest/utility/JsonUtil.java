@@ -14,6 +14,7 @@ import java.util.Set;
 
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class JsonUtil {
@@ -57,14 +58,22 @@ public class JsonUtil {
 	public static String getOptionalIdentityValue(String identity, String key) {
 		try {
 			JSONObject json = new JSONObject(identity);
-			JSONObject identityObj = json.getJSONObject(PropertiesUtil.getKeyValue("jsonObjName"));
+			String objName = PropertiesUtil.getKeyValue("jsonObjName");
+			if (!json.has(objName) || json.isNull(objName)) {
+				throw new IllegalArgumentException("Missing identity object: " + objName);
+			}
+			JSONObject identityObj = json.getJSONObject(objName);
 			if (identityObj.has(key) && !identityObj.isNull(key)) {
 				return identityObj.getString(key);
 			}
-		} catch (Exception e) {
-			logger.debug("Optional identity key not found: {}", key);
+			return null;
+		} catch (JSONException e) {
+			logger.error("Failed to resolve optional identity key: {}", key, e);
+			throw new IllegalArgumentException("Invalid identity payload for key: " + key, e);
+		} catch (IOException e) {
+			logger.error("Failed to load config for optional identity key: {}", key, e);
+			throw new IllegalArgumentException("Invalid identity payload/config for key: " + key, e);
 		}
-		return null;
 	}
 
 	public static String getIdentityValue(String identity, String key) {
@@ -204,7 +213,11 @@ public class JsonUtil {
 	public static List<String> getOptionalIdentityArrayList(String identity, String key) {
 		try {
 			JSONObject json = new JSONObject(identity);
-			JSONObject identityObj = json.getJSONObject(PropertiesUtil.getKeyValue("jsonObjName"));
+			String objName = PropertiesUtil.getKeyValue("jsonObjName");
+			if (!json.has(objName) || json.isNull(objName)) {
+				throw new IllegalArgumentException("Missing identity object: " + objName);
+			}
+			JSONObject identityObj = json.getJSONObject(objName);
 			if (!identityObj.has(key) || identityObj.isNull(key)) {
 				return null;
 			}
@@ -214,10 +227,13 @@ public class JsonUtil {
 				list.add(identityitems.getString(i));
 			}
 			return list;
-		} catch (Exception e) {
-			logger.debug("Optional identity array not found: {}", key);
+		} catch (JSONException e) {
+			logger.error("Failed to resolve optional identity array: {}", key, e);
+			throw new IllegalArgumentException("Invalid identity payload for array key: " + key, e);
+		} catch (IOException e) {
+			logger.error("Failed to load config for optional identity array: {}", key, e);
+			throw new IllegalArgumentException("Invalid identity payload/config for array key: " + key, e);
 		}
-		return null;
 	}
 
     public static List<String> JsonObjArrayListParsing(String jsonIdentity, String idfield) throws Exception {

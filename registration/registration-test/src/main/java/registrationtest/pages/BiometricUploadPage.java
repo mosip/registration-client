@@ -324,7 +324,9 @@ public class BiometricUploadPage {
 		}
 		try {
 			String scanButtonId = getScanButtonId(idBioType);
-			if (!isNodePresent(scanButtonId)) {
+			try {
+				waitsUtil.waitForNode(scanButtonId);
+			} catch (RuntimeException e) {
 				logger.info("Skipping biometric scan for {} - scan button not on current screen", idModality);
 				return;
 			}
@@ -332,7 +334,9 @@ public class BiometricUploadPage {
 			for (int i = 1; i <= bioCapattempvalue; i++) {
 				bioCorrectionPage.setMDSscore(type, JsonUtil.JsonObjParsing(jsonContent, "score" + i));
 
-				if (!isNodePresent(scanButtonId)) {
+				try {
+					waitsUtil.waitForNode(scanButtonId);
+				} catch (RuntimeException e) {
 					logger.info("Scan button disappeared before attempt {} for {}", i, idModality);
 					break;
 				}
@@ -586,6 +590,9 @@ public class BiometricUploadPage {
 	}
 
 	private boolean isModalityAvailable(String idBioType, String idModality) {
+		if ("#".equals(idBioType)) {
+			return isNodePresent(getScanButtonId(idBioType)) || isNodePresent(idModality);
+		}
 		return isNodePresent(getScanButtonId(idBioType)) || isNodePresent(idModality + "Button");
 	}
 

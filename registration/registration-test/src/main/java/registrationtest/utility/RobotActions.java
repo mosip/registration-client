@@ -38,15 +38,17 @@ public class RobotActions {
 
     private void dismissNativePrintSaveDialog() {
         try {
-            Thread.sleep(2000);
             Robot awtRobot = new Robot();
-            awtRobot.delay(300);
-            awtRobot.keyPress(KeyEvent.VK_ESCAPE);
-            awtRobot.keyRelease(KeyEvent.VK_ESCAPE);
             Thread.sleep(500);
-            awtRobot.keyPress(KeyEvent.VK_ESCAPE);
-            awtRobot.keyRelease(KeyEvent.VK_ESCAPE);
+            for (int i = 0; i < 12; i++) {
+                awtRobot.keyPress(KeyEvent.VK_ESCAPE);
+                awtRobot.keyRelease(KeyEvent.VK_ESCAPE);
+                Thread.sleep(250);
+            }
             logger.info("Dismissed native print/save dialog");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.warn("Dialog dismiss thread interrupted", e);
         } catch (Exception e) {
             logger.error("Failed to dismiss native print/save dialog", e);
         }
