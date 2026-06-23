@@ -113,14 +113,4 @@ public class Buttons {
         logger.info("verifySubmitButtonEnabled");
         waitsUtil.assertNodeEnabled(submit);
     }
-    
-    public void verifySubmitButtonDisabled() {
-        logger.info("verifySubmitButtonDisabled");
-        waitsUtil.assertNodeDisabled(submit);
-    }
-    
-    public void verifySubmitButtonEnabled() {
-        logger.info("verifySubmitButtonEnabled");
-        waitsUtil.assertNodeEnabled(submit);
-    }
 }
