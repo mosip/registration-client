@@ -118,7 +118,37 @@ cp "${work_dir}"/registration-client/target/run.bat "${work_dir}"/registration-c
 jarsigner -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore_secret} -tsa ${signer_timestamp_url_env} -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar CodeSigning
 jarsigner -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore_secret} -tsa ${signer_timestamp_url_env} -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-services-${client_version_env}.jar CodeSigning
 
-java -cp "${work_dir}"/registration-client/target/registration-client-${client_version_env}.jar:"${work_dir}"/registration-client/target/lib/* io.mosip.registration.update.ManifestCreator "${client_version_env}" "${work_dir}/registration-client/target/lib" "${work_dir}/registration-client/target"
+# ----------------------------------------------------------------------------------------------
+# 1.3.0 dual manifest + detached SHA256withRSA signatures (issue #812).
+# Verified at runtime by the launcher's SignatureVerifier using the public key in provider.pem
+# (the cert of the same CodeSigning keypair in keystore.p12).
+# ----------------------------------------------------------------------------------------------
+keystore="${work_dir}/build_files/keystore.p12"
+signing_alias="CodeSigning"
+target_dir="${work_dir}/registration-client/target"
+java_cp="${target_dir}/registration-client-${client_version_env}.jar:${target_dir}/lib/*"
+
+# lib/MANIFEST.MF : per-file integrity hashes of everything under lib/ (bundled inside lib.zip)
+java -cp "${java_cp}" io.mosip.registration.update.ManifestCreator "${client_version_env}" "${target_dir}/lib" "${target_dir}/lib"
+java -cp "${java_cp}" io.mosip.registration.update.ManifestSigner "${keystore}" "${keystore_secret}" "${signing_alias}" "${target_dir}/lib/MANIFEST.MF" "${target_dir}/lib/MANIFEST.MF.sig"
+
+# jre21.zip : the JRE artifact referenced by the root manifest / downloaded by the launcher
+cd "${target_dir}"
+/usr/bin/zip -r jre21.zip jre
+
+# Root ./MANIFEST.MF : orchestration artifacts only (NO lib.zip entry). Tolerant of sibling 1.3.0
+# artifacts (_launcher.jar / migration.exe / rollback.exe) that may not exist yet -- those entries
+# are skipped with a warning and fill in automatically as T2/T3/T4 land.
+java -cp "${java_cp}" io.mosip.registration.update.ManifestCreator --list "${client_version_env}" "${target_dir}" \
+  "${target_dir}/jre21.zip" \
+  "${target_dir}/_launcher.jar" \
+  "${target_dir}/migration.exe" \
+  "${target_dir}/rollback.exe" \
+  "${target_dir}/run.bat"
+java -cp "${java_cp}" io.mosip.registration.update.ManifestSigner "${keystore}" "${keystore_secret}" "${signing_alias}" "${target_dir}/MANIFEST.MF" "${target_dir}/MANIFEST.MF.sig"
+
+# lib.zip : all of lib/** (including the signed lib/MANIFEST.MF) hosted from the upgrade server
+/usr/bin/zip -r lib.zip lib
 
 cd "${work_dir}"/registration-client/target/
 
@@ -154,6 +184,9 @@ mkdir -p /var/www/html/registration-test/${client_version_env}
  
 cp "${work_dir}"/registration-client/target/lib/* /var/www/html/registration-client/${client_version_env}/lib
 cp "${work_dir}"/registration-client/target/MANIFEST.MF /var/www/html/registration-client/${client_version_env}/
+cp "${work_dir}"/registration-client/target/MANIFEST.MF.sig /var/www/html/registration-client/${client_version_env}/
+cp "${work_dir}"/registration-client/target/lib.zip /var/www/html/registration-client/${client_version_env}/
+cp "${work_dir}"/registration-client/target/jre21.zip /var/www/html/registration-client/${client_version_env}/
 cp "${work_dir}"/build_files/maven-metadata.xml /var/www/html/registration-client/
 cp "${work_dir}"/registration-client/target/reg-client.zip /var/www/html/registration-client/${client_version_env}/
 cp "${work_dir}"/registration-test-utility.zip /var/www/html/registration-client/${client_version_env}/
