@@ -15,6 +15,7 @@ import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
+import java.util.UUID;
 
 /**
  * Verifies that {@link ManifestSigner} produces detached signatures that the launcher's
@@ -23,7 +24,9 @@ import java.security.Signature;
 public class ManifestSignerTest {
 
     private static final String ALIAS = "CodeSigning";
-    private static final String STORE_PASS = "changeit";
+    // Generated per test run so no credential literal is committed. The keystore it protects is a
+    // throwaway PKCS12 created in a temp dir (@BeforeClass) and deleted in @AfterClass.
+    private static final String STORE_PASS = UUID.randomUUID().toString();
 
     private static File tempDir;
     private static File keystore;

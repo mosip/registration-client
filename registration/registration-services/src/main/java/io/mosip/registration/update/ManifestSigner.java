@@ -24,27 +24,40 @@ public final class ManifestSigner {
     private static final Logger logger = LoggerFactory.getLogger(ManifestSigner.class);
     private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
     private static final String KEYSTORE_TYPE = "PKCS12";
+    /**
+     * Environment variable carrying the keystore password. Read from the environment rather than a
+     * command-line argument so the secret is never exposed in process listings (ps, proc cmdline).
+     * Already present in the build container as a Dockerfile {@code ENV} and inherited by this process.
+     */
+    private static final String STORE_PASS_ENV_VAR = "keystore_secret_env";
 
     private ManifestSigner() {
         // utility class
     }
 
     /**
-     * CLI entry point.
+     * CLI entry point. The keystore password is read from the {@code keystore_secret_env} environment
+     * variable (NOT a command-line argument), so it is never exposed in process listings.
      *
-     * @param args {@code <keystorePath> <storePass> <alias> <dataFile> <sigFile>}
+     * @param args {@code <keystorePath> <alias> <dataFile> <sigFile>}
      */
     public static void main(String[] args) {
-        if (args.length != 5) {
-            logger.error("Usage: ManifestSigner <keystorePath> <storePass> <alias> <dataFile> <sigFile>");
+        if (args.length != 4) {
+            logger.error("Usage: ManifestSigner <keystorePath> <alias> <dataFile> <sigFile> "
+                    + "(keystore password is read from the {} environment variable)", STORE_PASS_ENV_VAR);
+            System.exit(2);
+        }
+        String storePass = System.getenv(STORE_PASS_ENV_VAR);
+        if (storePass == null || storePass.isEmpty()) {
+            logger.error("Keystore password not provided: set the {} environment variable", STORE_PASS_ENV_VAR);
             System.exit(2);
         }
         try {
-            PrivateKey privateKey = loadPrivateKey(new File(args[0]), args[1].toCharArray(), args[2]);
-            signFile(new File(args[3]), new File(args[4]), privateKey);
-            logger.info("Signed {} -> {}", args[3], args[4]);
+            PrivateKey privateKey = loadPrivateKey(new File(args[0]), storePass.toCharArray(), args[1]);
+            signFile(new File(args[2]), new File(args[3]), privateKey);
+            logger.info("Signed {} -> {}", args[2], args[3]);
         } catch (Exception e) {
-            logger.error("Failed to sign {}", args[3], e);
+            logger.error("Failed to sign {}", args[2], e);
             System.exit(1);
         }
     }

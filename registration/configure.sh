@@ -129,8 +129,10 @@ target_dir="${work_dir}/registration-client/target"
 java_cp="${target_dir}/registration-client-${client_version_env}.jar:${target_dir}/lib/*"
 
 # lib/MANIFEST.MF : per-file integrity hashes of everything under lib/ (bundled inside lib.zip)
+# ManifestSigner reads the keystore password from the keystore_secret_env env var (not argv) so the
+# secret never appears in process listings.
 java -cp "${java_cp}" io.mosip.registration.update.ManifestCreator "${client_version_env}" "${target_dir}/lib" "${target_dir}/lib"
-java -cp "${java_cp}" io.mosip.registration.update.ManifestSigner "${keystore}" "${keystore_secret}" "${signing_alias}" "${target_dir}/lib/MANIFEST.MF" "${target_dir}/lib/MANIFEST.MF.sig"
+java -cp "${java_cp}" io.mosip.registration.update.ManifestSigner "${keystore}" "${signing_alias}" "${target_dir}/lib/MANIFEST.MF" "${target_dir}/lib/MANIFEST.MF.sig"
 
 # jre21.zip : the JRE artifact referenced by the root manifest / downloaded by the launcher
 cd "${target_dir}"
@@ -145,7 +147,7 @@ java -cp "${java_cp}" io.mosip.registration.update.ManifestCreator --list "${cli
   "${target_dir}/migration.exe" \
   "${target_dir}/rollback.exe" \
   "${target_dir}/run.bat"
-java -cp "${java_cp}" io.mosip.registration.update.ManifestSigner "${keystore}" "${keystore_secret}" "${signing_alias}" "${target_dir}/MANIFEST.MF" "${target_dir}/MANIFEST.MF.sig"
+java -cp "${java_cp}" io.mosip.registration.update.ManifestSigner "${keystore}" "${signing_alias}" "${target_dir}/MANIFEST.MF" "${target_dir}/MANIFEST.MF.sig"
 
 # lib.zip : all of lib/** (including the signed lib/MANIFEST.MF) hosted from the upgrade server
 /usr/bin/zip -r lib.zip lib
