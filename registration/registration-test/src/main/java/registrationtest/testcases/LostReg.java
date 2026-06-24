@@ -122,7 +122,9 @@ public class LostReg {
 
             buttons.clickNextBtn();
 
-            rid1 = webViewDocument.acceptPreview(flow); // return thread and wait on thread
+            rid1 = webViewDocument.acceptPreview(flow);
+
+            webViewDocument.verifyPreviewScreen(jsonContent, flow, ageGroup, rid1);
 
             buttons.clickNextBtn();
 

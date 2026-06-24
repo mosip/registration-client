@@ -158,16 +158,14 @@ public class LoginPage {
 	public void submitWithoutUserId() {
 		logger.info("submitWithoutUserId");
 		try {
-			userIdTextField = (TextField) waitsUtil.waitForNode(userId);
+			userIdTextField = waitsUtil.waitForNode(userId, TextField.class);
 			assertNotNull(userIdTextField, "userIdTextField not present");
 			Platform.runLater(() -> {
 				userIdTextField.clear();
 			});
 			org.testfx.util.WaitForAsyncUtils.waitForFxEvents();
 			waitsUtil.clickNodeAssert("#sub1");
-			Node contextNode = waitsUtil.waitForNode("#context");
-			assertNotNull(contextNode, "Context node not present");
-			Label contextLabel = (Label) contextNode;
+			Label contextLabel = waitsUtil.waitForNode("#context", Label.class);
 			String actualMessage = contextLabel.getText();
 			logger.info("Popup message: " + actualMessage);
 			ExtentReportUtil.test1.info("Popup message displayed: " + actualMessage);
@@ -188,7 +186,7 @@ public class LoginPage {
 		try{
 			Platform.runLater(()->{
 
-				System.out.println("===== PRINTING IDS FROM ALL WINDOWS =====");
+				logger.debug("===== PRINTING IDS FROM ALL WINDOWS =====");
 
 				for(Window window:Window.getWindows()){
 
@@ -228,10 +226,11 @@ public class LoginPage {
 
 		// Print only useful elements
 		if(id!=null || (text!=null && !text.isEmpty())){
-			System.out.println(
-				"id="+id+
-				" | text="+text+
-				" | type="+node.getClass().getSimpleName()
+			logger.debug(
+				"id={} | text={} | type={}",
+				id,
+				text,
+				node.getClass().getSimpleName()
 			);
 		}
 
@@ -298,16 +297,14 @@ public class LoginPage {
 	public void submitWithoutPassword() {
 		logger.info("submitWithoutPassword");
 		try {
-			passwordTextField = (TextField) waitsUtil.waitForNode(password);
+			passwordTextField = waitsUtil.waitForNode(password, TextField.class);
 			assertNotNull(passwordTextField, "passwordTextField not present");
 			Platform.runLater(() -> {
 				passwordTextField.clear();
 			});
 			org.testfx.util.WaitForAsyncUtils.waitForFxEvents();
 			waitsUtil.clickNodeAssert("#sub2");
-			Node contextNode = waitsUtil.waitForNode("#context");
-			assertNotNull(contextNode, "Context node not present");
-			Label contextLabel = (Label) contextNode;
+			Label contextLabel = waitsUtil.waitForNode("#context", Label.class);
 			String actualMessage = contextLabel.getText();
 			logger.info("Popup message: " + actualMessage);
 			ExtentReportUtil.test1.info("Popup message displayed: " + actualMessage);
@@ -364,7 +361,7 @@ public class LoginPage {
             // if home else fail or check the #context
 
             waitsUtil.clickNodeAssert("#sub2");
-            Thread.sleep(15000);
+            Thread.sleep(35000);
             waitsUtil.clickNodeAssert(success);
 
             flag = true;

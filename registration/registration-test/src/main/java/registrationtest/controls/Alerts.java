@@ -1,12 +1,16 @@
 package registrationtest.controls;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.testfx.api.FxRobot;
 
-import javafx.scene.control.Button;
-import registrationtest.runapplication.RegistrationMain;
+import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.constants.RegistrationUIConstants;
+
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.WaitsUtil;
 
 public class Alerts {
@@ -69,6 +73,25 @@ public class Alerts {
     public void clickAlertConfirm() {
         waitsUtil.clickNodeAssert(confirm);
         logger.info("clickAlertConfirm");
+    }
+
+    public void verifyAndDismissPrintSuccessAlert() {
+        Node contextNode = waitsUtil.waitForVisibleNodeInAnyWindow(success, 30_000L);
+        assertNotNull(contextNode, "Print acknowledgement success alert not displayed");
+        Label contextLabel = (Label) contextNode;
+        String actualMessage = contextLabel.getText().trim();
+        logger.info("Print acknowledgement popup message: {}", actualMessage);
+        ExtentReportUtil.test1.info("Print acknowledgement popup: " + actualMessage);
+        String expectedMessage = RegistrationUIConstants
+                .getMessageLanguageSpecific(RegistrationUIConstants.PRINT_INITIATION_SUCCESS);
+        String expectedText = expectedMessage.split(RegistrationConstants.SPLITTER)[0].trim();
+        assertTrue(actualMessage.contains(expectedText),
+                "Expected print success message containing '" + expectedText + "' but got: " + actualMessage);
+        Node successIcon = waitsUtil.waitForVisibleNodeInAnyWindow(alertImage, 5_000L);
+        assertNotNull(successIcon, "Print success alert icon not displayed");
+        ExtentReportUtil.test1.pass("Print success alert verified");
+        waitsUtil.clickVisibleNodeInAnyWindow(exit, 10_000L);
+        logger.info("Dismissed print success alert");
     }
 
 }

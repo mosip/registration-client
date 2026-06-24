@@ -95,8 +95,13 @@ public class Buttons {
      */
     public void clickAuthenticateBtn() {
         logger.info("clickAuthenticateBtn");
-        waitsUtil.clickNodeAssert(authenticate);
+        waitsUtil.waitForFirstVisibleNode(authenticate, 15_000);
+        waitsUtil.clickVisibleNodeInAnyWindow(authenticate, 5_000);
+    }
 
+    public void clickPrintBtn() {
+        logger.info("clickPrintBtn");
+        waitsUtil.clickNodeAssert(print);
     }
     
     public void verifySubmitButtonDisabled() {
