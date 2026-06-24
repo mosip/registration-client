@@ -210,6 +210,27 @@ public class JsonUtil {
         return value;
     }
 
+	public static JSONArray getOptionalIdentityJsonArray(String identity, String key) {
+		try {
+			JSONObject json = new JSONObject(identity);
+			String objName = PropertiesUtil.getKeyValue("jsonObjName");
+			if (!json.has(objName) || json.isNull(objName)) {
+				throw new IllegalArgumentException("Missing identity object: " + objName);
+			}
+			JSONObject identityObj = json.getJSONObject(objName);
+			if (!identityObj.has(key) || identityObj.isNull(key)) {
+				return null;
+			}
+			return identityObj.getJSONArray(key);
+		} catch (JSONException e) {
+			logger.error("Failed to resolve optional identity json array: {}", key, e);
+			throw new IllegalArgumentException("Invalid identity payload for json array key: " + key, e);
+		} catch (IOException e) {
+			logger.error("Failed to load config for optional identity json array: {}", key, e);
+			throw new IllegalArgumentException("Invalid identity payload/config for json array key: " + key, e);
+		}
+	}
+
 	public static List<String> getOptionalIdentityArrayList(String identity, String key) {
 		try {
 			JSONObject json = new JSONObject(identity);

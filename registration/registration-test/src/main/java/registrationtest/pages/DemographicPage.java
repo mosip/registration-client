@@ -505,7 +505,7 @@ public class DemographicPage {
                 if (ageGroup.equalsIgnoreCase("INFANT") || ageGroup.equalsIgnoreCase("MINOR"))
                     getTextboxKeyValueChild1(schema, id, JsonIdentity, key, schema.isTransliterate(), scenario);
                 else
-                    getTextboxKeyValue1(schema, id, JsonIdentity, key, schema.isTransliterate(), scenario);
+                    getTextboxKeyValue(schema, id, JsonIdentity, key, schema.isTransliterate(), scenario);
 
             }
         }

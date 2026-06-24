@@ -173,6 +173,7 @@ public class BioCorrectionReg {
              * details
              */
             rid2 = webViewDocument.getacknowledgement(process);
+            webViewDocument.verifyAcknowledgementScreen(jsonContent, process, ageGroup, rid2);
 
             homePage.clickHomeImg();
 
