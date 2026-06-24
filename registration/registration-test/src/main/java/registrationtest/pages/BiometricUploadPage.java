@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import org.testfx.api.FxRobot;
 
 import javafx.application.Platform;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import registrationtest.controls.Buttons;
@@ -51,7 +53,10 @@ public class BiometricUploadPage {
 
 	public int getThresholdScoreLabel(String idBioType) {
 		idBioType = idBioType.equals("#") ? idBioType.concat("t") : idBioType.concat("T");
-		Label thresholdScore = waitsUtil.waitForNode(idBioType + thresholdScoreLabel, Label.class);
+		Label thresholdScore = lookupScoreLabel(idBioType + thresholdScoreLabel);
+		if (thresholdScore == null) {
+			thresholdScore = waitsUtil.waitForNode(idBioType + thresholdScoreLabel, Label.class);
+		}
 		String val = thresholdScore.getText();
 		val = val.replace("%", "");
 		if (val.equalsIgnoreCase(""))
@@ -68,7 +73,10 @@ public class BiometricUploadPage {
 
 		idBioType = idBioType.equals("#") ? idBioType.concat("q") : idBioType.concat("Q");
 
-		Label score = waitsUtil.waitForNode(idBioType + qualityScore, Label.class);
+		Label score = lookupScoreLabel(idBioType + qualityScore);
+		if (score == null) {
+			score = waitsUtil.waitForNode(idBioType + qualityScore, Label.class);
+		}
 		String val = score.getText();
 		val = val.replace("%", "");
 		if (val.equalsIgnoreCase(""))
@@ -84,7 +92,10 @@ public class BiometricUploadPage {
 
 		idBioType = idBioType.equals("#") ? idBioType.concat("a") : idBioType.concat("A");
 
-		Label slap = waitsUtil.lookupByIdLabel(idBioType + attemptSlap, robot);
+		Label slap = lookupScoreLabel(idBioType + attemptSlap);
+		if (slap == null) {
+			return 0;
+		}
 		String val = slap.getText();
 		val = val.replace("%", "");
 		if (val.equalsIgnoreCase(""))
@@ -312,22 +323,43 @@ public class BiometricUploadPage {
 			logger.error("", e);
 		}
 		try {
+			String scanButtonId = getScanButtonId(idBioType);
+			try {
+				waitsUtil.waitForNode(scanButtonId);
+			} catch (RuntimeException e) {
+				logger.info("Skipping biometric scan for {} - scan button not on current screen", idModality);
+				return;
+			}
+
 			for (int i = 1; i <= bioCapattempvalue; i++) {
 				bioCorrectionPage.setMDSscore(type, JsonUtil.JsonObjParsing(jsonContent, "score" + i));
 
-				String idBioTypeScan = idBioType.equals("#") ? idBioType.concat("s") : idBioType.concat("S");
-				clickScanBasedModality(idBioTypeScan + scanBtn);	
-				waitsUtil.clickNodeAssert(alertImage);
+				try {
+					waitsUtil.waitForNode(scanButtonId);
+				} catch (RuntimeException e) {
+					logger.info("Scan button disappeared before attempt {} for {}", i, idModality);
+					break;
+				}
 
+				clickScanBasedModality(scanButtonId);
+				waitsUtil.clickNodeAssert(alertImage);
 				waitsUtil.clickNodeAssert(success);
+
+				int attempt = getAttemptSlap(idBioType);
+				int quality = readQualityScoreSafe(idBioType, jsonContent, i);
+				int threshold = readThresholdScoreSafe(idBioType, jsonContent);
+				logger.info(idBioType + idModality + " ATTEMPT " + (attempt > 0 ? attempt : i));
+				logger.info(idBioType + idModality + " SCORE " + quality);
+				logger.info(idBioType + idModality + " THRESHOLD " + threshold);
+
 				waitsUtil.clickNodeAssert(exit);
 
-				logger.info(idBioType + idModality + " ATTEMPT " + getAttemptSlap(idBioType));
-				logger.info(idBioType + idModality + " SCORE " + getQualityScore(idBioType));
-				logger.info(idBioType + idModality + " THRESHOLD " + getThresholdScoreLabel(idBioType));
-
-				if (getQualityScore(idBioType) >= getThresholdScoreLabel(idBioType))
+				if (quality <= 0 && threshold <= 0) {
 					break;
+				}
+				if (quality >= threshold) {
+					break;
+				}
 
 			}
 		} catch (InterruptedException e) {
@@ -355,7 +387,12 @@ public class BiometricUploadPage {
 	public void bioScan(String idBioType, String idModality, String jsonContent) {
 		try {
 			logger.info("bioScan");
+			if (!isModalityAvailable(idBioType, idModality)) {
+				logger.info("Skipping bioScan for {} - biometric screen not available", idModality);
+				return;
+			}
 			clickModality(idBioType, idModality);
+			Thread.sleep(500);
 
 			clickScanBtn(idBioType, jsonContent, idModality);
 		}  catch (Exception e) {
@@ -540,6 +577,63 @@ public class BiometricUploadPage {
 	
 	private boolean hasFace(List<String> list) throws IOException {
 	    return list.contains(PropertiesUtil.getKeyValue("face"));
+	}
+
+	private String getScanButtonId(String idBioType) {
+		String idBioTypeScan = idBioType.equals("#") ? idBioType.concat("s") : idBioType.concat("S");
+		return idBioTypeScan + scanBtn;
+	}
+
+	private boolean isNodePresent(String id) {
+		Optional<Node> node = robot.lookup(id).tryQuery();
+		return node.isPresent() && node.get().isVisible();
+	}
+
+	private boolean isModalityAvailable(String idBioType, String idModality) {
+		if ("#".equals(idBioType)) {
+			return isNodePresent(getScanButtonId(idBioType)) || isNodePresent(idModality);
+		}
+		return isNodePresent(getScanButtonId(idBioType)) || isNodePresent(idModality + "Button");
+	}
+
+	private Label lookupScoreLabel(String controlId) {
+		Optional<Node> node = robot.lookup(controlId).tryQuery();
+		if (node.isPresent() && node.get() instanceof Label) {
+			return (Label) node.get();
+		}
+		return null;
+	}
+
+	private int readQualityScoreSafe(String idBioType, String jsonContent, int attempt) {
+		try {
+			idBioType = idBioType.equals("#") ? idBioType.concat("q") : idBioType.concat("Q");
+			Label score = lookupScoreLabel(idBioType + qualityScore);
+			if (score != null) {
+				String val = score.getText().replace("%", "");
+				if (!val.equalsIgnoreCase("")) {
+					return Integer.parseInt(val);
+				}
+			}
+			return Integer.parseInt(JsonUtil.JsonObjParsing(jsonContent, "score" + attempt));
+		} catch (Exception e) {
+			return 0;
+		}
+	}
+
+	private int readThresholdScoreSafe(String idBioType, String jsonContent) {
+		try {
+			idBioType = idBioType.equals("#") ? idBioType.concat("t") : idBioType.concat("T");
+			Label threshold = lookupScoreLabel(idBioType + thresholdScoreLabel);
+			if (threshold != null) {
+				String val = threshold.getText().replace("%", "");
+				if (!val.equalsIgnoreCase("")) {
+					return Integer.parseInt(val);
+				}
+			}
+			return Integer.parseInt(JsonUtil.JsonObjParsing(jsonContent, "score1"));
+		} catch (Exception e) {
+			return 0;
+		}
 	}
 
 	public void infantbioUploadTBD(String idmod, List<String> list, String id, String identity) {

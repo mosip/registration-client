@@ -9,6 +9,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -108,14 +109,13 @@ public class WaitsUtil {
     
     public Node waitForNodePresent(String id) {
         try {
-			WaitForAsyncUtils.waitFor(20, TimeUnit.SECONDS, () -> {
-			    return robot.lookup(id).tryQuery().isPresent();
-			});
-		} catch (TimeoutException e) {
-			e.printStackTrace();
-		}
-
-        return robot.lookup(id).query();
+            WaitForAsyncUtils.waitFor(20, TimeUnit.SECONDS, () -> robot.lookup(id).tryQuery().isPresent());
+            return robot.lookup(id).query();
+        } catch (TimeoutException e) {
+            logger.error("Element not found within timeout: " + id, e);
+            capture();
+            throw new RuntimeException("Element not found within 20 sec: " + id, e);
+        }
     }
 
 	public void clickIfPresent(String id) {
@@ -180,6 +180,91 @@ public class WaitsUtil {
         }
 
         return type.cast(node);
+    }
+
+    public Node findVisibleNodeInAnyWindow(String selector) {
+        Set<Node> nodes = robot.lookup(selector).queryAll();
+        for (Node node : nodes) {
+            if (node != null && node.isVisible() && !node.isDisable()) {
+                return node;
+            }
+        }
+        return null;
+    }
+
+    public Node waitForFirstVisibleNode(String selector, long timeoutMs) {
+        try {
+            WaitForAsyncUtils.waitFor(timeoutMs, TimeUnit.MILLISECONDS,
+                    () -> findVisibleNodeInAnyWindow(selector) != null);
+            return findVisibleNodeInAnyWindow(selector);
+        } catch (TimeoutException e) {
+            logger.error("Wait failed for visible element: " + selector, e);
+            capture();
+            throw new RuntimeException(
+                    "Element not found within " + (timeoutMs / 1000) + " sec : " + selector, e);
+        }
+    }
+
+    private Node findVisibleAuthPassword() {
+        Set<Node> panes = robot.lookup("#pwdBasedLogin").queryAll();
+        for (Node pane : panes) {
+            if (pane != null && pane.isVisible() && !pane.isDisable()) {
+                Node password = pane.lookup("#password");
+                if (password != null && password.isVisible() && !password.isDisable()) {
+                    return password;
+                }
+            }
+        }
+        return null;
+    }
+
+    public Node waitForVisibleAuthPassword(long timeoutMs) {
+        try {
+            WaitForAsyncUtils.waitFor(timeoutMs, TimeUnit.MILLISECONDS,
+                    () -> findVisibleAuthPassword() != null);
+            return findVisibleAuthPassword();
+        } catch (TimeoutException e) {
+            logger.error("Wait failed for operator auth password field", e);
+            capture();
+            throw new RuntimeException(
+                    "Operator auth password field not found within " + (timeoutMs / 1000) + " sec", e);
+        }
+    }
+
+    private Node findVisibleAuthUsername() {
+        Set<Node> panes = robot.lookup("#pwdBasedLogin").queryAll();
+        for (Node pane : panes) {
+            if (pane != null && pane.isVisible() && !pane.isDisable()) {
+                Node username = pane.lookup("#username");
+                if (username != null && username.isVisible() && !username.isDisable()) {
+                    return username;
+                }
+            }
+        }
+        return null;
+    }
+
+    public Node waitForVisibleAuthUsername(long timeoutMs) {
+        try {
+            WaitForAsyncUtils.waitFor(timeoutMs, TimeUnit.MILLISECONDS,
+                    () -> findVisibleAuthUsername() != null);
+            return findVisibleAuthUsername();
+        } catch (TimeoutException e) {
+            logger.error("Wait failed for operator auth username field", e);
+            capture();
+            throw new RuntimeException(
+                    "Operator auth username field not found within " + (timeoutMs / 1000) + " sec", e);
+        }
+    }
+
+    public Node waitForVisibleNodeInAnyWindow(String selector, long timeoutMs) {
+        return waitForFirstVisibleNode(selector, timeoutMs);
+    }
+
+    public void clickVisibleNodeInAnyWindow(String selector, long timeoutMs) {
+        Node node = waitForVisibleNodeInAnyWindow(selector, timeoutMs);
+        robot.moveTo(node);
+        robot.clickOn(node);
     }
 
     public void scrollclickNodeAssert(String id) {
@@ -290,7 +375,12 @@ public class WaitsUtil {
             Path SNAPSHOTPATH = Paths.get(System.getProperty("user.dir"), "snapshot",
                     "snapshot" + DateUtil.getDateTime() + ".jpg");
             snapshotpath = SNAPSHOTPATH.toString();
-            ImageIO.write(image, "jpg", new File(snapshotpath));
+            File snapshotFile = SNAPSHOTPATH.toFile();
+            File snapshotDir = snapshotFile.getParentFile();
+            if (snapshotDir != null && !snapshotDir.exists()) {
+                snapshotDir.mkdirs();
+            }
+            ImageIO.write(image, "jpg", snapshotFile);
 
         } catch (Exception e) {
             logger.error("", e);

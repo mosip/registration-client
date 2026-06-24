@@ -133,6 +133,8 @@ public class BioCorrectionReg {
 
             rid1 = webViewDocument.acceptPreview(process);
 
+            webViewDocument.verifyPreviewScreen(jsonContent, process, ageGroup, rid1);
+
             buttons.clickNextBtn();
 
             if (!rid1.rid.trim().isEmpty()) {

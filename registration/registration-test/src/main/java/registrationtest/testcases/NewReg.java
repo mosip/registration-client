@@ -182,9 +182,9 @@ public class NewReg {
             	loginPage.submitWithoutPassword();
             	loginPage.setInvalidPassword(operatorPwd);
 //            	alerts.clickAlertexit();
-            	loginPage.setPassword(operatorPwd);
+            	homePage = loginPage.setPassword(operatorPwd);
             }else
-            	loginPage.setPassword(operatorPwd);
+            	homePage = loginPage.setPassword(operatorPwd);
             flag = loginPage.verifyOnbard(jsoncontent);
             homePage.clickNewRegistration();
             buttons.clickcancelBtn();
@@ -297,6 +297,8 @@ public class NewReg {
             buttons.clickNextBtn();
 
             rid1 = webViewDocument.acceptPreview(process);
+
+            webViewDocument.verifyPreviewScreen(jsonContent, process, ageGroup, rid1);
 
             buttons.clickNextBtn();
             
