@@ -44,12 +44,15 @@ The project is a Maven multi-module build under `registration/`:
 ## Key Architectural Patterns
 
 ### Spring Context Bootstrap
+
 `ClientApplication` (JavaFX `Application` subclass) bootstraps Spring via `AnnotationConfigApplicationContext(AppConfig.class)` during JavaFX `init()`. Spring beans are not available before this point. `SessionContext.setApplicationContext()` stores the context for static access throughout the app.
 
 ### Configuration Loading Order
+
 `DaoConfig` runs first — it initializes the embedded Apache Derby database (encrypted with a machine-specific key via TPM or software fallback), then loads all `GlobalParam` rows from Derby into `ApplicationContext.applicationMap`. Properties in `mosip-application.properties` provide defaults; the DB values override at runtime after sync.
 
 ### Offline-First with Sync Jobs
+
 The client operates fully offline using local Derby. Quartz-scheduled jobs (defined in `jobs/impl/`) periodically sync with the MOSIP server when online:
 - `MasterSyncJob` — pulls master data (locations, document types, etc.)
 - `PublicKeySyncJob` / `KeyPolicySyncJob` — key material sync
@@ -58,12 +61,14 @@ The client operates fully offline using local Derby. Quartz-scheduled jobs (defi
 - `SynchConfigDataJob` — global parameters
 
 ### Registration Packet Flow
+
 1. UI controllers in `registration-client` collect demographic/biometric data into DTOs
 2. `PacketHandlerServiceImpl` assembles everything using `commons-packet` library's `PacketWriter`
 3. Packet is encrypted client-side via `ClientCryptoFacade` (TPM-backed if available)
 4. `PacketSynchServiceImpl` syncs packet status; `PacketUploadServiceImpl` uploads to server
 
 ### JavaFX UI Structure
+
 - `ClientPreLoader` shows a splash screen while `ClientApplication.init()` runs the heavy Spring boot + initial sync
 - `Initialization` is the true `main()` entry point (configured as jar manifest `Main-Class`)
 - FXML files under `registration-client/src/main/resources/fxml/` are paired with `@Component` controller classes
@@ -71,12 +76,15 @@ The client operates fully offline using local Derby. Quartz-scheduled jobs (defi
 - `GenericController` drives the dynamic registration form, rendering fields from `IdentitySchema` (downloaded from server and stored in Derby)
 
 ### Biometric Device Integration (MDM)
+
 `MosipDeviceSpecificationFactory` discovers SBI-compliant biometric devices by scanning localhost ports at startup. Device interaction goes through `BioServiceImpl` → MDM spec DTOs in `mdm/`. The SPI in `registration-api` allows injecting alternative scanner/geo-position implementations.
 
 ### AOP Security
+
 `AuthenticationAdvice` and `ResponseSignatureAdvice` in `util/advice/` intercept service calls annotated with `@PreAuthorizeUserId` to enforce that the logged-in operator has the required role before executing sensitive operations.
 
 ### Local Database
+
 Apache Derby embedded DB. Schema lives in `registration-services/src/main/resources/sql/` with versioned migration scripts. `SoftwareUpdateHandler.updateDerbyDB()` runs migrations on startup by comparing the installed version against applied scripts.
 
 ## Configuration
