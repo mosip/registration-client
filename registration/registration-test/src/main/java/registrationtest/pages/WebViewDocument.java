@@ -123,14 +123,10 @@ public class WebViewDocument {
 
                     RID = registrationId.split("<br>");
 
-                    String registrationIdDateTime;
-                    if (scenario.contains("update")) {
-                        registrationIdDateTime = (String) mywebview.getEngine()
-                                .executeScript("document.body.getElementsByTagName('td')[2].innerHTML;");
-                    } else {
-                        registrationIdDateTime = (String) mywebview.getEngine()
-                                .executeScript("document.body.getElementsByTagName('td')[1].innerHTML;");
-                    }
+                    int dateTimeCellIndex = scenario.contains("update") ? 3 : 2;
+                    String registrationIdDateTime = (String) mywebview.getEngine()
+                            .executeScript("document.body.getElementsByTagName('td')[" + dateTimeCellIndex
+                                    + "].innerHTML;");
                     RIDDateTime = registrationIdDateTime.split("<br>");
                 } finally {
                     latch.countDown();
