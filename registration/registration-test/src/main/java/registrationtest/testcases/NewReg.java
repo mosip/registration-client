@@ -312,6 +312,10 @@ public class NewReg {
              * Authentication enter password Click Continue
              */
             authenticationPage.enterUserName(loginUserid);
+            String packetAuthPassword = JsonUtil.getOptionalIdentityValue(jsonContent, "packetAuthPassword");
+            if (packetAuthPassword != null && packetAuthPassword.equalsIgnoreCase("invalid")) {
+                authenticationPage.setInvalidPassword(loginPwd);
+            }
             authenticationPage.enterPassword(loginPwd);
 
             buttons.clickAuthenticateBtn();
@@ -320,6 +324,11 @@ public class NewReg {
 
                 List<String> exceptionFlag = JsonUtil.JsonObjArrayListParsing(jsonContent, "bioExceptionAttributes");
                 if (exceptionFlag != null) {
+                    String reviewerAuthSameOperator = JsonUtil.getOptionalIdentityValue(jsonContent,
+                            "reviewerAuthSameOperator");
+                    if (reviewerAuthSameOperator != null && reviewerAuthSameOperator.equalsIgnoreCase("Y")) {
+                        authenticationPage.verifySameOperatorReviewerAuthFailure(loginUserid, loginPwd);
+                    }
                     /**
                      * Reviewer enter password Click Continue
                      */
@@ -338,6 +347,7 @@ public class NewReg {
              * details
              */
             rid2 = webViewDocument.getacknowledgement(process);
+            webViewDocument.verifyAcknowledgementScreen(jsonContent, process, ageGroup, rid2);
 
             homePage.clickHomeImg();
 

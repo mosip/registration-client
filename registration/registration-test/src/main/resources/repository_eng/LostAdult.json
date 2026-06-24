@@ -1,6 +1,8 @@
 { "identity" : {
 	"ageGroup":"ADULT",
 	"process":"Lost",
+	"UIN":"4538471905",
+	"ackTests":["qrCode","applicationId","dateTime","demographics","biometrics"],
 	"preferredLang":"English",
 	"documentUploadAttributes":["POB","POA","POI"],
 	   "profile":"Default",

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -109,40 +110,37 @@ public class WebViewDocument {
 	}
 
     public RID getacknowledgement(String scenario) {
+        CountDownLatch latch = new CountDownLatch(1);
         try {
-            Platform.runLater(new Runnable() {
-                @Override
-                public void run() {
+            Platform.runLater(() -> {
+                try {
                     javafx.scene.web.WebView mywebview = waitsUtil.lookupById(webView);
 
                     rid.setWebViewAck(mywebview.getEngine().executeScript("document.body.innerHTML;"));
 
-                    String RegistrationID = (String) mywebview.getEngine()
+                    String registrationId = (String) mywebview.getEngine()
                             .executeScript("document.body.getElementsByTagName('td')[1].innerHTML;");
 
-                    RID = RegistrationID.split("<br>");
+                    RID = registrationId.split("<br>");
 
-                    String RegistrationIDDateTime;
+                    String registrationIdDateTime;
                     if (scenario.contains("update")) {
-                        RegistrationIDDateTime = (String) mywebview.getEngine()
+                        registrationIdDateTime = (String) mywebview.getEngine()
                                 .executeScript("document.body.getElementsByTagName('td')[2].innerHTML;");
                     } else {
-                        RegistrationIDDateTime = (String) mywebview.getEngine()
+                        registrationIdDateTime = (String) mywebview.getEngine()
                                 .executeScript("document.body.getElementsByTagName('td')[1].innerHTML;");
                     }
-                    System.out.println("*****************************");
-                    System.out.println(RID[0] + "=" + RID[1]);
-                    System.out.println(RIDDateTime[0] + "=" + RIDDateTime[1]);
-
-                    System.out.println("*****************************");
+                    RIDDateTime = registrationIdDateTime.split("<br>");
+                } finally {
+                    latch.countDown();
                 }
             });
-
-        }  catch (Exception e) {
-        	logger.error("", e);
-		}
+            latch.await();
+        } catch (Exception e) {
+            logger.error("", e);
+        }
         return new RID(RID[1], RIDDateTime[1], rid.getWebViewAck(), rid.getWebViewAck());
-
     }
 
     public void verifyAcknowledgementPrint() {
@@ -170,7 +168,10 @@ public class WebViewDocument {
 
     private static final List<String> ALL_PREVIEW_CHECKS = Arrays.asList("applicationId", "demographics", "documents",
             "biometrics", "faceBiometric", "introducer", "uin", "authBiometrics", "additionalInfoRequestId",
-            "previewEdit");
+            "bioExceptions", "qrCode", "previewEdit");
+
+    private static final List<String> ALL_ACK_CHECKS = Arrays.asList("qrCode", "applicationId", "uin", "dateTime",
+            "demographics", "documents", "biometrics", "authBiometrics", "bioExceptions", "additionalInfoRequestId");
 
     public void verifyPreviewScreen(String jsonContent, String process, String ageGroup, RID rid) {
         List<String> previewChecks = resolvePreviewChecks(jsonContent, process, ageGroup);
@@ -191,6 +192,292 @@ public class WebViewDocument {
             runPreviewCheck(check, html, jsonContent, process, ageGroup, rid);
         }
         ExtentReportUtil.test1.pass("Preview screen verification passed");
+    }
+
+    public void verifyAcknowledgementScreen(String jsonContent, String process, String ageGroup, RID rid) {
+        List<String> ackChecks = resolveAckChecks(jsonContent, process, ageGroup);
+        if (ackChecks.isEmpty()) {
+            return;
+        }
+
+        String html = rid != null && rid.getWebViewAck() != null ? String.valueOf(rid.getWebViewAck()) : null;
+        if (html == null || html.isBlank()) {
+            html = getAckHtml();
+        }
+        assertNotNull(html, "Acknowledgement HTML content is empty");
+
+        ExtentReportUtil.test1.info("Verify acknowledgement slip checks: " + ackChecks);
+        for (String check : ackChecks) {
+            if (!isAckCheckApplicable(check, jsonContent, process, ageGroup)) {
+                logger.info("Skipping non-applicable acknowledgement check: {}", check);
+                continue;
+            }
+            runAckCheck(check, html, jsonContent, process, ageGroup, rid);
+        }
+        ExtentReportUtil.test1.pass("Acknowledgement slip verification passed");
+    }
+
+    public void verifyEodApplicationDetails(String jsonContent, String process, String ageGroup, RID rid,
+            List<String> viewTests) {
+        if (viewTests == null || viewTests.isEmpty()) {
+            return;
+        }
+
+        String html = getAckHtml();
+        assertNotNull(html, "Pending Approval application details HTML content is empty");
+
+        ExtentReportUtil.test1.info("Verify Pending Approval application details: " + viewTests);
+        for (String check : viewTests) {
+            if (!isEodCheckApplicable(check, jsonContent, process, ageGroup)) {
+                logger.info("Skipping non-applicable Pending Approval check: {}", check);
+                continue;
+            }
+            runEodCheck(check, html, jsonContent, process, ageGroup, rid);
+        }
+        ExtentReportUtil.test1.pass("Pending Approval application details verification passed");
+    }
+
+    private boolean isEodCheckApplicable(String check, String jsonContent, String process, String ageGroup) {
+        switch (check.toLowerCase()) {
+            case "qrcode":
+                return !"update".equalsIgnoreCase(process) && !"biocorrection".equalsIgnoreCase(process);
+            case "authbiometrics":
+                return hasIdentityArray(jsonContent, "bioAuthAttributes")
+                        || "update".equalsIgnoreCase(process);
+            default:
+                return isAckCheckApplicable(check, jsonContent, process, ageGroup);
+        }
+    }
+
+    private void runEodCheck(String check, String html, String jsonContent, String process, String ageGroup,
+            RID rid) {
+        switch (check.toLowerCase()) {
+            case "demographics":
+                verifyEodDemographics(html, jsonContent);
+                break;
+            case "authbiometrics":
+                verifyEodAuthBiometrics(html);
+                break;
+            default:
+                runAckCheck(check, html, jsonContent, process, ageGroup, rid);
+        }
+    }
+
+    private void verifyEodDemographics(String html, String jsonContent) {
+        String plainText = stripHtml(html);
+        assertTrue(html.contains("data:image"),
+                "Applicant photo not displayed in Pending Approval details");
+        assertTrue(plainText.toLowerCase().contains("dob") || plainText.matches("(?s).*\\d{4}/\\d{2}/\\d{2}.*"),
+                "Date of birth not displayed in Pending Approval details");
+        verifyDemoFieldIfPresent(html, jsonContent, "firstName", "First name");
+        verifyDemoFieldIfPresent(html, jsonContent, "lastName", "Last name");
+        ExtentReportUtil.test1.info("Pending Approval demographic details verified");
+    }
+
+    private void verifyDemoFieldIfPresent(String html, String jsonContent, String field, String label) {
+        try {
+            LinkedHashMap<String, String> values = JsonUtil.JsonObjSimpleParsing(jsonContent, field);
+            String engValue = values.get("eng");
+            if (engValue != null && !engValue.isBlank() && stripHtml(html).contains(engValue)) {
+                ExtentReportUtil.test1.info(label + " verified in Pending Approval details");
+            }
+        } catch (Exception e) {
+            logger.debug("Optional demographic field {} not verified: {}", field, e.getMessage());
+        }
+    }
+
+    private void verifyEodAuthBiometrics(String html) {
+        assertTrue(html.contains("data:image/jpeg") || html.toLowerCase().contains("biometric")
+                        || html.toLowerCase().contains("authentication"),
+                "Authentication biometric details not displayed in Pending Approval view");
+        ExtentReportUtil.test1.info("Authentication biometric section verified in Pending Approval details");
+    }
+
+    private List<String> resolveAckChecks(String jsonContent, String process, String ageGroup) {
+        List<String> configured = JsonUtil.getOptionalIdentityArrayList(jsonContent, "ackTests");
+        if (configured != null && !configured.isEmpty()) {
+            if (configured.stream().anyMatch(check -> "ALL".equalsIgnoreCase(check))) {
+                return ALL_ACK_CHECKS;
+            }
+            return configured;
+        }
+        return new ArrayList<>();
+    }
+
+    @SuppressWarnings("unused")
+    private List<String> defaultAckChecksForProcess(String process, String ageGroup) {
+        if (process == null) {
+            return new ArrayList<>();
+        }
+
+        switch (process.toLowerCase()) {
+            case "new":
+                return Arrays.asList("qrCode", "applicationId", "dateTime", "demographics", "documents", "biometrics");
+            case "lost":
+                return Arrays.asList("qrCode", "applicationId", "uin", "dateTime", "demographics", "biometrics");
+            case "update":
+                return Arrays.asList("applicationId", "uin", "dateTime", "demographics", "documents", "authBiometrics");
+            case "biocorrection":
+                return Arrays.asList("additionalInfoRequestId", "uin", "dateTime", "biometrics");
+            default:
+                return new ArrayList<>();
+        }
+    }
+
+    private boolean isAckCheckApplicable(String check, String jsonContent, String process, String ageGroup) {
+        switch (check.toLowerCase()) {
+            case "qrcode":
+                return !"update".equalsIgnoreCase(process) && !"biocorrection".equalsIgnoreCase(process);
+            case "uin":
+                return !"new".equalsIgnoreCase(process);
+            case "authbiometrics":
+                return hasIdentityArray(jsonContent, "bioAuthAttributes")
+                        || "update".equalsIgnoreCase(process);
+            case "additionalinforequestid":
+                return JsonUtil.getOptionalIdentityValue(jsonContent, "additionalInfoRequestId") != null
+                        || "biocorrection".equalsIgnoreCase(process);
+            case "bioexceptions":
+                return hasIdentityArray(jsonContent, "bioExceptionAttributes");
+            case "documents":
+                return hasIdentityArray(jsonContent, "documentUploadAttributes")
+                        || JsonUtil.getOptionalIdentityValue(jsonContent, "proofOfAddress") != null;
+            case "demographics":
+                return !isBioOnlyUpdate(jsonContent, process);
+            default:
+                return true;
+        }
+    }
+
+    private boolean isBioOnlyUpdate(String jsonContent, String process) {
+        if (!"update".equalsIgnoreCase(process)) {
+            return false;
+        }
+        try {
+            List<String> updateAttrs = JsonUtil.JsonObjArrayListParsing(jsonContent, "updateUINAttributes");
+            if (updateAttrs == null) {
+                return false;
+            }
+            return updateAttrs.stream().anyMatch(attr -> "Biometrics".equalsIgnoreCase(attr))
+                    && updateAttrs.stream().noneMatch(attr -> "FullName".equalsIgnoreCase(attr)
+                            || "Documents".equalsIgnoreCase(attr) || "Address".equalsIgnoreCase(attr));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void runAckCheck(String check, String html, String jsonContent, String process, String ageGroup,
+            RID rid) {
+        switch (check.toLowerCase()) {
+            case "qrcode":
+                verifyQrCode(html);
+                break;
+            case "applicationid":
+                verifyApplicationIdAndDateTime(rid, html);
+                break;
+            case "datetime":
+                verifyDateTime(rid, html);
+                break;
+            case "demographics":
+                verifyDemographics(html, jsonContent);
+                break;
+            case "documents":
+                verifyDocuments(html, jsonContent);
+                break;
+            case "biometrics":
+                verifyApplicantBiometrics(html);
+                break;
+            case "facebiometric":
+                verifyFaceBiometric(html, jsonContent);
+                break;
+            case "introducer":
+                verifyIntroducerDetails(html, jsonContent);
+                break;
+            case "uin":
+                verifyUinOnAck(html, jsonContent);
+                break;
+            case "authbiometrics":
+                verifyAuthBiometrics(html, jsonContent);
+                break;
+            case "bioexceptions":
+                verifyBioExceptions(html, jsonContent);
+                break;
+            case "additionalinforequestid":
+                verifyAdditionalInfoRequestId(html, jsonContent);
+                break;
+            default:
+                logger.warn("Unknown acknowledgement check: {}", check);
+        }
+    }
+
+    private String getAckHtml() {
+        AtomicReference<String> htmlRef = new AtomicReference<>();
+        CountDownLatch latch = new CountDownLatch(1);
+        try {
+            Platform.runLater(() -> {
+                try {
+                    WebView ackWebView = findVisibleWebView();
+                    htmlRef.set((String) ackWebView.getEngine().executeScript("document.body.innerHTML;"));
+                } finally {
+                    latch.countDown();
+                }
+            });
+            if (!latch.await(30, TimeUnit.SECONDS)) {
+                throw new AssertionError("Timed out while reading acknowledgement HTML");
+            }
+        } catch (Exception e) {
+            logger.error("Failed to read acknowledgement HTML", e);
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        return htmlRef.get();
+    }
+
+    private WebView findVisibleWebView() {
+        Set<Node> nodes = robot.lookup(webView).queryAll();
+        for (Node node : nodes) {
+            if (node instanceof WebView && node.isVisible()) {
+                return (WebView) node;
+            }
+        }
+        return waitsUtil.lookupById(webView);
+    }
+
+    private void verifyQrCode(String html) {
+        assertTrue(html.contains("data:image/png") || html.toLowerCase().contains("qr"),
+                "QR code not displayed on acknowledgement slip");
+        ExtentReportUtil.test1.info("QR code verified on acknowledgement slip");
+    }
+
+    private void verifyDateTime(RID rid, String html) {
+        assertTrue(rid.ridDateTime != null && !rid.ridDateTime.trim().isEmpty(),
+                "Date/time missing on acknowledgement slip");
+        verifyHtmlContains(html, rid.ridDateTime.trim(), "Date/time");
+    }
+
+    private void verifyUinOnAck(String html, String jsonContent) {
+        String uin = JsonUtil.getOptionalIdentityValue(jsonContent, "UIN");
+        if (uin != null && !uin.isBlank()) {
+            verifyHtmlContains(html, uin, "UIN");
+            return;
+        }
+        assertTrue(stripHtml(html).toLowerCase().contains("uin"), "UIN not displayed on acknowledgement slip");
+        ExtentReportUtil.test1.info("UIN section verified on acknowledgement slip");
+    }
+
+    private void verifyBioExceptions(String html, String jsonContent) {
+        try {
+            List<String> exceptionAttributes = JsonUtil.JsonObjArrayListParsing(jsonContent, "bioExceptionAttributes");
+            assertTrue(exceptionAttributes != null && !exceptionAttributes.isEmpty(),
+                    "Bio exception attributes missing in test data");
+            assertTrue(html.contains("data:image") || html.toLowerCase().contains("exception")
+                    || html.toLowerCase().contains("cross"),
+                    "Biometric exceptions not displayed");
+            ExtentReportUtil.test1.info("Biometric exceptions verified: " + exceptionAttributes);
+        } catch (Exception e) {
+            logger.error("Failed to verify biometric exceptions", e);
+            throw new AssertionError("Biometric exception verification failed", e);
+        }
     }
 
     private List<String> resolvePreviewChecks(String jsonContent, String process, String ageGroup) {
@@ -257,6 +544,10 @@ public class WebViewDocument {
                 return "INFANT".equals(age) || "MINOR".equals(age);
             case "facebiometric":
                 return "lost".equalsIgnoreCase(process) && "INFANT".equalsIgnoreCase(ageGroup);
+            case "bioexceptions":
+                return hasIdentityArray(jsonContent, "bioExceptionAttributes");
+            case "qrcode":
+                return "new".equalsIgnoreCase(process) || "lost".equalsIgnoreCase(process);
             case "documents":
                 return hasIdentityArray(jsonContent, "documentUploadAttributes")
                         || JsonUtil.getOptionalIdentityValue(jsonContent, "proofOfAddress") != null;
@@ -308,6 +599,12 @@ public class WebViewDocument {
                 break;
             case "additionalinforequestid":
                 verifyAdditionalInfoRequestId(html, jsonContent);
+                break;
+            case "bioexceptions":
+                verifyBioExceptions(html, jsonContent);
+                break;
+            case "qrcode":
+                verifyQrCode(html);
                 break;
             case "previewedit":
                 verifyPreviewNotEditable();
