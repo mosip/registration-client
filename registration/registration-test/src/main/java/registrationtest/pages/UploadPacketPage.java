@@ -7,6 +7,7 @@ import org.testfx.api.FxRobot;
 import javafx.scene.control.TextField;
 import registrationtest.controls.Alerts;
 
+import registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.RobotActions;
 import registrationtest.utility.WaitsUtil;
@@ -68,6 +69,21 @@ public class UploadPacketPage {
 //		robot.press(KeyCode.TAB).release(KeyCode.TAB);
 //		robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
 
+    }
+
+    public boolean verifyPacketPresent(String rid) {
+        logger.info("verifyPacketPresent {}", rid);
+        try {
+            filterField = waitsUtil.waitForNode(filterField1, TextField.class);
+            filterField.setText(rid);
+            Thread.sleep(500);
+            waitsUtil.clickNodeAssert(rid);
+            ExtentReportUtil.test1.pass("Application found in Application Upload task: " + rid);
+            return true;
+        } catch (Exception e) {
+            logger.error("Application not found in Application Upload task: {}", rid, e);
+            return false;
+        }
     }
 
     public Boolean verifyPacketUpload(String rid) {

@@ -1,6 +1,7 @@
 { "identity" : {
 	"ageGroup":"ADULT",
 	"process":"New",
+	"previewTests":["qrCode","applicationId","dateTime","demographics","documents","bioExceptions"],
 	"preferredLang":"English",
 	"documentUploadAttributes":["POB","POA","POI"],
 	   "profile":"Default",

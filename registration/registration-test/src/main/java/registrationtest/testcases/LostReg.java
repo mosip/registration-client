@@ -165,6 +165,7 @@ public class LostReg {
              */
 
             rid2 = webViewDocument.getacknowledgement(flow);
+            webViewDocument.verifyAcknowledgementScreen(jsonContent, flow, ageGroup, rid2);
             homePage.clickHomeImg();
 
             eodApprovalPage = homePage.clickeodApprovalImageView(applicationPrimaryStage, scene);
