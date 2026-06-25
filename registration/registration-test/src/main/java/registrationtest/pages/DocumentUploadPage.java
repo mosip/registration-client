@@ -118,4 +118,32 @@ public class DocumentUploadPage {
         return documentUploadAttList;
     }
 
+    public void uploadPoeDocument(String jsonIdentity) {
+        logger.info("Uploading POE document");
+        try {
+            LinkedHashMap<String, String> mapDropValue = JsonUtil.JsonObjSimpleParsing(jsonIdentity, "proofOfException");
+            Set<String> dropkeys = mapDropValue.keySet();
+            if (!dropkeys.isEmpty()) {
+                user_selects_combo_itemdoc("#proofOfException", mapDropValue.get(dropkeys.iterator().next()));
+                Button scanButton = waitsUtil.waitForNode("#proofOfExceptionbutton", Button.class);
+                robot.moveTo(scanButton);
+                robot.clickOn(scanButton);
+                selectDocumentScan();
+            }
+        } catch (Exception e) {
+            logger.error("Failed to upload POE document", e);
+            throw new AssertionError("POE document upload failed", e);
+        }
+    }
+
+    public void deletePoeDocument() {
+        logger.info("Deleting POE document");
+        try {
+            waitsUtil.clickNodeAssert("#proofOfExceptionclear");
+        } catch (Exception e) {
+            logger.error("Failed to delete POE document", e);
+            throw new AssertionError("POE document delete failed", e);
+        }
+    }
+
 }
