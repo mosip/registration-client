@@ -1,6 +1,8 @@
 { "identity" : {
 	"ageGroup":"ADULT",
 	"process":"Update",
+	"ackTests":["applicationId","dateTime","biometrics"],
+	"previewTests":["applicationId","biometrics"],
 	"preferredLang":"English",
 	"documentUploadAttributes":["POB","POA","POI"],
 	"UIN":"4538471905",
