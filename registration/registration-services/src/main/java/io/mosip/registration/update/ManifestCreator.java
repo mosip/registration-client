@@ -1,12 +1,15 @@
 package io.mosip.registration.update;
 
-import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.kernel.core.util.HMACUtils2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.nio.ByteOrder;
+import java.nio.file.Files;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -112,9 +115,27 @@ public class ManifestCreator {
     }
 
     private static void addEntryInManifest(Manifest manifest, File file) throws Exception {
-        String hashText = HMACUtils2.digestAsPlainText(FileUtils.readFileToByteArray(file));
+        // Stream the file through SHA-256 rather than buffering it whole (jre21.zip is hundreds of MB).
+        // The result is byte-for-byte identical to HMACUtils2.digestAsPlainText(readFileToByteArray(file)):
+        // generateHash() is a SHA-256 MessageDigest.digest(), and digestAsPlainText formats it as
+        // encodeBytesToHex(digest, true /*upper-case*/, BIG_ENDIAN) — reused verbatim here so the
+        // manifest hashes stay compatible with the launcher's verifier and validateJarChecksum().
+        String hashText = HMACUtils2.encodeBytesToHex(sha256(file), true, ByteOrder.BIG_ENDIAN);
         Attributes attribute = new Attributes();
         attribute.put(Attributes.Name.CONTENT_TYPE, hashText);
         manifest.getEntries().put(file.getName(), attribute);
+    }
+
+    /** Computes the SHA-256 digest of {@code file} by streaming it from disk (no full-file buffering). */
+    private static byte[] sha256(File file) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        try (InputStream in = Files.newInputStream(file.toPath())) {
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                digest.update(buffer, 0, read);
+            }
+        }
+        return digest.digest();
     }
 }

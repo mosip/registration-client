@@ -113,6 +113,27 @@ public class ManifestCreatorTest extends ManifestCreator {
     }
 
     @Test
+    public void streamedHashMatchesDigestAsPlainText() throws Exception {
+        listModeTempDir = Files.createTempDirectory("manifest-hash-compat").toFile();
+        File big = new File(listModeTempDir, "jre21.zip");
+        // larger than the 8 KB streaming buffer, to exercise multi-chunk digest updates
+        byte[] payload = new byte[20000];
+        new java.util.Random(42).nextBytes(payload);
+        Files.write(big.toPath(), payload);
+
+        main(new String[]{"--list", "1.3.0", listModeTempDir.getPath(), big.getPath()});
+
+        Manifest manifest;
+        try (FileInputStream in = new FileInputStream(new File(listModeTempDir, MANIFEST_FILE_NAME))) {
+            manifest = new Manifest(in);
+        }
+        String streamed = manifest.getEntries().get("jre21.zip").getValue(Attributes.Name.CONTENT_TYPE);
+        // streaming the file must yield the exact same value as hashing the whole byte[] the old way
+        String expected = io.mosip.kernel.core.util.HMACUtils2.digestAsPlainText(payload);
+        Assert.assertEquals(expected, streamed);
+    }
+
+    @Test
     public void integrityCheckTest() throws IOException {
         URL url = ManifestCreatorTest.class.getResource("/setup/registration-api-1.3.0-SNAPSHOT.jar");
         X509Certificate certificate =  ClientIntegrityValidator.getCertificate();

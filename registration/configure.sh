@@ -39,6 +39,17 @@ rm ${work_dir}/registration-client/target/lib/provider.pem
 
 cd "${work_dir}"
 
+# ----------------------------------------------------------------------------------------------
+# SECURITY : snapshot a TRUSTED classpath for the build-time signing tools NOW, while
+# target/lib still contains ONLY the maven-built project jar + its resolved dependencies. The blocks
+# below copy externally-downloaded / operator-supplied jars (third-party SDK, custom impls,
+# registration-api-impl, icu4j, clamav) into target/lib. Running ManifestCreator / ManifestSigner off
+# the full "lib/*" wildcard would let one of those untrusted jars shadow a tool class (or one of its
+# dependency classes) and execute during signing with access to the keystore secret. ManifestCreator
+# reads target/lib only as DATA (to hash it), so the tools never need those jars on their classpath.
+trusted_tools_cp="$(ls "${work_dir}"/registration-client/target/lib/*.jar | tr '\n' ':')"
+trusted_tools_cp="${trusted_tools_cp%:}"
+
 if wget "${artifactory_url}/artifactory/libs-release-local/reg-client/resources.zip"
 then
   echo "Successfully downloaded reg-client resources, Adding it to reg-client jar"
@@ -126,7 +137,10 @@ jarsigner -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore
 keystore="${work_dir}/build_files/keystore.p12"
 signing_alias="CodeSigning"
 target_dir="${work_dir}/registration-client/target"
-java_cp="${target_dir}/registration-client-${client_version_env}.jar:${target_dir}/lib/*"
+# Trusted, external-jar-free classpath snapshotted above (see SECURITY note before the downloads).
+# Do NOT use "${target_dir}/lib/*" here: by this point lib/ also holds downloaded / operator-supplied
+# jars that must never be on the signing-tool classpath.
+java_cp="${trusted_tools_cp}"
 
 # lib/MANIFEST.MF : per-file integrity hashes of everything under lib/ (bundled inside lib.zip)
 # ManifestSigner reads the keystore password from the keystore_secret_env env var (not argv) so the
