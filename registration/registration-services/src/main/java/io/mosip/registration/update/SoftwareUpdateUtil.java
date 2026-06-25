@@ -31,8 +31,10 @@ public class SoftwareUpdateUtil {
     private static final String MANIFEST_FILE_NAME = "MANIFEST.MF";
     private static final String MANIFEST_SIG_FILE_NAME = MANIFEST_FILE_NAME + ".sig";
     public static final String ARTIFACTS_DIRECTORY = ".artifacts";
+    // 50s timeout for establishing the connection to the upgrade server.
     private static final int DEFAULT_CONNECTION_TIMEOUT = 50000;
-    private static final int DEFAULT_READ_TIMEOUT = 0;
+    // 30s inactivity-between-bytes timeout (not a total cap); avoids hanging forever on a stalled connection.
+    private static final int DEFAULT_READ_TIMEOUT = 30000;
 
     protected static boolean deleteUnknownJars(Manifest localManifest) throws IOException {
         StringBuilder builder = new StringBuilder();
