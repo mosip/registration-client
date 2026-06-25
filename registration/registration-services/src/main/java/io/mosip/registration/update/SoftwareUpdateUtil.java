@@ -141,23 +141,6 @@ public class SoftwareUpdateUtil {
         }
     }
 
-    /**
-     * Guards against starting a download that cannot fit on the target's partition. Delegates to
-     * {@link ResumableDownloader#ensureSpace(File, long)} and translates the low-level
-     * {@link IOException} into the service-layer {@link RegBaseCheckedException}.
-     *
-     * @param targetDir     the directory the download will be written to
-     * @param requiredBytes the number of bytes about to be written
-     * @throws RegBaseCheckedException if there is insufficient usable space
-     */
-    protected static void ensureSpace(File targetDir, long requiredBytes) throws RegBaseCheckedException {
-        try {
-            ResumableDownloader.ensureSpace(targetDir, requiredBytes);
-        } catch (IOException e) {
-            throw new RegBaseCheckedException("REG-BUILD-004", e.getMessage(), e);
-        }
-    }
-
     private static int getTimeout(String key, int defaultValue) {
         try {
             Integer value = ApplicationContext.getIntValueFromApplicationMap(key);

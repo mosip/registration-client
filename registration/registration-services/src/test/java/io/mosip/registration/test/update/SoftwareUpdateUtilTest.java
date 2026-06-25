@@ -147,7 +147,7 @@ public class SoftwareUpdateUtilTest extends SoftwareUpdateUtil {
     }
 
     // ---------------------------------------------------------------------
-    // downloadResumable(...) + ensureSpace(...) tests
+    // downloadResumable(...) tests
     // ---------------------------------------------------------------------
 
     @Test
@@ -329,21 +329,6 @@ public class SoftwareUpdateUtilTest extends SoftwareUpdateUtil {
             server.stop(0);
             deleteDir(dir);
         }
-    }
-
-    @Test
-    public void ensureSpace_sufficient_noException() throws Exception {
-        ensureSpace(TEMP_DIR, 1L);
-    }
-
-    @Test(expected = RegBaseCheckedException.class)
-    public void ensureSpace_insufficient_throws() throws Exception {
-        ensureSpace(TEMP_DIR, Long.MAX_VALUE);
-    }
-
-    @Test
-    public void ensureSpace_nullDir_usesCurrentDir_noException() throws Exception {
-        ensureSpace(null, 1L);
     }
 
     // ---- helpers ----
