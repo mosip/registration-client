@@ -291,13 +291,18 @@ public class WebViewDocument {
 
     private List<String> resolveAckChecks(String jsonContent, String process, String ageGroup) {
         List<String> configured = JsonUtil.getOptionalIdentityArrayList(jsonContent, "ackTests");
+        List<String> checks;
         if (configured != null && !configured.isEmpty()) {
             if (configured.stream().anyMatch(check -> "ALL".equalsIgnoreCase(check))) {
-                return ALL_ACK_CHECKS;
+                checks = new ArrayList<>(ALL_ACK_CHECKS);
+            } else {
+                checks = new ArrayList<>(configured);
             }
-            return configured;
+        } else {
+            checks = new ArrayList<>(defaultAckChecksForProcess(process, ageGroup));
         }
-        return new ArrayList<>();
+        appendBioExceptionsIfApplicable(checks, jsonContent);
+        return checks;
     }
 
     @SuppressWarnings("unused")
@@ -466,31 +471,88 @@ public class WebViewDocument {
             List<String> exceptionAttributes = JsonUtil.JsonObjArrayListParsing(jsonContent, "bioExceptionAttributes");
             assertTrue(exceptionAttributes != null && !exceptionAttributes.isEmpty(),
                     "Bio exception attributes missing in test data");
-            assertTrue(html.contains("data:image") || html.toLowerCase().contains("exception")
-                    || html.toLowerCase().contains("cross"),
-                    "Biometric exceptions not displayed");
-            ExtentReportUtil.test1.info("Biometric exceptions verified: " + exceptionAttributes);
+
+            String plainText = stripHtml(html);
+            assertTrue(hasExceptionPhotoLabel(plainText),
+                    "Exception photo label not displayed");
+            assertTrue(hasExceptionPhotoImage(html),
+                    "Exception photo image not displayed");
+            assertTrue(html.toLowerCase().contains("exception") || html.toLowerCase().contains("cross")
+                    || hasExceptionMarksForAttributes(html, exceptionAttributes),
+                    "Biometric exception marks not displayed for: " + exceptionAttributes);
+
+            ExtentReportUtil.test1.info("Exception photo and biometric exceptions verified: " + exceptionAttributes);
         } catch (Exception e) {
             logger.error("Failed to verify biometric exceptions", e);
             throw new AssertionError("Biometric exception verification failed", e);
         }
     }
 
+    private void verifyBioExceptionsAfterBackNavigation(String jsonContent) {
+        ExtentReportUtil.test1.info("Verify exception photo persists after navigating back from preview and returning");
+        buttons.clickBackBtn();
+        assertTrue(isOnBiometricsScreen(), "Biometrics screen not displayed after back navigation from preview");
+        ExtentReportUtil.test1.info("Navigated back to biometrics screen from preview");
+
+        buttons.clickNextBtn();
+        waitsUtil.waitForNodePresent(webView);
+        verifyBioExceptions(getPreviewHtml(), jsonContent);
+        ExtentReportUtil.test1.pass("Exception photo verified after back navigation to preview");
+    }
+
+    private boolean isOnBiometricsScreen() {
+        Node scanBtn = robot.lookup("#individualBiometricsScanBtn").tryQuery().orElse(null);
+        return scanBtn != null && scanBtn.isVisible() && !scanBtn.isDisable();
+    }
+
+    private boolean hasExceptionPhotoLabel(String plainText) {
+        String lower = plainText.toLowerCase();
+        return lower.contains("exception photo")
+                || plainText.contains("استثناء الصورة")
+                || lower.contains("photo d'exception")
+                || lower.contains("photo d exception");
+    }
+
+    private boolean hasExceptionPhotoImage(String html) {
+        return html.contains("width=\"80\" height=\"80\"")
+                && (html.contains("data:image/jpeg") || html.contains("data:image/jpg")
+                        || html.contains("data:image/png"));
+    }
+
+    private boolean hasExceptionMarksForAttributes(String html, List<String> exceptionAttributes) {
+        for (String attribute : exceptionAttributes) {
+            if (html.toLowerCase().contains(attribute.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private List<String> resolvePreviewChecks(String jsonContent, String process, String ageGroup) {
         List<String> configured = JsonUtil.getOptionalIdentityArrayList(jsonContent, "previewTests");
+        List<String> checks;
         if (configured != null && !configured.isEmpty()) {
             if (configured.stream().anyMatch(check -> "ALL".equalsIgnoreCase(check))) {
-                return ALL_PREVIEW_CHECKS;
+                checks = new ArrayList<>(ALL_PREVIEW_CHECKS);
+            } else {
+                checks = new ArrayList<>(configured);
             }
-            return configured;
+        } else {
+            checks = new ArrayList<>(defaultChecksForProcess(process, ageGroup));
+            if ("Y".equalsIgnoreCase(JsonUtil.getOptionalIdentityValue(jsonContent, "verifyPreviewEdit"))
+                    && checks.stream().noneMatch(check -> "previewEdit".equalsIgnoreCase(check))) {
+                checks.add("previewEdit");
+            }
         }
+        appendBioExceptionsIfApplicable(checks, jsonContent);
+        return checks;
+    }
 
-        List<String> defaults = new ArrayList<>(defaultChecksForProcess(process, ageGroup));
-        if ("Y".equalsIgnoreCase(JsonUtil.getOptionalIdentityValue(jsonContent, "verifyPreviewEdit"))
-                && !defaults.contains("previewEdit")) {
-            defaults.add("previewEdit");
+    private void appendBioExceptionsIfApplicable(List<String> checks, String jsonContent) {
+        if (hasIdentityArray(jsonContent, "bioExceptionAttributes")
+                && checks.stream().noneMatch(check -> "bioExceptions".equalsIgnoreCase(check))) {
+            checks.add("bioExceptions");
         }
-        return defaults;
     }
 
     private List<String> defaultChecksForProcess(String process, String ageGroup) {
@@ -598,6 +660,7 @@ public class WebViewDocument {
                 break;
             case "bioexceptions":
                 verifyBioExceptions(html, jsonContent);
+                verifyBioExceptionsAfterBackNavigation(jsonContent);
                 break;
             case "qrcode":
                 verifyQrCode(html);

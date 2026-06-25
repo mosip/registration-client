@@ -1,6 +1,8 @@
 { "identity" : {
 	"ageGroup":"ADULT",
 	"process":"Lost",
+	"previewTests":["qrCode","applicationId","dateTime","demographics","biometrics","bioExceptions"],
+	"ackTests":["qrCode","applicationId","dateTime","demographics","biometrics","bioExceptions"],
 	"preferredLang":"English",
 	"documentUploadAttributes":["POB","POA","POI"],
 	   "profile":"Default",
