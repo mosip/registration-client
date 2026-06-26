@@ -67,6 +67,15 @@ public class LauncherConfigTest {
         LauncherConfig.fromProperties(p);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void templateWithQueryComponent_rejected() {
+        // A query would be corrupted once versionBase appends "<version>/" as plain path text.
+        Properties p = new Properties();
+        p.setProperty("mosip.client.upgrade.server.url", "https://dev.mosip.net");
+        p.setProperty("mosip.reg.client.url", "%s/registration-client?channel=beta/");
+        LauncherConfig.fromProperties(p);
+    }
+
     @Test
     public void loadsFromFile() throws Exception {
         File file = folder.newFile("mosip-application.properties");

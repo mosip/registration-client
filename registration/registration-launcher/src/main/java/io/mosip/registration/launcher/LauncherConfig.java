@@ -82,6 +82,12 @@ public final class LauncherConfig {
         if (uri.getHost() == null) {
             throw new IllegalArgumentException(propertyName + " has no host: " + value);
         }
+        // A query/fragment would be silently corrupted: versionBase appends "<version>/" as plain path
+        // text, turning ".../registration-client?x=1" into ".../registration-client?x=11.4.0/".
+        if (uri.getRawQuery() != null || uri.getRawFragment() != null) {
+            throw new IllegalArgumentException(
+                    propertyName + " must not contain a query or fragment: " + value);
+        }
         return uri;
     }
 

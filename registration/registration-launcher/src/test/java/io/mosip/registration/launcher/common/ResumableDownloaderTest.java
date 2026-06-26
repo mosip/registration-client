@@ -396,7 +396,7 @@ public class ResumableDownloaderTest {
         }
     }
 
-    @Test(expected = IOException.class)
+    @Test
     public void download_validatorSidecarUnwritable_failsClosed() throws Exception {
         // If the .part.meta sidecar cannot be persisted, the attempt must fail rather than write body
         // bytes paired with a stale/missing validator (which would undermine the resume contract).
@@ -407,6 +407,14 @@ public class ResumableDownloaderTest {
             // Make the sidecar path a directory so writeValidator's Files.write fails.
             Files.createDirectory(new File(dir, "artifact.bin.part.meta").toPath());
             download(urlFor(server), dir.getAbsolutePath(), "artifact.bin");
+            fail("expected IOException when validator sidecar cannot be persisted");
+        } catch (IOException expected) {
+            // Assert the fail-closed side effect, not just the exception: no final file, and no body
+            // bytes written to .part before the validator persistence failed.
+            assertFalse(new File(dir, "artifact.bin").exists());
+            File part = new File(dir, "artifact.bin.part");
+            assertFalse("body bytes must not be written before validator persistence succeeds",
+                    part.exists() && part.length() > 0L);
         } finally {
             server.stop(0);
             deleteDir(dir);
