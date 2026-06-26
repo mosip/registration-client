@@ -59,6 +59,15 @@ public final class StartupEvaluator {
         // re-trusting) ./MANIFEST.MF from disk after the signature check.
         Manifest verifiedManifest = ManifestVerifier.parse(manifestBytes);
 
+        // A signature-valid root manifest with no Manifest-Version is corrupt/mispackaged: the
+        // orchestration version drives every decision below, so abort rather than fall through to a
+        // migration/update path (mirrors the corrupt-lib-manifest handling).
+        String rootVersion = ManifestVerifier.getVersion(verifiedManifest);
+        if (rootVersion == null || rootVersion.trim().isEmpty()) {
+            LOGGER.error("Root MANIFEST.MF is signature-valid but has no Manifest-Version (corrupt) — aborting");
+            return new Evaluation(StartupAction.ABORT_CORRUPT_ROOT_MANIFEST, verifiedManifest);
+        }
+
         // --- version comparison against lib/MANIFEST.MF ---
         // An ABSENT lib manifest (pre-1.3.0 / fresh install) legitimately means "migration required".
         if (libManifest == null || !libManifest.exists()) {
@@ -67,7 +76,6 @@ public final class StartupEvaluator {
             return new Evaluation(migrationAction(jreMajorVersion), verifiedManifest);
         }
 
-        String rootVersion = ManifestVerifier.getVersion(verifiedManifest);
         String libVersion = ManifestVerifier.getVersion(libManifest);
 
         // A PRESENT-but-unreadable lib manifest is corruption, not a version change: do NOT silently run
@@ -76,7 +84,7 @@ public final class StartupEvaluator {
             LOGGER.error("lib/MANIFEST.MF is present but has no Manifest-Version (corrupt/truncated) — aborting");
             return new Evaluation(StartupAction.ABORT_CORRUPT_LIB_MANIFEST, verifiedManifest);
         }
-        if (rootVersion != null && rootVersion.equals(libVersion)) {
+        if (rootVersion.equals(libVersion)) {
             LOGGER.info("Root and lib manifest versions match — normal startup");
             return new Evaluation(StartupAction.NORMAL_STARTUP, verifiedManifest);
         }

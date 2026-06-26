@@ -32,13 +32,12 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
 	<build>
-		<!-- Produces _launcher.jar so it sorts ahead of registration-client.jar on the classpath
-		     ('_' = ASCII 95 < 'a' = 97), guaranteeing it is the entry point during the transition. -->
 		<finalName>_launcher</finalName>
 		<plugins>
 			<plugin>

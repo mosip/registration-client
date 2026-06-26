@@ -1,5 +1,6 @@
 package io.mosip.registration.launcher;
 
+import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,11 +15,24 @@ import java.awt.GraphicsEnvironment;
  */
 public class LauncherDialogsTest {
 
+    private static String previousHeadless;
+
     @BeforeClass
     public static void forceHeadless() {
         // Set before the first GraphicsEnvironment query so the JOptionPane branch is never reached
         // and the tests cannot block on a real dialog on a developer machine with a display.
+        previousHeadless = System.getProperty("java.awt.headless");
         System.setProperty("java.awt.headless", "true");
+    }
+
+    @AfterClass
+    public static void restoreHeadless() {
+        // Restore the JVM-global property so later tests in the same Surefire JVM aren't forced headless.
+        if (previousHeadless == null) {
+            System.clearProperty("java.awt.headless");
+        } else {
+            System.setProperty("java.awt.headless", previousHeadless);
+        }
     }
 
     @Test

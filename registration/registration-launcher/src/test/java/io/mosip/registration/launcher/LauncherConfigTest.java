@@ -58,6 +58,15 @@ public class LauncherConfigTest {
         LauncherConfig.fromProperties(props("http://dev.mosip.net"));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void templateRedirectingToAnotherHost_rejected() {
+        // "%s@evil.example/..." passes a startsWith("https://") check but parses to host=evil.example.
+        Properties p = new Properties();
+        p.setProperty("mosip.client.upgrade.server.url", "https://good.host");
+        p.setProperty("mosip.reg.client.url", "%s@evil.example/registration-client/");
+        LauncherConfig.fromProperties(p);
+    }
+
     @Test
     public void loadsFromFile() throws Exception {
         File file = folder.newFile("mosip-application.properties");

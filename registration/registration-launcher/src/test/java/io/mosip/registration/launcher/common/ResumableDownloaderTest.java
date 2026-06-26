@@ -254,6 +254,17 @@ public class ResumableDownloaderTest {
         download("http://localhost/file", tempDir.getAbsolutePath(), "sub/evil.bin");
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void download_zeroReadTimeout_rejected() throws Exception {
+        // A 0 (infinite) read timeout could hang the launcher forever — rejected at the entry point.
+        ResumableDownloader.download("https://localhost/file", tempDir.getAbsolutePath(), "x.bin", 5000, 0);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void download_zeroConnectTimeout_rejected() throws Exception {
+        ResumableDownloader.download("https://localhost/file", tempDir.getAbsolutePath(), "x.bin", 0, 5000);
+    }
+
     @Test(expected = IOException.class)
     public void download_unexpectedStatus_throws() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
@@ -379,6 +390,23 @@ public class ResumableDownloaderTest {
             download(urlFor(server), dir.getAbsolutePath(), "artifact.bin");
             assertArrayEquals(payload, Files.readAllBytes(new File(dir, "artifact.bin").toPath()));
             assertFalse(new File(dir, "artifact.bin.part.meta").exists());
+        } finally {
+            server.stop(0);
+            deleteDir(dir);
+        }
+    }
+
+    @Test(expected = IOException.class)
+    public void download_validatorSidecarUnwritable_failsClosed() throws Exception {
+        // If the .part.meta sidecar cannot be persisted, the attempt must fail rather than write body
+        // bytes paired with a stale/missing validator (which would undermine the resume contract).
+        byte[] payload = randomPayload(1500);
+        HttpServer server = startServer(payload, true);      // sends an ETag -> writeValidator writes
+        File dir = Files.createTempDirectory("dl").toFile();
+        try {
+            // Make the sidecar path a directory so writeValidator's Files.write fails.
+            Files.createDirectory(new File(dir, "artifact.bin.part.meta").toPath());
+            download(urlFor(server), dir.getAbsolutePath(), "artifact.bin");
         } finally {
             server.stop(0);
             deleteDir(dir);

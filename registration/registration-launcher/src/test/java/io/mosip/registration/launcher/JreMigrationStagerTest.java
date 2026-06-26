@@ -79,7 +79,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 0);
+                    keyPair.getPublic(), 50000, 30000);
 
             assertTrue(new File(root, ".TEMP/app.jar").exists());
             assertTrue(new File(root, "jre21_temp/release").exists());
@@ -98,7 +98,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 0);
+                    keyPair.getPublic(), 50000, 30000);
             fail("expected IOException for tampered jre21.zip");
         } catch (IOException expected) {
             assertTrue(expected.getMessage().contains("jre21.zip"));
@@ -117,7 +117,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 0);
+                    keyPair.getPublic(), 50000, 30000);
             fail("expected IOException for an artifact missing from the root manifest");
         } catch (IOException expected) {
             assertTrue(expected.getMessage().contains("migration.exe"));
@@ -148,7 +148,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ManifestVerifier.parse(rootManifest),
                     url(server, "/v/lib/MANIFEST.MF"), url(server, "/v/lib/MANIFEST.MF.sig"), url(server, "/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 0);
+                    keyPair.getPublic(), 50000, 30000);
             fail("expected SecurityException when lib signature is invalid");
         } catch (SecurityException expected) {
             // Case B: the invalid lib signature must surface as a security distinction, not a generic

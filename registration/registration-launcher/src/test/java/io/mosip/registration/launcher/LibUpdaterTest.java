@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
@@ -59,7 +60,7 @@ public class LibUpdaterTest {
         try {
             LibUpdateResult result = LibUpdater.update(
                     url(server, "/v/lib/MANIFEST.MF"), url(server, "/v/lib/MANIFEST.MF.sig"),
-                    url(server, "/v/lib.zip"), temp, keyPair.getPublic(), 50000, 0);
+                    url(server, "/v/lib.zip"), temp, keyPair.getPublic(), 50000, 30000);
 
             assertEquals(LibUpdateResult.READY_RESTART, result);
             assertTrue(new File(temp, ENTRY).exists());
@@ -79,7 +80,7 @@ public class LibUpdaterTest {
         try {
             LibUpdateResult result = LibUpdater.update(
                     url(server, "/v/lib/MANIFEST.MF"), url(server, "/v/lib/MANIFEST.MF.sig"),
-                    url(server, "/v/lib.zip"), temp, keyPair.getPublic(), 50000, 0);
+                    url(server, "/v/lib.zip"), temp, keyPair.getPublic(), 50000, 30000);
 
             assertEquals(LibUpdateResult.ABORT_INVALID_SIGNATURE, result);
             assertFalse("lib.zip must not be downloaded after sig failure",
@@ -101,7 +102,7 @@ public class LibUpdaterTest {
         try {
             LibUpdateResult result = LibUpdater.update(
                     url(server, "/v/lib/MANIFEST.MF"), url(server, "/v/lib/MANIFEST.MF.sig"),
-                    url(server, "/v/lib.zip"), temp, keyPair.getPublic(), 50000, 0);
+                    url(server, "/v/lib.zip"), temp, keyPair.getPublic(), 50000, 30000);
 
             assertEquals(LibUpdateResult.VERIFY_FAILED, result);
         } finally {
@@ -121,13 +122,41 @@ public class LibUpdaterTest {
         try {
             LibUpdater.update(
                     url(server, "/v/lib/MANIFEST.MF"), url(server, "/v/lib/MANIFEST.MF.sig"),
-                    url(server, "/v/lib.zip"), temp, keyPair.getPublic(), 50000, 0);
+                    url(server, "/v/lib.zip"), temp, keyPair.getPublic(), 50000, 30000);
             fail("expected IOException for a malformed downloaded manifest");
         } catch (IOException expected) {
             assertTrue(expected.getMessage().toLowerCase().contains("network/server error"));
         } finally {
             server.stop(0);
         }
+    }
+
+    @Test
+    public void update_stalePayloadInTemp_clearedBeforeExtract() throws Exception {
+        // A reused .TEMP/ with a stale jar from a prior failed attempt must not trip the allowlist:
+        // the stale file is cleared before extraction so a valid update still succeeds.
+        byte[] manifest = manifestBytes("1.4.0", ENTRY, HashUtil.sha256Hex(JAR));
+        byte[] sig = sign(manifest, keyPair.getPrivate());
+        HttpServer server = serve(routes(manifest, sig, zipBytes(ENTRY, JAR)));
+        File temp = folder.newFolder(".TEMP");
+        Files.write(new File(temp, "stale-old.jar").toPath(), "stale".getBytes(StandardCharsets.UTF_8));
+        try {
+            LibUpdateResult result = LibUpdater.update(
+                    url(server, "/v/lib/MANIFEST.MF"), url(server, "/v/lib/MANIFEST.MF.sig"),
+                    url(server, "/v/lib.zip"), temp, keyPair.getPublic(), 50000, 30000);
+            assertEquals(LibUpdateResult.READY_RESTART, result);
+            assertFalse("stale jar must be cleared before extraction", new File(temp, "stale-old.jar").exists());
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void update_nonPositiveReadTimeout_rejected() throws Exception {
+        // Invalid timeout is rejected at this entry point (fail fast) before any download is attempted.
+        File temp = folder.newFolder("temp-validate");
+        LibUpdater.update("https://localhost/m", "https://localhost/s", "https://localhost/z",
+                temp, keyPair.getPublic(), 50000, 0);
     }
 
     // ---- helpers ----

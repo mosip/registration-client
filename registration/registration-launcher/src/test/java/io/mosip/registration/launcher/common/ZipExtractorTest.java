@@ -1,5 +1,6 @@
 package io.mosip.registration.launcher.common;
 
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -76,5 +77,27 @@ public class ZipExtractorTest {
             assertTrue(expected.getMessage().contains("outside target directory"));
         }
         assertFalse(new File(folder.getRoot(), "escaped.txt").exists());
+    }
+
+    @Test
+    public void extract_throughPreexistingSymlinkDir_isBlocked() throws Exception {
+        File out = folder.newFolder("safe");
+        File outside = folder.newFolder("outside");
+        try {
+            // out/sub -> outside (a pre-existing symlinked subdir); entry "sub/payload.jar" must not
+            // be allowed to write through it outside the extraction root.
+            Files.createSymbolicLink(new File(out, "sub").toPath(), outside.toPath());
+        } catch (java.io.IOException | UnsupportedOperationException e) {
+            Assume.assumeNoException("symlinks not creatable on this platform/privilege", e);
+        }
+        File zip = writeZip("evil.zip", new String[] {"sub/payload.jar"}, new byte[][] {"pwned".getBytes()});
+
+        try {
+            ZipExtractor.extract(zip, out);
+            fail("Expected extraction through a symlinked dir to be blocked");
+        } catch (java.io.IOException expected) {
+            assertTrue(expected.getMessage().contains("symbolic link"));
+        }
+        assertFalse(new File(outside, "payload.jar").exists());
     }
 }

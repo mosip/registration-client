@@ -4,6 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,17 +65,36 @@ public final class MigrationCleaner {
         return removed;
     }
 
+    /**
+     * Deletes {@code file} and its contents <b>without following symlinks</b>. A symlink encountered
+     * inside a migration artifact dir is removed as a link (its target is left alone) — using the old
+     * {@code File.listFiles()} recursion would descend through the link and delete files outside the
+     * artifact directory on every normal startup.
+     */
     private static boolean deleteRecursively(File file) {
-        File[] children = file.listFiles();
-        if (children != null) {
-            for (File child : children) {
-                deleteRecursively(child);
-            }
+        try {
+            // walkFileTree does not follow symlinks unless FOLLOW_LINKS is passed, so a symlink is
+            // visited as a file (link deleted, target untouched).
+            Files.walkFileTree(file.toPath(), new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+                    Files.deleteIfExists(path);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    if (exc != null) {
+                        throw exc;
+                    }
+                    Files.deleteIfExists(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+            return true;
+        } catch (IOException e) {
+            LOGGER.warn("Could not delete {}", file, e);
+            return false;
         }
-        boolean deleted = file.delete();
-        if (!deleted) {
-            LOGGER.warn("Could not delete {}", file);
-        }
-        return deleted;
     }
 }

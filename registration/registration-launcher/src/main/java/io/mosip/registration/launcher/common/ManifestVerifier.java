@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -60,24 +61,29 @@ public final class ManifestVerifier {
      * <p>
      * Each entry name is resolved as a {@code baseDir}-relative path, so the check honours whatever
      * layout the signed manifest declares (flat jars at the root, or nested under sub-directories
-     * keyed with {@code '/'}). A manifest whose entry names disagree with the extracted layout
-     * correctly fails closed (the file is reported missing).
+     * keyed with {@code '/'}). An entry whose name escapes the update root — a {@code ../} sequence or
+     * an absolute path — is rejected (reported as mismatched) <b>before</b> any file is read, so a hash
+     * is never computed over a file outside {@code baseDir}. A manifest whose entry names disagree with
+     * the extracted layout likewise fails closed (the file is reported missing).
      *
-     * @return the list of entry names that are missing or whose hash does not match (empty when all
-     *         entries verify)
+     * @return the list of entry names that are missing, escape the root, or whose hash does not match
+     *         (empty when all entries verify)
      */
     public static List<String> findMismatchedFiles(Manifest manifest, File baseDir) throws IOException {
         List<String> mismatched = new ArrayList<>();
+        Path root = baseDir.toPath().toAbsolutePath().normalize();
         for (Map.Entry<String, Attributes> entry : manifest.getEntries().entrySet()) {
             String name = entry.getKey();
             String expectedHash = entry.getValue().getValue(Attributes.Name.CONTENT_TYPE);
-            File file = new File(baseDir, name);
-            if (!file.exists()) {
-                LOGGER.warn("Manifest entry {} has no corresponding file in {}", name, baseDir);
+            Path resolved = root.resolve(name).normalize();
+            // Containment guard: reject anything that escapes the update root (../ or absolute) and
+            // anything that is not a regular file — fail closed without hashing a file outside baseDir.
+            if (!resolved.startsWith(root) || !Files.isRegularFile(resolved)) {
+                LOGGER.warn("Manifest entry {} is missing or resolves outside {} — rejecting", name, baseDir);
                 mismatched.add(name);
                 continue;
             }
-            if (expectedHash == null || !expectedHash.equals(HashUtil.sha256Hex(file))) {
+            if (expectedHash == null || !expectedHash.equals(HashUtil.sha256Hex(resolved.toFile()))) {
                 LOGGER.warn("Hash mismatch for {}", name);
                 mismatched.add(name);
             }

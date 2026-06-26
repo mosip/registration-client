@@ -3,7 +3,6 @@ package io.mosip.registration.launcher;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class JreVersionDetectorTest {
 
@@ -47,8 +46,10 @@ public class JreVersionDetectorTest {
     }
 
     @Test
-    public void currentMajorVersion_matchesRuntime() {
-        // Running under JDK 21 in this build, but assert it is at least 11 to stay robust.
-        assertTrue(JreVersionDetector.currentMajorVersion() >= 11);
+    public void currentMajorVersion_matchesRuntimeDelegation() {
+        // currentMajorVersion() just delegates to majorVersion(System.getProperty("java.version")) —
+        // assert that exact equality so a regression in the delegation is caught (not merely >= 11).
+        assertEquals(JreVersionDetector.majorVersion(System.getProperty("java.version")),
+                JreVersionDetector.currentMajorVersion());
     }
 }

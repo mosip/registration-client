@@ -30,5 +30,12 @@ public enum StartupAction {
      * unreadable-but-present manifest must NOT silently trigger a heavy JRE migration on a possibly
      * current machine, so startup aborts and asks the operator to repair/reinstall.
      */
-    ABORT_CORRUPT_LIB_MANIFEST
+    ABORT_CORRUPT_LIB_MANIFEST,
+
+    /**
+     * The root {@code ./MANIFEST.MF} is signature-valid but carries no readable {@code Manifest-Version}
+     * (corrupt or mispackaged). The orchestration version drives every upgrade decision, so a missing
+     * version must be a hard stop rather than silently falling through to a migration/update path.
+     */
+    ABORT_CORRUPT_ROOT_MANIFEST
 }

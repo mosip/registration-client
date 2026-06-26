@@ -1,10 +1,12 @@
 package io.mosip.registration.launcher;
 
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
@@ -47,6 +49,28 @@ public class MigrationCleanerTest {
         assertFalse(new File(base, "run.bat_jre11").exists());
         assertFalse(new File(base, "migration.exe").exists());
         assertFalse(new File(base, "rollback.exe").exists());
+    }
+
+    @Test
+    public void cleanup_symlinkInsideArtifacts_doesNotDeleteThroughLink() throws Exception {
+        File base = folder.getRoot();
+        File outsideDir = folder.newFolder("outside");
+        File keep = new File(outsideDir, "keep.txt");
+        Files.write(keep.toPath(), "keep".getBytes());
+
+        File artifacts = new File(base, ".artifacts");
+        Files.createDirectories(artifacts.toPath());
+        try {
+            // .artifacts/link -> outside (a dir symlink); cleanup must delete the link, not its target.
+            Files.createSymbolicLink(new File(artifacts, "link").toPath(), outsideDir.toPath());
+        } catch (IOException | UnsupportedOperationException e) {
+            Assume.assumeNoException("symlinks not creatable on this platform/privilege", e);
+        }
+
+        MigrationCleaner.cleanup(base);
+
+        assertFalse(".artifacts must be removed", artifacts.exists());
+        assertTrue("file behind the symlink must survive", keep.exists());
     }
 
     @Test

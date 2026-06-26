@@ -9,7 +9,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -57,14 +61,18 @@ public final class LibUpdater {
      * @param libZipUrl         URL of {@code lib.zip}
      * @param tempDir           the {@code .TEMP/} staging directory
      * @param trustedKey        public key from the embedded {@code provider.pem}
-     * @param connectTimeout    connection timeout (ms)
-     * @param readTimeout       read timeout (ms)
+     * @param connectTimeout    connection timeout (ms; must be positive)
+     * @param readTimeout       read timeout (ms; must be positive)
      * @return the outcome (see {@link LibUpdateResult})
-     * @throws IOException if a download or extraction fails irrecoverably
+     * @throws IOException              if a download or extraction fails irrecoverably
+     * @throws IllegalArgumentException if {@code connectTimeout} or {@code readTimeout} is not positive
      */
     public static LibUpdateResult update(String libManifestUrl, String libManifestSigUrl, String libZipUrl,
                                          File tempDir, PublicKey trustedKey,
                                          int connectTimeout, int readTimeout) throws IOException {
+        // Reject invalid timeouts at this entry point (fail fast) rather than letting a 0/infinite
+        // value reach the per-file downloads below and hang the launcher.
+        ResumableDownloader.requirePositiveTimeouts(connectTimeout, readTimeout);
         Files.createDirectories(tempDir.toPath());
 
         // 1. download the new lib manifest and its detached signature
@@ -88,8 +96,14 @@ public final class LibUpdater {
             return LibUpdateResult.ABORT_INVALID_SIGNATURE;
         }
 
-        // 3. resumable download of lib.zip, then 4. unzip into .TEMP/
+        // 3. resumable download of lib.zip
         ResumableDownloader.download(libZipUrl, tempDir.getPath(), LIB_ZIP, connectTimeout, readTimeout);
+
+        // 4. clear any stale payload left by a previous (failed) attempt before unzipping into .TEMP/.
+        //    Otherwise old jars not present in the new manifest survive and trip the allowlist
+        //    (findUnexpectedFiles), making a valid update fail until .TEMP/ is cleaned by hand. The
+        //    just-downloaded control files (manifest, signature, lib.zip) are preserved.
+        clearStalePayload(tempDir);
         ZipExtractor.extract(new File(tempDir, LIB_ZIP), tempDir);
 
         // lib.zip may ship its own MANIFEST.MF; restore the signature-verified bytes so the manifest
@@ -128,5 +142,38 @@ public final class LibUpdater {
             throw new IOException("Downloaded manifest is malformed (likely a network/server error)");
         }
         return manifest;
+    }
+
+    /**
+     * Removes everything in {@code tempDir} except the just-downloaded control files
+     * ({@code MANIFEST.MF}, {@code MANIFEST.MF.sig}, {@code lib.zip}), so a reused staging directory
+     * cannot carry stale extracted jars into the next update's allowlist check. Does not follow symlinks.
+     */
+    private static void clearStalePayload(File tempDir) throws IOException {
+        File[] entries = tempDir.listFiles();
+        if (entries == null) {
+            return;
+        }
+        for (File entry : entries) {
+            if (CONTROL_FILES.contains(entry.getName())) {
+                continue;
+            }
+            Files.walkFileTree(entry.toPath(), new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+                    Files.deleteIfExists(path);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    if (exc != null) {
+                        throw exc;
+                    }
+                    Files.deleteIfExists(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        }
     }
 }

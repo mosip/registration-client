@@ -3,6 +3,8 @@ package io.mosip.registration.launcher;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.Objects;
 import java.util.Properties;
@@ -51,14 +53,36 @@ public final class LauncherConfig {
         if (!base.endsWith("/")) {
             base = base + "/";
         }
-        // Require https for every upgrade artifact (manifests, signatures, lib.zip). Content forgery
-        // is already blocked by the signature/hash chain, but enforcing https closes the plaintext
-        // MITM/downgrade window and fails fast on a misconfigured upgrade-server URL.
-        if (!base.toLowerCase().startsWith("https://")) {
-            throw new IllegalArgumentException(
-                    "Upgrade server URL must use https:// (got: " + base + ")");
+        // Validate the RENDERED base as a real URI, not a string prefix. A crafted reg.client.url
+        // template such as "%s@evil.example/..." would pass a startsWith("https://") check yet parse to a
+        // different authority, redirecting every artifact download off the configured host. Require https,
+        // forbid embedded user-info, and pin the host/port to the configured upgrade server.
+        URI serverUri = parseHttpsUri(upgradeServer, UPGRADE_SERVER_URL);
+        URI baseUri = parseHttpsUri(base, REG_CLIENT_URL);
+        if (baseUri.getUserInfo() != null
+                || !serverUri.getHost().equalsIgnoreCase(baseUri.getHost())
+                || serverUri.getPort() != baseUri.getPort()) {
+            throw new IllegalArgumentException("Resolved upgrade URL '" + base
+                    + "' does not stay on the configured upgrade server '" + upgradeServer + "'");
         }
         return new LauncherConfig(base);
+    }
+
+    /** Parses {@code value} and enforces an https URL with a host; used for both the server URL and the rendered base. */
+    private static URI parseHttpsUri(String value, String propertyName) {
+        URI uri;
+        try {
+            uri = new URI(value);
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(propertyName + " is not a valid URL: " + value, e);
+        }
+        if (uri.getScheme() == null || !"https".equalsIgnoreCase(uri.getScheme())) {
+            throw new IllegalArgumentException(propertyName + " must use https:// (got: " + value + ")");
+        }
+        if (uri.getHost() == null) {
+            throw new IllegalArgumentException(propertyName + " has no host: " + value);
+        }
+        return uri;
     }
 
     /** URL of the detached signature of the root {@code ./MANIFEST.MF} for the given version (Case C). */

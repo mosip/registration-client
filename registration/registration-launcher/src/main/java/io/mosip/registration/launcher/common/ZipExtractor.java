@@ -45,6 +45,10 @@ public final class ZipExtractor {
                 if (!resolved.startsWith(targetRoot)) {
                     throw new IOException("Blocked zip entry resolving outside target directory: " + entry.getName());
                 }
+                // startsWith is only lexical: if an ancestor under targetRoot is a pre-existing symlink,
+                // writing to 'resolved' would follow it outside the extraction root. Reject any symlinked
+                // ancestor before creating dirs / opening the output stream.
+                rejectSymlinkAncestor(targetRoot, resolved, entry.getName());
                 if (entry.isDirectory()) {
                     Files.createDirectories(resolved);
                 } else {
@@ -61,5 +65,22 @@ public final class ZipExtractor {
             }
         }
         LOGGER.info("Extracted {} into {}", zipFile.getName(), targetRoot);
+    }
+
+    /**
+     * Rejects writing through a pre-existing symbolic link: walks from {@code resolved} up to (but not
+     * past) {@code targetRoot} and fails if any existing path component is a symlink. This closes the
+     * gap left by the purely lexical {@code startsWith} check, where {@code sub -> /elsewhere} would let
+     * {@code sub/payload.jar} escape the extraction root.
+     */
+    private static void rejectSymlinkAncestor(Path targetRoot, Path resolved, String entryName) throws IOException {
+        for (Path cursor = resolved; cursor != null && cursor.startsWith(targetRoot); cursor = cursor.getParent()) {
+            if (cursor.equals(targetRoot)) {
+                return;
+            }
+            if (Files.isSymbolicLink(cursor)) {
+                throw new IOException("Blocked zip entry through symbolic link: " + entryName);
+            }
+        }
     }
 }

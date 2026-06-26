@@ -75,6 +75,37 @@ public class ManifestVerifierTest {
     }
 
     @Test
+    public void findMismatchedFiles_relativeTraversalEntry_rejectedEvenIfHashMatches() throws Exception {
+        // A real file OUTSIDE libDir whose hash the "../" entry would match: the containment guard must
+        // still reject it, proving the check is on the resolved path — not merely on existence/hash.
+        byte[] outside = "outside-bytes".getBytes();
+        Files.write(new File(libDir.getParentFile(), "outside.jar").toPath(), outside);
+        Manifest manifest = singleEntryManifest("../outside.jar", HashUtil.sha256Hex(outside));
+        List<String> mismatched = ManifestVerifier.findMismatchedFiles(manifest, libDir);
+        assertTrue(mismatched.contains("../outside.jar"));
+    }
+
+    @Test
+    public void findMismatchedFiles_absoluteEntry_rejectedEvenIfHashMatches() throws Exception {
+        // An absolute manifest entry pointing outside the update root must be rejected, never hashed.
+        byte[] outside = "abs-bytes".getBytes();
+        File abs = folder.newFile("abs-target.jar");
+        Files.write(abs.toPath(), outside);
+        Manifest manifest = singleEntryManifest(abs.getAbsolutePath(), HashUtil.sha256Hex(outside));
+        List<String> mismatched = ManifestVerifier.findMismatchedFiles(manifest, libDir);
+        assertTrue(mismatched.contains(abs.getAbsolutePath()));
+    }
+
+    private static Manifest singleEntryManifest(String entryName, String entryHash) {
+        Manifest m = new Manifest();
+        m.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.3.0");
+        Attributes attrs = new Attributes();
+        attrs.put(Attributes.Name.CONTENT_TYPE, entryHash);
+        m.getEntries().put(entryName, attrs);
+        return m;
+    }
+
+    @Test
     public void findUnexpectedFiles_onlyListedAndIgnored_returnsEmpty() throws Exception {
         Manifest manifest = manifest("1.3.0", "foo.jar");
         // foo.jar is listed; MANIFEST.MF is an ignored control file.

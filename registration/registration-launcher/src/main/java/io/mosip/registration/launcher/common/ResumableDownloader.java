@@ -55,15 +55,18 @@ public final class ResumableDownloader {
      * @param url            the source URL
      * @param targetDir      the directory the file should be written into (created if missing)
      * @param fileName       the final file name within {@code targetDir}
-     * @param connectTimeout connection timeout in milliseconds
-     * @param readTimeout    read timeout in milliseconds (0 = infinite)
+     * @param connectTimeout connection timeout in milliseconds (must be positive)
+     * @param readTimeout    read timeout in milliseconds (must be positive; a {@code 0}/infinite read
+     *                       timeout could hang the launcher forever on a stalled connection)
      * @throws IOException              if the download cannot be completed
      * @throws IllegalArgumentException if {@code fileName} is blank or contains a path separator or a
      *                                  {@code ..} sequence (guards against path-traversal writes outside
-     *                                  {@code targetDir})
+     *                                  {@code targetDir}), or if {@code connectTimeout}/{@code readTimeout}
+     *                                  is not positive
      */
     public static void download(String url, String targetDir, String fileName,
                                 int connectTimeout, int readTimeout) throws IOException {
+        requirePositiveTimeouts(connectTimeout, readTimeout);
         LOGGER.info("Resumable download invoked, url : {}, target : {}/{}", url, targetDir, fileName);
         File dir = new File(targetDir);
         if (!dir.exists() && !dir.mkdirs() && !dir.exists()) {
@@ -81,6 +84,22 @@ public final class ResumableDownloader {
             allowResume = false; // the partial was discarded; the next attempt starts from scratch
         }
         throw new IOException("Failed to download " + url + " after restart");
+    }
+
+    /**
+     * Rejects non-positive timeouts at every download entry point: a {@code 0} (infinite) connect or
+     * read timeout could hang the launcher forever on a stalled connection, so callers must pass
+     * positive millisecond values. Shared so {@code LibUpdater.update} can fail fast with the same
+     * message before it delegates here.
+     *
+     * @throws IllegalArgumentException if {@code connectTimeout} or {@code readTimeout} is {@code <= 0}
+     */
+    public static void requirePositiveTimeouts(int connectTimeout, int readTimeout) {
+        if (connectTimeout <= 0 || readTimeout <= 0) {
+            throw new IllegalArgumentException(
+                    "connectTimeout and readTimeout must be positive (ms); got connect="
+                            + connectTimeout + ", read=" + readTimeout);
+        }
     }
 
     /**
@@ -284,7 +303,14 @@ public final class ResumableDownloader {
         }
     }
 
-    private static void writeValidator(File metaFile, String validator) {
+    /**
+     * Persists (or clears) the resume validator sidecar. Fails closed: if the sidecar cannot be
+     * written, the caller must abort <b>before</b> writing body bytes, otherwise a new partial would be
+     * left paired with a stale/missing {@code .part.meta} and a later resume could splice two resource
+     * versions. Read failures, by contrast, degrade safely to a full re-download (see
+     * {@link #readValidator}), so only the write side propagates.
+     */
+    private static void writeValidator(File metaFile, String validator) throws IOException {
         try {
             if (validator == null) {
                 Files.deleteIfExists(metaFile.toPath());
@@ -292,7 +318,7 @@ public final class ResumableDownloader {
                 Files.write(metaFile.toPath(), validator.getBytes(StandardCharsets.UTF_8));
             }
         } catch (IOException e) {
-            LOGGER.warn("Could not persist validator {} : {}", metaFile, e.getMessage());
+            throw new IOException("Could not persist validator " + metaFile, e);
         }
     }
 

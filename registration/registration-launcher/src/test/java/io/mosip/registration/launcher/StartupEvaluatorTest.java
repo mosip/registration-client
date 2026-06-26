@@ -8,6 +8,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -140,5 +141,17 @@ public class StartupEvaluatorTest {
         File corruptLib = folder.newFile("corrupt-lib-MANIFEST.MF"); // empty/truncated — parses but has no version
         assertEquals(StartupAction.ABORT_CORRUPT_LIB_MANIFEST,
                 StartupEvaluator.evaluate(rootManifest, rootSignature, corruptLib, trusted(), 11).action());
+    }
+
+    @Test
+    public void validSignature_rootManifestNoVersion_abortsCorrupt() throws Exception {
+        // A signature-valid root MANIFEST.MF with no Manifest-Version (corrupt/mispackaged) must hard-stop
+        // rather than fall through to a migration/update decision.
+        File noVersionRoot = folder.newFile("noversion-MANIFEST.MF");
+        Files.write(noVersionRoot.toPath(), "Created-By: test\r\n\r\n".getBytes(StandardCharsets.UTF_8));
+        File sig = new File(folder.getRoot(), "noversion-MANIFEST.MF.sig");
+        sign(noVersionRoot, sig, keyPair.getPrivate());
+        assertEquals(StartupAction.ABORT_CORRUPT_ROOT_MANIFEST,
+                StartupEvaluator.evaluate(noVersionRoot, sig, null, trusted(), 11).action());
     }
 }

@@ -114,6 +114,13 @@ public class Initialization {
                         + "Please repair or reinstall the Registration Client.");
                 System.exit(1);
                 break;
+            case ABORT_CORRUPT_ROOT_MANIFEST:
+                // Signature-valid root MANIFEST.MF but no version — corrupt/mispackaged; do not proceed.
+                LOGGER.error("./MANIFEST.MF is corrupt (no Manifest-Version) — aborting startup");
+                LauncherDialogs.error("The update manifest appears corrupt (MANIFEST.MF). "
+                        + "Please repair or reinstall the Registration Client.");
+                System.exit(1);
+                break;
             default:
                 // Fail closed: a StartupAction added later without a case here must NOT silently fall
                 // through to a normal exit(0) — abort visibly so the gap is caught, not shipped.

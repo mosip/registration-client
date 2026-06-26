@@ -15,11 +15,26 @@ public class NormalStartupTest {
      */
     @Test
     public void launch_withoutClientOnClasspath_throwsReflectiveOperationException() {
+        // launch() sets these JVM-global properties before the (failing) reflective launch — capture and
+        // restore them so later tests in the same JVM aren't affected.
+        String previousUseSystemProxies = System.getProperty("java.net.useSystemProxies");
+        String previousLogbackConfig = System.getProperty("logback.configurationFile");
         try {
             NormalStartup.launch(new String[0]);
             fail("Expected ReflectiveOperationException when client/JavaFX classes are absent");
         } catch (ReflectiveOperationException expected) {
             assertTrue(expected instanceof ClassNotFoundException);
+        } finally {
+            restore("java.net.useSystemProxies", previousUseSystemProxies);
+            restore("logback.configurationFile", previousLogbackConfig);
+        }
+    }
+
+    private static void restore(String key, String previous) {
+        if (previous == null) {
+            System.clearProperty(key);
+        } else {
+            System.setProperty(key, previous);
         }
     }
 }
