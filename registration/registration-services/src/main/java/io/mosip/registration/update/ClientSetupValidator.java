@@ -159,7 +159,7 @@ public class ClientSetupValidator {
                 return new Manifest(fis);
             } catch (IOException e) {
                 logger.error("Failed to load {} manifest file", label.toLowerCase(), e);
-                throw new RegBaseCheckedException(errorCode, label + " Manifest not found");
+                throw new RegBaseCheckedException(errorCode, label + " Manifest not found", e);
             }
         }
         return null;

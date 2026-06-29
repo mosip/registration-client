@@ -54,16 +54,15 @@ public class ClientIntegrityValidator {
                 if(entry.getKey().toLowerCase().startsWith("registration-services") ||
                         entry.getKey().toLowerCase().startsWith("registration-client") ) {
                     File file = new File(libFolder + File.separator + entry.getKey());
-                    if(trustedCertificate != null) {
-                        verifyIntegrity(trustedCertificate, new JarFile(file));
-                        logger.info("Integrity check passed -> {}", entry.getKey());
+                    // Fail closed: without the trusted provider certificate the jar signature
+                    // cannot be pinned to the expected signer, so integrity cannot be enforced.
+                    // (The old fallback opened the jar but never read its entries, so the lazy
+                    // signature/digest check never ran and it logged a false success.)
+                    if (trustedCertificate == null) {
+                        throw new SecurityException("Trusted provider certificate is not found");
                     }
-                    else {
-                        logger.info("As provider.cer is not found, invoking verify with JarFile class : {}", entry.getKey());
-                        try(JarFile jarFile = new JarFile(file, true)){
-                            logger.info("Integrity check passed -> {}", entry.getKey());
-                        }
-                    }
+                    verifyIntegrity(trustedCertificate, new JarFile(file));
+                    logger.info("Integrity check passed -> {}", entry.getKey());
                 }
             }
         } catch (Throwable t) {

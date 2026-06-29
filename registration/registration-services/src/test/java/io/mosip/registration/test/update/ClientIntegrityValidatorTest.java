@@ -14,6 +14,7 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,10 +47,33 @@ public class ClientIntegrityValidatorTest {
 	@InjectMocks
 	private ClientIntegrityValidator clientIntegrityValidator;
 
+	// Backup of a pre-existing working-dir lib/MANIFEST.MF (e.g. left by another test in the
+	// same fork), restored in teardown so these tests don't depend on external filesystem state.
+	private File libManifestBackup;
+
 	@Before
 	public void initialize() throws Exception {
 		PowerMockito.mockStatic(ApplicationContext.class, FileUtils.class);
 		PowerMockito.mockStatic(HMACUtils2.class);
+		// Start every test from a known-absent lib/MANIFEST.MF; back up any pre-existing one.
+		File libManifest = new File("lib", "MANIFEST.MF");
+		if (libManifest.exists()) {
+			libManifestBackup = new File("lib", "MANIFEST.MF.testbak");
+			libManifestBackup.delete();
+			libManifest.renameTo(libManifestBackup);
+		} else {
+			libManifestBackup = null;
+		}
+	}
+
+	@After
+	public void restoreLibManifest() {
+		File libDir = new File("lib");
+		new File(libDir, "MANIFEST.MF").delete();
+		if (libManifestBackup != null && libManifestBackup.exists()) {
+			libManifestBackup.renameTo(new File(libDir, "MANIFEST.MF"));
+		}
+		libDir.delete(); // removes lib/ only if empty (i.e. created by a test)
 	}
 
 	// In a non-LOCAL environment (test props use environment=TEST) with no lib/MANIFEST.MF on
@@ -63,22 +87,17 @@ public class ClientIntegrityValidatorTest {
 	// registration-* entries to verify), integrity verification proceeds without throwing.
 	// Uses java.io (not java.nio) on purpose: under PowerMock + Java 21 the module system
 	// blocks the reflective access nio Path operations need (sun.nio.fs not opened).
+	// Setup/teardown (@Before/@After) own the lib/MANIFEST.MF backup + cleanup.
 	@Test
 	public void verifyClientIntegrityManifestPresentTest() throws Exception {
 		File libDir = new File("lib");
-		File libManifest = new File(libDir, "MANIFEST.MF");
 		libDir.mkdirs();
-		try (FileOutputStream fos = new FileOutputStream(libManifest)) {
+		try (FileOutputStream fos = new FileOutputStream(new File(libDir, "MANIFEST.MF"))) {
 			fos.write("Manifest-Version: 1.0\r\n\r\nName: logback.xml\r\nContent-Type: testhash\r\n\r\n"
 					.getBytes(StandardCharsets.UTF_8));
 		}
-		try {
-			// Non-registration entry -> per-jar verification loop is a no-op -> returns normally.
-			ClientIntegrityValidator.verifyClientIntegrity();
-		} finally {
-			libManifest.delete();
-			libDir.delete(); // removes lib/ only if empty
-		}
+		// Non-registration entry -> per-jar verification loop is a no-op -> returns normally.
+		ClientIntegrityValidator.verifyClientIntegrity();
 	}
 
 	@Test
