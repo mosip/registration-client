@@ -56,22 +56,31 @@ public class ClientIntegrityValidatorTest {
 		PowerMockito.mockStatic(ApplicationContext.class, FileUtils.class);
 		PowerMockito.mockStatic(HMACUtils2.class);
 		// Start every test from a known-absent lib/MANIFEST.MF; back up any pre-existing one.
+		// Fail fast on any file-op failure so a silent error can't leave state inconsistent.
 		File libManifest = new File("lib", "MANIFEST.MF");
 		if (libManifest.exists()) {
 			libManifestBackup = new File("lib", "MANIFEST.MF.testbak");
-			libManifestBackup.delete();
-			libManifest.renameTo(libManifestBackup);
+			if (libManifestBackup.exists() && !libManifestBackup.delete()) {
+				throw new IOException("Could not remove stale backup " + libManifestBackup);
+			}
+			if (!libManifest.renameTo(libManifestBackup)) {
+				throw new IOException("Could not back up " + libManifest);
+			}
 		} else {
 			libManifestBackup = null;
 		}
 	}
 
 	@After
-	public void restoreLibManifest() {
+	public void restoreLibManifest() throws IOException {
 		File libDir = new File("lib");
-		new File(libDir, "MANIFEST.MF").delete();
-		if (libManifestBackup != null && libManifestBackup.exists()) {
-			libManifestBackup.renameTo(new File(libDir, "MANIFEST.MF"));
+		File libManifest = new File(libDir, "MANIFEST.MF");
+		if (libManifest.exists() && !libManifest.delete()) {
+			throw new IOException("Could not delete test " + libManifest);
+		}
+		if (libManifestBackup != null && libManifestBackup.exists()
+				&& !libManifestBackup.renameTo(libManifest)) {
+			throw new IOException("Could not restore backup to " + libManifest);
 		}
 		libDir.delete(); // removes lib/ only if empty (i.e. created by a test)
 	}
