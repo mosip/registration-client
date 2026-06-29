@@ -28,6 +28,8 @@ public class SoftwareUpdateUtil {
     private static final String libFolder = "lib/";
     private static final String UNKNOWN_JARS = ".UNKNOWN_JARS";
     private static final String TEMP_DIRECTORY = ".TEMP";
+    private static final String MANIFEST_FILE_NAME = "MANIFEST.MF";
+    private static final String MANIFEST_SIG_FILE_NAME = MANIFEST_FILE_NAME + ".sig";
 
     protected static boolean deleteUnknownJars(Manifest localManifest) throws IOException {
         StringBuilder builder = new StringBuilder();
@@ -36,6 +38,12 @@ public class SoftwareUpdateUtil {
         File[] libraries = dir.listFiles();
         Map<String, Attributes> entries = localManifest.getEntries();
         for (File file : libraries) {
+            // lib/MANIFEST.MF and its detached signature live inside lib/ but are created after
+            // the manifest is generated, so they are not self-listed entries. Preserve them
+            // instead of treating them as unknown jars (else the lib manifest deletes itself).
+            if(MANIFEST_FILE_NAME.equals(file.getName()) || MANIFEST_SIG_FILE_NAME.equals(file.getName())) {
+                continue;
+            }
             if(!entries.containsKey(file.getName())) {
                 LOGGER.error("Unknown file found {}", file.getName());
                 deleteFile(file.getCanonicalPath());

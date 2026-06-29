@@ -23,7 +23,9 @@ public class ClientIntegrityValidator {
     private static final String PROPERTIES_FILE = "props/mosip-application.properties";
     private static final String libFolder = "lib";
     private static final String certPath = "provider.pem";
-    private static final String manifestFile = "MANIFEST.MF";
+    // Per-jar integrity hashes live in lib/MANIFEST.MF (bundled inside lib.zip), not the
+    // root orchestration MANIFEST.MF. See ClientSetupValidator for the corresponding split.
+    private static final String manifestFile = libFolder + File.separator + "MANIFEST.MF";
 
 
     public static void verifyClientIntegrity() {
@@ -41,21 +43,25 @@ public class ClientIntegrityValidator {
             X509Certificate trustedCertificate = getCertificate();
             Manifest localManifest = getLocalManifest();
 
-            if (localManifest != null) {
-            	Map<String, Attributes> localAttributes = localManifest.getEntries();
-                for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
-                    if(entry.getKey().toLowerCase().startsWith("registration-services") ||
-                            entry.getKey().toLowerCase().startsWith("registration-client") ) {
-                        File file = new File(libFolder + File.separator + entry.getKey());
-                        if(trustedCertificate != null) {
-                            verifyIntegrity(trustedCertificate, new JarFile(file));
+            // Fail closed: a missing lib manifest must abort startup, not silently skip the
+            // per-jar signature verification (which would disable client integrity enforcement).
+            if (localManifest == null) {
+                throw new SecurityException(manifestFile + " not found, cannot verify client integrity");
+            }
+
+            Map<String, Attributes> localAttributes = localManifest.getEntries();
+            for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
+                if(entry.getKey().toLowerCase().startsWith("registration-services") ||
+                        entry.getKey().toLowerCase().startsWith("registration-client") ) {
+                    File file = new File(libFolder + File.separator + entry.getKey());
+                    if(trustedCertificate != null) {
+                        verifyIntegrity(trustedCertificate, new JarFile(file));
+                        logger.info("Integrity check passed -> {}", entry.getKey());
+                    }
+                    else {
+                        logger.info("As provider.cer is not found, invoking verify with JarFile class : {}", entry.getKey());
+                        try(JarFile jarFile = new JarFile(file, true)){
                             logger.info("Integrity check passed -> {}", entry.getKey());
-                        }
-                        else {
-                            logger.info("As provider.cer is not found, invoking verify with JarFile class : {}", entry.getKey());
-                            try(JarFile jarFile = new JarFile(file, true)){
-                                logger.info("Integrity check passed -> {}", entry.getKey());
-                            }
                         }
                     }
                 }
@@ -195,13 +201,13 @@ public class ClientIntegrityValidator {
     }
 
     private static Manifest getLocalManifest() {
-        try {
-            File localManifestFile = new File(manifestFile);
-            if (localManifestFile.exists()) {
-                return new Manifest(new FileInputStream(localManifestFile));
+        File localManifestFile = new File(manifestFile);
+        if (localManifestFile.exists()) {
+            try (FileInputStream fis = new FileInputStream(localManifestFile)) {
+                return new Manifest(fis);
+            } catch (IOException e) {
+                logger.error("Failed to load local manifest file", e);
             }
-        } catch (IOException e) {
-            logger.error("Failed to load local manifest file", e);
         }
         return null;
     }

@@ -3,8 +3,10 @@ package io.mosip.registration.test.update;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -50,33 +52,33 @@ public class ClientIntegrityValidatorTest {
 		PowerMockito.mockStatic(HMACUtils2.class);
 	}
 
-	@SuppressWarnings({ "rawtypes", "unused" })
-	@Test
+	// In a non-LOCAL environment (test props use environment=TEST) with no lib/MANIFEST.MF on
+	// disk, integrity verification must fail closed with a SecurityException rather than skip.
+	@Test(expected = SecurityException.class)
 	public void verifyClientIntegrityTest() throws RegBaseCheckedException {
 		ClientIntegrityValidator.verifyClientIntegrity();
-		
-		Manifest localManifest = Mockito.mock(Manifest.class);
-//		when(localManifest.getEntries()).thenReturn(null, null);
-		
-		Map <String, Attributes> localAttributes = localManifest.getEntries();
-		
-		localAttributes.entrySet();
-		 
-		java.util.Iterator<Entry<String, Attributes>> it = localAttributes.entrySet().iterator();
-		while (it.hasNext()) {
-		    Map.Entry entry1 = (Map.Entry)it.next();
-		
-		    final String libFolder = "lib";
-		    @SuppressWarnings("unused")
-			File file = new File(libFolder + File.separator + entry1.getKey());
-    
-		    @SuppressWarnings("static-access")
-			X509Certificate trustedCertificate = clientIntegrityValidator.getCertificate();
+	}
 
-		    
+	// Counterpart to verifyClientIntegrityTest: with lib/MANIFEST.MF present (and no
+	// registration-* entries to verify), integrity verification proceeds without throwing.
+	// Uses java.io (not java.nio) on purpose: under PowerMock + Java 21 the module system
+	// blocks the reflective access nio Path operations need (sun.nio.fs not opened).
+	@Test
+	public void verifyClientIntegrityManifestPresentTest() throws Exception {
+		File libDir = new File("lib");
+		File libManifest = new File(libDir, "MANIFEST.MF");
+		libDir.mkdirs();
+		try (FileOutputStream fos = new FileOutputStream(libManifest)) {
+			fos.write("Manifest-Version: 1.0\r\n\r\nName: logback.xml\r\nContent-Type: testhash\r\n\r\n"
+					.getBytes(StandardCharsets.UTF_8));
 		}
-		
-	
+		try {
+			// Non-registration entry -> per-jar verification loop is a no-op -> returns normally.
+			ClientIntegrityValidator.verifyClientIntegrity();
+		} finally {
+			libManifest.delete();
+			libDir.delete(); // removes lib/ only if empty
+		}
 	}
 
 	@Test

@@ -59,6 +59,11 @@ public class ManifestCreatorTest extends ManifestCreator {
                 Path.of("lib").toFile());
         FileUtils.copyFile(Path.of(".","src", "test", "resources", "manifesttest", MANIFEST_FILE_NAME).toFile(),
                 Path.of(MANIFEST_FILE_NAME).toFile());
+        // Dual-manifest (T6): per-file hashes now live in lib/MANIFEST.MF. The manifest
+        // ManifestCreator generated over the lib folder is that lib manifest, so place it
+        // there too — ClientSetupValidator reads it for deleteUnknownJars + the checksum loop.
+        FileUtils.copyFile(Path.of(".","src", "test", "resources", "manifesttest", MANIFEST_FILE_NAME).toFile(),
+                Path.of("lib", MANIFEST_FILE_NAME).toFile());
 
         ClientSetupValidator clientSetupValidator = new ClientSetupValidator();
         clientSetupValidator.validateBuildSetup();
