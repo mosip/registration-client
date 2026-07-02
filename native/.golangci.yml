@@ -1,0 +1,25 @@
+# Lint config for the native upgrade executables (migration.exe / rollback.exe).
+# Mirrors the mosip/esignet develop-go service config for consistency across the
+# org's Go code; only the goimports local-prefix differs (our module path).
+#
+# Not required to build/test - go vet (in build.ps1) is the essential gate. This
+# adds the stricter golangci-lint pass used in CI. Run locally with:
+#   golangci-lint run    (https://golangci-lint.run)
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - errorlint
+    - gocritic
+    - misspell
+    - revive
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/mosip/registration-client/native
