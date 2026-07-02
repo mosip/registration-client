@@ -5,9 +5,6 @@ feature). They perform the JRE swap **outside the JVM**, because the swap
 deletes/replaces the very `jre/` a running JVM would hold open (Windows locks
 in-use files). `_launcher.jar` starts them and exits the JVM first.
 
-**Toolchain: Go (locked in).** GraalVM-Java remains in `../native-java/` only as
-the evaluated alternative behind `design/registration/decision-01-native-toolchain.md`.
-
 | Output | Role | Status |
 |--------|------|--------|
 | `rollback.exe`  | Restore the pre-migration state after a failed/aborted migration | **Logic complete** (`cmd/rollback`, 4 tests) |
