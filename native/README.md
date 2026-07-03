@@ -10,10 +10,10 @@ in-use files). `_launcher.jar` starts them and exits the JVM first.
 | `rollback.exe`  | Restore the pre-migration state after a failed/aborted migration | **Logic complete** (`cmd/rollback`, 4 tests) |
 | `migration.exe` | Perform the Java 11 → 21 JRE swap | **Logic complete** (`cmd/migration`, 6 tests; auto-invokes `rollback.exe` on failure) |
 
-## Why Go (this scaffold)
+## Why Go
 - Single **static `.exe`, no runtime dependency** (the hard requirement — these run when the JRE is mid-swap/absent).
 - File ops are stdlib (`os`, `path/filepath`); the operator dialog is a one-line `user32!MessageBoxW` syscall — no GUI toolkit.
-- Cross-compiles to Windows from any OS; tiny binary.
+- Cross-compiles to Windows from any OS; small, self-contained binary.
 - (Comparison candidate vs GraalVM `native-image`, which keeps the language Java but adds the GraalVM + MSVC toolchain. Same logic either way.)
 
 ## Layout
@@ -34,7 +34,7 @@ native/
     appenv/          resolve app root from the exe location (not CWD)
     fsops/           idempotent move/remove/clean/restore (+ CopyFile, Unzip)
     jre/             detect JRE feature version from <jre>/release
-    ui/              MessageBoxW (windows) + stdout stub (dev)
+    ui/              MessageBoxW (Windows) + stdout stub (dev)
 ```
 
 ## `migration.exe` behaviour (design step 4)
@@ -64,13 +64,14 @@ Idempotent, safe to re-run. Against the app root:
 Or by hand:
 ```bash
 go vet ./...
-go test ./...          # runs on any OS (ui has a non-windows stub)
+go test ./...          # runs on any OS (ui has a non-Windows stub)
 
 # build ON or FOR Windows; -H=windowsgui = no console window
 go build -ldflags "-H=windowsgui" -o dist/rollback.exe  ./cmd/rollback
 go build -ldflags "-H=windowsgui" -o dist/migration.exe ./cmd/migration
 
 # cross-compile from Linux/macOS:
-GOOS=windows GOARCH=amd64 go build -ldflags "-H=windowsgui" -o dist/rollback.exe ./cmd/rollback
+GOOS=windows GOARCH=amd64 go build -ldflags "-H=windowsgui" -o dist/rollback.exe  ./cmd/rollback
+GOOS=windows GOARCH=amd64 go build -ldflags "-H=windowsgui" -o dist/migration.exe ./cmd/migration
 ```
 

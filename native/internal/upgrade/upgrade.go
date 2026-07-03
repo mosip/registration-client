@@ -196,3 +196,4 @@ func snapshot(path string) (fingerprint string, present bool) {
 	}
 	return fmt.Sprintf("%d:%d", fi.Size(), fi.ModTime().UnixNano()), true
 }
+

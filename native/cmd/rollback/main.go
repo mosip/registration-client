@@ -55,3 +55,4 @@ func run() int {
 	ui.ShowInfo(dialogTitle, successMessage)
 	return 0
 }
+

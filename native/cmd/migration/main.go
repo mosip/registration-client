@@ -70,3 +70,4 @@ func invokeRollback(base string) error {
 	log.Printf("auto-invoking rollback.exe")
 	return exec.Command(rb).Start()
 }
+
