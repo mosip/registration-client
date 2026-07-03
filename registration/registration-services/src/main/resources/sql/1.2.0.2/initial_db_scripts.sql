@@ -1,0 +1,1 @@
+-- Upgrade script for version 1.2.0.2 - No changes to database
