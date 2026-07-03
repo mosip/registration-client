@@ -1,0 +1,65 @@
+THIRD-PARTY-NOTICES
+
+This project uses third-party software under licenses that require attribution.  
+Below is a simplified notice listing only attribution-required components and their licenses.
+
+================================================================================
+License: Mozilla Public License 2.0
+Components:
+- MOSIP Kernel, Commons & Registration Stack (multiple modules)
+- MOSIP Velocity Template Manager
+- MOSIP Logger (kernel-logger-logback)
+
+================================================================================
+License: MIT License
+Components:
+- SLF4J (slf4j-api)
+- Mockito Core
+- Project Lombok
+- Microsoft TSS.Java TPM Library
+
+================================================================================
+License: Eclipse Public License 1.0
+Components:
+- JUnit 4
+
+================================================================================
+License: Eclipse Public License 2.0
+Components:
+- JUnit 5 (Jupiter API, Engine, Vintage)
+- JaCoCo Maven Plugin
+
+================================================================================
+License: GNU Lesser General Public License 2.1
+Components:
+- Logback Core
+
+================================================================================
+License: GNU Lesser General Public License 3.0
+Components:
+- Sonar Maven Plugin
+- Git Commit ID Maven Plugin
+
+================================================================================
+License: BSD 3-Clause License
+Components:
+- jai-imageio-jpeg2000
+- jakarta.xml.bind-api
+- ExtentReports
+
+================================================================================
+License: GPL 2.0 with Classpath Exception
+Components:
+- JavaFX (OpenJFX)
+- javax.activation / javax.xml.bind (dual licensed)
+
+================================================================================
+License: JSON License
+Components:
+- org.json:json
+
+================================================================================
+MOSIP COPYRIGHT NOTICE
+© 2018–2025 MOSIP (Modular Open Source Identity Platform)
+All rights reserved.
+
