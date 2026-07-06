@@ -1,4 +1,8 @@
-// Command migration is the T3 (#809) native executable: migration.exe.
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// Command migration is the native executable: migration.exe.
 //
 // Thin entrypoint over the shared upgrade logic. It performs the Java 11 -> 21
 // JRE swap from outside the JVM (the swap deletes the very jre/ a JVM would hold

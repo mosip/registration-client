@@ -1,4 +1,8 @@
-// Command rollback is the T4 (#811) native executable: rollback.exe.
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// Command rollback is the native executable: rollback.exe.
 //
 // Thin entrypoint over the shared upgrade logic. It restores the Registration
 // Client to its pre-migration state after a failed or aborted Java 11 -> 21

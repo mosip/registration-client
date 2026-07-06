@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 // Package fsops provides the small set of idempotent filesystem operations the
 // migration/rollback executables need. Each operation is safe to run repeatedly
 // (e.g. after an operator force-kill) and treats "source already absent" as a

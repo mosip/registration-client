@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 // Package jre detects the feature version of a JRE from its release file, used
 // by migration.exe to decide whether to back up the Java 11 JRE.
 package jre
