@@ -72,7 +72,7 @@ public class ManifestSignerTest {
     }
 
     @Test
-    public void signFile_writesDetachedSignatureThatVerifies() throws Exception {
+    public void signFile_validKey_writesVerifiableDetachedSignature() throws Exception {
         File data = new File(tempDir, "MANIFEST.MF");
         File sig = new File(tempDir, "MANIFEST.MF.sig");
         Files.write(data.toPath(), "lib manifest body".getBytes(StandardCharsets.UTF_8));
@@ -86,7 +86,7 @@ public class ManifestSignerTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void loadPrivateKey_unknownAlias_throws() throws Exception {
+    public void loadPrivateKey_unknownAlias_throwsException() throws Exception {
         ManifestSigner.loadPrivateKey(keystore, STORE_PASS.toCharArray(), "no-such-alias");
     }
 

@@ -68,7 +68,7 @@ public class ManifestCreatorTest extends ManifestCreator {
 
 
     @Test
-    public void listModeCreatesManifestFromExplicitFiles() throws Exception {
+    public void listMode_explicitFiles_createsManifest() throws Exception {
         listModeTempDir = Files.createTempDirectory("manifest-list-mode").toFile();
         File jre = new File(listModeTempDir, "jre21.zip");
         File runBat = new File(listModeTempDir, "run.bat");
@@ -92,7 +92,7 @@ public class ManifestCreatorTest extends ManifestCreator {
     }
 
     @Test
-    public void listModeSkipsMissingFiles() throws Exception {
+    public void listMode_missingFile_skipsMissing() throws Exception {
         listModeTempDir = Files.createTempDirectory("manifest-list-mode-missing").toFile();
         File present = new File(listModeTempDir, "run.bat");
         Files.write(present.toPath(), "run-bytes".getBytes(StandardCharsets.UTF_8));
@@ -113,7 +113,7 @@ public class ManifestCreatorTest extends ManifestCreator {
     }
 
     @Test
-    public void streamedHashMatchesDigestAsPlainText() throws Exception {
+    public void listMode_largeFile_hashMatchesDigestAsPlainText() throws Exception {
         listModeTempDir = Files.createTempDirectory("manifest-hash-compat").toFile();
         File big = new File(listModeTempDir, "jre21.zip");
         // larger than the 8 KB streaming buffer, to exercise multi-chunk digest updates
