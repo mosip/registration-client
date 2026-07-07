@@ -25,7 +25,10 @@ func DetectMajor(jreDir string) int {
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		line := scanner.Text()
+		// Tolerate a UTF-8 BOM on the first line: some editors/scripts re-save
+		// the release file with a leading U+FEFF, which would otherwise defeat
+		// the HasPrefix check and silently degrade detection to 0.
+		line := strings.TrimPrefix(scanner.Text(), "\uFEFF")
 		if strings.HasPrefix(line, "JAVA_VERSION=") {
 			value := strings.Trim(strings.TrimPrefix(line, "JAVA_VERSION="), "\"")
 			return parseMajor(value)
