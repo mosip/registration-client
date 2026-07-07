@@ -34,6 +34,12 @@ import java.nio.file.StandardCopyOption;
  * re-downloaded from scratch, so bytes from two different resource versions can never be spliced
  * together. The completed transfer is verified against {@code Content-Length} before the staged
  * {@code .part} is atomically moved onto the final file.
+ * <p>
+ * <b>Integrity scope.</b> This class verifies transfer <i>completeness</i> (byte count) only, not
+ * content <i>integrity</i>. Cryptographic verification of a downloaded artifact (SHA / HMAC against the
+ * signed {@code MANIFEST.MF}) is deliberately performed downstream by the caller
+ * ({@code softwareUpdateHandler} and the launcher's manifest verifier) before the artifact is placed
+ * into use, so it is intentionally out of scope here.
  */
 public final class ResumableDownloader {
 
@@ -102,6 +108,10 @@ public final class ResumableDownloader {
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
         connection.setConnectTimeout(connectTimeout);
         connection.setReadTimeout(readTimeout);
+        // Force an uncompressed transfer: with a byte Range request, transparent gzip anywhere in the
+        // path would make the Content-Length (compressed) and the byte offsets disagree with the bytes
+        // written to .part, breaking both the completeness check and any subsequent resume.
+        connection.setRequestProperty("Accept-Encoding", "identity");
         if (existing > 0) {
             connection.setRequestProperty("Range", "bytes=" + existing + "-");
             connection.setRequestProperty("If-Range", validator);
