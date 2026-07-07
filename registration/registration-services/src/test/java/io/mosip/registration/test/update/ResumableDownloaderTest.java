@@ -232,6 +232,27 @@ public class ResumableDownloaderTest {
         }
     }
 
+    @Test
+    public void ensureSpace_sufficient_doesNotThrow() throws Exception {
+        File dir = tempDir();
+        try {
+            assertTrue("precondition: temp dir has free space", dir.getUsableSpace() > 1L);
+            // a real directory with far more than 1 byte free must pass without throwing
+            ResumableDownloader.ensureSpace(dir, 1L);
+        } finally {
+            deleteDir(dir);
+        }
+    }
+
+    @Test
+    public void ensureSpace_nullOrMissingDir_fallsBackToCwd() throws Exception {
+        // null and a non-existent directory both fall back to new File(".") (the working dir),
+        // so a modest requirement is satisfiable and must not throw.
+        assertTrue("precondition: working dir has free space", new File(".").getUsableSpace() > 1L);
+        ResumableDownloader.ensureSpace(null, 1L);
+        ResumableDownloader.ensureSpace(new File("no-such-dir-" + System.nanoTime()), 1L);
+    }
+
     // ---------------------------------------------------------------------
     // G8: target directory is created when missing
     // ---------------------------------------------------------------------
