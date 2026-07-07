@@ -170,7 +170,7 @@ public class SoftwareUpdateUtilTest extends SoftwareUpdateUtil {
     }
 
     @Test
-    public void downloadResumable_resumesFromPartial() throws Exception {
+    public void downloadResumable_partialPresent_resumesByAppending() throws Exception {
         byte[] payload = randomPayload(2000);
         HttpServer server = startServer(payload, true);
         File dir = Files.createTempDirectory("dl").toFile();
@@ -299,7 +299,7 @@ public class SoftwareUpdateUtilTest extends SoftwareUpdateUtil {
     }
 
     @Test(expected = RegBaseCheckedException.class)
-    public void downloadResumable_invalidHost_throws() throws Exception {
+    public void downloadResumable_invalidHost_throwsException() throws Exception {
         downloadResumable("http://invalid.invalid/file", TEMP_DIR.getAbsolutePath(), "x.bin");
     }
 
@@ -315,7 +315,7 @@ public class SoftwareUpdateUtilTest extends SoftwareUpdateUtil {
     }
 
     @Test(expected = RegBaseCheckedException.class)
-    public void downloadResumable_unexpectedStatus_throws() throws Exception {
+    public void downloadResumable_unexpectedStatus_throwsException() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
         server.createContext("/file", exchange -> {
             exchange.sendResponseHeaders(404, -1);

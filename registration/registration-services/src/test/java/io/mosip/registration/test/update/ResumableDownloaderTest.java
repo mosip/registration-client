@@ -42,7 +42,7 @@ public class ResumableDownloaderTest {
     // ---------------------------------------------------------------------
 
     @Test
-    public void fullDownload_success_cleansPartAndMeta() throws Exception {
+    public void download_fullResponse_succeedsAndCleansSidecars() throws Exception {
         byte[] payload = randomPayload(2000);
         HttpServer server = rangeServer(payload, ETAG, null, true);
         File dir = tempDir();
@@ -59,7 +59,7 @@ public class ResumableDownloaderTest {
     }
 
     @Test
-    public void resumesFromPartial_appends() throws Exception {
+    public void download_partialPresent_resumesByAppending() throws Exception {
         byte[] payload = randomPayload(2000);
         HttpServer server = rangeServer(payload, ETAG, null, true);
         File dir = tempDir();
@@ -81,7 +81,7 @@ public class ResumableDownloaderTest {
     // ---------------------------------------------------------------------
 
     @Test
-    public void resume206WithWrongStart_discardsAndRestarts() throws Exception {
+    public void download_206WrongStartOffset_discardsAndRestarts() throws Exception {
         byte[] payload = randomPayload(2000);
         // Serves 206 but always claims it started at byte 0, regardless of the requested offset.
         HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
@@ -123,7 +123,7 @@ public class ResumableDownloaderTest {
     // ---------------------------------------------------------------------
 
     @Test
-    public void rangeNotSatisfiable_partLargerThanTotal_restartsFresh() throws Exception {
+    public void download_416PartLargerThanTotal_restartsFresh() throws Exception {
         byte[] payload = randomPayload(2000);
         HttpServer server = rangeServer(payload, ETAG, null, true);
         File dir = tempDir();
@@ -146,7 +146,7 @@ public class ResumableDownloaderTest {
     // ---------------------------------------------------------------------
 
     @Test
-    public void weakEtagIgnored_lastModifiedUsedAsValidator() throws Exception {
+    public void download_weakEtag_usesLastModifiedValidator() throws Exception {
         byte[] payload = randomPayload(4000);
         // A weak ETag (W/...) is invalid for byte-range validation -> Last-Modified must be chosen.
         HttpServer server = truncatingServer(payload, "W/\"weak\"", LAST_MODIFIED);
@@ -161,7 +161,7 @@ public class ResumableDownloaderTest {
     }
 
     @Test
-    public void noEtag_lastModifiedUsedAsValidator() throws Exception {
+    public void download_noEtag_usesLastModifiedValidator() throws Exception {
         byte[] payload = randomPayload(4000);
         HttpServer server = truncatingServer(payload, null, LAST_MODIFIED);
         File dir = tempDir();
@@ -178,7 +178,7 @@ public class ResumableDownloaderTest {
     // ---------------------------------------------------------------------
 
     @Test
-    public void noValidatorHeaders_metaNotWritten() throws Exception {
+    public void download_noValidatorHeaders_writesNoMeta() throws Exception {
         byte[] payload = randomPayload(4000);
         HttpServer server = truncatingServer(payload, null, null);
         File dir = tempDir();
@@ -196,7 +196,7 @@ public class ResumableDownloaderTest {
     // ---------------------------------------------------------------------
 
     @Test
-    public void chunkedUnknownLength_completes() throws Exception {
+    public void download_chunkedUnknownLength_completes() throws Exception {
         byte[] payload = randomPayload(2000);
         HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
         server.createContext("/file", exchange -> {
@@ -258,7 +258,7 @@ public class ResumableDownloaderTest {
     // ---------------------------------------------------------------------
 
     @Test
-    public void targetDirectoryCreatedWhenMissing() throws Exception {
+    public void download_missingTargetDir_createsDirectory() throws Exception {
         byte[] payload = randomPayload(1000);
         HttpServer server = rangeServer(payload, ETAG, null, true);
         File base = tempDir();
@@ -280,7 +280,7 @@ public class ResumableDownloaderTest {
     // ---------------------------------------------------------------------
 
     @Test
-    public void finalizeOverwritesExistingTarget() throws Exception {
+    public void download_existingTarget_overwrites() throws Exception {
         byte[] payload = randomPayload(2000);
         HttpServer server = rangeServer(payload, ETAG, null, true);
         File dir = tempDir();
@@ -301,19 +301,19 @@ public class ResumableDownloaderTest {
     // ---------------------------------------------------------------------
 
     @Test(expected = IllegalArgumentException.class)
-    public void blankFileName_rejected() throws Exception {
+    public void download_blankFileName_throwsIllegalArgument() throws Exception {
         ResumableDownloader.download("http://localhost/file", tempDir().getAbsolutePath(), "",
                 CONNECT_TIMEOUT, READ_TIMEOUT);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void pathTraversalName_rejected() throws Exception {
+    public void download_pathTraversalName_throwsIllegalArgument() throws Exception {
         ResumableDownloader.download("http://localhost/file", tempDir().getAbsolutePath(), "..\\evil.bin",
                 CONNECT_TIMEOUT, READ_TIMEOUT);
     }
 
     @Test(expected = IOException.class)
-    public void unexpectedStatus_throws() throws Exception {
+    public void download_unexpectedStatus_throws() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
         server.createContext("/file", exchange -> {
             exchange.sendResponseHeaders(404, -1);
