@@ -4,6 +4,7 @@ import io.mosip.kernel.core.util.FileUtils;
 import io.mosip.registration.update.ClientIntegrityValidator;
 import io.mosip.registration.update.ClientSetupValidator;
 import io.mosip.registration.update.ManifestCreator;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,6 +14,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.cert.X509Certificate;
 import java.util.jar.Attributes;
@@ -24,6 +27,18 @@ import java.util.jar.Manifest;
 public class ManifestCreatorTest extends ManifestCreator {
 
     private static final String MANIFEST_FILE_NAME = "MANIFEST.MF";
+
+    private File listModeTempDir;
+
+    @After
+    public void cleanUpListMode() throws IOException {
+        if (listModeTempDir != null && listModeTempDir.exists()) {
+            for (File f : listModeTempDir.listFiles()) {
+                Files.deleteIfExists(f.toPath());
+            }
+            Files.deleteIfExists(listModeTempDir.toPath());
+        }
+    }
 
     @Test
     public void mainTest() throws Exception {
@@ -51,6 +66,72 @@ public class ManifestCreatorTest extends ManifestCreator {
         Assert.assertFalse(failed);
     }
 
+
+    @Test
+    public void listMode_explicitFiles_createsManifest() throws Exception {
+        listModeTempDir = Files.createTempDirectory("manifest-list-mode").toFile();
+        File jre = new File(listModeTempDir, "jre21.zip");
+        File runBat = new File(listModeTempDir, "run.bat");
+        Files.write(jre.toPath(), "jre-bytes".getBytes(StandardCharsets.UTF_8));
+        Files.write(runBat.toPath(), "run-bytes".getBytes(StandardCharsets.UTF_8));
+
+        String version = "1.3.0";
+        main(new String[]{"--list", version, listModeTempDir.getPath(), jre.getPath(), runBat.getPath()});
+
+        File manifestFile = new File(listModeTempDir, MANIFEST_FILE_NAME);
+        Assert.assertTrue(manifestFile.exists());
+        Manifest manifest;
+        try (FileInputStream in = new FileInputStream(manifestFile)) {
+            manifest = new Manifest(in);
+        }
+        Assert.assertEquals(version, manifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION));
+        Assert.assertEquals(2, manifest.getEntries().size());
+        Assert.assertTrue(manifest.getEntries().containsKey("jre21.zip"));
+        Assert.assertTrue(manifest.getEntries().containsKey("run.bat"));
+        Assert.assertNotNull(manifest.getEntries().get("jre21.zip").getValue(Attributes.Name.CONTENT_TYPE));
+    }
+
+    @Test
+    public void listMode_missingFile_skipsMissing() throws Exception {
+        listModeTempDir = Files.createTempDirectory("manifest-list-mode-missing").toFile();
+        File present = new File(listModeTempDir, "run.bat");
+        Files.write(present.toPath(), "run-bytes".getBytes(StandardCharsets.UTF_8));
+        File missing = new File(listModeTempDir, "_launcher.jar"); // never created (produced later by T2)
+
+        String version = "1.3.0";
+        main(new String[]{"--list", version, listModeTempDir.getPath(), present.getPath(), missing.getPath()});
+
+        File manifestFile = new File(listModeTempDir, MANIFEST_FILE_NAME);
+        Assert.assertTrue(manifestFile.exists());
+        Manifest manifest;
+        try (FileInputStream in = new FileInputStream(manifestFile)) {
+            manifest = new Manifest(in);
+        }
+        Assert.assertEquals(1, manifest.getEntries().size());
+        Assert.assertTrue(manifest.getEntries().containsKey("run.bat"));
+        Assert.assertFalse(manifest.getEntries().containsKey("_launcher.jar"));
+    }
+
+    @Test
+    public void listMode_largeFile_hashMatchesDigestAsPlainText() throws Exception {
+        listModeTempDir = Files.createTempDirectory("manifest-hash-compat").toFile();
+        File big = new File(listModeTempDir, "jre21.zip");
+        // larger than the 8 KB streaming buffer, to exercise multi-chunk digest updates
+        byte[] payload = new byte[20000];
+        new java.util.Random(42).nextBytes(payload);
+        Files.write(big.toPath(), payload);
+
+        main(new String[]{"--list", "1.3.0", listModeTempDir.getPath(), big.getPath()});
+
+        Manifest manifest;
+        try (FileInputStream in = new FileInputStream(new File(listModeTempDir, MANIFEST_FILE_NAME))) {
+            manifest = new Manifest(in);
+        }
+        String streamed = manifest.getEntries().get("jre21.zip").getValue(Attributes.Name.CONTENT_TYPE);
+        // streaming the file must yield the exact same value as hashing the whole byte[] the old way
+        String expected = io.mosip.kernel.core.util.HMACUtils2.digestAsPlainText(payload);
+        Assert.assertEquals(expected, streamed);
+    }
 
     @Test
     public void integrityCheckTest() throws IOException {
