@@ -50,8 +50,20 @@ func run() int {
 
 	if err := upgrade.Migrate(base); err != nil {
 		log.Printf("migration FAILED: %v", err)
-		// Design step 4 / Scenarios 1 & 5: on failure, auto-invoke rollback.exe,
-		// which restores the previous state and shows its own dialog.
+		// Design step 4a: auto-invoke rollback.exe on failure, EXCEPT once the
+		// JRE swap has already completed (jre/ is a valid Java 21). A late-stage
+		// failure after the swap (lib/ reset or run.bat copy) must NOT roll back
+		// — that would downgrade a good swap; the idempotent migration.exe is
+		// simply re-run on the next launch to retry the failed tail steps.
+		if !upgrade.ShouldRollback(base) {
+			log.Printf("skipping rollback: JRE swap intact, migration is re-runnable")
+			ui.ShowError(dialogTitle,
+				"Migration could not be completed: "+err.Error()+
+					"\n\nThe JRE is already in place and nothing was rolled back. "+
+					"Please restart the application to finish the migration.")
+			return 1
+		}
+		// Scenarios 1 & 5: restore the previous state; rollback.exe shows its own dialog.
 		if rbErr := invokeRollback(base); rbErr != nil {
 			log.Printf("could not launch rollback.exe: %v", rbErr)
 			ui.ShowError(dialogTitle,

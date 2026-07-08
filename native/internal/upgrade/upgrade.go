@@ -106,6 +106,30 @@ func Migrate(base string) error {
 	return nil
 }
 
+// ShouldRollback reports whether a failed Migrate warrants auto-invoking
+// rollback.exe. It enforces the intent behind the design's rollback-trigger
+// table (registration-upgrade.md step 4a): roll back only while jre/ is missing
+// or partially populated — never once the JRE swap has already completed.
+//
+// The distinction matters for late-stage failures. The JRE swap (extract,
+// back up, promote) can complete fully — jre/ is now a valid Java 21 — and yet
+// Migrate still return an error from a later, non-destructive step such as the
+// lib/ reset or the run.bat copy (e.g. an antivirus lock or a transient
+// permission error). Rolling back there would delete the good Java 21 jre/ and
+// restore Java 11, discarding real progress. Because migration.exe is
+// idempotent/resumable, the correct recovery is simply to re-run it: it detects
+// major==21, skips the swap, and retries only the failed tail steps. So when
+// jre/ is already a complete Java 21, do NOT roll back.
+//
+// For every other failure (jre/ missing, partially populated, or still the
+// untouched Java 11 from an early extract failure) rollback is invoked: it
+// restores jre11/ if a backup exists and otherwise only performs the harmless
+// cleanup the design expects (restore run.bat_jre11, empty .TEMP/, remove
+// .artifacts/) — it never deletes jre/ without a backup to replace it.
+func ShouldRollback(base string) bool {
+	return jre.DetectMajor(filepath.Join(base, "jre")) != 21
+}
+
 // Rollback restores the Registration Client to its pre-migration state after a
 // failed or aborted migration (design registration-upgrade.md step 4a / issue
 // #811). It is fully idempotent (safe to run multiple times) and never touches
