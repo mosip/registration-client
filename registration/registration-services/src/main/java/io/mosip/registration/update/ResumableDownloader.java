@@ -133,6 +133,13 @@ public final class ResumableDownloader {
             } else if (status == HttpURLConnection.HTTP_OK) {          // 200 - fresh body (or If-Range mismatch)
                 append = false;
                 existing = 0L;
+                // Discard any stale partial BEFORE persisting the new validator. Writing the new
+                // validator while old bytes still sit in .part would, if the process died before
+                // writeBody truncates them (e.g. ensureSpaceForWrite throws), leave a new validator
+                // paired with stale bytes — which the next resume would splice onto the new resource
+                // via If-Range. Deleting first keeps .part and .meta in sync (and frees the old bytes
+                // so the disk-space pre-check below sees them as available).
+                Files.deleteIfExists(artifact.part.toPath());
                 // Persist the validator so a later interrupted attempt can resume this exact resource.
                 writeValidator(artifact.meta, extractValidator(connection));
             } else if (status == HTTP_RANGE_NOT_SATISFIABLE) {         // 416 - part is at/over server size

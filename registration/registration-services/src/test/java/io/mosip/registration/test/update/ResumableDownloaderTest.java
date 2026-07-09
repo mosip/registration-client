@@ -142,6 +142,37 @@ public class ResumableDownloaderTest {
     }
 
     // ---------------------------------------------------------------------
+    // G2b: 416 where the local part size == server total -> finalize the local part (no re-download)
+    // ---------------------------------------------------------------------
+
+    @Test
+    public void download_416PartMatchesTotal_finalizesLocalPart() throws Exception {
+        byte[] payload = randomPayload(2000);
+        // A complete .part exactly the server's size, but with distinguishable content so the
+        // assertion proves the local part is finalized as-is rather than re-downloaded. (finalize is
+        // completeness-based - length == server total; content integrity is verified downstream per
+        // the class contract.) The resume Range then starts at EOF (2000) -> the server answers 416,
+        // and because part length == server total handleRangeNotSatisfiable finalizes the part.
+        byte[] completePart = payload.clone();
+        completePart[0] ^= 0xFF;
+        HttpServer server = rangeServer(payload, ETAG, null, true);
+        File dir = tempDir();
+        try {
+            Files.write(new File(dir, "artifact.bin.part").toPath(), completePart);
+            writeMeta(dir, ETAG);
+
+            ResumableDownloader.download(urlFor(server), dir.getAbsolutePath(), "artifact.bin",
+                    CONNECT_TIMEOUT, READ_TIMEOUT);
+
+            assertArrayEquals(completePart, Files.readAllBytes(new File(dir, "artifact.bin").toPath()));
+            assertFalse(new File(dir, "artifact.bin.part").exists());       // part consumed by finalize
+            assertFalse(new File(dir, "artifact.bin.part.meta").exists());  // validator sidecar removed
+        } finally {
+            stop(server, dir);
+        }
+    }
+
+    // ---------------------------------------------------------------------
     // G3 / G4: validator selection - weak ETag ignored, Last-Modified used
     // ---------------------------------------------------------------------
 
