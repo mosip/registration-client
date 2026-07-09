@@ -1,0 +1,4 @@
+# build outputs
+*.exe
+# runtime log written by rollback.exe/migration.exe
+*.log
