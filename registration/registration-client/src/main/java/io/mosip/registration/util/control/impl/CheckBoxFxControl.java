@@ -17,7 +17,6 @@ import io.mosip.registration.constants.AuditReferenceIdTypes;
 import io.mosip.registration.constants.Components;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.SessionContext;
-import io.mosip.registration.controller.Initialization;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.util.control.FxControl;
 import javafx.scene.Node;
