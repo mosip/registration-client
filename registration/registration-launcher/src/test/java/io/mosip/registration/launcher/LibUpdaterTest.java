@@ -137,6 +137,28 @@ public class LibUpdaterTest {
     }
 
     @Test
+    public void update_oversizeManifest_failsAsIoErrorNotSecurityAlert() throws Exception {
+        // A hostile/misconfigured server returns an oversized manifest body; it must be rejected on
+        // size BEFORE being buffered into memory and verified, surfacing as a network/server
+        // IOException (not a signature alert, and never an unbounded allocation).
+        byte[] huge = new byte[1024 * 1024 + 1];             // just over MAX_MANIFEST_BYTES (1 MiB)
+        byte[] sig = sign(huge, keyPair.getPrivate());        // never reached (manifest cap trips first)
+
+        HttpServer server = serve(routes(huge, sig, zipBytes(ENTRY, JAR)));
+        File temp = folder.newFolder(".TEMP");
+        try {
+            LibUpdater.update(
+                    url(server, "/v/lib/MANIFEST.MF"), url(server, "/v/lib/MANIFEST.MF.sig"),
+                    url(server, "/v/lib.zip"), temp, keyPair.getPublic(), 50000, 30000);
+            fail("expected IOException for an oversized downloaded manifest");
+        } catch (IOException expected) {
+            assertTrue(expected.getMessage().toLowerCase().contains("network/server error"));
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
     public void update_stalePayloadInTemp_clearedBeforeExtract() throws Exception {
         // A reused .TEMP/ with a stale jar from a prior failed attempt must not trip the allowlist:
         // the stale file is cleared before extraction so a valid update still succeeds.

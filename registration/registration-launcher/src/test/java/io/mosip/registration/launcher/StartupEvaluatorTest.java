@@ -73,21 +73,21 @@ public class StartupEvaluatorTest {
     }
 
     @Test
-    public void signatureMissing() throws Exception {
+    public void evaluate_signatureMissing_returnsSignatureMissing() throws Exception {
         // rootSignature file not created
         assertEquals(StartupAction.SIGNATURE_MISSING,
                 StartupEvaluator.evaluate(rootManifest, rootSignature, null, trusted(), 11).action());
     }
 
     @Test
-    public void signatureInvalid_abort() throws Exception {
+    public void evaluate_invalidSignature_returnsAbortInvalidSignature() throws Exception {
         sign(rootManifest, rootSignature, wrongKeyPair.getPrivate()); // signed by untrusted key
         assertEquals(StartupAction.ABORT_INVALID_SIGNATURE,
                 StartupEvaluator.evaluate(rootManifest, rootSignature, null, trusted(), 11).action());
     }
 
     @Test
-    public void validSignature_versionsMatch_normalStartup() throws Exception {
+    public void evaluate_versionsMatch_returnsNormalStartup() throws Exception {
         sign(rootManifest, rootSignature, keyPair.getPrivate());
         libManifest = writeManifest("lib-MANIFEST.MF", "1.3.0");
         assertEquals(StartupAction.NORMAL_STARTUP,
@@ -95,7 +95,7 @@ public class StartupEvaluatorTest {
     }
 
     @Test
-    public void validSignature_versionsDiffer_jre11_migrateJre() throws Exception {
+    public void evaluate_versionsDifferJre11_returnsMigrateJre() throws Exception {
         sign(rootManifest, rootSignature, keyPair.getPrivate());
         libManifest = writeManifest("lib-MANIFEST.MF", "1.2.0.1");
         assertEquals(StartupAction.MIGRATE_JRE,
@@ -103,7 +103,7 @@ public class StartupEvaluatorTest {
     }
 
     @Test
-    public void validSignature_versionsDiffer_jre21_updateLib() throws Exception {
+    public void evaluate_versionsDifferJre21_returnsUpdateLib() throws Exception {
         sign(rootManifest, rootSignature, keyPair.getPrivate());
         libManifest = writeManifest("lib-MANIFEST.MF", "1.3.0");
         File newerRoot = writeManifest("root2-MANIFEST.MF", "1.4.0");
@@ -114,7 +114,7 @@ public class StartupEvaluatorTest {
     }
 
     @Test
-    public void validSignature_versionsDiffer_unsupportedJre_aborts() throws Exception {
+    public void evaluate_versionsDifferJre8_returnsAbortUnsupportedJre() throws Exception {
         sign(rootManifest, rootSignature, keyPair.getPrivate());
         libManifest = writeManifest("lib-MANIFEST.MF", "1.2.0.1");
         assertEquals(StartupAction.ABORT_UNSUPPORTED_JRE,
@@ -122,7 +122,7 @@ public class StartupEvaluatorTest {
     }
 
     @Test
-    public void validSignature_versionsDiffer_jre25_updateLib() throws Exception {
+    public void evaluate_versionsDifferJre25_returnsUpdateLib() throws Exception {
         // any JRE >= 21 takes the lib-only update path
         sign(rootManifest, rootSignature, keyPair.getPrivate());
         libManifest = writeManifest("lib-MANIFEST.MF", "1.2.0.1");
@@ -131,7 +131,7 @@ public class StartupEvaluatorTest {
     }
 
     @Test
-    public void validSignature_libManifestMissing_treatedAsDiffer() throws Exception {
+    public void evaluate_libManifestMissing_returnsMigrateJre() throws Exception {
         sign(rootManifest, rootSignature, keyPair.getPrivate());
         File missingLib = new File(folder.getRoot(), "no-such-lib-MANIFEST.MF");
         assertEquals(StartupAction.MIGRATE_JRE,
@@ -139,7 +139,7 @@ public class StartupEvaluatorTest {
     }
 
     @Test
-    public void validSignature_libManifestPresentButNoVersion_abortsCorrupt() throws Exception {
+    public void evaluate_libManifestNoVersion_returnsAbortCorruptLibManifest() throws Exception {
         // A present-but-version-less lib/MANIFEST.MF (corrupt/truncated) must NOT trigger a migration —
         // it aborts so a possibly-current machine is not needlessly re-migrated.
         sign(rootManifest, rootSignature, keyPair.getPrivate());
@@ -149,7 +149,7 @@ public class StartupEvaluatorTest {
     }
 
     @Test
-    public void validSignature_rootManifestNoVersion_abortsCorrupt() throws Exception {
+    public void evaluate_rootManifestNoVersion_returnsAbortCorruptRootManifest() throws Exception {
         // A signature-valid root MANIFEST.MF with no Manifest-Version (corrupt/mispackaged) must hard-stop
         // rather than fall through to a migration/update decision.
         File noVersionRoot = folder.newFile("noversion-MANIFEST.MF");

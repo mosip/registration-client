@@ -50,6 +50,12 @@ public final class LibUpdater {
     private static final String MANIFEST = "MANIFEST.MF";
     private static final String MANIFEST_SIG = "MANIFEST.MF.sig";
     private static final String LIB_ZIP = "lib.zip";
+    // Upper bounds for the metadata bodies buffered fully into memory before verification, so a
+    // compromised/misconfigured server cannot force an unbounded allocation via an oversized response.
+    // A detached SHA256withRSA signature is tiny (RSA-4096 -> 512 bytes); lib/MANIFEST.MF holds one
+    // per-file hash line per jar (KBs in practice) — 1 MiB is comfortably generous for both.
+    private static final long MAX_SIGNATURE_BYTES = 1024L;
+    private static final long MAX_MANIFEST_BYTES = 1024L * 1024L;
 
     /** Control files legitimately present in the staging dir but not manifest entries. */
     static final Set<String> CONTROL_FILES = new HashSet<>(Arrays.asList(MANIFEST, MANIFEST_SIG, LIB_ZIP));
@@ -87,8 +93,8 @@ public final class LibUpdater {
         // 2. verify the manifest signature; on failure do not download lib.zip (Case B)
         File manifestFile = new File(tempDir, MANIFEST);
         File signatureFile = new File(tempDir, MANIFEST_SIG);
-        byte[] manifestBytes = Files.readAllBytes(manifestFile.toPath());
-        byte[] signatureBytes = Files.readAllBytes(signatureFile.toPath());
+        byte[] manifestBytes = readCapped(manifestFile, MAX_MANIFEST_BYTES);
+        byte[] signatureBytes = readCapped(signatureFile, MAX_SIGNATURE_BYTES);
 
         // A truncated download or an HTML/error body is a network/server problem, not a tamper —
         // detect it here so it surfaces as a plain failure rather than a misleading "signature
@@ -126,6 +132,22 @@ public final class LibUpdater {
 
         LOGGER.info("lib update staged in {} — restart required to apply", tempDir);
         return LibUpdateResult.READY_RESTART;
+    }
+
+    /**
+     * Reads {@code file} fully into memory but only after checking its on-disk size against
+     * {@code maxBytes}, so an oversized (or empty) body — e.g. an HTML error page or a hostile
+     * unbounded response — is rejected as a network/server error before it is buffered, rather than
+     * driving an unbounded allocation. Framed as an {@link IOException} (not a tamper alert) to match
+     * {@link #parseDownloadedManifest}: the signature check below is the actual integrity gate.
+     */
+    private static byte[] readCapped(File file, long maxBytes) throws IOException {
+        long length = file.length();
+        if (length == 0L || length > maxBytes) {
+            throw new IOException("Downloaded " + file.getName() + " has unexpected size " + length
+                    + " bytes (expected 1.." + maxBytes + "; likely a network/server error)");
+        }
+        return Files.readAllBytes(file.toPath());
     }
 
     /**

@@ -29,7 +29,7 @@ public class LauncherConfigTest {
     }
 
     @Test
-    public void buildsAllUrlsForVersion() {
+    public void fromProperties_validServer_buildsAllVersionedUrls() {
         LauncherConfig config = LauncherConfig.fromProperties(props("https://dev.mosip.net"));
         String base = "https://dev.mosip.net/registration-client/1.4.0/";
 
@@ -40,13 +40,13 @@ public class LauncherConfigTest {
     }
 
     @Test
-    public void serverTrailingSlash_isNormalised() {
+    public void fromProperties_serverTrailingSlash_isNormalised() {
         LauncherConfig config = LauncherConfig.fromProperties(props("https://dev.mosip.net/"));
         assertEquals("https://dev.mosip.net/registration-client/1.4.0/lib.zip", config.libZipUrl("1.4.0"));
     }
 
     @Test
-    public void usesDefaultTemplateWhenAbsent() {
+    public void fromProperties_regClientTemplateAbsent_usesDefaultTemplate() {
         Properties p = new Properties();
         p.setProperty("mosip.client.upgrade.server.url", "https://example.org");
         LauncherConfig config = LauncherConfig.fromProperties(p);
@@ -54,17 +54,17 @@ public class LauncherConfigTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void missingUpgradeServer_throws() {
+    public void fromProperties_missingUpgradeServer_throws() {
         LauncherConfig.fromProperties(new Properties());
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void plaintextHttpUpgradeServer_rejected() {
+    public void fromProperties_plaintextHttpServer_rejected() {
         LauncherConfig.fromProperties(props("http://dev.mosip.net"));
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void templateRedirectingToAnotherHost_rejected() {
+    public void fromProperties_templateCrossHost_rejected() {
         // "%s@evil.example/..." passes a startsWith("https://") check but parses to host=evil.example.
         Properties p = new Properties();
         p.setProperty("mosip.client.upgrade.server.url", "https://good.host");
@@ -73,7 +73,7 @@ public class LauncherConfigTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void templateWithQueryComponent_rejected() {
+    public void fromProperties_templateWithQuery_rejected() {
         // A query would be corrupted once versionBase appends "<version>/" as plain path text.
         Properties p = new Properties();
         p.setProperty("mosip.client.upgrade.server.url", "https://dev.mosip.net");
@@ -82,7 +82,7 @@ public class LauncherConfigTest {
     }
 
     @Test
-    public void loadsFromFile() throws Exception {
+    public void load_propertiesFile_buildsConfig() throws Exception {
         File file = folder.newFile("mosip-application.properties");
         try (OutputStream out = Files.newOutputStream(file.toPath())) {
             props("https://dev.mosip.net").store(out, null);

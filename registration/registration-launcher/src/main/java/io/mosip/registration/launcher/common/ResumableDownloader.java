@@ -15,6 +15,7 @@ import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
@@ -423,7 +424,10 @@ public final class ResumableDownloader {
         private void finalizeOnto() throws IOException {
             try {
                 Files.move(part.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE);
-            } catch (IOException atomicMoveUnsupported) {
+            } catch (AtomicMoveNotSupportedException atomicMoveUnsupported) {
+                // Only fall back when the file system genuinely cannot do an atomic move. Any other
+                // IOException (permission denied, file locked, ...) propagates with its real cause
+                // intact instead of being masked by a second failure from the REPLACE_EXISTING retry.
                 Files.move(part.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
             Files.deleteIfExists(meta.toPath());
