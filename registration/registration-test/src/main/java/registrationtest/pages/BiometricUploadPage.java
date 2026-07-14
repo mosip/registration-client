@@ -1,5 +1,6 @@
 package registrationtest.pages;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -643,15 +644,14 @@ public class BiometricUploadPage {
 		}
 	}
 
-	public void verifyCapturedBiometricsRetained(String identity) {
-		String bioFieldId = "individualBiometrics";
+	public void verifyCapturedBiometricsRetained(String identity, String bioFieldId) {
 		List<String> bioAttributes = bioAttributeList(identity);
 		List<String> listException = exceptionList(identity);
 		if (listException == null) {
 			listException = new ArrayList<>();
 		}
 
-		ExtentReportUtil.test1.info("Verifying biometric data retained on biometric page");
+		ExtentReportUtil.test1.info("Verifying biometric data retained on biometric page for field " + bioFieldId);
 		scrollBiometricModalityListToTop();
 
 		try {
@@ -739,6 +739,43 @@ public class BiometricUploadPage {
 
 		} catch (IOException e) {
 			logger.error("", e);
+		}
+	}
+
+	public void verifyIntroducerBioOptions(String bioFieldId) {
+		ExtentReportUtil.test1.info(
+				"Verifying introducer biometrics options for field " + bioFieldId
+						+ " (FP, Iris, Face without exception photo)");
+		verifyModalityOptionVisible(bioFieldId, IRIS_DOUBLE, "Introducer iris");
+		verifyModalityOptionVisible(bioFieldId, FINGERPRINT_SLAB_RIGHT, "Introducer right hand fingerprints");
+		verifyModalityOptionVisible(bioFieldId, FINGERPRINT_SLAB_LEFT, "Introducer left hand fingerprints");
+		verifyModalityOptionVisible(bioFieldId, FINGERPRINT_SLAB_THUMBS, "Introducer thumb fingerprints");
+		verifyModalityOptionVisible(bioFieldId, FACE, "Introducer face");
+		verifyExceptionPhotoNotVisible(bioFieldId);
+		ExtentReportUtil.test1.info(
+				"Introducer biometrics options verified: FP, Iris and Face available; exception photo not shown");
+	}
+
+	private void verifyModalityOptionVisible(String bioFieldId, String modality, String description) {
+		String buttonId = "#" + bioFieldId + modality + "Button";
+		Optional<Node> node = robot.lookup(buttonId).tryQuery();
+		assertTrue(node.isPresent() && node.get().isVisible(),
+				description + " option should be visible for introducer biometrics");
+		ExtentReportUtil.test1.info(description + " option verified for introducer");
+	}
+
+	private void verifyExceptionPhotoNotVisible(String bioFieldId) {
+		String exceptionPhotoPaneId = "#" + bioFieldId + EXCEPTION_PHOTO;
+		Optional<Node> pane = robot.lookup(exceptionPhotoPaneId).tryQuery();
+		if (pane.isPresent()) {
+			assertFalse(pane.get().isVisible(),
+					"Exception photo option should not be visible for introducer biometrics");
+		}
+		String exceptionPhotoButtonId = "#" + bioFieldId + EXCEPTION_PHOTO + "Button";
+		Optional<Node> button = robot.lookup(exceptionPhotoButtonId).tryQuery();
+		if (button.isPresent()) {
+			assertFalse(button.get().isVisible(),
+					"Exception photo button should not be visible for introducer biometrics");
 		}
 	}
 
