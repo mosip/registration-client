@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -57,8 +58,12 @@ public final class LibUpdater {
     private static final long MAX_SIGNATURE_BYTES = 1024L;
     private static final long MAX_MANIFEST_BYTES = 1024L * 1024L;
 
-    /** Control files legitimately present in the staging dir but not manifest entries. */
-    static final Set<String> CONTROL_FILES = new HashSet<>(Arrays.asList(MANIFEST, MANIFEST_SIG, LIB_ZIP));
+    /**
+     * Control files legitimately present in the staging dir but not manifest entries. {@code lib.zip}
+     * is intentionally NOT listed: it is downloaded to a sibling staging dir (never into {@code .TEMP/}),
+     * so a {@code lib.zip} entry unpacked from the archive is an unexpected file and correctly rejected.
+     */
+    static final Set<String> CONTROL_FILES = new HashSet<>(Arrays.asList(MANIFEST, MANIFEST_SIG));
 
     private LibUpdater() {
         // utility class
@@ -107,15 +112,30 @@ public final class LibUpdater {
             return LibUpdateResult.ABORT_INVALID_SIGNATURE;
         }
 
-        // 3. resumable download of lib.zip
-        ResumableDownloader.download(libZipUrl, tempDir.getPath(), LIB_ZIP, connectTimeout, readTimeout);
+        // 3. resumable download of lib.zip into a sibling staging dir — NOT into .TEMP/ itself.
+        //    Extracting an archive into the directory that also holds it lets a crafted entry named
+        //    "lib.zip" overwrite the archive while it is still being read (and, as a former control
+        //    file, slip past the allowlist). Staging the archive outside .TEMP/ closes that
+        //    self-overwrite window; a stray "lib.zip" entry now lands in .TEMP/ and is rejected as
+        //    unexpected by the allowlist check below. getAbsoluteFile() guards against a relative
+        //    .TEMP whose getParentFile() would otherwise be null.
+        File zipStagingDir = new File(tempDir.getAbsoluteFile().getParentFile(), tempDir.getName() + ".zipstage");
+        ResumableDownloader.download(libZipUrl, zipStagingDir.getPath(), LIB_ZIP, connectTimeout, readTimeout);
 
-        // 4. clear any stale payload left by a previous (failed) attempt before unzipping into .TEMP/.
-        //    Otherwise old jars not present in the new manifest survive and trip the allowlist
-        //    (findUnexpectedFiles), making a valid update fail until .TEMP/ is cleaned by hand. The
-        //    just-downloaded control files (manifest, signature, lib.zip) are preserved.
-        clearStalePayload(tempDir);
-        ZipExtractor.extract(new File(tempDir, LIB_ZIP), tempDir);
+        // Once the download returns, lib.zip is complete and no longer needs its resumable .part, so we
+        // always drop the staging dir after extraction — even if extraction fails. An interrupted
+        // download throws above (before this try), leaving the staging dir + .part intact so the
+        // operator retry resumes instead of re-fetching from the start.
+        try {
+            // 4. clear any stale payload left by a previous (failed) attempt before unzipping into
+            //    .TEMP/. Otherwise old jars not present in the new manifest survive and trip the
+            //    allowlist (findUnexpectedFiles), making a valid update fail until .TEMP/ is cleaned by
+            //    hand. The just-downloaded control files (manifest, signature) are preserved.
+            clearStalePayload(tempDir);
+            ZipExtractor.extract(new File(zipStagingDir, LIB_ZIP), tempDir);
+        } finally {
+            deleteTree(zipStagingDir);
+        }
 
         // lib.zip may ship its own MANIFEST.MF; restore the signature-verified bytes so the manifest
         // that run.bat copies into lib/ is the trusted one, not the (unverified) archived copy.
@@ -185,7 +205,17 @@ public final class LibUpdater {
             if (CONTROL_FILES.contains(entry.getName())) {
                 continue;
             }
-            Files.walkFileTree(entry.toPath(), new SimpleFileVisitor<Path>() {
+            deleteTree(entry);
+        }
+    }
+
+    /**
+     * Recursively deletes {@code root} (a file, directory tree, or symlink) without following symlinks.
+     * A non-existent {@code root} is a no-op.
+     */
+    private static void deleteTree(File root) throws IOException {
+        try {
+            Files.walkFileTree(root.toPath(), new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
                     Files.deleteIfExists(path);
@@ -201,6 +231,8 @@ public final class LibUpdater {
                     return FileVisitResult.CONTINUE;
                 }
             });
+        } catch (NoSuchFileException e) {
+            // already gone — nothing to delete
         }
     }
 }

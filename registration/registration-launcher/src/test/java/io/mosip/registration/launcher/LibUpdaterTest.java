@@ -178,6 +178,28 @@ public class LibUpdaterTest {
         }
     }
 
+    @Test
+    public void update_zipShipsControlFileEntry_verifyFailed() throws Exception {
+        // A crafted lib.zip that smuggles an extra entry named "lib.zip" must NOT overwrite the archive
+        // mid-extract (it is staged outside .TEMP/) and must be caught by the allowlist: once unpacked
+        // into .TEMP/, "lib.zip" is no longer a control file there, so it is an unexpected file and the
+        // update fails closed rather than being silently accepted.
+        byte[] manifest = manifestBytes("1.4.0", ENTRY, HashUtil.sha256Hex(JAR));
+        byte[] sig = sign(manifest, keyPair.getPrivate());
+        byte[] zip = zipBytes(ENTRY, JAR, "lib.zip", "rogue".getBytes(StandardCharsets.UTF_8));
+
+        HttpServer server = serve(routes(manifest, sig, zip));
+        File temp = folder.newFolder(".TEMP");
+        try {
+            LibUpdateResult result = LibUpdater.update(
+                    url(server, "/v/lib/MANIFEST.MF"), url(server, "/v/lib/MANIFEST.MF.sig"),
+                    url(server, "/v/lib.zip"), temp, keyPair.getPublic(), 50000, 30000);
+            assertEquals(LibUpdateResult.VERIFY_FAILED, result);
+        } finally {
+            server.stop(0);
+        }
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void update_nonPositiveReadTimeout_rejected() throws Exception {
         // Invalid timeout is rejected at this entry point (fail fast) before any download is attempted.
@@ -219,6 +241,19 @@ public class LibUpdaterTest {
         try (ZipOutputStream zos = new ZipOutputStream(bos)) {
             zos.putNextEntry(new ZipEntry(entryName));
             zos.write(content);
+            zos.closeEntry();
+        }
+        return bos.toByteArray();
+    }
+
+    private static byte[] zipBytes(String name1, byte[] content1, String name2, byte[] content2) throws Exception {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(bos)) {
+            zos.putNextEntry(new ZipEntry(name1));
+            zos.write(content1);
+            zos.closeEntry();
+            zos.putNextEntry(new ZipEntry(name2));
+            zos.write(content2);
             zos.closeEntry();
         }
         return bos.toByteArray();
