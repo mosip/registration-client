@@ -12,6 +12,7 @@ import io.mosip.registration.launcher.LauncherDialogs;
 import io.mosip.registration.launcher.LibUpdateResult;
 import io.mosip.registration.launcher.LibUpdater;
 import io.mosip.registration.launcher.MigrationCleaner;
+import io.mosip.registration.launcher.MigrationLauncher;
 import io.mosip.registration.launcher.NormalStartup;
 import io.mosip.registration.launcher.StartupAction;
 import io.mosip.registration.launcher.StartupEvaluator;
@@ -176,7 +177,7 @@ public class Initialization {
         }
     }
 
-    /** Step 3: prepare the JRE migration, then launch {@code migration.exe} (launch blocked on T3). */
+    /** Step 3: prepare the JRE migration, then launch {@code migration.exe} and exit. */
     private static void handleJreMigration(Manifest verifiedRootManifest, PublicKey trustedKey) {
         LOGGER.info("Version change on JRE 11 — preparing JRE migration (step 3)");
         try {
@@ -185,13 +186,12 @@ public class Initialization {
             JreMigrationStager.stage(APP_ROOT, verifiedRootManifest,
                     config.libManifestUrl(version), config.libManifestSigUrl(version), config.libZipUrl(version),
                     trustedKey, CONNECT_TIMEOUT, READ_TIMEOUT);
-            // TODO(T3): replace the dialog+exit below with "launch migration.exe (native; toolchain
-            //   reopened) and System.exit(0)" — migration.exe performs the JRE swap and exits.
-            // Until then make the terminal state explicit (visible dialog + deliberate exit) so the
-            // staged-but-not-executed migration is never an invisible fall-through to exit(0).
-            LOGGER.warn("JRE migration staged; launching migration.exe is blocked on T3 (native-exe toolchain TBD)");
-            LauncherDialogs.info("A required runtime update has been prepared. "
-                    + "Completing it needs a newer client version — please contact your administrator.");
+            // stage() has verified migration.exe against the signature-verified root manifest and copied
+            // it (with rollback.exe) to the app root. Launch it detached and exit so the JVM releases
+            // jre/bin/* for the swap; migration.exe shows its own progress/result dialog and, on failure,
+            // invokes rollback.exe.
+            LOGGER.info("JRE migration staged — launching migration.exe and exiting");
+            MigrationLauncher.launch(APP_ROOT);
             System.exit(0);
         } catch (SecurityException e) {
             // Case B propagated from stage(): show the security alert, consistent with handleLibUpdate,

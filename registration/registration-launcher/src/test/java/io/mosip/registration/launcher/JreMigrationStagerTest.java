@@ -26,6 +26,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -52,14 +53,29 @@ public class JreMigrationStagerTest {
         keyPair = generator.generateKeyPair();
     }
 
-    /** Sets up a root with run.bat, a signed lib (served), and a root manifest covering jre21.zip. */
+    /**
+     * Sets up a root with run.bat, a signed lib (served), and a root manifest covering jre21.zip plus
+     * the migration.exe / rollback.exe the launcher now requires (staged in .artifacts/, integrity
+     * listed). {@code _launcher.jar} is deliberately NOT staged/listed so tests can use it as the
+     * "present but unverifiable" artifact.
+     */
     private TestServer baseSetup(File root) throws Exception {
         write(new File(root, "run.bat"), "current-run-bat");
 
-        // jre21.zip on disk in .artifacts, with its hash recorded in the (verified) root manifest
+        // jre21.zip + the two native exes on disk in .artifacts, hashes recorded in the (verified)
+        // root manifest so they pass the integrity gate and copyRequired can stage them.
         File jre21Zip = new File(root, ".artifacts/jre21.zip");
         writeZipFile(jre21Zip, entry("release", "JAVA_VERSION=\"21.0.3\"\n"));
-        byte[] rootManifest = manifestBytes("1.4.0", "jre21.zip", HashUtil.sha256Hex(jre21Zip));
+        File migrationExe = new File(root, ".artifacts/migration.exe");
+        File rollbackExe = new File(root, ".artifacts/rollback.exe");
+        write(migrationExe, "migration-exe-bytes");
+        write(rollbackExe, "rollback-exe-bytes");
+
+        Map<String, String> rootEntries = new LinkedHashMap<>();
+        rootEntries.put("jre21.zip", HashUtil.sha256Hex(jre21Zip));
+        rootEntries.put("migration.exe", HashUtil.sha256Hex(migrationExe));
+        rootEntries.put("rollback.exe", HashUtil.sha256Hex(rollbackExe));
+        byte[] rootManifest = manifestBytes("1.4.0", rootEntries);
         File rootManifestFile = new File(root, "MANIFEST.MF");
         write(rootManifestFile, new String(rootManifest, StandardCharsets.UTF_8));
 
@@ -89,6 +105,8 @@ public class JreMigrationStagerTest {
             assertTrue(new File(root, ".TEMP/app.jar").exists());
             assertTrue(new File(root, "jre21_temp/release").exists());
             assertTrue(new File(root, "run.bat_jre11").exists());
+            assertTrue(new File(root, "migration.exe").exists());
+            assertTrue(new File(root, "rollback.exe").exists());
         } finally {
             ts.stop();
         }
@@ -116,17 +134,38 @@ public class JreMigrationStagerTest {
     public void stage_artifactPresentButUnlistedInRootManifest_failsClosed() throws Exception {
         File root = folder.getRoot();
         TestServer ts = baseSetup(root);
-        // migration.exe is present in .artifacts/ but the root manifest has NO entry for it, so it
-        // cannot be integrity-checked -> staging must abort rather than use an unverifiable artifact.
-        write(new File(root, ".artifacts/migration.exe"), "unverifiable-binary");
+        // _launcher.jar is present in .artifacts/ but the root manifest has NO entry for it (baseSetup
+        // lists jre21.zip/migration.exe/rollback.exe only), so it cannot be integrity-checked ->
+        // staging must abort rather than use an unverifiable artifact.
+        write(new File(root, ".artifacts/_launcher.jar"), "unverifiable-binary");
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
                     keyPair.getPublic(), 50000, 30000);
             fail("expected IOException for an artifact missing from the root manifest");
         } catch (IOException expected) {
-            assertTrue(expected.getMessage().contains("migration.exe"));
+            assertTrue(expected.getMessage().contains("_launcher.jar"));
             assertTrue(expected.getMessage().contains("no integrity entry"));
+        } finally {
+            ts.stop();
+        }
+    }
+
+    @Test
+    public void stage_missingMigrationExe_failsClosed() throws Exception {
+        File root = folder.getRoot();
+        TestServer ts = baseSetup(root);
+        // migration.exe is listed in the root manifest but NOT present in .artifacts/ -> copyRequired
+        // must abort rather than silently skip (the launcher would otherwise have no exe to run).
+        Files.delete(new File(root, ".artifacts/migration.exe").toPath());
+        try {
+            JreMigrationStager.stage(root, ts.rootManifest,
+                    ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
+                    keyPair.getPublic(), 50000, 30000);
+            fail("expected IOException for a missing migration.exe");
+        } catch (IOException expected) {
+            assertTrue(expected.getMessage().contains("migration.exe"));
+            assertTrue(expected.getMessage().contains("required"));
         } finally {
             ts.stop();
         }
@@ -200,11 +239,19 @@ public class JreMigrationStagerTest {
     }
 
     private static byte[] manifestBytes(String version, String entryName, String hash) throws IOException {
+        Map<String, String> single = new LinkedHashMap<>();
+        single.put(entryName, hash);
+        return manifestBytes(version, single);
+    }
+
+    private static byte[] manifestBytes(String version, Map<String, String> entries) throws IOException {
         Manifest manifest = new Manifest();
         manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, version);
-        Attributes attrs = new Attributes();
-        attrs.put(Attributes.Name.CONTENT_TYPE, hash);
-        manifest.getEntries().put(entryName, attrs);
+        for (Map.Entry<String, String> e : entries.entrySet()) {
+            Attributes attrs = new Attributes();
+            attrs.put(Attributes.Name.CONTENT_TYPE, e.getValue());
+            manifest.getEntries().put(e.getKey(), attrs);
+        }
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         manifest.write(bos);
         return bos.toByteArray();

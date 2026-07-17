@@ -123,9 +123,11 @@ public final class JreMigrationStager {
             ZipExtractor.extract(jre21Zip, jre21Temp);
         }
 
-        // 5 & 6. copy the verified migration.exe / rollback.exe -> app root (if not already present)
-        copyIfMissing(new File(artifacts, FILE_MIGRATION_EXE), new File(root, FILE_MIGRATION_EXE));
-        copyIfMissing(new File(artifacts, FILE_ROLLBACK_EXE), new File(root, FILE_ROLLBACK_EXE));
+        // 5 & 6. copy the verified migration.exe / rollback.exe -> app root. Required now that the
+        //    build pipeline produces them: fail closed if either is missing rather than leave the
+        //    launcher with no binary to run. Idempotent when already staged by a prior run.
+        copyRequired(new File(artifacts, FILE_MIGRATION_EXE), new File(root, FILE_MIGRATION_EXE));
+        copyRequired(new File(artifacts, FILE_ROLLBACK_EXE), new File(root, FILE_ROLLBACK_EXE));
 
         // 7. backup run.bat -> run.bat_jre11 (once)
         File runBat = new File(root, FILE_RUN_BAT);
@@ -168,14 +170,15 @@ public final class JreMigrationStager {
         }
     }
 
-    private static void copyIfMissing(File src, File dst) throws IOException {
+    private static void copyRequired(File src, File dst) throws IOException {
         if (!src.exists()) {
-            // migration.exe / rollback.exe are produced by T3/T4 (toolchain TBD); tolerate absence here.
-            LOGGER.warn("{} not present in .artifacts/ — skipping copy (required before migration.exe runs)", src.getName());
-            return;
+            // The exes are produced by the build pipeline (configure.sh) and staged into .artifacts/; a
+            // missing one is a broken bundle -> fail closed rather than leave the launcher with no
+            // migration.exe / rollback.exe to run.
+            throw new IOException(src.getName() + " missing from .artifacts/ — required to run the JRE migration");
         }
         if (dst.exists()) {
-            return;
+            return; // idempotent: already staged by a prior (interrupted) run
         }
         copy(src, dst);
     }
