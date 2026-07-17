@@ -142,6 +142,25 @@ target_dir="${work_dir}/registration-client/target"
 # jars that must never be on the signing-tool classpath.
 java_cp="${trusted_tools_cp}"
 
+# ----------------------------------------------------------------------------------------------
+# 1.3.0 native upgrade executables + launcher jar -> lib/. Built/placed BEFORE both manifests below
+# so each is hashed into the per-file lib/MANIFEST.MF (verified by ClientPreLoader) AND the signed
+# root ./MANIFEST.MF (verified by the launcher before it copies/executes them). Placing them in lib/
+# also auto-hosts them under <version>/lib/ via the nginx block below -- the exact path
+# SoftwareUpdateHandler downloads root-manifest entries from (<version>/lib/<basename>).
+# NOTE: requires a Go toolchain on the build box (cross-compiles Windows x64 from Linux CI).
+# ----------------------------------------------------------------------------------------------
+native_src="${work_dir}/../native"          # native/ lives at the repo root (confirm vs CI work_dir)
+lib_dir="${target_dir}/lib"
+
+# migration.exe + rollback.exe : cross-compiled Windows x64, no-JVM (they perform the jre/ swap)
+( cd "${native_src}" \
+  && GOOS=windows GOARCH=amd64 go build -ldflags "-H=windowsgui" -o "${lib_dir}/migration.exe" ./cmd/migration \
+  && GOOS=windows GOARCH=amd64 go build -ldflags "-H=windowsgui" -o "${lib_dir}/rollback.exe"  ./cmd/rollback )
+
+# _launcher.jar : the single entry point (registration-launcher module build output)
+cp "${work_dir}/registration-launcher/target/_launcher.jar" "${lib_dir}/_launcher.jar"
+
 # lib/MANIFEST.MF : per-file integrity hashes of everything under lib/ (bundled inside lib.zip)
 # ManifestSigner reads the keystore password from the keystore_secret_env env var (not argv) so the
 # secret never appears in process listings.
@@ -152,14 +171,18 @@ java -cp "${java_cp}" io.mosip.registration.update.ManifestSigner "${keystore}" 
 cd "${target_dir}"
 /usr/bin/zip -r jre21.zip jre
 
-# Root ./MANIFEST.MF : orchestration artifacts only (NO lib.zip entry). Tolerant of sibling 1.3.0
-# artifacts (_launcher.jar / migration.exe / rollback.exe) that may not exist yet -- those entries
-# are skipped with a warning and fill in automatically as T2/T3/T4 land.
+# Root ./MANIFEST.MF : orchestration artifacts only (NO lib.zip entry). Entry name = basename
+# (ManifestCreator.addEntryInManifest). _launcher.jar / migration.exe / rollback.exe are now built
+# into lib/ above, so they are hashed here AND auto-hosted under <version>/lib/ -- matching
+# SoftwareUpdateHandler's <version>/lib/<name> download URL.
+# TODO(contract): jre21.zip and run.bat still resolve at app root. SoftwareUpdateHandler downloads
+#   EVERY root-manifest entry from <version>/lib/<name>, so it would 404 on <version>/lib/jre21.zip
+#   and <version>/lib/run.bat until their server-path contract is settled (see note to Anusha).
 java -cp "${java_cp}" io.mosip.registration.update.ManifestCreator --list "${client_version_env}" "${target_dir}" \
   "${target_dir}/jre21.zip" \
-  "${target_dir}/_launcher.jar" \
-  "${target_dir}/migration.exe" \
-  "${target_dir}/rollback.exe" \
+  "${lib_dir}/_launcher.jar" \
+  "${lib_dir}/migration.exe" \
+  "${lib_dir}/rollback.exe" \
   "${target_dir}/run.bat"
 java -cp "${java_cp}" io.mosip.registration.update.ManifestSigner "${keystore}" "${signing_alias}" "${target_dir}/MANIFEST.MF" "${target_dir}/MANIFEST.MF.sig"
 
