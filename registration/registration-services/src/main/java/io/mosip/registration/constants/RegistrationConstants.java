@@ -1269,6 +1269,15 @@ public class RegistrationConstants {
 	public static final String QUALITY_CHECK_WITH_SDK = "mosip.registration.quality_check_with_sdk";
 	public static final String UPDATE_SDK_QUALITY_SCORE = "mosip.registration.replace_sdk_quality_score";
 
+	// Biometric Quality Orchestrator configuration key prefixes
+	public static final String QUALITY_SDK_VENDORS = "mosip.registration.quality.sdk.vendors";
+	public static final String QUALITY_EVALUATORS_PREFIX = "mosip.registration.quality.evaluators.";
+	public static final String QUALITY_SELECTION_PREFIX = "mosip.registration.quality.selection.";
+	public static final String QUALITY_SUBSET_PREFIX = "mosip.registration.quality.subset.";
+	public static final String QUALITY_AGGREGATION_PREFIX = "mosip.registration.quality.aggregation.";
+	public static final String QUALITY_WEIGHT_PREFIX = "mosip.registration.quality.weight.";
+	public static final String QUALITY_FORMULA_PREFIX = "mosip.registration.quality.formula.";
+
 	// Packet Sync
 	public static final String PACKET_SYNC = "packet_sync";
 	public static final String PACKET_SYNC_V2 = "packet_sync_v2";

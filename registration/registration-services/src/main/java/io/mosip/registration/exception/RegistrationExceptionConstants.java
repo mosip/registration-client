@@ -240,7 +240,12 @@ public enum RegistrationExceptionConstants {
 	REG_FILE_SIGNATURE_ERROR("REG-SIGN-001" ,"Downloaded file signature verification failed"),
 	PRE_REG_PACKET_ENTRIES_THRESHOLD_CROSSED( "PREREG-SYN-001", "Entries count in pre-reg zip greater than limit"),
 	PRE_REG_PACKET_ZIP_SIZE_THRESHOLD_CROSSED( "PREREG-SYN-002", "Pre-reg zip read size is greater than limit"),
-	PRE_REG_PACKET_ZIP_COMPRESSED_RATIO_EXCEEDED( "PREREG-SYN-003", "Pre-reg zip compressed ratio exceeded");
+	PRE_REG_PACKET_ZIP_COMPRESSED_RATIO_EXCEEDED( "PREREG-SYN-003", "Pre-reg zip compressed ratio exceeded"),
+
+	// Biometric Quality Orchestrator exceptions
+	REG_SDK_QUALITY_TIMEOUT("REG-ORCH-001", "SDK quality check timed out"),
+	REG_SDK_INVALID_SCORE("REG-ORCH-002", "SDK returned an invalid or negative quality score"),
+	REG_NO_QUALITY_SOURCE("REG-ORCH-003", "No quality evaluator found for the given modality");
 
 	/**
 	 * The constructor
