@@ -38,6 +38,7 @@ import io.mosip.registration.mdm.integrator.MosipDeviceSpecificationProvider;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import io.mosip.registration.service.BaseService;
 import io.mosip.registration.service.bio.BioService;
+import io.mosip.registration.service.bio.quality.BiometricQualityOrchestrator;
 import io.mosip.registration.util.common.BIRBuilder;
 
 /**
@@ -64,6 +65,9 @@ public class BioServiceImpl extends BaseService implements BioService {
 
 	@Autowired
 	private BIRBuilder birBuilder;
+
+	@Autowired
+	private BiometricQualityOrchestrator biometricQualityOrchestrator;
 
 	/**
 	 * Gets the registration DTO from session.
@@ -97,11 +101,19 @@ public class BioServiceImpl extends BaseService implements BioService {
 				if (RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map()
 						.getOrDefault(RegistrationConstants.QUALITY_CHECK_WITH_SDK, RegistrationConstants.DISABLE))) {
 					try {
-						biometricsDto.setSdkScore(getSDKScore(biometricsDto));
-					} catch (BiometricException e) {
-						LOGGER.error("Unable to fetch SDK Score ", e);
-						throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorCode(),
-								RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorMessage());
+						// Route through the BiometricQualityOrchestrator for multi-source evaluation
+						double orchestratedScore = biometricQualityOrchestrator.orchestrate(biometricsDto);
+						biometricsDto.setSdkScore(orchestratedScore);
+					} catch (RegBaseCheckedException orchestratorEx) {
+						// Fallback to direct SDK score if orchestrator is not configured
+						try {
+							LOGGER.warn("BiometricQualityOrchestrator failed, falling back to direct SDK score: {}", orchestratorEx.getMessage());
+							biometricsDto.setSdkScore(getSDKScore(biometricsDto));
+						} catch (BiometricException fallbackEx) {
+							LOGGER.error("Unable to fetch SDK Score ", fallbackEx);
+							throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorCode(),
+									RegistrationExceptionConstants.REG_BIOMETRIC_QUALITY_CHECK_ERROR.getErrorMessage());
+						}
 					}
 				}
 				list.add(biometricsDto);
