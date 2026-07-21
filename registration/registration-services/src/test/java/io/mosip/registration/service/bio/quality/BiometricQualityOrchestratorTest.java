@@ -64,8 +64,8 @@ public class BiometricQualityOrchestratorTest {
 
 	@Before
 	public void setUp() {
-		// Clear application map and inject test values fresh each test
-		ApplicationContext.setApplicationMap(new HashMap<>());
+		// Fully clear the static applicationMap field (putAll-based setApplicationMap won't clear it)
+		ReflectionTestUtils.setField(ApplicationContext.class, "applicationMap", new HashMap<String, Object>());
 
 		// Inject real aggregators and mocked evaluators into the orchestrator
 		ReflectionTestUtils.setField(orchestrator, "evaluators",
@@ -286,8 +286,9 @@ public class BiometricQualityOrchestratorTest {
 			orchestrator.orchestrate(biometricsDto);
 			fail("Expected RegBaseCheckedException");
 		} catch (RegBaseCheckedException e) {
-			assertEquals(RegistrationExceptionConstants.REG_NO_QUALITY_SOURCE.getErrorCode(),
-					e.getMessage());
+			// getMessage() returns "errorCode --> errorMessage", so check it starts with the code
+			assertTrue(e.getMessage().startsWith(
+					RegistrationExceptionConstants.REG_NO_QUALITY_SOURCE.getErrorCode()));
 			verify(auditFactory).audit(eq(AuditEvent.QUALITY_ORCH_FAILED),
 					eq(Components.REG_BIOMETRICS), anyString(), anyString());
 		}
