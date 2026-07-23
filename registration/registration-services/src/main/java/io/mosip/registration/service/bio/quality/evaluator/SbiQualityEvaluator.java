@@ -8,9 +8,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * SBI Quality Evaluator reads the quality score captured via MDM.
- * 
- * @author Antigravity
- *
  */
 @Component
 public class SbiQualityEvaluator implements IBiometricQualityEvaluator {

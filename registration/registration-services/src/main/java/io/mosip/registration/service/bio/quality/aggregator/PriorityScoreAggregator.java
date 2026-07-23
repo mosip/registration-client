@@ -7,9 +7,6 @@ import java.util.Map;
 /**
  * Strategy implementation for priority-based score aggregation.
  * Lower priority value (ranking weight) indicates higher priority.
- * 
- * @author Antigravity
- *
  */
 @Component
 public class PriorityScoreAggregator implements IBiometricScoreAggregator {

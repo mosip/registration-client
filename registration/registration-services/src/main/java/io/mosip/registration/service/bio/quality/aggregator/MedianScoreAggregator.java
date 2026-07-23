@@ -8,9 +8,6 @@ import java.util.stream.Collectors;
 
 /**
  * Strategy implementation for median score aggregation.
- * 
- * @author Antigravity
- *
  */
 @Component
 public class MedianScoreAggregator implements IBiometricScoreAggregator {

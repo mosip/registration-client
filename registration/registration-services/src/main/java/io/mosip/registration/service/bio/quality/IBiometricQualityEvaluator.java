@@ -6,9 +6,6 @@ import io.mosip.kernel.biometrics.model.QualityScore;
 
 /**
  * Interface for biometric quality evaluator plugins.
- * 
- * @author Antigravity
- *
  */
 public interface IBiometricQualityEvaluator {
 

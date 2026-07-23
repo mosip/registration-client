@@ -12,9 +12,6 @@ import java.util.Map;
 
 /**
  * Strategy implementation for custom formula (SpEL-based) score aggregation.
- * 
- * @author Antigravity
- *
  */
 @Component
 public class FormulaScoreAggregator implements IBiometricScoreAggregator {

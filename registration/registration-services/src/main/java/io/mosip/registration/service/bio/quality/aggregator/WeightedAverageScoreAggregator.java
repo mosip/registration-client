@@ -6,9 +6,6 @@ import java.util.Map;
 
 /**
  * Strategy implementation for weighted average score aggregation.
- * 
- * @author Antigravity
- *
  */
 @Component
 public class WeightedAverageScoreAggregator implements IBiometricScoreAggregator {

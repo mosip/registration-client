@@ -2,9 +2,6 @@ package io.mosip.registration.service.bio.quality;
 
 /**
  * Selection mode defining how configured quality evaluators are executed and resolved.
- * 
- * @author Antigravity
- *
  */
 public enum EvaluatorSelectionMode {
 

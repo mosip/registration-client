@@ -24,8 +24,6 @@ import org.springframework.stereotype.Component;
  * SDK Biometric Quality Evaluator that calls the biometric SDK via BioAPIFactory.
  * Uses the existing iBioProviderApi.getModalityQuality() which is already
  * wired in the project via BioAPIFactory.
- *
- * @author Antigravity
  */
 @Component
 public class SdkBiometricQualityEvaluator implements IBiometricQualityEvaluator {
