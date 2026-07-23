@@ -4,9 +4,6 @@ import java.util.Map;
 
 /**
  * Interface for biometric score aggregation strategies.
- * 
- * @author Antigravity
- *
  */
 public interface IBiometricScoreAggregator {
 

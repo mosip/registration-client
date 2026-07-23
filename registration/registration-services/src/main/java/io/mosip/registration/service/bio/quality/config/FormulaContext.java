@@ -2,9 +2,6 @@ package io.mosip.registration.service.bio.quality.config;
 
 /**
  * Thread-local context holder for evaluating SpEL expression context.
- * 
- * @author Antigravity
- *
  */
 public final class FormulaContext {
 

@@ -21,8 +21,6 @@ import javax.annotation.PostConstruct;
  * from application context and provides ordered evaluator names. Uses only
  * {@link SdkBiometricQualityEvaluator} since iBioProviderApi selection is
  * already handled internally by BioAPIFactory via the SDK vendor configuration.
- *
- * @author Antigravity
  */
 @Component
 public class SdkEvaluatorRegistry {

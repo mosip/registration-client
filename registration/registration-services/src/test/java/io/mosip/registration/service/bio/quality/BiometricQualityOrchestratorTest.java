@@ -29,8 +29,6 @@ import static org.mockito.Mockito.*;
  * Covers: evaluator selection, all aggregation strategies (MEAN, MEDIAN,
  * WEIGHTED, PRIORITY), multi-evaluator collection, failure/fallback paths,
  * audit logging, and edge values.
- *
- * @author Antigravity
  */
 @RunWith(MockitoJUnitRunner.class)
 public class BiometricQualityOrchestratorTest {

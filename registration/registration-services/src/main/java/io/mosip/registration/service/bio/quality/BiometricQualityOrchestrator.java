@@ -26,8 +26,6 @@ import org.springframework.stereotype.Component;
  *
  * <p>Configuration is read from application context at runtime using the
  * {@code RegistrationConstants.QUALITY_*} prefix keys.
- *
- * @author Antigravity
  */
 @Component
 public class BiometricQualityOrchestrator {

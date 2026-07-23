@@ -40,8 +40,6 @@ import static org.mockito.Mockito.*;
  * targets Java 21 and is not published to Maven Central. The approach here
  * accurately replicates its contract: {@code getModalityQuality(BIR[], null)}
  * returns a {@code Map<BiometricType, Float>} with a quality score per modality.
- *
- * @author Antigravity
  */
 @RunWith(MockitoJUnitRunner.class)
 public class SdkBiometricQualityEvaluatorTest {

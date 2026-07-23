@@ -6,9 +6,6 @@ import java.util.Map;
 
 /**
  * Strategy implementation for mean (average) score aggregation.
- * 
- * @author Antigravity
- *
  */
 @Component
 public class MeanScoreAggregator implements IBiometricScoreAggregator {
