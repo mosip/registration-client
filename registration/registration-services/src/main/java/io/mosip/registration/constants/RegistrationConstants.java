@@ -1272,6 +1272,8 @@ public class RegistrationConstants {
 	// Biometric Quality Orchestrator configuration key prefixes
 	public static final String QUALITY_SDK_VENDORS = "mosip.registration.quality.sdk.vendors";
 	public static final String QUALITY_EVALUATORS_PREFIX = "mosip.registration.quality.evaluators.";
+	/** Per-modality evaluator config prefix: mosip.registration.quality.evaluators.modality.<MODALITY> */
+	public static final String QUALITY_EVALUATORS_MODALITY_PREFIX = "mosip.registration.quality.evaluators.modality.";
 	public static final String QUALITY_SELECTION_PREFIX = "mosip.registration.quality.selection.";
 	public static final String QUALITY_SUBSET_PREFIX = "mosip.registration.quality.subset.";
 	public static final String QUALITY_AGGREGATION_PREFIX = "mosip.registration.quality.aggregation.";

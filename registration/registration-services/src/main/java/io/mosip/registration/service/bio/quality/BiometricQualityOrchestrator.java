@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.mosip.commons.packet.constants.Biometric;
+import io.mosip.kernel.biometrics.constant.BiometricType;
 import io.mosip.kernel.biometrics.model.QualityScore;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.audit.AuditManagerService;
@@ -62,12 +64,36 @@ public class BiometricQualityOrchestrator {
 		String bioAttribute = biometricsDto.getBioAttribute();
 		LOGGER.info("BiometricQualityOrchestrator: Starting quality orchestration for attribute {}", bioAttribute);
 
-		// 1. Read the configured evaluator list for this attribute (or global fallback)
-		String evaluatorConfig = (String) ApplicationContext.map()
-				.getOrDefault(RegistrationConstants.QUALITY_EVALUATORS_PREFIX + bioAttribute,
-						ApplicationContext.map().getOrDefault(RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default", "SBI"));
+		// 1. Resolve modality (FINGER, IRIS, FACE) from bioAttribute for config lookup
+		String modality = resolveModality(bioAttribute);
+
+		// Config lookup priority: per-modality > per-attribute > default
+		String modalityKeyUpper = RegistrationConstants.QUALITY_EVALUATORS_MODALITY_PREFIX + modality.toUpperCase();
+		String modalityKeyLower = RegistrationConstants.QUALITY_EVALUATORS_MODALITY_PREFIX + modality.toLowerCase();
+		String attributeKey     = RegistrationConstants.QUALITY_EVALUATORS_PREFIX + bioAttribute;
+		String defaultKey       = RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default";
+
+		String evaluatorConfig;
+		if (ApplicationContext.map().containsKey(modalityKeyUpper)) {
+			evaluatorConfig = (String) ApplicationContext.map().get(modalityKeyUpper);
+			LOGGER.info("BiometricQualityOrchestrator: Using modality config '{}' for modality {} (attribute {})",
+					modalityKeyUpper, modality, bioAttribute);
+		} else if (ApplicationContext.map().containsKey(modalityKeyLower)) {
+			evaluatorConfig = (String) ApplicationContext.map().get(modalityKeyLower);
+			LOGGER.info("BiometricQualityOrchestrator: Using modality config '{}' for modality {} (attribute {})",
+					modalityKeyLower, modality, bioAttribute);
+		} else if (ApplicationContext.map().containsKey(attributeKey)) {
+			evaluatorConfig = (String) ApplicationContext.map().get(attributeKey);
+			LOGGER.info("BiometricQualityOrchestrator: Using attribute config '{}' for attribute {}", attributeKey, bioAttribute);
+		} else {
+			evaluatorConfig = (String) ApplicationContext.map().getOrDefault(defaultKey, "SBI");
+			LOGGER.info("BiometricQualityOrchestrator: Using default evaluator config for attribute {}", bioAttribute);
+		}
+
 		List<String> configuredEvaluatorNames = List.of(evaluatorConfig.split(",")).stream()
 				.map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
+
+
 
 		// 2. Collect only the matching evaluators
 		List<IBiometricQualityEvaluator> selectedEvaluators = evaluators.stream()
@@ -151,5 +177,37 @@ public class BiometricQualityOrchestrator {
 
 		auditFactory.audit(AuditEvent.QUALITY_ORCH_COMPLETED, Components.REG_BIOMETRICS, bioAttribute, "ORCH_DONE");
 		return aggregatedScore;
+	}
+
+	/**
+	 * Resolves the modality name (e.g. FINGER, IRIS, FACE) for a bioAttribute.
+	 *
+	 * @param bioAttribute the attribute name (e.g. leftIndex, leftEye, face)
+	 * @return modality name string or UNKNOWN
+	 */
+	private String resolveModality(String bioAttribute) {
+		if (bioAttribute == null) {
+			return "UNKNOWN";
+		}
+		try {
+			BiometricType type = Biometric.getSingleTypeByAttribute(bioAttribute);
+			if (type != null) {
+				return type.name().toUpperCase();
+			}
+		} catch (Throwable t) {
+			LOGGER.debug("BiometricQualityOrchestrator: Biometric.getSingleTypeByAttribute fallback for {}", bioAttribute);
+		}
+
+		// Fallback string matching for standard MOSIP attributes (e.g. in test environment)
+		String attr = bioAttribute.toLowerCase();
+		if (attr.contains("eye") || attr.contains("iris")) {
+			return "IRIS";
+		} else if (attr.contains("face")) {
+			return "FACE";
+		} else if (attr.contains("index") || attr.contains("thumb") || attr.contains("middle")
+				|| attr.contains("ring") || attr.contains("little") || attr.contains("finger") || attr.contains("hand")) {
+			return "FINGER";
+		}
+		return "UNKNOWN";
 	}
 }

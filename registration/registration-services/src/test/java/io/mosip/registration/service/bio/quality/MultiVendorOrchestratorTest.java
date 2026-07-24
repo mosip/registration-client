@@ -6,6 +6,7 @@ import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.bio.quality.aggregator.FormulaScoreAggregator;
+import io.mosip.registration.service.bio.quality.aggregator.MeanScoreAggregator;
 import io.mosip.registration.service.bio.quality.aggregator.MedianScoreAggregator;
 import io.mosip.registration.service.bio.quality.aggregator.WeightedAverageScoreAggregator;
 import io.mosip.registration.service.bio.quality.config.FormulaContext;
@@ -50,6 +51,7 @@ public class MultiVendorOrchestratorTest {
     private final IBiometricQualityEvaluator vendor3 = new MockVendor3Evaluator();
 
     // ── Real aggregator strategy implementations ────────────────────────────
+    private final MeanScoreAggregator            meanAggregator     = new MeanScoreAggregator();
     private final WeightedAverageScoreAggregator weightedAggregator = new WeightedAverageScoreAggregator();
     private final MedianScoreAggregator          medianAggregator   = new MedianScoreAggregator();
     private final FormulaScoreAggregator         formulaAggregator  = new FormulaScoreAggregator();
@@ -76,9 +78,9 @@ public class MultiVendorOrchestratorTest {
         ReflectionTestUtils.setField(orchestrator, "evaluators",
                 Arrays.asList(vendor1, vendor2, vendor3));
 
-        // Inject all three aggregator strategies into the orchestrator
+        // Inject all aggregator strategies into the orchestrator
         ReflectionTestUtils.setField(orchestrator, "aggregators",
-                Arrays.asList(weightedAggregator, medianAggregator, formulaAggregator));
+                Arrays.asList(meanAggregator, weightedAggregator, medianAggregator, formulaAggregator));
 
         biometricsDto = new BiometricsDto("leftIndex", new byte[]{1, 2, 3}, 75.0);
 
@@ -88,9 +90,7 @@ public class MultiVendorOrchestratorTest {
 
     // helper
     private void putConfig(String key, String value) {
-        Map<String, Object> m = new HashMap<>();
-        m.put(key, value);
-        ApplicationContext.setApplicationMap(m);
+        ApplicationContext.map().put(key, value);
     }
 
     // =========================================================================
@@ -145,5 +145,41 @@ public class MultiVendorOrchestratorTest {
 
         // 60*0.2 + 80*0.3 + 90*0.5 = 81.0
         assertEquals(81.0, result, 0.001);
+    }
+
+    // =========================================================================
+    // TEST 4: Per-Modality Vendor Configuration for FINGER (leftIndex)
+    // =========================================================================
+    @Test
+    public void testPerModalityFingerVendorsConfig() throws RegBaseCheckedException {
+        // Country specifies Vendors 1 and 2 for Finger modality
+        putConfig(RegistrationConstants.QUALITY_EVALUATORS_MODALITY_PREFIX + "FINGER",
+                "MOCK_VENDOR_1, MOCK_VENDOR_2");
+        putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEAN");
+
+        // leftIndex maps to FINGER modality
+        BiometricsDto fingerDto = new BiometricsDto("leftIndex", new byte[]{1, 2}, 70.0);
+        double result = orchestrator.orchestrate(fingerDto);
+
+        // Mean of Vendor 1 (60.0) and Vendor 2 (80.0) = 70.0
+        assertEquals(70.0, result, 0.001);
+    }
+
+    // =========================================================================
+    // TEST 5: Per-Modality Vendor Configuration for IRIS (leftEye)
+    // =========================================================================
+    @Test
+    public void testPerModalityIrisVendorsConfig() throws RegBaseCheckedException {
+        // Country specifies Vendor 3 for Iris modality
+        putConfig(RegistrationConstants.QUALITY_EVALUATORS_MODALITY_PREFIX + "IRIS",
+                "MOCK_VENDOR_3");
+        putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEAN");
+
+        // leftEye maps to IRIS modality
+        BiometricsDto irisDto = new BiometricsDto("leftEye", new byte[]{3, 4}, 85.0);
+        double result = orchestrator.orchestrate(irisDto);
+
+        // Vendor 3 score = 90.0
+        assertEquals(90.0, result, 0.001);
     }
 }
