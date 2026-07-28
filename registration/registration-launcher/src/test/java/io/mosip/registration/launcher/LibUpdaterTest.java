@@ -23,7 +23,9 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.Signature;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -69,6 +71,33 @@ public class LibUpdaterTest {
 
             assertEquals(LibUpdateResult.READY_RESTART, result);
             assertTrue(new File(temp, ENTRY).exists());
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
+    public void update_reportsLibZipDownloadProgress_toListener() throws Exception {
+        // The progress listener passed to update() must be forwarded to the lib.zip download (only —
+        // the manifest/sig are tiny). Guards against the wiring silently dropping the listener.
+        byte[] manifest = manifestBytes("1.4.0", ENTRY, HashUtil.sha256Hex(JAR));
+        byte[] sig = sign(manifest, keyPair.getPrivate());
+        byte[] zip = zipBytes(ENTRY, JAR);
+
+        HttpServer server = serve(routes(manifest, sig, zip));
+        File temp = folder.newFolder(".TEMP");
+        try {
+            List<long[]> events = new ArrayList<>();
+            LibUpdateResult result = LibUpdater.update(
+                    url(server, "/v/lib/MANIFEST.MF"), url(server, "/v/lib/MANIFEST.MF.sig"),
+                    url(server, "/v/lib.zip"), temp, keyPair.getPublic(), 50000, 30000,
+                    (done, total) -> events.add(new long[]{done, total}));
+
+            assertEquals(LibUpdateResult.READY_RESTART, result);
+            assertFalse("progress listener must be invoked for the lib.zip download", events.isEmpty());
+            long[] last = events.get(events.size() - 1);
+            assertEquals("total should be the lib.zip content length", zip.length, last[1]);
+            assertEquals("final done should equal the lib.zip size", zip.length, last[0]);
         } finally {
             server.stop(0);
         }

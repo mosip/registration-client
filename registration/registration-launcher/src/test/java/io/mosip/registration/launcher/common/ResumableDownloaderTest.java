@@ -14,7 +14,9 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import static org.junit.Assert.*;
@@ -63,6 +65,89 @@ public class ResumableDownloaderTest {
             assertArrayEquals(payload, Files.readAllBytes(out.toPath()));
             assertFalse(new File(dir, "artifact.bin.part").exists());
             assertFalse(new File(dir, "artifact.bin.part.meta").exists());
+        } finally {
+            server.stop(0);
+            deleteDir(dir);
+        }
+    }
+
+    @Test
+    public void download_reportsByteProgress_toCompletion() throws Exception {
+        byte[] payload = randomPayload(50_000); // several 8 KiB reads -> multiple percent steps
+        HttpServer server = startServer(payload, true);
+        File dir = Files.createTempDirectory("dl").toFile();
+        try {
+            List<long[]> events = new ArrayList<>();
+            ResumableDownloader.download(urlFor(server), dir.getAbsolutePath(), "artifact.bin",
+                    CONNECT_TIMEOUT, READ_TIMEOUT, (done, total) -> events.add(new long[]{done, total}));
+
+            assertFalse("expected at least one progress callback", events.isEmpty());
+            long[] last = events.get(events.size() - 1);
+            assertEquals("total should be the full content length", payload.length, last[1]);
+            assertEquals("final done should equal the full size", payload.length, last[0]);
+            // done is monotonically non-decreasing and never exceeds total
+            long prev = -1;
+            for (long[] e : events) {
+                assertTrue("progress went backwards", e[0] >= prev);
+                assertTrue("done exceeded total", e[0] <= e[1]);
+                prev = e[0];
+            }
+        } finally {
+            server.stop(0);
+            deleteDir(dir);
+        }
+    }
+
+    @Test
+    public void download_resume_reportsProgressFromResumedOffset() throws Exception {
+        // On a resumed download the bar must not restart at 0: the first report reflects the bytes
+        // already on disk, and the total is the full resource size (offset + remaining).
+        byte[] payload = randomPayload(4000);
+        HttpServer server = startServer(payload, true);
+        File dir = Files.createTempDirectory("dl").toFile();
+        try {
+            int resumeFrom = 1500;
+            Files.write(new File(dir, "artifact.bin.part").toPath(), Arrays.copyOf(payload, resumeFrom));
+            writeMeta(dir, SERVER_ETAG);
+
+            List<long[]> events = new ArrayList<>();
+            ResumableDownloader.download(urlFor(server), dir.getAbsolutePath(), "artifact.bin",
+                    CONNECT_TIMEOUT, READ_TIMEOUT, (done, total) -> events.add(new long[]{done, total}));
+
+            assertArrayEquals(payload, Files.readAllBytes(new File(dir, "artifact.bin").toPath()));
+            assertFalse("expected progress callbacks on a resumed download", events.isEmpty());
+            assertEquals("first report should start at the resumed offset", resumeFrom, events.get(0)[0]);
+            assertEquals("total should be the full resource size", payload.length, events.get(0)[1]);
+            assertEquals("final done should reach the full size", payload.length, events.get(events.size() - 1)[0]);
+        } finally {
+            server.stop(0);
+            deleteDir(dir);
+        }
+    }
+
+    @Test
+    public void download_unknownContentLength_reportsNoProgress() throws Exception {
+        // With no Content-Length (chunked) the total is unknown, so the consumer must stay indeterminate:
+        // the listener is not called at all rather than fired with a bogus/negative total.
+        byte[] payload = randomPayload(3000);
+        HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+        server.createContext("/file", exchange -> {
+            exchange.sendResponseHeaders(200, 0); // 0 -> chunked transfer, no Content-Length
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(payload);
+            }
+            exchange.close();
+        });
+        server.start();
+        File dir = Files.createTempDirectory("dl").toFile();
+        try {
+            List<long[]> events = new ArrayList<>();
+            ResumableDownloader.download(urlFor(server), dir.getAbsolutePath(), "artifact.bin",
+                    CONNECT_TIMEOUT, READ_TIMEOUT, (done, total) -> events.add(new long[]{done, total}));
+
+            assertTrue("no progress callbacks expected when the size is unknown", events.isEmpty());
+            assertArrayEquals("file must still download completely", payload,
+                    Files.readAllBytes(new File(dir, "artifact.bin").toPath()));
         } finally {
             server.stop(0);
             deleteDir(dir);

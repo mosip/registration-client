@@ -5,6 +5,7 @@
  */
 package io.mosip.registration.launcher;
 
+import io.mosip.registration.launcher.common.DownloadProgressListener;
 import io.mosip.registration.launcher.common.ManifestVerifier;
 import io.mosip.registration.launcher.common.ZipExtractor;
 import org.slf4j.Logger;
@@ -81,6 +82,18 @@ public final class JreMigrationStager {
     public static void stage(File root, Manifest verifiedRootManifest,
                              String libManifestUrl, String libManifestSigUrl, String libZipUrl,
                              PublicKey trustedKey, int connectTimeout, int readTimeout) throws IOException {
+        stage(root, verifiedRootManifest, libManifestUrl, libManifestSigUrl, libZipUrl,
+                trustedKey, connectTimeout, readTimeout, null);
+    }
+
+    /**
+     * As {@link #stage(File, Manifest, String, String, String, PublicKey, int, int)}, additionally
+     * reporting the {@code lib.zip} download's byte progress to {@code progress} (may be {@code null}).
+     */
+    public static void stage(File root, Manifest verifiedRootManifest,
+                             String libManifestUrl, String libManifestSigUrl, String libZipUrl,
+                             PublicKey trustedKey, int connectTimeout, int readTimeout,
+                             DownloadProgressListener progress) throws IOException {
         File artifacts = new File(root, DIR_ARTIFACTS);
         File temp = new File(root, DIR_TEMP);
         File lib = new File(root, DIR_LIB);
@@ -103,7 +116,7 @@ public final class JreMigrationStager {
 
         // 3. stage the lib into .TEMP/ with full verification (signature + per-file hash + allowlist).
         LibUpdateResult libResult = LibUpdater.update(libManifestUrl, libManifestSigUrl, libZipUrl,
-                temp, trustedKey, connectTimeout, readTimeout);
+                temp, trustedKey, connectTimeout, readTimeout, progress);
         if (libResult == LibUpdateResult.ABORT_INVALID_SIGNATURE) {
             // Case B (tamper/MITM): preserve the security distinction across the stage() boundary so the
             // operator sees the same "signature invalid" alert as the lib-only update path, not a

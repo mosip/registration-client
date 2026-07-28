@@ -12,6 +12,8 @@ import org.junit.Test;
 
 import java.awt.GraphicsEnvironment;
 
+import static org.junit.Assert.assertNotNull;
+
 /**
  * Exercises the operator-dialog wrappers on the <b>headless</b> path — the only path safe to unit
  * test, since the alternative pops a real (blocking) {@link javax.swing.JOptionPane}. Headless is the
@@ -50,5 +52,18 @@ public class LauncherDialogsTest {
     public void info_headless_logsAndReturnsWithoutDialog() {
         Assume.assumeTrue("requires a headless JVM", GraphicsEnvironment.isHeadless());
         LauncherDialogs.info("an informational message");
+    }
+
+    @Test
+    public void progress_headless_returnsNoOpHandleThatClosesQuietly() {
+        Assume.assumeTrue("requires a headless JVM", GraphicsEnvironment.isHeadless());
+        LauncherDialogs.ProgressHandle handle = LauncherDialogs.progress("preparing the update");
+        // On the headless path a non-null no-op handle is returned; update() and close() are all safe
+        // to call (idempotently, off any real window) from the test thread without throwing or blocking.
+        assertNotNull(handle);
+        handle.update(50, 100); // determinate update -> safe no-op when headless
+        handle.update(0, -1);   // unknown-size update -> safe no-op
+        handle.close();
+        handle.close();
     }
 }

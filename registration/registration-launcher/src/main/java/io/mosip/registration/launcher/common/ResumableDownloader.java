@@ -72,6 +72,19 @@ public final class ResumableDownloader {
      */
     public static void download(String url, String targetDir, String fileName,
                                 int connectTimeout, int readTimeout) throws IOException {
+        download(url, targetDir, fileName, connectTimeout, readTimeout, null);
+    }
+
+    /**
+     * As {@link #download(String, String, String, int, int)}, additionally reporting byte progress to
+     * {@code progress} (may be {@code null}). The listener is called on the downloading thread as bytes
+     * are written — including once at the start to report any resumed offset — so a UI consumer must
+     * marshal its own work off this thread. It is not called when the server omits {@code Content-Length}
+     * (the total is unknown), leaving the consumer indeterminate.
+     */
+    public static void download(String url, String targetDir, String fileName,
+                                int connectTimeout, int readTimeout,
+                                DownloadProgressListener progress) throws IOException {
         requirePositiveTimeouts(connectTimeout, readTimeout);
         LOGGER.info("Resumable download invoked, url : {}, target : {}/{}", url, targetDir, fileName);
         File dir = new File(targetDir);
@@ -84,7 +97,7 @@ public final class ResumableDownloader {
         // stale / unusable) one fresh restart with the stale part discarded.
         boolean allowResume = true;
         for (int attempt = 0; attempt < 2; attempt++) {
-            if (attemptDownload(url, artifact, allowResume, connectTimeout, readTimeout)) {
+            if (attemptDownload(url, artifact, allowResume, connectTimeout, readTimeout, progress)) {
                 return;
             }
             allowResume = false; // the partial was discarded; the next attempt starts from scratch
@@ -115,7 +128,8 @@ public final class ResumableDownloader {
      *         found stale/unusable and discarded, so the caller should restart from scratch.
      */
     private static boolean attemptDownload(String url, Artifact artifact, boolean allowResume,
-                                           int connectTimeout, int readTimeout) throws IOException {
+                                           int connectTimeout, int readTimeout,
+                                           DownloadProgressListener progress) throws IOException {
         String validator = allowResume ? resumeValidator(artifact) : null;
         long existing = (validator != null) ? artifact.part.length() : 0L;
 
@@ -159,7 +173,8 @@ public final class ResumableDownloader {
 
             long contentLength = connection.getContentLengthLong();
             ensureSpaceForWrite(artifact.dir, artifact.part, contentLength, append);
-            writeBody(connection, artifact.part, append, existing);
+            long total = contentLength < 0 ? -1L : (append ? existing : 0L) + contentLength;
+            writeBody(connection, artifact.part, append, existing, total, progress);
             verifyComplete(artifact, contentLength, append, existing);
             artifact.finalizeOnto();
             LOGGER.info("Resumable download completed : {}", artifact.name);
@@ -218,9 +233,14 @@ public final class ResumableDownloader {
         return validator;
     }
 
-    /** Streams the response body into the part file, appending from {@code existing} or overwriting. */
-    private static void writeBody(HttpURLConnection connection, File partFile, boolean append, long existing)
-            throws IOException {
+    /**
+     * Streams the response body into the part file, appending from {@code existing} or overwriting.
+     * When {@code progress} is non-null and {@code total > 0}, reports cumulative bytes as the download
+     * proceeds — once up front (so a resume doesn't start the bar at 0) and thereafter only when the
+     * whole-number percent changes, to avoid flooding the consumer for a large file.
+     */
+    private static void writeBody(HttpURLConnection connection, File partFile, boolean append, long existing,
+                                  long total, DownloadProgressListener progress) throws IOException {
         try (InputStream in = connection.getInputStream();
              RandomAccessFile out = new RandomAccessFile(partFile, "rw")) {
             if (append) {
@@ -228,10 +248,25 @@ public final class ResumableDownloader {
             } else {
                 out.setLength(0);
             }
+            long done = append ? existing : 0L;
+            boolean report = progress != null && total > 0;
+            int lastPct = -1;
+            if (report) {
+                lastPct = (int) Math.min(100, done * 100 / total);
+                progress.onProgress(done, total);
+            }
             byte[] buffer = new byte[BUFFER_SIZE];
             int read;
             while ((read = in.read(buffer)) != -1) {
                 out.write(buffer, 0, read);
+                done += read;
+                if (report) {
+                    int pct = (int) Math.min(100, done * 100 / total);
+                    if (pct != lastPct) {
+                        lastPct = pct;
+                        progress.onProgress(done, total);
+                    }
+                }
             }
         }
     }

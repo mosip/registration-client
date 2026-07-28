@@ -180,12 +180,18 @@ public class Initialization {
     /** Step 3: prepare the JRE migration, then launch {@code migration.exe} and exit. */
     private static void handleJreMigration(Manifest verifiedRootManifest, PublicKey trustedKey) {
         LOGGER.info("Version change on JRE 11 — preparing JRE migration (step 3)");
+        // The slow work (download lib.zip, verify sig/hash, unzip jre21) happens inside stage(); show an
+        // indeterminate progress window during it. The launcher deliberately shows NO completion dialog —
+        // it must exit right after launching migration.exe, and the exe owns the terminal success/error
+        // message. On any failure the window is closed before the error dialog so the modeless spinner
+        // never sits behind a modal alert; on success it dies with the JVM at exit.
+        LauncherDialogs.ProgressHandle progress = LauncherDialogs.progress("Preparing the update. Please wait…");
         try {
             LauncherConfig config = LauncherConfig.load(CONFIG_FILE);
             String version = requireVersion(ManifestVerifier.getVersion(verifiedRootManifest));
             JreMigrationStager.stage(APP_ROOT, verifiedRootManifest,
                     config.libManifestUrl(version), config.libManifestSigUrl(version), config.libZipUrl(version),
-                    trustedKey, CONNECT_TIMEOUT, READ_TIMEOUT);
+                    trustedKey, CONNECT_TIMEOUT, READ_TIMEOUT, progress::update);
             // stage() has verified migration.exe against the signature-verified root manifest and copied
             // it (with rollback.exe) to the app root. Launch it detached and exit so the JVM releases
             // jre/bin/* for the swap; migration.exe shows its own progress/result dialog and, on failure,
@@ -194,12 +200,14 @@ public class Initialization {
             MigrationLauncher.launch(APP_ROOT);
             System.exit(0);
         } catch (SecurityException e) {
+            progress.close();
             // Case B propagated from stage(): show the security alert, consistent with handleLibUpdate,
             // rather than the generic "failed to prepare" message that would invite a retry of a tamper.
             LOGGER.error("Security alert preparing JRE migration", e);
             LauncherDialogs.error("Security alert: lib signature invalid. Update aborted.");
             System.exit(1);
         } catch (Exception e) {
+            progress.close();
             LOGGER.error("Failed to prepare JRE migration", e);
             LauncherDialogs.error("Failed to prepare the update: " + e.getMessage());
             System.exit(1);
@@ -209,12 +217,16 @@ public class Initialization {
     /** Step 5: download + verify + stage the new lib into {@code .TEMP/}, then prompt for restart. */
     private static void handleLibUpdate(Manifest verifiedRootManifest, int jreMajor, PublicKey trustedKey) {
         LOGGER.info("Version change on JRE {} — lib-only update path (step 5)", jreMajor);
+        // Show an indeterminate progress window while LibUpdater downloads/verifies/stages lib.zip, then
+        // dismiss it before the result dialog so the modeless spinner never sits behind a modal message.
+        LauncherDialogs.ProgressHandle progress = LauncherDialogs.progress("Preparing the update. Please wait…");
         try {
             LauncherConfig config = LauncherConfig.load(CONFIG_FILE);
             String version = requireVersion(ManifestVerifier.getVersion(verifiedRootManifest));
             LibUpdateResult result = LibUpdater.update(
                     config.libManifestUrl(version), config.libManifestSigUrl(version), config.libZipUrl(version),
-                    TEMP_DIR, trustedKey, CONNECT_TIMEOUT, READ_TIMEOUT);
+                    TEMP_DIR, trustedKey, CONNECT_TIMEOUT, READ_TIMEOUT, progress::update);
+            progress.close();
             switch (result) {
                 case READY_RESTART:
                     LauncherDialogs.info("Update ready. Please restart the application.");
@@ -237,6 +249,7 @@ public class Initialization {
                     break;
             }
         } catch (Exception e) {
+            progress.close();
             LOGGER.error("Lib update failed", e);
             LauncherDialogs.error("Update failed: " + e.getMessage());
             System.exit(1);

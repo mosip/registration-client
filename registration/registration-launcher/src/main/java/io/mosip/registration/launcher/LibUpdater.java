@@ -5,6 +5,7 @@
  */
 package io.mosip.registration.launcher;
 
+import io.mosip.registration.launcher.common.DownloadProgressListener;
 import io.mosip.registration.launcher.common.ManifestVerifier;
 import io.mosip.registration.launcher.common.ResumableDownloader;
 import io.mosip.registration.launcher.common.SignatureVerifier;
@@ -86,6 +87,19 @@ public final class LibUpdater {
     public static LibUpdateResult update(String libManifestUrl, String libManifestSigUrl, String libZipUrl,
                                          File tempDir, PublicKey trustedKey,
                                          int connectTimeout, int readTimeout) throws IOException {
+        return update(libManifestUrl, libManifestSigUrl, libZipUrl, tempDir, trustedKey,
+                connectTimeout, readTimeout, null);
+    }
+
+    /**
+     * As {@link #update(String, String, String, File, PublicKey, int, int)}, additionally reporting the
+     * {@code lib.zip} download's byte progress to {@code progress} (may be {@code null}). Only the
+     * {@code lib.zip} transfer is reported — the manifest and its signature are tiny.
+     */
+    public static LibUpdateResult update(String libManifestUrl, String libManifestSigUrl, String libZipUrl,
+                                         File tempDir, PublicKey trustedKey,
+                                         int connectTimeout, int readTimeout,
+                                         DownloadProgressListener progress) throws IOException {
         // Reject invalid timeouts at this entry point (fail fast) rather than letting a 0/infinite
         // value reach the per-file downloads below and hang the launcher.
         ResumableDownloader.requirePositiveTimeouts(connectTimeout, readTimeout);
@@ -120,7 +134,7 @@ public final class LibUpdater {
         //    unexpected by the allowlist check below. getAbsoluteFile() guards against a relative
         //    .TEMP whose getParentFile() would otherwise be null.
         File zipStagingDir = new File(tempDir.getAbsoluteFile().getParentFile(), tempDir.getName() + ".zipstage");
-        ResumableDownloader.download(libZipUrl, zipStagingDir.getPath(), LIB_ZIP, connectTimeout, readTimeout);
+        ResumableDownloader.download(libZipUrl, zipStagingDir.getPath(), LIB_ZIP, connectTimeout, readTimeout, progress);
 
         // Once the download returns, lib.zip is complete and no longer needs its resumable .part, so we
         // always drop the staging dir after extraction — even if extraction fails. An interrupted
