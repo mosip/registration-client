@@ -1277,6 +1277,8 @@ public class RegistrationConstants {
 	public static final String QUALITY_SELECTION_PREFIX = "mosip.registration.quality.selection.";
 	public static final String QUALITY_SUBSET_PREFIX = "mosip.registration.quality.subset.";
 	public static final String QUALITY_AGGREGATION_PREFIX = "mosip.registration.quality.aggregation.";
+	/** Per-modality aggregation strategy config prefix: mosip.registration.quality.aggregation.modality.<MODALITY> */
+	public static final String QUALITY_AGGREGATION_MODALITY_PREFIX = "mosip.registration.quality.aggregation.modality.";
 	public static final String QUALITY_WEIGHT_PREFIX = "mosip.registration.quality.weight.";
 	public static final String QUALITY_FORMULA_PREFIX = "mosip.registration.quality.formula.";
 

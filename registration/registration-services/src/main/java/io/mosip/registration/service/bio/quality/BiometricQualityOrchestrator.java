@@ -67,7 +67,7 @@ public class BiometricQualityOrchestrator {
 		// 1. Resolve modality (FINGER, IRIS, FACE) from bioAttribute for config lookup
 		String modality = resolveModality(bioAttribute);
 
-		// Config lookup priority: per-modality > per-attribute > default
+		
 		String modalityKeyUpper = RegistrationConstants.QUALITY_EVALUATORS_MODALITY_PREFIX + modality.toUpperCase();
 		String modalityKeyLower = RegistrationConstants.QUALITY_EVALUATORS_MODALITY_PREFIX + modality.toLowerCase();
 		String attributeKey     = RegistrationConstants.QUALITY_EVALUATORS_PREFIX + bioAttribute;
@@ -134,10 +134,22 @@ public class BiometricQualityOrchestrator {
 					RegistrationExceptionConstants.REG_NO_QUALITY_SOURCE.getErrorMessage());
 		}
 
-		// 4. Read the configured aggregation strategy
-		String strategyName = (String) ApplicationContext.map()
-				.getOrDefault(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + bioAttribute,
-						ApplicationContext.map().getOrDefault(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEAN"));
+		// 4. Read the configured aggregation strategy (Hierarchy: modality > attribute > default)
+		String aggModalityKeyUpper = RegistrationConstants.QUALITY_AGGREGATION_MODALITY_PREFIX + modality.toUpperCase();
+		String aggModalityKeyLower = RegistrationConstants.QUALITY_AGGREGATION_MODALITY_PREFIX + modality.toLowerCase();
+		String aggAttributeKey     = RegistrationConstants.QUALITY_AGGREGATION_PREFIX + bioAttribute;
+		String aggDefaultKey       = RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default";
+
+		String strategyName;
+		if (ApplicationContext.map().containsKey(aggModalityKeyUpper)) {
+			strategyName = (String) ApplicationContext.map().get(aggModalityKeyUpper);
+		} else if (ApplicationContext.map().containsKey(aggModalityKeyLower)) {
+			strategyName = (String) ApplicationContext.map().get(aggModalityKeyLower);
+		} else if (ApplicationContext.map().containsKey(aggAttributeKey)) {
+			strategyName = (String) ApplicationContext.map().get(aggAttributeKey);
+		} else {
+			strategyName = (String) ApplicationContext.map().getOrDefault(aggDefaultKey, "MEAN");
+		}
 		strategyName = strategyName.trim().toUpperCase();
 
 		// 5. Read per-evaluator weights (for weighted strategies)

@@ -165,6 +165,18 @@ public class MultiVendorOrchestratorTest {
         assertEquals(70.0, result, 0.001);
     }
 
+    @Test
+    public void testPerModalityStrategyConfig() throws RegBaseCheckedException {
+        putConfig(RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default", "MOCK_VENDOR_1, MOCK_VENDOR_2, MOCK_VENDOR_3");
+        putConfig(RegistrationConstants.QUALITY_AGGREGATION_MODALITY_PREFIX + "FINGER", "MEDIAN");
+
+        BiometricsDto fingerDto = new BiometricsDto("leftIndex", new byte[]{1, 2}, 70.0);
+        double result = orchestrator.orchestrate(fingerDto);
+
+        // Sorted [60.0, 80.0, 90.0] -> Median = 80.0
+        assertEquals(80.0, result, 0.001);
+    }
+
     // =========================================================================
     // TEST 5: Per-Modality Vendor Configuration for IRIS (leftEye)
     // =========================================================================
