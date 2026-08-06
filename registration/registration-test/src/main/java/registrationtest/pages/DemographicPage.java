@@ -387,7 +387,14 @@ public class DemographicPage {
     }
 
     private boolean hasDocumentsScreen() {
-        return findDocumentsScreenName() != null;
+        if (orderedScreensList == null) {
+            return false;
+        }
+        return orderedScreensList.stream()
+                .filter(screen -> screen.getFields() != null)
+                .anyMatch(screen -> screen.getFields().stream()
+                        .anyMatch(field -> "fileupload".equals(field.getControlType())
+                                && "POE".equalsIgnoreCase(field.getSubType())));
     }
 
     private boolean hasPoeOnBiometricScreen() {
