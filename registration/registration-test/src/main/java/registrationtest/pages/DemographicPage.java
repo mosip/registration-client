@@ -36,6 +36,7 @@ import registrationtest.pojo.schema.Schema;
 import registrationtest.pojo.schema.Screens;
 import registrationtest.utility.ComboBoxUtil;
 import registrationtest.utility.DateUtil;
+import registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.JsonUtil;
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;
@@ -79,6 +80,7 @@ public class DemographicPage {
     LinkedHashMap<String, Integer> allignmentgroupMap;
 
     Boolean flag = false;
+    boolean skipDocumentUpload = false;
 
     public DemographicPage(FxRobot robot) {
         logger.info(" DemographicPage Constructor  ");
@@ -282,9 +284,234 @@ public class DemographicPage {
                     logger.error("", e);
                 }
             }
+
+            if (isBiometricScreen(nameTab)
+                    && "Y".equalsIgnoreCase(JsonUtil.getOptionalIdentityValue(JsonIdentity, "verifyBioAfterSkipPOE"))) {
+                runBioRetainedAfterSkipPOETest(JsonIdentity, flow, ageGroup);
+            }
+
+            if (isBiometricScreen(nameTab)
+                    && "Y".equalsIgnoreCase(JsonUtil.getOptionalIdentityValue(JsonIdentity, "verifyPoeDeleteFlow"))) {
+                runBioRetainedAfterPoeDeleteTest(JsonIdentity, flow, ageGroup);
+            }
         }
         return webViewDocument;
 
+    }
+
+    private void runBioRetainedAfterSkipPOETest(String jsonIdentity, String flow, String ageGroup) {
+        try {
+            if (hasDocumentsScreen()) {
+                skipPoeOnDocumentsScreen(jsonIdentity, flow, ageGroup);
+            } else if (hasPoeOnBiometricScreen()) {
+                skipPoeOnBiometricScreen(jsonIdentity);
+            } else {
+                throw new AssertionError(
+                        "verifyBioAfterSkipPOE requires a Documents screen or proofOfException on the biometric screen");
+            }
+
+            buttons.clickNextBtn();
+
+            navigateToBiometricScreenForVerification();
+            biometricUploadPage.verifyCapturedBiometricsRetained(jsonIdentity, findBioFieldId("applicant"));
+        } catch (Exception e) {
+            logger.error("Bio retained after skip POE verification failed", e);
+            throw new AssertionError("Bio retained after skip POE verification failed", e);
+        }
+    }
+
+    private void runBioRetainedAfterPoeDeleteTest(String jsonIdentity, String flow, String ageGroup) {
+        try {
+            if (hasDocumentsScreen()) {
+                uploadAndDeletePoeOnDocumentsScreen(jsonIdentity, flow, ageGroup);
+            } else if (hasPoeOnBiometricScreen()) {
+                uploadAndDeletePoeOnBiometricScreen(jsonIdentity);
+            } else {
+                throw new AssertionError(
+                        "verifyPoeDeleteFlow requires a Documents screen or proofOfException on the biometric screen");
+            }
+
+            buttons.clickNextBtn();
+
+            navigateToBiometricScreenForVerification();
+            biometricUploadPage.verifyCapturedBiometricsRetained(jsonIdentity, findBioFieldId("applicant"));
+        } catch (Exception e) {
+            logger.error("Bio retained after POE delete verification failed", e);
+            throw new AssertionError("Bio retained after POE delete verification failed", e);
+        }
+    }
+
+    private void skipPoeOnDocumentsScreen(String jsonIdentity, String flow, String ageGroup) throws IOException {
+        ExtentReportUtil.test1.info(
+                "Navigate to document page after biometrics, skip POE upload, click next and verify biometrics");
+
+        String documentsScreenName = findDocumentsScreenName();
+        waitsUtil.clickNodeAssert("#" + documentsScreenName + "_tab");
+        scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("proofscroll")));
+
+        for (Screens screen : orderedScreensList) {
+            if (!documentsScreenName.equalsIgnoreCase(screen.getName())) {
+                continue;
+            }
+            for (Schema schema : screen.getFields()) {
+                if ("fileupload".equals(schema.getControlType()) && !"POE".equalsIgnoreCase(schema.getSubType())) {
+                    contolType(schema, jsonIdentity, flow, ageGroup);
+                }
+            }
+            break;
+        }
+
+        ExtentReportUtil.test1.info("Skipped POE document upload on document page");
+        skipDocumentUpload = true;
+    }
+
+    private void skipPoeOnBiometricScreen(String jsonIdentity) throws IOException {
+        ExtentReportUtil.test1.info(
+                "On biometric page after biometrics, skip POE document upload, click next and verify biometrics");
+        ExtentReportUtil.test1.info("Skipped POE document upload on biometric page");
+        skipDocumentUpload = true;
+    }
+
+    private void uploadAndDeletePoeOnDocumentsScreen(String jsonIdentity, String flow, String ageGroup)
+            throws IOException {
+        ExtentReportUtil.test1.info(
+                "Navigate to document page after biometrics, upload POE, delete POE, click next and verify biometrics");
+
+        String documentsScreenName = findDocumentsScreenName();
+        waitsUtil.clickNodeAssert("#" + documentsScreenName + "_tab");
+        scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("proofscroll")));
+
+        for (Screens screen : orderedScreensList) {
+            if (!documentsScreenName.equalsIgnoreCase(screen.getName())) {
+                continue;
+            }
+            for (Schema schema : screen.getFields()) {
+                if ("fileupload".equals(schema.getControlType()) && !"POE".equalsIgnoreCase(schema.getSubType())) {
+                    contolType(schema, jsonIdentity, flow, ageGroup);
+                }
+            }
+            break;
+        }
+
+        documentUploadPage.uploadPoeDocument(jsonIdentity);
+        ExtentReportUtil.test1.info("Uploaded POE document on document page");
+        documentUploadPage.deletePoeDocument();
+        ExtentReportUtil.test1.info("Deleted POE document on document page");
+        skipDocumentUpload = true;
+    }
+
+    private void uploadAndDeletePoeOnBiometricScreen(String jsonIdentity) throws IOException {
+        ExtentReportUtil.test1.info(
+                "On biometric page after biometrics, upload POE, delete POE, click next and verify biometrics");
+        scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+        documentUploadPage.uploadPoeDocument(jsonIdentity);
+        ExtentReportUtil.test1.info("Uploaded POE document on biometric page");
+        documentUploadPage.deletePoeDocument();
+        ExtentReportUtil.test1.info("Deleted POE document on biometric page");
+        skipDocumentUpload = true;
+    }
+
+    private boolean hasDocumentsScreen() {
+        return findDocumentsScreenName() != null;
+    }
+
+    private boolean hasPoeOnBiometricScreen() {
+        Screens biometricScreen = findBiometricScreen();
+        if (biometricScreen == null) {
+            return false;
+        }
+        for (Schema field : biometricScreen.getFields()) {
+            if ("fileupload".equals(field.getControlType()) && "POE".equalsIgnoreCase(field.getSubType())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void navigateToBiometricScreenForVerification() {
+        String biometricScreenName = findBiometricScreenName();
+        String applicantBioFieldId = findBioFieldId("applicant");
+        waitsUtil.waitForFirstVisibleNode("#" + biometricScreenName + "_tab", 15_000);
+        waitsUtil.clickIfPresent("#" + biometricScreenName + "_tab");
+        waitsUtil.waitForFirstVisibleNode("#" + applicantBioFieldId + "IRIS_DOUBLEButton", 20_000);
+        org.testfx.util.WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    private boolean isBiometricScreen(String screenName) {
+        Screens biometricScreen = findBiometricScreen();
+        return biometricScreen != null && biometricScreen.getName().equalsIgnoreCase(screenName);
+    }
+
+    private Screens findBiometricScreen() {
+        if (orderedScreensList == null) {
+            return null;
+        }
+        for (Screens screen : orderedScreensList) {
+            if (screen.getFields() == null) {
+                continue;
+            }
+            for (Schema field : screen.getFields()) {
+                if ("biometrics".equalsIgnoreCase(field.getControlType())) {
+                    return screen;
+                }
+            }
+        }
+        return null;
+    }
+
+    private String findBiometricScreenName() {
+        Screens biometricScreen = findBiometricScreen();
+        return biometricScreen != null ? biometricScreen.getName() : "BiometricDetails";
+    }
+
+    private String findDocumentsScreenName() {
+        if (orderedScreensList == null) {
+            return null;
+        }
+        for (Screens screen : orderedScreensList) {
+            if (screen.getFields() == null) {
+                continue;
+            }
+            boolean hasFileUpload = false;
+            boolean hasBiometrics = false;
+            for (Schema field : screen.getFields()) {
+                if ("fileupload".equalsIgnoreCase(field.getControlType())) {
+                    hasFileUpload = true;
+                }
+                if ("biometrics".equalsIgnoreCase(field.getControlType())) {
+                    hasBiometrics = true;
+                }
+            }
+            if (hasFileUpload && !hasBiometrics) {
+                return screen.getName();
+            }
+        }
+        return null;
+    }
+
+    private String findBioFieldId(String subType) {
+        if (orderedScreensList == null) {
+            return defaultBioFieldId(subType);
+        }
+        for (Screens screen : orderedScreensList) {
+            if (screen.getFields() == null) {
+                continue;
+            }
+            for (Schema field : screen.getFields()) {
+                if ("biometrics".equalsIgnoreCase(field.getControlType())
+                        && subType.equalsIgnoreCase(field.getSubType())) {
+                    return field.getId();
+                }
+            }
+        }
+        return defaultBioFieldId(subType);
+    }
+
+    private String defaultBioFieldId(String subType) {
+        if ("introducer".equalsIgnoreCase(subType)) {
+            return "introducerBiometrics";
+        }
+        return "individualBiometrics";
     }
 
     private void scrollVerticalDirection2(int i, Schema schema) {
@@ -683,6 +910,10 @@ public class DemographicPage {
                 } else
                     scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
 
+                if ("Y".equalsIgnoreCase(JsonUtil.getOptionalIdentityValue(identity, "verifyIntroducerBioOptions"))) {
+                    biometricUploadPage.verifyIntroducerBioOptions(schema.getId());
+                }
+
 //                Thread.sleep(400);
                 biometricUploadPage.newRegbioUpload(schema.getSubType(),
                         biometricUploadPage.bioAuthAttributeList(identity), id, identity, ageGroup);
@@ -741,6 +972,10 @@ public class DemographicPage {
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
                     } else
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+
+                    if ("Y".equalsIgnoreCase(JsonUtil.getOptionalIdentityValue(identity, "verifyIntroducerBioOptions"))) {
+                        biometricUploadPage.verifyIntroducerBioOptions(schema.getId());
+                    }
 
 //                    Thread.sleep(400);
 
@@ -801,6 +1036,9 @@ public class DemographicPage {
     public void fileupload(Schema schema, String JsonIdentity, String key, String id, String scenario,
             String ageGroup) {
         try {
+            if (skipDocumentUpload) {
+                return;
+            }
             List<String> documentUploadAttList = documentUploadPage.documentUploadAttributeList(JsonIdentity);
             for (String doclist : documentUploadAttList) {
                 if (schema.getSubType().equals(doclist)) {
