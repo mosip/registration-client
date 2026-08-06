@@ -54,7 +54,8 @@ public class DocumentUploadPage {
 
             // robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
         } catch (Exception e) {
-            logger.error("", e);
+            logger.error("Document scan failed", e);
+            throw new AssertionError("Document scan failed", e);
         }
 
     }

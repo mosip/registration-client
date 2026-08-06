@@ -355,7 +355,8 @@ public class WebViewDocument {
             }
             return updateAttrs.stream().anyMatch(attr -> "Biometrics".equalsIgnoreCase(attr))
                     && updateAttrs.stream().noneMatch(attr -> "FullName".equalsIgnoreCase(attr)
-                            || "Documents".equalsIgnoreCase(attr) || "Address".equalsIgnoreCase(attr));
+                            || "Documents".equalsIgnoreCase(attr) || "Address".equalsIgnoreCase(attr)
+                            || "DateOfBirth".equalsIgnoreCase(attr));
         } catch (Exception e) {
             return false;
         }
