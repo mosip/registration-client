@@ -179,7 +179,7 @@ public class BiometricUploadPage {
 			listException = exceptionList(jsonContent);
 			// FINGERPRINT_SLAB_RIGHT
 			clickModality(idBioType, idModality);
-			Thread.sleep(500);
+			WaitForAsyncUtils.waitForFxEvents();
 
 			if (listException.contains("rightIndex") && listException.contains("rightLittle")
 					&& listException.contains("rightRing") && listException.contains("rightMiddle")) {
@@ -400,7 +400,7 @@ public class BiometricUploadPage {
 				return;
 			}
 			clickModality(idBioType, idModality);
-			Thread.sleep(500);
+			WaitForAsyncUtils.waitForFxEvents();
 
 			clickScanBtn(idBioType, jsonContent, idModality);
 		}  catch (Exception e) {
@@ -695,15 +695,18 @@ public class BiometricUploadPage {
 	private void verifyModalityCaptureStatus(String bioFieldId, String modality, String description) {
 		String buttonId = "#" + bioFieldId + modality + "Button";
 		String paneId = "#" + bioFieldId + modality + "PANE";
+		String modalitySelector = "#" + bioFieldId + modality;
 
 		Node modalityButton = waitsUtil.waitForFirstVisibleNode(buttonId, 20_000);
 		robot.moveTo(modalityButton);
 		robot.clickOn(modalityButton);
 		WaitForAsyncUtils.waitForFxEvents();
 
-		Node completionMark = waitsUtil.waitForFirstVisibleNode(paneId, 20_000);
-		assertTrue(completionMark != null && completionMark.isVisible(),
-				description + " not displayed on biometric page after document navigation");
+		waitsUtil.waitForFirstVisibleNode(paneId, 20_000);
+		boolean retained = EXCEPTION_PHOTO.equals(modality)
+				? getAttemptSlap(modalitySelector) > 0 || getQualityScore(modalitySelector) > 0
+				: getQualityScore(modalitySelector) > 0;
+		assertTrue(retained, description + " not retained on biometric page after document navigation");
 		ExtentReportUtil.test1.info(description + " verified on biometric page");
 	}
 
