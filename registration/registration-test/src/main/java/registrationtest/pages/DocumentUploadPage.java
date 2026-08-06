@@ -118,6 +118,9 @@ public class DocumentUploadPage {
         return documentUploadAttList;
     }
 
+    /**
+     * Uploads a proof-of-exception document using the schema-derived field id.
+     */
     public void uploadPoeDocument(String jsonIdentity, String poeFieldId) {
         logger.info("Uploading POE document");
         try {
@@ -137,6 +140,9 @@ public class DocumentUploadPage {
         }
     }
 
+    /**
+     * Clears a previously uploaded proof-of-exception document.
+     */
     public void deletePoeDocument(String poeFieldId) {
         logger.info("Deleting POE document");
         try {

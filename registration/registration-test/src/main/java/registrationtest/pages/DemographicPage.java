@@ -327,7 +327,7 @@ public class DemographicPage {
         }
     }
 
-    private void skipPoeOnDocumentsScreen() {
+    private void skipPoeOnDocumentsScreen() throws IOException {
         ExtentReportUtil.test1.info(
                 "Navigate to document page after biometrics, skip POE upload, click next and verify biometrics");
 
@@ -343,7 +343,7 @@ public class DemographicPage {
         ExtentReportUtil.test1.info("Skipped POE document upload on biometric page");
     }
 
-    private void uploadAndDeletePoeOnDocumentsScreen(String jsonIdentity) {
+    private void uploadAndDeletePoeOnDocumentsScreen(String jsonIdentity) throws IOException {
         ExtentReportUtil.test1.info(
                 "Navigate to document page after biometrics, upload POE, delete POE, click next and verify biometrics");
 
@@ -358,7 +358,7 @@ public class DemographicPage {
         ExtentReportUtil.test1.info("Deleted POE document on document page");
     }
 
-    private void uploadAndDeletePoeOnBiometricScreen(String jsonIdentity) {
+    private void uploadAndDeletePoeOnBiometricScreen(String jsonIdentity) throws IOException {
         ExtentReportUtil.test1.info(
                 "On biometric page after biometrics, upload POE, delete POE, click next and verify biometrics");
         String poeFieldId = findPoeFieldId();
