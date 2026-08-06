@@ -44,6 +44,9 @@ Update the following:
 1. Verify the failure in the logs file `\logs\AutomationLogs.log`
 1. Execution results present under report folder file `extentReport-datetimestamp.html`
 
+## Automated Test Cases
+See [AUTOMATED_TEST_CASES.md](AUTOMATED_TEST_CASES.md) for the full list of 45 automated test scenarios (MOSIP-43431).
+
 ## License
 This project is licensed under the terms of [Mozilla Public License 2.0](../../LICENSE)
 
