@@ -644,6 +644,10 @@ public class BiometricUploadPage {
 		}
 	}
 
+	/**
+	 * Verifies that captured biometric modalities remain available after navigating away
+	 * from the biometric screen (e.g. after POE skip/delete on the documents screen).
+	 */
 	public void verifyCapturedBiometricsRetained(String identity, String bioFieldId) {
 		List<String> bioAttributes = bioAttributeList(identity);
 		List<String> listException = exceptionList(identity);
@@ -745,6 +749,9 @@ public class BiometricUploadPage {
 		}
 	}
 
+	/**
+	 * Verifies that introducer biometrics shows FP, Iris, and Face options without exception photo.
+	 */
 	public void verifyIntroducerBioOptions(String bioFieldId) {
 		ExtentReportUtil.test1.info(
 				"Verifying introducer biometrics options for field " + bioFieldId
