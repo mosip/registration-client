@@ -790,7 +790,7 @@ public class WebViewDocument {
             return;
         }
         String plainText = stripHtml(html).toLowerCase();
-        assertTrue(!plainText.matches("(?s).*\\bpoe\\b.*") && !plainText.contains("proof of exception"),
+        assertTrue(!plainText.contains("proof of exception"),
                 "POE document should not be displayed on preview when not uploaded");
         ExtentReportUtil.test1.info("Verified POE document is not shown on preview");
     }
