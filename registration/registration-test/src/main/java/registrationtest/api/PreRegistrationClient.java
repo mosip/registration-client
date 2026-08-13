@@ -17,6 +17,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import io.restassured.RestAssured;
+import io.restassured.config.HttpClientConfig;
+import io.restassured.config.RestAssuredConfig;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import registrationtest.utility.PropertiesUtil;
@@ -42,6 +44,13 @@ public class PreRegistrationClient {
             org.slf4j.LoggerFactory.getLogger(PreRegistrationClient.class);
 
     private static final Random RANDOM = new Random();
+
+    private static final int TIMEOUT_MS = 30_000;
+    private static final RestAssuredConfig HTTP_CONFIG = RestAssuredConfig.config().httpClient(
+            HttpClientConfig.httpClientConfig()
+                    .setParam("http.connection.timeout", TIMEOUT_MS)
+                    .setParam("http.socket.timeout", TIMEOUT_MS)
+                    .setParam("http.connection-manager.timeout", (long) TIMEOUT_MS));
 
     // Automation/test-data metadata present in repository_eng JSON fixtures that
     // is not part of the actual MOSIP identity schema, plus fields (biometrics,
@@ -81,21 +90,26 @@ public class PreRegistrationClient {
             request.put("demographicDetails", demographicDetails);
             requestJson.put("request", request);
 
+            // relaxedHTTPSValidation(): MOSIP QA/sandbox environments (this client's only
+            // intended target) commonly present self-signed/internal-CA certificates, matching
+            // the convention used across MOSIP's own apitest-commons RestClient for the same reason.
             Response response = RestAssured.given()
+                    .config(HTTP_CONFIG)
                     .relaxedHTTPSValidation()
                     .contentType(ContentType.JSON)
                     .cookie("Authorization", token)
                     .body(requestJson.toString())
                     .post(baseUrl + "/preregistration/v1/applications/prereg");
 
-            JSONObject responseJson = new JSONObject(response.getBody().asString());
+            JSONObject responseJson = parseJsonResponse(response, "Pre-Registration creation");
             if (responseJson.has("response") && !responseJson.isNull("response")
                     && responseJson.getJSONObject("response").has("preRegistrationId")) {
                 String preRegId = responseJson.getJSONObject("response").getString("preRegistrationId");
                 logger.info("Created preRegistrationId={}", preRegId);
                 return preRegId;
             }
-            throw new IllegalStateException("Pre-Registration creation failed: " + responseJson);
+            throw new IllegalStateException("Pre-Registration creation failed: status="
+                    + response.getStatusCode() + " errors=" + responseJson.opt("errors"));
         } catch (IOException e) {
             throw new IllegalStateException("Failed to read config.properties for pre-registration setup", e);
         }
@@ -116,23 +130,50 @@ public class PreRegistrationClient {
         requestJson.put("request", request);
 
         Response response = RestAssured.given()
+                .config(HTTP_CONFIG)
                 .relaxedHTTPSValidation()
                 .contentType(ContentType.JSON)
                 .body(requestJson.toString())
                 .post(baseUrl + "/v1/authmanager/authenticate/internal/useridPwd");
 
-        JSONObject responseJson = new JSONObject(response.getBody().asString());
+        JSONObject responseJson = parseJsonResponse(response, "Admin authentication");
         if (!responseJson.has("response") || responseJson.isNull("response")
                 || !responseJson.getJSONObject("response").has("token")) {
-            throw new IllegalStateException("Admin authentication failed: " + responseJson);
+            throw new IllegalStateException("Admin authentication failed: status="
+                    + response.getStatusCode() + " errors=" + responseJson.opt("errors"));
         }
         return responseJson.getJSONObject("response").getString("token");
     }
 
+    /**
+     * Validates the HTTP status before parsing so a gateway/HTML error page produces a clear
+     * failure instead of an opaque JSONException, and avoids echoing the full response body
+     * (which can carry submitted PII or auth tokens) into logs/exception messages.
+     */
+    private static JSONObject parseJsonResponse(Response response, String context) {
+        String body = response.getBody().asString();
+        if (response.getStatusCode() < 200 || response.getStatusCode() >= 300) {
+            throw new IllegalStateException(
+                    context + " failed with HTTP status " + response.getStatusCode());
+        }
+        try {
+            return new JSONObject(body);
+        } catch (org.json.JSONException e) {
+            throw new IllegalStateException(context + " returned a non-JSON response (status "
+                    + response.getStatusCode() + ")", e);
+        }
+    }
+
     private static JSONObject buildIdentity() throws IOException {
         String datadir = require("datadir");
-        String templateFile = System.getProperty("user.dir") + "/src/main/resources" + datadir + "NewAdult.json";
-        String content = new String(Files.readAllBytes(Paths.get(templateFile)));
+        java.nio.file.Path templateFile = Paths.get(System.getProperty("user.dir") + datadir + "NewAdult.json");
+        if (!Files.exists(templateFile)) {
+            // IDE/dev layout: repository_eng/ lives under src/main/resources rather than
+            // alongside the built artifact.
+            templateFile = Paths.get(
+                    System.getProperty("user.dir") + "/src/main/resources" + datadir + "NewAdult.json");
+        }
+        String content = new String(Files.readAllBytes(templateFile));
         JSONObject template = new JSONObject(content).getJSONObject("identity");
 
         JSONObject identity = new JSONObject();

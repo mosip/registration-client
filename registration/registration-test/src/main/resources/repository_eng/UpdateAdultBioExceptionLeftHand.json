@@ -1,7 +1,7 @@
 { "identity" : {
 	"ageGroup":"ADULT",
 	"process":"Update",
-	"previewTests":["applicationId","uin","authBiometrics","bioExceptions"],
+	"previewTests":["applicationId","dateTime","demographics","uin","authBiometrics","bioExceptions"],
 	"ackTests":["applicationId","uin","dateTime","demographics","authBiometrics","bioExceptions"],
 	"preferredLang":"English",
 	"documentUploadAttributes":["POB","POA","POI"],
