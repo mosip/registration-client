@@ -259,14 +259,24 @@ public class NewReg {
             String supervisorUserpwd, Stage applicationPrimaryStage1, String jsonContent, String process,
             String ageGroup, String fileName, ApplicationContext applicationContext, boolean usePreRegistration) {
 
-        String preRegistrationId = usePreRegistration
-                ? registrationtest.api.PreRegistrationClient.createPreRegistration(ageGroup)
-                : null;
+        ExtentReportUtil.test1 = ExtentReportUtil.reports
+                .createTest("New Registration Scenario : " + process + " FileName : " + fileName);
+
+        String preRegistrationId = null;
+        if (usePreRegistration) {
+            try {
+                preRegistrationId = registrationtest.api.PreRegistrationClient.createPreRegistration(ageGroup);
+            } catch (RuntimeException e) {
+                logger.error("Pre-Registration creation failed", e);
+                ExtentReportUtil.test1.log(Status.FAIL, "Pre-Registration creation failed: " + e.getMessage());
+                ExtentReportUtil.reports.flush();
+                rid1 = null;
+                return rid1;
+            }
+        }
 
         try {
             logger.info("New Adult Registration Scenario : " + process + " FileName : " + fileName);
-            ExtentReportUtil.test1 = ExtentReportUtil.reports
-                    .createTest("New Registration Scenario : " + process + " FileName : " + fileName);
 
             loginPage = new LoginPage(robot);
             buttons = new Buttons(robot);

@@ -332,14 +332,30 @@ public class DemographicPage {
 
         waitsUtil.clickNodeAssert(fetchBtn);
 
+        boolean fetchStarted = true;
         try {
-            org.testfx.util.WaitForAsyncUtils.waitFor(30, java.util.concurrent.TimeUnit.SECONDS, () -> {
+            // The fetch can complete before this first poll runs, so a timeout here only
+            // means "already finished", not a failure - only the disappearance wait below matters.
+            org.testfx.util.WaitForAsyncUtils.waitFor(10, java.util.concurrent.TimeUnit.SECONDS, () -> {
                 Node indicator = robot.lookup(progressIndicator).tryQuery().orElse(null);
-                return indicator == null || !indicator.isVisible();
+                return indicator != null && indicator.isVisible();
             });
         } catch (Exception e) {
-            logger.error("Timed out waiting for pre-registration fetch to complete", e);
+            fetchStarted = false;
         }
+
+        if (fetchStarted) {
+            try {
+                org.testfx.util.WaitForAsyncUtils.waitFor(30, java.util.concurrent.TimeUnit.SECONDS, () -> {
+                    Node indicator = robot.lookup(progressIndicator).tryQuery().orElse(null);
+                    return indicator == null || !indicator.isVisible();
+                });
+            } catch (Exception e) {
+                logger.error("Timed out waiting for pre-registration fetch to complete", e);
+                ExtentReportUtil.test1.fail("Pre-Registration fetch did not complete for ID " + preRegistrationId);
+            }
+        }
+        org.testfx.util.WaitForAsyncUtils.waitForFxEvents();
     }
 
     private void runBioRetainedAfterPoeFlow(String jsonIdentity, String label, boolean deleteAfterUpload) {
@@ -376,6 +392,9 @@ public class DemographicPage {
                 "Navigate to document page after biometrics, skip POE upload, click next and verify biometrics");
 
         String documentsScreenName = findDocumentsScreenName();
+        if (documentsScreenName == null) {
+            throw new AssertionError("No document-only screen found in the process definition");
+        }
         waitsUtil.clickNodeAssert("#" + documentsScreenName + "_tab");
         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("proofscroll")));
         ExtentReportUtil.test1.info("Skipped POE document upload on document page");
@@ -392,6 +411,9 @@ public class DemographicPage {
                 "Navigate to document page after biometrics, upload POE, delete POE, click next and verify biometrics");
 
         String documentsScreenName = findDocumentsScreenName();
+        if (documentsScreenName == null) {
+            throw new AssertionError("No document-only screen found in the process definition");
+        }
         String poeFieldId = findPoeFieldId();
         waitsUtil.clickNodeAssert("#" + documentsScreenName + "_tab");
         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("proofscroll")));
@@ -413,6 +435,11 @@ public class DemographicPage {
         ExtentReportUtil.test1.info("Deleted POE document on biometric page");
     }
 
+    private boolean isPoeField(Schema field) {
+        return "fileupload".equalsIgnoreCase(field.getControlType())
+                && "POE".equalsIgnoreCase(field.getSubType());
+    }
+
     private String findPoeFieldId() {
         if (orderedScreensList == null) {
             throw new AssertionError("POE field not found in process definition");
@@ -422,7 +449,7 @@ public class DemographicPage {
                 continue;
             }
             for (Schema field : screen.getFields()) {
-                if ("fileupload".equals(field.getControlType()) && "POE".equalsIgnoreCase(field.getSubType())) {
+                if (isPoeField(field)) {
                     return field.getId();
                 }
             }
@@ -431,14 +458,7 @@ public class DemographicPage {
     }
 
     private boolean hasDocumentsScreen() {
-        if (orderedScreensList == null) {
-            return false;
-        }
-        return orderedScreensList.stream()
-                .filter(screen -> screen.getFields() != null)
-                .anyMatch(screen -> screen.getFields().stream()
-                        .anyMatch(field -> "fileupload".equals(field.getControlType())
-                                && "POE".equalsIgnoreCase(field.getSubType())));
+        return findDocumentsScreenName() != null;
     }
 
     private boolean hasPoeOnBiometricScreen() {
@@ -447,7 +467,7 @@ public class DemographicPage {
             return false;
         }
         for (Schema field : biometricScreen.getFields()) {
-            if ("fileupload".equals(field.getControlType()) && "POE".equalsIgnoreCase(field.getSubType())) {
+            if (isPoeField(field)) {
                 return true;
             }
         }
@@ -461,11 +481,6 @@ public class DemographicPage {
         waitsUtil.clickIfPresent("#" + biometricScreenName + "_tab");
         waitsUtil.waitForFirstVisibleNode("#" + applicantBioFieldId, 20_000);
         org.testfx.util.WaitForAsyncUtils.waitForFxEvents();
-    }
-
-    private boolean isBiometricScreen(String screenName) {
-        Screens biometricScreen = findBiometricScreen();
-        return biometricScreen != null && biometricScreen.getName().equalsIgnoreCase(screenName);
     }
 
     private Screens findBiometricScreen() {
