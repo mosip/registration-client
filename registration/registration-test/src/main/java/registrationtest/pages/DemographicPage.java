@@ -60,6 +60,9 @@ public class DemographicPage {
     BioCorrectionPage bioCorrectionPage;
     WaitsUtil waitsUtil;
     String DemoDetailsImg = "#DemoDetailsImg";
+    String preRegistrationIdField = "#preRegistrationId";
+    String fetchBtn = "#fetchBtn";
+    String progressIndicator = "#progressIndicator";
     WebViewDocument webViewDocument;
     Buttons buttons;
     String schemaJsonFilePath;
@@ -196,6 +199,15 @@ public class DemographicPage {
      * @return
      */
     public WebViewDocument screensFlow(String JsonIdentity, String flow, String ageGroup) {
+        return screensFlow(JsonIdentity, flow, ageGroup, null);
+    }
+
+    /**
+     * @param preRegistrationId when non-empty, is entered into the demographic page's
+     *                          Pre-Registration ID field and fetched before any screen
+     *                          whose process definition has preRegFetchRequired=true is filled.
+     */
+    public WebViewDocument screensFlow(String JsonIdentity, String flow, String ageGroup, String preRegistrationId) {
 
         /**
          * convert jsonFromSchema intoJava
@@ -233,10 +245,14 @@ public class DemographicPage {
             logger.info("Order" + screens.getOrder() + " Fields" + screens.getFields());
             fieldsList = screens.getFields();
 
-            nameTab = screens.getName();       
+            nameTab = screens.getName();
             waitsUtil.clickNodeAssert("#" + nameTab + "_tab");
             // waitsUtil.clickNodeAssert("#"+nameTab);
             robot.moveTo("#" + nameTab);
+
+            if (screens.isPreRegFetchRequired() && preRegistrationId != null && !preRegistrationId.trim().isEmpty()) {
+                fetchPreRegistrationData(preRegistrationId);
+            }
 
             for (Schema schema : fieldsList) {
                 try {
@@ -296,6 +312,34 @@ public class DemographicPage {
         skipDocumentUpload = false;
         return webViewDocument;
 
+    }
+
+    /**
+     * Enters the given Pre-Registration ID into the demographic page's PRID field
+     * and clicks fetch, waiting for the fetched applicant data to load.
+     */
+    private void fetchPreRegistrationData(String preRegistrationId) {
+        logger.info("fetchPreRegistrationData preRegistrationId=" + preRegistrationId);
+
+        TextField preRegField = waitsUtil.waitForNode(preRegistrationIdField, TextField.class);
+        assertNotNull(preRegField, preRegistrationIdField + " not present");
+
+        Platform.runLater(() -> {
+            preRegField.clear();
+            preRegField.setText(preRegistrationId);
+        });
+        org.testfx.util.WaitForAsyncUtils.waitForFxEvents();
+
+        waitsUtil.clickNodeAssert(fetchBtn);
+
+        try {
+            org.testfx.util.WaitForAsyncUtils.waitFor(30, java.util.concurrent.TimeUnit.SECONDS, () -> {
+                Node indicator = robot.lookup(progressIndicator).tryQuery().orElse(null);
+                return indicator == null || !indicator.isVisible();
+            });
+        } catch (Exception e) {
+            logger.error("Timed out waiting for pre-registration fetch to complete", e);
+        }
     }
 
     private void runBioRetainedAfterPoeFlow(String jsonIdentity, String label, boolean deleteAfterUpload) {

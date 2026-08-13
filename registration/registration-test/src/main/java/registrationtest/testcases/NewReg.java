@@ -246,6 +246,22 @@ public class NewReg {
     public RID newRegistration(FxRobot robot, String loginUserid, String loginPwd, String supervisorUserid,
             String supervisorUserpwd, Stage applicationPrimaryStage1, String jsonContent, String process,
             String ageGroup, String fileName, ApplicationContext applicationContext) {
+        return newRegistration(robot, loginUserid, loginPwd, supervisorUserid, supervisorUserpwd,
+                applicationPrimaryStage1, jsonContent, process, ageGroup, fileName, applicationContext, false);
+    }
+
+    /**
+     * @param usePreRegistration when true, creates a Pre-Registration ID via {@link registrationtest.api.PreRegistrationClient}
+     *                           before starting New Registration, and fetches it on the demographic page
+     *                           (only takes effect on screens whose process definition has preRegFetchRequired=true).
+     */
+    public RID newRegistration(FxRobot robot, String loginUserid, String loginPwd, String supervisorUserid,
+            String supervisorUserpwd, Stage applicationPrimaryStage1, String jsonContent, String process,
+            String ageGroup, String fileName, ApplicationContext applicationContext, boolean usePreRegistration) {
+
+        String preRegistrationId = usePreRegistration
+                ? registrationtest.api.PreRegistrationClient.createPreRegistration(ageGroup)
+                : null;
 
         try {
             logger.info("New Adult Registration Scenario : " + process + " FileName : " + fileName);
@@ -292,7 +308,7 @@ public class NewReg {
                 buttons.clicksubmitBtn();
             }
 
-            webViewDocument = demographicPage.screensFlow(jsonContent, process, ageGroup);
+            webViewDocument = demographicPage.screensFlow(jsonContent, process, ageGroup, preRegistrationId);
 
             buttons.clickNextBtn();
 
