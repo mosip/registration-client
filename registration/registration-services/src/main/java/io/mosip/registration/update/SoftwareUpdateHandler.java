@@ -4,12 +4,15 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -73,6 +76,8 @@ public class SoftwareUpdateHandler extends BaseService {
 	private static final Logger LOGGER = AppConfig.getLogger(SoftwareUpdateHandler.class);
 	private static final String SLASH = "/";
 	private static final String manifestFile = "MANIFEST.MF";
+	/** Detached signature over ./MANIFEST.MF's bytes; must be replaced whenever the manifest is. */
+	private static final String manifestSignatureFile = "MANIFEST.MF.sig";
 	private static final String libFolder = "lib";
 	private static final String dbFolder = "db";
 	private static final String binFolder = "bin";
@@ -85,6 +90,10 @@ public class SoftwareUpdateHandler extends BaseService {
 	private static final String MOSIP_CLIENT = "registration-client";
 	private static final String FEATURE = "http://apache.org/xml/features/disallow-doctype-decl";
 	private static final String EXTERNAL_DTD_FEATURE = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
+
+	/** Guards against two concurrent upgrades now that the UI stays usable during the download. */
+	private final java.util.concurrent.atomic.AtomicBoolean upgradeInProgress =
+			new java.util.concurrent.atomic.AtomicBoolean(false);
 
 	private String currentVersion;
 	private String latestVersion;
@@ -260,26 +269,61 @@ public class SoftwareUpdateHandler extends BaseService {
 		return currentVersion;
 	}
 
-	public void doSoftwareUpgrade() {
-		LOGGER.info("Updating latest version started");
-		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-		String date = timestamp.toString().replace(":", "-") + "Z";
-		File backupFolder = new File(backUpPath + SLASH + getCurrentVersion() + "_" + date);
+	public UpgradeOutcome doSoftwareUpgrade() {
+		return doSoftwareUpgrade(UpgradeProgressListener.NO_OP);
+	}
 
-		try {
-			// Back Current Application
-			backUpSetup(backupFolder);
-			update();
-			LOGGER.info("Updating to latest version completed.");
-			return;
-		} catch (Throwable t) {
-			LOGGER.error("Failed with software upgrade", t);
+	/** True while an upgrade is running, so callers can decline to start a second one. */
+	public boolean isUpgradeInProgress() {
+		return upgradeInProgress.get();
+	}
+
+	/**
+	 * As {@link #doSoftwareUpgrade()}, reporting overall download progress so the caller can show a
+	 * determinate progress bar while the operator keeps using the application. Callbacks arrive on the
+	 * calling thread, which is never the JavaFX application thread.
+	 *
+	 * @param progressListener receives progress updates; {@link UpgradeProgressListener#NO_OP} to ignore
+	 */
+	public UpgradeOutcome doSoftwareUpgrade(UpgradeProgressListener progressListener) {
+		// Refuse to run two upgrades at once. The UI no longer disables the pane for the whole download,
+		// so a second click (or another entry point) could otherwise start a concurrent run: backUpSetup
+		// deletes every backup folder except its own -- destroying the first run's rollback point -- and
+		// both runs would write ./MANIFEST.MF and the same .artifacts/<name>.part files, splicing bytes
+		// from two attempts into one artifact.
+		if (!upgradeInProgress.compareAndSet(false, true)) {
+			// Distinct from FAILED on purpose: "already running" is not an error, and reporting it as
+			// one made the caller tear down the FIRST run's progress display and offer a retry.
+			LOGGER.warn("A software upgrade is already in progress; ignoring this request");
+			return UpgradeOutcome.ALREADY_IN_PROGRESS;
 		}
-
 		try {
-			rollBackSetup(backupFolder);
-		} catch (io.mosip.kernel.core.exception.IOException e) {
-			LOGGER.error("Failed to rollback setup", e);
+			LOGGER.info("Updating latest version started");
+			Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+			String date = timestamp.toString().replace(":", "-") + "Z";
+			File backupFolder = new File(backUpPath + SLASH + getCurrentVersion() + "_" + date);
+
+			try {
+				// Back Current Application
+				backUpSetup(backupFolder);
+				update(progressListener == null ? UpgradeProgressListener.NO_OP : progressListener);
+				LOGGER.info("Updating to latest version completed.");
+				return UpgradeOutcome.COMPLETED;
+			} catch (Throwable t) {
+				LOGGER.error("Failed with software upgrade", t);
+			}
+
+			try {
+				rollBackSetup(backupFolder);
+			} catch (io.mosip.kernel.core.exception.IOException e) {
+				LOGGER.error("Failed to rollback setup", e);
+			}
+			// Report the failure instead of swallowing it. The caller previously had no way to tell a
+			// rolled-back failure from a success, so the operator was told the update completed either
+			// way -- and, on a forced update, was restarted into the rolled-back install.
+			return UpgradeOutcome.FAILED;
+		} finally {
+			upgradeInProgress.set(false);
 		}
 	}
 
@@ -313,34 +357,78 @@ public class SoftwareUpdateHandler extends BaseService {
 	 *             - IOException
 	 */
 	@Counted(recordFailuresOnly = true)
-	private void update() throws Exception {
-		// fetch server manifest && replace local manifest with Server manifest
+	private void update(UpgradeProgressListener progressListener) throws Exception {
+		// Fetch the server manifest, but do NOT adopt it yet -- see the write at the end of this method.
 		setServerManifest();
-		serverManifest.write(new FileOutputStream(manifestFile));
-		setLocalManifest();
 
 		// From 1.3.0 the handler is download-and-record only: artifacts are staged into .artifacts/
 		// (resumable, never into lib/) and the .artifacts/ directory is intentionally NOT cleared so an
 		// interrupted download can resume from its .part file on the next run. Unzipping and applying to
 		// lib/ is the launcher's / run.bat's job (T2), not the handler's.
-		Map<String, Attributes> localAttributes = localManifest.getEntries();
+		Map<String, Attributes> localAttributes = serverManifest.getEntries();
+		// Overall progress is weighted per artifact rather than per byte: the manifest carries no sizes,
+		// so the total download volume is not known up front. Within an artifact the byte-level callback
+		// refines the fraction, which keeps the bar moving through the large jre21.zip entry.
+		final int totalArtifacts = localAttributes.size();
+		int completedArtifacts = 0;
 		for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
-			File file = new File(libFolder + SLASH + entry.getKey());
+			File staged = new File(SoftwareUpdateUtil.ARTIFACTS_DIRECTORY + SLASH + entry.getKey());
 			String url = serverRegClientURL + latestVersion + SLASH + libFolder + SLASH + entry.getKey();
+			final String artifactName = entry.getKey();
+			final int alreadyDone = completedArtifacts;
+			ResumableDownloader.ProgressListener byteListener = (bytesDone, totalBytes) -> {
+				if (totalBytes <= 0) {
+					// Server sent no usable Content-Length. Propagate "unknown" so the bar goes
+					// indeterminate; reporting a determinate fraction here would freeze it at a fixed
+					// percentage for the whole of a chunked ~200MB transfer.
+					progressListener.onProgress(-1.0d, artifactName);
+					return;
+				}
+				double within = Math.min(1.0d, (double) bytesDone / (double) totalBytes);
+				progressListener.onProgress((alreadyDone + within) / totalArtifacts, artifactName);
+			};
 
-			if(!file.exists()) {
-				LOGGER.info("{} file doesn't exists, downloading it", entry.getKey());
-				SoftwareUpdateUtil.downloadResumable(url, SoftwareUpdateUtil.ARTIFACTS_DIRECTORY, entry.getKey());
-				LOGGER.info("Successfully downloaded the file : {}", entry.getKey());
+			// Skip anything already staged in .artifacts/ AND intact. The previous check tested
+			// lib/<entry>, which is meaningless from 1.3.0: the design guarantees nothing is downloaded
+			// into lib/ any more, so it was always false and EVERY artifact was re-fetched on every
+			// attempt -- including the ~200MB jre21.zip on a retry that had already completed it.
+			if (staged.exists() && SoftwareUpdateUtil.validateJarChecksum(staged, entry.getValue())) {
+				LOGGER.info("{} already staged in .artifacts/ and intact, skipping download", entry.getKey());
+				completedArtifacts++;
+				progressListener.onProgress((double) completedArtifacts / totalArtifacts, artifactName);
 				continue;
 			}
 
-			if(!SoftwareUpdateUtil.validateJarChecksum(file, entry.getValue())) {
-				LOGGER.info("{} file checksum validation failed, downloading it", entry.getKey());
-				SoftwareUpdateUtil.downloadResumable(url, SoftwareUpdateUtil.ARTIFACTS_DIRECTORY, entry.getKey());
-				LOGGER.info("Successfully downloaded the latest file : {}", entry.getKey());
-			}
+			LOGGER.info("Downloading {}", entry.getKey());
+			SoftwareUpdateUtil.downloadResumable(url, SoftwareUpdateUtil.ARTIFACTS_DIRECTORY, entry.getKey(), byteListener);
+			LOGGER.info("Successfully downloaded the file : {}", entry.getKey());
+			completedArtifacts++;
+			progressListener.onProgress((double) completedArtifacts / totalArtifacts, artifactName);
 		}
+
+		// Adopt the new manifest ONLY now that every artifact is on disk. Writing it up front (the
+		// previous behaviour) meant an interrupted download left ./MANIFEST.MF claiming the new version
+		// while .artifacts/ was incomplete -- on the next start the launcher saw root != lib, entered the
+		// migration path, failed on the missing artifact and exited, and the client could never boot far
+		// enough to resume the download. Deferring the write keeps an interrupted attempt fully
+		// resumable: the version still reads as the old one, so the client starts normally and the
+		// operator can retry, picking up the .part files where they left off.
+		// The detached signature is fetched BEFORE anything is written and committed together with the
+		// manifest. ./MANIFEST.MF.sig signs the manifest's BYTES, so a new manifest left paired with the
+		// previous signature fails the launcher's signature check on the very next start -- and that is
+		// Case B, which deliberately re-downloads nothing, so the client cannot recover. Every upgrade
+		// after 1.3.0 would brick on a SUCCESSFUL update. (The 1.2.x -> 1.3.0 hop hides it: no
+		// ./MANIFEST.MF.sig exists yet, so the launcher's Case C fetches a fresh one.)
+		byte[] serverSignature = downloadRootManifestSignature();
+		commitRootManifest(serverSignature);
+		// Deliberately NOT reloading localManifest here. ./MANIFEST.MF on disk is now the PENDING
+		// version; the jars actually executing in this JVM are still the old ones, and stay that way
+		// until the operator restarts -- which they may defer indefinitely, now that the restart is a
+		// prompt rather than automatic. Refreshing the in-memory manifest would make
+		// getCurrentVersion() report the new version to everything that asks: packet metadata
+		// (META_CLIENT_VERSION), the version sent on every sync/REST call, and the UI labels. Packets
+		// would be stamped with a version that never ran. The on-disk manifest is picked up naturally
+		// on the next start, which is exactly when it becomes true.
 
 		auditFactory.audit(AuditEvent.CLIENT_UPGRADE_JARS_DOWNLOADED, Components.CLIENT_UPGRADE, 
 				RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
@@ -353,6 +441,58 @@ public class SoftwareUpdateHandler extends BaseService {
 				RegistrationConstants.DISABLE);
 		globalParamService.update(RegistrationConstants.LAST_SOFTWARE_UPDATE,
 				String.valueOf(Timestamp.valueOf(DateUtils.getUTCCurrentDateTime())));
+	}
+
+	/**
+	 * Fetches the detached signature for the server manifest. Read fully into memory before any local
+	 * file is touched, so a network failure here aborts the upgrade with the old manifest and old
+	 * signature still paired and valid.
+	 */
+	private byte[] downloadRootManifestSignature() throws IOException, RegBaseCheckedException {
+		String url = serverRegClientURL + latestVersion + SLASH + manifestSignatureFile;
+		LOGGER.info("Downloading root manifest signature from {}", url);
+		try (InputStream in = SoftwareUpdateUtil.download(url);
+				ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+			byte[] chunk = new byte[8192];
+			int read;
+			while ((read = in.read(chunk)) != -1) {
+				buffer.write(chunk, 0, read);
+			}
+			if (buffer.size() == 0) {
+				throw new IOException("Downloaded " + manifestSignatureFile + " is empty");
+			}
+			return buffer.toByteArray();
+		}
+	}
+
+	/**
+	 * Replaces ./MANIFEST.MF and ./MANIFEST.MF.sig together.
+	 * <p>
+	 * The signature is <b>removed first</b>, deliberately. The two files cannot be swapped in one atomic
+	 * step, so some crash window is unavoidable -- the choice is which state it leaves behind. A
+	 * mismatched manifest/signature pair is unrecoverable (the launcher's Case B aborts and re-downloads
+	 * nothing), whereas a MISSING signature is recoverable by design: Case C fetches the signature for
+	 * whichever manifest version is on disk. Deleting first means every crash window lands on the
+	 * recoverable state, whether the manifest has been replaced yet or not.
+	 * <p>
+	 * Each file is staged to a temp name and moved into place, so a failure mid-write can never leave a
+	 * truncated manifest behind.
+	 */
+	private void commitRootManifest(byte[] signature) throws IOException {
+		File manifestTarget = new File(manifestFile);
+		File signatureTarget = new File(manifestSignatureFile);
+		File manifestTmp = new File(manifestFile + ".tmp");
+		File signatureTmp = new File(manifestSignatureFile + ".tmp");
+
+		try (FileOutputStream out = new FileOutputStream(manifestTmp)) {
+			serverManifest.write(out);
+		}
+		Files.write(signatureTmp.toPath(), signature);
+
+		Files.deleteIfExists(signatureTarget.toPath());
+		Files.move(manifestTmp.toPath(), manifestTarget.toPath(), StandardCopyOption.REPLACE_EXISTING);
+		Files.move(signatureTmp.toPath(), signatureTarget.toPath(), StandardCopyOption.REPLACE_EXISTING);
+		LOGGER.info("Adopted the new root manifest and its signature");
 	}
 
 	private void backUpSetup(File backUpFolder) throws io.mosip.kernel.core.exception.IOException {
@@ -392,7 +532,13 @@ public class SoftwareUpdateHandler extends BaseService {
 		try {
 			File localManifestFile = new File(manifestFile);
 			if (localManifestFile.exists()) {
-				localManifest = new Manifest(new FileInputStream(localManifestFile));
+				// Close the stream. An unclosed FileInputStream keeps a Windows file handle on
+				// ./MANIFEST.MF until GC, which blocks the atomic replace in commitRootManifest with
+				// "The process cannot access the file because it is being used by another process" --
+				// so the upgrade fails at the very last step, after every artifact downloaded.
+				try (FileInputStream inputStream = new FileInputStream(localManifestFile)) {
+					localManifest = new Manifest(inputStream);
+				}
 			}
 		} catch (IOException e) {
 			LOGGER.error("Failed to load local manifest file", e);
@@ -400,12 +546,24 @@ public class SoftwareUpdateHandler extends BaseService {
 		}
 	}
 
-	private void setServerManifest() {
+	private void setServerManifest() throws RegBaseCheckedException {
+		// Clear the field FIRST. It survives a failed run -- the reset at the end of update() is only
+		// reached on success -- so a previous attempt's manifest would otherwise still be sitting here.
+		serverManifest = null;
 		String url = serverRegClientURL + latestVersion + SLASH + manifestFile;
-		try(InputStream in = SoftwareUpdateUtil.download(url)) {
+		try (InputStream in = SoftwareUpdateUtil.download(url)) {
+			if (in == null) {
+				throw new IOException("No response body for " + url);
+			}
 			serverManifest = new Manifest(in);
-		} catch (IOException | RegBaseCheckedException e) {
+		} catch (IOException e) {
+			// Propagate instead of swallowing. Returning quietly here used to leave update() running
+			// against whatever manifest was left over: it would download from the NEW version's URLs
+			// but commit the OLD version's manifest, and doSoftwareUpgrade would still report success.
+			// The boolean contract makes that silent mismatch actively misleading to the operator.
 			LOGGER.error("Failed to load server manifest file", e);
+			throw new RegBaseCheckedException("REG-BUILD-004",
+					"Failed to download the server manifest from " + url);
 		}
 	}
 

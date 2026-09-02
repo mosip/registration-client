@@ -36,6 +36,9 @@ public final class MigrationCleaner {
     private static final String[] ARTIFACT_DIRS = {DIR_JRE21_TEMP, DIR_ARTIFACTS};
     private static final String[] ARTIFACT_FILES = {FILE_RUN_BAT_BACKUP, FILE_MIGRATION_EXE, FILE_ROLLBACK_EXE};
 
+    /** How long an interrupted download's partials are kept before being treated as abandoned. */
+    private static final long RESUMABLE_RETENTION_MS = 30L * 24 * 60 * 60 * 1000;
+
     private MigrationCleaner() {
         // utility class
     }
@@ -50,7 +53,19 @@ public final class MigrationCleaner {
         List<String> removed = new ArrayList<>();
         for (String name : ARTIFACT_DIRS) {
             File dir = new File(baseDir, name);
-            if (dir.exists() && deleteRecursively(dir)) {
+            if (!dir.exists()) {
+                continue;
+            }
+            if (DIR_ARTIFACTS.equals(name) && hasDownloadInProgress(dir)) {
+                // Versions match, but .artifacts/ holds .part files from an upgrade whose download was
+                // interrupted. The handler adopts the new ./MANIFEST.MF only after every artifact is
+                // downloaded, so an interrupted attempt legitimately leaves the versions matching -- and
+                // deleting the partials here would silently force the operator to re-fetch the whole
+                // ~200MB JRE instead of resuming it.
+                LOGGER.info("Keeping {} - it holds an in-progress resumable download", name);
+                continue;
+            }
+            if (deleteRecursively(dir)) {
                 removed.add(name);
             }
         }
@@ -68,6 +83,40 @@ public final class MigrationCleaner {
             LOGGER.info("Cleaned up migration artifacts: {}", removed);
         }
         return removed;
+    }
+
+    /**
+    /**
+     * True when {@code .artifacts/} contains a resumable download's sidecar files, i.e. an upgrade was
+     * started and interrupted rather than completed.
+     */
+    private static boolean hasDownloadInProgress(File artifactsDir) {
+        File[] files = artifactsDir.listFiles();
+        if (files == null) {
+            return false;
+        }
+        long staleBefore = System.currentTimeMillis() - RESUMABLE_RETENTION_MS;
+        boolean sawStalePartial = false;
+        for (File file : files) {
+            if (file.isFile() && file.getName().endsWith(".part")) {
+                // Bound the retention. An upgrade the operator started and abandoned would otherwise pin
+                // a partial jre21.zip (up to ~200MB) on disk forever on an otherwise healthy client,
+                // because a matched-version startup is exactly the state this guard protects. Past the
+                // window the partial is treated as abandoned and cleaned with the rest; a later retry
+                // simply downloads afresh.
+                if (file.lastModified() >= staleBefore) {
+                    return true;
+                }
+                sawStalePartial = true;
+            }
+        }
+        // Logged only once the loop has actually concluded the directory is abandoned. Reporting it per
+        // stale file would contradict the "Keeping .artifacts" line whenever a later partial is fresh.
+        if (sawStalePartial) {
+            LOGGER.info("Only stale partials in .artifacts/ (older than the retention window) - "
+                    + "treating it as abandoned");
+        }
+        return false;
     }
 
     /**

@@ -33,6 +33,8 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -55,11 +57,21 @@ public class JreMigrationStagerTest {
 
     /**
      * Sets up a root with run.bat, a signed lib (served), and a root manifest covering jre21.zip plus
-     * the migration.exe / rollback.exe the launcher now requires (staged in .artifacts/, integrity
-     * listed). {@code _launcher.jar} is deliberately NOT staged/listed so tests can use it as the
+     * the migration.exe / rollback.exe the launcher now requires and the staged .artifacts/run.bat that
+     * migration.exe installs into the app root (all staged in .artifacts/, integrity listed).
+     * {@code _launcher.jar} is deliberately NOT staged/listed so tests can use it as the
      * "present but unverifiable" artifact.
      */
     private TestServer baseSetup(File root) throws Exception {
+        return baseSetup(root, true);
+    }
+
+    /**
+     * @param stageLauncher when true, {@code _launcher.jar} is staged in {@code .artifacts/} and listed
+     *                      in the root manifest, which the happy paths need now that staging refuses to
+     *                      start the swap without it. Pass false to model it as present-but-unlisted.
+     */
+    private TestServer baseSetup(File root, boolean stageLauncher) throws Exception {
         write(new File(root, "run.bat"), "current-run-bat");
 
         // jre21.zip + the two native exes on disk in .artifacts, hashes recorded in the (verified)
@@ -70,11 +82,24 @@ public class JreMigrationStagerTest {
         File rollbackExe = new File(root, ".artifacts/rollback.exe");
         write(migrationExe, "migration-exe-bytes");
         write(rollbackExe, "rollback-exe-bytes");
+        // The Java 21 run.bat is delivered through .artifacts/ as well (migration.exe copies it into the
+        // app root after the swap), so it is integrity-listed and verified like the rest.
+        File runBatArtifact = new File(root, ".artifacts/run.bat");
+        write(runBatArtifact, "jre21-run-bat");
+        // migration.exe copies _launcher.jar into lib/ after emptying it, so staging requires it too.
+        File launcherArtifact = new File(root, ".artifacts/_launcher.jar");
+        if (stageLauncher) {
+            write(launcherArtifact, "launcher-jar-bytes");
+        }
 
         Map<String, String> rootEntries = new LinkedHashMap<>();
         rootEntries.put("jre21.zip", HashUtil.sha256Hex(jre21Zip));
         rootEntries.put("migration.exe", HashUtil.sha256Hex(migrationExe));
         rootEntries.put("rollback.exe", HashUtil.sha256Hex(rollbackExe));
+        rootEntries.put("run.bat", HashUtil.sha256Hex(runBatArtifact));
+        if (stageLauncher) {
+            rootEntries.put("_launcher.jar", HashUtil.sha256Hex(launcherArtifact));
+        }
         byte[] rootManifest = manifestBytes("1.4.0", rootEntries);
         File rootManifestFile = new File(root, "MANIFEST.MF");
         write(rootManifestFile, new String(rootManifest, StandardCharsets.UTF_8));
@@ -131,11 +156,175 @@ public class JreMigrationStagerTest {
     }
 
     @Test
-    public void stage_artifactPresentButUnlistedInRootManifest_failsClosed() throws Exception {
+    public void stage_staleAppRootExes_overwrittenFromVerifiedArtifacts() throws Exception {
         File root = folder.getRoot();
         TestServer ts = baseSetup(root);
+        // An earlier (interrupted, possibly different-version) attempt left exes at the app root. Those
+        // are the binaries MigrationLauncher executes, so staging must replace them with the copies just
+        // verified against the signed root manifest -- never leave a stale/unverified binary in place.
+        write(new File(root, "migration.exe"), "stale-migration-exe-from-older-version");
+        write(new File(root, "rollback.exe"), "stale-rollback-exe-from-older-version");
+        try {
+            JreMigrationStager.stage(root, ts.rootManifest,
+                    ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
+                    keyPair.getPublic(), 50000, 30000);
+
+            assertEquals("migration-exe-bytes", read(new File(root, "migration.exe")));
+            assertEquals("rollback-exe-bytes", read(new File(root, "rollback.exe")));
+        } finally {
+            ts.stop();
+        }
+    }
+
+    @Test
+    public void stage_appRootExeAlreadyMatchesVerifiedArtifact_isNotRecopied() throws Exception {
+        File root = folder.getRoot();
+        TestServer ts = baseSetup(root);
+        // An app-root exe whose bytes already equal the just-verified .artifacts/ copy must be left
+        // alone. Re-copying it unconditionally is what breaks a resumable retry on Windows, where a
+        // still-running (or AV-held) exe locks its own image and REPLACE_EXISTING throws
+        // AccessDeniedException -- turning a retry that used to succeed into a permanent abort.
+        File appRootExe = new File(root, "migration.exe");
+        write(appRootExe, "migration-exe-bytes");
+        long untouched = System.currentTimeMillis() - 600000L;
+        assertTrue("test setup: could not age the file", appRootExe.setLastModified(untouched));
+        long before = appRootExe.lastModified();
+        try {
+            JreMigrationStager.stage(root, ts.rootManifest,
+                    ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
+                    keyPair.getPublic(), 50000, 30000);
+
+            assertEquals("identical bytes must not be rewritten", before, appRootExe.lastModified());
+            assertEquals("migration-exe-bytes", read(appRootExe));
+            // The differing sibling still gets staged, so the skip is content-driven, not a blanket skip.
+            assertEquals("rollback-exe-bytes", read(new File(root, "rollback.exe")));
+        } finally {
+            ts.stop();
+        }
+    }
+
+    @Test
+    public void stage_doesNotTouchTheApplicationRootRunBat() throws Exception {
+        File root = folder.getRoot();
+        TestServer ts = baseSetup(root);
+        // run.bat is now hash-verified in .artifacts/, but staging must never install it at the app
+        // root -- migration.exe does that after the JRE swap. The running JRE 11 launcher script has to
+        // survive staging intact, or a failed migration would leave an unbootable client.
+        File appRootRunBat = new File(root, "run.bat");
+        try {
+            JreMigrationStager.stage(root, ts.rootManifest,
+                    ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
+                    keyPair.getPublic(), 50000, 30000);
+
+            assertEquals("app-root run.bat must be left as the JRE 11 script", "current-run-bat",
+                    read(appRootRunBat));
+            // ... and the backup taken for rollback must be that same script.
+            assertEquals("current-run-bat", read(new File(root, "run.bat_jre11")));
+        } finally {
+            ts.stop();
+        }
+    }
+
+    @Test
+    public void stage_tamperedRunBatInArtifacts_failsRootManifestCheck() throws Exception {
+        File root = folder.getRoot();
+        TestServer ts = baseSetup(root);
+        // migration.exe copies .artifacts/run.bat into the app root, where it becomes the script that
+        // launches the client -> a tampered copy must abort staging, never be installed unverified.
+        write(new File(root, ".artifacts/run.bat"), "tampered-run-bat");
+        try {
+            JreMigrationStager.stage(root, ts.rootManifest,
+                    ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
+                    keyPair.getPublic(), 50000, 30000);
+            fail("expected IOException for a tampered run.bat");
+        } catch (IOException expected) {
+            assertTrue(expected.getMessage().contains("run.bat"));
+            assertTrue(expected.getMessage().contains("Integrity check failed"));
+        } finally {
+            ts.stop();
+        }
+    }
+
+    @Test
+    public void stage_runBatPresentButUnlistedInRootManifest_failsClosed() throws Exception {
+        File root = folder.getRoot();
+        write(new File(root, "run.bat"), "current");
+        File jre21Zip = new File(root, ".artifacts/jre21.zip");
+        writeZipFile(jre21Zip, entry("release", "JAVA_VERSION=\"21.0.3\"\n"));
+        // .artifacts/run.bat staged but the root manifest lists jre21.zip ONLY -> nothing to verify it
+        // against, so staging must abort instead of letting migration.exe install unverifiable bytes.
+        write(new File(root, ".artifacts/run.bat"), "unverifiable-run-bat");
+        byte[] rootManifest = manifestBytes("1.4.0", "jre21.zip", HashUtil.sha256Hex(jre21Zip));
+        write(new File(root, "MANIFEST.MF"), new String(rootManifest, StandardCharsets.UTF_8));
+
+        byte[] libManifest = manifestBytes("1.4.0", LIB_ENTRY, HashUtil.sha256Hex(APP_JAR));
+        Map<String, byte[]> routes = new HashMap<>();
+        routes.put("/v/lib/MANIFEST.MF", libManifest);
+        routes.put("/v/lib/MANIFEST.MF.sig", sign(libManifest, keyPair.getPrivate()));
+        routes.put("/v/lib.zip", zipBytes(LIB_ENTRY, APP_JAR));
+        HttpServer server = serve(routes);
+        try {
+            JreMigrationStager.stage(root, ManifestVerifier.parse(rootManifest),
+                    url(server, "/v/lib/MANIFEST.MF"), url(server, "/v/lib/MANIFEST.MF.sig"), url(server, "/v/lib.zip"),
+                    keyPair.getPublic(), 50000, 30000);
+            fail("expected IOException for a run.bat missing from the root manifest");
+        } catch (IOException expected) {
+            assertTrue(expected.getMessage().contains("run.bat"));
+            assertTrue(expected.getMessage().contains("no integrity entry"));
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
+    public void stage_launcherJarMissingFromArtifacts_failsBeforeStartingTheSwap() throws Exception {
+        File root = folder.getRoot();
+        TestServer ts = baseSetup(root, false);   // _launcher.jar neither staged nor listed
+        // migration.exe empties lib/ and then copies _launcher.jar in from .artifacts/. If it is not
+        // there, that copy fails AFTER the JRE swap, where migration.exe's rollback trigger is off --
+        // leaving an empty lib/, a Java 21 jre/ and nothing to boot. Staging must refuse first.
+        try {
+            JreMigrationStager.stage(root, ts.rootManifest,
+                    ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
+                    keyPair.getPublic(), 50000, 30000);
+            fail("expected IOException when _launcher.jar is absent from .artifacts/");
+        } catch (IOException expected) {
+            assertTrue(expected.getMessage().contains("_launcher.jar"));
+            assertTrue(expected.getMessage().contains("rollback is no longer possible"));
+            // and nothing destructive may have happened
+            assertFalse("migration.exe must not have been staged at the app root",
+                    new File(root, "migration-launched.marker").exists());
+        } finally {
+            ts.stop();
+        }
+    }
+
+    @Test
+    public void stage_runBatMissingFromArtifacts_failsBeforeStartingTheSwap() throws Exception {
+        File root = folder.getRoot();
+        TestServer ts = baseSetup(root);
+        // Same point-of-no-return argument for run.bat: migration.exe restores it to the app root after
+        // the swap, and hard-fails without it, so the client is left on Java 21 with the JRE 11 script.
+        assertTrue(new File(root, ".artifacts/run.bat").delete());
+        try {
+            JreMigrationStager.stage(root, ts.rootManifest,
+                    ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
+                    keyPair.getPublic(), 50000, 30000);
+            fail("expected IOException when run.bat is absent from .artifacts/");
+        } catch (IOException expected) {
+            assertTrue(expected.getMessage().contains("run.bat"));
+            assertTrue(expected.getMessage().contains("rollback is no longer possible"));
+        } finally {
+            ts.stop();
+        }
+    }
+
+    @Test
+    public void stage_artifactPresentButUnlistedInRootManifest_failsClosed() throws Exception {
+        File root = folder.getRoot();
+        TestServer ts = baseSetup(root, false);
         // _launcher.jar is present in .artifacts/ but the root manifest has NO entry for it (baseSetup
-        // lists jre21.zip/migration.exe/rollback.exe only), so it cannot be integrity-checked ->
+        // lists jre21.zip/migration.exe/rollback.exe/run.bat, never _launcher.jar), so it cannot be integrity-checked ->
         // staging must abort rather than use an unverifiable artifact.
         write(new File(root, ".artifacts/_launcher.jar"), "unverifiable-binary");
         try {
@@ -220,6 +409,10 @@ public class JreMigrationStagerTest {
         Map<String, String> m = new HashMap<>();
         m.put(name, content);
         return m;
+    }
+
+    private static String read(File file) throws IOException {
+        return new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
     }
 
     private static void write(File file, String content) throws IOException {

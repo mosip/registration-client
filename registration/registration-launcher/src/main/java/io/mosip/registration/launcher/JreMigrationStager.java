@@ -36,10 +36,14 @@ import static io.mosip.registration.launcher.MigrationArtifacts.FILE_RUN_BAT_BAC
  * <p>
  * All downloaded/staged content is integrity-verified before it is placed or made runnable: the lib
  * is staged via {@link LibUpdater} (signature + per-file hash + allowlist), and the migration
- * artifacts ({@code jre21.zip}, the exes, {@code _launcher.jar}) are checked against the
- * signature-verified root {@code MANIFEST.MF} before they are unzipped/copied.
+ * artifacts ({@code jre21.zip}, the exes, {@code _launcher.jar}, {@code run.bat}) are checked against
+ * the signature-verified root {@code MANIFEST.MF} before they are unzipped/copied.
  * <p>
- * Idempotent: safe to re-run after an interrupted attempt (each step is guarded by an existence check).
+ * Idempotent: safe to re-run after an interrupted attempt. Most steps are guarded by an existence
+ * check; steps 5 and 6 instead re-copy the exes whenever the app-root copy differs from the
+ * just-verified {@code .artifacts/} copy, so the binary that runs is always the binary that was
+ * verified (see {@link #copyRequired}). This diverges from design step 3's literal "if not in app
+ * root -> copy" wording, which assumes the app root can only ever hold THIS migration's exe.
  */
 public final class JreMigrationStager {
 
@@ -50,9 +54,29 @@ public final class JreMigrationStager {
             FILE_LAUNCHER, FILE_JRE21_ZIP, FILE_MIGRATION_EXE, FILE_ROLLBACK_EXE, FILE_RUN_BAT
     };
 
-    /** Migration artifacts that must be integrity-checked against the signed root manifest before use. */
+    /**
+     * Migration artifacts that must be integrity-checked against the signed root manifest before use.
+     * <p>
+     * {@code run.bat} is included because {@code migration.exe} copies {@code .artifacts/run.bat} into
+     * the application root, where it becomes the script that launches the client — so it is as
+     * execution-sensitive as the exes, and the design's Case-A scenario (N3) expects its hash to be
+     * checked. The launcher only detects a mismatch (fail closed); the AC11 re-download recovery for
+     * root artifacts is not yet implemented.
+     */
+    /**
+     * Artifacts {@code migration.exe} copies out of {@code .artifacts/} <b>after</b> it has emptied
+     * {@code lib/} and renamed the new JRE over {@code jre/} — past the point where its own rollback
+     * trigger is switched off. If either is missing there, the migration fails with the old lib gone,
+     * the new JRE in place and no {@code _launcher.jar} to boot: an unbootable install that no retry
+     * can repair. Presence is therefore required <i>before</i> the exe is ever started, which is the
+     * only point at which failing is still safe (design constraint 5: a failed migration must remain
+     * rollback-able). Note this cannot be left to
+     * {@link #verifyArtifactsAgainstRootManifest} — that deliberately skips absent artifacts.
+     */
+    private static final String[] MIGRATION_INPUTS = {FILE_LAUNCHER, FILE_RUN_BAT};
+
     private static final String[] VERIFIED_ROOT_ARTIFACTS = {
-            FILE_JRE21_ZIP, FILE_MIGRATION_EXE, FILE_ROLLBACK_EXE, FILE_LAUNCHER
+            FILE_JRE21_ZIP, FILE_MIGRATION_EXE, FILE_ROLLBACK_EXE, FILE_LAUNCHER, FILE_RUN_BAT
     };
 
     private JreMigrationStager() {
@@ -138,9 +162,12 @@ public final class JreMigrationStager {
 
         // 5 & 6. copy the verified migration.exe / rollback.exe -> app root. Required now that the
         //    build pipeline produces them: fail closed if either is missing rather than leave the
-        //    launcher with no binary to run. Idempotent when already staged by a prior run.
-        copyRequired(new File(artifacts, FILE_MIGRATION_EXE), new File(root, FILE_MIGRATION_EXE));
-        copyRequired(new File(artifacts, FILE_ROLLBACK_EXE), new File(root, FILE_ROLLBACK_EXE));
+        //    launcher with no binary to run. Overwrites any app-root copy from a prior attempt so the
+        //    binary that runs is always the one verified above.
+        copyRequired(verifiedRootManifest, FILE_MIGRATION_EXE,
+                new File(artifacts, FILE_MIGRATION_EXE), new File(root, FILE_MIGRATION_EXE));
+        copyRequired(verifiedRootManifest, FILE_ROLLBACK_EXE,
+                new File(artifacts, FILE_ROLLBACK_EXE), new File(root, FILE_ROLLBACK_EXE));
 
         // 7. backup run.bat -> run.bat_jre11 (once)
         File runBat = new File(root, FILE_RUN_BAT);
@@ -149,6 +176,11 @@ public final class JreMigrationStager {
             LOGGER.info("Backing up run.bat -> run.bat_jre11");
             copy(runBat, runBatBackup);
         }
+
+        // 8. last gate before the point of no return: everything migration.exe will consume from
+        //    .artifacts/ after the swap must actually be there. Verified already (step 2) if present;
+        //    this closes the "absent artifacts are skipped" hole in that check.
+        requireMigrationInputs(artifacts);
 
         LOGGER.info("JRE migration staged (verified); caller should now launch migration.exe and exit");
     }
@@ -183,15 +215,38 @@ public final class JreMigrationStager {
         }
     }
 
-    private static void copyRequired(File src, File dst) throws IOException {
+    /**
+     * Fails closed unless every {@link #MIGRATION_INPUTS} entry is staged in {@code .artifacts/}.
+     */
+    private static void requireMigrationInputs(File artifacts) throws IOException {
+        for (String name : MIGRATION_INPUTS) {
+            File staged = new File(artifacts, name);
+            if (!staged.exists()) {
+                throw new IOException(name + " missing from .artifacts/ — migration.exe installs it after "
+                        + "the JRE swap, where rollback is no longer possible; refusing to start the swap");
+            }
+        }
+    }
+
+    private static void copyRequired(Manifest rootMf, String name, File src, File dst) throws IOException {
         if (!src.exists()) {
             // The exes are produced by the build pipeline (configure.sh) and staged into .artifacts/; a
             // missing one is a broken bundle -> fail closed rather than leave the launcher with no
             // migration.exe / rollback.exe to run.
             throw new IOException(src.getName() + " missing from .artifacts/ — required to run the JRE migration");
         }
-        if (dst.exists()) {
-            return; // idempotent: already staged by a prior (interrupted) run
+        // Re-copy only when the app-root copy does not already match the SIGNED root manifest. Checking
+        // dst against the manifest (rather than hashing .artifacts/ a second time) costs one hash instead
+        // of two and asserts the property that actually matters -- the binary that runs is the one the
+        // manifest approves -- without depending on an earlier, unrelated method having verified src.
+        // A root copy left behind by an earlier attempt can be a DIFFERENT version (or one never checked
+        // against THIS manifest), and it is the copy MigrationLauncher executes — so the verified binary
+        // and the running binary must never be allowed to diverge. Comparing first, rather than always
+        // overwriting, keeps the re-run safe on Windows: a still-running (or AV-held) exe locks its own
+        // image, and an unconditional REPLACE_EXISTING copy would throw AccessDeniedException and turn a
+        // resumable retry into a permanent abort.
+        if (dst.exists() && ManifestVerifier.fileMatches(rootMf, name, dst)) {
+            return;
         }
         copy(src, dst);
     }

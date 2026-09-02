@@ -55,6 +55,8 @@ import io.mosip.registration.service.remap.CenterMachineReMapService;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.SyncStatusValidatorService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
+import io.mosip.registration.update.UpgradeOutcome;
+import io.mosip.registration.update.UpgradeProgressListener;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import javafx.application.Platform;
 import javafx.concurrent.Service;
@@ -557,11 +559,22 @@ public class HeaderController extends BaseController {
 		return hasUpdate;
 	}
 
-	private String softwareUpdate() {
+	private String softwareUpdate(UpgradeProgressListener progressListener) {
 		try {
 
-			softwareUpdateHandler.doSoftwareUpgrade();
-			return RegistrationConstants.ALERT_INFORMATION;
+			// doSoftwareUpgrade catches Throwable internally and rolls back, so it never propagates an
+			// exception -- its boolean return is the ONLY signal that the upgrade actually succeeded.
+			// Treating every call as success told the operator "update completed" after a rolled-back
+			// failure, and on a forced update restarted them into the rolled-back install.
+			UpgradeOutcome outcome = softwareUpdateHandler.doSoftwareUpgrade(progressListener);
+			if (outcome == UpgradeOutcome.ALREADY_IN_PROGRESS) {
+				// Not an error: another upgrade is still running. Reporting it as a failure would show
+				// "unable to update" and tear down that upgrade's own progress display.
+				return RegistrationConstants.ALERT_INFORMATION;
+			}
+			return outcome == UpgradeOutcome.COMPLETED
+					? RegistrationConstants.ALERT_INFORMATION
+					: RegistrationConstants.ERROR;
 
 		} catch (Exception exception) {
 			LOGGER.error(LoggerConstants.LOG_REG_HEADER, APPLICATION_NAME, APPLICATION_ID,
@@ -679,14 +692,37 @@ public class HeaderController extends BaseController {
 
 	public void executeSoftwareUpdateTask(Pane pane, ProgressIndicator progressIndicator) {
 
+		// Refuse a duplicate request BEFORE creating a Service or rebinding the indicator. The pane is
+		// released during the download, so the update menu stays reachable; starting a second task would
+		// bind progressIndicator to it and hide the running download's progress, then re-enable the pane
+		// and pop an alert when it returned. The handler guards the upgrade itself; this guards the UI.
+		if (softwareUpdateHandler.isUpgradeInProgress()) {
+			LOGGER.info(LoggerConstants.LOG_REG_HEADER, APPLICATION_NAME, APPLICATION_ID,
+					"A software upgrade is already running; ignoring the duplicate request");
+			// No alert: the progress indicator for the running download is already on screen, and there
+			// is no existing localised message for this state -- inventing one would mean writing
+			// strings for every shipped language.
+			return;
+		}
+
 		progressIndicator.setVisible(true);
-		pane.setDisable(true);
+		// The operator keeps working for the LONG phase of the upgrade -- the download -- but not for the
+		// whole of it. doSoftwareUpgrade first runs backUpSetup, which copies bin/, lib/ and the live
+		// Derby db/ into the backup folder; letting the operator register during that would copy a
+		// mutating database and produce a torn backup. So the pane stays disabled (as the "update now?"
+		// confirmation left it) and is re-enabled below on the first download-progress callback, by which
+		// point the backup is complete and the only remaining writes go to .artifacts/, which nothing
+		// reads until the operator restarts.
+		// NOTE: a failure still triggers rollBackSetup, which restores bin/ and lib/ underneath a running
+		// application. That hazard is inherent to the existing rollback design, not to this change.
 
 		/**
 		 * This anonymous service class will do the pre application launch task
 		 * progress.
 		 *
 		 */
+		final java.util.concurrent.atomic.AtomicBoolean paneReleased =
+				new java.util.concurrent.atomic.AtomicBoolean(false);
 		Service<String> taskService = new Service<String>() {
 			@Override
 			protected Task<String> createTask() {
@@ -707,8 +743,21 @@ public class HeaderController extends BaseController {
 								APPLICATION_ID, "Handling all the Software Update activities");
 
 						progressIndicator.setVisible(true);
-						pane.setDisable(true);
-						return softwareUpdate();
+						// Feed real download progress to the indicator. updateProgress is thread-safe and
+						// coalesces onto the FX thread; a negative fraction means the size is not yet
+						// known, leaving the indicator indeterminate rather than showing a false 0%.
+						return softwareUpdate((fraction, artifact) -> {
+							// First progress callback means backUpSetup finished and downloading has
+							// started -- from here the operator can safely keep working.
+							if (paneReleased.compareAndSet(false, true)) {
+								Platform.runLater(() -> pane.setDisable(false));
+							}
+							if (fraction < 0) {
+								updateProgress(-1, 1);
+							} else {
+								updateProgress(fraction, 1.0d);
+							}
+						});
 
 					}
 				};
@@ -729,16 +778,70 @@ public class HeaderController extends BaseController {
 					// RegistrationUIConstants.getMessageLanguageSpecific("UNABLE_TO_UPDATE);
 					softwareUpdate(pane, progressIndicator, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_TO_UPDATE), true);
 				} else if (RegistrationConstants.ALERT_INFORMATION.equalsIgnoreCase(taskService.getValue())) {
-					// Update completed Re-Launch application
-					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_COMPLETED));
-
-					restartApplication();
+					// Update staged. Ask the operator when to restart rather than restarting for them.
+					promptRestartAfterUpdate();
 				}
 
 			}
 
 		});
 
+		// Without this the pane stays disabled forever if the task dies on an Error/Throwable that
+		// softwareUpdate's catch block does not turn into an ERROR return value.
+		taskService.setOnFailed(new EventHandler<WorkerStateEvent>() {
+			@Override
+			public void handle(WorkerStateEvent t) {
+				LOGGER.error(LoggerConstants.LOG_REG_HEADER, APPLICATION_NAME, APPLICATION_ID,
+						"Software update task failed" + (taskService.getException() == null ? ""
+								: ExceptionUtils.getStackTrace(taskService.getException())));
+				pane.setDisable(false);
+				progressIndicator.setVisible(false);
+				generateAlert(RegistrationConstants.ERROR,
+						RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_TO_UPDATE));
+			}
+		});
+
+	}
+
+	/**
+	 * Asks the operator when to restart instead of restarting for them. Now that the application stays
+	 * usable throughout the download, restarting the moment it finished could discard a registration the
+	 * operator is in the middle of. Declining is safe: everything is staged in .artifacts/ and the
+	 * launcher applies it on the next start, whenever that is.
+	 */
+	private void promptRestartAfterUpdate() {
+		if (statusValidatorService.isToBeForceUpdate()) {
+			// Forced update: the freeze deadline has passed, so restarting is not the operator's choice.
+			// Mirrors the single-button forced path in softwareUpdate(...) -- without this, the
+			// deferrable prompt below would let an operator keep running a frozen-out version
+			// indefinitely, which the old unconditional restartApplication() call prevented.
+			Alert forcedAlert = createAlert(AlertType.INFORMATION,
+					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_COMPLETED),
+					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.ALERT_NOTE_LABEL),
+					RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.RESTART_APPLICATION),
+					RegistrationConstants.UPDATE_NOW_LABEL, null);
+
+			forcedAlert.showAndWait();
+			LOGGER.info(LoggerConstants.LOG_REG_HEADER, APPLICATION_NAME, APPLICATION_ID,
+					"Forced update: restarting without offering a deferral");
+			restartApplication();
+			return;
+		}
+
+		Alert restartAlert = createAlert(AlertType.CONFIRMATION,
+				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UPDATE_COMPLETED),
+				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.ALERT_NOTE_LABEL),
+				RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.RESTART_APPLICATION),
+				RegistrationConstants.UPDATE_NOW_LABEL, RegistrationConstants.UPDATE_LATER_LABEL);
+
+		restartAlert.showAndWait();
+
+		if (restartAlert.getResult() == ButtonType.OK) {
+			restartApplication();
+		} else {
+			LOGGER.info(LoggerConstants.LOG_REG_HEADER, APPLICATION_NAME, APPLICATION_ID,
+					"Operator deferred the restart; the staged update applies on the next start");
+		}
 	}
 
 	public void softwareUpdate(Pane pane, ProgressIndicator progressIndicator, String context,

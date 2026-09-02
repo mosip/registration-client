@@ -49,6 +49,9 @@ public final class ResumableDownloader {
     private static final int HTTP_RANGE_NOT_SATISFIABLE = 416;
     private static final int BUFFER_SIZE = 8192;
 
+    /** Report progress at most once per megabyte written, to keep UI callbacks cheap. */
+    private static final long PROGRESS_REPORT_BYTES = 1024L * 1024L;
+
     private ResumableDownloader() {
         // utility class
     }
@@ -75,6 +78,38 @@ public final class ResumableDownloader {
      */
     public static void download(String url, String targetDir, String fileName,
                                 int connectTimeout, int readTimeout) throws IOException {
+        download(url, targetDir, fileName, connectTimeout, readTimeout, NO_PROGRESS);
+    }
+
+    /**
+     * Byte-level progress callback for a single artifact. Invoked on the download thread as the body
+     * is streamed, so implementations must not touch UI state directly.
+     */
+    @FunctionalInterface
+    public interface ProgressListener {
+        /**
+         * @param bytesDone  bytes of this artifact written so far, including any resumed prefix
+         * @param totalBytes the artifact's full size, or a negative value when the server did not
+         *                   supply a usable Content-Length. The FINAL callback of a successful download
+         *                   always carries a real size: once the file is on disk its length is known,
+         *                   even for a chunked transfer that was indeterminate throughout.
+         */
+        void onBytes(long bytesDone, long totalBytes);
+    }
+
+    /** Listener used by the progress-free overload. */
+    private static final ProgressListener NO_PROGRESS = (done, total) -> {
+        // no progress reporting requested
+    };
+
+    /**
+     * As {@link #download(String, String, String, int, int)}, additionally reporting byte-level
+     * progress for this artifact. Progress is reported against the artifact's full size, so a resumed
+     * download starts from the bytes already on disk rather than from zero.
+     */
+    public static void download(String url, String targetDir, String fileName,
+                                int connectTimeout, int readTimeout,
+                                ProgressListener progressListener) throws IOException {
         LOGGER.info("Resumable download invoked, url : {}, target : {}/{}", url, targetDir, fileName);
         File dir = new File(targetDir);
         if (!dir.exists() && !dir.mkdirs() && !dir.exists()) {
@@ -82,11 +117,25 @@ public final class ResumableDownloader {
         }
         Artifact artifact = new Artifact(dir, fileName);
 
+        // No monotonicity guard is needed around progressListener. A restart is only triggered by
+        // attemptDownload returning false, which happens on the 206-wrong-offset and 416-discard paths --
+        // both of which return BEFORE writeBody, the only source of progress callbacks. So the second
+        // attempt can never follow a report, and progress cannot walk backwards.
+        //
         // At most two attempts: a resume attempt, and (only when the server signals the partial is
         // stale / unusable) one fresh restart with the stale part discarded.
         boolean allowResume = true;
         for (int attempt = 0; attempt < 2; attempt++) {
-            if (attemptDownload(url, artifact, allowResume, connectTimeout, readTimeout)) {
+            if (attemptDownload(url, artifact, allowResume, connectTimeout, readTimeout, progressListener)) {
+                // Guarantee a final 100% report on every success path. The 416 "the part is already the
+                // whole file" branch finalizes without streaming a body, so it would otherwise complete
+                // having reported nothing at all. Guarded on a real size: a zero-length artifact would
+                // otherwise report (0, 0), which callers read as "length unknown" and would snap an
+                // otherwise-finished bar back to indeterminate.
+                long finalSize = artifact.target.length();
+                if (finalSize > 0) {
+                    progressListener.onBytes(finalSize, finalSize);
+                }
                 return;
             }
             allowResume = false; // the partial was discarded; the next attempt starts from scratch
@@ -101,7 +150,8 @@ public final class ResumableDownloader {
      *         found stale/unusable and discarded, so the caller should restart from scratch.
      */
     private static boolean attemptDownload(String url, Artifact artifact, boolean allowResume,
-                                           int connectTimeout, int readTimeout) throws IOException {
+                                           int connectTimeout, int readTimeout,
+                                           ProgressListener progressListener) throws IOException {
         String validator = allowResume ? resumeValidator(artifact) : null;
         long existing = (validator != null) ? artifact.part.length() : 0L;
 
@@ -150,7 +200,11 @@ public final class ResumableDownloader {
 
             long contentLength = connection.getContentLengthLong();
             ensureSpaceForWrite(artifact.dir, artifact.part, contentLength, append);
-            writeBody(connection, artifact.part, append, existing);
+            // On a 206 the Content-Length covers only the remaining range, so the artifact's full size
+            // is what is already on disk plus what is still to come. Negative stays negative: an unknown
+            // length must be reported as unknown rather than mistaken for a complete file.
+            long artifactTotal = (contentLength < 0) ? -1L : (append ? existing + contentLength : contentLength);
+            writeBody(connection, artifact.part, append, existing, artifactTotal, progressListener);
             verifyComplete(artifact, contentLength, append, existing);
             artifact.finalizeOnto();
             LOGGER.info("Resumable download completed : {}", artifact.name);
@@ -196,20 +250,32 @@ public final class ResumableDownloader {
     }
 
     /** Streams the response body into the part file, appending from {@code existing} or overwriting. */
-    private static void writeBody(HttpURLConnection connection, File partFile, boolean append, long existing)
-            throws IOException {
+    private static void writeBody(HttpURLConnection connection, File partFile, boolean append, long existing,
+                                  long artifactTotal, ProgressListener progressListener) throws IOException {
         try (InputStream in = connection.getInputStream();
              RandomAccessFile out = new RandomAccessFile(partFile, "rw")) {
+            long written = append ? existing : 0L;
             if (append) {
                 out.seek(existing);
             } else {
                 out.setLength(0);
             }
+            progressListener.onBytes(written, artifactTotal);
             byte[] buffer = new byte[BUFFER_SIZE];
             int read;
+            long sinceLastReport = 0L;
             while ((read = in.read(buffer)) != -1) {
                 out.write(buffer, 0, read);
+                written += read;
+                sinceLastReport += read;
+                // Throttle: a ~200MB artifact is millions of buffer reads, and a UI callback per read
+                // would swamp the FX event queue that this progress is meant to keep responsive.
+                if (sinceLastReport >= PROGRESS_REPORT_BYTES) {
+                    progressListener.onBytes(written, artifactTotal);
+                    sinceLastReport = 0L;
+                }
             }
+            progressListener.onBytes(written, artifactTotal);
         }
     }
 

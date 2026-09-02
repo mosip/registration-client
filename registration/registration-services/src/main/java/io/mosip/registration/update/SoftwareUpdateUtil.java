@@ -133,10 +133,28 @@ public class SoftwareUpdateUtil {
      * @throws RegBaseCheckedException if the download cannot be completed
      */
     protected static void downloadResumable(String url, String targetDir, String fileName) throws RegBaseCheckedException {
+        downloadResumable(url, targetDir, fileName, null);
+    }
+
+    /**
+     * As {@link #downloadResumable(String, String, String)}, reporting byte-level progress for this
+     * artifact so the caller can drive a determinate progress bar. A {@code null} listener disables
+     * reporting.
+     */
+    protected static void downloadResumable(String url, String targetDir, String fileName,
+                                            ResumableDownloader.ProgressListener progressListener)
+            throws RegBaseCheckedException {
         try {
-            ResumableDownloader.download(url, targetDir, fileName,
-                    getTimeout(CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT),
-                    getTimeout(READ_TIMEOUT, DEFAULT_READ_TIMEOUT));
+            int connectTimeout = getTimeout(CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
+            int readTimeout = getTimeout(READ_TIMEOUT, DEFAULT_READ_TIMEOUT);
+            if (progressListener == null) {
+                // Delegate to the progress-free overload rather than allocating another no-op lambda;
+                // ResumableDownloader already owns the single NO_PROGRESS instance for this case.
+                ResumableDownloader.download(url, targetDir, fileName, connectTimeout, readTimeout);
+            } else {
+                ResumableDownloader.download(url, targetDir, fileName, connectTimeout, readTimeout,
+                        progressListener);
+            }
         } catch (IOException e) {
             LOGGER.error("Failed to download {}", url, e);
             throw new RegBaseCheckedException("REG-BUILD-005", "Failed to download " + url, e);

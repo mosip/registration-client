@@ -161,6 +161,65 @@ lib_dir="${target_dir}/lib"
 # _launcher.jar : the single entry point (registration-launcher module build output)
 cp "${work_dir}/registration-launcher/target/_launcher.jar" "${lib_dir}/_launcher.jar"
 
+# Authenticode-sign migration.exe / rollback.exe so Windows/AV accept them. Signed HERE, before both
+# manifests below, so the SIGNED bytes are what gets hashed. This is OS-level trust only: the launcher's
+# own gate is the hash in the signature-verified root MANIFEST.MF, so an unsigned exe still fails closed
+# there. Best-effort -- a missing signer only warns (does not break the build).
+#
+# Signing identity: the SAME mounted build_files/keystore.p12 + CodeSigning alias the jarsigner calls
+# above use for the jars. That p12 is produced by the regclient-openssl job (generate-signing-certs.sh),
+# which issues the client cert with extendedKeyUsage=codeSigning (openssl.cnf) off a 4096-bit MOSIP root
+# CA and exports it as -name "CodeSigning" -- so it is already a valid Authenticode identity and needs no
+# separate cert, env var or pipeline stage. The matching public cert reaches the client as provider.pem
+# (Client.crt, copied from the same mount at the top of this script).
+#
+# Trust model: MOSIP-managed root CA, not a publicly trusted one -- deployments that want SmartScreen
+# quiet must distribute the MOSIP root CA to the operator machines' trust store.
+if [ -z "${signer_timestamp_url_env:-}" ]; then
+  # Fail loudly rather than silently shipping unsigned exes: without a TSA URL osslsigncode is handed
+  # -ts "" and exits non-zero, which the per-exe failure branch below would downgrade to a WARN on a
+  # green build. A missing timestamp URL is a pipeline misconfiguration, not a transient condition.
+  echo "ERROR: signer_timestamp_url_env is not set -- refusing to attempt Authenticode signing"
+  exit 1
+fi
+
+if command -v osslsigncode >/dev/null 2>&1; then
+  # The keystore password goes in a mode-0600 temp file, never on the command line: argv is readable
+  # via ps / /proc/<pid>/cmdline, and this is the same secret the ManifestSigner call below
+  # deliberately keeps out of argv.
+  pass_file="$(mktemp)"
+  # Install the cleanup trap BEFORE the secret is written: an abort in between (SIGINT, an OOM-killed
+  # build step) would otherwise leave the plaintext CodeSigning password behind in $TMPDIR. mktemp
+  # already creates the file 0600; the chmod is belt-and-braces for a permissive TMPDIR.
+  trap 'rm -f "${pass_file}"' EXIT
+  chmod 600 "${pass_file}"
+  printf %s "${keystore_secret}" > "${pass_file}"
+  for exe in migration rollback; do
+    # -h sha256 is REQUIRED: osslsigncode 1.x defaults to SHA-1, which Windows has distrusted for code
+    # signing since 2016 -- an unflagged signature is rejected by the very OS check this block exists
+    # to satisfy. Matches -digestalg SHA-256 on the jarsigner calls above.
+    if osslsigncode sign \
+        -pkcs12 "${keystore}" -readpass "${pass_file}" \
+        -h sha256 \
+        -n "MOSIP Registration Client Upgrade" -i "https://mosip.io" \
+        -ts "${signer_timestamp_url_env}" \
+        -in "${lib_dir}/${exe}.exe" -out "${lib_dir}/${exe}.exe.signed"; then
+      mv "${lib_dir}/${exe}.exe.signed" "${lib_dir}/${exe}.exe"
+      echo "Authenticode-signed ${exe}.exe"
+    else
+      # Best-effort as documented above. Without this branch `set -e` (line 3) would abort the whole
+      # image build on a TSA outage or an unset signer_timestamp_url_env. Shipping unsigned is safe
+      # for the upgrade itself: the launcher gates on the root-manifest hash, not on Authenticode.
+      rm -f "${lib_dir}/${exe}.exe.signed"
+      echo "WARN: Authenticode signing failed for ${exe}.exe -- shipping it unsigned"
+    fi
+  done
+  rm -f "${pass_file}"
+  trap - EXIT
+else
+  echo "WARN: osslsigncode not found -- migration.exe/rollback.exe NOT Authenticode-signed (install osslsigncode on the build image)"
+fi
+
 # lib/MANIFEST.MF : per-file integrity hashes of everything under lib/ (bundled inside lib.zip)
 # ManifestSigner reads the keystore password from the keystore_secret_env env var (not argv) so the
 # secret never appears in process listings.
@@ -175,9 +234,20 @@ cd "${target_dir}"
 # (ManifestCreator.addEntryInManifest). _launcher.jar / migration.exe / rollback.exe are now built
 # into lib/ above, so they are hashed here AND auto-hosted under <version>/lib/ -- matching
 # SoftwareUpdateHandler's <version>/lib/<name> download URL.
-# TODO(contract): jre21.zip and run.bat still resolve at app root. SoftwareUpdateHandler downloads
-#   EVERY root-manifest entry from <version>/lib/<name>, so it would 404 on <version>/lib/jre21.zip
-#   and <version>/lib/run.bat until their server-path contract is settled (see note to Anusha).
+#
+# DOWNLOAD-PATH CONTRACT: SoftwareUpdateHandler downloads EVERY root-manifest entry from
+# <version>/lib/<basename> into .artifacts/, so every entry listed here MUST be reachable at that
+# URL. jre21.zip and run.bat are BUILT at the app root (they must stay out of lib/ -- and therefore
+# out of lib.zip: jre21.zip is ~200MB and would bloat every incremental patch), so the nginx block
+# below ALSO publishes a copy of each under <version>/lib/. That is a server-side path alias only;
+# neither file is added to the lib/ folder, so lib.zip and lib/MANIFEST.MF are unaffected.
+#
+# run.bat MUST stay in this list: migration.exe restores the app-root run.bat from .artifacts/run.bat
+# (native/internal/upgrade/upgrade.go) and hard-fails if it is absent, and that failure lands AFTER
+# the JRE swap where ShouldRollback() is false -- so a missing entry means a migration that reports
+# failure and can never succeed on retry. The lib/ copy is renamed 1201to121_run.bat, so the
+# launcher's lib/ -> .artifacts/ transition rescue does not cover it either; this download is the
+# only path that populates .artifacts/run.bat.
 java -cp "${java_cp}" io.mosip.registration.update.ManifestCreator --list "${client_version_env}" "${target_dir}" \
   "${target_dir}/jre21.zip" \
   "${lib_dir}/_launcher.jar" \
@@ -230,6 +300,17 @@ cp "${work_dir}"/build_files/maven-metadata.xml /var/www/html/registration-clien
 cp "${work_dir}"/registration-client/target/reg-client.zip /var/www/html/registration-client/${client_version_env}/
 cp "${work_dir}"/registration-test-utility.zip /var/www/html/registration-client/${client_version_env}/
 cp "${work_dir}"/registration-client/target/run.bat /var/www/html/registration-client/${client_version_env}/
+
+# Root-manifest orchestration artifacts that live at the app root must ALSO be reachable under
+# <version>/lib/ : SoftwareUpdateHandler downloads every root-manifest entry from
+# <version>/lib/<basename> into .artifacts/, and a 404 there aborts the whole download loop AFTER the
+# local ./MANIFEST.MF has already been replaced with the server one -- leaving a client that boots into
+# the upgrade path with an incomplete .artifacts/. Server-side path alias only: the files are NOT added
+# to the lib/ folder, so lib.zip and lib/MANIFEST.MF stay unchanged (see the root-manifest block above).
+# Symlinks, not copies: jre21.zip is ~200MB and a second physical copy would double the per-release
+# footprint on the nginx volume. nginx follows symlinks by default (disable_symlinks is off).
+ln -sfn ../jre21.zip /var/www/html/registration-client/${client_version_env}/lib/jre21.zip
+ln -sfn ../run.bat   /var/www/html/registration-client/${client_version_env}/lib/run.bat
 
 echo "setting up nginx static content - completed"
 

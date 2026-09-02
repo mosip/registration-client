@@ -95,4 +95,57 @@ public class MigrationCleanerTest {
         assertTrue(removed.contains("migration.exe"));
         assertFalse(new File(base, "migration.exe").exists());
     }
+
+    @Test
+    public void cleanup_artifactsHoldingAnInterruptedDownload_isKept() throws Exception {
+        File root = folder.getRoot();
+        File artifacts = new File(root, ".artifacts");
+        assertTrue(artifacts.mkdirs());
+        // A .part sidecar means an upgrade download was interrupted, not completed. Since the handler
+        // now adopts the new ./MANIFEST.MF only after every artifact lands, versions legitimately match
+        // in that state -- wiping .artifacts/ here would throw away a resumable ~200MB download.
+        Files.write(new File(artifacts, "jre21.zip.part").toPath(), "half-a-jre".getBytes());
+        Files.write(new File(artifacts, "jre21.zip.part.meta").toPath(), "etag".getBytes());
+        File jre21Temp = new File(root, "jre21_temp");
+        assertTrue(jre21Temp.mkdirs());
+
+        List<String> removed = MigrationCleaner.cleanup(root);
+
+        assertTrue("in-progress .artifacts/ must survive cleanup", artifacts.exists());
+        assertTrue(new File(artifacts, "jre21.zip.part").exists());
+        assertFalse("only .artifacts/ is spared; other artefacts still go", removed.contains(".artifacts"));
+        assertFalse("jre21_temp is unrelated to the download and must still be cleaned", jre21Temp.exists());
+    }
+
+    @Test
+    public void cleanup_artifactsWithNoPartFiles_isRemoved() throws Exception {
+        File root = folder.getRoot();
+        File artifacts = new File(root, ".artifacts");
+        assertTrue(artifacts.mkdirs());
+        // A completed migration leaves finalized artifacts and no sidecars -> normal cleanup applies.
+        Files.write(new File(artifacts, "jre21.zip").toPath(), "a-whole-jre".getBytes());
+
+        List<String> removed = MigrationCleaner.cleanup(root);
+
+        assertFalse(artifacts.exists());
+        assertTrue(removed.contains(".artifacts"));
+    }
+
+    @Test
+    public void cleanup_artifactsWithAnAbandonedStalePartial_isRemoved() throws Exception {
+        File root = folder.getRoot();
+        File artifacts = new File(root, ".artifacts");
+        assertTrue(artifacts.mkdirs());
+        File stale = new File(artifacts, "jre21.zip.part");
+        Files.write(stale.toPath(), "half-a-jre".getBytes());
+        // An upgrade started and abandoned months ago. Without a retention bound this partial would pin
+        // ~200MB on a healthy client forever, because a matched-version startup is exactly the state the
+        // in-progress guard protects.
+        assertTrue(stale.setLastModified(System.currentTimeMillis() - (60L * 24 * 60 * 60 * 1000)));
+
+        List<String> removed = MigrationCleaner.cleanup(root);
+
+        assertFalse("an abandoned partial must not keep .artifacts/ alive", artifacts.exists());
+        assertTrue(removed.contains(".artifacts"));
+    }
 }

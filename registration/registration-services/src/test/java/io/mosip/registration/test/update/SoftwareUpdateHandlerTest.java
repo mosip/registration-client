@@ -3,8 +3,13 @@ package io.mosip.registration.test.update;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.util.Set;
+import java.util.List;
+import java.util.HashSet;
+import java.util.ArrayList;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.HashMap;
@@ -16,6 +21,8 @@ import java.util.jar.Manifest;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.update.SoftwareUpdateUtil;
+import io.mosip.registration.update.ResumableDownloader;
+import io.mosip.registration.update.UpgradeOutcome;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -86,11 +93,44 @@ public class SoftwareUpdateHandlerTest {
 		PowerMockito.mockStatic(ApplicationContext.class, FileUtils.class);
 	}
 
+	/**
+	 * update() calls SoftwareUpdateUtil.download(String) twice - once for the server manifest and once
+	 * for its detached signature - but PowerMock's stub(...).toReturn() can only hand back a single
+	 * instance, which the first read exhausts. ByteArrayInputStream.close() is already a no-op, so
+	 * re-arming on close gives both calls the full bytes without changing what is stubbed.
+	 */
+	private static InputStream rereadable(byte[] bytes) {
+		return new ByteArrayInputStream(bytes) {
+			@Override
+			public void close() {
+				// Rewind explicitly rather than via reset(): Manifest's parser calls mark() while
+				// reading, so reset() would return to wherever the parser last marked - near EOF -
+				// and the second caller would see an empty stream.
+				this.pos = 0;
+				this.mark = 0;
+			}
+		};
+	}
+
 	@After
 	public void cleanup() {
 		// MANIFEST.MF at the project root is written by the production update() method;
 		// tempFolder handles cleanup of all test-created directory trees automatically.
 		new File("MANIFEST.MF").delete();
+		// update() now commits the detached signature alongside the manifest - clean it up too, along
+		// with the staging files, so a mid-write failure cannot leave them behind for the next test.
+		new File("MANIFEST.MF.sig").delete();
+		new File("MANIFEST.MF.tmp").delete();
+		new File("MANIFEST.MF.sig.tmp").delete();
+		// update() stages into .artifacts/ relative to the module dir; remove what the tests created.
+		File artifactsDir = new File(".artifacts");
+		File[] staged = artifactsDir.listFiles();
+		if (staged != null) {
+			for (File f : staged) {
+				f.delete();
+			}
+		}
+		artifactsDir.delete();
 	}
 
 	@Test
@@ -400,12 +440,199 @@ public class SoftwareUpdateHandlerTest {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		serverManifestContent.write(baos);
 		PowerMockito.stub(PowerMockito.method(SoftwareUpdateUtil.class, "download", String.class))
-				.toReturn(new ByteArrayInputStream(baos.toByteArray()));
+				.toReturn(rereadable(baos.toByteArray()));
 
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
 		softwareUpdateHandler.doSoftwareUpgrade();
 		// update() calls globalParamService.update(IS_SOFTWARE_UPDATE_AVAILABLE, DISABLE) at the very
 		// end — verifying this confirms the entire update path ran (manifest fetched, files processed)
+		Mockito.verify(globalParamService).update(
+				Mockito.eq(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE),
+				Mockito.eq(RegistrationConstants.DISABLE));
+	}
+
+	@Test
+	public void doSoftwareUpgrade_withProgressListener_reportsEveryArtifactAndEndsAtFullProgress()
+			throws Exception {
+		// The in-app upgrade leaves the operator working, so the bar must report real progress rather
+		// than spin: every artifact advances it and the last report is 100%.
+		Attributes mainAttrs = new Attributes();
+		mainAttrs.put(Attributes.Name.MANIFEST_VERSION, "1.2.0-SNAPSHOT");
+		Mockito.when(manifest.getMainAttributes()).thenReturn(mainAttrs);
+		// Back up into a TemporaryFolder, not src/test/resources/sql: backUpSetup mkdirs() a
+		// <version>_<timestamp> tree and relies on FileUtils.deleteDirectory to prune old ones, but
+		// FileUtils is statically mocked here so that prune is a no-op -- pointing at the resources
+		// tree leaks a directory per run into the repo.
+		ReflectionTestUtils.setField(softwareUpdateHandler, "backUpPath",
+				tempFolder.newFolder("backup-progress").getAbsolutePath());
+		ReflectionTestUtils.setField(softwareUpdateHandler, "serverRegClientURL", "https://dev.mosip.net/registration-client/");
+		ReflectionTestUtils.setField(softwareUpdateHandler, "latestVersion", "1.2.0-SNAPSHOT");
+		PowerMockito.suppress(PowerMockito.method(FileUtils.class, "copyFile", File.class, File.class));
+		PowerMockito.mockStatic(SoftwareUpdateUtil.class);
+
+		Manifest serverManifestContent = new Manifest();
+		serverManifestContent.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.2.0-SNAPSHOT");
+		Attributes first = new Attributes();
+		first.put(Attributes.Name.CONTENT_TYPE, "checksum-a");
+		Attributes second = new Attributes();
+		second.put(Attributes.Name.CONTENT_TYPE, "checksum-b");
+		serverManifestContent.getEntries().put("artifact-a.jar", first);
+		serverManifestContent.getEntries().put("artifact-b.jar", second);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		serverManifestContent.write(baos);
+		PowerMockito.stub(PowerMockito.method(SoftwareUpdateUtil.class, "download", String.class))
+				.toReturn(rereadable(baos.toByteArray()));
+		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
+
+		List<Double> fractions = new ArrayList<>();
+		Set<String> artifacts = new HashSet<>();
+		softwareUpdateHandler.doSoftwareUpgrade((fraction, artifact) -> {
+			fractions.add(fraction);
+			artifacts.add(artifact);
+		});
+
+		Assert.assertFalse("expected progress reports", fractions.isEmpty());
+		Assert.assertEquals("progress must finish at 100%", 1.0d, fractions.get(fractions.size() - 1), 0.0001d);
+		double previous = -1d;
+		for (Double fraction : fractions) {
+			Assert.assertTrue("progress must never go backwards", fraction >= previous);
+			Assert.assertTrue("progress must stay within [0,1]", fraction >= 0d && fraction <= 1d);
+			previous = fraction;
+		}
+		// Manifest entry order is not guaranteed, so assert coverage rather than sequence.
+		Assert.assertTrue("both artifacts must be reported", artifacts.contains("artifact-a.jar")
+				&& artifacts.contains("artifact-b.jar"));
+		// The detached signature must be adopted together with the manifest. Leaving the previous
+		// signature in place would fail the launcher's Case B check on the next start, with no recovery.
+		Assert.assertTrue("MANIFEST.MF must be written on success", new File("MANIFEST.MF").exists());
+		Assert.assertTrue("MANIFEST.MF.sig must be written alongside it",
+				new File("MANIFEST.MF.sig").exists());
+		Assert.assertFalse("no staging files may be left behind", new File("MANIFEST.MF.tmp").exists());
+	}
+
+	@Test
+	public void doSoftwareUpgrade_afterSuccess_stillReportsTheRunningVersionUntilRestart() throws Exception {
+		// The restart is now a prompt the operator can defer, so the downloaded version can sit on disk
+		// for the rest of the session while the OLD jars keep executing. getCurrentVersion() feeds packet
+		// metadata (META_CLIENT_VERSION), the version sent on every sync/REST call and the UI labels --
+		// all of which must keep describing what is actually running, not what is staged.
+		Attributes mainAttrs = new Attributes();
+		mainAttrs.put(Attributes.Name.MANIFEST_VERSION, "1.2.0-SNAPSHOT");
+		Mockito.when(manifest.getMainAttributes()).thenReturn(mainAttrs);
+		ReflectionTestUtils.setField(softwareUpdateHandler, "backUpPath",
+				tempFolder.newFolder("backup-version").getAbsolutePath());
+		ReflectionTestUtils.setField(softwareUpdateHandler, "serverRegClientURL", "https://dev.mosip.net/registration-client/");
+		ReflectionTestUtils.setField(softwareUpdateHandler, "latestVersion", "9.9.9-NEW");
+		PowerMockito.suppress(PowerMockito.method(FileUtils.class, "copyFile", File.class, File.class));
+		PowerMockito.mockStatic(SoftwareUpdateUtil.class);
+
+		Manifest serverManifestContent = new Manifest();
+		serverManifestContent.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "9.9.9-NEW");
+		Attributes entryAttrs = new Attributes();
+		entryAttrs.put(Attributes.Name.CONTENT_TYPE, "checksum");
+		serverManifestContent.getEntries().put("artifact-a.jar", entryAttrs);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		serverManifestContent.write(baos);
+		PowerMockito.stub(PowerMockito.method(SoftwareUpdateUtil.class, "download", String.class))
+				.toReturn(rereadable(baos.toByteArray()));
+		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
+
+		Assert.assertEquals("upgrade should succeed", UpgradeOutcome.COMPLETED,
+				softwareUpdateHandler.doSoftwareUpgrade());
+
+		Assert.assertTrue("the new manifest must be on disk", new File("MANIFEST.MF").exists());
+		Assert.assertEquals("getCurrentVersion() must still report the RUNNING version until restart",
+				"1.2.0-SNAPSHOT", softwareUpdateHandler.getCurrentVersion());
+	}
+
+	@Test
+	public void doSoftwareUpgrade_artifactAlreadyStagedAndIntact_isNotDownloadedAgain() throws Exception {
+		// The skip test used to look at lib/<entry>, which the design guarantees is never populated from
+		// 1.3.0 onwards -- so it was always false and every artifact was re-fetched on every attempt,
+		// including the ~200MB jre21.zip on a retry that had already finished it.
+		Attributes mainAttrs = new Attributes();
+		mainAttrs.put(Attributes.Name.MANIFEST_VERSION, "1.2.0-SNAPSHOT");
+		Mockito.when(manifest.getMainAttributes()).thenReturn(mainAttrs);
+		ReflectionTestUtils.setField(softwareUpdateHandler, "backUpPath",
+				tempFolder.newFolder("backup-staged").getAbsolutePath());
+		ReflectionTestUtils.setField(softwareUpdateHandler, "serverRegClientURL", "https://dev.mosip.net/registration-client/");
+		ReflectionTestUtils.setField(softwareUpdateHandler, "latestVersion", "1.2.0-SNAPSHOT");
+		PowerMockito.suppress(PowerMockito.method(FileUtils.class, "copyFile", File.class, File.class));
+		PowerMockito.mockStatic(SoftwareUpdateUtil.class);
+
+		Manifest serverManifestContent = new Manifest();
+		serverManifestContent.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.2.0-SNAPSHOT");
+		Attributes entryAttrs = new Attributes();
+		entryAttrs.put(Attributes.Name.CONTENT_TYPE, "checksum");
+		serverManifestContent.getEntries().put("artifact-a.jar", entryAttrs);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		serverManifestContent.write(baos);
+		PowerMockito.stub(PowerMockito.method(SoftwareUpdateUtil.class, "download", String.class))
+				.toReturn(rereadable(baos.toByteArray()));
+
+		// The artifact is already staged and passes its checksum.
+		File artifactsDir = new File(".artifacts");
+		Assert.assertTrue(artifactsDir.exists() || artifactsDir.mkdirs());
+		// Plain stream, not java.nio.file.Files: PowerMock's instrumentation cannot reflect into
+		// java.nio.file under JPMS ("module java.base does not opens java.nio.file").
+		try (FileOutputStream staged = new FileOutputStream(new File(artifactsDir, "artifact-a.jar"))) {
+			staged.write("already-downloaded".getBytes());
+		}
+		PowerMockito.stub(PowerMockito.method(SoftwareUpdateUtil.class, "validateJarChecksum",
+				File.class, Attributes.class)).toReturn(true);
+		// Any download attempt fails the test outright: reaching it means the skip did not work.
+		PowerMockito.stub(PowerMockito.method(SoftwareUpdateUtil.class, "downloadResumable",
+				String.class, String.class, String.class, ResumableDownloader.ProgressListener.class))
+				.toThrow(new IllegalStateException("a staged, intact artifact must not be re-downloaded"));
+		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
+
+		Assert.assertEquals(UpgradeOutcome.COMPLETED, softwareUpdateHandler.doSoftwareUpgrade());
+	}
+
+	@Test
+	public void doSoftwareUpgrade_whileAnotherIsRunning_reportsAlreadyInProgressNotFailure() throws Exception {
+		// The operator can reach the update menu during a download now that the pane is released. A
+		// rejected duplicate must be distinguishable from a real failure: reporting FAILED made the
+		// caller show "unable to update" and tear down the RUNNING upgrade's progress display.
+		ReflectionTestUtils.setField(softwareUpdateHandler, "upgradeInProgress",
+				new java.util.concurrent.atomic.AtomicBoolean(true));
+
+		UpgradeOutcome outcome = softwareUpdateHandler.doSoftwareUpgrade();
+
+		Assert.assertEquals(UpgradeOutcome.ALREADY_IN_PROGRESS, outcome);
+		Assert.assertTrue("the in-progress flag must be reported to callers",
+				softwareUpdateHandler.isUpgradeInProgress());
+		// The rejected request must not have touched anything.
+		Mockito.verifyNoInteractions(globalParamService);
+	}
+
+	@Test
+	public void doSoftwareUpgrade_noArgOverload_stillWorksWithoutAProgressListener() throws Exception {
+		// The pre-existing no-arg entry point must keep working for every caller that wants no progress.
+		Attributes mainAttrs = new Attributes();
+		mainAttrs.put(Attributes.Name.MANIFEST_VERSION, "1.2.0-SNAPSHOT");
+		Mockito.when(manifest.getMainAttributes()).thenReturn(mainAttrs);
+		// See the note on the progress test above: temp folder, so nothing leaks into the repo.
+		ReflectionTestUtils.setField(softwareUpdateHandler, "backUpPath",
+				tempFolder.newFolder("backup-noarg").getAbsolutePath());
+		ReflectionTestUtils.setField(softwareUpdateHandler, "serverRegClientURL", "https://dev.mosip.net/registration-client/");
+		ReflectionTestUtils.setField(softwareUpdateHandler, "latestVersion", "1.2.0-SNAPSHOT");
+		PowerMockito.suppress(PowerMockito.method(FileUtils.class, "copyFile", File.class, File.class));
+		PowerMockito.mockStatic(SoftwareUpdateUtil.class);
+
+		Manifest serverManifestContent = new Manifest();
+		serverManifestContent.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.2.0-SNAPSHOT");
+		Attributes entryAttrs = new Attributes();
+		entryAttrs.put(Attributes.Name.CONTENT_TYPE, "checksum");
+		serverManifestContent.getEntries().put("artifact-a.jar", entryAttrs);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		serverManifestContent.write(baos);
+		PowerMockito.stub(PowerMockito.method(SoftwareUpdateUtil.class, "download", String.class))
+				.toReturn(rereadable(baos.toByteArray()));
+		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
+
+		softwareUpdateHandler.doSoftwareUpgrade();
+
 		Mockito.verify(globalParamService).update(
 				Mockito.eq(RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE),
 				Mockito.eq(RegistrationConstants.DISABLE));
@@ -432,7 +659,7 @@ public class SoftwareUpdateHandlerTest {
 	}
 
 	@Test
-	public void doSoftwareUpgrade_withSuppressedCopyFile_callsUpdate() throws Exception {
+	public void doSoftwareUpgrade_staleServerManifestAndFailedFetch_reportsFailure() throws Exception {
 		Attributes attributes = new Attributes();
 		attributes.put(Attributes.Name.MANIFEST_VERSION, "1.2.0-SNAPSHOT");
 		Mockito.when(manifest.getMainAttributes()).thenReturn(attributes);
@@ -441,12 +668,20 @@ public class SoftwareUpdateHandlerTest {
 		ReflectionTestUtils.setField(softwareUpdateHandler, "latestVersion", "1.2.0-SNAPSHOT");
 		// Suppress copyFile(File,File) explicitly to allow backUpSetup to complete
 		PowerMockito.suppress(PowerMockito.method(FileUtils.class, "copyFile", File.class, File.class));
-		// Pre-set serverManifest so update() can call write() (mocked, no-op) after setServerManifest fails silently
+		// A leftover manifest from an earlier attempt is planted here: the field is only reset at the end
+		// of a SUCCESSFUL update(), so this is a state a real client reaches after any failed upgrade.
 		ReflectionTestUtils.setField(softwareUpdateHandler, "serverManifest", manifest);
-		// SoftwareUpdateUtil.download returns null by default → new Manifest(null) → NPE caught in setServerManifest → serverManifest stays pre-set
+		// SoftwareUpdateUtil.download is mocked and returns null, i.e. the manifest fetch fails.
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
-		softwareUpdateHandler.doSoftwareUpgrade();
-		// update() ran to completion — IS_SOFTWARE_UPDATE_AVAILABLE and LAST_SOFTWARE_UPDATE must have been set
+
+		UpgradeOutcome outcome = softwareUpdateHandler.doSoftwareUpgrade();
+
+		// It must report failure rather than quietly proceeding on the stale manifest -- which would
+		// download from the NEW version's URLs while committing the OLD version's manifest.
+		Assert.assertEquals("a failed manifest fetch must report failure", UpgradeOutcome.FAILED, outcome);
+		Assert.assertNull("the stale manifest must not survive the failed fetch",
+				ReflectionTestUtils.getField(softwareUpdateHandler, "serverManifest"));
+		// backUpSetup still ran, so the backup-folder param was recorded before the failure.
 		Mockito.verify(globalParamService, Mockito.atLeastOnce())
 				.update(Mockito.anyString(), Mockito.anyString());
 	}
