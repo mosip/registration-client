@@ -1270,6 +1270,7 @@ public class RegistrationConstants {
 	public static final String UPDATE_SDK_QUALITY_SCORE = "mosip.registration.replace_sdk_quality_score";
 
 	// Biometric Quality Orchestrator configuration key prefixes
+	public static final String QUALITY_ORCHESTRATOR_ENABLED = "mosip.registration.quality.orchestrator.enabled";
 	public static final String QUALITY_SDK_VENDORS = "mosip.registration.quality.sdk.vendors";
 	public static final String QUALITY_EVALUATORS_PREFIX = "mosip.registration.quality.evaluators.";
 	/** Per-modality evaluator config prefix: mosip.registration.quality.evaluators.modality.<MODALITY> */
@@ -1280,7 +1281,10 @@ public class RegistrationConstants {
 	/** Per-modality aggregation strategy config prefix: mosip.registration.quality.aggregation.modality.<MODALITY> */
 	public static final String QUALITY_AGGREGATION_MODALITY_PREFIX = "mosip.registration.quality.aggregation.modality.";
 	public static final String QUALITY_WEIGHT_PREFIX = "mosip.registration.quality.weight.";
+	public static final String QUALITY_THRESHOLD_SOURCE_PREFIX = "mosip.registration.quality.threshold.source.";
+	public static final String QUALITY_DISPLAY_SOURCE_PREFIX = "mosip.registration.quality.display.source.";
 	public static final String QUALITY_FORMULA_PREFIX = "mosip.registration.quality.formula.";
+	public static final String QUALITY_TIMEOUT_PREFIX = "mosip.registration.quality.timeout.";
 
 	// Packet Sync
 	public static final String PACKET_SYNC = "packet_sync";

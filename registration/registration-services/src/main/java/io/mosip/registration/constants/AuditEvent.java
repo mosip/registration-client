@@ -324,10 +324,16 @@ public enum AuditEvent {
 			"Client Upgrade: SQL scripts execution success"),
 
 	// Biometric Quality Orchestrator audit events
-	QUALITY_ORCH_COMPLETED("REG-QORCH-001", SYSTEM_EVENT.getCode(), "QUALITY_ORCH_COMPLETED",
-			"Quality Orchestrator: Successfully evaluated and aggregated biometric quality scores"),
-	QUALITY_ORCH_FAILED("REG-QORCH-002", SYSTEM_EVENT.getCode(), "QUALITY_ORCH_FAILED",
-			"Quality Orchestrator: Failed to evaluate biometric quality scores"),
+	SDK_QUALITY_EVAL_SUCCESS("REG-EVT-090", SYSTEM_EVENT.getCode(), "SDK_QUALITY_EVAL_SUCCESS",
+			"SDK quality evaluation succeeded"),
+	SDK_QUALITY_EVAL_TIMEOUT("REG-EVT-091", SYSTEM_EVENT.getCode(), "SDK_QUALITY_EVAL_TIMEOUT",
+			"SDK quality evaluation timed out"),
+	SDK_QUALITY_EVAL_FAILED("REG-EVT-092", SYSTEM_EVENT.getCode(), "SDK_QUALITY_EVAL_FAILED",
+			"SDK quality evaluation failed"),
+	QUALITY_ORCH_COMPLETED("REG-EVT-093", SYSTEM_EVENT.getCode(), "QUALITY_ORCH_COMPLETED",
+			"Quality orchestration completed"),
+	QUALITY_ORCH_FAILED("REG-EVT-094", SYSTEM_EVENT.getCode(), "QUALITY_ORCH_FAILED",
+			"Quality orchestration failed"),
 	QUALITY_EVAL_STARTED("REG-QORCH-003", SYSTEM_EVENT.getCode(), "QUALITY_EVAL_STARTED",
 			"Quality Orchestrator: Evaluator started for modality");
 

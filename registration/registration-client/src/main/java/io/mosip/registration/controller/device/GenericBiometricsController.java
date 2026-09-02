@@ -574,7 +574,19 @@ public class GenericBiometricsController extends BaseController {
 			@Override
 			public void handle(WorkerStateEvent t) {
 				LOGGER.debug("RCapture task failed");
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
+
+				// Biometric quality errors (REG-SDK-*) carry a specific, operator-facing
+				// message per the error scenario that occurred - show that verbatim instead
+				// of the generic scanning-error message.
+				String alertMessage = RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR);
+				Throwable failureCause = t.getSource().getException();
+				if (failureCause instanceof RegBaseCheckedException) {
+					String errorCode = ((RegBaseCheckedException) failureCause).getErrorCode();
+					if (errorCode != null && errorCode.startsWith("REG-SDK-")) {
+						alertMessage = ((RegBaseCheckedException) failureCause).getErrorText();
+					}
+				}
+				generateAlert(RegistrationConstants.ERROR, alertMessage);
 
 				LOGGER.debug("Enabling LogOut");
 				// Enable Auto-Logout
@@ -657,6 +669,7 @@ public class GenericBiometricsController extends BaseController {
 		try {
 			double score = 0;
 			double sdkScore = 0;
+			double aggregatedScore = 0;
 			switch (modalityName) {
 				case FINGERPRINT_SLAB_LEFT:
 				case FINGERPRINT_SLAB_RIGHT:
@@ -671,6 +684,7 @@ public class GenericBiometricsController extends BaseController {
 								FingerDecoder.convertFingerISOToImageBytes(convertRequestDto));
 						score += dto.getQualityScore();
 						sdkScore += dto.getSdkScore();
+						aggregatedScore += dto.getAggregatedScore();
 					}
 					getRegistrationDTOFromSession().BIO_SCORES.put(String.format("%s_%s_%s",
 							fieldId, modalityName.name(), retry),
@@ -678,6 +692,9 @@ public class GenericBiometricsController extends BaseController {
 					getRegistrationDTOFromSession().SDK_SCORES.put(String.format("%s_%s_%s",
 							fieldId, modalityName.name(), retry),
 							sdkScore / biometricsDtos.size());
+					getRegistrationDTOFromSession().AGGREGATED_SCORES.put(String.format("%s_%s_%s",
+							fieldId, modalityName.name(), retry),
+							aggregatedScore / biometricsDtos.size());
 					break;
 				case IRIS_DOUBLE:
 					for(BiometricsDto dto : biometricsDtos) {
@@ -689,6 +706,7 @@ public class GenericBiometricsController extends BaseController {
 								IrisDecoder.convertIrisISOToImageBytes(convertRequestDto));
 						score += dto.getQualityScore();
 						sdkScore += dto.getSdkScore();
+						aggregatedScore += dto.getAggregatedScore();
 					}
 					getRegistrationDTOFromSession().BIO_SCORES.put(String.format("%s_%s_%s",
 							fieldId, modalityName.name(), retry),
@@ -696,6 +714,9 @@ public class GenericBiometricsController extends BaseController {
 					getRegistrationDTOFromSession().SDK_SCORES.put(String.format("%s_%s_%s",
 							fieldId, modalityName.name(), retry),
 							sdkScore / biometricsDtos.size());
+					getRegistrationDTOFromSession().AGGREGATED_SCORES.put(String.format("%s_%s_%s",
+							fieldId, modalityName.name(), retry),
+							aggregatedScore / biometricsDtos.size());
 					break;
 
 				case EXCEPTION_PHOTO:
@@ -713,6 +734,9 @@ public class GenericBiometricsController extends BaseController {
 					getRegistrationDTOFromSession().SDK_SCORES.put(String.format("%s_%s_%s",
 							fieldId, modalityName.name(), retry),
 							faceDto.getSdkScore());
+					getRegistrationDTOFromSession().AGGREGATED_SCORES.put(String.format("%s_%s_%s",
+							fieldId, modalityName.name(), retry),
+							faceDto.getAggregatedScore());
 					break;
 			}
 		} catch (Exception exception) {
@@ -804,10 +828,12 @@ public class GenericBiometricsController extends BaseController {
 		LOGGER.debug("Updating progress Bar,Text and attempts Box in UI");
 
 		int retry = getRegistrationDTOFromSession().ATTEMPTS.getOrDefault(String.format("%s_%s", fieldId, modality.name()), 0);
+		String scoreKey = String.format("%s_%s_%s", fieldId, modality.name(), retry);
 
-		setCapturedValues(getRegistrationDTOFromSession().BIO_SCORES.getOrDefault(String.format("%s_%s_%s",
-				fieldId, modality.name(), retry), 0.0), getRegistrationDTOFromSession().SDK_SCORES.getOrDefault(String.format("%s_%s_%s",
-				fieldId, modality.name(), retry), 0.0), retry, bioService.getMDMQualityThreshold(modality));
+		setCapturedValues(getRegistrationDTOFromSession().BIO_SCORES.getOrDefault(scoreKey, 0.0),
+				getRegistrationDTOFromSession().SDK_SCORES.getOrDefault(scoreKey, 0.0),
+				getRegistrationDTOFromSession().AGGREGATED_SCORES.getOrDefault(scoreKey, 0.0),
+				retry, bioService.getMDMQualityThreshold(modality));
 
 		// Get the stream image from Bio ServiceImpl and load it in the image pane
 		biometricImage.setImage(getBioStreamImage(fieldId, modality, retry));
@@ -869,26 +895,38 @@ public class GenericBiometricsController extends BaseController {
 	/**
 	 * Updating captured values
 	 *
-	 * @param qltyScore      Qulaity score
-	 * @param retry          retrycount
-	 * @param thresholdValue threshold value
+	 * @param qltyScore        raw MDS/SBI-reported quality score
+	 * @param sdkScore         raw mock-SDK-reported quality score
+	 * @param aggregatedScore  orchestrator's aggregated score (per the configured strategy)
+	 * @param retry            retrycount
+	 * @param thresholdValue   threshold value
 	 */
-	private void setCapturedValues(double qltyScore, double sdkScore, int retry, double thresholdValue) {
+	private void setCapturedValues(double qltyScore, double sdkScore, double aggregatedScore, int retry, double thresholdValue) {
 
 		LOGGER.info("Updating captured values of biometrics");
+
+		// The MDS-quality and SDK-quality labels always show their own raw sources.
+		// The progress bar (fill + accept/reject decision) reflects the orchestrator's
+		// aggregated score when SDK-based quality evaluation is enabled. Falls back to
+		// the raw SDK score if no aggregate was produced, then further back to the raw
+		// SBI score if the SDK evaluator didn't run either (e.g. SBI-only config) —
+		// otherwise both would sit at 0 and the bar would wrongly show an empty bar.
+		double barScore = isQualityCheckWithSdkEnabled()
+				? (aggregatedScore > 0 ? aggregatedScore : (sdkScore > 0 ? sdkScore : qltyScore))
+				: qltyScore;
 
 		biometricPane.getStyleClass().clear();
 		biometricPane.getStyleClass().add(RegistrationConstants.FINGERPRINT_PANES_SELECTED);
 		qualityScore.setText(getQualityScoreText(qltyScore));
 		bioProgress.setProgress(
-				Double.valueOf(getQualityScoreText(qltyScore).split(RegistrationConstants.PERCENTAGE)[0]) / 100);
-		qualityText.setText(getQualityScoreText(qltyScore));
+				Double.valueOf(getQualityScoreText(barScore).split(RegistrationConstants.PERCENTAGE)[0]) / 100);
+		qualityText.setText(getQualityScoreText(barScore));
 		sdkQualityText.setText(getQualityScoreText(sdkScore));
 
 		retry = retry == 0 ? 1 : retry;
 		clearAttemptsBox(thresholdValue, retry);
 
-		if (Double.valueOf(getQualityScoreText(qltyScore).split(RegistrationConstants.PERCENTAGE)[0]) >= thresholdValue) {
+		if (Double.valueOf(getQualityScoreText(barScore).split(RegistrationConstants.PERCENTAGE)[0]) >= thresholdValue) {
 			bioProgress.getStyleClass().removeAll(RegistrationConstants.PROGRESS_BAR_RED);
 			bioProgress.getStyleClass().add(RegistrationConstants.PROGRESS_BAR_GREEN);
 			qualityText.getStyleClass().removeAll(RegistrationConstants.LABEL_RED);
@@ -1091,7 +1129,16 @@ public class GenericBiometricsController extends BaseController {
 	public double getBioScores(String fieldId, Modality modality, int attempt) {
 		double qualityScore = 0.0;
 		try {
-			qualityScore = getRegistrationDTOFromSession().BIO_SCORES.getOrDefault(String.format("%s_%s_%s", fieldId, modality, attempt),qualityScore);
+			String key = String.format("%s_%s_%s", fieldId, modality, attempt);
+			if (isQualityCheckWithSdkEnabled()) {
+				double aggregated = getRegistrationDTOFromSession().AGGREGATED_SCORES.getOrDefault(key, 0.0);
+				double sdk = getRegistrationDTOFromSession().SDK_SCORES.getOrDefault(key, 0.0);
+				qualityScore = aggregated > 0 ? aggregated
+						: sdk > 0 ? sdk
+						: getRegistrationDTOFromSession().BIO_SCORES.getOrDefault(key, qualityScore);
+			} else {
+				qualityScore = getRegistrationDTOFromSession().BIO_SCORES.getOrDefault(key, qualityScore);
+			}
 		} catch (NullPointerException nullPointerException) {
 			LOGGER.error("Error getting bioscore", nullPointerException);
 		}

@@ -243,9 +243,15 @@ public enum RegistrationExceptionConstants {
 	PRE_REG_PACKET_ZIP_COMPRESSED_RATIO_EXCEEDED( "PREREG-SYN-003", "Pre-reg zip compressed ratio exceeded"),
 
 	// Biometric Quality Orchestrator exceptions
-	REG_SDK_QUALITY_TIMEOUT("REG-ORCH-001", "SDK quality check timed out"),
-	REG_SDK_INVALID_SCORE("REG-ORCH-002", "SDK returned an invalid or negative quality score"),
-	REG_NO_QUALITY_SOURCE("REG-ORCH-003", "No quality evaluator found for the given modality");
+	REG_SDK_QUALITY_TIMEOUT("REG-SDK-001", "Biometric quality evaluation timed out. Please re-capture."),
+	REG_SDK_INVALID_SCORE("REG-SDK-002", "Invalid biometric quality score received from SDK."),
+	REG_NO_QUALITY_SOURCE("REG-SDK-003", "Biometric quality evaluation not configured. Registration cannot proceed."),
+	REG_SDK_EVALUATION_EXCEPTION("REG-SDK-004", "Error occurred during SDK-based quality evaluation. Please retry capture."),
+	REG_SBI_SCORE_UNAVAILABLE("REG-SDK-005", "Default biometric quality score unavailable."),
+	REG_QUALITY_BELOW_THRESHOLD("REG-SDK-006", "Biometric quality below acceptable threshold. Please re-capture."),
+	REG_PARTIAL_CAPTURE("REG-SDK-007", "Incomplete biometric capture. Please capture all required biometrics."),
+	REG_CORRUPT_BIOMETRIC_DATA("REG-SDK-008", "Captured biometric data is invalid. Please re-capture."),
+	REG_QUALITY_CONFIG_ERROR("REG-SDK-009", "Biometric quality configuration error. Please contact administrator.");
 
 	/**
 	 * The constructor
