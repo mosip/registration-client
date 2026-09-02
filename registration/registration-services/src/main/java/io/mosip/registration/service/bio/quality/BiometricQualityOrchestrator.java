@@ -46,6 +46,41 @@ public class BiometricQualityOrchestrator {
 	private AuditManagerService auditFactory;
 
 	/**
+	 * Holds the final aggregated score together with the individual per-evaluator
+	 * scores (e.g. "SBI" -> 44.0, "SDK" -> 75.0) that fed into it, so callers can
+	 * display/store the raw sources alongside the aggregate.
+	 */
+	public static class OrchestrationResult {
+		private final double aggregatedScore;
+		private final Map<String, Double> evaluatorScores;
+		private final boolean aggregationExplicitlyConfigured;
+
+		public OrchestrationResult(double aggregatedScore, Map<String, Double> evaluatorScores,
+				boolean aggregationExplicitlyConfigured) {
+			this.aggregatedScore = aggregatedScore;
+			this.evaluatorScores = evaluatorScores;
+			this.aggregationExplicitlyConfigured = aggregationExplicitlyConfigured;
+		}
+
+		public double getAggregatedScore() {
+			return aggregatedScore;
+		}
+
+		/**
+		 * @return true if an aggregation strategy was explicitly set via config
+		 *         (modality/attribute/default key); false if the orchestrator fell
+		 *         back to its built-in MEAN default because nothing was configured.
+		 */
+		public boolean isAggregationExplicitlyConfigured() {
+			return aggregationExplicitlyConfigured;
+		}
+
+		public Map<String, Double> getEvaluatorScores() {
+			return evaluatorScores;
+		}
+	}
+
+	/**
 	 * Orchestrates the quality evaluation for a given biometric DTO.
 	 *
 	 * <p>Steps:
@@ -53,14 +88,14 @@ public class BiometricQualityOrchestrator {
 	 *   <li>Reads which evaluators are configured for the modality/attribute.</li>
 	 *   <li>Runs each evaluator and collects scores.</li>
 	 *   <li>Selects the configured aggregation strategy and aggregates scores.</li>
-	 *   <li>Returns the aggregated score.</li>
+	 *   <li>Returns the aggregated score together with the individual evaluator scores.</li>
 	 * </ol>
 	 *
 	 * @param biometricsDto the captured biometric data
-	 * @return the aggregated final quality score (0-100)
+	 * @return the aggregated final quality score (0-100) plus the raw per-evaluator scores
 	 * @throws RegBaseCheckedException if no evaluators are configured or evaluation fails
 	 */
-	public double orchestrate(BiometricsDto biometricsDto) throws RegBaseCheckedException {
+	public OrchestrationResult orchestrate(BiometricsDto biometricsDto) throws RegBaseCheckedException {
 		String bioAttribute = biometricsDto.getBioAttribute();
 		LOGGER.info("BiometricQualityOrchestrator: Starting quality orchestration for attribute {}", bioAttribute);
 
@@ -103,18 +138,20 @@ public class BiometricQualityOrchestrator {
 
 		if (selectedEvaluators.isEmpty()) {
 			LOGGER.error("BiometricQualityOrchestrator: No matching evaluators found for configured names: {}", configuredEvaluatorNames);
-			auditFactory.audit(AuditEvent.QUALITY_ORCH_FAILED, Components.REG_BIOMETRICS,
-					bioAttribute, "NO_EVALUATOR");
+			safeAudit(AuditEvent.QUALITY_ORCH_FAILED, bioAttribute, "NO_EVALUATOR");
 			throw new RegBaseCheckedException(
 					RegistrationExceptionConstants.REG_NO_QUALITY_SOURCE.getErrorCode(),
 					RegistrationExceptionConstants.REG_NO_QUALITY_SOURCE.getErrorMessage());
 		}
 
-		// 3. Run each evaluator and collect scores
+		// 3. Run each evaluator and collect scores.
+		// A configured evaluator that fails (invalid score, timeout, exception) blocks
+		// immediately and does NOT silently fall back to the remaining sources - only
+		// an evaluator that was never configured/selected is skipped silently.
 		Map<String, Double> scores = new HashMap<>();
 		for (IBiometricQualityEvaluator evaluator : selectedEvaluators) {
+			LOGGER.info("BiometricQualityOrchestrator: Running evaluator {} for attribute {}", evaluator.getEvaluatorName(), bioAttribute);
 			try {
-				LOGGER.info("BiometricQualityOrchestrator: Running evaluator {} for attribute {}", evaluator.getEvaluatorName(), bioAttribute);
 				QualityScore qs = evaluator.evaluate(biometricsDto);
 				if (qs != null) {
 					scores.put(evaluator.getEvaluatorName(), (double) qs.getScore());
@@ -122,13 +159,14 @@ public class BiometricQualityOrchestrator {
 			} catch (RegBaseCheckedException e) {
 				LOGGER.error("BiometricQualityOrchestrator: Evaluator {} failed for attribute {}: {}",
 						evaluator.getEvaluatorName(), bioAttribute, e.getMessage());
-				// Continue with other evaluators, not fatal unless all fail
+				safeAudit(AuditEvent.QUALITY_ORCH_FAILED, bioAttribute, evaluator.getEvaluatorName() + "_FAILED");
+				throw e;
 			}
 		}
 
 		if (scores.isEmpty()) {
 			LOGGER.error("BiometricQualityOrchestrator: All evaluators failed for attribute {}", bioAttribute);
-			auditFactory.audit(AuditEvent.QUALITY_ORCH_FAILED, Components.REG_BIOMETRICS, bioAttribute, "ALL_EVALUATORS_FAILED");
+			safeAudit(AuditEvent.QUALITY_ORCH_FAILED, bioAttribute, "ALL_EVALUATORS_FAILED");
 			throw new RegBaseCheckedException(
 					RegistrationExceptionConstants.REG_NO_QUALITY_SOURCE.getErrorCode(),
 					RegistrationExceptionConstants.REG_NO_QUALITY_SOURCE.getErrorMessage());
@@ -140,15 +178,30 @@ public class BiometricQualityOrchestrator {
 		String aggAttributeKey     = RegistrationConstants.QUALITY_AGGREGATION_PREFIX + bioAttribute;
 		String aggDefaultKey       = RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default";
 
+		// Scoped strictly to spring.properties / mosip-application.properties: a DB
+		// global-param or local-preference override does NOT count as "configured"
+		// here, only the build's own config files do.
+		boolean aggregationExplicitlyConfigured = io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggModalityKeyUpper)
+				|| io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggModalityKeyLower)
+				|| io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggAttributeKey)
+				|| io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggDefaultKey);
+
+		// When the strategy is explicitly set in the config files, take the value
+		// straight from the file (not the merged runtime map, which can carry a
+		// stale DB global-param or local-preference override on top of it).
 		String strategyName;
-		if (ApplicationContext.map().containsKey(aggModalityKeyUpper)) {
-			strategyName = (String) ApplicationContext.map().get(aggModalityKeyUpper);
-		} else if (ApplicationContext.map().containsKey(aggModalityKeyLower)) {
-			strategyName = (String) ApplicationContext.map().get(aggModalityKeyLower);
-		} else if (ApplicationContext.map().containsKey(aggAttributeKey)) {
-			strategyName = (String) ApplicationContext.map().get(aggAttributeKey);
+		if (aggregationExplicitlyConfigured) {
+			if (io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggModalityKeyUpper)) {
+				strategyName = io.mosip.registration.config.DaoConfig.getPropertyValueFromFile(aggModalityKeyUpper);
+			} else if (io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggModalityKeyLower)) {
+				strategyName = io.mosip.registration.config.DaoConfig.getPropertyValueFromFile(aggModalityKeyLower);
+			} else if (io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggAttributeKey)) {
+				strategyName = io.mosip.registration.config.DaoConfig.getPropertyValueFromFile(aggAttributeKey);
+			} else {
+				strategyName = io.mosip.registration.config.DaoConfig.getPropertyValueFromFile(aggDefaultKey);
+			}
 		} else {
-			strategyName = (String) ApplicationContext.map().getOrDefault(aggDefaultKey, "MEAN");
+			strategyName = "MEAN";
 		}
 		strategyName = strategyName.trim().toUpperCase();
 
@@ -177,7 +230,7 @@ public class BiometricQualityOrchestrator {
 
 		if (selectedAggregator == null) {
 			LOGGER.error("BiometricQualityOrchestrator: No aggregator found for strategy {}", strategyName);
-			auditFactory.audit(AuditEvent.QUALITY_ORCH_FAILED, Components.REG_BIOMETRICS, bioAttribute, "NO_AGGREGATOR");
+			safeAudit(AuditEvent.QUALITY_ORCH_FAILED, bioAttribute, "NO_AGGREGATOR");
 			throw new RegBaseCheckedException(
 					RegistrationExceptionConstants.REG_NO_QUALITY_SOURCE.getErrorCode(),
 					RegistrationExceptionConstants.REG_NO_QUALITY_SOURCE.getErrorMessage());
@@ -187,8 +240,20 @@ public class BiometricQualityOrchestrator {
 		LOGGER.info("BiometricQualityOrchestrator: Aggregated score {} using strategy {} for attribute {}",
 				aggregatedScore, finalStrategyName, bioAttribute);
 
-		auditFactory.audit(AuditEvent.QUALITY_ORCH_COMPLETED, Components.REG_BIOMETRICS, bioAttribute, "ORCH_DONE");
-		return aggregatedScore;
+		safeAudit(AuditEvent.QUALITY_ORCH_COMPLETED, bioAttribute, "ORCH_DONE");
+		return new OrchestrationResult(aggregatedScore, scores, aggregationExplicitlyConfigured);
+	}
+
+	/**
+	 * Records an audit event without letting an audit-subsystem failure disrupt
+	 * quality evaluation itself (Audit Log Failure: continue, log a warning).
+	 */
+	private void safeAudit(AuditEvent event, String bioAttribute, String reason) {
+		try {
+			auditFactory.audit(event, Components.REG_BIOMETRICS, bioAttribute, reason);
+		} catch (Exception e) {
+			LOGGER.warn("Warning: Unable to record biometric quality audit details.", e);
+		}
 	}
 
 	/**
