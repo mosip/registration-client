@@ -407,6 +407,18 @@ public class SoftwareUpdateHandler extends BaseService {
 
 			LOGGER.info("Downloading {}", entry.getKey());
 			SoftwareUpdateUtil.downloadResumable(url, SoftwareUpdateUtil.ARTIFACTS_DIRECTORY, entry.getKey(), byteListener);
+			// Verify what actually landed. The download reports success on byte count alone, and the 416
+			// path finalizes a .part purely because its LENGTH matches the server total -- so a stale
+			// artifact of the same size is adopted silently. Without this check update() would go on to
+			// commit ./MANIFEST.MF, doSoftwareUpgrade would report COMPLETED, and the corruption would
+			// surface only on the next start, where the launcher's integrity gate fails and Case B
+			// re-downloads nothing: an unbootable client. Failing here instead leaves the OLD manifest in
+			// place, so the client still boots and the operator can simply retry -- and the retry's skip
+			// check re-hashes the bad artifact and re-fetches it.
+			if (!SoftwareUpdateUtil.validateJarChecksum(staged, entry.getValue())) {
+				throw new RegBaseCheckedException("REG-BUILD-007",
+						"Downloaded artifact failed its manifest checksum: " + entry.getKey());
+			}
 			LOGGER.info("Successfully downloaded the file : {}", entry.getKey());
 			completedArtifacts++;
 			progressListener.onProgress((double) completedArtifacts / totalArtifacts, artifactName);
