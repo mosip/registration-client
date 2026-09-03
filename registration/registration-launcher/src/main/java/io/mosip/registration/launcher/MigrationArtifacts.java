@@ -26,6 +26,13 @@ public final class MigrationArtifacts {
     public static final String DIR_TEMP = ".TEMP";
     public static final String DIR_LIB = "lib";
     public static final String DIR_JRE21_TEMP = "jre21_temp";
+    /**
+     * Scratch directory jre21.zip is unzipped into, renamed to {@link #DIR_JRE21_TEMP} only once the
+     * extraction completes. This is what makes the existence of {@code jre21_temp/} mean a COMPLETE
+     * extraction. {@code migration.exe} uses the same name and the same rename-on-success protocol,
+     * so whichever of the two is interrupted, the other discards the leftover and re-extracts.
+     */
+    public static final String DIR_JRE21_TEMP_PARTIAL = DIR_JRE21_TEMP + ".partial";
 
     // files (relative to the application root)
     public static final String FILE_JRE21_ZIP = "jre21.zip";

@@ -10,11 +10,13 @@ import java.util.Set;
 import java.util.List;
 import java.util.HashSet;
 import java.util.ArrayList;
+import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -110,6 +112,22 @@ public class SoftwareUpdateHandlerTest {
 				this.mark = 0;
 			}
 		};
+	}
+
+	/**
+	 * Reads a file without java.nio.file.Files, which throws InaccessibleObjectException under the
+	 * PowerMock classloader used by this class.
+	 */
+	private static byte[] readAllBytes(File file) throws IOException {
+		try (FileInputStream in = new FileInputStream(file);
+				ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+			byte[] chunk = new byte[4096];
+			int read;
+			while ((read = in.read(chunk)) != -1) {
+				out.write(chunk, 0, read);
+			}
+			return out.toByteArray();
+		}
 	}
 
 	@After
@@ -595,7 +613,7 @@ public class SoftwareUpdateHandlerTest {
 		// rejected duplicate must be distinguishable from a real failure: reporting FAILED made the
 		// caller show "unable to update" and tear down the RUNNING upgrade's progress display.
 		ReflectionTestUtils.setField(softwareUpdateHandler, "upgradeInProgress",
-				new java.util.concurrent.atomic.AtomicBoolean(true));
+				new AtomicBoolean(true));
 
 		UpgradeOutcome outcome = softwareUpdateHandler.doSoftwareUpgrade();
 
@@ -659,6 +677,61 @@ public class SoftwareUpdateHandlerTest {
 	}
 
 	@Test
+	public void doSoftwareUpgrade_oversizedSignatureBody_isRejectedAndNothingIsCommitted() throws Exception {
+		// The upgrade server answers the MANIFEST.MF.sig request with something far larger than a
+		// signature -- an HTML error page or a redirect body is the realistic case. Adopting it as
+		// ./MANIFEST.MF.sig would pair a valid manifest with a bogus signature, and the launcher treats
+		// that as Case B: it aborts with "signature invalid" and re-downloads NOTHING, so the client
+		// cannot boot again without manual repair. The download must be refused instead.
+		Attributes mainAttrs = new Attributes();
+		mainAttrs.put(Attributes.Name.MANIFEST_VERSION, "1.2.0-SNAPSHOT");
+		Mockito.when(manifest.getMainAttributes()).thenReturn(mainAttrs);
+		ReflectionTestUtils.setField(softwareUpdateHandler, "backUpPath",
+				tempFolder.newFolder("backup-oversized-sig").getAbsolutePath());
+		ReflectionTestUtils.setField(softwareUpdateHandler, "serverRegClientURL", "https://dev.mosip.net/registration-client/");
+		ReflectionTestUtils.setField(softwareUpdateHandler, "latestVersion", "1.2.0-SNAPSHOT");
+		PowerMockito.suppress(PowerMockito.method(FileUtils.class, "copyFile", File.class, File.class));
+		PowerMockito.mockStatic(SoftwareUpdateUtil.class);
+
+		// One stubbed body serves both fetches. It is a VALID manifest, so setServerManifest succeeds and
+		// the run reaches the signature download -- where the same bytes are well over the 1024-byte cap.
+		Manifest serverManifestContent = new Manifest();
+		serverManifestContent.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.2.0-SNAPSHOT");
+		for (int i = 0; i < 40; i++) {
+			Attributes entry = new Attributes();
+			entry.put(Attributes.Name.CONTENT_TYPE, "checksum-" + i);
+			serverManifestContent.getEntries().put("artifact-" + i + ".jar", entry);
+		}
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		serverManifestContent.write(baos);
+		Assert.assertTrue("the fixture must exceed the signature cap to exercise it",
+				baos.toByteArray().length > 1024);
+		PowerMockito.stub(PowerMockito.method(SoftwareUpdateUtil.class, "download", String.class))
+				.toReturn(rereadable(baos.toByteArray()));
+		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
+
+		// Snapshot rather than assert non-existence: ./MANIFEST.MF may or may not be on disk depending on
+		// which tests ran before. What matters is that this run leaves it exactly as it found it.
+		File rootManifest = new File("MANIFEST.MF");
+		boolean manifestExistedBefore = rootManifest.exists();
+		byte[] manifestBefore = manifestExistedBefore ? readAllBytes(rootManifest) : null;
+
+		UpgradeOutcome outcome = softwareUpdateHandler.doSoftwareUpgrade();
+
+		Assert.assertEquals("an oversized signature body must fail the upgrade", UpgradeOutcome.FAILED, outcome);
+		Assert.assertEquals("the manifest must not be created or removed when its signature was refused",
+				manifestExistedBefore, rootManifest.exists());
+		if (manifestExistedBefore) {
+			Assert.assertArrayEquals("the manifest must not be replaced when its signature was refused",
+					manifestBefore, readAllBytes(rootManifest));
+		}
+		Assert.assertFalse("no signature may be adopted from an oversized body",
+				new File("MANIFEST.MF.sig").exists());
+		Assert.assertFalse("no staging files may be left behind", new File("MANIFEST.MF.tmp").exists());
+		Assert.assertFalse("no staging files may be left behind", new File("MANIFEST.MF.sig.tmp").exists());
+	}
+
+	@Test
 	public void doSoftwareUpgrade_staleServerManifestAndFailedFetch_reportsFailure() throws Exception {
 		Attributes attributes = new Attributes();
 		attributes.put(Attributes.Name.MANIFEST_VERSION, "1.2.0-SNAPSHOT");
@@ -671,7 +744,12 @@ public class SoftwareUpdateHandlerTest {
 		// A leftover manifest from an earlier attempt is planted here: the field is only reset at the end
 		// of a SUCCESSFUL update(), so this is a state a real client reaches after any failed upgrade.
 		ReflectionTestUtils.setField(softwareUpdateHandler, "serverManifest", manifest);
-		// SoftwareUpdateUtil.download is mocked and returns null, i.e. the manifest fetch fails.
+		// Arm the static mock so setServerManifest() gets a null body -- the manifest fetch fails. Without
+		// this the REAL download(String) runs and opens a connection to the configured serverRegClientURL,
+		// making the test depend on network reachability (and on that host not serving a valid manifest).
+		PowerMockito.mockStatic(SoftwareUpdateUtil.class);
+		PowerMockito.stub(PowerMockito.method(SoftwareUpdateUtil.class, "download", String.class))
+				.toReturn(null);
 		Mockito.doNothing().when(globalParamService).update(Mockito.anyString(), Mockito.anyString());
 
 		UpgradeOutcome outcome = softwareUpdateHandler.doSoftwareUpgrade();

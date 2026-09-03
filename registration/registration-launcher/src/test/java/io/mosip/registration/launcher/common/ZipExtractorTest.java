@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -78,7 +79,7 @@ public class ZipExtractorTest {
         try {
             ZipExtractor.extract(zip, out);
             fail("Expected zip-slip entry to be rejected");
-        } catch (java.io.IOException expected) {
+        } catch (IOException expected) {
             assertTrue(expected.getMessage().contains("outside target directory"));
         }
         assertFalse(new File(folder.getRoot(), "escaped.txt").exists());
@@ -92,7 +93,7 @@ public class ZipExtractorTest {
             // out/sub -> outside (a pre-existing symlinked subdir); entry "sub/payload.jar" must not
             // be allowed to write through it outside the extraction root.
             Files.createSymbolicLink(new File(out, "sub").toPath(), outside.toPath());
-        } catch (java.io.IOException | UnsupportedOperationException e) {
+        } catch (IOException | UnsupportedOperationException e) {
             Assume.assumeNoException("symlinks not creatable on this platform/privilege", e);
         }
         File zip = writeZip("evil.zip", new String[] {"sub/payload.jar"}, new byte[][] {"pwned".getBytes()});
@@ -100,7 +101,7 @@ public class ZipExtractorTest {
         try {
             ZipExtractor.extract(zip, out);
             fail("Expected extraction through a symlinked dir to be blocked");
-        } catch (java.io.IOException expected) {
+        } catch (IOException expected) {
             assertTrue(expected.getMessage().contains("symbolic link"));
         }
         assertFalse(new File(outside, "payload.jar").exists());

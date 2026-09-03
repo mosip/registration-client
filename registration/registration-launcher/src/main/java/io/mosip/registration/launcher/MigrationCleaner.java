@@ -20,6 +20,7 @@ import java.util.List;
 
 import static io.mosip.registration.launcher.MigrationArtifacts.DIR_ARTIFACTS;
 import static io.mosip.registration.launcher.MigrationArtifacts.DIR_JRE21_TEMP;
+import static io.mosip.registration.launcher.MigrationArtifacts.DIR_JRE21_TEMP_PARTIAL;
 import static io.mosip.registration.launcher.MigrationArtifacts.FILE_MIGRATION_EXE;
 import static io.mosip.registration.launcher.MigrationArtifacts.FILE_ROLLBACK_EXE;
 import static io.mosip.registration.launcher.MigrationArtifacts.FILE_RUN_BAT_BACKUP;
@@ -33,7 +34,10 @@ public final class MigrationCleaner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MigrationCleaner.class);
 
-    private static final String[] ARTIFACT_DIRS = {DIR_JRE21_TEMP, DIR_ARTIFACTS};
+    // jre21_temp.partial/ is listed too: a run interrupted mid-unzip leaves one behind, and nothing
+    // else reclaims it once the migration has completed -- it would sit there as ~200MB of dead
+    // bytes on every client that ever hit an interrupted extraction.
+    private static final String[] ARTIFACT_DIRS = {DIR_JRE21_TEMP, DIR_JRE21_TEMP_PARTIAL, DIR_ARTIFACTS};
     private static final String[] ARTIFACT_FILES = {FILE_RUN_BAT_BACKUP, FILE_MIGRATION_EXE, FILE_ROLLBACK_EXE};
 
     /** How long an interrupted download's partials are kept before being treated as abandoned. */
@@ -86,7 +90,6 @@ public final class MigrationCleaner {
     }
 
     /**
-    /**
      * True when {@code .artifacts/} contains a resumable download's sidecar files, i.e. an upgrade was
      * started and interrupted rather than completed.
      */
@@ -120,12 +123,16 @@ public final class MigrationCleaner {
     }
 
     /**
-     * Deletes {@code file} and its contents <b>without following symlinks</b>. A symlink encountered
+     * Deletes {@code file} and its contents <b>without following symlinks</b>, returning {@code true}
+     * if the tree is gone (a non-existent path counts as failure -- callers that tolerate absence should
+     * check first). Shared with {@link JreMigrationStager}, which discards interrupted extractions.
+     * <p>
+     * A symlink encountered
      * inside a migration artifact dir is removed as a link (its target is left alone) — using the old
      * {@code File.listFiles()} recursion would descend through the link and delete files outside the
      * artifact directory on every normal startup.
      */
-    private static boolean deleteRecursively(File file) {
+    static boolean deleteRecursively(File file) {
         try {
             // walkFileTree does not follow symlinks unless FOLLOW_LINKS is passed, so a symlink is
             // visited as a file (link deleted, target untouched).

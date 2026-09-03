@@ -20,6 +20,7 @@ import java.util.jar.Manifest;
 
 import static io.mosip.registration.launcher.MigrationArtifacts.DIR_ARTIFACTS;
 import static io.mosip.registration.launcher.MigrationArtifacts.DIR_JRE21_TEMP;
+import static io.mosip.registration.launcher.MigrationArtifacts.DIR_JRE21_TEMP_PARTIAL;
 import static io.mosip.registration.launcher.MigrationArtifacts.DIR_LIB;
 import static io.mosip.registration.launcher.MigrationArtifacts.DIR_TEMP;
 import static io.mosip.registration.launcher.MigrationArtifacts.FILE_JRE21_ZIP;
@@ -55,15 +56,6 @@ public final class JreMigrationStager {
     };
 
     /**
-     * Migration artifacts that must be integrity-checked against the signed root manifest before use.
-     * <p>
-     * {@code run.bat} is included because {@code migration.exe} copies {@code .artifacts/run.bat} into
-     * the application root, where it becomes the script that launches the client — so it is as
-     * execution-sensitive as the exes, and the design's Case-A scenario (N3) expects its hash to be
-     * checked. The launcher only detects a mismatch (fail closed); the AC11 re-download recovery for
-     * root artifacts is not yet implemented.
-     */
-    /**
      * Artifacts {@code migration.exe} copies out of {@code .artifacts/} <b>after</b> it has emptied
      * {@code lib/} and renamed the new JRE over {@code jre/} — past the point where its own rollback
      * trigger is switched off. If either is missing there, the migration fails with the old lib gone,
@@ -75,6 +67,15 @@ public final class JreMigrationStager {
      */
     private static final String[] MIGRATION_INPUTS = {FILE_LAUNCHER, FILE_RUN_BAT};
 
+    /**
+     * Migration artifacts that must be integrity-checked against the signed root manifest before use.
+     * <p>
+     * {@code run.bat} is included because {@code migration.exe} copies {@code .artifacts/run.bat} into
+     * the application root, where it becomes the script that launches the client — so it is as
+     * execution-sensitive as the exes, and the design's Case-A scenario (N3) expects its hash to be
+     * checked. The launcher only detects a mismatch (fail closed); the AC11 re-download recovery for
+     * root artifacts is not yet implemented.
+     */
     private static final String[] VERIFIED_ROOT_ARTIFACTS = {
             FILE_JRE21_ZIP, FILE_MIGRATION_EXE, FILE_ROLLBACK_EXE, FILE_LAUNCHER, FILE_RUN_BAT
     };
@@ -151,13 +152,49 @@ public final class JreMigrationStager {
             throw new IOException("lib staging failed integrity verification: " + libResult);
         }
 
-        // 4. unzip the verified jre21.zip -> jre21_temp/ (only if not already staged)
+        // 4. unzip the verified jre21.zip -> jre21_temp/ (only if not already staged).
+        //    Extraction goes into jre21_temp.partial/ and is renamed to jre21_temp/ only on success, so
+        //    a crash mid-unzip can never leave a half-written tree named jre21_temp/. Testing
+        //    jre21Temp.exists() on its own treated such a tree as staged: the next start skipped step 4
+        //    and reported success, and migration.exe promoted a broken JRE over the working one -- an
+        //    unbootable client. The design requires exactly this split: a partial tree is discarded and
+        //    the unzip re-attempted, while a COMPLETE one is skipped so a re-invoked migration.exe stays
+        //    idempotent instead of re-extracting ~200MB. migration.exe uses the same
+        //    jre21_temp.partial/ protocol, so a tree left behind by either component is discarded and
+        //    re-extracted by the other.
+        //    NOTE: this makes jre21_temp/ trustworthy against interruption, NOT against tampering -- it
+        //    is the one migration input with no hash in the root manifest. Anything able to plant a
+        //    directory in the app root can equally overwrite lib/_launcher.jar, so this adds no exposure
+        //    the installation does not already have.
+        //
+        //    The stale-partial cleanup sits OUTSIDE the skip: a run that was interrupted mid-unzip and
+        //    then completed on a later attempt leaves jre21_temp.partial/ behind forever otherwise --
+        //    rollback.exe removes only jre21_temp/, and MigrationCleaner runs solely on normal startup,
+        //    which is unreachable while the version mismatch driving this migration persists.
+        File partial = new File(root, DIR_JRE21_TEMP_PARTIAL);
+        if (partial.exists() && !MigrationCleaner.deleteRecursively(partial)) {
+            throw new IOException("Could not clear stale " + partial.getPath()
+                    + " left by an interrupted extraction");
+        }
         if (!jre21Temp.exists()) {
             File jre21Zip = new File(artifacts, FILE_JRE21_ZIP);
             if (!jre21Zip.exists()) {
                 throw new IOException("Missing " + jre21Zip.getPath() + " required for JRE migration");
             }
-            ZipExtractor.extract(jre21Zip, jre21Temp);
+            ZipExtractor.extract(jre21Zip, partial);
+            try {
+                // Files.move, not File.renameTo: renameTo returns a bare false that discards the OS
+                // error, and on Windows a transient handle on any one of the thousands of just-written
+                // JRE files (indexer, AV scan) is enough to fail it. An exception carries the real cause
+                // into the log instead of an unexplained abort, and copyRequired below already reasons
+                // about this same Windows hazard.
+                Files.move(partial.toPath(), jre21Temp.toPath());
+            } catch (IOException e) {
+                // Leave the extracted tree under .partial/: the next attempt clears and re-extracts it.
+                // Promoting it by any other route would defeat the completeness guarantee.
+                throw new IOException("Could not finalize the extracted JRE: " + partial.getPath()
+                        + " -> " + jre21Temp.getPath(), e);
+            }
         }
 
         // 5 & 6. copy the verified migration.exe / rollback.exe -> app root. Required now that the

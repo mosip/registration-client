@@ -24,6 +24,7 @@ import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -109,7 +110,8 @@ public class LibUpdaterTest {
         byte[] sig = sign(manifest, wrongKeyPair.getPrivate()); // signed by untrusted key
         byte[] zip = zipBytes(ENTRY, JAR);
 
-        HttpServer server = serve(routes(manifest, sig, zip));
+        List<String> requested = Collections.synchronizedList(new ArrayList<>());
+        HttpServer server = serve(routes(manifest, sig, zip), requested);
         File temp = folder.newFolder(".TEMP");
         try {
             LibUpdateResult result = LibUpdater.update(
@@ -117,8 +119,10 @@ public class LibUpdaterTest {
                     url(server, "/v/lib.zip"), temp, keyPair.getPublic(), 50000, 30000);
 
             assertEquals(LibUpdateResult.ABORT_INVALID_SIGNATURE, result);
-            assertFalse("lib.zip must not be downloaded after sig failure",
-                    new File(temp, "lib.zip").exists());
+            assertFalse("lib.zip must not be requested after sig failure",
+                    requested.contains("/v/lib.zip"));
+            assertFalse("no lib.zip may be staged after sig failure",
+                    new File(temp.getParentFile(), temp.getName() + ".zipstage/lib.zip").exists());
         } finally {
             server.stop(0);
         }
@@ -289,8 +293,19 @@ public class LibUpdaterTest {
     }
 
     private static HttpServer serve(Map<String, byte[]> routes) throws IOException {
+        return serve(routes, Collections.synchronizedList(new ArrayList<>()));
+    }
+
+    /**
+     * As {@link #serve(Map)}, additionally recording every requested path into {@code requested} so a
+     * test can assert that something was never fetched. Asserting on the absence of a downloaded FILE is
+     * not equivalent: LibUpdater stages lib.zip in a {@code .zipstage} sibling of the temp dir, so
+     * checking for {@code temp/lib.zip} passes whether or not the download happened.
+     */
+    private static HttpServer serve(Map<String, byte[]> routes, List<String> requested) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
         server.createContext("/", exchange -> {
+            requested.add(exchange.getRequestURI().getPath());
             byte[] body = routes.get(exchange.getRequestURI().getPath());
             if (body == null) {
                 exchange.sendResponseHeaders(404, -1);

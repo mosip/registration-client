@@ -85,10 +85,11 @@ public class SoftwareUpdateUtil {
             File tempDir = new File(TEMP_DIRECTORY);
             if(!tempDir.exists()) { tempDir.mkdirs(); }
 
-            Integer connectionTimeout = ApplicationContext.getIntValueFromApplicationMap(CONNECTION_TIMEOUT);
-            if(connectionTimeout == null) { connectionTimeout = 50000; }
-            Integer readTimeout = ApplicationContext.getIntValueFromApplicationMap(READ_TIMEOUT);
-            if(readTimeout == null) { readTimeout = 0; }
+            // Via getTimeout, not a local fallback: the old inline default was readTimeout = 0, which
+            // HttpURLConnection reads as INFINITE, so an unconfigured client had no read timeout at all
+            // and a stalled upgrade server hung the calling thread forever.
+            int connectionTimeout = getTimeout(CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
+            int readTimeout = getTimeout(READ_TIMEOUT, DEFAULT_READ_TIMEOUT);
 
             URL fileUrl = new URL(url);
             FileUtils.copyURLToFile(fileUrl, new File(TEMP_DIRECTORY + File.separator + fileName),
@@ -104,10 +105,11 @@ public class SoftwareUpdateUtil {
     protected static InputStream download(String url) throws RegBaseCheckedException {
         LOGGER.info("invoking url : {}", url);
         try {
-            Integer connectionTimeout = ApplicationContext.getIntValueFromApplicationMap(CONNECTION_TIMEOUT);
-            if(connectionTimeout == null) { connectionTimeout = 50000; }
-            Integer readTimeout = ApplicationContext.getIntValueFromApplicationMap(READ_TIMEOUT);
-            if(readTimeout == null) { readTimeout = 0; }
+            // See download(String, String): the previous readTimeout = 0 fallback meant no read timeout.
+            // This method fetches MANIFEST.MF and MANIFEST.MF.sig during an upgrade, so a server that
+            // accepts the connection and then goes silent would stall the upgrade indefinitely.
+            int connectionTimeout = getTimeout(CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
+            int readTimeout = getTimeout(READ_TIMEOUT, DEFAULT_READ_TIMEOUT);
 
             final URLConnection connection = new URL(url).openConnection();
             connection.setConnectTimeout(connectionTimeout);
@@ -164,7 +166,19 @@ public class SoftwareUpdateUtil {
     private static int getTimeout(String key, int defaultValue) {
         try {
             Integer value = ApplicationContext.getIntValueFromApplicationMap(key);
-            return value == null ? defaultValue : value;
+            // A configured 0 is NOT "no override" -- HttpURLConnection reads it as an INFINITE timeout,
+            // so a stalled upgrade server would hang the download thread forever, defeating the whole
+            // point of the defaults above. Negatives are rejected outright by setReadTimeout. Only a
+            // strictly positive value is a usable override; anything else falls back to the default.
+            // ResumableDownloader.requirePositiveTimeouts now rejects these outright as well; this
+            // keeps a misconfigured client working on the defaults instead of failing the upgrade.
+            if (value == null || value <= 0) {
+                if (value != null) {
+                    LOGGER.warn("Non-positive value {} for {}, using default {}", value, key, defaultValue);
+                }
+                return defaultValue;
+            }
+            return value;
         } catch (RuntimeException e) {
             // e.g. a non-numeric configured value -> NumberFormatException; fall back to the default
             LOGGER.warn("Invalid value for {}, using default {} : {}", key, defaultValue, e.getMessage());

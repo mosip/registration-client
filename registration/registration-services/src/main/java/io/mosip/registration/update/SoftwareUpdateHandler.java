@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
@@ -78,6 +79,12 @@ public class SoftwareUpdateHandler extends BaseService {
 	private static final String manifestFile = "MANIFEST.MF";
 	/** Detached signature over ./MANIFEST.MF's bytes; must be replaced whenever the manifest is. */
 	private static final String manifestSignatureFile = "MANIFEST.MF.sig";
+	// Upper bound on the detached signature body. A SHA256withRSA signature is tiny (RSA-4096 ->
+	// 512 bytes), so anything larger is not a signature -- typically an HTML error page or a
+	// redirect body from the upgrade server. This MUST match the launcher's own MAX_SIGNATURE_BYTES:
+	// a larger body accepted here would be written to ./MANIFEST.MF.sig and then rejected by the
+	// launcher on the next start as Case B, which re-downloads nothing and cannot recover.
+	private static final int MAX_SIGNATURE_BYTES = 1024;
 	private static final String libFolder = "lib";
 	private static final String dbFolder = "db";
 	private static final String binFolder = "bin";
@@ -92,8 +99,7 @@ public class SoftwareUpdateHandler extends BaseService {
 	private static final String EXTERNAL_DTD_FEATURE = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
 
 	/** Guards against two concurrent upgrades now that the UI stays usable during the download. */
-	private final java.util.concurrent.atomic.AtomicBoolean upgradeInProgress =
-			new java.util.concurrent.atomic.AtomicBoolean(false);
+	private final AtomicBoolean upgradeInProgress = new AtomicBoolean(false);
 
 	private String currentVersion;
 	private String latestVersion;
@@ -453,10 +459,20 @@ public class SoftwareUpdateHandler extends BaseService {
 		LOGGER.info("Downloading root manifest signature from {}", url);
 		try (InputStream in = SoftwareUpdateUtil.download(url);
 				ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+			if (in == null) {
+				// Guarded exactly as setServerManifest guards the identical call. Without it a null body
+				// is an NPE swallowed by doSoftwareUpgrade's catch(Throwable), so the operator gets a
+				// bare stack trace instead of a message naming the URL that failed.
+				throw new IOException("No response body for " + url);
+			}
 			byte[] chunk = new byte[8192];
 			int read;
 			while ((read = in.read(chunk)) != -1) {
 				buffer.write(chunk, 0, read);
+				if (buffer.size() > MAX_SIGNATURE_BYTES) {
+					throw new IOException("Downloaded " + manifestSignatureFile + " exceeds "
+							+ MAX_SIGNATURE_BYTES + " bytes; refusing to adopt it as a signature");
+				}
 			}
 			if (buffer.size() == 0) {
 				throw new IOException("Downloaded " + manifestSignatureFile + " is empty");
@@ -542,7 +558,7 @@ public class SoftwareUpdateHandler extends BaseService {
 			}
 		} catch (IOException e) {
 			LOGGER.error("Failed to load local manifest file", e);
-			throw new RegBaseCheckedException("REG-BUILD-003", "Local Manifest not found");
+			throw new RegBaseCheckedException("REG-BUILD-003", "Local Manifest not found", e);
 		}
 	}
 
@@ -563,7 +579,7 @@ public class SoftwareUpdateHandler extends BaseService {
 			// The boolean contract makes that silent mismatch actively misleading to the operator.
 			LOGGER.error("Failed to load server manifest file", e);
 			throw new RegBaseCheckedException("REG-BUILD-004",
-					"Failed to download the server manifest from " + url);
+					"Failed to download the server manifest from " + url, e);
 		}
 	}
 

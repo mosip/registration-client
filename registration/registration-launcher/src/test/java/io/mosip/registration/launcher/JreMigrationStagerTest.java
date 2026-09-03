@@ -138,6 +138,59 @@ public class JreMigrationStagerTest {
     }
 
     @Test
+    public void stage_partialJre21Temp_isDiscardedAndReExtracted() throws Exception {
+        File root = folder.getRoot();
+        TestServer ts = baseSetup(root);
+        // A power loss / force-kill during a previous unzip: jre21_temp.partial/ holds a half-written
+        // tree and jre21_temp/ was never created, because the rename is the last step.
+        File partial = new File(root, "jre21_temp.partial");
+        write(new File(partial, "release"), "TRUNCATED");
+        write(new File(partial, "leftover-from-interrupted-unzip"), "junk");
+        try {
+            JreMigrationStager.stage(root, ts.rootManifest,
+                    ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
+                    keyPair.getPublic(), 50000, 30000);
+
+            assertFalse("the partial tree must not survive the retry", partial.exists());
+            assertTrue(new File(root, "jre21_temp/release").exists());
+            assertTrue("the JRE must be re-extracted, not resumed from the partial tree",
+                    read(new File(root, "jre21_temp/release")).contains("21.0.3"));
+            assertFalse("stale files from the interrupted unzip must be gone",
+                    new File(root, "jre21_temp/leftover-from-interrupted-unzip").exists());
+        } finally {
+            ts.stop();
+        }
+    }
+
+    @Test
+    public void stage_completeJre21Temp_skipsReExtraction() throws Exception {
+        File root = folder.getRoot();
+        TestServer ts = baseSetup(root);
+        // migration.exe was force-killed after a COMPLETE extraction (N6). jre21_temp/ exists because the
+        // rename succeeded, so re-extracting ~200MB would be wasted work -- the retry must skip step 4.
+        // A marker file that a real extraction would never produce proves the directory was left alone.
+        write(new File(root, "jre21_temp/already-extracted-marker"), "kept");
+        // An EARLIER run was interrupted mid-unzip and a later one completed, so a stale partial tree is
+        // also on disk. Skipping extraction must not mean skipping its reclamation: rollback.exe removes
+        // only jre21_temp/, and MigrationCleaner runs solely on normal startup -- unreachable while the
+        // version mismatch driving this migration persists. Nothing else would ever free those ~200MB.
+        File stalePartial = new File(root, "jre21_temp.partial");
+        write(new File(stalePartial, "release"), "TRUNCATED");
+        try {
+            JreMigrationStager.stage(root, ts.rootManifest,
+                    ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
+                    keyPair.getPublic(), 50000, 30000);
+
+            assertTrue("a complete jre21_temp/ must be reused, not re-extracted",
+                    new File(root, "jre21_temp/already-extracted-marker").exists());
+            assertFalse("a stale partial tree must be reclaimed even when extraction is skipped",
+                    stalePartial.exists());
+        } finally {
+            ts.stop();
+        }
+    }
+
+    @Test
     public void stage_tamperedJre21Zip_failsRootManifestCheck() throws Exception {
         File root = folder.getRoot();
         TestServer ts = baseSetup(root);

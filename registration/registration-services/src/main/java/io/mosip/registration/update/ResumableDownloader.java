@@ -70,7 +70,7 @@ public final class ResumableDownloader {
      * @param targetDir      the directory the file should be written into (created if missing)
      * @param fileName       the final file name within {@code targetDir}
      * @param connectTimeout connection timeout in milliseconds
-     * @param readTimeout    read timeout in milliseconds (0 = infinite)
+     * @param readTimeout    read timeout in milliseconds; must be positive (0 would mean infinite)
      * @throws IOException              if the download cannot be completed
      * @throws IllegalArgumentException if {@code fileName} is blank or contains a path separator or a
      *                                  {@code ..} sequence (guards against path-traversal writes outside
@@ -107,10 +107,27 @@ public final class ResumableDownloader {
      * progress for this artifact. Progress is reported against the artifact's full size, so a resumed
      * download starts from the bytes already on disk rather than from zero.
      */
+    /**
+     * Rejects non-positive timeouts. {@code HttpURLConnection} reads 0 as an INFINITE timeout, so a
+     * stalled upgrade server would hang the calling thread forever -- the caller is left with no way to
+     * notice or recover. Callers routing through {@code SoftwareUpdateUtil.getTimeout} already get a
+     * positive value; this makes the guarantee the downloader's own rather than its callers'.
+     * Mirrors the launcher-side {@code ResumableDownloader.requirePositiveTimeouts}.
+     */
+    private static void requirePositiveTimeouts(int connectTimeout, int readTimeout) {
+        if (connectTimeout <= 0) {
+            throw new IllegalArgumentException("connectTimeout must be positive, was " + connectTimeout);
+        }
+        if (readTimeout <= 0) {
+            throw new IllegalArgumentException("readTimeout must be positive, was " + readTimeout);
+        }
+    }
+
     public static void download(String url, String targetDir, String fileName,
                                 int connectTimeout, int readTimeout,
                                 ProgressListener progressListener) throws IOException {
         LOGGER.info("Resumable download invoked, url : {}, target : {}/{}", url, targetDir, fileName);
+        requirePositiveTimeouts(connectTimeout, readTimeout);
         File dir = new File(targetDir);
         if (!dir.exists() && !dir.mkdirs() && !dir.exists()) {
             throw new IOException("Unable to create target directory " + dir.getAbsolutePath());

@@ -79,6 +79,22 @@ public class MigrationCleanerTest {
     }
 
     @Test
+    public void cleanup_removesLeftoverPartialJreExtraction() throws Exception {
+        File base = folder.getRoot();
+
+        // A previous start was interrupted mid-unzip, leaving jre21_temp.partial/ behind. The migration
+        // has since completed, so nothing will ever consume it -- and it holds a full unpacked JRE.
+        File partial = new File(base, "jre21_temp.partial");
+        Files.createDirectories(new File(partial, "bin").toPath());
+        Files.write(new File(partial, "bin/java.exe").toPath(), "x".getBytes());
+
+        List<String> removed = MigrationCleaner.cleanup(base);
+
+        assertTrue("jre21_temp.partial must be reclaimed", removed.contains("jre21_temp.partial"));
+        assertFalse(partial.exists());
+    }
+
+    @Test
     public void cleanup_noArtifacts_returnsEmpty() {
         List<String> removed = MigrationCleaner.cleanup(folder.getRoot());
         assertTrue(removed.isEmpty());
