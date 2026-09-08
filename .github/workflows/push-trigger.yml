@@ -139,15 +139,13 @@ jobs:
         include:
           - SERVICE_LOCATION: 'regclient-openssl'
             SERVICE_NAME: 'regclient-keystore'
-            BASE_IMAGE_BUILD: true
       fail-fast: false
     name: ${{ matrix.SERVICE_NAME }}
     uses: mosip/kattu/.github/workflows/docker-build.yml@develop
     with:
       SERVICE_LOCATION: ${{ matrix.SERVICE_LOCATION }}
       SERVICE_NAME: ${{ matrix.SERVICE_NAME }}
-      BUILD_ARTIFACT: ${{ matrix.BUILD_ARTIFACT || false }}
-      BASE_IMAGE_BUILD: ${{ matrix.BASE_IMAGE_BUILD }}
+      BUILD_ARTIFACT: 'false'
     secrets:
       DEV_NAMESPACE_DOCKER_HUB: ${{ secrets.DEV_NAMESPACE_DOCKER_HUB }}
       ACTOR_DOCKER_HUB: ${{ secrets.ACTOR_DOCKER_HUB }}
