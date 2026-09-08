@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-package io.mosip.registration.update;
+package io.mosip.registration.launcher.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +15,7 @@ import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
@@ -34,12 +35,6 @@ import java.nio.file.StandardCopyOption;
  * re-downloaded from scratch, so bytes from two different resource versions can never be spliced
  * together. The completed transfer is verified against {@code Content-Length} before the staged
  * {@code .part} is atomically moved onto the final file.
- * <p>
- * <b>Integrity scope.</b> This class verifies transfer <i>completeness</i> (byte count) only, not
- * content <i>integrity</i>. Cryptographic verification of a downloaded artifact (SHA / HMAC against the
- * signed {@code MANIFEST.MF}) is deliberately performed downstream by the caller
- * ({@code softwareUpdateHandler} and the launcher's manifest verifier) before the artifact is placed
- * into use, so it is intentionally out of scope here.
  */
 public final class ResumableDownloader {
 
@@ -48,9 +43,6 @@ public final class ResumableDownloader {
     private static final String META_SUFFIX = ".part.meta";
     private static final int HTTP_RANGE_NOT_SATISFIABLE = 416;
     private static final int BUFFER_SIZE = 8192;
-
-    /** Report progress at most once per megabyte written, to keep UI callbacks cheap. */
-    private static final long PROGRESS_REPORT_BYTES = 1024L * 1024L;
 
     private ResumableDownloader() {
         // utility class
@@ -69,95 +61,64 @@ public final class ResumableDownloader {
      * @param url            the source URL
      * @param targetDir      the directory the file should be written into (created if missing)
      * @param fileName       the final file name within {@code targetDir}
-     * @param connectTimeout connection timeout in milliseconds
-     * @param readTimeout    read timeout in milliseconds; must be positive (0 would mean infinite)
+     * @param connectTimeout connection timeout in milliseconds (must be positive)
+     * @param readTimeout    read timeout in milliseconds (must be positive; a {@code 0}/infinite read
+     *                       timeout could hang the launcher forever on a stalled connection)
      * @throws IOException              if the download cannot be completed
      * @throws IllegalArgumentException if {@code fileName} is blank or contains a path separator or a
      *                                  {@code ..} sequence (guards against path-traversal writes outside
-     *                                  {@code targetDir})
+     *                                  {@code targetDir}), or if {@code connectTimeout}/{@code readTimeout}
+     *                                  is not positive
      */
     public static void download(String url, String targetDir, String fileName,
                                 int connectTimeout, int readTimeout) throws IOException {
-        download(url, targetDir, fileName, connectTimeout, readTimeout, NO_PROGRESS);
+        download(url, targetDir, fileName, connectTimeout, readTimeout, null);
     }
 
     /**
-     * Byte-level progress callback for a single artifact. Invoked on the download thread as the body
-     * is streamed, so implementations must not touch UI state directly.
+     * As {@link #download(String, String, String, int, int)}, additionally reporting byte progress to
+     * {@code progress} (may be {@code null}). The listener is called on the downloading thread as bytes
+     * are written — including once at the start to report any resumed offset — so a UI consumer must
+     * marshal its own work off this thread. It is not called when the server omits {@code Content-Length}
+     * (the total is unknown), leaving the consumer indeterminate.
      */
-    @FunctionalInterface
-    public interface ProgressListener {
-        /**
-         * @param bytesDone  bytes of this artifact written so far, including any resumed prefix
-         * @param totalBytes the artifact's full size, or a negative value when the server did not
-         *                   supply a usable Content-Length. The FINAL callback of a successful download
-         *                   always carries a real size: once the file is on disk its length is known,
-         *                   even for a chunked transfer that was indeterminate throughout.
-         */
-        void onBytes(long bytesDone, long totalBytes);
-    }
-
-    /** Listener used by the progress-free overload. */
-    private static final ProgressListener NO_PROGRESS = (done, total) -> {
-        // no progress reporting requested
-    };
-
-    /**
-     * As {@link #download(String, String, String, int, int)}, additionally reporting byte-level
-     * progress for this artifact. Progress is reported against the artifact's full size, so a resumed
-     * download starts from the bytes already on disk rather than from zero.
-     */
-    /**
-     * Rejects non-positive timeouts. {@code HttpURLConnection} reads 0 as an INFINITE timeout, so a
-     * stalled upgrade server would hang the calling thread forever -- the caller is left with no way to
-     * notice or recover. Callers routing through {@code SoftwareUpdateUtil.getTimeout} already get a
-     * positive value; this makes the guarantee the downloader's own rather than its callers'.
-     * Mirrors the launcher-side {@code ResumableDownloader.requirePositiveTimeouts}.
-     */
-    private static void requirePositiveTimeouts(int connectTimeout, int readTimeout) {
-        if (connectTimeout <= 0) {
-            throw new IllegalArgumentException("connectTimeout must be positive, was " + connectTimeout);
-        }
-        if (readTimeout <= 0) {
-            throw new IllegalArgumentException("readTimeout must be positive, was " + readTimeout);
-        }
-    }
-
     public static void download(String url, String targetDir, String fileName,
                                 int connectTimeout, int readTimeout,
-                                ProgressListener progressListener) throws IOException {
-        LOGGER.info("Resumable download invoked, url : {}, target : {}/{}", url, targetDir, fileName);
+                                DownloadProgressListener progress) throws IOException {
         requirePositiveTimeouts(connectTimeout, readTimeout);
+        LOGGER.info("Resumable download invoked, url : {}, target : {}/{}", url, targetDir, fileName);
         File dir = new File(targetDir);
         if (!dir.exists() && !dir.mkdirs() && !dir.exists()) {
             throw new IOException("Unable to create target directory " + dir.getAbsolutePath());
         }
         Artifact artifact = new Artifact(dir, fileName);
 
-        // No monotonicity guard is needed around progressListener. A restart is only triggered by
-        // attemptDownload returning false, which happens on the 206-wrong-offset and 416-discard paths --
-        // both of which return BEFORE writeBody, the only source of progress callbacks. So the second
-        // attempt can never follow a report, and progress cannot walk backwards.
-        //
         // At most two attempts: a resume attempt, and (only when the server signals the partial is
         // stale / unusable) one fresh restart with the stale part discarded.
         boolean allowResume = true;
         for (int attempt = 0; attempt < 2; attempt++) {
-            if (attemptDownload(url, artifact, allowResume, connectTimeout, readTimeout, progressListener)) {
-                // Guarantee a final 100% report on every success path. The 416 "the part is already the
-                // whole file" branch finalizes without streaming a body, so it would otherwise complete
-                // having reported nothing at all. Guarded on a real size: a zero-length artifact would
-                // otherwise report (0, 0), which callers read as "length unknown" and would snap an
-                // otherwise-finished bar back to indeterminate.
-                long finalSize = artifact.target.length();
-                if (finalSize > 0) {
-                    progressListener.onBytes(finalSize, finalSize);
-                }
+            if (attemptDownload(url, artifact, allowResume, connectTimeout, readTimeout, progress)) {
                 return;
             }
             allowResume = false; // the partial was discarded; the next attempt starts from scratch
         }
         throw new IOException("Failed to download " + url + " after restart");
+    }
+
+    /**
+     * Rejects non-positive timeouts at every download entry point: a {@code 0} (infinite) connect or
+     * read timeout could hang the launcher forever on a stalled connection, so callers must pass
+     * positive millisecond values. Shared so {@code LibUpdater.update} can fail fast with the same
+     * message before it delegates here.
+     *
+     * @throws IllegalArgumentException if {@code connectTimeout} or {@code readTimeout} is {@code <= 0}
+     */
+    public static void requirePositiveTimeouts(int connectTimeout, int readTimeout) {
+        if (connectTimeout <= 0 || readTimeout <= 0) {
+            throw new IllegalArgumentException(
+                    "connectTimeout and readTimeout must be positive (ms); got connect="
+                            + connectTimeout + ", read=" + readTimeout);
+        }
     }
 
     /**
@@ -168,17 +129,13 @@ public final class ResumableDownloader {
      */
     private static boolean attemptDownload(String url, Artifact artifact, boolean allowResume,
                                            int connectTimeout, int readTimeout,
-                                           ProgressListener progressListener) throws IOException {
+                                           DownloadProgressListener progress) throws IOException {
         String validator = allowResume ? resumeValidator(artifact) : null;
         long existing = (validator != null) ? artifact.part.length() : 0L;
 
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
         connection.setConnectTimeout(connectTimeout);
         connection.setReadTimeout(readTimeout);
-        // Force an uncompressed transfer: with a byte Range request, transparent gzip anywhere in the
-        // path would make the Content-Length (compressed) and the byte offsets disagree with the bytes
-        // written to .part, breaking both the completeness check and any subsequent resume.
-        connection.setRequestProperty("Accept-Encoding", "identity");
         if (existing > 0) {
             connection.setRequestProperty("Range", "bytes=" + existing + "-");
             connection.setRequestProperty("If-Range", validator);
@@ -200,12 +157,11 @@ public final class ResumableDownloader {
             } else if (status == HttpURLConnection.HTTP_OK) {          // 200 - fresh body (or If-Range mismatch)
                 append = false;
                 existing = 0L;
-                // Discard any stale partial BEFORE persisting the new validator. Writing the new
-                // validator while old bytes still sit in .part would, if the process died before
-                // writeBody truncates them (e.g. ensureSpaceForWrite throws), leave a new validator
-                // paired with stale bytes — which the next resume would splice onto the new resource
-                // via If-Range. Deleting first keeps .part and .meta in sync (and frees the old bytes
-                // so the disk-space pre-check below sees them as available).
+                // Discard any stale partial BEFORE recording the new validator. writeBody truncates the
+                // part only later, so writing meta=<new resource> while the old bytes are still on disk
+                // would — on a crash in this window — leave those old bytes paired with the new
+                // validator and splice two resource versions on the next resume. Deleting the part now
+                // keeps part and meta consistent at every instant (a crash here simply restarts fresh).
                 Files.deleteIfExists(artifact.part.toPath());
                 // Persist the validator so a later interrupted attempt can resume this exact resource.
                 writeValidator(artifact.meta, extractValidator(connection));
@@ -217,11 +173,8 @@ public final class ResumableDownloader {
 
             long contentLength = connection.getContentLengthLong();
             ensureSpaceForWrite(artifact.dir, artifact.part, contentLength, append);
-            // On a 206 the Content-Length covers only the remaining range, so the artifact's full size
-            // is what is already on disk plus what is still to come. Negative stays negative: an unknown
-            // length must be reported as unknown rather than mistaken for a complete file.
-            long artifactTotal = (contentLength < 0) ? -1L : (append ? existing + contentLength : contentLength);
-            writeBody(connection, artifact.part, append, existing, artifactTotal, progressListener);
+            long total = contentLength < 0 ? -1L : (append ? existing : 0L) + contentLength;
+            writeBody(connection, artifact.part, append, existing, total, progress);
             verifyComplete(artifact, contentLength, append, existing);
             artifact.finalizeOnto();
             LOGGER.info("Resumable download completed : {}", artifact.name);
@@ -234,18 +187,32 @@ public final class ResumableDownloader {
         }
     }
 
-    /** Handles a 416 response: finalize if the part is already the complete file, else discard + restart. */
+    /**
+     * Handles a 416 response: finalize only if the part is already the complete file <b>and</b> the
+     * server's current validator has not changed from the one the part was downloaded against; else
+     * discard + restart.
+     * <p>
+     * A length-only check is not sufficient: a server that ignores {@code If-Range} (non-conformant)
+     * can return 416 for a <i>changed</i> resource that happens to have the same byte length, which
+     * would otherwise pass a stale part off as complete. We therefore reject when the 416 response
+     * carries a validator that differs from the stored one. (When the server omits a validator on the
+     * 416 we cannot tell, so we keep the length-based behaviour; the downstream manifest hash check is
+     * the final backstop in that residual case.)
+     */
     private static boolean handleRangeNotSatisfiable(HttpURLConnection connection, Artifact artifact)
             throws IOException {
         long total = parseContentRangeTotal(connection.getHeaderField("Content-Range"));
         long partLength = artifact.part.exists() ? artifact.part.length() : 0L;
-        if (total >= 0 && partLength == total) {
+        String currentValidator = extractValidator(connection);
+        boolean validatorChanged = currentValidator != null
+                && !currentValidator.equals(readValidator(artifact.meta));
+        if (total >= 0 && partLength == total && !validatorChanged) {
             LOGGER.info("Range not satisfiable for {} and part matches server size; finalizing", artifact.name);
             artifact.finalizeOnto();
             return true;
         }
-        LOGGER.warn("416 for {} but local part ({} bytes) != server total ({}); restarting fresh",
-                artifact.name, partLength, total);
+        LOGGER.warn("416 for {} (part {} bytes, server total {}, validatorChanged={}); restarting fresh",
+                artifact.name, partLength, total, validatorChanged);
         artifact.discard();
         return false;
     }
@@ -266,33 +233,41 @@ public final class ResumableDownloader {
         return validator;
     }
 
-    /** Streams the response body into the part file, appending from {@code existing} or overwriting. */
+    /**
+     * Streams the response body into the part file, appending from {@code existing} or overwriting.
+     * When {@code progress} is non-null and {@code total > 0}, reports cumulative bytes as the download
+     * proceeds — once up front (so a resume doesn't start the bar at 0) and thereafter only when the
+     * whole-number percent changes, to avoid flooding the consumer for a large file.
+     */
     private static void writeBody(HttpURLConnection connection, File partFile, boolean append, long existing,
-                                  long artifactTotal, ProgressListener progressListener) throws IOException {
+                                  long total, DownloadProgressListener progress) throws IOException {
         try (InputStream in = connection.getInputStream();
              RandomAccessFile out = new RandomAccessFile(partFile, "rw")) {
-            long written = append ? existing : 0L;
             if (append) {
                 out.seek(existing);
             } else {
                 out.setLength(0);
             }
-            progressListener.onBytes(written, artifactTotal);
+            long done = append ? existing : 0L;
+            boolean report = progress != null && total > 0;
+            int lastPct = -1;
+            if (report) {
+                lastPct = (int) Math.min(100, done * 100 / total);
+                progress.onProgress(done, total);
+            }
             byte[] buffer = new byte[BUFFER_SIZE];
             int read;
-            long sinceLastReport = 0L;
             while ((read = in.read(buffer)) != -1) {
                 out.write(buffer, 0, read);
-                written += read;
-                sinceLastReport += read;
-                // Throttle: a ~200MB artifact is millions of buffer reads, and a UI callback per read
-                // would swamp the FX event queue that this progress is meant to keep responsive.
-                if (sinceLastReport >= PROGRESS_REPORT_BYTES) {
-                    progressListener.onBytes(written, artifactTotal);
-                    sinceLastReport = 0L;
+                done += read;
+                if (report) {
+                    int pct = (int) Math.min(100, done * 100 / total);
+                    if (pct != lastPct) {
+                        lastPct = pct;
+                        progress.onProgress(done, total);
+                    }
                 }
             }
-            progressListener.onBytes(written, artifactTotal);
         }
     }
 
@@ -369,7 +344,14 @@ public final class ResumableDownloader {
         }
     }
 
-    private static void writeValidator(File metaFile, String validator) {
+    /**
+     * Persists (or clears) the resume validator sidecar. Fails closed: if the sidecar cannot be
+     * written, the caller must abort <b>before</b> writing body bytes, otherwise a new partial would be
+     * left paired with a stale/missing {@code .part.meta} and a later resume could splice two resource
+     * versions. Read failures, by contrast, degrade safely to a full re-download (see
+     * {@link #readValidator}), so only the write side propagates.
+     */
+    private static void writeValidator(File metaFile, String validator) throws IOException {
         try {
             if (validator == null) {
                 Files.deleteIfExists(metaFile.toPath());
@@ -377,7 +359,7 @@ public final class ResumableDownloader {
                 Files.write(metaFile.toPath(), validator.getBytes(StandardCharsets.UTF_8));
             }
         } catch (IOException e) {
-            LOGGER.warn("Could not persist validator {} : {}", metaFile, e.getMessage());
+            throw new IOException("Could not persist validator " + metaFile, e);
         }
     }
 
@@ -477,7 +459,10 @@ public final class ResumableDownloader {
         private void finalizeOnto() throws IOException {
             try {
                 Files.move(part.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE);
-            } catch (IOException atomicMoveUnsupported) {
+            } catch (AtomicMoveNotSupportedException atomicMoveUnsupported) {
+                // Only fall back when the file system genuinely cannot do an atomic move. Any other
+                // IOException (permission denied, file locked, ...) propagates with its real cause
+                // intact instead of being masked by a second failure from the REPLACE_EXISTING retry.
                 Files.move(part.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
             Files.deleteIfExists(meta.toPath());
