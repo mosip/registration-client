@@ -100,16 +100,34 @@ public class FullOrchestratorWithMockSdkTest {
         ApplicationContext.getInstance();
     }
 
+    // Sets a config key in the runtime map, and also in DaoConfig's file-backed
+    // properties so aggregation-strategy keys are seen as "explicitly configured"
+    // (BiometricQualityOrchestrator checks the file, not the runtime map, for
+    // that flag - see DaoConfig.isKeyPresentInPropertiesFile).
+    private void putFileConfig(String key, String value) {
+        ApplicationContext.map().put(key, value);
+        java.util.Properties props = (java.util.Properties) ReflectionTestUtils.getField(
+                io.mosip.registration.config.DaoConfig.class, "keys");
+        if (props == null) {
+            props = new java.util.Properties();
+            ReflectionTestUtils.setField(io.mosip.registration.config.DaoConfig.class, "keys", props);
+        }
+        props.setProperty(key, value);
+    }
+
     @Before
     public void setUp() throws Exception {
         // -- Clear & configure ApplicationContext (simulates spring.properties) --
         ReflectionTestUtils.setField(ApplicationContext.class, "applicationMap",
                 new HashMap<String, Object>());
+        // DaoConfig.keys is a static field shared across the whole test JVM fork -
+        // clear it so aggregation-strategy config from another test class can't leak in.
+        ReflectionTestUtils.setField(io.mosip.registration.config.DaoConfig.class, "keys", null);
 
         // Default: use BOTH evaluators + MEAN aggregation
         ApplicationContext.map().put(
                 RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default", "SBI, SDK");
-        ApplicationContext.map().put(
+        putFileConfig(
                 RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEAN");
 
         // -- Instantiate real SampleSDKV2 and verify it initialises correctly --
@@ -156,7 +174,7 @@ public class FullOrchestratorWithMockSdkTest {
     public void test_MEAN_aggregation_Finger() throws RegBaseCheckedException {
         configureAggregation("MEAN");
 
-        double result = orchestrator.orchestrate(dto("leftIndex"));
+        double result = orchestrator.orchestrate(dto("leftIndex")).getAggregatedScore();
 
         System.out.println("\n[MEAN] SBI=" + SBI_SCORE + "  SDK=" + SDK_SCORE
                 + "  →  Aggregated=" + result);
@@ -171,7 +189,7 @@ public class FullOrchestratorWithMockSdkTest {
     public void test_MEDIAN_aggregation_Iris() throws RegBaseCheckedException {
         configureAggregation("MEDIAN");
 
-        double result = orchestrator.orchestrate(dto("leftEye"));
+        double result = orchestrator.orchestrate(dto("leftEye")).getAggregatedScore();
 
         System.out.println("\n[MEDIAN] SBI=" + SBI_SCORE + "  SDK=" + SDK_SCORE
                 + "  →  Aggregated=" + result);
@@ -191,7 +209,7 @@ public class FullOrchestratorWithMockSdkTest {
                 RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default.weights",
                 "SBI=0.4,SDK=0.6");
 
-        double result = orchestrator.orchestrate(dto("face"));
+        double result = orchestrator.orchestrate(dto("face")).getAggregatedScore();
 
         System.out.println("\n[WEIGHTED] SBI=" + SBI_SCORE + "×0.4  SDK=" + SDK_SCORE
                 + "×0.6  →  Aggregated=" + result);
@@ -210,7 +228,7 @@ public class FullOrchestratorWithMockSdkTest {
     public void test_PRIORITY_aggregation_SDKWins() throws RegBaseCheckedException {
         configureAggregation("PRIORITY");
 
-        double result = orchestrator.orchestrate(dto("rightIndex"));
+        double result = orchestrator.orchestrate(dto("rightIndex")).getAggregatedScore();
 
         System.out.println("\n[PRIORITY] SBI=" + SBI_SCORE + "  SDK=" + SDK_SCORE
                 + "  →  Aggregated=" + result);
@@ -227,14 +245,14 @@ public class FullOrchestratorWithMockSdkTest {
     @Test
     public void test_PerModality_DifferentStrategies() throws RegBaseCheckedException {
         // FINGER → MEAN
-        ApplicationContext.map().put(
+        putFileConfig(
                 RegistrationConstants.QUALITY_AGGREGATION_MODALITY_PREFIX + "FINGER", "MEAN");
         // IRIS → MEDIAN
-        ApplicationContext.map().put(
+        putFileConfig(
                 RegistrationConstants.QUALITY_AGGREGATION_MODALITY_PREFIX + "IRIS", "MEDIAN");
 
-        double fingerResult = orchestrator.orchestrate(dto("leftIndex")); // FINGER
-        double irisResult   = orchestrator.orchestrate(dto("leftEye"));   // IRIS
+        double fingerResult = orchestrator.orchestrate(dto("leftIndex")).getAggregatedScore(); // FINGER
+        double irisResult   = orchestrator.orchestrate(dto("leftEye")).getAggregatedScore();   // IRIS
 
         System.out.println("\n[PER-MODALITY] FINGER(MEAN)=" + fingerResult
                 + "  IRIS(MEDIAN)=" + irisResult);
@@ -254,7 +272,7 @@ public class FullOrchestratorWithMockSdkTest {
                 RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default", "SBI");
         configureAggregation("MEAN");
 
-        double result = orchestrator.orchestrate(dto("leftThumb"));
+        double result = orchestrator.orchestrate(dto("leftThumb")).getAggregatedScore();
 
         System.out.println("\n[SBI-ONLY] SBI=" + SBI_SCORE + "  →  Aggregated=" + result);
         assertEquals("SBI-only mode should return exactly SBI score",
@@ -295,9 +313,9 @@ public class FullOrchestratorWithMockSdkTest {
         configureAggregation("MEAN");
 
         // Extend provider map for all types (already done for all in setUp)
-        double fingerResult = orchestrator.orchestrate(dto("leftIndex"));
-        double irisResult   = orchestrator.orchestrate(dto("leftEye"));
-        double faceResult   = orchestrator.orchestrate(dto("face"));
+        double fingerResult = orchestrator.orchestrate(dto("leftIndex")).getAggregatedScore();
+        double irisResult   = orchestrator.orchestrate(dto("leftEye")).getAggregatedScore();
+        double faceResult   = orchestrator.orchestrate(dto("face")).getAggregatedScore();
 
         System.out.println("\n[ALL-MODALITIES MEAN]"
                 + "  Finger=" + fingerResult
@@ -327,7 +345,7 @@ public class FullOrchestratorWithMockSdkTest {
 
         for (String strategy : Arrays.asList("MEAN", "MEDIAN", "WEIGHTED")) {
             configureAggregation(strategy);
-            double result = orchestrator.orchestrate(perfectDto);
+            double result = orchestrator.orchestrate(perfectDto).getAggregatedScore();
             System.out.println("[PERFECT-" + strategy + "] Result: " + result);
             assertEquals("All strategies should return 100 for perfect scores",
                     100.0, result, 0.001);
@@ -345,7 +363,7 @@ public class FullOrchestratorWithMockSdkTest {
 
         for (String strategy : Arrays.asList("MEAN", "MEDIAN", "WEIGHTED")) {
             configureAggregation(strategy);
-            double result = orchestrator.orchestrate(dto("leftIndex"));
+            double result = orchestrator.orchestrate(dto("leftIndex")).getAggregatedScore();
             System.out.println("[RANGE-CHECK-" + strategy + "] SBI="
                     + SBI_SCORE + " SDK=" + SDK_SCORE + " Result=" + result);
             assertTrue("Strategy " + strategy + ": result " + result
@@ -358,7 +376,7 @@ public class FullOrchestratorWithMockSdkTest {
     // Utility: configure aggregation strategy in ApplicationContext
     // =========================================================================
     private void configureAggregation(String strategy) {
-        ApplicationContext.map().put(
+        putFileConfig(
                 RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", strategy);
     }
 }

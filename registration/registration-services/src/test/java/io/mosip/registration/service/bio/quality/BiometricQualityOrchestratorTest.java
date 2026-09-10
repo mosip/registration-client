@@ -64,6 +64,9 @@ public class BiometricQualityOrchestratorTest {
 	public void setUp() {
 		// Fully clear the static applicationMap field (putAll-based setApplicationMap won't clear it)
 		ReflectionTestUtils.setField(ApplicationContext.class, "applicationMap", new HashMap<String, Object>());
+		// DaoConfig.keys is a static field shared across the whole test JVM fork -
+		// clear it so aggregation-strategy config from another test class can't leak in.
+		ReflectionTestUtils.setField(io.mosip.registration.config.DaoConfig.class, "keys", null);
 
 		// Inject real aggregators and mocked evaluators into the orchestrator
 		ReflectionTestUtils.setField(orchestrator, "evaluators",
@@ -77,11 +80,21 @@ public class BiometricQualityOrchestratorTest {
 		biometricsDto = new BiometricsDto("leftIndex", new byte[]{1, 2, 3}, 75.0);
 	}
 
-	// helper to put a key into the live ApplicationContext map
+	// helper to put a key into the live ApplicationContext map, and also into
+	// DaoConfig's file-backed properties so aggregation-strategy keys are seen
+	// as "explicitly configured" (BiometricQualityOrchestrator checks the file,
+	// not the runtime map, for that flag - see DaoConfig.isKeyPresentInPropertiesFile).
 	private void putConfig(String key, String value) {
 		Map<String, Object> m = new HashMap<>();
 		m.put(key, value);
 		ApplicationContext.setApplicationMap(m);
+		java.util.Properties props = (java.util.Properties) ReflectionTestUtils.getField(
+				io.mosip.registration.config.DaoConfig.class, "keys");
+		if (props == null) {
+			props = new java.util.Properties();
+			ReflectionTestUtils.setField(io.mosip.registration.config.DaoConfig.class, "keys", props);
+		}
+		props.setProperty(key, value);
 	}
 
 	// =========================================================================
@@ -94,7 +107,7 @@ public class BiometricQualityOrchestratorTest {
 		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEAN");
 		when(sbiEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(80L));
 
-		double result = orchestrator.orchestrate(biometricsDto);
+		double result = orchestrator.orchestrate(biometricsDto).getAggregatedScore();
 
 		assertEquals(80.0, result, 0.001);
 		verify(sbiEvaluator, times(1)).evaluate(biometricsDto);
@@ -107,7 +120,7 @@ public class BiometricQualityOrchestratorTest {
 		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEAN");
 		when(sdkEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(90L));
 
-		double result = orchestrator.orchestrate(biometricsDto);
+		double result = orchestrator.orchestrate(biometricsDto).getAggregatedScore();
 
 		assertEquals(90.0, result, 0.001);
 		verify(sdkEvaluator, times(1)).evaluate(biometricsDto);
@@ -121,7 +134,7 @@ public class BiometricQualityOrchestratorTest {
 		when(sbiEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(70L));
 		when(sdkEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(90L));
 
-		double result = orchestrator.orchestrate(biometricsDto);
+		double result = orchestrator.orchestrate(biometricsDto).getAggregatedScore();
 
 		// MEAN of (70 + 90) = 80.0
 		assertEquals(80.0, result, 0.001);
@@ -136,7 +149,7 @@ public class BiometricQualityOrchestratorTest {
 		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEAN");
 		when(sdkEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(85L));
 
-		double result = orchestrator.orchestrate(biometricsDto);
+		double result = orchestrator.orchestrate(biometricsDto).getAggregatedScore();
 
 		assertEquals(85.0, result, 0.001);
 		verify(sdkEvaluator).evaluate(biometricsDto);
@@ -155,7 +168,7 @@ public class BiometricQualityOrchestratorTest {
 		when(sdkEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(80L));
 
 		// (60 + 80) / 2 = 70.0
-		assertEquals(70.0, orchestrator.orchestrate(biometricsDto), 0.001);
+		assertEquals(70.0, orchestrator.orchestrate(biometricsDto).getAggregatedScore(), 0.001);
 	}
 
 	@Test
@@ -198,7 +211,7 @@ public class BiometricQualityOrchestratorTest {
 		when(sdkEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(80L));
 
 		// (60*0.3 + 80*0.7) / (0.3 + 0.7) = (18 + 56) / 1.0 = 74.0
-		assertEquals(74.0, orchestrator.orchestrate(biometricsDto), 0.001);
+		assertEquals(74.0, orchestrator.orchestrate(biometricsDto).getAggregatedScore(), 0.001);
 	}
 
 	@Test
@@ -244,7 +257,7 @@ public class BiometricQualityOrchestratorTest {
 		when(sdkEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(80L));
 
 		// Falls back to MEAN = 70.0
-		assertEquals(70.0, orchestrator.orchestrate(biometricsDto), 0.001);
+		assertEquals(70.0, orchestrator.orchestrate(biometricsDto).getAggregatedScore(), 0.001);
 	}
 
 	// =========================================================================
@@ -273,7 +286,7 @@ public class BiometricQualityOrchestratorTest {
 	public void testNoMatchingEvaluatorThrowsException() throws RegBaseCheckedException {
 		putConfig(RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default", "NONEXISTENT");
 		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEAN");
-		orchestrator.orchestrate(biometricsDto);
+		orchestrator.orchestrate(biometricsDto).getAggregatedScore();
 	}
 
 	@Test
@@ -281,7 +294,7 @@ public class BiometricQualityOrchestratorTest {
 		putConfig(RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default", "NONEXISTENT");
 		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEAN");
 		try {
-			orchestrator.orchestrate(biometricsDto);
+			orchestrator.orchestrate(biometricsDto).getAggregatedScore();
 			fail("Expected RegBaseCheckedException");
 		} catch (RegBaseCheckedException e) {
 			// getMessage() returns "errorCode --> errorMessage", so check it starts with the code
@@ -293,27 +306,37 @@ public class BiometricQualityOrchestratorTest {
 	}
 
 	@Test
-	public void testOneEvaluatorFailsContinuesWithOther() throws RegBaseCheckedException {
+	public void testOneEvaluatorFailsBlocksWithNoFallback() throws RegBaseCheckedException {
+		// Spec: a configured evaluator's failure blocks immediately with no silent
+		// fallback to whichever other evaluator happened to succeed (Error
+		// Scenarios: "No fallback to SBI/SDK" for Invalid SDK Score / SDK Exception
+		// / Missing SBI Score) - the old catch-and-continue behavior this test used
+		// to assert has been intentionally removed.
 		putConfig(RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default", "SBI,SDK");
 		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEAN");
 		when(sbiEvaluator.evaluate(biometricsDto)).thenThrow(
 				new RegBaseCheckedException("ERR-001", "SBI unavailable"));
-		when(sdkEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(88L));
+		// No SDK stub - SBI's failure blocks before SDK is ever invoked, so
+		// stubbing it here would be an unnecessary/dead stub under strict Mockito.
 
-		// Only SDK contributed; mean of [88] = 88.0
-		assertEquals(88.0, orchestrator.orchestrate(biometricsDto), 0.001);
+		try {
+			orchestrator.orchestrate(biometricsDto);
+			fail("Expected orchestrate() to block when a configured evaluator fails");
+		} catch (RegBaseCheckedException e) {
+			assertEquals("ERR-001", e.getErrorCode());
+		}
 	}
 
 	@Test(expected = RegBaseCheckedException.class)
 	public void testAllEvaluatorsFailThrowsException() throws RegBaseCheckedException {
 		putConfig(RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default", "SBI,SDK");
 		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEAN");
+		// No fallback: the first configured evaluator's failure (SBI) blocks
+		// immediately, so SDK is never invoked - stubbing it would be dead/unreachable.
 		when(sbiEvaluator.evaluate(biometricsDto)).thenThrow(
 				new RegBaseCheckedException("ERR-001", "SBI failed"));
-		when(sdkEvaluator.evaluate(biometricsDto)).thenThrow(
-				new RegBaseCheckedException("ERR-002", "SDK failed"));
 
-		orchestrator.orchestrate(biometricsDto);
+		orchestrator.orchestrate(biometricsDto).getAggregatedScore();
 	}
 
 	@Test
@@ -323,9 +346,7 @@ public class BiometricQualityOrchestratorTest {
 		try {
 			when(sbiEvaluator.evaluate(biometricsDto)).thenThrow(
 					new RegBaseCheckedException("ERR-001", "SBI failed"));
-			when(sdkEvaluator.evaluate(biometricsDto)).thenThrow(
-					new RegBaseCheckedException("ERR-002", "SDK failed"));
-			orchestrator.orchestrate(biometricsDto);
+			orchestrator.orchestrate(biometricsDto).getAggregatedScore();
 			fail("Expected RegBaseCheckedException");
 		} catch (RegBaseCheckedException e) {
 			verify(auditFactory).audit(eq(AuditEvent.QUALITY_ORCH_FAILED),
@@ -341,7 +362,7 @@ public class BiometricQualityOrchestratorTest {
 		when(sdkEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(70L));
 
 		// Only SDK score is valid; mean of [70] = 70.0
-		assertEquals(70.0, orchestrator.orchestrate(biometricsDto), 0.001);
+		assertEquals(70.0, orchestrator.orchestrate(biometricsDto).getAggregatedScore(), 0.001);
 	}
 
 	// =========================================================================
@@ -358,7 +379,7 @@ public class BiometricQualityOrchestratorTest {
 		when(sdkEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(80L));
 
 		// Both weights default to 1.0 → (60 + 80) / 2 = 70.0
-		assertEquals(70.0, orchestrator.orchestrate(biometricsDto), 0.001);
+		assertEquals(70.0, orchestrator.orchestrate(biometricsDto).getAggregatedScore(), 0.001);
 	}
 
 	// =========================================================================
@@ -371,7 +392,7 @@ public class BiometricQualityOrchestratorTest {
 		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEAN");
 		when(sbiEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(75L));
 
-		orchestrator.orchestrate(biometricsDto);
+		orchestrator.orchestrate(biometricsDto).getAggregatedScore();
 
 		verify(auditFactory, times(1)).audit(eq(AuditEvent.QUALITY_ORCH_COMPLETED),
 				eq(Components.REG_BIOMETRICS), anyString(), anyString());
@@ -387,7 +408,7 @@ public class BiometricQualityOrchestratorTest {
 		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEAN");
 		when(sbiEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(0L));
 
-		assertEquals(0.0, orchestrator.orchestrate(biometricsDto), 0.001);
+		assertEquals(0.0, orchestrator.orchestrate(biometricsDto).getAggregatedScore(), 0.001);
 	}
 
 	@Test
@@ -396,7 +417,7 @@ public class BiometricQualityOrchestratorTest {
 		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEAN");
 		when(sbiEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(100L));
 
-		assertEquals(100.0, orchestrator.orchestrate(biometricsDto), 0.001);
+		assertEquals(100.0, orchestrator.orchestrate(biometricsDto).getAggregatedScore(), 0.001);
 	}
 
 	// =========================================================================

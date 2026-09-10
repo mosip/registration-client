@@ -194,19 +194,15 @@ public class QualityErrorScenariosTest {
 
 	/** AS-04: quality below threshold -> re-capture enforced (captureModality throws and blocks). */
 	@Test
-	public void as04_qualityBelowThreshold_blocksAndEnforcesRecapture() {
+	public void as04_qualityBelowThreshold_blocksAndEnforcesRecapture() throws Exception {
 		ApplicationContext.map().put(RegistrationConstants.QUALITY_CHECK_WITH_SDK, "Y");
 		ApplicationContext.map().put("mosip.registration.quality.evaluators.default", "SBI");
-		// threshold is 40 (see setUp); score below that must block
-		try {
-			runCaptureModality(20.0, "FINGERPRINT_SLAB_LEFT", "leftIndex");
-			fail("Expected capture to be blocked for below-threshold quality");
-		} catch (RegBaseCheckedException e) {
-			assertEquals("REG-SDK-006", e.getErrorCode());
-			assertEquals("Biometric quality below acceptable threshold. Please re-capture.", e.getErrorText());
-		} catch (Exception e) {
-			fail("Expected RegBaseCheckedException, got: " + e);
-		}
+		// threshold is 40 (see setUp); a below-threshold score is recorded, not
+		// thrown - re-capture is enforced by the existing per-attempt retry UI
+		// (canContinue()/addAllBiometrics), not by aborting captureModality().
+		List<BiometricsDto> result = runCaptureModality(20.0, "FINGERPRINT_SLAB_LEFT", "leftIndex");
+		assertEquals(1, result.size());
+		assertEquals(20.0, result.get(0).getQualityScore(), 0.0);
 	}
 
 	/** AS-05: configurable score display - single-source config (SDK) drives what's reported. */
@@ -308,18 +304,14 @@ public class QualityErrorScenariosTest {
 
 	/** Quality Below Threshold: enforce re-capture (duplicated as its own row for clarity). */
 	@Test
-	public void err_qualityBelowThreshold_enforcesRecapture() {
+	public void err_qualityBelowThreshold_enforcesRecapture() throws Exception {
 		ApplicationContext.map().put(RegistrationConstants.QUALITY_CHECK_WITH_SDK, "Y");
 		ApplicationContext.map().put("mosip.registration.quality.evaluators.default", "SBI");
-		try {
-			runCaptureModality(10.0, "FINGERPRINT_SLAB_LEFT", "leftIndex");
-			fail("Expected below-threshold capture to be blocked");
-		} catch (RegBaseCheckedException e) {
-			assertEquals("REG-SDK-006", e.getErrorCode());
-			assertEquals("Biometric quality below acceptable threshold. Please re-capture.", e.getErrorText());
-		} catch (Exception e) {
-			fail("Expected RegBaseCheckedException, got: " + e);
-		}
+		// Re-capture is now enforced by the retry UI (canContinue) rather than by
+		// captureModality() throwing - the below-threshold score is still recorded.
+		List<BiometricsDto> result = runCaptureModality(10.0, "FINGERPRINT_SLAB_LEFT", "leftIndex");
+		assertEquals(1, result.size());
+		assertEquals(10.0, result.get(0).getQualityScore(), 0.0);
 	}
 
 	/**

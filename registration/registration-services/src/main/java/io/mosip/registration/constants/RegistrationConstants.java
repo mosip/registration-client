@@ -1947,6 +1947,14 @@ public class RegistrationConstants {
 	public static final String RETRIES = "RETRIES";
 	public static final String FORCE_CAPTURED  = "FORCE_CAPTURED";
 	public static final String SDK_SCORE  = "SDK_SCORE";
+	public static final String AGGREGATED_SCORE  = "AGGREGATED_SCORE";
+	// SDK owner/version details for the SDK_SCORE entry - mirrors the Organization
+	// carried inside the primary Quality tag's Algorithm, but for the SDK's own
+	// self-reported SDKInfo (productOwner, sdkVersion, apiVersion).
+	public static final String SDK_SCORE_ORGANIZATION = "SDK_SCORE_ORGANIZATION";
+	public static final String SDK_SCORE_ORGANIZATION_TYPE = "SDK_SCORE_ORGANIZATION_TYPE";
+	public static final String SDK_SCORE_SDK_VERSION = "SDK_SCORE_SDK_VERSION";
+	public static final String SDK_SCORE_API_VERSION = "SDK_SCORE_API_VERSION";
 	public static final String EXCEPTION   = "EXCEPTION";
 	public static final String CONFIGURED    = "CONFIGURED";
 	public static final String PAYLOAD = "PAYLOAD";
