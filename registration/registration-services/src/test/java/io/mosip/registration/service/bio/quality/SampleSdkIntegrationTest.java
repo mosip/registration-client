@@ -116,7 +116,7 @@ public class SampleSdkIntegrationTest {
 
         BiometricsDto fingerDto = new BiometricsDto("leftIndex", new byte[]{1, 2, 3, 4}, 70.0);
 
-        double aggregatedScore = orchestrator.orchestrate(fingerDto);
+        double aggregatedScore = orchestrator.orchestrate(fingerDto).getAggregatedScore();
 
         // Mean of SBI (70.0) and SampleSDK (90.0) = 80.0
         assertEquals(80.0, aggregatedScore, 0.001);

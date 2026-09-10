@@ -130,6 +130,18 @@ public class GenericBiometricsController extends BaseController {
 	private Label sdkQualityText;
 
 	@FXML
+	private Label mdsQualityLabel;
+
+	@FXML
+	private Label sdkQualityLabel;
+
+	@FXML
+	private Label aggregatedQualityLabel;
+
+	@FXML
+	private Label aggregatedQualityText;
+
+	@FXML
 	private ColumnConstraints thresholdPane1;
 
 	@FXML
@@ -648,8 +660,19 @@ public class GenericBiometricsController extends BaseController {
 					addStreamImageAndScoreToCache(fxControl.getUiSchemaDTO().getId(), currentModality, biometricsMap.values(),
 							getRegistrationDTOFromSession().ATTEMPTS.get(String.format("%s_%s", fxControl.getUiSchemaDTO().getId(), currentModality)));
 					displayBiometric(currentModality);
-					// if all the above check success show alert capture success
-					generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
+					// A capture below its modality's threshold is still recorded (see
+					// BioServiceImpl#captureModality), but the operator must be told to
+					// re-capture rather than shown a false "success" - the actual
+					// enforcement (blocking Next / eventually force-accepting the best
+					// attempt after retries) is handled elsewhere.
+					boolean belowThreshold = biometricsMap.values().stream()
+						.anyMatch(GenericBiometricsController.this::isBelowThreshold);
+					LOGGER.info("GenericBiometricsController: capture alert decision - belowThreshold={} for attributes {}",
+							belowThreshold, biometricsMap.keySet());
+					generateAlert(belowThreshold ? RegistrationConstants.ALERT_WARNING : RegistrationConstants.ALERT_INFORMATION,
+							RegistrationUIConstants.getMessageLanguageSpecific(
+									belowThreshold ? RegistrationUIConstants.BIOMETRIC_QUALITY_BELOW_THRESHOLD
+											: RegistrationUIConstants.BIOMETRIC_CAPTURE_SUCCESS));
 				} catch (Exception e) {
 					LOGGER.error("Exception while getting the scanned biometrics for user registration",e);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.BIOMETRIC_SCANNING_ERROR));
@@ -743,6 +766,18 @@ public class GenericBiometricsController extends BaseController {
 			LOGGER.error("Failed to extract image from ISO", exception);
 			throw exception;
 		}
+	}
+
+	/**
+	 * Same score-fallback (aggregate, else SDK, else raw SBI) used for the
+	 * threshold bar, evaluated against the modality's configured threshold.
+	 */
+	private boolean isBelowThreshold(BiometricsDto biometricsDto) {
+		double displayScore = biometricsDto.getAggregatedScore() > 0 ? biometricsDto.getAggregatedScore()
+				: biometricsDto.getSdkScore() > 0 ? biometricsDto.getSdkScore()
+				: biometricsDto.getQualityScore();
+		double threshold = bioService.getMDMQualityThreshold(Modality.getModality(biometricsDto.getBioAttribute()));
+		return displayScore < threshold;
 	}
 
 	private boolean isValidBiometric(List<BiometricsDto> mdsCapturedBiometricsList) {
@@ -917,25 +952,84 @@ public class GenericBiometricsController extends BaseController {
 
 		biometricPane.getStyleClass().clear();
 		biometricPane.getStyleClass().add(RegistrationConstants.FINGERPRINT_PANES_SELECTED);
-		qualityScore.setText(getQualityScoreText(qltyScore));
-		bioProgress.setProgress(
-				Double.valueOf(getQualityScoreText(barScore).split(RegistrationConstants.PERCENTAGE)[0]) / 100);
-		qualityText.setText(getQualityScoreText(barScore));
-		sdkQualityText.setText(getQualityScoreText(sdkScore));
+
+		// Only show the SDK score when the SDK evaluator actually ran, and only show
+		// the aggregated score when an aggregate was actually produced - never show
+		// a bare 0 for a source that was never evaluated. MDS is shown alongside SDK
+		// and Aggregated whenever each is present; before the first scan (nothing
+		// captured yet), none of the three are shown as "0" - a hyphen placeholder
+		// is used instead, matching the pre-scan/cleared state elsewhere in the UI.
+		boolean anyScorePresent = qltyScore > 0 || sdkScore > 0 || aggregatedScore > 0;
+		boolean sdkPresent = sdkScore > 0;
+		boolean aggregatePresent = sdkPresent && aggregatedScore > 0;
+
+		qualityScore.setText(anyScorePresent ? getQualityScoreText(qltyScore) : RegistrationConstants.HYPHEN);
+
+		sdkQualityLabel.setVisible(sdkPresent);
+		sdkQualityLabel.setManaged(sdkPresent);
+		sdkQualityText.setVisible(sdkPresent);
+		sdkQualityText.setManaged(sdkPresent);
+		if (sdkPresent) {
+			sdkQualityText.setText(getQualityScoreText(sdkScore));
+		}
+
+		aggregatedQualityLabel.setVisible(aggregatePresent);
+		aggregatedQualityLabel.setManaged(aggregatePresent);
+		aggregatedQualityText.setVisible(aggregatePresent);
+		aggregatedQualityText.setManaged(aggregatePresent);
+		if (aggregatePresent) {
+			aggregatedQualityText.setText(getQualityScoreText(aggregatedScore));
+		}
 
 		retry = retry == 0 ? 1 : retry;
 		clearAttemptsBox(thresholdValue, retry);
 
-		if (Double.valueOf(getQualityScoreText(barScore).split(RegistrationConstants.PERCENTAGE)[0]) >= thresholdValue) {
-			bioProgress.getStyleClass().removeAll(RegistrationConstants.PROGRESS_BAR_RED);
-			bioProgress.getStyleClass().add(RegistrationConstants.PROGRESS_BAR_GREEN);
-			qualityText.getStyleClass().removeAll(RegistrationConstants.LABEL_RED);
-			qualityText.getStyleClass().add(RegistrationConstants.LABEL_GREEN);
+		// Pass/fail (red/green) coloring belongs on whichever score is actually
+		// driving the threshold decision (same source as barScore) - not statically
+		// on the SDK column regardless of what's really being evaluated. Both the
+		// caption (e.g. "SDK Quality") and its value are highlighted together, using
+		// scoreValueRed/scoreValueGreen (text-fill only, no font-size override) so
+		// these small labels stay at their normal size - unlike labelRed/labelGreen
+		// which also bump font-size and are reserved for the big bar-score label.
+		final String SCORE_GREEN = "scoreValueGreen";
+		final String SCORE_RED = "scoreValueRed";
+		Label thresholdValueLabel = aggregatePresent ? aggregatedQualityText
+				: sdkPresent ? sdkQualityText
+				: qualityScore;
+		Label thresholdCaptionLabel = aggregatePresent ? aggregatedQualityLabel
+				: sdkPresent ? sdkQualityLabel
+				: mdsQualityLabel;
+		qualityScore.getStyleClass().removeAll(SCORE_RED, SCORE_GREEN);
+		sdkQualityText.getStyleClass().removeAll(SCORE_RED, SCORE_GREEN);
+		aggregatedQualityText.getStyleClass().removeAll(SCORE_RED, SCORE_GREEN);
+		mdsQualityLabel.getStyleClass().removeAll(SCORE_RED, SCORE_GREEN);
+		sdkQualityLabel.getStyleClass().removeAll(SCORE_RED, SCORE_GREEN);
+		aggregatedQualityLabel.getStyleClass().removeAll(SCORE_RED, SCORE_GREEN);
+
+		if (anyScorePresent) {
+			bioProgress.setProgress(
+					Double.valueOf(getQualityScoreText(barScore).split(RegistrationConstants.PERCENTAGE)[0]) / 100);
+			qualityText.setText(getQualityScoreText(barScore));
+			if (Double.valueOf(getQualityScoreText(barScore).split(RegistrationConstants.PERCENTAGE)[0]) >= thresholdValue) {
+				bioProgress.getStyleClass().removeAll(RegistrationConstants.PROGRESS_BAR_RED);
+				bioProgress.getStyleClass().add(RegistrationConstants.PROGRESS_BAR_GREEN);
+				qualityText.getStyleClass().removeAll(RegistrationConstants.LABEL_RED);
+				qualityText.getStyleClass().add(RegistrationConstants.LABEL_GREEN);
+				thresholdValueLabel.getStyleClass().add(SCORE_GREEN);
+				thresholdCaptionLabel.getStyleClass().add(SCORE_GREEN);
+			} else {
+				bioProgress.getStyleClass().removeAll(RegistrationConstants.PROGRESS_BAR_GREEN);
+				bioProgress.getStyleClass().add(RegistrationConstants.PROGRESS_BAR_RED);
+				qualityText.getStyleClass().removeAll(RegistrationConstants.LABEL_GREEN);
+				qualityText.getStyleClass().add(RegistrationConstants.LABEL_RED);
+				thresholdValueLabel.getStyleClass().add(SCORE_RED);
+				thresholdCaptionLabel.getStyleClass().add(SCORE_RED);
+			}
 		} else {
-			bioProgress.getStyleClass().removeAll(RegistrationConstants.PROGRESS_BAR_GREEN);
-			bioProgress.getStyleClass().add(RegistrationConstants.PROGRESS_BAR_RED);
-			qualityText.getStyleClass().removeAll(RegistrationConstants.LABEL_GREEN);
-			qualityText.getStyleClass().add(RegistrationConstants.LABEL_RED);
+			bioProgress.setProgress(0);
+			qualityText.setText(RegistrationConstants.HYPHEN);
+			bioProgress.getStyleClass().removeAll(RegistrationConstants.PROGRESS_BAR_RED, RegistrationConstants.PROGRESS_BAR_GREEN);
+			qualityText.getStyleClass().removeAll(RegistrationConstants.LABEL_RED, RegistrationConstants.LABEL_GREEN);
 		}
 
 		scanBtn.setDisable(isAllExceptions() ? true : (retry == bioService.getRetryCount(currentModality)));

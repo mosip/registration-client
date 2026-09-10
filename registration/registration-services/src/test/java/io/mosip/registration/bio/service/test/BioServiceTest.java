@@ -563,7 +563,9 @@ public class BioServiceTest {
         BiometricsDto dto = new BiometricsDto();
         dto.setBioAttribute("face");
         dto.setQualityScore(80.0);
-        dto.setAttributeISO(new byte[0]);
+        // Non-empty ISO bytes - an empty array is now treated as corrupt/unreadable
+        // data (Error Scenarios: "Corrupt Data" blocks with REG-SDK-008).
+        dto.setAttributeISO(new byte[]{1, 2, 3, 4});
         dto.setModalityName("FACE");
 
         Mockito.when(deviceSpecificationFactory.getDeviceInfoByModality(Mockito.anyString())).thenReturn(device);
@@ -610,7 +612,11 @@ public class BioServiceTest {
     }
 
     @Test
-    public void captureModality_nullBiometricInList_skipped() throws Exception {
+    public void captureModality_nullBiometricInList_throwsPartialCapture() throws Exception {
+        // A null entry is still skipped rather than NPE'd on, but the resulting
+        // list is now shorter than the requested count (1), which the Partial
+        // Capture check (Error Scenarios: "Incomplete biometric capture",
+        // REG-SDK-007) correctly blocks on instead of silently returning empty.
         MdmBioDevice device = new MdmBioDevice();
         device.setSpecVersion("0.9.5");
 
@@ -621,8 +627,12 @@ public class BioServiceTest {
 
         ApplicationContext.map().remove(RegistrationConstants.QUALITY_CHECK_WITH_SDK);
         MDMRequestDto req = new MDMRequestDto("FACE", new String[0], "REGISTRATION", "TEST", 5000, 1, 70);
-        List<BiometricsDto> result = bioServiceImpl.captureModality(req);
-        Assert.assertTrue(result.isEmpty());
+        try {
+            bioServiceImpl.captureModality(req);
+            Assert.fail("Expected partial capture to be blocked");
+        } catch (RegBaseCheckedException e) {
+            Assert.assertEquals("REG-SDK-007", e.getErrorCode());
+        }
     }
 
     // ── captureModalityForAuth ────────────────────────────────────────────────
@@ -635,7 +645,9 @@ public class BioServiceTest {
         BiometricsDto dto = new BiometricsDto();
         dto.setBioAttribute("face");
         dto.setQualityScore(80.0);
-        dto.setAttributeISO(new byte[0]);
+        // Non-empty ISO bytes - an empty array is now treated as corrupt/unreadable
+        // data (Error Scenarios: "Corrupt Data" blocks with REG-SDK-008).
+        dto.setAttributeISO(new byte[]{1, 2, 3, 4});
         dto.setModalityName("FACE");
 
         Mockito.when(deviceSpecificationFactory.isDeviceAvailable(Mockito.anyString())).thenReturn(true);

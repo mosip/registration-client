@@ -73,6 +73,9 @@ public class MultiVendorOrchestratorTest {
     public void setUp() {
         // Clean application config map before every test
         ReflectionTestUtils.setField(ApplicationContext.class, "applicationMap", new HashMap<String, Object>());
+        // DaoConfig.keys is a static field shared across the whole test JVM fork -
+        // clear it so aggregation-strategy config from another test class can't leak in.
+        ReflectionTestUtils.setField(io.mosip.registration.config.DaoConfig.class, "keys", null);
 
         // Inject all three vendor evaluators into the orchestrator
         ReflectionTestUtils.setField(orchestrator, "evaluators",
@@ -89,8 +92,18 @@ public class MultiVendorOrchestratorTest {
     }
 
     // helper
+    // Also seeds DaoConfig's file-backed properties so aggregation-strategy keys
+    // are seen as "explicitly configured" (BiometricQualityOrchestrator checks
+    // the file, not the runtime map, for that flag).
     private void putConfig(String key, String value) {
         ApplicationContext.map().put(key, value);
+        java.util.Properties props = (java.util.Properties) ReflectionTestUtils.getField(
+                io.mosip.registration.config.DaoConfig.class, "keys");
+        if (props == null) {
+            props = new java.util.Properties();
+            ReflectionTestUtils.setField(io.mosip.registration.config.DaoConfig.class, "keys", props);
+        }
+        props.setProperty(key, value);
     }
 
     // =========================================================================
@@ -107,7 +120,7 @@ public class MultiVendorOrchestratorTest {
         putConfig(RegistrationConstants.QUALITY_WEIGHT_PREFIX + "leftIndex.MOCK_VENDOR_2", "0.3");
         putConfig(RegistrationConstants.QUALITY_WEIGHT_PREFIX + "leftIndex.MOCK_VENDOR_3", "0.5");
 
-        double result = orchestrator.orchestrate(biometricsDto);
+        double result = orchestrator.orchestrate(biometricsDto).getAggregatedScore();
 
         // (60*0.2 + 80*0.3 + 90*0.5) / 1.0 = 81.0
         assertEquals(81.0, result, 0.001);
@@ -122,7 +135,7 @@ public class MultiVendorOrchestratorTest {
                 "MOCK_VENDOR_1, MOCK_VENDOR_2, MOCK_VENDOR_3");
         putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEDIAN");
 
-        double result = orchestrator.orchestrate(biometricsDto);
+        double result = orchestrator.orchestrate(biometricsDto).getAggregatedScore();
 
         // Sorted [60, 80, 90] → middle element = 80.0
         assertEquals(80.0, result, 0.001);
@@ -141,7 +154,7 @@ public class MultiVendorOrchestratorTest {
             "#scores['MOCK_VENDOR_1'] * 0.2 + #scores['MOCK_VENDOR_2'] * 0.3 + #scores['MOCK_VENDOR_3'] * 0.5"
         );
 
-        double result = orchestrator.orchestrate(biometricsDto);
+        double result = orchestrator.orchestrate(biometricsDto).getAggregatedScore();
 
         // 60*0.2 + 80*0.3 + 90*0.5 = 81.0
         assertEquals(81.0, result, 0.001);
@@ -159,7 +172,7 @@ public class MultiVendorOrchestratorTest {
 
         // leftIndex maps to FINGER modality
         BiometricsDto fingerDto = new BiometricsDto("leftIndex", new byte[]{1, 2}, 70.0);
-        double result = orchestrator.orchestrate(fingerDto);
+        double result = orchestrator.orchestrate(fingerDto).getAggregatedScore();
 
         // Mean of Vendor 1 (60.0) and Vendor 2 (80.0) = 70.0
         assertEquals(70.0, result, 0.001);
@@ -171,7 +184,7 @@ public class MultiVendorOrchestratorTest {
         putConfig(RegistrationConstants.QUALITY_AGGREGATION_MODALITY_PREFIX + "FINGER", "MEDIAN");
 
         BiometricsDto fingerDto = new BiometricsDto("leftIndex", new byte[]{1, 2}, 70.0);
-        double result = orchestrator.orchestrate(fingerDto);
+        double result = orchestrator.orchestrate(fingerDto).getAggregatedScore();
 
         // Sorted [60.0, 80.0, 90.0] -> Median = 80.0
         assertEquals(80.0, result, 0.001);
@@ -189,7 +202,7 @@ public class MultiVendorOrchestratorTest {
 
         // leftEye maps to IRIS modality
         BiometricsDto irisDto = new BiometricsDto("leftEye", new byte[]{3, 4}, 85.0);
-        double result = orchestrator.orchestrate(irisDto);
+        double result = orchestrator.orchestrate(irisDto).getAggregatedScore();
 
         // Vendor 3 score = 90.0
         assertEquals(90.0, result, 0.001);

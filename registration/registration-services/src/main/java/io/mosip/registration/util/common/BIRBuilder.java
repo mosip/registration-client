@@ -25,11 +25,16 @@ import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.kernel.biometrics.constant.OtherKey;
+import io.mosip.kernel.biometrics.model.SDKInfo;
+import io.mosip.registration.service.bio.quality.SdkInfoProvider;
 
 @Component
 public class BIRBuilder {
 
 	private static final Logger LOGGER = AppConfig.getLogger(BIRBuilder.class);
+
+	@org.springframework.beans.factory.annotation.Autowired
+	private SdkInfoProvider sdkInfoProvider;
 
 	public BIR buildBIR(BiometricsDto bioDto) {
 		LOGGER.debug("started building BIR for for bioAttribute : {}", bioDto.getBioAttribute());
@@ -72,6 +77,29 @@ public class BIRBuilder {
 		otherEntries.add(new Entry(OtherKey.PAYLOAD, payLoad == null ? RegistrationConstants.EMPTY : payLoad));
 		otherEntries.add(new Entry(OtherKey.SPEC_VERSION, bioDto.getSpecVersion() == null ? RegistrationConstants.EMPTY : bioDto.getSpecVersion()));*/
 
+		// SDK owner/version details, mirroring the Organization already carried
+		// inside the primary Quality tag's Algorithm - but sourced from the SDK's
+		// own self-reported SDKInfo (productOwner, sdkVersion, apiVersion) rather
+		// than a fixed constant, since this describes whichever vendor SDK produced
+		// bioDto.getSdkScore(). Only meaningful when an SDK score was produced.
+		String sdkOrganization = RegistrationConstants.EMPTY;
+		String sdkOrganizationType = RegistrationConstants.EMPTY;
+		String sdkVersion = RegistrationConstants.EMPTY;
+		String sdkApiVersion = RegistrationConstants.EMPTY;
+		if (bioDto.getSdkScore() > 0 && sdkInfoProvider != null) {
+			SDKInfo sdkInfo = sdkInfoProvider.getSdkInfo(biometricType);
+			if (sdkInfo != null) {
+				if (sdkInfo.getProductOwner() != null) {
+					sdkOrganization = sdkInfo.getProductOwner().getOrganization() == null
+							? RegistrationConstants.EMPTY : sdkInfo.getProductOwner().getOrganization();
+					sdkOrganizationType = sdkInfo.getProductOwner().getType() == null
+							? RegistrationConstants.EMPTY : sdkInfo.getProductOwner().getType();
+				}
+				sdkVersion = sdkInfo.getSdkVersion() == null ? RegistrationConstants.EMPTY : sdkInfo.getSdkVersion();
+				sdkApiVersion = sdkInfo.getApiVersion() == null ? RegistrationConstants.EMPTY : sdkInfo.getApiVersion();
+			}
+		}
+
 		return new BIR.BIRBuilder().withBdb(bioDto.getAttributeISO() == null ? new byte[0] : bioDto.getAttributeISO())
 				.withVersion(versionType)
 				.withCbeffversion(versionType)
@@ -85,6 +113,14 @@ public class BIRBuilder {
 				.withOthers(OtherKey.EXCEPTION, bioDto.getAttributeISO()==null ? "true" : "false")
 				.withOthers(OtherKey.RETRIES, bioDto.getNumOfRetries()+RegistrationConstants.EMPTY)
 				.withOthers(OtherKey.SDK_SCORE, bioDto.getSdkScore()+RegistrationConstants.EMPTY)
+				// withOthers accepts a plain String key, not just OtherKey's constants -
+				// AGGREGATED_SCORE and the SDK_SCORE_* owner details below are new
+				// "others" entries, not repurposing SDK_SCORE.
+				.withOthers(RegistrationConstants.AGGREGATED_SCORE, bioDto.getAggregatedScore()+RegistrationConstants.EMPTY)
+				.withOthers(RegistrationConstants.SDK_SCORE_ORGANIZATION, sdkOrganization)
+				.withOthers(RegistrationConstants.SDK_SCORE_ORGANIZATION_TYPE, sdkOrganizationType)
+				.withOthers(RegistrationConstants.SDK_SCORE_SDK_VERSION, sdkVersion)
+				.withOthers(RegistrationConstants.SDK_SCORE_API_VERSION, sdkApiVersion)
 				.withOthers(OtherKey.FORCE_CAPTURED, bioDto.isForceCaptured()+RegistrationConstants.EMPTY)
 				.withOthers(OtherKey.PAYLOAD, payLoad == null ? RegistrationConstants.EMPTY : payLoad)
 				.withOthers(OtherKey.SPEC_VERSION, bioDto.getSpecVersion() == null ? RegistrationConstants.EMPTY : bioDto.getSpecVersion())
