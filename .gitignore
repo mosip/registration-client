@@ -29,3 +29,9 @@ test.txt
 /.recommenders/
 **/*.iml
 .vscode
+
+# Excluded local files
+registration/registration-client/.mosipkeys/db.conf
+registration/registration-client/SCHEMA_0.2.json
+registration/registration-client/SCHEMA_0.3.json
+registration/registration-client/lib/
