@@ -1,7 +1,6 @@
 package io.mosip.registration.service.bio.quality.aggregator;
 
 import io.mosip.registration.service.bio.quality.IBiometricScoreAggregator;
-import io.mosip.registration.service.bio.quality.config.FormulaContext;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.exception.RegBaseUncheckedException;
@@ -30,8 +29,8 @@ public class FormulaScoreAggregator implements IBiometricScoreAggregator {
 	private final Map<String, Expression> expressionCache = new ConcurrentHashMap<>();
 
 	@Override
-	public double aggregate(Map<String, Double> scores, Map<String, Double> w) {
-		String expr = FormulaContext.getFormula();
+	public double aggregate(Map<String, Double> scores, Map<String, Double> w, String formulaExpression) {
+		String expr = formulaExpression;
 		if (expr == null || expr.trim().isEmpty()) {
 			// Configuration Error per the Error Scenarios table: FORMULA selected with
 			// no expression configured is a misconfigured quality gate, not a case to

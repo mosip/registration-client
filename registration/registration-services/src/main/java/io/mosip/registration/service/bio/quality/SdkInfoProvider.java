@@ -1,35 +1,53 @@
 package io.mosip.registration.service.bio.quality;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.aop.framework.Advised;
+import org.springframework.aop.support.AopUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import io.mosip.kernel.biometrics.constant.BiometricFunction;
 import io.mosip.kernel.biometrics.constant.BiometricType;
 import io.mosip.kernel.biometrics.model.SDKInfo;
 import io.mosip.kernel.biometrics.spi.IBioApi;
+import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
+import io.mosip.kernel.biosdk.provider.spi.iBioProviderApi;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
-import io.mosip.registration.context.ApplicationContext;
 
 /**
  * Fetches the real {@link SDKInfo} (owner organization, sdk/api version etc.)
- * from the SDK configured for a modality. BioAPIFactory/iBioProviderApi -
- * the interface used elsewhere to run quality checks - never expose the
- * SDKInfo returned by the SDK's own init() call, so this instantiates the
- * configured IBioApi implementation directly (same className config used to
- * wire that SDK into BioAPIFactory) purely to read its self-reported info.
- * Instantiated once per modality and cached, since this info is static for
- * the lifetime of the running app.
+ * from the SDK BioAPIFactory already has live for a modality.
+ *
+ * <p>BioAPIFactory/iBioProviderApi never expose the SDKInfo returned by the
+ * SDK's own init() call, so this reflects into the concrete provider's
+ * private {@code sdkRegistry} field to reuse the exact {@link IBioApi}
+ * instance BioAPIFactory itself already instantiated and manages - it does
+ * NOT read a config string and reflectively instantiate a second SDK object
+ * of its own. Reflecting on a config-supplied class name (the previous
+ * approach) would let anyone with server config-write access get arbitrary
+ * code to run on every field machine that syncs it, and would separately
+ * risk a second live instance of a licensed SDK (extra license-seat
+ * consumption, an init() call with different params than the vendor
+ * expects). Going through BioAPIFactory's own already-bootstrapped instance
+ * avoids both.
+ *
+ * <p>This only works against {@code BioProviderImpl_V_0_9} (the only
+ * provider version this feature has been built and tested against); for any
+ * other/unrecognised provider shape this returns null rather than guessing.
+ * Resolved once per modality and cached, since this info is static for the
+ * lifetime of the running app.
  */
 @Component
 public class SdkInfoProvider {
 
 	private static final Logger LOGGER = AppConfig.getLogger(SdkInfoProvider.class);
 
-	private static final String FINGER_PROVIDER_KEY = "mosip.fingerprint.provider";
-	private static final String IRIS_PROVIDER_KEY = "mosip.iris.provider";
-	private static final String FACE_PROVIDER_KEY = "mosip.face.provider";
+	@Autowired
+	private BioAPIFactory bioAPIFactory;
 
 	private final Map<BiometricType, SDKInfo> cache = new ConcurrentHashMap<>();
 	private static final SDKInfo NOT_AVAILABLE = new SDKInfo();
@@ -46,42 +64,69 @@ public class SdkInfoProvider {
 	}
 
 	private SDKInfo resolveSdkInfo(BiometricType biometricType) {
-		String providerKey = providerKeyFor(biometricType);
-		if (providerKey == null) {
-			return null;
-		}
-
-		String className = (String) ApplicationContext.map().get(providerKey);
-		if (className == null || className.trim().isEmpty()) {
-			LOGGER.warn("SdkInfoProvider: No SDK provider configured under key {} for {}", providerKey, biometricType);
-			return null;
-		}
-
 		try {
-			Object instance = Class.forName(className.trim()).getDeclaredConstructor().newInstance();
-			if (!(instance instanceof IBioApi)) {
-				LOGGER.warn("SdkInfoProvider: Configured class {} does not implement IBioApi", className);
+			iBioProviderApi provider = bioAPIFactory.getBioProvider(biometricType, BiometricFunction.QUALITY_CHECK);
+			if (provider == null) {
 				return null;
 			}
-			SDKInfo sdkInfo = ((IBioApi) instance).init(null);
-			LOGGER.info("SdkInfoProvider: Resolved SDKInfo for {} from {}: {}", biometricType, className, sdkInfo);
+
+			IBioApi liveSdk = extractLiveSdkInstance(provider, biometricType);
+			if (liveSdk == null) {
+				return null;
+			}
+
+			// Reuses the already-bootstrapped instance - does not create a new one.
+			SDKInfo sdkInfo = liveSdk.init(null);
+			LOGGER.info("SdkInfoProvider: Resolved SDKInfo for {} via BioAPIFactory's live provider: {}",
+					biometricType, sdkInfo);
 			return sdkInfo;
 		} catch (Exception e) {
-			LOGGER.warn("SdkInfoProvider: Unable to resolve SDKInfo for {} from {}", biometricType, className, e);
+			LOGGER.warn("SdkInfoProvider: Unable to resolve SDKInfo for {} via BioAPIFactory", biometricType, e);
 			return null;
 		}
 	}
 
-	private String providerKeyFor(BiometricType biometricType) {
-		switch (biometricType) {
-			case FINGER:
-				return FINGER_PROVIDER_KEY;
-			case IRIS:
-				return IRIS_PROVIDER_KEY;
-			case FACE:
-				return FACE_PROVIDER_KEY;
-			default:
-				return null;
+	/**
+	 * Reflects into BioProviderImpl_V_0_9's private
+	 * {@code sdkRegistry: Map<BiometricType, Map<BiometricFunction, IBioApi>>}
+	 * field to get the IBioApi instance it already has live for this
+	 * modality/function, instead of instantiating a new one ourselves.
+	 */
+	@SuppressWarnings("unchecked")
+	private IBioApi extractLiveSdkInstance(iBioProviderApi provider, BiometricType biometricType) throws Exception {
+		// The bean BioAPIFactory returns is a Spring AOP proxy (the @Counted/@Timed
+		// micrometer annotations on the provider's methods trigger JDK dynamic
+		// proxying), not the concrete BioProviderImpl_V_0_9 instance itself - its
+		// declared fields (including sdkRegistry) live on the real target object
+		// behind the proxy, so unwrap that first.
+		Object target = provider;
+		if (AopUtils.isAopProxy(provider) && provider instanceof Advised) {
+			Object unwrapped = ((Advised) provider).getTargetSource().getTarget();
+			if (unwrapped != null) {
+				target = unwrapped;
+			}
 		}
+
+		Field registryField;
+		try {
+			registryField = target.getClass().getDeclaredField("sdkRegistry");
+		} catch (NoSuchFieldException nsfe) {
+			LOGGER.warn("SdkInfoProvider: Provider {} has no sdkRegistry field - unsupported provider version",
+					target.getClass().getName());
+			return null;
+		}
+		registryField.setAccessible(true);
+		Object registryValue = registryField.get(target);
+		if (!(registryValue instanceof Map)) {
+			return null;
+		}
+
+		Object perModality = ((Map<BiometricType, Object>) registryValue).get(biometricType);
+		if (!(perModality instanceof Map)) {
+			return null;
+		}
+
+		Object sdkForFunction = ((Map<BiometricFunction, Object>) perModality).get(BiometricFunction.QUALITY_CHECK);
+		return sdkForFunction instanceof IBioApi ? (IBioApi) sdkForFunction : null;
 	}
 }

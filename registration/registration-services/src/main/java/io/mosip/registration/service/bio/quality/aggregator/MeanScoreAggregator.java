@@ -11,7 +11,7 @@ import java.util.Map;
 public class MeanScoreAggregator implements IBiometricScoreAggregator {
 
 	@Override
-	public double aggregate(Map<String, Double> scores, Map<String, Double> w) {
+	public double aggregate(Map<String, Double> scores, Map<String, Double> w, String formulaExpression) {
 		if (scores == null || scores.isEmpty()) {
 			return 0.0;
 		}

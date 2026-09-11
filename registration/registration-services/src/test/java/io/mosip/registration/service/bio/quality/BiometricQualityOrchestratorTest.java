@@ -173,7 +173,7 @@ public class BiometricQualityOrchestratorTest {
 
 	@Test
 	public void testMeanAggregatorWithEmptyScoresReturnsZero() {
-		assertEquals(0.0, meanAggregator.aggregate(Collections.emptyMap(), Collections.emptyMap()), 0.001);
+		assertEquals(0.0, meanAggregator.aggregate(Collections.emptyMap(), Collections.emptyMap(), null), 0.001);
 	}
 
 	@Test
@@ -183,7 +183,7 @@ public class BiometricQualityOrchestratorTest {
 		scores.put("B", 90.0);
 		scores.put("C", 60.0);
 		// Sorted: [30, 60, 90] → median = 60.0
-		assertEquals(60.0, medianAggregator.aggregate(scores, Collections.emptyMap()), 0.001);
+		assertEquals(60.0, medianAggregator.aggregate(scores, Collections.emptyMap(), null), 0.001);
 	}
 
 	@Test
@@ -192,12 +192,12 @@ public class BiometricQualityOrchestratorTest {
 		scores.put("A", 70.0);
 		scores.put("B", 90.0);
 		// (70 + 90) / 2 = 80.0
-		assertEquals(80.0, medianAggregator.aggregate(scores, Collections.emptyMap()), 0.001);
+		assertEquals(80.0, medianAggregator.aggregate(scores, Collections.emptyMap(), null), 0.001);
 	}
 
 	@Test
 	public void testMedianWithSingleValue() {
-		assertEquals(75.0, medianAggregator.aggregate(Map.of("SBI", 75.0), Collections.emptyMap()), 0.001);
+		assertEquals(75.0, medianAggregator.aggregate(Map.of("SBI", 75.0), Collections.emptyMap(), null), 0.001);
 	}
 
 	@Test
@@ -219,14 +219,14 @@ public class BiometricQualityOrchestratorTest {
 		Map<String, Double> scores = Map.of("SBI", 60.0, "SDK", 80.0);
 		Map<String, Double> weights = Map.of("SBI", 0.3, "SDK", 0.7);
 		// (60*0.3 + 80*0.7) / 1.0 = 74.0
-		assertEquals(74.0, weightedAggregator.aggregate(scores, weights), 0.001);
+		assertEquals(74.0, weightedAggregator.aggregate(scores, weights, null), 0.001);
 	}
 
 	@Test
 	public void testWeightedAggregatorWithEqualWeightsEqualsMean() {
 		Map<String, Double> scores = Map.of("SBI", 60.0, "SDK", 80.0);
 		Map<String, Double> weights = Map.of("SBI", 1.0, "SDK", 1.0);
-		assertEquals(70.0, weightedAggregator.aggregate(scores, weights), 0.001);
+		assertEquals(70.0, weightedAggregator.aggregate(scores, weights, null), 0.001);
 	}
 
 	@Test
@@ -236,7 +236,7 @@ public class BiometricQualityOrchestratorTest {
 		scores.put("SBI", 55.0);
 		scores.put("SDK", 90.0);
 		// First entry is SBI=55.0
-		assertEquals(55.0, priorityAggregator.aggregate(scores, Collections.emptyMap()), 0.001);
+		assertEquals(55.0, priorityAggregator.aggregate(scores, Collections.emptyMap(), null), 0.001);
 	}
 
 	@Test
@@ -246,7 +246,7 @@ public class BiometricQualityOrchestratorTest {
 		scores.put("SBI", 55.0);
 		scores.put("SDK", 90.0);
 		Map<String, Double> weights = Map.of("SBI", 2.0, "SDK", 1.0); // SDK has higher priority (rank 1)
-		assertEquals(90.0, priorityAggregator.aggregate(scores, weights), 0.001);
+		assertEquals(90.0, priorityAggregator.aggregate(scores, weights, null), 0.001);
 	}
 
 	@Test

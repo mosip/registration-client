@@ -251,34 +251,23 @@ public class BiometricQualityOrchestrator {
 					RegistrationExceptionConstants.REG_NO_QUALITY_SOURCE.getErrorMessage());
 		}
 
-		// FormulaScoreAggregator reads its SpEL expression from FormulaContext (a
-		// ThreadLocal), not from a parameter - resolve it here (per-attribute, else
-		// default) before aggregating. Only overwrite FormulaContext when config
-		// actually provides an expression, so a value already set directly by a
-		// caller (e.g. a test driving the aggregator layer) isn't clobbered with
-		// null just because no properties-file formula exists for this attribute.
-		boolean formulaSetHere = false;
+		// Resolve the FORMULA strategy's SpEL expression (per-attribute, else
+		// default) and pass it directly into aggregate() rather than through
+		// ambient/thread-local state - a value set that way could otherwise leak
+		// from one thread's FORMULA aggregation into a later, differently
+		// configured evaluation on the same (pooled) thread. Non-FORMULA
+		// strategies simply ignore the parameter.
+		String formulaExpr = null;
 		if ("FORMULA".equalsIgnoreCase(finalStrategyName)) {
 			String formulaAttrKey = RegistrationConstants.QUALITY_FORMULA_PREFIX + bioAttribute;
 			String formulaDefaultKey = RegistrationConstants.QUALITY_FORMULA_PREFIX + "default";
-			String formulaExpr = (String) ApplicationContext.map().get(formulaAttrKey);
+			formulaExpr = (String) ApplicationContext.map().get(formulaAttrKey);
 			if (formulaExpr == null) {
 				formulaExpr = (String) ApplicationContext.map().get(formulaDefaultKey);
 			}
-			if (formulaExpr != null) {
-				io.mosip.registration.service.bio.quality.config.FormulaContext.setFormula(formulaExpr);
-				formulaSetHere = true;
-			}
 		}
 
-		double aggregatedScore;
-		try {
-			aggregatedScore = selectedAggregator.aggregate(scores, weights);
-		} finally {
-			if (formulaSetHere) {
-				io.mosip.registration.service.bio.quality.config.FormulaContext.clear();
-			}
-		}
+		double aggregatedScore = selectedAggregator.aggregate(scores, weights, formulaExpr);
 		LOGGER.info("BiometricQualityOrchestrator: Aggregated score {} using strategy {} for attribute {}",
 				aggregatedScore, finalStrategyName, bioAttribute);
 

@@ -9,7 +9,6 @@ import io.mosip.registration.service.bio.quality.aggregator.FormulaScoreAggregat
 import io.mosip.registration.service.bio.quality.aggregator.MeanScoreAggregator;
 import io.mosip.registration.service.bio.quality.aggregator.MedianScoreAggregator;
 import io.mosip.registration.service.bio.quality.aggregator.WeightedAverageScoreAggregator;
-import io.mosip.registration.service.bio.quality.config.FormulaContext;
 import io.mosip.registration.service.bio.quality.mock.MockVendor1Evaluator;
 import io.mosip.registration.service.bio.quality.mock.MockVendor2Evaluator;
 import io.mosip.registration.service.bio.quality.mock.MockVendor3Evaluator;
@@ -86,9 +85,6 @@ public class MultiVendorOrchestratorTest {
                 Arrays.asList(meanAggregator, weightedAggregator, medianAggregator, formulaAggregator));
 
         biometricsDto = new BiometricsDto("leftIndex", new byte[]{1, 2, 3}, 75.0);
-
-        // Always clear any leftover SpEL formula between tests
-        FormulaContext.clear();
     }
 
     // helper
@@ -149,8 +145,7 @@ public class MultiVendorOrchestratorTest {
         putConfig(RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default",
                 "MOCK_VENDOR_1, MOCK_VENDOR_2, MOCK_VENDOR_3");
         putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "FORMULA");
-
-        FormulaContext.setFormula(
+        putConfig(RegistrationConstants.QUALITY_FORMULA_PREFIX + "default",
             "#scores['MOCK_VENDOR_1'] * 0.2 + #scores['MOCK_VENDOR_2'] * 0.3 + #scores['MOCK_VENDOR_3'] * 0.5"
         );
 
