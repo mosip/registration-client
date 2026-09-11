@@ -313,8 +313,17 @@ public class BiometricQualityOrchestrator {
 			if (type != null) {
 				return type.name().toUpperCase();
 			}
-		} catch (Throwable t) {
-			LOGGER.debug("BiometricQualityOrchestrator: Biometric.getSingleTypeByAttribute fallback for {}", bioAttribute);
+			// type == null means bioAttribute genuinely doesn't match any known
+			// Biometric constant (not an exception) - falls through to the string
+			// matching below, same as any other unrecognized attribute.
+		} catch (RuntimeException e) {
+			// Biometric.getSingleTypeByAttribute is a plain linear scan over a fixed
+			// enum and should never throw for a real, valid attribute - if it does,
+			// that's a real bug (e.g. a malformed entry in the library) worth seeing,
+			// not papering over silently at DEBUG. Narrowed from Throwable so Errors
+			// (OutOfMemoryError etc.) still propagate instead of being swallowed.
+			LOGGER.error("BiometricQualityOrchestrator: Biometric.getSingleTypeByAttribute threw for attribute {} - falling back to string matching",
+					bioAttribute, e);
 		}
 
 		// Fallback string matching for standard MOSIP attributes (e.g. in test environment)
