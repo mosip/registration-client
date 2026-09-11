@@ -33,4 +33,16 @@ public class BiometricsDto {
 		this.qualityScore = qualityScore;
 		this.modalityName = Biometric.getModalityNameByAttribute(bioAttribute);
 	}
+
+	/**
+	 * The score actually shown/used for threshold decisions: aggregate if the
+	 * aggregation strategy was explicitly configured, else SDK, else raw SBI.
+	 * Single source of truth for this precedence - callers should not
+	 * reimplement it inline.
+	 */
+	public double getDisplayScore() {
+		return aggregatedScore > 0 ? aggregatedScore
+				: sdkScore > 0 ? sdkScore
+				: qualityScore;
+	}
 }

@@ -769,15 +769,14 @@ public class GenericBiometricsController extends BaseController {
 	}
 
 	/**
-	 * Same score-fallback (aggregate, else SDK, else raw SBI) used for the
-	 * threshold bar, evaluated against the modality's configured threshold.
+	 * Evaluated against the modality's configured threshold, using
+	 * BiometricsDto#getDisplayScore() - the single source of truth for the
+	 * score-fallback rule (aggregate, else SDK, else raw SBI) also used for the
+	 * threshold bar.
 	 */
 	private boolean isBelowThreshold(BiometricsDto biometricsDto) {
-		double displayScore = biometricsDto.getAggregatedScore() > 0 ? biometricsDto.getAggregatedScore()
-				: biometricsDto.getSdkScore() > 0 ? biometricsDto.getSdkScore()
-				: biometricsDto.getQualityScore();
 		double threshold = bioService.getMDMQualityThreshold(Modality.getModality(biometricsDto.getBioAttribute()));
-		return displayScore < threshold;
+		return biometricsDto.getDisplayScore() < threshold;
 	}
 
 	private boolean isValidBiometric(List<BiometricsDto> mdsCapturedBiometricsList) {
@@ -961,7 +960,10 @@ public class GenericBiometricsController extends BaseController {
 		// is used instead, matching the pre-scan/cleared state elsewhere in the UI.
 		boolean anyScorePresent = qltyScore > 0 || sdkScore > 0 || aggregatedScore > 0;
 		boolean sdkPresent = sdkScore > 0;
-		boolean aggregatePresent = sdkPresent && aggregatedScore > 0;
+		// Decoupled from sdkPresent - an aggregate can legitimately be computed
+		// (e.g. from SBI + a third-vendor evaluator) even when the SDK itself
+		// scored 0, and should still be shown in that case.
+		boolean aggregatePresent = aggregatedScore > 0;
 
 		qualityScore.setText(anyScorePresent ? getQualityScoreText(qltyScore) : RegistrationConstants.HYPHEN);
 

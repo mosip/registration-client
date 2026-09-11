@@ -128,14 +128,18 @@ public class BioServiceImpl extends BaseService implements BioService {
 
 					// Enforce re-capture when the score that will actually be shown/used
 					// (aggregate, else SDK, else raw SBI) falls below the existing threshold.
-					double displayScore = getDisplayScore(biometricsDto);
-					double threshold = getMDMQualityThreshold(Modality.getModality(biometricsDto.getBioAttribute()));
-					// Configuration Error: a non-positive threshold means the config key is
-					// missing or invalid, not that "anything passes" - block and flag it
-					// rather than silently letting every capture through.
-					if (threshold <= 0) {
-						LOGGER.error("BioServiceImpl: Invalid/missing quality threshold ({}) for attribute {}",
-								threshold, biometricsDto.getBioAttribute());
+					double displayScore = biometricsDto.getDisplayScore();
+					Modality modality = Modality.getModality(biometricsDto.getBioAttribute());
+					double threshold = getMDMQualityThreshold(modality);
+					// Configuration Error only when the threshold key is genuinely missing or
+					// unparseable - NOT when an administrator has explicitly configured 0
+					// (which legitimately means "no threshold gating for this modality").
+					// getMDMQualityThreshold() collapses both cases to 0, so the distinction
+					// has to be made via isMDMQualityThresholdConfigured() instead of just
+					// checking threshold <= 0.
+					if (threshold <= 0 && !isMDMQualityThresholdConfigured(modality)) {
+						LOGGER.error("BioServiceImpl: Missing/unparseable quality threshold config for attribute {}",
+								biometricsDto.getBioAttribute());
 						throw new RegBaseCheckedException(
 								RegistrationExceptionConstants.REG_QUALITY_CONFIG_ERROR.getErrorCode(),
 								RegistrationExceptionConstants.REG_QUALITY_CONFIG_ERROR.getErrorMessage());
@@ -252,7 +256,7 @@ public class BioServiceImpl extends BaseService implements BioService {
 						capturedContext.put(attribute, true);
 						continue;
 					}
-					quality = quality + getDisplayScore(biometricsDto);
+					quality = quality + biometricsDto.getDisplayScore();
 					capturedAttributes.add(attribute);
 				}
 				//if some attributes are captured, determine capture status based on threshold check
@@ -303,37 +307,58 @@ public class BioServiceImpl extends BaseService implements BioService {
 		return groupedAttributes;
 	}
 
-	/**
-	 * The score actually shown on the UI's threshold bar: aggregate if the
-	 * aggregation strategy was explicitly configured, else SDK, else raw SBI.
-	 */
-	private static double getDisplayScore(BiometricsDto biometricsDto) {
-		return biometricsDto.getAggregatedScore() > 0 ? biometricsDto.getAggregatedScore()
-				: biometricsDto.getSdkScore() > 0 ? biometricsDto.getSdkScore()
-				: biometricsDto.getQualityScore();
-	}
-
 	@Override
 	public double getMDMQualityThreshold(@NonNull Modality modality) {
-		String thresholdScore = null;
+		String thresholdScore = getGlobalConfigValueOf(thresholdConfigKeyFor(modality));
+		if (thresholdScore == null) {
+			return 0;
+		}
+		try {
+			return Double.valueOf(thresholdScore);
+		} catch (NumberFormatException nfe) {
+			LOGGER.error("BioServiceImpl: Unparseable quality threshold '{}' configured for modality {}",
+					thresholdScore, modality);
+			return 0;
+		}
+	}
+
+	/**
+	 * Whether a quality threshold is actually configured (present and
+	 * parseable) for this modality, as opposed to {@link #getMDMQualityThreshold}
+	 * returning 0 because the key is missing/invalid vs. an administrator
+	 * explicitly configuring 0 (disabling threshold gating). Callers that need
+	 * to tell "misconfigured" apart from "intentionally zero" should check
+	 * this rather than only looking at whether the threshold is <= 0.
+	 */
+	@Override
+	public boolean isMDMQualityThresholdConfigured(@NonNull Modality modality) {
+		String thresholdScore = getGlobalConfigValueOf(thresholdConfigKeyFor(modality));
+		if (thresholdScore == null) {
+			return false;
+		}
+		try {
+			Double.valueOf(thresholdScore);
+			return true;
+		} catch (NumberFormatException nfe) {
+			return false;
+		}
+	}
+
+	private String thresholdConfigKeyFor(Modality modality) {
 		switch (modality) {
 			case FINGERPRINT_SLAB_LEFT:
-				thresholdScore = getGlobalConfigValueOf(RegistrationConstants.LEFTSLAP_FINGERPRINT_THRESHOLD);
-				break;
+				return RegistrationConstants.LEFTSLAP_FINGERPRINT_THRESHOLD;
 			case FINGERPRINT_SLAB_RIGHT:
-				thresholdScore = getGlobalConfigValueOf(RegistrationConstants.RIGHTSLAP_FINGERPRINT_THRESHOLD);
-				break;
+				return RegistrationConstants.RIGHTSLAP_FINGERPRINT_THRESHOLD;
 			case FINGERPRINT_SLAB_THUMBS:
-				thresholdScore = getGlobalConfigValueOf(RegistrationConstants.THUMBS_FINGERPRINT_THRESHOLD);
-				break;
+				return RegistrationConstants.THUMBS_FINGERPRINT_THRESHOLD;
 			case IRIS_DOUBLE:
-				thresholdScore = getGlobalConfigValueOf(RegistrationConstants.IRIS_THRESHOLD);
-				break;
+				return RegistrationConstants.IRIS_THRESHOLD;
 			case FACE:
-				thresholdScore = getGlobalConfigValueOf(RegistrationConstants.FACE_THRESHOLD);
-				break;
+				return RegistrationConstants.FACE_THRESHOLD;
+			default:
+				return null;
 		}
-		return thresholdScore == null ? 0 : Double.valueOf(thresholdScore);
 	}
 
 	@Override

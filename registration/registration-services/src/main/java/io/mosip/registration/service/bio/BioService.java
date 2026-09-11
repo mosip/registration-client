@@ -86,6 +86,17 @@ public interface BioService {
 	public double getMDMQualityThreshold(@NonNull Modality modality);
 
 	/**
+	 * Whether a quality threshold is actually configured (present and
+	 * parseable) for this modality, as opposed to
+	 * {@link #getMDMQualityThreshold} returning 0 because the key is
+	 * missing/invalid vs. an administrator explicitly configuring 0.
+	 *
+	 * @param modality
+	 * @return
+	 */
+	public boolean isMDMQualityThresholdConfigured(@NonNull Modality modality);
+
+	/**
 	 *
 	 * @param modality
 	 * @return
