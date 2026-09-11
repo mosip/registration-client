@@ -30,7 +30,11 @@ public class SbiQualityEvaluator implements IBiometricQualityEvaluator {
 		double rawScore = dto.getQualityScore();
 
 		// A negative score means the device never reported one (0-100 is the valid
-		// range for a real, if poor, capture) - treat that as the score being missing.
+		// range for a real, if poor, capture) - treat that as the score being
+		// missing. This only actually catches a genuinely absent score because
+		// BiometricsDto#qualityScore defaults to the sentinel -1.0, not to a real
+		// value 0.0 would be indistinguishable from - a real capture whose device
+		// score genuinely IS 0.
 		if (rawScore < 0) {
 			LOGGER.error("SbiQualityEvaluator: Missing/invalid SBI score {} for {}", rawScore, bioAttribute);
 			safeAudit(AuditEvent.QUALITY_ORCH_FAILED, bioAttribute, "SBI_SCORE_MISSING");
@@ -40,7 +44,10 @@ public class SbiQualityEvaluator implements IBiometricQualityEvaluator {
 		}
 
 		QualityScore qs = new QualityScore();
-		qs.setScore((long) rawScore);
+		// QualityScore.setScore() takes a float directly - going through (long)
+		// first truncated toward zero (e.g. 39.9 -> 39), which could flip an
+		// accept/reject decision right at a threshold boundary.
+		qs.setScore((float) rawScore);
 		return qs;
 	}
 

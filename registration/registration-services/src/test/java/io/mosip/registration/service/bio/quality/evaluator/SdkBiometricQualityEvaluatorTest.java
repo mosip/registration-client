@@ -148,8 +148,10 @@ public class SdkBiometricQualityEvaluatorTest {
 
         QualityScore result = evaluator.evaluate(buildDto("leftIndex", Modality.FINGERPRINT_SLAB_LEFT));
 
-        // float 55.5 cast to long = 55; getScore() returns double
-        assertEquals(55.0, result.getScore(), 0.0);
+        // QualityScore.setScore() takes a float directly - no truncation, so a
+        // fractional SDK score (55.5) is preserved exactly rather than being
+        // floored to 55 by an unnecessary (long) cast.
+        assertEquals(55.5, result.getScore(), 0.001);
     }
 
     // =========================================================================

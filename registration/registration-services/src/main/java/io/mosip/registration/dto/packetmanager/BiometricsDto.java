@@ -14,7 +14,13 @@ public class BiometricsDto {
 	private String bioAttribute;
 	private String bioSubType;
 	private String modalityName;
-	private double qualityScore;
+	// Sentinel, not 0.0: qualityScore is a primitive, so a BiometricsDto built
+	// via the no-arg constructor and never given a score would otherwise read
+	// as an indistinguishable "real capture that scored 0" instead of "no SBI
+	// score was ever reported" - SbiQualityEvaluator relies on this to detect
+	// the Missing SBI Score scenario (0-100 is the valid range for a real
+	// score, so anything negative can only be the sentinel).
+	private double qualityScore = -1.0;
 	private boolean isForceCaptured;
 	private int numOfRetries;	
 	private boolean isCaptured;

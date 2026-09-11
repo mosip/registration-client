@@ -4,8 +4,12 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.PreDestroy;
 
 import io.mosip.commons.packet.constants.Biometric;
 import io.mosip.kernel.biometrics.constant.BiometricFunction;
@@ -42,6 +46,34 @@ public class SdkBiometricQualityEvaluator implements IBiometricQualityEvaluator 
 
 	private static final long DEFAULT_TIMEOUT_MS = 5000L;
 
+	// Shared, bounded pool instead of a new single-thread executor per attribute
+	// (a ten-finger slap previously meant ten thread creations/teardowns). Sized
+	// to tolerate a handful of concurrent evaluations, not to guarantee forward
+	// progress under total SDK hang: shutdownNow()/Future#cancel(true) on a
+	// blocking native SDK call is generally NOT actually interruptible, so a
+	// genuinely hung SDK still permanently leaks one thread from this pool per
+	// timeout rather than one thread per call - this bounds the damage instead
+	// of it being unbounded, it does not eliminate it. If every pool thread is
+	// eventually leaked this way, subsequent calls queue behind them and hit
+	// their own future.get(timeoutMs) without ever starting, which still fails
+	// fast rather than hanging the caller.
+	private static final int SDK_EXECUTOR_POOL_SIZE = 4;
+	private final ExecutorService sdkExecutor = Executors.newFixedThreadPool(SDK_EXECUTOR_POOL_SIZE, sdkThreadFactory());
+
+	private static ThreadFactory sdkThreadFactory() {
+		AtomicInteger counter = new AtomicInteger(1);
+		return runnable -> {
+			Thread thread = new Thread(runnable, "sdk-quality-eval-" + counter.getAndIncrement());
+			thread.setDaemon(true);
+			return thread;
+		};
+	}
+
+	@PreDestroy
+	private void shutdownSdkExecutor() {
+		sdkExecutor.shutdownNow();
+	}
+
 	@Autowired
 	private BioAPIFactory bioAPIFactory;
 
@@ -73,7 +105,10 @@ public class SdkBiometricQualityEvaluator implements IBiometricQualityEvaluator 
 			}
 
 			QualityScore qs = new QualityScore();
-			qs.setScore((long) rawScore.floatValue());
+			// QualityScore.setScore() takes a float directly - going through (long)
+			// first truncated toward zero (e.g. 39.9 -> 39), which could flip an
+			// accept/reject decision right at a threshold boundary.
+			qs.setScore(rawScore.floatValue());
 			LOGGER.info("SdkBiometricQualityEvaluator: SDK score {} for attribute {}", rawScore, bioAttribute);
 			safeAudit(AuditEvent.SDK_QUALITY_EVAL_SUCCESS, bioAttribute, "SDK_SUCCESS");
 			return qs;
@@ -116,16 +151,19 @@ public class SdkBiometricQualityEvaluator implements IBiometricQualityEvaluator 
 	private Map<BiometricType, Float> callSdkWithTimeout(BiometricType biometricType, BIR[] birList,
 			String bioAttribute) throws RegBaseCheckedException, BiometricException {
 		long timeoutMs = resolveTimeoutMs();
-		ExecutorService executor = Executors.newSingleThreadExecutor();
+		Future<Map<BiometricType, Float>> future = sdkExecutor.submit(() -> bioAPIFactory
+				.getBioProvider(biometricType, BiometricFunction.QUALITY_CHECK)
+				.getModalityQuality(birList, null));
 		try {
-			Future<Map<BiometricType, Float>> future = executor.submit(() -> bioAPIFactory
-					.getBioProvider(biometricType, BiometricFunction.QUALITY_CHECK)
-					.getModalityQuality(birList, null));
 			return future.get(timeoutMs, TimeUnit.MILLISECONDS);
 		} catch (TimeoutException te) {
 			LOGGER.error("SdkBiometricQualityEvaluator: SDK quality check timed out after {} ms for {}",
 					timeoutMs, bioAttribute);
 			safeAudit(AuditEvent.SDK_QUALITY_EVAL_TIMEOUT, bioAttribute, "SDK_TIMEOUT");
+			// Best-effort only: a blocking native SDK call generally isn't actually
+			// interruptible, so this does not reliably reclaim the worker thread -
+			// see the pool-level comment on sdkExecutor.
+			future.cancel(true);
 			throw new RegBaseCheckedException(
 					RegistrationExceptionConstants.REG_SDK_QUALITY_TIMEOUT.getErrorCode(),
 					RegistrationExceptionConstants.REG_SDK_QUALITY_TIMEOUT.getErrorMessage());
@@ -145,8 +183,6 @@ public class SdkBiometricQualityEvaluator implements IBiometricQualityEvaluator 
 		} catch (InterruptedException ie) {
 			Thread.currentThread().interrupt();
 			throw new RuntimeException(ie);
-		} finally {
-			executor.shutdownNow();
 		}
 	}
 
