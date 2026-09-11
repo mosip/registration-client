@@ -4,6 +4,8 @@ import io.mosip.registration.service.bio.quality.IBiometricScoreAggregator;
 import io.mosip.registration.service.bio.quality.config.FormulaContext;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
+import io.mosip.registration.exception.RegBaseUncheckedException;
+import io.mosip.registration.exception.RegistrationExceptionConstants;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -30,11 +32,14 @@ public class FormulaScoreAggregator implements IBiometricScoreAggregator {
 	public double aggregate(Map<String, Double> scores, Map<String, Double> w) {
 		String expr = FormulaContext.getFormula();
 		if (expr == null || expr.trim().isEmpty()) {
-			LOGGER.warn("FORMULA strategy set but no expression found; using mean");
-			if (scores == null || scores.isEmpty()) {
-				return 0.0;
-			}
-			return scores.values().stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+			// Configuration Error per the Error Scenarios table: FORMULA selected with
+			// no expression configured is a misconfigured quality gate, not a case to
+			// fail open on - block and notify the administrator rather than silently
+			// substituting MEAN.
+			LOGGER.error("FORMULA strategy set but no expression configured");
+			throw new RegBaseUncheckedException(
+					RegistrationExceptionConstants.REG_QUALITY_CONFIG_ERROR.getErrorCode(),
+					RegistrationExceptionConstants.REG_QUALITY_CONFIG_ERROR.getErrorMessage());
 		}
 
 		StandardEvaluationContext ctx = new StandardEvaluationContext();
