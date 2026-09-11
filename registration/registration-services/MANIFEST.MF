@@ -1,5 +1,4 @@
-Manifest-Version: 1.2.0-SNAPSHOT
+Manifest-Version: 1.2.0.1-SNAPSHOT
 
-Name: test-lib.jar
-Content-Type: fakechecksum
-
+Name: logback.xml
+Manifest-Version: 1.2.0.1-SNAPSHOT
