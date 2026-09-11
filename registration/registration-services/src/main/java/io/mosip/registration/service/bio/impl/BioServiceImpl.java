@@ -160,8 +160,14 @@ public class BioServiceImpl extends BaseService implements BioService {
 			}
 
 			// Partial Capture: the device returned fewer biometric segments than this
-			// request required (mdmRequestDto.getCount() is the expected number, minus
-			// any attributes explicitly marked as exceptions).
+			// request required. mdmRequestDto.getCount() is already net of exceptions
+			// by the time it reaches here: the active caller,
+			// GenericBiometricsController#rCapture(), computes
+			// modality.getAttributes().size() - exceptionBioAttributes.size() before
+			// building the MDMRequestDto, and the 0.9.5 MDS provider independently
+			// recomputes the same net-of-exceptions count in its own getCount() before
+			// overwriting it - so an exception-marked finger does not trip this check
+			// (see BioServiceTest#captureModality_oneAttributeMarkedException_notBlockedAsPartialCapture).
 			if (list.size() < mdmRequestDto.getCount()) {
 				LOGGER.error("BioServiceImpl: Partial capture for modality {} - expected {} got {}",
 						mdmRequestDto.getModality(), mdmRequestDto.getCount(), list.size());

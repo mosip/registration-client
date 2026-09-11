@@ -108,8 +108,16 @@ public class BiometricQualityOrchestrator {
 		String attributeKey     = RegistrationConstants.QUALITY_EVALUATORS_PREFIX + bioAttribute;
 		String defaultKey       = RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default";
 
+		// Hierarchy: attribute > modality > default. Attribute is the most specific
+		// key, so it must win over a modality-wide setting - checking modality first
+		// would make a per-attribute override (e.g. ...evaluators.leftIndex) unable
+		// to ever take effect on a deployment that also sets a per-modality key
+		// (e.g. ...evaluators.modality.FINGER).
 		String evaluatorConfig;
-		if (ApplicationContext.map().containsKey(modalityKeyUpper)) {
+		if (ApplicationContext.map().containsKey(attributeKey)) {
+			evaluatorConfig = (String) ApplicationContext.map().get(attributeKey);
+			LOGGER.info("BiometricQualityOrchestrator: Using attribute config '{}' for attribute {}", attributeKey, bioAttribute);
+		} else if (ApplicationContext.map().containsKey(modalityKeyUpper)) {
 			evaluatorConfig = (String) ApplicationContext.map().get(modalityKeyUpper);
 			LOGGER.info("BiometricQualityOrchestrator: Using modality config '{}' for modality {} (attribute {})",
 					modalityKeyUpper, modality, bioAttribute);
@@ -117,9 +125,6 @@ public class BiometricQualityOrchestrator {
 			evaluatorConfig = (String) ApplicationContext.map().get(modalityKeyLower);
 			LOGGER.info("BiometricQualityOrchestrator: Using modality config '{}' for modality {} (attribute {})",
 					modalityKeyLower, modality, bioAttribute);
-		} else if (ApplicationContext.map().containsKey(attributeKey)) {
-			evaluatorConfig = (String) ApplicationContext.map().get(attributeKey);
-			LOGGER.info("BiometricQualityOrchestrator: Using attribute config '{}' for attribute {}", attributeKey, bioAttribute);
 		} else {
 			evaluatorConfig = (String) ApplicationContext.map().getOrDefault(defaultKey, "SBI");
 			LOGGER.info("BiometricQualityOrchestrator: Using default evaluator config for attribute {}", bioAttribute);
@@ -153,9 +158,17 @@ public class BiometricQualityOrchestrator {
 			LOGGER.info("BiometricQualityOrchestrator: Running evaluator {} for attribute {}", evaluator.getEvaluatorName(), bioAttribute);
 			try {
 				QualityScore qs = evaluator.evaluate(biometricsDto);
-				if (qs != null) {
-					scores.put(evaluator.getEvaluatorName(), (double) qs.getScore());
+				// A null result is an Invalid Score, not a source to silently skip -
+				// today both built-in evaluators throw instead of returning null, but
+				// a third-party evaluator returning null must not let the capture
+				// proceed on a partial score set (Error Scenarios: no silent fallback).
+				if (qs == null) {
+					// Caught and audited by the catch block immediately below.
+					throw new RegBaseCheckedException(
+							RegistrationExceptionConstants.REG_SDK_INVALID_SCORE.getErrorCode(),
+							RegistrationExceptionConstants.REG_SDK_INVALID_SCORE.getErrorMessage());
 				}
+				scores.put(evaluator.getEvaluatorName(), (double) qs.getScore());
 			} catch (RegBaseCheckedException e) {
 				LOGGER.error("BiometricQualityOrchestrator: Evaluator {} failed for attribute {}: {}",
 						evaluator.getEvaluatorName(), bioAttribute, e.getMessage());
@@ -172,7 +185,7 @@ public class BiometricQualityOrchestrator {
 					RegistrationExceptionConstants.REG_NO_QUALITY_SOURCE.getErrorMessage());
 		}
 
-		// 4. Read the configured aggregation strategy (Hierarchy: modality > attribute > default)
+		// 4. Read the configured aggregation strategy (Hierarchy: attribute > modality > default)
 		String aggModalityKeyUpper = RegistrationConstants.QUALITY_AGGREGATION_MODALITY_PREFIX + modality.toUpperCase();
 		String aggModalityKeyLower = RegistrationConstants.QUALITY_AGGREGATION_MODALITY_PREFIX + modality.toLowerCase();
 		String aggAttributeKey     = RegistrationConstants.QUALITY_AGGREGATION_PREFIX + bioAttribute;
@@ -189,14 +202,16 @@ public class BiometricQualityOrchestrator {
 		// When the strategy is explicitly set in the config files, take the value
 		// straight from the file (not the merged runtime map, which can carry a
 		// stale DB global-param or local-preference override on top of it).
+		// Attribute is checked before modality here too, for the same reason as
+		// the evaluator lookup above: it's the more specific key and must win.
 		String strategyName;
 		if (aggregationExplicitlyConfigured) {
-			if (io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggModalityKeyUpper)) {
+			if (io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggAttributeKey)) {
+				strategyName = io.mosip.registration.config.DaoConfig.getPropertyValueFromFile(aggAttributeKey);
+			} else if (io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggModalityKeyUpper)) {
 				strategyName = io.mosip.registration.config.DaoConfig.getPropertyValueFromFile(aggModalityKeyUpper);
 			} else if (io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggModalityKeyLower)) {
 				strategyName = io.mosip.registration.config.DaoConfig.getPropertyValueFromFile(aggModalityKeyLower);
-			} else if (io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggAttributeKey)) {
-				strategyName = io.mosip.registration.config.DaoConfig.getPropertyValueFromFile(aggAttributeKey);
 			} else {
 				strategyName = io.mosip.registration.config.DaoConfig.getPropertyValueFromFile(aggDefaultKey);
 			}

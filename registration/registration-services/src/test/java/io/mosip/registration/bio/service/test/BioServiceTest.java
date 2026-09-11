@@ -635,6 +635,41 @@ public class BioServiceTest {
         }
     }
 
+    @Test
+    public void captureModality_oneAttributeMarkedException_notBlockedAsPartialCapture() throws Exception {
+        // Simulates a 2-finger slab with one finger marked as a biometric
+        // exception (e.g. a missing finger): the caller (GenericBiometricsController
+        // .rCapture()) computes MDMRequestDto's count net of exceptions
+        // (attributes.size() - exceptions.size() = 2 - 1 = 1) before the request
+        // is built, and the device only returns the one real attribute. This must
+        // NOT trip the Partial Capture check (Error Scenarios: REG-SDK-007),
+        // which compares the returned list size against that already-net count.
+        MdmBioDevice device = new MdmBioDevice();
+        device.setSpecVersion("0.9.5");
+
+        BiometricsDto dto = new BiometricsDto();
+        dto.setBioAttribute("leftIndex");
+        dto.setQualityScore(80.0);
+        dto.setAttributeISO(new byte[]{1, 2, 3, 4});
+        dto.setModalityName("FINGER");
+
+        Mockito.when(deviceSpecificationFactory.getDeviceInfoByModality(Mockito.anyString())).thenReturn(device);
+        Mockito.when(deviceSpecificationFactory.getMdsProvider(Mockito.anyString())).thenReturn(deviceSpecificationProvider);
+        Mockito.when(deviceSpecificationProvider.rCapture(Mockito.any(), Mockito.any()))
+                .thenReturn(java.util.Arrays.asList(dto));
+
+        ApplicationContext.map().remove(RegistrationConstants.QUALITY_CHECK_WITH_SDK);
+
+        // count=1: net of the one exception-marked finger, matching what
+        // GenericBiometricsController.rCapture() computes before this request
+        // is built.
+        MDMRequestDto req = new MDMRequestDto("FINGERPRINT_SLAB_LEFT", new String[]{"leftLittle"},
+                "REGISTRATION", "TEST", 5000, 1, 70);
+        List<BiometricsDto> result = bioServiceImpl.captureModality(req);
+
+        Assert.assertEquals(1, result.size());
+    }
+
     // ── captureModalityForAuth ────────────────────────────────────────────────
 
     @Test

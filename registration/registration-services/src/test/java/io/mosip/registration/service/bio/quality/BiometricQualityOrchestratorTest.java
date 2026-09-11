@@ -355,14 +355,20 @@ public class BiometricQualityOrchestratorTest {
 	}
 
 	@Test
-	public void testEvaluatorReturningNullIsIgnored() throws RegBaseCheckedException {
+	public void testEvaluatorReturningNullRaisesInvalidScore() {
+		// A null QualityScore is an Invalid Score (REG-SDK-002), not a source to
+		// silently skip - proceeding on the remaining evaluator's score alone
+		// would be exactly the silent partial-fallback the Error Scenarios table
+		// forbids, even if another configured source (SDK here) did succeed.
 		putConfig(RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default", "SBI,SDK");
 		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEAN");
-		when(sbiEvaluator.evaluate(biometricsDto)).thenReturn(null);
-		when(sdkEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(70L));
-
-		// Only SDK score is valid; mean of [70] = 70.0
-		assertEquals(70.0, orchestrator.orchestrate(biometricsDto).getAggregatedScore(), 0.001);
+		try {
+			when(sbiEvaluator.evaluate(biometricsDto)).thenReturn(null);
+			orchestrator.orchestrate(biometricsDto);
+			fail("Expected RegBaseCheckedException for null QualityScore");
+		} catch (RegBaseCheckedException e) {
+			assertEquals("REG-SDK-002", e.getErrorCode());
+		}
 	}
 
 	// =========================================================================
