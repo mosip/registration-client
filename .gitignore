@@ -29,11 +29,3 @@ test.txt
 /.recommenders/
 **/*.iml
 .vscode
-/registration/registration-client/SCHEMA_0.1.json
-/registration/registration-client/applicanttype.mvel
-/registration/registration-client/bioCorrectionProcess.json
-/registration/registration-client/lostProcess.json
-/registration/registration-client/newProcess.json
-/registration/registration-client/updateProcess.json
-/registration/registration-services/SCHEMA_0.5.json
-/registration/registration-services/newProcess.json
