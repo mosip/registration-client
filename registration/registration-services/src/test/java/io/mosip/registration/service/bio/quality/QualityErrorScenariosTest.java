@@ -129,6 +129,13 @@ public class QualityErrorScenariosTest {
 		ReflectionTestUtils.setField(bioService, "globalParamService", globalParamService);
 		ReflectionTestUtils.setField(bioService, "localConfigService", localConfigService);
 
+		// DaoConfig.keys is a static field shared across the whole test JVM fork -
+		// clear it so a leftover aggregation-strategy key from another test class
+		// (e.g. BiometricQualityOrchestratorTest's UNKNOWN_STRATEGY case) can't
+		// make aggregationExplicitlyConfigured look true here and misfire the new
+		// Configuration Error path on completely unrelated scenarios.
+		ReflectionTestUtils.setField(io.mosip.registration.config.DaoConfig.class, "keys", null);
+
 		// Deterministic config, independent of whatever is currently in the real
 		// spring.properties file on disk. No aggregation strategy is set anywhere.
 		ApplicationContext.getInstance();
@@ -188,8 +195,9 @@ public class QualityErrorScenariosTest {
 		assertEquals(1, captured.size());
 		assertEquals(72.0, captured.get(0).getQualityScore(), 0.0);
 		verifyNoInteractions(bioAPIFactory);
+		// -1.0, not 0.0: BiometricsDto's "never evaluated" sentinel (see BiometricsDto).
 		assertEquals("Orchestrator's own aggregatedScore field must stay unset when SDK check is off",
-				0.0, captured.get(0).getAggregatedScore(), 0.0);
+				-1.0, captured.get(0).getAggregatedScore(), 0.0);
 	}
 
 	/** AS-04: quality below threshold -> re-capture enforced (captureModality throws and blocks). */

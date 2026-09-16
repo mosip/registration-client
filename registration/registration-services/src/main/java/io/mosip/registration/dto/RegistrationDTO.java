@@ -395,11 +395,11 @@ public class RegistrationDTO {
 			// Use the same score that is actually shown/used elsewhere (aggregate if
 			// explicitly configured, else SDK, else raw SBI) so a capture that passes
 			// on the UI's threshold bar isn't silently force-retried here against the
-			// raw SBI score alone.
-			double displayScore = biometricsDto.getAggregatedScore() > 0 ? biometricsDto.getAggregatedScore()
-					: biometricsDto.getSdkScore() > 0 ? biometricsDto.getSdkScore()
-					: biometricsDto.getQualityScore();
-			qualityScore += displayScore;
+			// raw SBI score alone. Delegates to BiometricsDto#getDisplayScore() - the
+			// single source of truth for this precedence - rather than reimplementing
+			// it inline, so the >=0 "was this source actually evaluated" check can't
+			// drift out of sync between the two places.
+			qualityScore += biometricsDto.getDisplayScore();
 		}
 
 		return qualityScore;

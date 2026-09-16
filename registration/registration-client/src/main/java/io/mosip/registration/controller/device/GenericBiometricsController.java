@@ -864,9 +864,13 @@ public class GenericBiometricsController extends BaseController {
 		int retry = getRegistrationDTOFromSession().ATTEMPTS.getOrDefault(String.format("%s_%s", fieldId, modality.name()), 0);
 		String scoreKey = String.format("%s_%s_%s", fieldId, modality.name(), retry);
 
-		setCapturedValues(getRegistrationDTOFromSession().BIO_SCORES.getOrDefault(scoreKey, 0.0),
-				getRegistrationDTOFromSession().SDK_SCORES.getOrDefault(scoreKey, 0.0),
-				getRegistrationDTOFromSession().AGGREGATED_SCORES.getOrDefault(scoreKey, 0.0),
+		// -1.0 default, not 0.0: setCapturedValues() now distinguishes "never
+		// evaluated" from "evaluated at 0" via a >= 0 check, so a missing map entry
+		// (this modality/retry was never captured) must default to the same -1
+		// sentinel rather than a value that would now read as a real, present score.
+		setCapturedValues(getRegistrationDTOFromSession().BIO_SCORES.getOrDefault(scoreKey, -1.0),
+				getRegistrationDTOFromSession().SDK_SCORES.getOrDefault(scoreKey, -1.0),
+				getRegistrationDTOFromSession().AGGREGATED_SCORES.getOrDefault(scoreKey, -1.0),
 				retry, bioService.getMDMQualityThreshold(modality));
 
 		// Get the stream image from Bio ServiceImpl and load it in the image pane
@@ -946,7 +950,7 @@ public class GenericBiometricsController extends BaseController {
 		// SBI score if the SDK evaluator didn't run either (e.g. SBI-only config) —
 		// otherwise both would sit at 0 and the bar would wrongly show an empty bar.
 		double barScore = isQualityCheckWithSdkEnabled()
-				? (aggregatedScore > 0 ? aggregatedScore : (sdkScore > 0 ? sdkScore : qltyScore))
+				? (aggregatedScore >= 0 ? aggregatedScore : (sdkScore >= 0 ? sdkScore : qltyScore))
 				: qltyScore;
 
 		biometricPane.getStyleClass().clear();
@@ -958,12 +962,16 @@ public class GenericBiometricsController extends BaseController {
 		// and Aggregated whenever each is present; before the first scan (nothing
 		// captured yet), none of the three are shown as "0" - a hyphen placeholder
 		// is used instead, matching the pre-scan/cleared state elsewhere in the UI.
-		boolean anyScorePresent = qltyScore > 0 || sdkScore > 0 || aggregatedScore > 0;
-		boolean sdkPresent = sdkScore > 0;
+		// >= 0, not > 0: qltyScore/sdkScore/aggregatedScore each use -1 as their
+		// "never evaluated" sentinel (see BiometricsDto), so a source that legitimately
+		// scored exactly 0 must still count as present here rather than being
+		// mistaken for one that never ran.
+		boolean anyScorePresent = qltyScore >= 0 || sdkScore >= 0 || aggregatedScore >= 0;
+		boolean sdkPresent = sdkScore >= 0;
 		// Decoupled from sdkPresent - an aggregate can legitimately be computed
 		// (e.g. from SBI + a third-vendor evaluator) even when the SDK itself
 		// scored 0, and should still be shown in that case.
-		boolean aggregatePresent = aggregatedScore > 0;
+		boolean aggregatePresent = aggregatedScore >= 0;
 
 		qualityScore.setText(anyScorePresent ? getQualityScoreText(qltyScore) : RegistrationConstants.HYPHEN);
 
@@ -1223,14 +1231,17 @@ public class GenericBiometricsController extends BaseController {
 	}
 
 	public double getBioScores(String fieldId, Modality modality, int attempt) {
-		double qualityScore = 0.0;
+		// -1.0, not 0.0: same "never evaluated" sentinel as BiometricsDto - a
+		// missing map entry (this attempt was never captured) must stay
+		// distinguishable from a source that legitimately scored 0.
+		double qualityScore = -1.0;
 		try {
 			String key = String.format("%s_%s_%s", fieldId, modality, attempt);
 			if (isQualityCheckWithSdkEnabled()) {
-				double aggregated = getRegistrationDTOFromSession().AGGREGATED_SCORES.getOrDefault(key, 0.0);
-				double sdk = getRegistrationDTOFromSession().SDK_SCORES.getOrDefault(key, 0.0);
-				qualityScore = aggregated > 0 ? aggregated
-						: sdk > 0 ? sdk
+				double aggregated = getRegistrationDTOFromSession().AGGREGATED_SCORES.getOrDefault(key, -1.0);
+				double sdk = getRegistrationDTOFromSession().SDK_SCORES.getOrDefault(key, -1.0);
+				qualityScore = aggregated >= 0 ? aggregated
+						: sdk >= 0 ? sdk
 						: getRegistrationDTOFromSession().BIO_SCORES.getOrDefault(key, qualityScore);
 			} else {
 				qualityScore = getRegistrationDTOFromSession().BIO_SCORES.getOrDefault(key, qualityScore);

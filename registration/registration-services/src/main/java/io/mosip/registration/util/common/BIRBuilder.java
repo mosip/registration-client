@@ -86,7 +86,7 @@ public class BIRBuilder {
 		String sdkOrganizationType = RegistrationConstants.EMPTY;
 		String sdkVersion = RegistrationConstants.EMPTY;
 		String sdkApiVersion = RegistrationConstants.EMPTY;
-		if (bioDto.getSdkScore() > 0 && sdkInfoProvider != null) {
+		if (bioDto.getSdkScore() >= 0 && sdkInfoProvider != null) {
 			SDKInfo sdkInfo = sdkInfoProvider.getSdkInfo(biometricType);
 			if (sdkInfo != null) {
 				if (sdkInfo.getProductOwner() != null) {

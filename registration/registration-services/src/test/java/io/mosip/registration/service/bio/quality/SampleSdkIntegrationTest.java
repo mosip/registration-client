@@ -70,6 +70,10 @@ public class SampleSdkIntegrationTest {
     @Before
     public void setUp() throws Exception {
         ReflectionTestUtils.setField(ApplicationContext.class, "applicationMap", new HashMap<String, Object>());
+        // DaoConfig.keys is a static field shared across the whole test JVM fork -
+        // clear it so a leftover aggregation-strategy key from another test class
+        // can't make aggregationExplicitlyConfigured look true here.
+        ReflectionTestUtils.setField(io.mosip.registration.config.DaoConfig.class, "keys", null);
 
         sampleSDK = Mockito.spy(new SampleSDK());
 

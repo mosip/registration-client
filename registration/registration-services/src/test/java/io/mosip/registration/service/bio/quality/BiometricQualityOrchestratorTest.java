@@ -250,14 +250,23 @@ public class BiometricQualityOrchestratorTest {
 	}
 
 	@Test
-	public void testDefaultAggregationFallsBackToMeanWhenUnknownStrategy() throws RegBaseCheckedException {
+	public void testUnknownExplicitlyConfiguredStrategyThrowsConfigError() throws RegBaseCheckedException {
 		putConfig(RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default", "SBI,SDK");
 		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "UNKNOWN_STRATEGY");
 		when(sbiEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(60L));
 		when(sdkEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(80L));
 
-		// Falls back to MEAN = 70.0
-		assertEquals(70.0, orchestrator.orchestrate(biometricsDto).getAggregatedScore(), 0.001);
+		// A strategy name that was explicitly configured (e.g. a typo in
+		// aggregation.default/aggregation.modality.*) but matches no registered
+		// aggregator must be a Configuration Error - the same failure mode
+		// already fixed for FORMULA-without-expression - not a silent
+		// substitution of MEAN that would quietly change the scoring method.
+		try {
+			orchestrator.orchestrate(biometricsDto);
+			fail("Expected REG_QUALITY_CONFIG_ERROR for an unmatched, explicitly-configured strategy name");
+		} catch (RegBaseCheckedException e) {
+			assertEquals(RegistrationExceptionConstants.REG_QUALITY_CONFIG_ERROR.getErrorCode(), e.getErrorCode());
+		}
 	}
 
 	// =========================================================================

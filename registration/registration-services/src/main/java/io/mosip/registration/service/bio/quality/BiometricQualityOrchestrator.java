@@ -238,12 +238,25 @@ public class BiometricQualityOrchestrator {
 		IBiometricScoreAggregator selectedAggregator = aggregators.stream()
 				.filter(a -> a.getStrategyName().equalsIgnoreCase(finalStrategyName))
 				.findFirst()
-				.orElse(aggregators.stream()
-						.filter(a -> "MEAN".equalsIgnoreCase(a.getStrategyName()))
-						.findFirst()
-						.orElse(null));
+				.orElse(null);
 
 		if (selectedAggregator == null) {
+			if (aggregationExplicitlyConfigured) {
+				// Configuration Error, not a silent MEAN substitution: an administrator
+				// configured a strategy name (e.g. aggregation.modality.FINGER) that
+				// doesn't match any registered aggregator - most likely a typo. Silently
+				// falling back would quietly change the scoring method underneath them,
+				// the same failure mode already fixed for FORMULA-without-expression.
+				LOGGER.error("BiometricQualityOrchestrator: Configured aggregation strategy '{}' does not match any registered aggregator for attribute {}",
+						strategyName, bioAttribute);
+				safeAudit(AuditEvent.QUALITY_ORCH_FAILED, bioAttribute, "AGGREGATION_CONFIG_ERROR");
+				throw new RegBaseCheckedException(
+						RegistrationExceptionConstants.REG_QUALITY_CONFIG_ERROR.getErrorCode(),
+						RegistrationExceptionConstants.REG_QUALITY_CONFIG_ERROR.getErrorMessage());
+			}
+			// Nothing was configured at all - "MEAN" is the built-in default. Its
+			// absence is a wiring/packaging problem (MeanScoreAggregator not on the
+			// classpath / not a Spring bean), not an administrator config mistake.
 			LOGGER.error("BiometricQualityOrchestrator: No aggregator found for strategy {}", strategyName);
 			safeAudit(AuditEvent.QUALITY_ORCH_FAILED, bioAttribute, "NO_AGGREGATOR");
 			throw new RegBaseCheckedException(

@@ -22,11 +22,19 @@ public class BiometricsDto {
 	// score, so anything negative can only be the sentinel).
 	private double qualityScore = -1.0;
 	private boolean isForceCaptured;
-	private int numOfRetries;	
+	private int numOfRetries;
 	private boolean isCaptured;
 	private String subType;
-	private double sdkScore;
-	private double aggregatedScore;
+	// Same sentinel reasoning as qualityScore above: sdkScore/aggregatedScore
+	// are only ever written when that source actually produced a score
+	// (BioServiceImpl only calls setSdkScore/setAggregatedScore when the SDK
+	// evaluator ran / an aggregation strategy was explicitly configured), so a
+	// legitimately-computed score of exactly 0 must stay distinguishable from
+	// "this source never ran" - both getDisplayScore() below and every UI
+	// presence check (e.g. GenericBiometricsController#setCapturedValues) rely
+	// on that distinction via a >= 0 check rather than > 0.
+	private double sdkScore = -1.0;
+	private double aggregatedScore = -1.0;
 	private String payLoad;
 	private String signature;
 	private String specVersion;
@@ -47,8 +55,8 @@ public class BiometricsDto {
 	 * reimplement it inline.
 	 */
 	public double getDisplayScore() {
-		return aggregatedScore > 0 ? aggregatedScore
-				: sdkScore > 0 ? sdkScore
+		return aggregatedScore >= 0 ? aggregatedScore
+				: sdkScore >= 0 ? sdkScore
 				: qualityScore;
 	}
 }
