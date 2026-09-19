@@ -117,6 +117,8 @@ public class BIRBuilder {
 				// AGGREGATED_SCORE and the SDK_SCORE_* owner details below are new
 				// "others" entries, not repurposing SDK_SCORE.
 				.withOthers(RegistrationConstants.AGGREGATED_SCORE, bioDto.getAggregatedScore()+RegistrationConstants.EMPTY)
+				.withOthers(RegistrationConstants.AGGREGATED_STRATEGY, bioDto.getAggregationStrategy() == null
+						? RegistrationConstants.EMPTY : bioDto.getAggregationStrategy())
 				.withOthers(RegistrationConstants.SDK_SCORE_ORGANIZATION, sdkOrganization)
 				.withOthers(RegistrationConstants.SDK_SCORE_ORGANIZATION_TYPE, sdkOrganizationType)
 				.withOthers(RegistrationConstants.SDK_SCORE_SDK_VERSION, sdkVersion)

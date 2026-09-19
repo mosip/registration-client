@@ -120,6 +120,7 @@ public class BioServiceImpl extends BaseService implements BioService {
 					// otherwise leave it unset so the UI falls back to the raw SDK score.
 					if (orchestrationResult.isAggregationExplicitlyConfigured()) {
 						biometricsDto.setAggregatedScore(orchestrationResult.getAggregatedScore());
+						biometricsDto.setAggregationStrategy(orchestrationResult.getAggregationStrategy());
 					}
 					Double sdkOnlyScore = orchestrationResult.getEvaluatorScores().get("SDK");
 					if (sdkOnlyScore != null) {

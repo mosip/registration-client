@@ -35,6 +35,10 @@ public class BiometricsDto {
 	// on that distinction via a >= 0 check rather than > 0.
 	private double sdkScore = -1.0;
 	private double aggregatedScore = -1.0;
+	// The aggregation strategy (MEAN, MEDIAN, WEIGHTED_AVERAGE, PRIORITY, FORMULA)
+	// that actually produced aggregatedScore - set alongside it, so the packet
+	// records how the number was derived, not just the number itself.
+	private String aggregationStrategy;
 	private String payLoad;
 	private String signature;
 	private String specVersion;

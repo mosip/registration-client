@@ -54,12 +54,14 @@ public class BiometricQualityOrchestrator {
 		private final double aggregatedScore;
 		private final Map<String, Double> evaluatorScores;
 		private final boolean aggregationExplicitlyConfigured;
+		private final String aggregationStrategy;
 
 		public OrchestrationResult(double aggregatedScore, Map<String, Double> evaluatorScores,
-				boolean aggregationExplicitlyConfigured) {
+				boolean aggregationExplicitlyConfigured, String aggregationStrategy) {
 			this.aggregatedScore = aggregatedScore;
 			this.evaluatorScores = evaluatorScores;
 			this.aggregationExplicitlyConfigured = aggregationExplicitlyConfigured;
+			this.aggregationStrategy = aggregationStrategy;
 		}
 
 		public double getAggregatedScore() {
@@ -77,6 +79,16 @@ public class BiometricQualityOrchestrator {
 
 		public Map<String, Double> getEvaluatorScores() {
 			return evaluatorScores;
+		}
+
+		/**
+		 * @return the strategy name (MEAN, MEDIAN, WEIGHTED_AVERAGE, PRIORITY,
+		 *         FORMULA) that produced getAggregatedScore() - including the
+		 *         built-in "MEAN" default used when nothing was explicitly
+		 *         configured, since that value is still computed either way.
+		 */
+		public String getAggregationStrategy() {
+			return aggregationStrategy;
 		}
 	}
 
@@ -285,7 +297,7 @@ public class BiometricQualityOrchestrator {
 				aggregatedScore, finalStrategyName, bioAttribute);
 
 		safeAudit(AuditEvent.QUALITY_ORCH_COMPLETED, bioAttribute, "ORCH_DONE");
-		return new OrchestrationResult(aggregatedScore, scores, aggregationExplicitlyConfigured);
+		return new OrchestrationResult(aggregatedScore, scores, aggregationExplicitlyConfigured, finalStrategyName);
 	}
 
 	/**

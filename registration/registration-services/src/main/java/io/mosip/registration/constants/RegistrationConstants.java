@@ -1947,6 +1947,10 @@ public class RegistrationConstants {
 	public static final String FORCE_CAPTURED  = "FORCE_CAPTURED";
 	public static final String SDK_SCORE  = "SDK_SCORE";
 	public static final String AGGREGATED_SCORE  = "AGGREGATED_SCORE";
+	// The aggregation strategy (MEAN, MEDIAN, WEIGHTED_AVERAGE, PRIORITY, FORMULA)
+	// that actually produced AGGREGATED_SCORE, so the packet records how that
+	// number was derived, not just the number itself.
+	public static final String AGGREGATED_STRATEGY = "AGGREGATED_STRATEGY";
 	// SDK owner/version details for the SDK_SCORE entry - mirrors the Organization
 	// carried inside the primary Quality tag's Algorithm, but for the SDK's own
 	// self-reported SDKInfo (productOwner, sdkVersion, apiVersion).
