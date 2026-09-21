@@ -1269,6 +1269,22 @@ public class RegistrationConstants {
 	public static final String QUALITY_CHECK_WITH_SDK = "mosip.registration.quality_check_with_sdk";
 	public static final String UPDATE_SDK_QUALITY_SCORE = "mosip.registration.replace_sdk_quality_score";
 
+	// Biometric Quality Orchestrator configuration key prefixes
+	public static final String QUALITY_ORCHESTRATOR_ENABLED = "mosip.registration.quality.orchestrator.enabled";
+	public static final String QUALITY_EVALUATORS_PREFIX = "mosip.registration.quality.evaluators.";
+	/** Per-modality evaluator config prefix: mosip.registration.quality.evaluators.modality.<MODALITY> */
+	public static final String QUALITY_EVALUATORS_MODALITY_PREFIX = "mosip.registration.quality.evaluators.modality.";
+	public static final String QUALITY_SELECTION_PREFIX = "mosip.registration.quality.selection.";
+	public static final String QUALITY_SUBSET_PREFIX = "mosip.registration.quality.subset.";
+	public static final String QUALITY_AGGREGATION_PREFIX = "mosip.registration.quality.aggregation.";
+	/** Per-modality aggregation strategy config prefix: mosip.registration.quality.aggregation.modality.<MODALITY> */
+	public static final String QUALITY_AGGREGATION_MODALITY_PREFIX = "mosip.registration.quality.aggregation.modality.";
+	public static final String QUALITY_WEIGHT_PREFIX = "mosip.registration.quality.weight.";
+	public static final String QUALITY_THRESHOLD_SOURCE_PREFIX = "mosip.registration.quality.threshold.source.";
+	public static final String QUALITY_DISPLAY_SOURCE_PREFIX = "mosip.registration.quality.display.source.";
+	public static final String QUALITY_FORMULA_PREFIX = "mosip.registration.quality.formula.";
+	public static final String QUALITY_TIMEOUT_PREFIX = "mosip.registration.quality.timeout.";
+
 	// Packet Sync
 	public static final String PACKET_SYNC = "packet_sync";
 	public static final String PACKET_SYNC_V2 = "packet_sync_v2";
@@ -1930,6 +1946,18 @@ public class RegistrationConstants {
 	public static final String RETRIES = "RETRIES";
 	public static final String FORCE_CAPTURED  = "FORCE_CAPTURED";
 	public static final String SDK_SCORE  = "SDK_SCORE";
+	public static final String AGGREGATED_SCORE  = "AGGREGATED_SCORE";
+	// The aggregation strategy (MEAN, MEDIAN, WEIGHTED_AVERAGE, PRIORITY, FORMULA)
+	// that actually produced AGGREGATED_SCORE, so the packet records how that
+	// number was derived, not just the number itself.
+	public static final String AGGREGATED_STRATEGY = "AGGREGATED_STRATEGY";
+	// SDK owner/version details for the SDK_SCORE entry - mirrors the Organization
+	// carried inside the primary Quality tag's Algorithm, but for the SDK's own
+	// self-reported SDKInfo (productOwner, sdkVersion, apiVersion).
+	public static final String SDK_SCORE_ORGANIZATION = "SDK_SCORE_ORGANIZATION";
+	public static final String SDK_SCORE_ORGANIZATION_TYPE = "SDK_SCORE_ORGANIZATION_TYPE";
+	public static final String SDK_SCORE_SDK_VERSION = "SDK_SCORE_SDK_VERSION";
+	public static final String SDK_SCORE_API_VERSION = "SDK_SCORE_API_VERSION";
 	public static final String EXCEPTION   = "EXCEPTION";
 	public static final String CONFIGURED    = "CONFIGURED";
 	public static final String PAYLOAD = "PAYLOAD";
