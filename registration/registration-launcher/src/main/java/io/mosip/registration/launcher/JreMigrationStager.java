@@ -7,6 +7,8 @@ package io.mosip.registration.launcher;
 
 import io.mosip.registration.launcher.common.DownloadProgressListener;
 import io.mosip.registration.launcher.common.ManifestVerifier;
+import io.mosip.registration.launcher.common.OperatorAlertListener;
+import io.mosip.registration.launcher.common.ResumableDownloader;
 import io.mosip.registration.launcher.common.ZipExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +18,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.security.PublicKey;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.jar.Manifest;
 
 import static io.mosip.registration.launcher.MigrationArtifacts.DIR_ARTIFACTS;
@@ -23,6 +27,7 @@ import static io.mosip.registration.launcher.MigrationArtifacts.DIR_JRE21_TEMP;
 import static io.mosip.registration.launcher.MigrationArtifacts.DIR_JRE21_TEMP_PARTIAL;
 import static io.mosip.registration.launcher.MigrationArtifacts.DIR_LIB;
 import static io.mosip.registration.launcher.MigrationArtifacts.DIR_TEMP;
+import static io.mosip.registration.launcher.MigrationArtifacts.DIR_TEMP_RESTORE;
 import static io.mosip.registration.launcher.MigrationArtifacts.FILE_JRE21_ZIP;
 import static io.mosip.registration.launcher.MigrationArtifacts.FILE_LAUNCHER;
 import static io.mosip.registration.launcher.MigrationArtifacts.FILE_MIGRATION_EXE;
@@ -73,8 +78,13 @@ public final class JreMigrationStager {
      * {@code run.bat} is included because {@code migration.exe} copies {@code .artifacts/run.bat} into
      * the application root, where it becomes the script that launches the client — so it is as
      * execution-sensitive as the exes, and the design's Case-A scenario (N3) expects its hash to be
-     * checked. The launcher only detects a mismatch (fail closed); the AC11 re-download recovery for
-     * root artifacts is not yet implemented.
+     * checked. A <i>mismatching</i> artifact is recovered in place by re-downloading it from the
+     * upgrade server (Case A / Case D for root-level files, see
+     * {@code design/registration/registration-upgrade.md}). Two things still fail closed, because
+     * re-downloading resolves neither: an artifact with no manifest entry to verify a fresh copy
+     * against, and a fresh copy that itself fails the hash. An artifact that is <i>absent</i> rather
+     * than corrupt is not recovered here either — it is skipped, and step 8 then refuses to start
+     * the swap without it.
      */
     private static final String[] VERIFIED_ROOT_ARTIFACTS = {
             FILE_JRE21_ZIP, FILE_MIGRATION_EXE, FILE_ROLLBACK_EXE, FILE_LAUNCHER, FILE_RUN_BAT
@@ -96,9 +106,13 @@ public final class JreMigrationStager {
      * @param libManifestUrl      URL of {@code lib/MANIFEST.MF} for the target version
      * @param libManifestSigUrl   URL of {@code lib/MANIFEST.MF.sig}
      * @param libZipUrl           URL of {@code lib.zip}
+     * @param rootArtifactBaseUrl base URL the root artifacts are served from (trailing {@code /}), used
+     *                            to restore one whose local copy fails its hash
      * @param trustedKey          public key from the embedded {@code provider.pem}
      * @param connectTimeout      connection timeout (ms)
      * @param readTimeout         read timeout (ms)
+     * @throws IntegrityRestoredException if a root artifact failed its hash and was restored from the
+     *                           server — the migration is abandoned and the operator asked to restart
      * @throws IOException       if a required artifact is missing or fails integrity verification
      * @throws SecurityException if the downloaded {@code lib/MANIFEST.MF.sig} is invalid (possible
      *                           tamper/MITM) — surfaced distinctly so the operator sees a security
@@ -106,19 +120,23 @@ public final class JreMigrationStager {
      */
     public static void stage(File root, Manifest verifiedRootManifest,
                              String libManifestUrl, String libManifestSigUrl, String libZipUrl,
-                             PublicKey trustedKey, int connectTimeout, int readTimeout) throws IOException {
+                             String rootArtifactBaseUrl, PublicKey trustedKey,
+                             int connectTimeout, int readTimeout) throws IOException {
         stage(root, verifiedRootManifest, libManifestUrl, libManifestSigUrl, libZipUrl,
-                trustedKey, connectTimeout, readTimeout, null);
+                rootArtifactBaseUrl, trustedKey, connectTimeout, readTimeout, null, null);
     }
 
     /**
-     * As {@link #stage(File, Manifest, String, String, String, PublicKey, int, int)}, additionally
-     * reporting the {@code lib.zip} download's byte progress to {@code progress} (may be {@code null}).
+     * As {@link #stage(File, Manifest, String, String, String, String, PublicKey, int, int)},
+     * additionally reporting download byte progress to {@code progress} and operator-facing status
+     * lines to {@code alerts} (either may be {@code null}).
      */
     public static void stage(File root, Manifest verifiedRootManifest,
                              String libManifestUrl, String libManifestSigUrl, String libZipUrl,
-                             PublicKey trustedKey, int connectTimeout, int readTimeout,
-                             DownloadProgressListener progress) throws IOException {
+                             String rootArtifactBaseUrl, PublicKey trustedKey,
+                             int connectTimeout, int readTimeout,
+                             DownloadProgressListener progress, OperatorAlertListener alerts)
+            throws IOException {
         File artifacts = new File(root, DIR_ARTIFACTS);
         File temp = new File(root, DIR_TEMP);
         File lib = new File(root, DIR_LIB);
@@ -137,7 +155,18 @@ public final class JreMigrationStager {
 
         // 2. integrity-check the migration artifacts against the signature-verified root manifest
         //    BEFORE any of them are unzipped (jre21.zip) or made runnable (exes / _launcher.jar).
-        verifyArtifactsAgainstRootManifest(verifiedRootManifest, artifacts);
+        //    A local copy that fails its hash is restored from the upgrade server rather than aborting:
+        //    the manifest's signature is valid, so the manifest is trustworthy and only the file is bad.
+        List<String> restored = verifyArtifactsAgainstRootManifest(verifiedRootManifest, artifacts, root,
+                rootArtifactBaseUrl, connectTimeout, readTimeout, progress, alerts);
+        if (!restored.isEmpty()) {
+            // Case A / Case D close with "Integrity restored. Please exit & restart the application
+            // manually." — so stop here instead of migrating on. Restarting re-enters startup with the
+            // repaired artifacts and re-evaluates every gate from scratch, which is what makes the
+            // recovery safe: this run already read some of those bytes (and the operator has just been
+            // told the install was tampered with), so continuing would migrate on a half-checked state.
+            throw new IntegrityRestoredException(restored);
+        }
 
         // 3. stage the lib into .TEMP/ with full verification (signature + per-file hash + allowlist).
         LibUpdateResult libResult = LibUpdater.update(libManifestUrl, libManifestSigUrl, libZipUrl,
@@ -224,11 +253,22 @@ public final class JreMigrationStager {
 
     /**
      * Verifies each present migration artifact in {@code .artifacts/} against its hash in the
-     * signature-verified root manifest. A mismatch — or a present artifact with no manifest entry to
-     * verify it against — aborts the migration (fail closed): an unverifiable artifact must never be
-     * unzipped/copied/made runnable.
+     * signature-verified root manifest, restoring any that fails from the upgrade server.
+     * <p>
+     * A hash mismatch under a <i>valid</i> manifest signature means the manifest is trustworthy and the
+     * local file was tampered with or corrupted, which the design treats as safely recoverable (Case A /
+     * Case D): re-download, verify, put back. Two conditions still fail closed, because no amount of
+     * re-downloading fixes either — an artifact present but absent from the manifest (there is nothing
+     * to verify a fresh copy against), and a freshly downloaded copy that itself fails the hash (then it
+     * is the server's copy that disagrees with the signed manifest, not the local one).
+     *
+     * @return the artifacts that were restored, in check order; empty when everything already matched
      */
-    private static void verifyArtifactsAgainstRootManifest(Manifest rootMf, File artifacts) throws IOException {
+    private static List<String> verifyArtifactsAgainstRootManifest(
+            Manifest rootMf, File artifacts, File root, String rootArtifactBaseUrl,
+            int connectTimeout, int readTimeout, DownloadProgressListener progress,
+            OperatorAlertListener alerts) throws IOException {
+        List<String> restored = new ArrayList<>();
         for (String name : VERIFIED_ROOT_ARTIFACTS) {
             File artifact = new File(artifacts, name);
             if (!artifact.exists()) {
@@ -245,10 +285,65 @@ public final class JreMigrationStager {
                 throw new IOException("Root manifest has no integrity entry for migration artifact: "
                         + name + " — refusing to use an unverifiable artifact");
             }
-            if (!ManifestVerifier.fileMatches(rootMf, name, artifact)) {
-                throw new IOException("Integrity check failed for migration artifact: " + name);
+            if (ManifestVerifier.fileMatches(rootMf, name, artifact)) {
+                LOGGER.info("Verified migration artifact against root manifest: {}", name);
+                continue;
             }
-            LOGGER.info("Verified migration artifact against root manifest: {}", name);
+            // The design requires the operator be told before the re-download starts, in these words.
+            alert(alerts, name + " integrity check failed. Restoring from server...");
+            try {
+                restoreFromServer(rootMf, name, artifact, root, rootArtifactBaseUrl,
+                        connectTimeout, readTimeout, progress);
+            } catch (IOException e) {
+                // Repairs already made are real and on disk. The run still fails, but neither the log
+                // nor a reader of it should conclude that nothing was restored: the next start will
+                // find those artifacts intact and only re-attempt the one that failed here.
+                if (!restored.isEmpty()) {
+                    LOGGER.warn("Restored {} before {} failed to restore; those repairs are in place",
+                            restored, name);
+                }
+                throw e;
+            }
+            restored.add(name);
+        }
+        return restored;
+    }
+
+    /**
+     * Case A / Case D recovery for a single root artifact: re-download it, verify the fresh copy against
+     * the signature-verified root manifest, and only then put it back into {@code .artifacts/}.
+     * <p>
+     * The download lands in a scratch directory rather than straight over the bad copy, so a failed or
+     * half-written fetch cannot also destroy the copy already on disk; {@code .artifacts/} is touched
+     * only once the new bytes have been proven to match the signed manifest. That directory is
+     * {@link MigrationArtifacts#DIR_TEMP_RESTORE}, a sibling of {@code .TEMP/} and never inside it:
+     * see that constant for why a partial download must not be left where {@code run.bat} will copy
+     * it into {@code lib/}.
+     */
+    private static void restoreFromServer(Manifest rootMf, String name, File artifact, File root,
+                                          String rootArtifactBaseUrl, int connectTimeout, int readTimeout,
+                                          DownloadProgressListener progress) throws IOException {
+        File staging = new File(root, DIR_TEMP_RESTORE);
+        Files.createDirectories(staging.toPath());
+        // An interrupted download throws here, keeping <name>.part in the staging directory so the next
+        // attempt resumes instead of re-fetching (~200MB, for jre21.zip).
+        ResumableDownloader.download(rootArtifactBaseUrl + name, staging.getPath(), name,
+                connectTimeout, readTimeout, progress);
+        File staged = new File(staging, name);
+        try {
+            if (!ManifestVerifier.fileMatches(rootMf, name, staged)) {
+                throw new IOException("Restored " + name + " still fails its root-manifest hash "
+                        + "— refusing to use it");
+            }
+            copy(staged, artifact);
+            LOGGER.info("Restored migration artifact from the upgrade server: {}", name);
+        } finally {
+            // The download completed, so the bytes are either in place or known bad: drop the scratch
+            // copy either way rather than leave a stale (possibly ~200MB) file behind. Reached only
+            // after a COMPLETE download, so this never discards a partial that could have resumed.
+            if (!MigrationCleaner.deleteRecursively(staging)) {
+                LOGGER.warn("Could not clear the restore staging directory {}", staging.getPath());
+            }
         }
     }
 
@@ -286,6 +381,20 @@ public final class JreMigrationStager {
             return;
         }
         copy(src, dst);
+    }
+
+    /** Logs an operator-facing line and, when a listener is wired, shows it. Never fails the upgrade. */
+    private static void alert(OperatorAlertListener alerts, String message) {
+        LOGGER.warn(message);
+        if (alerts == null) {
+            return;
+        }
+        try {
+            alerts.onAlert(message);
+        } catch (RuntimeException e) {
+            // A status line must never break the upgrade it is reporting on.
+            LOGGER.warn("Could not surface the operator alert ({})", e.getMessage());
+        }
     }
 
     private static void copy(File src, File dst) throws IOException {

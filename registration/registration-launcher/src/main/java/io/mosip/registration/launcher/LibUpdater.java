@@ -35,10 +35,11 @@ import java.util.jar.Manifest;
  * {@code lib.zip} into {@code .TEMP/}, verifies them, and leaves the staged update for {@code run.bat}
  * to copy into {@code lib/} on the next restart.
  * <p>
- * <b>Design note (recorded in upgrade-implementation-spec.md):</b> step 5 says "verify lib.zip hash
- * against an entry in MANIFEST.MF", but the dual-manifest model states {@code lib/MANIFEST.MF} carries
- * <i>per-file</i> hashes and no {@code lib.zip} entry. This implements the consistent reading: verify
- * the manifest's signature, then verify each <i>extracted</i> file against its per-file hash.
+ * <b>Design note</b> (see {@code design/registration/registration-upgrade.md}, step 5): the design says
+ * "verify lib.zip hash against an entry in MANIFEST.MF", but the dual-manifest model states
+ * {@code lib/MANIFEST.MF} carries <i>per-file</i> hashes and no {@code lib.zip} entry. This implements
+ * the consistent reading: verify the manifest's signature, then verify each <i>extracted</i> file
+ * against its per-file hash.
  * <p>
  * The per-file check resolves each manifest entry by its {@code .TEMP/}-relative path, so it honours
  * whatever layout the signed {@code lib/MANIFEST.MF} declares — flat jars at the root, or jars nested

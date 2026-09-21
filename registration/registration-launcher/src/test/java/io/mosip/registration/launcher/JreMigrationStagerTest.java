@@ -25,7 +25,10 @@ import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.jar.Attributes;
@@ -72,6 +75,16 @@ public class JreMigrationStagerTest {
      *                      start the swap without it. Pass false to model it as present-but-unlisted.
      */
     private TestServer baseSetup(File root, boolean stageLauncher) throws Exception {
+        return baseSetup(root, stageLauncher, Collections.<String, byte[]>emptyMap());
+    }
+
+    /**
+     * @param routeOverrides replaces what the server returns for the given paths, so a test can model an
+     *                       upgrade server whose own copy of an artifact disagrees with the signed root
+     *                       manifest.
+     */
+    private TestServer baseSetup(File root, boolean stageLauncher, Map<String, byte[]> routeOverrides)
+            throws Exception {
         write(new File(root, "run.bat"), "current-run-bat");
 
         // jre21.zip + the two native exes on disk in .artifacts, hashes recorded in the (verified)
@@ -113,6 +126,16 @@ public class JreMigrationStagerTest {
         routes.put("/v/lib/MANIFEST.MF", libManifest);
         routes.put("/v/lib/MANIFEST.MF.sig", libSig);
         routes.put("/v/lib.zip", libZip);
+        // The root artifacts are served from <version>/lib/ as well (the layout softwareUpdateHandler
+        // downloads them from), which is what makes the Case A / Case D restore possible.
+        routes.put("/v/lib/jre21.zip", Files.readAllBytes(jre21Zip.toPath()));
+        routes.put("/v/lib/migration.exe", Files.readAllBytes(migrationExe.toPath()));
+        routes.put("/v/lib/rollback.exe", Files.readAllBytes(rollbackExe.toPath()));
+        routes.put("/v/lib/run.bat", Files.readAllBytes(runBatArtifact.toPath()));
+        if (stageLauncher) {
+            routes.put("/v/lib/_launcher.jar", Files.readAllBytes(launcherArtifact.toPath()));
+        }
+        routes.putAll(routeOverrides);
         // stage() receives the signature-verified parsed manifest (as Initialization passes it from
         // StartupEvaluator), not a File it re-reads from disk.
         return new TestServer(serve(routes), ManifestVerifier.parse(rootManifest));
@@ -125,7 +148,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 30000);
+                    ts.url("/v/lib/"), keyPair.getPublic(), 50000, 30000);
 
             assertTrue(new File(root, ".TEMP/app.jar").exists());
             assertTrue(new File(root, "jre21_temp/release").exists());
@@ -149,7 +172,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 30000);
+                    ts.url("/v/lib/"), keyPair.getPublic(), 50000, 30000);
 
             assertFalse("the partial tree must not survive the retry", partial.exists());
             assertTrue(new File(root, "jre21_temp/release").exists());
@@ -179,7 +202,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 30000);
+                    ts.url("/v/lib/"), keyPair.getPublic(), 50000, 30000);
 
             assertTrue("a complete jre21_temp/ must be reused, not re-extracted",
                     new File(root, "jre21_temp/already-extracted-marker").exists());
@@ -191,18 +214,26 @@ public class JreMigrationStagerTest {
     }
 
     @Test
-    public void stage_tamperedJre21Zip_failsRootManifestCheck() throws Exception {
+    public void stage_tamperedJre21Zip_isRestoredFromServer() throws Exception {
         File root = folder.getRoot();
         TestServer ts = baseSetup(root);
-        // tamper jre21.zip AFTER its hash was recorded in the root manifest
+        // tamper jre21.zip AFTER its hash was recorded in the root manifest. The root manifest's
+        // signature is still valid, so this is Case D -- a bad local file under a trustworthy manifest,
+        // which the design repairs from the server instead of aborting.
         write(new File(root, ".artifacts/jre21.zip"), "tampered-bytes");
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 30000);
-            fail("expected IOException for tampered jre21.zip");
-        } catch (IOException expected) {
-            assertTrue(expected.getMessage().contains("jre21.zip"));
+                    ts.url("/v/lib/"), keyPair.getPublic(), 50000, 30000);
+            fail("expected IntegrityRestoredException for a tampered jre21.zip");
+        } catch (IntegrityRestoredException expected) {
+            assertEquals(Collections.singletonList("jre21.zip"), expected.getRestored());
+            assertTrue(ManifestVerifier.fileMatches(ts.rootManifest, "jre21.zip",
+                    new File(root, ".artifacts/jre21.zip")));
+            // The run stops at the restore: the operator is asked to restart, and nothing downstream may
+            // have run on artifacts that changed underneath it.
+            assertFalse(new File(root, "jre21_temp").exists());
+            assertFalse(new File(root, "migration.exe").exists());
         } finally {
             ts.stop();
         }
@@ -220,7 +251,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 30000);
+                    ts.url("/v/lib/"), keyPair.getPublic(), 50000, 30000);
 
             assertEquals("migration-exe-bytes", read(new File(root, "migration.exe")));
             assertEquals("rollback-exe-bytes", read(new File(root, "rollback.exe")));
@@ -245,7 +276,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 30000);
+                    ts.url("/v/lib/"), keyPair.getPublic(), 50000, 30000);
 
             assertEquals("identical bytes must not be rewritten", before, appRootExe.lastModified());
             assertEquals("migration-exe-bytes", read(appRootExe));
@@ -267,7 +298,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 30000);
+                    ts.url("/v/lib/"), keyPair.getPublic(), 50000, 30000);
 
             assertEquals("app-root run.bat must be left as the JRE 11 script", "current-run-bat",
                     read(appRootRunBat));
@@ -279,20 +310,79 @@ public class JreMigrationStagerTest {
     }
 
     @Test
-    public void stage_tamperedRunBatInArtifacts_failsRootManifestCheck() throws Exception {
+    public void stage_tamperedRunBatInArtifacts_isRestoredFromServer() throws Exception {
         File root = folder.getRoot();
         TestServer ts = baseSetup(root);
         // migration.exe copies .artifacts/run.bat into the app root, where it becomes the script that
-        // launches the client -> a tampered copy must abort staging, never be installed unverified.
+        // launches the client. Design scenario N3: a failed hash under a valid ./MANIFEST.MF.sig is
+        // restored from the server and the operator asked to restart -- never installed unverified, and
+        // never a dead end the operator cannot get out of.
         write(new File(root, ".artifacts/run.bat"), "tampered-run-bat");
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 30000);
-            fail("expected IOException for a tampered run.bat");
+                    ts.url("/v/lib/"), keyPair.getPublic(), 50000, 30000);
+            fail("expected IntegrityRestoredException for a tampered run.bat");
+        } catch (IntegrityRestoredException expected) {
+            assertEquals(Collections.singletonList("run.bat"), expected.getRestored());
+            assertEquals("jre21-run-bat", read(new File(root, ".artifacts/run.bat")));
+            // the app-root run.bat is the JRE 11 script this very JVM was started by: untouched
+            assertEquals("current-run-bat", read(new File(root, "run.bat")));
+            // .TEMP/ is left clean: step 3 extracts lib.zip there and rejects anything the signed
+            // lib/MANIFEST.MF does not list, so a leftover copy would break the next lib update. The
+            // download never goes there in the first place, and its scratch dir is dropped once complete
+            // -- run.bat copies .TEMP/* into lib/, so a stray .part there would reach the classpath.
+            assertFalse(new File(root, ".TEMP/run.bat").exists());
+            assertFalse(new File(root, ".TEMP/run.bat.part").exists());
+            assertFalse(new File(root, ".TEMP.restore").exists());
+        } finally {
+            ts.stop();
+        }
+    }
+
+    @Test
+    public void stage_restore_alertsTheOperatorWithTheDesignWording() throws Exception {
+        File root = folder.getRoot();
+        TestServer ts = baseSetup(root);
+        write(new File(root, ".artifacts/run.bat"), "tampered-run-bat");
+        // The design does not just require the repair, it requires the operator be told it is happening,
+        // in these words -- otherwise the client appears to stall on an unexplained download.
+        List<String> alerts = new ArrayList<>();
+        try {
+            JreMigrationStager.stage(root, ts.rootManifest,
+                    ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
+                    ts.url("/v/lib/"), keyPair.getPublic(), 50000, 30000, null, alerts::add);
+            fail("expected IntegrityRestoredException for a tampered run.bat");
+        } catch (IntegrityRestoredException expected) {
+            assertEquals(Collections.singletonList("run.bat integrity check failed. Restoring from server..."),
+                    alerts);
+        } finally {
+            ts.stop();
+        }
+    }
+
+    @Test
+    public void stage_restoredCopyAlsoFailsHash_failsClosed() throws Exception {
+        File root = folder.getRoot();
+        // The server's own run.bat disagrees with the signed root manifest. Re-downloading cannot fix
+        // that, and the bytes are unverifiable, so staging must fail closed instead of restoring.
+        Map<String, byte[]> serverCopyIsWrong = new HashMap<>();
+        serverCopyIsWrong.put("/v/lib/run.bat", "server-copy-does-not-match".getBytes(StandardCharsets.UTF_8));
+        TestServer ts = baseSetup(root, true, serverCopyIsWrong);
+        write(new File(root, ".artifacts/run.bat"), "tampered-run-bat");
+        try {
+            JreMigrationStager.stage(root, ts.rootManifest,
+                    ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
+                    ts.url("/v/lib/"), keyPair.getPublic(), 50000, 30000);
+            fail("expected IOException when the restored copy still fails its hash");
+        } catch (IntegrityRestoredException restored) {
+            fail("a server copy that fails the manifest hash must never count as a restore");
         } catch (IOException expected) {
-            assertTrue(expected.getMessage().contains("run.bat"));
-            assertTrue(expected.getMessage().contains("Integrity check failed"));
+            assertTrue(expected.getMessage().contains("still fails its root-manifest hash"));
+            // nothing unverifiable may be promoted into .artifacts/, and .TEMP/ is left clean
+            assertEquals("tampered-run-bat", read(new File(root, ".artifacts/run.bat")));
+            assertFalse(new File(root, ".TEMP/run.bat").exists());
+            assertFalse(new File(root, ".TEMP.restore").exists());
         } finally {
             ts.stop();
         }
@@ -319,7 +409,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ManifestVerifier.parse(rootManifest),
                     url(server, "/v/lib/MANIFEST.MF"), url(server, "/v/lib/MANIFEST.MF.sig"), url(server, "/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 30000);
+                    url(server, "/v/lib/"), keyPair.getPublic(), 50000, 30000);
             fail("expected IOException for a run.bat missing from the root manifest");
         } catch (IOException expected) {
             assertTrue(expected.getMessage().contains("run.bat"));
@@ -339,7 +429,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 30000);
+                    ts.url("/v/lib/"), keyPair.getPublic(), 50000, 30000);
             fail("expected IOException when _launcher.jar is absent from .artifacts/");
         } catch (IOException expected) {
             assertTrue(expected.getMessage().contains("_launcher.jar"));
@@ -362,7 +452,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 30000);
+                    ts.url("/v/lib/"), keyPair.getPublic(), 50000, 30000);
             fail("expected IOException when run.bat is absent from .artifacts/");
         } catch (IOException expected) {
             assertTrue(expected.getMessage().contains("run.bat"));
@@ -383,7 +473,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 30000);
+                    ts.url("/v/lib/"), keyPair.getPublic(), 50000, 30000);
             fail("expected IOException for an artifact missing from the root manifest");
         } catch (IOException expected) {
             assertTrue(expected.getMessage().contains("_launcher.jar"));
@@ -403,7 +493,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ts.rootManifest,
                     ts.url("/v/lib/MANIFEST.MF"), ts.url("/v/lib/MANIFEST.MF.sig"), ts.url("/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 30000);
+                    ts.url("/v/lib/"), keyPair.getPublic(), 50000, 30000);
             fail("expected IOException for a missing migration.exe");
         } catch (IOException expected) {
             assertTrue(expected.getMessage().contains("migration.exe"));
@@ -434,7 +524,7 @@ public class JreMigrationStagerTest {
         try {
             JreMigrationStager.stage(root, ManifestVerifier.parse(rootManifest),
                     url(server, "/v/lib/MANIFEST.MF"), url(server, "/v/lib/MANIFEST.MF.sig"), url(server, "/v/lib.zip"),
-                    keyPair.getPublic(), 50000, 30000);
+                    url(server, "/v/lib/"), keyPair.getPublic(), 50000, 30000);
             fail("expected SecurityException when lib signature is invalid");
         } catch (SecurityException expected) {
             // Case B: the invalid lib signature must surface as a security distinction, not a generic

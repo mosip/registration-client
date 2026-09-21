@@ -37,6 +37,9 @@ public class LauncherConfigTest {
         assertEquals(base + "lib/MANIFEST.MF", config.libManifestUrl("1.4.0"));
         assertEquals(base + "lib/MANIFEST.MF.sig", config.libManifestSigUrl("1.4.0"));
         assertEquals(base + "lib.zip", config.libZipUrl("1.4.0"));
+        // root artifacts are served from <version>/lib/ even though they are consumed from .artifacts/
+        assertEquals(base + "lib/", config.rootArtifactBaseUrl("1.4.0"));
+        assertEquals(base + "lib/run.bat", config.rootArtifactBaseUrl("1.4.0") + "run.bat");
     }
 
     @Test

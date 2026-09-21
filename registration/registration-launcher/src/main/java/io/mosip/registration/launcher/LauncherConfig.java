@@ -116,6 +116,19 @@ public final class LauncherConfig {
         return versionBase(version) + "lib.zip";
     }
 
+    /**
+     * Base URL (with trailing {@code /}) the root-level artifacts are served from for the given version:
+     * {@code jre21.zip}, {@code migration.exe}, {@code rollback.exe}, {@code _launcher.jar} and
+     * {@code run.bat}. They are hosted under {@code <version>/lib/} — the same location
+     * {@code softwareUpdateHandler} downloads them from — even though they are consumed from
+     * {@code .artifacts/} and the application root, never from {@code lib/}.
+     * <p>
+     * Used by the Case A / Case D recovery to re-fetch a root artifact whose local copy fails its hash.
+     */
+    public String rootArtifactBaseUrl(String version) {
+        return versionBase(version) + "lib/";
+    }
+
     public String getRegClientBaseUrl() {
         return regClientBaseUrl;
     }

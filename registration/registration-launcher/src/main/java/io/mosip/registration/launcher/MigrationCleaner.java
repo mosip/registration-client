@@ -21,6 +21,7 @@ import java.util.List;
 import static io.mosip.registration.launcher.MigrationArtifacts.DIR_ARTIFACTS;
 import static io.mosip.registration.launcher.MigrationArtifacts.DIR_JRE21_TEMP;
 import static io.mosip.registration.launcher.MigrationArtifacts.DIR_JRE21_TEMP_PARTIAL;
+import static io.mosip.registration.launcher.MigrationArtifacts.DIR_TEMP_RESTORE;
 import static io.mosip.registration.launcher.MigrationArtifacts.FILE_MIGRATION_EXE;
 import static io.mosip.registration.launcher.MigrationArtifacts.FILE_ROLLBACK_EXE;
 import static io.mosip.registration.launcher.MigrationArtifacts.FILE_RUN_BAT_BACKUP;
@@ -37,7 +38,8 @@ public final class MigrationCleaner {
     // jre21_temp.partial/ is listed too: a run interrupted mid-unzip leaves one behind, and nothing
     // else reclaims it once the migration has completed -- it would sit there as ~200MB of dead
     // bytes on every client that ever hit an interrupted extraction.
-    private static final String[] ARTIFACT_DIRS = {DIR_JRE21_TEMP, DIR_JRE21_TEMP_PARTIAL, DIR_ARTIFACTS};
+    private static final String[] ARTIFACT_DIRS =
+            {DIR_JRE21_TEMP, DIR_JRE21_TEMP_PARTIAL, DIR_TEMP_RESTORE, DIR_ARTIFACTS};
     private static final String[] ARTIFACT_FILES = {FILE_RUN_BAT_BACKUP, FILE_MIGRATION_EXE, FILE_ROLLBACK_EXE};
 
     /** How long an interrupted download's partials are kept before being treated as abandoned. */

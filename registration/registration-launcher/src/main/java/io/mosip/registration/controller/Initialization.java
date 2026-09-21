@@ -5,6 +5,7 @@
  */
 package io.mosip.registration.controller;
 
+import io.mosip.registration.launcher.IntegrityRestoredException;
 import io.mosip.registration.launcher.JreMigrationStager;
 import io.mosip.registration.launcher.JreVersionDetector;
 import io.mosip.registration.launcher.LauncherConfig;
@@ -191,13 +192,23 @@ public class Initialization {
             String version = requireVersion(ManifestVerifier.getVersion(verifiedRootManifest));
             JreMigrationStager.stage(APP_ROOT, verifiedRootManifest,
                     config.libManifestUrl(version), config.libManifestSigUrl(version), config.libZipUrl(version),
-                    trustedKey, CONNECT_TIMEOUT, READ_TIMEOUT, progress::update);
+                    config.rootArtifactBaseUrl(version), trustedKey, CONNECT_TIMEOUT, READ_TIMEOUT,
+                    progress::update, progress::message);
             // stage() has verified migration.exe against the signature-verified root manifest and copied
             // it (with rollback.exe) to the app root. Launch it detached and exit so the JVM releases
             // jre/bin/* for the swap; migration.exe shows its own progress/result dialog and, on failure,
             // invokes rollback.exe.
             LOGGER.info("JRE migration staged — launching migration.exe and exiting");
             MigrationLauncher.launch(APP_ROOT);
+            System.exit(0);
+        } catch (IntegrityRestoredException e) {
+            progress.close();
+            // Case A / Case D: a migration artifact failed its hash under a VALID manifest signature and
+            // was re-downloaded and verified. Nothing is broken any more, so this is an info dialog and a
+            // clean exit — not an error. The design ends the recovery by asking for a manual restart,
+            // which re-enters startup against the repaired artifacts.
+            LOGGER.warn("Migration artifacts restored from the upgrade server: {}", e.getRestored());
+            LauncherDialogs.info("Integrity restored. Please exit & restart the application manually.");
             System.exit(0);
         } catch (SecurityException e) {
             progress.close();

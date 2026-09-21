@@ -34,6 +34,17 @@ public final class MigrationArtifacts {
      */
     public static final String DIR_JRE21_TEMP_PARTIAL = DIR_JRE21_TEMP + ".partial";
 
+    /**
+     * Scratch directory the Case A / Case D restore downloads into — a <b>sibling</b> of
+     * {@link #DIR_TEMP}, never inside it. {@code ResumableDownloader} keeps {@code <name>.part} and
+     * {@code <name>.part.meta} on an interrupted download so the next attempt can resume, and
+     * {@code run.bat} copies {@code .TEMP/*} into {@code lib/} wholesale on the next start — so a
+     * partial left inside {@code .TEMP/} would land on the classpath and fail the per-file check
+     * against the lib manifest. {@code LibUpdater} keeps {@code lib.zip} out of {@code .TEMP/} for
+     * exactly the same reason.
+     */
+    public static final String DIR_TEMP_RESTORE = DIR_TEMP + ".restore";
+
     // files (relative to the application root)
     public static final String FILE_JRE21_ZIP = "jre21.zip";
     public static final String FILE_RUN_BAT = "run.bat";

@@ -48,6 +48,16 @@ public final class LauncherDialogs {
         default void update(long bytesDone, long total) {
             // no-op unless a real window is showing (overridden by the Swing handle)
         }
+
+        /**
+         * Replaces the status line above the bar, so a step that changes what it is doing mid-flight can
+         * say so in the window already on screen. Preferred over a modal alert while this window is up:
+         * a modeless spinner sitting behind a modal dialog is exactly the confusion the callers here
+         * take care to avoid. A no-op on the headless / no-op handle. Safe to call from any thread.
+         */
+        default void message(String text) {
+            // no-op unless a real window is showing (overridden by the Swing handle)
+        }
     }
 
     /** Returned on the headless path and whenever the window cannot be built — the upgrade proceeds silently. */
@@ -108,24 +118,37 @@ public final class LauncherDialogs {
         bar.setIndeterminate(true); // a spinner until the first byte-progress arrives (or if the size is unknown)
         JPanel panel = new JPanel(new BorderLayout(0, 12));
         panel.setBorder(BorderFactory.createEmptyBorder(18, 24, 18, 24));
-        panel.add(new JLabel(message), BorderLayout.NORTH);
+        JLabel label = new JLabel(message);
+        panel.add(label, BorderLayout.NORTH);
         panel.add(bar, BorderLayout.CENTER);
         dialog.setContentPane(panel);
         dialog.setResizable(false);
         dialog.pack();
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
-        return new SwingProgressHandle(dialog, bar);
+        return new SwingProgressHandle(dialog, bar, label);
     }
 
     /** The concrete progress window: disposes on close, and flips from spinner to a percentage on update. */
     private static final class SwingProgressHandle implements ProgressHandle {
         private final JDialog dialog;
         private final JProgressBar bar;
+        private final JLabel label;
 
-        SwingProgressHandle(JDialog dialog, JProgressBar bar) {
+        SwingProgressHandle(JDialog dialog, JProgressBar bar, JLabel label) {
             this.dialog = dialog;
             this.bar = bar;
+            this.label = label;
+        }
+
+        @Override
+        public void message(String text) {
+            SwingUtilities.invokeLater(() -> {
+                label.setText(text);
+                // Resize for the new line, but do NOT re-centre: the window would jump away from
+                // wherever the operator had dragged it.
+                dialog.pack();
+            });
         }
 
         @Override
