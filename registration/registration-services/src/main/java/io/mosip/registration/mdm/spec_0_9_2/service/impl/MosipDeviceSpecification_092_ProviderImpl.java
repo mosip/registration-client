@@ -257,7 +257,7 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 			List<RCaptureRequestBioDTO> captureRequestBioDTOs = new LinkedList<>();
 			captureRequestBioDTOs.add(new RCaptureRequestBioDTO(getDeviceType(bioDevice.getDeviceType()), "1",
 					mdmRequestDto.getExceptions(), String.valueOf(mdmRequestDto.getRequestedScore()),
-					bioDevice.getDeviceId(), getDeviceSubId(mdmRequestDto.getModality()), null));
+					bioDevice.getDeviceId(), getDeviceSubId(mdmRequestDto.getModality()), ""));
 
 			rCaptureRequestDTO = new RCaptureRequestDTO(mdmRequestDto.getEnvironment(), "Registration", "0.9.2",
 					String.valueOf(mdmRequestDto.getTimeout()),

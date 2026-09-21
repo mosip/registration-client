@@ -270,7 +270,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 			List<SbiRCaptureRequestBioDTO> captureRequestBioDTOs = new LinkedList<>();
 			captureRequestBioDTOs.add(new SbiRCaptureRequestBioDTO(getDeviceType(bioDevice.getDeviceType()), "1",
 					mdmRequestDto.getExceptions(), String.valueOf(mdmRequestDto.getRequestedScore()), bioDevice.getSerialNumber(),
-					bioDevice.getDeviceId(),bioDevice.getDeviceSubType(), getDeviceSubId(mdmRequestDto.getModality()), null));
+					bioDevice.getDeviceId(),bioDevice.getDeviceSubType(), getDeviceSubId(mdmRequestDto.getModality()), ""));
 
 			sbiRCaptureRequestDTO = new SbiRCaptureRequestDTO(mdmRequestDto.getEnvironment(), bioDevice.getPurpose(), bioDevice.getSpecVersion(),
 					String.valueOf(mdmRequestDto.getTimeout()),
