@@ -100,6 +100,16 @@ public class BIRBuilder {
 			}
 		}
 
+		// SDK_SCORE and AGGREGATED_SCORE are existing packet fields (SDK_SCORE
+		// already written on develop); their "not evaluated" sentinel (-1.0) is
+		// internal to BiometricsDto only (see its field comments) and must not
+		// change what these two fields mean on the wire - develop wrote 0.0 when
+		// a source didn't run, so that's what's emitted here too, changing an
+		// existing packet field's semantics would need downstream consumer
+		// sign-off, unlike AGGREGATED_STRATEGY below, which is a brand-new field.
+		double sdkScoreForPacket = bioDto.getSdkScore() < 0 ? 0.0 : bioDto.getSdkScore();
+		double aggregatedScoreForPacket = bioDto.getAggregatedScore() < 0 ? 0.0 : bioDto.getAggregatedScore();
+
 		return new BIR.BIRBuilder().withBdb(bioDto.getAttributeISO() == null ? new byte[0] : bioDto.getAttributeISO())
 				.withVersion(versionType)
 				.withCbeffversion(versionType)
@@ -112,11 +122,11 @@ public class BIRBuilder {
 				.withSb(bioDto.getSignature() == null ? new byte[0] : bioDto.getSignature().getBytes(StandardCharsets.UTF_8))
 				.withOthers(OtherKey.EXCEPTION, bioDto.getAttributeISO()==null ? "true" : "false")
 				.withOthers(OtherKey.RETRIES, bioDto.getNumOfRetries()+RegistrationConstants.EMPTY)
-				.withOthers(OtherKey.SDK_SCORE, bioDto.getSdkScore()+RegistrationConstants.EMPTY)
+				.withOthers(OtherKey.SDK_SCORE, sdkScoreForPacket+RegistrationConstants.EMPTY)
 				// withOthers accepts a plain String key, not just OtherKey's constants -
 				// AGGREGATED_SCORE and the SDK_SCORE_* owner details below are new
 				// "others" entries, not repurposing SDK_SCORE.
-				.withOthers(RegistrationConstants.AGGREGATED_SCORE, bioDto.getAggregatedScore()+RegistrationConstants.EMPTY)
+				.withOthers(RegistrationConstants.AGGREGATED_SCORE, aggregatedScoreForPacket+RegistrationConstants.EMPTY)
 				.withOthers(RegistrationConstants.AGGREGATED_STRATEGY, bioDto.getAggregationStrategy() == null
 						? RegistrationConstants.EMPTY : bioDto.getAggregationStrategy())
 				.withOthers(RegistrationConstants.SDK_SCORE_ORGANIZATION, sdkOrganization)
