@@ -39,6 +39,8 @@ public final class StartupEvaluator {
      * @param rootManifest     the orchestration manifest {@code ./MANIFEST.MF}
      * @param rootSignature    its detached signature {@code ./MANIFEST.MF.sig} (may be absent)
      * @param libManifest      the per-file manifest {@code lib/MANIFEST.MF} (may be absent pre-1.3.0)
+     * @param libSignature     its detached signature {@code lib/MANIFEST.MF.sig}, checked only on the
+     *                         versions-match branch (see below)
      * @param trustedKey       the public key from the embedded {@code provider.pem}
      * @param jreMajorVersion  the running JRE major version (see {@link JreVersionDetector})
      * @return the action the entry point must take next, together with the signature-verified root
@@ -46,7 +48,17 @@ public final class StartupEvaluator {
      * @throws IOException if {@code rootManifest} cannot be read
      */
     public static Evaluation evaluate(File rootManifest, File rootSignature, File libManifest,
-                                      PublicKey trustedKey, int jreMajorVersion) throws IOException {
+                                      File libSignature, PublicKey trustedKey, int jreMajorVersion)
+            throws IOException {
+        // An absent ./MANIFEST.MF is a broken install, not a missing signature. Check it BEFORE the
+        // signature gate: otherwise Case C would be entered and the missing manifest would only
+        // surface later as a NoSuchFileException from the version read, reported to the operator as a
+        // signature-download failure — a safe stop, but pointing at the wrong problem.
+        if (rootManifest == null || !rootManifest.exists()) {
+            LOGGER.error("./MANIFEST.MF is absent — the installation is incomplete or corrupt, aborting");
+            return new Evaluation(StartupAction.ABORT_MISSING_ROOT_MANIFEST, null);
+        }
+
         // --- signature gate (Cases B / C) ---
         if (rootSignature == null || !rootSignature.exists()) {
             LOGGER.info("Root MANIFEST.MF.sig not present");
@@ -90,13 +102,45 @@ public final class StartupEvaluator {
             return new Evaluation(StartupAction.ABORT_CORRUPT_LIB_MANIFEST, verifiedManifest);
         }
         if (rootVersion.equals(libVersion)) {
-            LOGGER.info("Root and lib manifest versions match — normal startup");
-            return new Evaluation(StartupAction.NORMAL_STARTUP, verifiedManifest);
+            // This is the ONLY branch that trusts lib/MANIFEST.MF: nothing is going to replace lib/, so
+            // that manifest is what the per-file hash checks of the jars about to run are measured
+            // against, and the launcher is the only thing that sees it before they load. Verify its
+            // signature here, on every launch — not just at the moment an update was staged.
+            //
+            // Deliberately NOT gated earlier, before the version comparison: a pre-1.3.0 install has an
+            // unsigned lib/MANIFEST.MF and no .sig at all, so gating there would abort exactly the
+            // machines the migration exists to upgrade. On every other branch lib/ is replaced wholesale
+            // and re-verified from the signed server manifest, which makes the version string there a
+            // routing hint rather than a trust decision — a tampered one can only force an update that
+            // verifies everything anyway.
+            return evaluateLibSignature(libManifest, libSignature, trustedKey, verifiedManifest);
         }
 
         LOGGER.info("Manifest versions differ (root={}, lib={}) — migration required (JRE major version {})",
                 rootVersion, libVersion, jreMajorVersion);
         return new Evaluation(migrationAction(jreMajorVersion), verifiedManifest);
+    }
+
+    /**
+     * Signature gate for {@code lib/MANIFEST.MF} (Cases B / C applied to the lib manifest), reached only
+     * when the versions match and the client is about to be launched from the installed {@code lib/}.
+     */
+    private static Evaluation evaluateLibSignature(File libManifest, File libSignature,
+                                                   PublicKey trustedKey, Manifest verifiedRootManifest)
+            throws IOException {
+        if (libSignature == null || !libSignature.exists()) {
+            LOGGER.info("Versions match but lib/MANIFEST.MF.sig is not present");
+            return new Evaluation(StartupAction.LIB_SIGNATURE_MISSING, verifiedRootManifest);
+        }
+        byte[] manifestBytes = Files.readAllBytes(libManifest.toPath());
+        byte[] signatureBytes = Files.readAllBytes(libSignature.toPath());
+        if (!SignatureVerifier.verify(manifestBytes, signatureBytes, trustedKey)) {
+            LOGGER.error("lib/MANIFEST.MF signature is INVALID — aborting startup (possible tamper)");
+            return new Evaluation(StartupAction.ABORT_INVALID_LIB_SIGNATURE, verifiedRootManifest);
+        }
+        LOGGER.info("Root and lib manifest versions match and lib/MANIFEST.MF is signature-valid "
+                + "— normal startup");
+        return new Evaluation(StartupAction.NORMAL_STARTUP, verifiedRootManifest);
     }
 
     /**

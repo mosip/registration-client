@@ -27,6 +27,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.PublicKey;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.jar.Manifest;
 
 /**
@@ -48,6 +50,7 @@ public class Initialization {
     private static final File ROOT_MANIFEST = new File("MANIFEST.MF");
     private static final File ROOT_SIGNATURE = new File("MANIFEST.MF.sig");
     private static final File LIB_MANIFEST = new File("lib/MANIFEST.MF");
+    private static final File LIB_SIGNATURE = new File("lib/MANIFEST.MF.sig");
     private static final File TEMP_DIR = new File(".TEMP");
     private static final File APP_ROOT = new File(".");
     private static final File CONFIG_FILE = new File("mosip-application.properties");
@@ -61,6 +64,15 @@ public class Initialization {
     // larger (e.g. an HTML error page) is a malformed signature — a Case C integrity failure.
     private static final long MAX_SIGNATURE_BYTES = 1024L;
 
+    // Each Case C repair is attempted at most ONCE per run. Both repair handlers re-enter handle() after
+    // re-evaluating, so each can route into the other: guarding only against re-entering itself leaves
+    // them free to recurse into each other — root sig missing -> download -> lib sig missing -> download
+    // -> root sig missing again -> … — if something keeps removing the signatures as fast as they land
+    // (an AV agent quarantining unrecognised binaries, a policy-reverted install directory). That ends in
+    // StackOverflowError, an Error that main()'s catch (Exception) does not take, so the operator would
+    // get a raw JVM crash instead of the abort dialog.
+    private static final Set<StartupAction> ATTEMPTED_REPAIRS = EnumSet.noneOf(StartupAction.class);
+
     public static void main(String[] args) {
         try {
             // Detect the JRE inside the try: majorVersion() throws IllegalArgumentException for a
@@ -71,7 +83,7 @@ public class Initialization {
 
             PublicKey trustedKey = loadTrustedKey();
             StartupEvaluator.Evaluation evaluation = StartupEvaluator.evaluate(
-                    ROOT_MANIFEST, ROOT_SIGNATURE, LIB_MANIFEST, trustedKey, jreMajor);
+                    ROOT_MANIFEST, ROOT_SIGNATURE, LIB_MANIFEST, LIB_SIGNATURE, trustedKey, jreMajor);
             handle(evaluation, jreMajor, args, trustedKey);
         } catch (Exception e) {
             LOGGER.error("Launcher startup failed", e);
@@ -91,12 +103,37 @@ public class Initialization {
                 LauncherDialogs.error("Security alert: MANIFEST.MF signature invalid. Startup aborted.");
                 System.exit(1);
                 break;
+            case LIB_SIGNATURE_MISSING:
+                handleLibSignatureMissing(evaluation, jreMajor, args, trustedKey);
+                break;
+            case ABORT_INVALID_LIB_SIGNATURE:
+                // Case B for the lib manifest: the jars about to be loaded are measured against a
+                // manifest that is not the one we signed — do not launch, do not re-download.
+                LOGGER.error("lib/MANIFEST.MF signature is invalid — aborting startup");
+                LauncherDialogs.error("Security alert: lib/MANIFEST.MF signature invalid. Startup aborted.");
+                System.exit(1);
+                break;
             case NORMAL_STARTUP:
-                LOGGER.info("Versions match — cleaning up migration artifacts and starting normally (step 6)");
-                MigrationCleaner.cleanup(APP_ROOT);
+                LOGGER.info("Versions match — starting normally (step 6)");
                 try {
-                    NormalStartup.launch(args);
-                } catch (ReflectiveOperationException e) {
+                    // Resolve (and initialize) the client classes BEFORE the migration artifacts are
+                    // cleaned up, and catch the Errors that resolution can throw
+                    // (ExceptionInInitializerError / NoClassDefFoundError are LinkageErrors, taken by
+                    // neither a ReflectiveOperationException handler nor main()'s catch (Exception)).
+                    // This covers a freshly-migrated lib/ that is missing registration-client.jar,
+                    // JavaFX or the services jar behind ClientApplication's logger.
+                    //
+                    // It is NOT full "the app started" proof: ClientApplication's static state is only
+                    // its LOGGER, while the integrity validation and the Spring context run in init(),
+                    // i.e. inside start() below and therefore after this cleanup. A jar that is present
+                    // but corrupt still fails with the rollback tooling gone. Closing that gap needs the
+                    // client to signal a successful start (a marker cleaned on the next launch) rather
+                    // than more work here — deferring cleanup until start() returns is not it, since a
+                    // client that exits the JVM itself would never reach it.
+                    NormalStartup.Launch launch = NormalStartup.prepare();
+                    MigrationCleaner.cleanup(APP_ROOT);
+                    launch.start(args);
+                } catch (ReflectiveOperationException | LinkageError e) {
                     LOGGER.error("Failed to launch ClientApplication", e);
                     LauncherDialogs.error("Failed to start the application: " + e.getMessage());
                     System.exit(1);
@@ -121,6 +158,14 @@ public class Initialization {
                         + "Please repair or reinstall the Registration Client.");
                 System.exit(1);
                 break;
+            case ABORT_MISSING_ROOT_MANIFEST:
+                // No ./MANIFEST.MF at all — nothing to verify or version-compare against. Say so
+                // plainly instead of letting it surface as a signature problem.
+                LOGGER.error("./MANIFEST.MF is missing — aborting startup");
+                LauncherDialogs.error("The update manifest is missing (MANIFEST.MF). "
+                        + "Please repair or reinstall the Registration Client.");
+                System.exit(1);
+                break;
             case ABORT_CORRUPT_ROOT_MANIFEST:
                 // Signature-valid root MANIFEST.MF but no version — corrupt/mispackaged; do not proceed.
                 LOGGER.error("./MANIFEST.MF is corrupt (no Manifest-Version) — aborting startup");
@@ -140,6 +185,12 @@ public class Initialization {
 
     /** Case C: download the missing root {@code MANIFEST.MF.sig}, then re-evaluate once. */
     private static void handleSignatureMissing(int jreMajor, String[] args, PublicKey trustedKey) {
+        if (!ATTEMPTED_REPAIRS.add(StartupAction.SIGNATURE_MISSING)) {
+            LOGGER.error("MANIFEST.MF.sig was already repaired once this run and is missing again — aborting");
+            LauncherDialogs.error("Unable to obtain MANIFEST.MF signature. Startup aborted.");
+            System.exit(1);
+            return;
+        }
         try {
             LauncherConfig config = LauncherConfig.load(CONFIG_FILE);
             // No verified manifest exists yet (the .sig is what's missing). Read the version from the
@@ -164,7 +215,7 @@ public class Initialization {
             }
 
             StartupEvaluator.Evaluation evaluation = StartupEvaluator.evaluate(
-                    ROOT_MANIFEST, ROOT_SIGNATURE, LIB_MANIFEST, trustedKey, jreMajor);
+                    ROOT_MANIFEST, ROOT_SIGNATURE, LIB_MANIFEST, LIB_SIGNATURE, trustedKey, jreMajor);
             if (evaluation.action() == StartupAction.SIGNATURE_MISSING) {
                 LauncherDialogs.error("Unable to obtain MANIFEST.MF signature. Startup aborted.");
                 System.exit(1);
@@ -174,6 +225,53 @@ public class Initialization {
         } catch (Exception e) {
             LOGGER.error("Failed to download/verify MANIFEST.MF.sig", e);
             LauncherDialogs.error("Failed to obtain MANIFEST.MF signature: " + e.getMessage());
+            System.exit(1);
+        }
+    }
+
+    /**
+     * Case C for the lib manifest: download the missing {@code lib/MANIFEST.MF.sig}, then re-evaluate
+     * once. Reached only when the versions match, so the version comes from the signature-verified root
+     * manifest — the download URL is never derived from untrusted bytes. Aborting outright would be the
+     * harsher option, but a signature that merely went missing is repairable from the server, and the
+     * re-evaluation below still rejects a lib manifest the downloaded signature does not cover.
+     */
+    private static void handleLibSignatureMissing(StartupEvaluator.Evaluation evaluation, int jreMajor,
+                                                  String[] args, PublicKey trustedKey) {
+        if (!ATTEMPTED_REPAIRS.add(StartupAction.LIB_SIGNATURE_MISSING)) {
+            LOGGER.error("lib/MANIFEST.MF.sig was already repaired once this run and is missing again — aborting");
+            LauncherDialogs.error("Unable to obtain lib/MANIFEST.MF signature. Startup aborted.");
+            System.exit(1);
+            return;
+        }
+        try {
+            LauncherConfig config = LauncherConfig.load(CONFIG_FILE);
+            String version = requireVersion(ManifestVerifier.getVersion(evaluation.verifiedRootManifest()));
+            LOGGER.info("Downloading missing lib/MANIFEST.MF.sig for version {}", version);
+            ResumableDownloader.download(config.libManifestSigUrl(version),
+                    LIB_SIGNATURE.getParent(), LIB_SIGNATURE.getName(), CONNECT_TIMEOUT, READ_TIMEOUT);
+
+            // Same up-front malformed-body check as the root Case C: an empty or oversized response
+            // (an HTML error page, say) is an integrity failure, not a softer "download" problem.
+            long sigLength = LIB_SIGNATURE.length();
+            if (sigLength == 0L || sigLength > MAX_SIGNATURE_BYTES) {
+                LOGGER.error("Downloaded lib/MANIFEST.MF.sig is malformed (size {} bytes) — aborting", sigLength);
+                LauncherDialogs.error("Security alert: lib/MANIFEST.MF signature invalid. Startup aborted.");
+                System.exit(1);
+                return;
+            }
+
+            StartupEvaluator.Evaluation reevaluated = StartupEvaluator.evaluate(
+                    ROOT_MANIFEST, ROOT_SIGNATURE, LIB_MANIFEST, LIB_SIGNATURE, trustedKey, jreMajor);
+            if (reevaluated.action() == StartupAction.LIB_SIGNATURE_MISSING) {
+                LauncherDialogs.error("Unable to obtain lib/MANIFEST.MF signature. Startup aborted.");
+                System.exit(1);
+            } else {
+                handle(reevaluated, jreMajor, args, trustedKey);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to download/verify lib/MANIFEST.MF.sig", e);
+            LauncherDialogs.error("Failed to obtain lib/MANIFEST.MF signature: " + e.getMessage());
             System.exit(1);
         }
     }

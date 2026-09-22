@@ -5,14 +5,18 @@
  */
 package io.mosip.registration.launcher.common;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.jar.Attributes;
@@ -141,6 +145,38 @@ public class ManifestVerifierTest {
         List<String> unexpected = ManifestVerifier.findUnexpectedFiles(
                 manifest, libDir, Collections.emptySet());
         assertTrue(unexpected.contains("evil/payload.jar"));
+    }
+
+    @Test
+    public void findUnexpectedFiles_symbolicLink_reportedAndNotFollowed() throws Exception {
+        // A symlink cannot come out of ZipExtractor, so one under the update root was planted on disk.
+        // It must be reported rather than followed: a link pointing at a parent directory makes the
+        // walk recurse until StackOverflowError, an Error that escapes the entry point's exception
+        // handlers and crashes the JVM instead of failing closed.
+        Manifest manifest = manifest("1.3.0", "foo.jar");
+        Path link = new File(libDir, "loop").toPath();
+        try {
+            Files.createSymbolicLink(link, libDir.toPath());
+        } catch (IOException | UnsupportedOperationException e) {
+            // Windows needs developer mode or elevation to create symlinks; skip where it is not allowed.
+            Assume.assumeNoException("symbolic links not permitted in this environment", e);
+        }
+        List<String> unexpected = ManifestVerifier.findUnexpectedFiles(
+                manifest, libDir, Collections.emptySet());
+        assertTrue(unexpected.contains("loop"));
+    }
+
+    @Test
+    public void findUnexpectedFiles_unlistableDirectory_failsClosed() {
+        // listFiles() returns null when a directory cannot be read. The allowlist gate must treat that
+        // as suspicious rather than silently skipping the subtree it hides, so the caller rejects the
+        // staged update instead of accepting an unverifiable one.
+        Manifest manifest = manifest("1.3.0", "foo.jar");
+        File unreadable = Paths.get(folder.getRoot().getPath(), "not-a-directory").toFile();
+        List<String> unexpected = ManifestVerifier.findUnexpectedFiles(
+                manifest, unreadable, Collections.emptySet());
+        assertFalse("an unlistable base directory must not pass the allowlist gate", unexpected.isEmpty());
+        assertTrue(unexpected.contains("."));
     }
 
     private static Manifest manifest(String version, String entryName) {

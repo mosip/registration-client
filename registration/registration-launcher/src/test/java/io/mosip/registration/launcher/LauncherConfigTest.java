@@ -94,4 +94,36 @@ public class LauncherConfigTest {
         assertEquals("https://dev.mosip.net/registration-client/1.3.0/lib/MANIFEST.MF",
                 config.libManifestUrl("1.3.0"));
     }
+
+    @Test
+    public void load_noFileAtAppRoot_fallsBackToClasspathResource() throws Exception {
+        // configure.sh does NOT ship mosip-application.properties at the app root — it jars it into
+        // registration-services-*.jar as props/mosip-application.properties, which is where AppConfig,
+        // DaoConfig, ClientSetupValidator and ClientIntegrityValidator read it from. Without this
+        // fallback every LauncherConfig.load() on a real install throws NoSuchFileException, which would
+        // take out Case C, the JRE migration and the lib update alike.
+        File absent = new File(folder.getRoot(), "no-such-mosip-application.properties");
+        LauncherConfig config = LauncherConfig.load(absent);
+        assertEquals("https://classpath.mosip.net/registration-client/1.3.0/lib.zip",
+                config.libZipUrl("1.3.0"));
+    }
+
+    @Test
+    public void load_nullFile_fallsBackToClasspathResource() throws Exception {
+        LauncherConfig config = LauncherConfig.load(null);
+        assertEquals("https://classpath.mosip.net/registration-client/1.3.0/lib.zip",
+                config.libZipUrl("1.3.0"));
+    }
+
+    @Test
+    public void load_appRootFileWins_overClasspathResource() throws Exception {
+        // The app-root file stays supported as an operator/test override, and takes precedence.
+        File file = folder.newFile("override-mosip-application.properties");
+        try (OutputStream out = Files.newOutputStream(file.toPath())) {
+            props("https://override.mosip.net").store(out, null);
+        }
+        LauncherConfig config = LauncherConfig.load(file);
+        assertEquals("https://override.mosip.net/registration-client/1.3.0/lib.zip",
+                config.libZipUrl("1.3.0"));
+    }
 }

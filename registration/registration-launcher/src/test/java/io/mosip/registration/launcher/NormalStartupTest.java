@@ -35,6 +35,26 @@ public class NormalStartupTest {
         }
     }
 
+    /**
+     * {@code prepare()} must resolve (and initialize) the client classes on its own, so the entry
+     * point can find out whether the installed {@code lib/} is loadable <b>before</b> it deletes the
+     * rollback tooling. With no client on the test classpath that resolution fails here, not later.
+     */
+    @Test
+    public void prepare_withoutClientOnClasspath_throwsReflectiveOperationException() {
+        String previousUseSystemProxies = System.getProperty("java.net.useSystemProxies");
+        String previousLogbackConfig = System.getProperty("logback.configurationFile");
+        try {
+            NormalStartup.prepare();
+            fail("Expected ReflectiveOperationException when client/JavaFX classes are absent");
+        } catch (ReflectiveOperationException expected) {
+            assertTrue(expected instanceof ClassNotFoundException);
+        } finally {
+            restore("java.net.useSystemProxies", previousUseSystemProxies);
+            restore("logback.configurationFile", previousLogbackConfig);
+        }
+    }
+
     private static void restore(String key, String previous) {
         if (previous == null) {
             System.clearProperty(key);

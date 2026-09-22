@@ -19,15 +19,26 @@ import java.util.Properties;
  * Case C, and the {@code lib/MANIFEST.MF}(+sig) / {@code lib.zip} for step 5).
  * <p>
  * The launcher runs under Java 11 with no access to the services {@code ApplicationContext} / DB, so
- * it reads the same {@code mosip-application.properties} the build writes to the app root:
+ * it reads the same {@code mosip-application.properties} the rest of the client reads:
  * <ul>
  *   <li>{@code mosip.client.upgrade.server.url} — the upgrade-server base (e.g. {@code https://dev.mosip.net})</li>
  *   <li>{@code mosip.reg.client.url} — the registration-client path template (e.g. {@code %s/registration-client/})</li>
  * </ul>
  * Per-version artifacts live under {@code {base}/{version}/...}, matching how {@code configure.sh}
  * publishes them.
+ * <p>
+ * <b>Where that file lives:</b> {@code configure.sh} does <i>not</i> ship it at the app root — it
+ * {@code jar uf}s it into {@code registration-services-*.jar} as {@code props/mosip-application.properties},
+ * which is where {@code AppConfig}, {@code DaoConfig}, {@code ClientSetupValidator} and
+ * {@code ClientIntegrityValidator} all read it from. The launcher therefore reads the same classpath
+ * resource, and only falls back to it after an app-root file, which stays supported as an operator/test
+ * override. Reading a resource out of a jar loads no classes from it, so this is safe under the Java 11
+ * constraint that forbids touching Java 21 client classes.
  */
 public final class LauncherConfig {
+
+    /** Where the build actually puts it: inside {@code registration-services-*.jar} (configure.sh `jar uf`). */
+    private static final String CLASSPATH_PROPERTIES = "props/mosip-application.properties";
 
     private static final String UPGRADE_SERVER_URL = "mosip.client.upgrade.server.url";
     private static final String REG_CLIENT_URL = "mosip.reg.client.url";
@@ -39,13 +50,34 @@ public final class LauncherConfig {
         this.regClientBaseUrl = regClientBaseUrl;
     }
 
-    /** Loads configuration from a properties file (typically {@code mosip-application.properties} in the app root). */
+    /**
+     * Loads configuration from {@code propertiesFile} when that file exists, otherwise from the
+     * {@code props/mosip-application.properties} classpath resource the build packages into
+     * {@code registration-services-*.jar} — the location every other consumer uses, and the only one
+     * present on a real install.
+     *
+     * @param propertiesFile optional app-root override; may be {@code null} or nonexistent
+     * @throws IOException if neither source can be read
+     */
     public static LauncherConfig load(File propertiesFile) throws IOException {
-        try (InputStream in = Files.newInputStream(propertiesFile.toPath())) {
-            Properties props = new Properties();
-            props.load(in);
-            return fromProperties(props);
+        if (propertiesFile != null && propertiesFile.isFile()) {
+            try (InputStream in = Files.newInputStream(propertiesFile.toPath())) {
+                return read(in);
+            }
         }
+        try (InputStream in = LauncherConfig.class.getClassLoader().getResourceAsStream(CLASSPATH_PROPERTIES)) {
+            if (in == null) {
+                throw new IOException("mosip-application.properties not found — neither at "
+                        + propertiesFile + " nor on the classpath as " + CLASSPATH_PROPERTIES);
+            }
+            return read(in);
+        }
+    }
+
+    private static LauncherConfig read(InputStream in) throws IOException {
+        Properties props = new Properties();
+        props.load(in);
+        return fromProperties(props);
     }
 
     public static LauncherConfig fromProperties(Properties props) {

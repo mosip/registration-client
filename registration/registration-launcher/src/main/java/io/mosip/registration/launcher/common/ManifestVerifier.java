@@ -106,6 +106,10 @@ public final class ManifestVerifier {
      * {@code '/'} separators) against the manifest's entry-name set. Any extracted file whose relative
      * path is not an enumerated entry (and not in {@code ignore}) is reported — so a tampered archive
      * cannot hide an extra file under a nested directory where a top-level-only scan would miss it.
+     * <p>
+     * Being the allowlist gate, the walk <b>fails closed</b> on anything it cannot account for: a
+     * directory that cannot be listed and a symbolic link are both reported as unexpected rather than
+     * skipped or followed.
      *
      * @param ignore control files legitimately present in {@code baseDir} but not manifest entries
      *               (e.g. {@code MANIFEST.MF}, {@code MANIFEST.MF.sig}, {@code lib.zip})
@@ -120,20 +124,45 @@ public final class ManifestVerifier {
                                           Set<String> ignore, List<String> unexpected) {
         File[] files = current.listFiles();
         if (files == null) {
+            // listFiles() returns null when the directory cannot be read (I/O error, permissions).
+            // This scan is the allowlist gate, so an unreadable directory must fail CLOSED: report it
+            // instead of silently skipping whatever subtree it hides.
+            String relative = relativize(baseDir, current);
+            LOGGER.warn("Directory could not be listed — treating as unexpected: {}", relative);
+            unexpected.add(relative);
             return;
         }
         for (File file : files) {
+            String relative = relativize(baseDir, file);
+            if (Files.isSymbolicLink(file.toPath())) {
+                // ZipExtractor cannot create a symlink from a zip entry, so one found here was planted
+                // on disk. Following it would escape baseDir, and a link cycle would recurse until
+                // StackOverflowError — an Error that escapes the entry point's catch (Exception)
+                // handlers. Report it, never follow it, so the caller fails closed instead of crashing.
+                LOGGER.warn("Symbolic link under the update root — treating as unexpected: {}", relative);
+                unexpected.add(relative);
+                continue;
+            }
             if (file.isDirectory()) {
                 collectUnexpected(baseDir, file, entries, ignore, unexpected);
                 continue;
             }
-            String relative = baseDir.toPath().relativize(file.toPath()).toString().replace(File.separatorChar, '/');
             if (ignore.contains(relative) || entries.contains(relative)) {
                 continue;
             }
             LOGGER.warn("Unexpected file not listed in manifest: {}", relative);
             unexpected.add(relative);
         }
+    }
+
+    /**
+     * @return {@code file}'s {@code baseDir}-relative path with {@code '/'} separators, or {@code "."}
+     *         when {@code file} is {@code baseDir} itself (an empty relative path would be reported as
+     *         a blank entry).
+     */
+    private static String relativize(File baseDir, File file) {
+        String relative = baseDir.toPath().relativize(file.toPath()).toString().replace(File.separatorChar, '/');
+        return relative.isEmpty() ? "." : relative;
     }
 
     /** @return {@code true} if {@code manifest} lists {@code entryName}. */
