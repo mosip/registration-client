@@ -440,6 +440,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		
 
 		<!-- https://mvnrepository.com/artifact/com.github.jai-imageio/jai-imageio-jpeg2000 -->
 		<!-- Used JP2 to jpg image conversion -->
