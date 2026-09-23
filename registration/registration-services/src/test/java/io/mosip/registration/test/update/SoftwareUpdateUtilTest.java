@@ -1,12 +1,14 @@
 package io.mosip.registration.test.update;
 
 import com.sun.net.httpserver.HttpServer;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.update.SoftwareUpdateUtil;
 import org.junit.*;
 import org.mockito.InjectMocks;
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -377,6 +379,42 @@ public class SoftwareUpdateUtilTest extends SoftwareUpdateUtil {
         });
         server.start();
         return server;
+    }
+
+    /**
+     * A configured 0 must NOT be honoured: HttpURLConnection reads 0 as an infinite read timeout, so a
+     * stalled upgrade server would hang the download thread forever. Only a strictly positive value is
+     * a usable override.
+     */
+    @Test
+    public void getTimeout_nonPositiveConfiguredValue_fallsBackToTheDefault() throws Exception {
+        Method getTimeout =
+                SoftwareUpdateUtil.class.getDeclaredMethod("getTimeout", String.class, int.class);
+        getTimeout.setAccessible(true);
+        String key = "test.timeout.key";
+        try {
+            ApplicationContext.setGlobalConfigValueOf(key, "0");
+            assertEquals("a configured 0 must not become an infinite timeout",
+                    30000, getTimeout.invoke(null, key, 30000));
+
+            ApplicationContext.setGlobalConfigValueOf(key, "-1");
+            assertEquals("a negative value must fall back to the default",
+                    30000, getTimeout.invoke(null, key, 30000));
+
+            ApplicationContext.setGlobalConfigValueOf(key, "not-a-number");
+            assertEquals("an unparseable value must fall back to the default",
+                    30000, getTimeout.invoke(null, key, 30000));
+
+            ApplicationContext.removeGlobalConfigValueOf(key);
+            assertEquals("an absent value must fall back to the default",
+                    30000, getTimeout.invoke(null, key, 30000));
+
+            ApplicationContext.setGlobalConfigValueOf(key, "12345");
+            assertEquals("a positive override must be honoured",
+                    12345, getTimeout.invoke(null, key, 30000));
+        } finally {
+            ApplicationContext.removeGlobalConfigValueOf(key);
+        }
     }
 
     private static String urlFor(HttpServer server) {
