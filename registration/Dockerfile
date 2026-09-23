@@ -55,6 +55,10 @@ ENV work_dir=/home/${container_user}
 
 ADD registration-client/target ./registration-client/target
 
+# _launcher.jar plus the CI-cross-compiled migration.exe / rollback.exe. configure.sh copies all
+# three into target/lib before the manifests are generated, so they are hashed and hosted.
+ADD registration-launcher/target ./registration-launcher/target
+
 ADD registration-test/target ./registration-test/target
 
 ADD registration-test/src/main/resources ./registration-test/resources
@@ -63,12 +67,13 @@ ADD configure.sh configure.sh
 
 # install packages and create user
 RUN apt-get -y update \
-&& apt-get install -y unzip zip nginx \
+&& apt-get install -y unzip zip nginx osslsigncode \
 && groupadd -g ${container_user_gid} ${container_user_group} \
 && useradd -u ${container_user_uid} -g ${container_user_group} -s /bin/bash -m ${container_user} \
 && chmod a+x configure.sh && touch /run/nginx.pid && mkdir -p /var/cache/nginx /var/lib/nginx /var/run /var/log/nginx \
 && rm -f ./registration-client/target/registration-client-*-javadoc.jar \
 && rm -f ./registration-client/target/registration-client-*-sources.jar \
+&& rm -f ./registration-launcher/target/_launcher-*.jar \
 && chown -R ${container_user}:${container_user} /home/${container_user} /var/www /var/lib/nginx /var/cache/nginx /var/run /etc/nginx /var/log/nginx /run/nginx.pid
 
 # select container user for all tasks

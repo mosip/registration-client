@@ -148,18 +148,21 @@ java_cp="${trusted_tools_cp}"
 # root ./MANIFEST.MF (verified by the launcher before it copies/executes them). Placing them in lib/
 # also auto-hosts them under <version>/lib/ via the nginx block below -- the exact path
 # SoftwareUpdateHandler downloads root-manifest entries from (<version>/lib/<basename>).
-# NOTE: requires a Go toolchain on the build box (cross-compiles Windows x64 from Linux CI).
+# The exes are cross-compiled in CI (the Go step in .github/workflows/push-trigger.yml), NOT here:
+# native/ sits at the repo root, outside this image's build context, and baking a Go toolchain into
+# an nginx runtime image to rebuild them on every pod start would cost ~400MB for no benefit. CI
+# writes them into registration-launcher/target/ so they ride the existing build artifact and are
+# ADDed to the image alongside _launcher.jar.
 # ----------------------------------------------------------------------------------------------
-native_src="${work_dir}/../native"          # native/ lives at the repo root (confirm vs CI work_dir)
 lib_dir="${target_dir}/lib"
+launcher_target="${work_dir}/registration-launcher/target"
 
-# migration.exe + rollback.exe : cross-compiled Windows x64, no-JVM (they perform the jre/ swap)
-( cd "${native_src}" \
-  && GOOS=windows GOARCH=amd64 go build -ldflags "-H=windowsgui" -o "${lib_dir}/migration.exe" ./cmd/migration \
-  && GOOS=windows GOARCH=amd64 go build -ldflags "-H=windowsgui" -o "${lib_dir}/rollback.exe"  ./cmd/rollback )
+# migration.exe + rollback.exe : Windows x64, no-JVM (they perform the jre/ swap)
+cp "${launcher_target}/migration.exe" "${lib_dir}/migration.exe"
+cp "${launcher_target}/rollback.exe"  "${lib_dir}/rollback.exe"
 
 # _launcher.jar : the single entry point (registration-launcher module build output)
-cp "${work_dir}/registration-launcher/target/_launcher.jar" "${lib_dir}/_launcher.jar"
+cp "${launcher_target}/_launcher.jar" "${lib_dir}/_launcher.jar"
 
 # Authenticode-sign migration.exe / rollback.exe so Windows/AV accept them. Signed HERE, before both
 # manifests below, so the SIGNED bytes are what gets hashed. This is OS-level trust only: the launcher's
