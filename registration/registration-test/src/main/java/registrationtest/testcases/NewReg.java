@@ -246,11 +246,37 @@ public class NewReg {
     public RID newRegistration(FxRobot robot, String loginUserid, String loginPwd, String supervisorUserid,
             String supervisorUserpwd, Stage applicationPrimaryStage1, String jsonContent, String process,
             String ageGroup, String fileName, ApplicationContext applicationContext) {
+        return newRegistration(robot, loginUserid, loginPwd, supervisorUserid, supervisorUserpwd,
+                applicationPrimaryStage1, jsonContent, process, ageGroup, fileName, applicationContext, false);
+    }
+
+    /**
+     * @param usePreRegistration when true, creates a Pre-Registration ID via {@link registrationtest.api.PreRegistrationClient}
+     *                           before starting New Registration, and fetches it on the demographic page
+     *                           (only takes effect on screens whose process definition has preRegFetchRequired=true).
+     */
+    public RID newRegistration(FxRobot robot, String loginUserid, String loginPwd, String supervisorUserid,
+            String supervisorUserpwd, Stage applicationPrimaryStage1, String jsonContent, String process,
+            String ageGroup, String fileName, ApplicationContext applicationContext, boolean usePreRegistration) {
+
+        ExtentReportUtil.test1 = ExtentReportUtil.reports
+                .createTest("New Registration Scenario : " + process + " FileName : " + fileName);
+
+        String preRegistrationId = null;
+        if (usePreRegistration) {
+            try {
+                preRegistrationId = registrationtest.api.PreRegistrationClient.createPreRegistration(ageGroup);
+            } catch (RuntimeException e) {
+                logger.error("Pre-Registration creation failed", e);
+                ExtentReportUtil.test1.log(Status.FAIL, "Pre-Registration creation failed: " + e.getMessage());
+                ExtentReportUtil.reports.flush();
+                rid1 = null;
+                return rid1;
+            }
+        }
 
         try {
             logger.info("New Adult Registration Scenario : " + process + " FileName : " + fileName);
-            ExtentReportUtil.test1 = ExtentReportUtil.reports
-                    .createTest("New Registration Scenario : " + process + " FileName : " + fileName);
 
             loginPage = new LoginPage(robot);
             buttons = new Buttons(robot);
@@ -292,7 +318,7 @@ public class NewReg {
                 buttons.clicksubmitBtn();
             }
 
-            webViewDocument = demographicPage.screensFlow(jsonContent, process, ageGroup);
+            webViewDocument = demographicPage.screensFlow(jsonContent, process, ageGroup, preRegistrationId);
 
             buttons.clickNextBtn();
 
