@@ -1,7 +1,9 @@
 { "identity" : {
 	"ageGroup":"ADULT",
 	"process":"New",
-	"previewTests":["qrCode","applicationId","dateTime","demographics","documents","bioExceptions"],
+	"previewTests":["qrCode","applicationId","demographics","documents","biometrics","bioExceptions"],
+	"ackTests":["qrCode","applicationId","dateTime","demographics","documents","biometrics","bioExceptions"],
+	"verifyBioAfterSkipPOE":"Y",
 	"preferredLang":"English",
 	"documentUploadAttributes":["POB","POA","POI"],
 	   "profile":"Default",
