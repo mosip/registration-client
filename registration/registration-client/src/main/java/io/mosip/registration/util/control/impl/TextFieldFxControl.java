@@ -32,6 +32,7 @@ import io.mosip.registration.util.common.DemographicChangeActionHandler;
 import io.mosip.registration.util.control.FxControl;
 import javafx.collections.ObservableList;
 import javafx.scene.Cursor;
+import javafx.animation.PauseTransition;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Hyperlink;
@@ -47,6 +48,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.Duration;
 
 /**
  * @author YASWANTH S
@@ -60,6 +62,9 @@ public class TextFieldFxControl extends FxControl {
 	private static final Logger LOGGER = AppConfig.getLogger(TextFieldFxControl.class);
 
 	private static String loggerClassName = " Text Field Control Type Class";
+
+	private static final Duration REFRESH_DELAY = Duration.millis(120);
+	private final PauseTransition refreshDelay = new PauseTransition(REFRESH_DELAY);
 
 	private Validations validation;
 	
@@ -77,6 +82,7 @@ public class TextFieldFxControl extends FxControl {
 	private GenericController genericController;
 	
 	public TextFieldFxControl() {
+		refreshDelay.setOnFinished(event -> refreshFields());
 		ApplicationContext applicationContext = ClientApplication.getApplicationContext();
 		validation = applicationContext.getBean(Validations.class);
 		fxComponents = applicationContext.getBean(FXComponents.class);
@@ -147,9 +153,9 @@ public class TextFieldFxControl extends FxControl {
 			} else {
 				getRegistrationDTo().getDemographics().remove(this.uiFieldDTO.getId());
 			}
-			LOGGER.info("invoked from Listener {}",uiFieldDTO.getId());
+			LOGGER.debug("invoked from Listener {}",uiFieldDTO.getId());
 			// Group level visibility listeners
-			refreshFields();
+			refreshDelay.playFromStart();
 		});
 	}
 

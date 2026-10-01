@@ -15,7 +15,6 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.VirtualKeyboardKeys;
 import io.mosip.registration.controller.reg.RegistrationController;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.BooleanProperty;
@@ -64,8 +63,6 @@ public class VirtualKeyboard {
 
 	private ResourceBundle keyboard = null;
 	
-	private KeyEvent keyEvent;
-
 	private Stage parentStage;
 	
 	public VirtualKeyboard(String langCode) {
@@ -406,77 +403,52 @@ public class VirtualKeyboard {
 	}
 
 	public void changeControlOfKeyboard(TextField textField) {
-		textField.setOnKeyPressed(new EventHandler<Event>() {
-			@Override
-			public void handle(Event event) {
-				if (!vkType.toString().contains("vk")) {
-					KeyEvent e = ((KeyEvent) event);
-					if (e.getCode().getName().equals("Caps Lock")) {
-						if (capsLock) {
-							capsLock = false;
-						} else {
-							capsLock = true;
-						}
-					}
-					if (e.getCode().getName().equals("Shift")) {
-						keyEvent = e;
-					}					
-					
-					textField.setOnKeyReleased(new EventHandler<KeyEvent>() {
-			            @Override
-			            public void handle(KeyEvent event) {
-			                switch (event.getCode()) {			                   
-			                    case SHIFT:
-			                    	keyEvent = null;
-							default:
-								break;
-			                }
-			            }
-			        });
-					
-					String key;
-					if (capsLock || (keyEvent != null ? keyEvent.getCode() != null && keyEvent.getCode().getName() != null && keyEvent.getCode().getName().equals("Shift") : false)) {
-						try {
-							key = keyboard.getString("shift_" + e.getCode().getName().replaceAll("\\s", ""));
-						} catch (MissingResourceException exception) {
-							LOGGER.error("Virtual Keyboard", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-									exception.getMessage());
-							key = null;
-						}
-						if (key != null) {
-							textField.fireEvent(new KeyEvent(KeyEvent.KEY_TYPED, key, e.getCode().getName(),
-									e.getCode(), false, false, false, false));
-							textField.setEditable(false);
-						}
-					} else {
-						try {
-							key = keyboard.getString("unshift_" + e.getCode().getName().replaceAll("\\s", ""));
-						} catch (MissingResourceException exception) {
-							LOGGER.error("Virtual Keyboard", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-									exception.getMessage());
-							key = null;
-						}
-						if (key != null) {
-							textField.fireEvent(new KeyEvent(KeyEvent.KEY_TYPED, key, e.getCode().getName(),
-									e.getCode(), false, false, false, false));
-							textField.setEditable(false);
-						}
-					}
+		final StringBuilder mappedPhysicalKey = new StringBuilder();
+
+		textField.setOnKeyPressed(event -> {
+			if (vkType.toString().contains("vk")) {
+				return;
+			}
+
+			mappedPhysicalKey.setLength(0);
+
+			if (event.getCode() == KeyCode.CAPS) {
+				capsLock = !capsLock;
+				return;
+			}
+
+			if (event.isControlDown() || event.isAltDown() || event.isMetaDown()) {
+				return;
+			}
+
+			try {
+				String prefix = (capsLock || event.isShiftDown()) ? "shift_" : "unshift_";
+				String key = keyboard.getString(prefix + event.getCode().getName().replaceAll("\\s", ""));
+				if (key != null) {
+					mappedPhysicalKey.append(key);
 				}
+			} catch (MissingResourceException exception) {
+				mappedPhysicalKey.setLength(0);
 			}
 		});
 
-		textField.textProperty().addListener(new ChangeListener<String>() {
-			@Override
-			public void changed(final ObservableValue<? extends String> obsVal, final String oldValue,
-					final String newValue) {
-				Platform.runLater(() -> {
-					textField.setEditable(true);
-				});
+		textField.addEventFilter(KeyEvent.KEY_TYPED, event -> {
+			if (vkType.toString().contains("vk")
+					|| event.isControlDown()
+					|| event.isAltDown()
+					|| event.isMetaDown()) {
+				return;
+			}
 
+			if (mappedPhysicalKey.length() > 0) {
+				String key = mappedPhysicalKey.toString();
+				mappedPhysicalKey.setLength(0);
+				event.consume();
+				textField.replaceSelection(key);
 			}
 		});
 
+		textField.setOnKeyReleased(event -> mappedPhysicalKey.setLength(0));
 	}
 
 	public void focusListener(TextField field, double y, Node keyboardNode) {

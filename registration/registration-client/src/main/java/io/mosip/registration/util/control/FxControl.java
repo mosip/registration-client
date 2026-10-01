@@ -153,15 +153,19 @@ public abstract class FxControl  {
 					break;
 			}
 		}
-		visible(this.node, isFieldVisible(uiFieldDTO));
+		visible(this.node, isFieldVisible);
 	}
 
 	/**
 	 * Hide the field
 	 */
 	public void visible(Node node, boolean isVisible) {
-		node.setVisible(isVisible);
-		node.setManaged(isVisible);
+		if (node.isVisible() != isVisible) {
+			node.setVisible(isVisible);
+		}
+		if (node.isManaged() != isVisible) {
+			node.setManaged(isVisible);
+		}
 	}
 
 	/**
