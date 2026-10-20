@@ -5,8 +5,7 @@
  */
 package io.mosip.registration.launcher;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.mosip.registration.launcher.common.LauncherLog;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +32,7 @@ import static io.mosip.registration.launcher.MigrationArtifacts.FILE_RUN_BAT_BAC
  */
 public final class MigrationCleaner {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MigrationCleaner.class);
+    private static final LauncherLog LOGGER = LauncherLog.get(MigrationCleaner.class);
 
     // jre21_temp.partial/ is listed too: a run interrupted mid-unzip leaves one behind, and nothing
     // else reclaims it once the migration has completed -- it would sit there as ~200MB of dead

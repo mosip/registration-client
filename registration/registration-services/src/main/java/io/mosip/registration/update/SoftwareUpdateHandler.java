@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -44,16 +44,16 @@ import io.micrometer.core.annotation.Counted;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.FileUtils;
-import io.mosip.kernel.logger.logback.util.MetricTag;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.AuditEvent;
 import io.mosip.registration.constants.AuditReferenceIdTypes;
 import io.mosip.registration.constants.Components;
-import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
+import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.ResponseDTO;
+import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.VersionMappings;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.BaseService;
@@ -117,66 +117,114 @@ public class SoftwareUpdateHandler extends BaseService {
 	private String serverMosipXmlFileUrl;
 
 	@Autowired
-	private JdbcTemplate jdbcTemplate;
-
-	@Autowired
 	private GlobalParamService globalParamService;
 	
 	@Autowired
 	private AuditManagerService auditFactory;
 
+	// ---------------------------------------------------------------------------------------------------
+	// Local DB upgrade (version-mapped sql/<dbVersion>/ scripts).
+	//
+	// Static and plain JDBC on purpose: it runs from DaoConfig.entityManagerFactory(), after the datasource
+	// is up but BEFORE Hibernate and any JPA-backed bean exists. Beans may query the schema while the Spring
+	// context is still being created (the keymanager library's PartnerCertificateManagerServiceImpl reads
+	// CA_CERT_STORE.CA_CERT_TYPE in its init method), so an upgrade run once the context is up never gets
+	// the chance on a database that still needs it. This bean instance cannot be used there either: through
+	// BaseService it depends on JPA services, which depend on the entityManagerFactory being built.
+	// ---------------------------------------------------------------------------------------------------
 
-	public ResponseDTO updateDerbyDB() {
-		getCurrentVersion();
+	private static final String UPDATE_GLOBAL_PARAM = "UPDATE REG.GLOBAL_PARAM SET VAL = ?, NAME = ?, IS_ACTIVE = TRUE, "
+			+ "UPD_BY = ?, UPD_DTIMES = ? WHERE CODE = ? AND LANG_CODE = ?";
+	private static final String INSERT_GLOBAL_PARAM = "INSERT INTO REG.GLOBAL_PARAM (CODE, NAME, VAL, TYP, LANG_CODE, "
+			+ "IS_ACTIVE, CR_BY, CR_DTIMES, UPD_BY, UPD_DTIMES) VALUES (?, ?, ?, ?, ?, TRUE, ?, ?, ?, ?)";
+
+	// Inputs of the run in progress; the static counterparts of the jdbcTemplate/backUpPath the instance code uses.
+	private static JdbcTemplate dbJdbcTemplate;
+	private static File dbAppRoot;
+	private static String dbBackUpPath;
+
+	private static boolean dbUpgradeRan;
+	private static ResponseDTO dbUpgradeResult;
+
+	/**
+	 * Runs the pending DB upgrade scripts, once per process; later calls return the first outcome.
+	 *
+	 * @param jdbcTemplate template over the (already booted) local database
+	 * @param appRoot      application root holding MANIFEST.MF, lib/, db/, bin/
+	 * @param backUpPath   backup folder (mosip.reg.rollback.path), relative to appRoot
+	 * @return null when nothing needed upgrading, otherwise a success or error response
+	 */
+	public static synchronized ResponseDTO upgradeLocalDatabase(JdbcTemplate jdbcTemplate, File appRoot, String backUpPath) {
+		if (!dbUpgradeRan) {
+			dbJdbcTemplate = jdbcTemplate;
+			dbAppRoot = appRoot;
+			dbBackUpPath = backUpPath;
+			dbUpgradeResult = updateDerbyDB();
+			dbUpgradeRan = true;
+		}
+		return dbUpgradeResult;
+	}
+
+	/** Outcome of {@link #upgradeLocalDatabase}; null when nothing needed upgrading (or it has not run). */
+	public static synchronized ResponseDTO getLocalDatabaseUpgradeResult() {
+		return dbUpgradeResult;
+	}
+
+	private static ResponseDTO updateDerbyDB() {
+		String currentVersion = readManifestVersion();
 		String version = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SERVICES_VERSION_KEY);
 		LOGGER.info("Inside updateDerbyDB currentVersion: {} and {} : {}", currentVersion,
 				RegistrationConstants.SERVICES_VERSION_KEY, version);
-		
-		Map<String, VersionMappings> versionMappings = new LinkedHashMap<>();
-		try {
-			versionMappings = getVersionMappings();
-		} catch (RegBaseCheckedException exception) {
-			return setErrorResponse(new ResponseDTO(), RegistrationConstants.VERSION_MAPPINGS_ERROR, null);
-		}
-		
-		if (version.isEmpty() || version.equals("0")) {
-			version = setupPreviousVersion(version, versionMappings);	
-		}
-		
-		if(version != null && !version.trim().equals("0") && currentVersion != null && !currentVersion.equalsIgnoreCase(version)) {
-			return executeSqlFile(version, versionMappings);
-		}
-		return null;
-	}
-	
-	private Map<String, VersionMappings> getVersionMappings() throws RegBaseCheckedException {
-		Map<String, VersionMappings> versionMappings = new LinkedHashMap<>();
+
+		Map<String, VersionMappings> versionMappings;
 		try {
 			versionMappings = getSortedVersionMappings(RegistrationConstants.VERSION_MAPPINGS_KEY);
 		} catch (Exception exception) {
 			LOGGER.error("Exception in parsing the version-mappings: ", exception);
-			throw new RegBaseCheckedException(); 
+			return addDbUpgradeError(new ResponseDTO(), RegistrationConstants.VERSION_MAPPINGS_ERROR);
 		}
-		return versionMappings;
+
+		if (version == null || version.isEmpty() || version.equals("0")) {
+			version = setupPreviousVersion(version, versionMappings);
+		}
+
+		if (version != null && !version.trim().equals("0") && currentVersion != null
+				&& !currentVersion.equalsIgnoreCase(version)) {
+			return executeSqlFile(currentVersion, version, versionMappings);
+		}
+		return null;
 	}
 
-	private String setupPreviousVersion(String version, Map<String, VersionMappings> versionMappings) {
-		File file = FileUtils.getFile(backUpPath);
-		LOGGER.info("Backup Path found: ", file.exists());		
+	private static String readManifestVersion() {
+		File localManifestFile = dbFile(manifestFile);
+		if (!localManifestFile.exists()) {
+			LOGGER.error("Local manifest not found: {}", localManifestFile.getAbsolutePath());
+			return null;
+		}
+		try (FileInputStream inputStream = new FileInputStream(localManifestFile)) {
+			return new Manifest(inputStream).getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
+		} catch (IOException exception) {
+			LOGGER.error("Failed to read the local manifest", exception);
+			return null;
+		}
+	}
+
+	private static String setupPreviousVersion(String version, Map<String, VersionMappings> versionMappings) {
+		File file = dbFile(dbBackUpPath);
+		LOGGER.info("Backup Path found: {}", file.exists());
 		if (!file.exists()) {
-			LOGGER.info("Backup folder not found, returning the version as the same: ", version);
+			LOGGER.info("Backup folder not found, returning the version as the same: {}", version);
 			return version;
 		}
 		Map<Integer, String> backupVersions = new TreeMap<>(Collections.reverseOrder());
-		for (File backUpFolder : file.listFiles()) {
-			File localManifestFile = new File(backUpFolder.getAbsolutePath() + RegistrationConstants.MANIFEST_PATH);
+		File[] backUpFolders = file.listFiles();
+		for (File backUpFolder : backUpFolders == null ? new File[0] : backUpFolders) {
+			File localManifestFile = new File(backUpFolder, manifestFile);
 			if (localManifestFile.exists()) {
 				try (FileInputStream inputStream = new FileInputStream(localManifestFile)) {
-					Manifest manifest = new Manifest(inputStream);
-					String backupVersion = manifest.getMainAttributes().getValue(Attributes.Name.MANIFEST_VERSION);
-					// Looping through all the available manifest versions in backup folder and
-					// preparing a map with key as releaseOrder from version-mappings and value as
-					// manifest version
+					String backupVersion = new Manifest(inputStream).getMainAttributes()
+							.getValue(Attributes.Name.MANIFEST_VERSION);
+					// Key the backups by releaseOrder so the highest one is the latest previous version.
 					if (versionMappings.containsKey(backupVersion)) {
 						backupVersions.put(versionMappings.get(backupVersion).getReleaseOrder(), backupVersion);
 					}
@@ -186,14 +234,243 @@ public class SoftwareUpdateHandler extends BaseService {
 			}
 		}
 		if (!backupVersions.isEmpty()) {
-			// Since we have used treemap with reverse order, the backupVersions map will be
-			// in descending order. The top most entry is considered as the
-			// latest previous version.
 			return backupVersions.entrySet().iterator().next().getValue();
 		}
 		return version;
 	}
 
+	private static ResponseDTO executeSqlFile(String currentVersion, String previousVersion,
+			Map<String, VersionMappings> versionMappings) {
+		LOGGER.info("DB-Script files execution started from previous version : {} , To Current Version : {}",
+				previousVersion, currentVersion);
+
+		// Only the versions released after the previous one need their scripts run.
+		if (versionMappings.containsKey(previousVersion)) {
+			Integer previousVersionReleaseOrder = versionMappings.get(previousVersion).getReleaseOrder();
+			versionMappings.entrySet().removeIf(versionMapping -> versionMapping.getValue().getReleaseOrder() <= previousVersionReleaseOrder);
+		}
+
+		ResponseDTO responseDTO = new ResponseDTO();
+		List<String> fullSyncEntitiesList = new ArrayList<>();
+
+		for (Entry<String, VersionMappings> entry : versionMappings.entrySet()) {
+			try {
+				LOGGER.info("DB Script files execution started for the version : {}", entry.getKey());
+				executeSQL(entry.getValue().getDbVersion(), previousVersion);
+				// Backing up the DB with ongoing upgrade version name
+				String date = new Timestamp(System.currentTimeMillis()).toString().replace(":", "-") + "Z";
+				dbUpgradeBackUpSetup(new File(dbFile(dbBackUpPath), entry.getKey() + "_" + date));
+				previousVersion = entry.getKey();
+				saveGlobalParam(RegistrationConstants.SERVICES_VERSION_KEY, entry.getKey());
+				String fullSyncEntities = entry.getValue().getFullSyncEntities();
+				if (fullSyncEntities != null && !fullSyncEntities.isBlank()) {
+					fullSyncEntitiesList.add(fullSyncEntities);
+				}
+			} catch (Throwable exception) {
+				LOGGER.error("Error while executing SQL files for upgrade : ", exception);
+				responseDTO = rollBack(responseDTO);
+				addDbUpgradeError(responseDTO, RegistrationConstants.SQL_EXECUTION_FAILURE);
+				return responseDTO;
+			}
+		}
+
+		if (!fullSyncEntitiesList.isEmpty()) {
+			LOGGER.info("Saving the list of fullSyncEntities mentioned in version-mappings..");
+			saveGlobalParam(RegistrationConstants.UPGRADE_FULL_SYNC_ENTITIES, String.join(",", fullSyncEntitiesList));
+		}
+		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
+		successResponseDTO.setCode(RegistrationConstants.ALERT_INFORMATION);
+		successResponseDTO.setMessage(RegistrationConstants.SQL_EXECUTION_SUCCESS);
+		responseDTO.setSuccessResponseDTO(successResponseDTO);
+		LOGGER.info("DB-Script files execution completed");
+		return responseDTO;
+	}
+
+	private static ResponseDTO rollBack(ResponseDTO responseDTO) {
+		try {
+			String backupPath = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SOFTWARE_BACKUP_FOLDER);
+			if (backupPath != null) {
+				dbUpgradeRollBackSetup(new File(backupPath));
+			}
+			addDbUpgradeError(responseDTO, RegistrationConstants.BACKUP_PREVIOUS_SUCCESS);
+		} catch (Throwable exception) {
+			LOGGER.error("Failed to execute db rollback scripts", exception);
+		}
+		return responseDTO;
+	}
+
+	private static void executeSQL(String dbVersion, String previousVersion) throws RegBaseCheckedException {
+		boolean isExecutionSuccess = false;
+		boolean isRollBackSuccess = false;
+		try {
+			LOGGER.info("Checking Started : " + dbVersion + SLASH + exectionSqlFile);
+			execute(SQL + SLASH + dbVersion + SLASH + exectionSqlFile);
+			isExecutionSuccess = true;
+			LOGGER.info("Checking completed : " + dbVersion + SLASH + exectionSqlFile);
+		} catch (RuntimeException | IOException exception) {
+			LOGGER.error("Failed to execute db upgrade scripts", exception);
+		}
+		if (!isExecutionSuccess) {
+			try {
+				LOGGER.info("Rollback started : " + dbVersion + SLASH + rollBackSqlFile);
+				execute(SQL + SLASH + dbVersion + SLASH + rollBackSqlFile);
+				isRollBackSuccess = true;
+				LOGGER.info("Rollback completed : " + dbVersion + SLASH + rollBackSqlFile);
+			} catch (RuntimeException | IOException exception) {
+				LOGGER.error("Failed to execute db rollback scripts", exception);
+			}
+
+			if (!isRollBackSuccess) {
+				LOGGER.info("Trying to rollback DB from the backup folder as rollback scripts failed for the version: " + dbVersion);
+				dbRollBackSetup(previousVersion);
+			}
+			throw new RegBaseCheckedException();
+		}
+	}
+
+	private static void dbRollBackSetup(String previousVersion) {
+		LOGGER.info("Replacing DB backup started for the version: " + previousVersion);
+		File file = dbFile(dbBackUpPath);
+		LOGGER.info("Backup Path found : " + file.exists());
+
+		if (!file.exists()) {
+			LOGGER.info("Backup folder not found, db backup stopped");
+			return;
+		}
+
+		File[] backUpFolders = file.listFiles();
+		for (File backUpFolder : backUpFolders == null ? new File[0] : backUpFolders) {
+			if (backUpFolder.getName().contains(previousVersion)) {
+				try {
+					FileUtils.copyDirectory(new File(backUpFolder, dbFolder), dbFile(dbFolder));
+					LOGGER.info("Replacing DB backup completed for the version: " + previousVersion);
+				} catch (Exception exception) {
+					LOGGER.error("Exception in backing up the DB folder: ", exception);
+				}
+				break;
+			}
+		}
+	}
+
+	private static void execute(String path) throws IOException {
+		try (InputStream inputStream = SoftwareUpdateHandler.class.getClassLoader().getResourceAsStream(path)) {
+			LOGGER.info(inputStream != null ? path + " found" : path + " Not Found");
+			if (inputStream != null) {
+				runSqlFile(inputStream);
+			}
+		}
+	}
+
+	private static void runSqlFile(InputStream inputStream) throws IOException {
+		LOGGER.info("Execution started sql file");
+		try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+			StringBuilder sb = new StringBuilder();
+			String str;
+			while ((str = bufferedReader.readLine()) != null) {
+				sb.append(str + "\n ");
+			}
+			for (String statement : sb.toString().split(";")) {
+				// Derby rejects a statement that is only comments ("Syntax error: Encountered <EOF>"), which is
+				// all a no-change script such as sql/1.2.0.2 holds. A comment ahead of real SQL is accepted.
+				if (!isBlankOrCommentOnly(statement)) {
+					LOGGER.info("Executing Statment : " + statement);
+					dbJdbcTemplate.execute(statement);
+				}
+			}
+		}
+		LOGGER.info("Execution completed sql file");
+	}
+
+	private static boolean isBlankOrCommentOnly(String statement) {
+		for (String line : statement.split("\n")) {
+			String trimmed = line.trim();
+			if (!trimmed.isEmpty() && !trimmed.startsWith("--")) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/** backUpSetup() for the DB upgrade: the same backup, but the folder is recorded over JDBC. */
+	private static void dbUpgradeBackUpSetup(File backUpFolder) throws io.mosip.kernel.core.exception.IOException {
+		LOGGER.info("Backup of current version started {}", backUpFolder);
+		File lib = new File(backUpFolder, libFolder);
+		lib.mkdirs();
+		File db = new File(backUpFolder, dbFolder);
+		db.mkdirs();
+
+		// Installs from reg-client.zip have no bin/, and copyDirectory throws on a missing source.
+		File binSource = dbFile(binFolder);
+		if (binSource.exists()) {
+			FileUtils.copyDirectory(binSource, new File(backUpFolder, binFolder));
+		}
+		FileUtils.copyDirectory(dbFile(libFolder), lib);
+		FileUtils.copyDirectory(dbFile(dbFolder), db);
+		FileUtils.copyFile(dbFile(manifestFile), new File(backUpFolder, manifestFile));
+
+		File[] backups = dbFile(dbBackUpPath).listFiles();
+		for (File backUpFile : backups == null ? new File[0] : backups) {
+			if (!backUpFile.getAbsolutePath().equals(backUpFolder.getAbsolutePath())) {
+				FileUtils.deleteDirectory(backUpFile);
+			}
+		}
+
+		saveGlobalParam(RegistrationConstants.SOFTWARE_BACKUP_FOLDER, backUpFolder.getAbsolutePath());
+		LOGGER.info("Backup of current version completed at {}", backUpFolder.getAbsolutePath());
+	}
+
+	/** rollBackSetup() for the DB upgrade, resolving against the app root it was given. */
+	private static void dbUpgradeRollBackSetup(File backUpFolder) throws io.mosip.kernel.core.exception.IOException {
+		LOGGER.info("Replacing Backup of current version started");
+		if (backUpFolder.exists()) {
+			File binBackup = new File(backUpFolder, binFolder);
+			if (binBackup.exists()) {
+				FileUtils.copyDirectory(binBackup, dbFile(binFolder));
+			}
+			FileUtils.copyDirectory(new File(backUpFolder, libFolder), dbFile(libFolder));
+			FileUtils.copyFile(new File(backUpFolder, manifestFile), dbFile(manifestFile));
+		}
+		LOGGER.info("Replacing Backup of current version completed");
+	}
+
+	/**
+	 * The JDBC equivalent of GlobalParamService.update, which is JPA-backed and so unavailable here: update
+	 * the row, or insert it when missing, and mirror the value into the application map.
+	 */
+	private static void saveGlobalParam(String code, String val) {
+		if (code == null || val == null) {
+			LOGGER.error("Not Update global param because of code or val is null value");
+			return;
+		}
+		Timestamp now = Timestamp.valueOf(DateUtils.getUTCCurrentDateTime());
+		int updated = dbJdbcTemplate.update(UPDATE_GLOBAL_PARAM, val, code, RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM,
+				now, code, RegistrationConstants.ENGLISH_LANG_CODE);
+		if (updated == 0) {
+			dbJdbcTemplate.update(INSERT_GLOBAL_PARAM, code, code, val, RegistrationConstants.CONFIGURATION,
+					RegistrationConstants.ENGLISH_LANG_CODE, RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM, now,
+					RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM, now);
+		}
+		ApplicationContext.setGlobalConfigValueOf(code, val);
+	}
+
+	private static ResponseDTO addDbUpgradeError(ResponseDTO response, String message) {
+		List<ErrorResponseDTO> errorResponses = response.getErrorResponseDTOs() != null
+				? response.getErrorResponseDTOs()
+				: new LinkedList<>();
+		ErrorResponseDTO errorResponse = new ErrorResponseDTO();
+		errorResponse.setCode(RegistrationConstants.ERROR);
+		errorResponse.setMessage(message);
+		errorResponses.add(errorResponse);
+		response.setErrorResponseDTOs(errorResponses);
+		return response;
+	}
+
+	private static File dbFile(String path) {
+		File file = new File(path);
+		return file.isAbsolute() ? file : new File(dbAppRoot, path);
+	}
+
+	// --------------------------------------- end of local DB upgrade ---------------------------------------
 
 	/**
 	 * It will check whether any software updates are available or not.
@@ -525,9 +802,8 @@ public class SoftwareUpdateHandler extends BaseService {
 
 	private void backUpSetup(File backUpFolder) throws io.mosip.kernel.core.exception.IOException {
 		LOGGER.info("Backup of current version started {}", backUpFolder);
-		// bin backup folder
+		// bin backup folder -- created by copyDirectory only when bin/ exists, so rollBackSetup can tell
 		File bin = new File(backUpFolder.getAbsolutePath() + SLASH + binFolder);
-		bin.mkdirs();
 
 		// lib backup folder
 		File lib = new File(backUpFolder.getAbsolutePath() + SLASH + libFolder);
@@ -540,7 +816,12 @@ public class SoftwareUpdateHandler extends BaseService {
 		// manifest backup file
 		File manifest = new File(backUpFolder.getAbsolutePath() + SLASH + manifestFile);
 
-		FileUtils.copyDirectory(new File(binFolder), bin);
+		// reg-client.zip ships no bin/, and copyDirectory throws on a missing source, which used to
+		// abort every upgrade of a fresh install before anything was downloaded.
+		File binSource = new File(binFolder);
+		if (binSource.exists()) {
+			FileUtils.copyDirectory(binSource, bin);
+		}
 		FileUtils.copyDirectory(new File(libFolder), lib);
 		FileUtils.copyDirectory(new File(dbFolder), db);
 		FileUtils.copyFile(new File(manifestFile), manifest);
@@ -620,195 +901,13 @@ public class SoftwareUpdateHandler extends BaseService {
 		return new Timestamp(calendar.getTime().getTime());
 	}
 
-	/**
-	 * This method will check whether any updation needs to be done in the DB
-	 * structure.
-	 * <p>
-	 * If there is any updates available:
-	 * </p>
-	 * <p>
-	 * Take the back-up of the current DB
-	 * </p>
-	 * <p>
-	 * Run the Update queries from the sql file, which is downloaded from the server
-	 * and available in the local
-	 * </p>
-	 * <p>
-	 * If there is any error occurs during the update,then the rollback query will
-	 * run from the sql file
-	 * </p>
-	 * 
-	 * @param actualLatestVersion
-	 *            latest version
-	 * @param previousVersion
-	 *            previous version
-	 * @param versionMappings 
-	 * @return response of sql execution
-	 * @throws IOException
-	 */
-	@Counted(recordFailuresOnly = true)
-	public ResponseDTO executeSqlFile(@MetricTag("oldversion") String previousVersion, Map<String, VersionMappings> versionMappings) {
-
-		LOGGER.info("DB-Script files execution started from previous version : {} , To Current Version : {}", previousVersion, currentVersion);
-		
-		/*
-		 * Here, we are removing the entries from version-mappings map, for which, the
-		 * releaseOrder is less than or equal to the previous version, because, we need
-		 * to execute the upgrade scripts only for the versions released after the
-		 * previous version.
-		 */
-		if (versionMappings.containsKey(previousVersion)) {
-			Integer previousVersionReleaseOrder = versionMappings.get(previousVersion).getReleaseOrder();
-			versionMappings.entrySet().removeIf(versionMapping -> versionMapping.getValue().getReleaseOrder() <= previousVersionReleaseOrder);
-		}
-
-		ResponseDTO responseDTO = new ResponseDTO();
-
-		List<String> fullSyncEntitiesList = new ArrayList<>();
-		
-		for (Entry<String, VersionMappings> entry : versionMappings.entrySet()) {
-			try {
-				LOGGER.info("DB Script files execution started for the version : " + entry.getKey());				
-				executeSQL(entry.getValue().getDbVersion(), previousVersion);
-				//Backing up the DB with ongoing upgrade version name
-				String date = new Timestamp(System.currentTimeMillis()).toString().replace(":", "-") + "Z";
-				File backupFolder = new File(backUpPath + SLASH + entry.getKey() + "_" + date);
-				backUpSetup(backupFolder);
-				previousVersion = entry.getKey();
-				// Update global param with current version
-				globalParamService.update(RegistrationConstants.SERVICES_VERSION_KEY, entry.getKey());
-				String fullSyncEntities = entry.getValue().getFullSyncEntities();
-				if (fullSyncEntities != null && !fullSyncEntities.isBlank()) {
-					fullSyncEntitiesList.add(fullSyncEntities);
-				}
-			} catch (Throwable exception) {
-				LOGGER.error("Error while executing SQL files for upgrade : ", exception);
-				// Replace with backup
-				responseDTO = rollBack(responseDTO);
-				// Prepare Error Response
-				setErrorResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_FAILURE, null);
-				return responseDTO;
-			}
-		}
-		
-		if (!fullSyncEntitiesList.isEmpty()) {
-			LOGGER.info("Saving the list of fullSyncEntities mentioned in version-mappings..");			
-			globalParamService.update(RegistrationConstants.UPGRADE_FULL_SYNC_ENTITIES, String.join(",", fullSyncEntitiesList));
-		}
-		setSuccessResponse(responseDTO, RegistrationConstants.SQL_EXECUTION_SUCCESS, null);
-		LOGGER.info("DB-Script files execution completed");
-		return responseDTO;
-	}
-	
-	private ResponseDTO rollBack(ResponseDTO responseDTO) {
-		try {
-			String backupPath = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SOFTWARE_BACKUP_FOLDER);
-			if (backupPath != null) {
-				rollBackSetup(new File(backupPath));
-				globalParamService.update(RegistrationConstants.SOFTWARE_BACKUP_FOLDER, null);
-			}
-			setErrorResponse(responseDTO, RegistrationConstants.BACKUP_PREVIOUS_SUCCESS, null);
-		} catch (Throwable exception) {
-			LOGGER.error("Failed to execute db rollback scripts", exception);
-		}	
-		return responseDTO;
-	}
-
-	private void executeSQL(String dbVersion, String previousVersion) throws RegBaseCheckedException {
-		boolean isExecutionSuccess = false;
-		boolean isRollBackSuccess = false;
-		try {
-			LOGGER.info("Checking Started : " + dbVersion + SLASH + exectionSqlFile);
-			execute(SQL + SLASH + dbVersion + SLASH + exectionSqlFile);
-			isExecutionSuccess = true;
-			LOGGER.info("Checking completed : " + dbVersion + SLASH + exectionSqlFile);
-		} catch (RuntimeException | IOException exception) {		
-			LOGGER.error("Failed to execute db upgrade scripts", exception);			
-		}
-		if (!isExecutionSuccess) {
-			// ROLL BACK QUERIES
-			try {
-				LOGGER.info("Rollback started : " + dbVersion + SLASH + rollBackSqlFile);
-				execute(SQL + SLASH + dbVersion + SLASH + rollBackSqlFile);
-				isRollBackSuccess = true;
-				LOGGER.info("Rollback completed : " + dbVersion + SLASH + rollBackSqlFile);
-			} catch (RuntimeException | IOException exception) {
-				LOGGER.error("Failed to execute db rollback scripts", exception);
-			}
-
-			if (!isRollBackSuccess) {
-				LOGGER.info("Trying to rollback DB from the backup folder as rollback scripts failed for the version: " + dbVersion);			
-				dbRollBackSetup(previousVersion);
-			}
-			throw new RegBaseCheckedException();
-		}
-	}
-	
-	private void dbRollBackSetup(String previousVersion) {
-		LOGGER.info("Replacing DB backup started for the version: " + previousVersion);	
-		File file = FileUtils.getFile(backUpPath);
-		LOGGER.info("Backup Path found : " + file.exists());
-		
-		if (!file.exists()) {
-			LOGGER.info("Backup folder not found, db backup stopped");
-			return;
-		}
-		
-		for (File backUpFolder : file.listFiles()) {
-			if (backUpFolder.getName().contains(previousVersion)) {
-				try {
-					FileUtils.copyDirectory(new File(backUpFolder.getAbsolutePath() + SLASH + dbFolder), new File(dbFolder));				
-					LOGGER.info("Replacing DB backup completed for the version: " + previousVersion);
-				} catch (Exception exception) {
-					LOGGER.error("Exception in backing up the DB folder: ", exception);
-				}
-				break;
-			}
-		}
-	}
-
-	private void execute(String path) throws IOException {
-		try (InputStream inputStream = SoftwareUpdateHandler.class.getClassLoader().getResourceAsStream(path)) {
-
-			LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-					inputStream != null ? path + " found" : path + " Not Found");
-
-			if (inputStream != null) {
-				runSqlFile(inputStream);
-			}
-		}
-	}
-
-	private void runSqlFile(InputStream inputStream) throws IOException {
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Execution started sql file");
-
-		try (InputStreamReader inputStreamReader = new InputStreamReader(inputStream)) {
-			try (BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
-
-				String str;
-				StringBuilder sb = new StringBuilder();
-				while ((str = bufferedReader.readLine()) != null) {
-					sb.append(str + "\n ");
-				}
-
-				List<String> statments = java.util.Arrays.asList(sb.toString().split(";"));
-
-				for (String stat : statments) {
-					if (!stat.trim().equals("")) {
-						LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID,
-								"Executing Statment : " + stat);
-						jdbcTemplate.execute(stat);
-					}
-				}
-			}
-		}
-		LOGGER.info(LoggerConstants.LOG_REG_UPDATE, APPLICATION_NAME, APPLICATION_ID, "Execution completed sql file");
-	}
-
 	private void rollBackSetup(File backUpFolder) throws io.mosip.kernel.core.exception.IOException {
 		LOGGER.info("Replacing Backup of current version started");
 		if(backUpFolder.exists()) {
-			FileUtils.copyDirectory(new File(backUpFolder.getAbsolutePath() + SLASH + binFolder), new File(binFolder));
+			File binBackup = new File(backUpFolder.getAbsolutePath() + SLASH + binFolder);
+			if (binBackup.exists()) {
+				FileUtils.copyDirectory(binBackup, new File(binFolder));
+			}
 			FileUtils.copyDirectory(new File(backUpFolder.getAbsolutePath() + SLASH + libFolder), new File(libFolder));
 			FileUtils.copyFile(new File(backUpFolder.getAbsolutePath() + SLASH + manifestFile), new File(manifestFile));
 		}

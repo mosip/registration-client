@@ -5,9 +5,6 @@
  */
 package io.mosip.registration.launcher.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
@@ -25,7 +22,7 @@ import java.security.cert.X509Certificate;
  */
 public final class SignatureVerifier {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SignatureVerifier.class);
+    private static final LauncherLog LOGGER = LauncherLog.get(SignatureVerifier.class);
     private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
     private static final String X509 = "X.509";
 

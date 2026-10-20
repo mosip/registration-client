@@ -5,8 +5,7 @@
  */
 package io.mosip.registration.launcher;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.mosip.registration.launcher.common.LauncherLog;
 
 import javax.swing.BorderFactory;
 import javax.swing.JDialog;
@@ -27,7 +26,7 @@ import java.awt.GraphicsEnvironment;
  */
 public final class LauncherDialogs {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LauncherDialogs.class);
+    private static final LauncherLog LOGGER = LauncherLog.get(LauncherDialogs.class);
     private static final String TITLE = "Registration Client";
 
     /**
@@ -146,8 +145,13 @@ public final class LauncherDialogs {
             SwingUtilities.invokeLater(() -> {
                 label.setText(text);
                 // Resize for the new line, but do NOT re-centre: the window would jump away from
-                // wherever the operator had dragged it.
+                // wherever the operator had dragged it. Grow only, never shrink: the download line
+                // changes every percent, and a width that follows each new text makes the window jitter.
+                int width = dialog.getWidth();
                 dialog.pack();
+                if (dialog.getWidth() < width) {
+                    dialog.setSize(width, dialog.getHeight());
+                }
             });
         }
 

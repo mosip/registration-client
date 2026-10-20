@@ -114,6 +114,9 @@ echo "xcopy /s /k /y /q jre\jre jre && rmdir /s /q jre\jre" >> "${work_dir}"/reg
 echo ")" >> "${work_dir}"/registration-client/target/run.bat
 echo "if exist .UNKNOWN_JARS (" >> "${work_dir}"/registration-client/target/run.bat
 echo "FOR /F \"tokens=* delims=\" %%x in (.UNKNOWN_JARS) DO DEL /Q lib\%%x" >> "${work_dir}"/registration-client/target/run.bat
+# Consume the list once: left in place it is re-applied on every launch, and after an upgrade it can name
+# jars the new version also ships (the <1.3.0 -> 1.3.0 transition lists the entire old lib/).
+echo "del /q .UNKNOWN_JARS" >> "${work_dir}"/registration-client/target/run.bat
 echo ")" >> "${work_dir}"/registration-client/target/run.bat
 echo "if exist .TEMP (" >> "${work_dir}"/registration-client/target/run.bat
 echo "echo Starting Registration Client after Upgrade" >> "${work_dir}"/registration-client/target/run.bat
@@ -126,8 +129,8 @@ echo ")" >> "${work_dir}"/registration-client/target/run.bat
 cp "${work_dir}"/registration-client/target/run.bat "${work_dir}"/registration-client/target/lib/1201to121_run.bat
 
 ## jar signing
-jarsigner -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore_secret} -tsa ${signer_timestamp_url_env} -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-client-${client_version_env}.jar CodeSigning
-jarsigner -keystore "${work_dir}"/build_files/keystore.p12 -storepass ${keystore_secret} -tsa ${signer_timestamp_url_env} -digestalg SHA-256 "${work_dir}"/registration-client/target/lib/registration-services-${client_version_env}.jar CodeSigning
+KEYSTORE_PASS="${keystore_secret}" jarsigner -keystore "${work_dir}/build_files/keystore.p12" -storepass:env KEYSTORE_PASS -tsa "${signer_timestamp_url_env}" -digestalg SHA-256 "${work_dir}/registration-client/target/lib/registration-client-${client_version_env}.jar" CodeSigning
+KEYSTORE_PASS="${keystore_secret}" jarsigner -keystore "${work_dir}/build_files/keystore.p12" -storepass:env KEYSTORE_PASS -tsa "${signer_timestamp_url_env}" -digestalg SHA-256 "${work_dir}/registration-client/target/lib/registration-services-${client_version_env}.jar" CodeSigning
 
 # ----------------------------------------------------------------------------------------------
 # 1.3.0 dual manifest + detached SHA256withRSA signatures (issue #812).
@@ -163,6 +166,28 @@ cp "${launcher_target}/rollback.exe"  "${lib_dir}/rollback.exe"
 
 # _launcher.jar : the single entry point (registration-launcher module build output)
 cp "${launcher_target}/_launcher.jar" "${lib_dir}/_launcher.jar"
+
+# The launcher must be self-contained: across the <1.3.0 -> 1.3.0 transition it runs with only the root
+# artifacts left in lib/, the registration-services jar that carries these two files having been deleted
+# as unknown. So it gets its own copy of the environment config (without it no upgrade-server URL can be
+# built) and of the signer certificate (without it the manifest signatures are checked against the
+# development certificate bundled at build time, and fail). Injected before both manifests below so the
+# updated bytes are what gets hashed.
+(
+  cd "${lib_dir}"
+  mkdir -p props
+  cp "${work_dir}"/mosip-application.properties props/mosip-application.properties
+  cp "${work_dir}"/build_files/Client.crt provider.pem
+  jar uf _launcher.jar props/mosip-application.properties provider.pem
+  rm -rf props provider.pem
+)
+
+# Sign _launcher.jar with the same identity as registration-client-*.jar. Both carry classes in
+# io.mosip.registration.controller (Initialization must keep that FQN for run.bat), and the JVM refuses
+# to load a package whose classes come from differently signed jars: an unsigned launcher fails to load
+# ClientApplication with "signer information does not match". Signed AFTER the jar uf above (updating a
+# signed jar breaks its signature) and before both manifests below, so the signed bytes are hashed.
+KEYSTORE_PASS="${keystore_secret}" jarsigner -keystore "${work_dir}/build_files/keystore.p12" -storepass:env KEYSTORE_PASS -tsa "${signer_timestamp_url_env}" -digestalg SHA-256 "${lib_dir}/_launcher.jar" CodeSigning
 
 # Authenticode-sign migration.exe / rollback.exe so Windows/AV accept them. Signed HERE, before both
 # manifests below, so the SIGNED bytes are what gets hashed. This is OS-level trust only: the launcher's
@@ -259,8 +284,10 @@ java -cp "${java_cp}" io.mosip.registration.update.ManifestCreator --list "${cli
   "${target_dir}/run.bat"
 java -cp "${java_cp}" io.mosip.registration.update.ManifestSigner "${keystore}" "${signing_alias}" "${target_dir}/MANIFEST.MF" "${target_dir}/MANIFEST.MF.sig"
 
-# lib.zip : all of lib/** (including the signed lib/MANIFEST.MF) hosted from the upgrade server
-/usr/bin/zip -r lib.zip lib
+# lib.zip : all of lib/** (including the signed lib/MANIFEST.MF) hosted from the upgrade server. Zipped
+# from INSIDE lib/ so the entries are flat: the launcher unzips it straight into .TEMP/, which run.bat
+# then copies onto lib/, so a lib/ prefix would stage every file one level too deep and fail verification.
+(cd lib && /usr/bin/zip -r ../lib.zip .)
 
 cd "${work_dir}"/registration-client/target/
 
