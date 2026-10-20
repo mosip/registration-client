@@ -5,8 +5,7 @@
  */
 package io.mosip.registration.launcher;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.mosip.registration.launcher.common.LauncherLog;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +26,10 @@ import static io.mosip.registration.launcher.MigrationArtifacts.FILE_MIGRATION_E
  */
 public final class MigrationLauncher {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MigrationLauncher.class);
+    private static final LauncherLog LOGGER = LauncherLog.get(MigrationLauncher.class);
+
+    /** Tells migration.exe which process to wait for (native/internal/procwait). */
+    static final String WAIT_PID_FLAG = "--wait-pid";
 
     /** Seam so the process launch can be exercised in tests without spawning a real process. */
     @FunctionalInterface
@@ -57,7 +59,10 @@ public final class MigrationLauncher {
                     + exe.getPath() + ") — cannot start the JRE migration");
         }
         // Absolute path (not a bare name resolved against PATH) so nothing on PATH can be run instead.
-        ProcessBuilder pb = new ProcessBuilder(exe.getAbsolutePath());
+        // Pass our PID: exiting is not instant, and until this JVM has fully terminated Windows keeps
+        // jre/ and lib/_launcher.jar locked, so migration.exe waits for it before touching either.
+        ProcessBuilder pb = new ProcessBuilder(exe.getAbsolutePath(),
+                WAIT_PID_FLAG, Long.toString(ProcessHandle.current().pid()));
         pb.directory(appRoot);
         // migration.exe is a windowsgui binary that shows its own dialogs; discard any stray stream
         // output rather than piping it into unread buffers we abandon at JVM exit.

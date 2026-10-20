@@ -5,9 +5,6 @@
  */
 package io.mosip.registration.launcher.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +22,7 @@ import java.util.zip.ZipInputStream;
  */
 public final class ZipExtractor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ZipExtractor.class);
+    private static final LauncherLog LOGGER = LauncherLog.get(ZipExtractor.class);
     private static final int BUFFER_SIZE = 8192;
 
     private ZipExtractor() {

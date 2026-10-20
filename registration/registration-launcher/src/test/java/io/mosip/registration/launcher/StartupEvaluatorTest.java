@@ -97,6 +97,39 @@ public class StartupEvaluatorTest {
     }
 
     @Test
+    public void evaluate_versionsMatchOnJre11_resumesMigration() throws Exception {
+        // An interrupted transition: the old run.bat has copied the staged .TEMP/ (new lib manifest and
+        // its valid .sig) into lib/, but the JRE swap never happened. Starting normally would fail on the
+        // Java 21 class files, so the evaluator must send it back into the migration.
+        sign(rootManifest, rootSignature, keyPair.getPrivate());
+        libManifest = writeManifest("lib-MANIFEST.MF", "1.3.0");
+        File libSignature = new File(folder.getRoot(), "lib-MANIFEST.MF.sig");
+        sign(libManifest, libSignature, keyPair.getPrivate());
+        assertEquals(StartupAction.MIGRATE_JRE,
+                StartupEvaluator.evaluate(rootManifest, rootSignature, libManifest, libSignature, trusted(), 11).action());
+    }
+
+    @Test
+    public void evaluate_versionsMatchOnJre11WithoutLibSignature_resumesMigration() throws Exception {
+        // lib/ is about to be replaced and re-verified from the signed server manifest, so a missing lib
+        // signature is irrelevant here and must not divert into the Case C repair.
+        sign(rootManifest, rootSignature, keyPair.getPrivate());
+        libManifest = writeManifest("lib-MANIFEST.MF", "1.3.0");
+        assertEquals(StartupAction.MIGRATE_JRE,
+                StartupEvaluator.evaluate(rootManifest, rootSignature, libManifest, null, trusted(), 11).action());
+    }
+
+    @Test
+    public void evaluate_versionsMatchOnJre17_returnsAbortUnsupportedJre() throws Exception {
+        sign(rootManifest, rootSignature, keyPair.getPrivate());
+        libManifest = writeManifest("lib-MANIFEST.MF", "1.3.0");
+        File libSignature = new File(folder.getRoot(), "lib-MANIFEST.MF.sig");
+        sign(libManifest, libSignature, keyPair.getPrivate());
+        assertEquals(StartupAction.ABORT_UNSUPPORTED_JRE,
+                StartupEvaluator.evaluate(rootManifest, rootSignature, libManifest, libSignature, trusted(), 17).action());
+    }
+
+    @Test
     public void evaluate_versionsMatchButLibSignatureAbsent_returnsLibSignatureMissing() throws Exception {
         // A 1.3.0+ bundle always ships lib/MANIFEST.MF.sig (configure.sh signs it into lib/ before
         // lib.zip is built), so an absent one on this branch means it was removed — repairable from the

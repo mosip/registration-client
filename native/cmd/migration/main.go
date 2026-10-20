@@ -18,9 +18,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	"github.com/mosip/registration-client/native/internal/appenv"
 	"github.com/mosip/registration-client/native/internal/fsops"
+	"github.com/mosip/registration-client/native/internal/procwait"
 	"github.com/mosip/registration-client/native/internal/ui"
 	"github.com/mosip/registration-client/native/internal/upgrade"
 )
@@ -28,6 +30,9 @@ import (
 const (
 	dialogTitle    = "Registration Client - JRE Migration"
 	successMessage = "JRE migration complete. Please start the application using run.bat."
+
+	// A JVM normally exits within a second or two of System.exit; this only bounds a hung one.
+	launcherExitTimeout = 60 * time.Second
 )
 
 func main() { os.Exit(run()) }
@@ -47,6 +52,18 @@ func run() int {
 		log.SetOutput(f)
 	}
 	log.Printf("migration started, base=%s", base)
+
+	// The launcher JVM that started us may still be exiting, holding jre/ and
+	// lib/_launcher.jar open. Wait for it; on a timeout carry on, and a still-locked
+	// jre/ fails the swap below and rolls back as before.
+	if pid, ok := procwait.ParseWaitPID(os.Args[1:]); ok {
+		log.Printf("waiting for the launcher JVM (pid %d) to exit", pid)
+		if err := procwait.WaitForExit(pid, launcherExitTimeout); err != nil {
+			log.Printf("could not confirm the launcher exited: %v - continuing", err)
+		} else {
+			log.Printf("launcher JVM has exited")
+		}
+	}
 
 	if err := upgrade.Migrate(base); err != nil {
 		log.Printf("migration FAILED: %v", err)

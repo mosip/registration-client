@@ -148,11 +148,10 @@ public class ClientApplication extends Application {
 		}
 	}
 
-	// Execute SQL file (Script files on update)
+	// Report the DB upgrade (the scripts already ran while the context was created; see DaoConfig.entityManagerFactory)
 	private void upgradeLocalDatabase() {
 		notifyPreloader(new ClientPreLoaderNotification("Checking for any DB upgrades started..."));
-		SoftwareUpdateHandler softwareUpdateHandler = applicationContext.getBean(SoftwareUpdateHandler.class);
-		ResponseDTO responseDTO = softwareUpdateHandler.updateDerbyDB();
+		ResponseDTO responseDTO = SoftwareUpdateHandler.getLocalDatabaseUpgradeResult();
 		if(responseDTO == null) {
 			notifyPreloader(new ClientPreLoaderNotification("Nothing to be upgraded."));
 			return;

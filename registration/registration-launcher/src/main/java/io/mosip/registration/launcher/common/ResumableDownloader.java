@@ -5,9 +5,6 @@
  */
 package io.mosip.registration.launcher.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +35,7 @@ import java.nio.file.StandardCopyOption;
  */
 public final class ResumableDownloader {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ResumableDownloader.class);
+    private static final LauncherLog LOGGER = LauncherLog.get(ResumableDownloader.class);
     private static final String PART_SUFFIX = ".part";
     private static final String META_SUFFIX = ".part.meta";
     private static final int HTTP_RANGE_NOT_SATISFIABLE = 416;

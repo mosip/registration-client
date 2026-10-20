@@ -17,11 +17,10 @@ import io.mosip.registration.launcher.MigrationLauncher;
 import io.mosip.registration.launcher.NormalStartup;
 import io.mosip.registration.launcher.StartupAction;
 import io.mosip.registration.launcher.StartupEvaluator;
+import io.mosip.registration.launcher.common.LauncherLog;
 import io.mosip.registration.launcher.common.ManifestVerifier;
 import io.mosip.registration.launcher.common.ResumableDownloader;
 import io.mosip.registration.launcher.common.SignatureVerifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +44,7 @@ import java.util.jar.Manifest;
  */
 public class Initialization {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Initialization.class);
+    private static final LauncherLog LOGGER = LauncherLog.get(Initialization.class);
 
     private static final File ROOT_MANIFEST = new File("MANIFEST.MF");
     private static final File ROOT_SIGNATURE = new File("MANIFEST.MF.sig");
@@ -74,6 +73,10 @@ public class Initialization {
     private static final Set<StartupAction> ATTEMPTED_REPAIRS = EnumSet.noneOf(StartupAction.class);
 
     public static void main(String[] args) {
+        // Start the log file before anything else can fail, so a startup abort is diagnosable from
+        // launcher.log rather than a console that run.bat detaches and discards.
+        LauncherLog.enableFileLogging();
+
         try {
             // Detect the JRE inside the try: majorVersion() throws IllegalArgumentException for a
             // null/blank/unparseable java.version, and that must surface through the operator dialog +
@@ -334,7 +337,7 @@ public class Initialization {
             String version = requireVersion(ManifestVerifier.getVersion(verifiedRootManifest));
             LibUpdateResult result = LibUpdater.update(
                     config.libManifestUrl(version), config.libManifestSigUrl(version), config.libZipUrl(version),
-                    TEMP_DIR, trustedKey, CONNECT_TIMEOUT, READ_TIMEOUT, progress::update);
+                    TEMP_DIR, trustedKey, CONNECT_TIMEOUT, READ_TIMEOUT, progress::update, progress::message);
             progress.close();
             switch (result) {
                 case READY_RESTART:

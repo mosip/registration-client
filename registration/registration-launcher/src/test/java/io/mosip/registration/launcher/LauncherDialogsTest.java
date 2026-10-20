@@ -63,6 +63,7 @@ public class LauncherDialogsTest {
         assertNotNull(handle);
         handle.update(50, 100); // determinate update -> safe no-op when headless
         handle.update(0, -1);   // unknown-size update -> safe no-op
+        handle.message("Downloading the update (170 of 364 MB)…"); // status line -> safe no-op
         handle.close();
         handle.close();
     }

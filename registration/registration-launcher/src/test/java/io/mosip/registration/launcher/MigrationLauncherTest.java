@@ -50,8 +50,11 @@ public class MigrationLauncherTest {
 
         ProcessBuilder pb = started.get();
         assertNotNull("the exe should have been started", pb);
-        assertEquals(1, pb.command().size());
         assertEquals(exe.getAbsolutePath(), pb.command().get(0));
         assertEquals(appRoot, pb.directory());
+        // migration.exe must be told this JVM's PID so it waits for it to release jre/ before the swap.
+        assertEquals(3, pb.command().size());
+        assertEquals("--wait-pid", pb.command().get(1));
+        assertEquals(Long.toString(ProcessHandle.current().pid()), pb.command().get(2));
     }
 }

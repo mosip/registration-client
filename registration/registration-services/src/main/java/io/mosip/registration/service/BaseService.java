@@ -783,7 +783,7 @@ public class BaseService {
 	 * @return sorted version-mappings
 	 * @throws Exception
 	 */
-	protected Map<String, VersionMappings> getSortedVersionMappings(String key) throws Exception {
+	protected static Map<String, VersionMappings> getSortedVersionMappings(String key) throws Exception {
 		String value = null;
 		
 		try (InputStream configKeys = BaseService.class.getClassLoader().getResourceAsStream("spring.properties")) {

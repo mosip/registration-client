@@ -5,8 +5,7 @@
  */
 package io.mosip.registration.launcher;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.mosip.registration.launcher.common.LauncherLog;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -23,7 +22,7 @@ import java.nio.file.Paths;
  */
 public final class NormalStartup {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NormalStartup.class);
+    private static final LauncherLog LOGGER = LauncherLog.get(NormalStartup.class);
 
     private static final String LAUNCHER_IMPL = "com.sun.javafx.application.LauncherImpl";
     private static final String CLIENT_APPLICATION = "io.mosip.registration.controller.ClientApplication";

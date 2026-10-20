@@ -5,9 +5,6 @@
  */
 package io.mosip.registration.launcher.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +27,7 @@ import java.util.jar.Manifest;
  */
 public final class ManifestVerifier {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ManifestVerifier.class);
+    private static final LauncherLog LOGGER = LauncherLog.get(ManifestVerifier.class);
 
     private ManifestVerifier() {
         // utility class

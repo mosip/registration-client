@@ -28,16 +28,15 @@ import java.util.Properties;
  * publishes them.
  * <p>
  * <b>Where that file lives:</b> {@code configure.sh} does <i>not</i> ship it at the app root — it
- * {@code jar uf}s it into {@code registration-services-*.jar} as {@code props/mosip-application.properties},
- * which is where {@code AppConfig}, {@code DaoConfig}, {@code ClientSetupValidator} and
- * {@code ClientIntegrityValidator} all read it from. The launcher therefore reads the same classpath
- * resource, and only falls back to it after an app-root file, which stays supported as an operator/test
- * override. Reading a resource out of a jar loads no classes from it, so this is safe under the Java 11
- * constraint that forbids touching Java 21 client classes.
+ * {@code jar uf}s it as {@code props/mosip-application.properties} into {@code registration-services-*.jar}
+ * (where {@code AppConfig}, {@code DaoConfig} and the validators read it) and into {@code _launcher.jar}
+ * itself. The launcher's own copy is the one that matters: across the {@code <1.3.0 -> 1.3.0} transition
+ * the services jar has been deleted and {@code _launcher.jar} is alone on the classpath. An app-root file
+ * still takes precedence, as an operator/test override.
  */
 public final class LauncherConfig {
 
-    /** Where the build actually puts it: inside {@code registration-services-*.jar} (configure.sh `jar uf`). */
+    /** Where the build puts it: inside {@code _launcher.jar} (and the services jar), via configure.sh {@code jar uf}. */
     private static final String CLASSPATH_PROPERTIES = "props/mosip-application.properties";
 
     private static final String UPGRADE_SERVER_URL = "mosip.client.upgrade.server.url";
@@ -53,8 +52,7 @@ public final class LauncherConfig {
     /**
      * Loads configuration from {@code propertiesFile} when that file exists, otherwise from the
      * {@code props/mosip-application.properties} classpath resource the build packages into
-     * {@code registration-services-*.jar} — the location every other consumer uses, and the only one
-     * present on a real install.
+     * {@code _launcher.jar} — the one location present on every real install, transition included.
      *
      * @param propertiesFile optional app-root override; may be {@code null} or nonexistent
      * @throws IOException if neither source can be read

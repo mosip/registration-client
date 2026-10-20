@@ -6,12 +6,11 @@
 package io.mosip.registration.launcher;
 
 import io.mosip.registration.launcher.common.DownloadProgressListener;
+import io.mosip.registration.launcher.common.LauncherLog;
 import io.mosip.registration.launcher.common.ManifestVerifier;
 import io.mosip.registration.launcher.common.OperatorAlertListener;
 import io.mosip.registration.launcher.common.ResumableDownloader;
 import io.mosip.registration.launcher.common.ZipExtractor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,7 +52,7 @@ import static io.mosip.registration.launcher.MigrationArtifacts.FILE_RUN_BAT_BAC
  */
 public final class JreMigrationStager {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JreMigrationStager.class);
+    private static final LauncherLog LOGGER = LauncherLog.get(JreMigrationStager.class);
 
     /** Artifacts copied from {@code lib/} to {@code .artifacts/} during the one-time {@code <1.3.0 -> 1.3.0} transition. */
     private static final String[] TRANSITION_ARTIFACTS = {
@@ -68,7 +67,8 @@ public final class JreMigrationStager {
      * can repair. Presence is therefore required <i>before</i> the exe is ever started, which is the
      * only point at which failing is still safe (design constraint 5: a failed migration must remain
      * rollback-able). Note this cannot be left to
-     * {@link #verifyArtifactsAgainstRootManifest} — that deliberately skips absent artifacts.
+     * {@link #verifyArtifactsAgainstRootManifest} — that skips absent artifacts the root manifest does
+     * not list, since there is nothing to restore them against.
      */
     private static final String[] MIGRATION_INPUTS = {FILE_LAUNCHER, FILE_RUN_BAT};
 
@@ -82,9 +82,9 @@ public final class JreMigrationStager {
      * upgrade server (Case A / Case D for root-level files, see
      * {@code design/registration/registration-upgrade.md}). Two things still fail closed, because
      * re-downloading resolves neither: an artifact with no manifest entry to verify a fresh copy
-     * against, and a fresh copy that itself fails the hash. An artifact that is <i>absent</i> rather
-     * than corrupt is not recovered here either — it is skipped, and step 8 then refuses to start
-     * the swap without it.
+     * against, and a fresh copy that itself fails the hash. An artifact that is <i>absent</i> is
+     * restored the same way when the manifest lists it; an absent <i>unlisted</i> one is skipped, and
+     * step 8 then refuses to start the swap without it.
      */
     private static final String[] VERIFIED_ROOT_ARTIFACTS = {
             FILE_JRE21_ZIP, FILE_MIGRATION_EXE, FILE_ROLLBACK_EXE, FILE_LAUNCHER, FILE_RUN_BAT
@@ -129,7 +129,9 @@ public final class JreMigrationStager {
     /**
      * As {@link #stage(File, Manifest, String, String, String, String, PublicKey, int, int)},
      * additionally reporting download byte progress to {@code progress} and operator-facing status
-     * lines to {@code alerts} (either may be {@code null}).
+     * lines to {@code alerts} (either may be {@code null}): the step now running (checking, downloading
+     * with megabytes received, unpacking, verifying, switching to Java 21) as well as the design's
+     * integrity-restore alert.
      */
     public static void stage(File root, Manifest verifiedRootManifest,
                              String libManifestUrl, String libManifestSigUrl, String libZipUrl,
@@ -157,6 +159,7 @@ public final class JreMigrationStager {
         //    BEFORE any of them are unzipped (jre21.zip) or made runnable (exes / _launcher.jar).
         //    A local copy that fails its hash is restored from the upgrade server rather than aborting:
         //    the manifest's signature is valid, so the manifest is trustworthy and only the file is bad.
+        status(alerts, "Checking the update files…");
         List<String> restored = verifyArtifactsAgainstRootManifest(verifiedRootManifest, artifacts, root,
                 rootArtifactBaseUrl, connectTimeout, readTimeout, progress, alerts);
         if (!restored.isEmpty()) {
@@ -170,7 +173,7 @@ public final class JreMigrationStager {
 
         // 3. stage the lib into .TEMP/ with full verification (signature + per-file hash + allowlist).
         LibUpdateResult libResult = LibUpdater.update(libManifestUrl, libManifestSigUrl, libZipUrl,
-                temp, trustedKey, connectTimeout, readTimeout, progress);
+                temp, trustedKey, connectTimeout, readTimeout, progress, alerts);
         if (libResult == LibUpdateResult.ABORT_INVALID_SIGNATURE) {
             // Case B (tamper/MITM): preserve the security distinction across the stage() boundary so the
             // operator sees the same "signature invalid" alert as the lib-only update path, not a
@@ -210,6 +213,7 @@ public final class JreMigrationStager {
             if (!jre21Zip.exists()) {
                 throw new IOException("Missing " + jre21Zip.getPath() + " required for JRE migration");
             }
+            status(alerts, "Unpacking Java 21…");
             ZipExtractor.extract(jre21Zip, partial);
             try {
                 // Files.move, not File.renameTo: renameTo returns a bare false that discards the OS
@@ -248,12 +252,13 @@ public final class JreMigrationStager {
         //    this closes the "absent artifacts are skipped" hole in that check.
         requireMigrationInputs(artifacts);
 
+        status(alerts, "Switching to Java 21. The application will close and restart…");
         LOGGER.info("JRE migration staged (verified); caller should now launch migration.exe and exit");
     }
 
     /**
-     * Verifies each present migration artifact in {@code .artifacts/} against its hash in the
-     * signature-verified root manifest, restoring any that fails from the upgrade server.
+     * Verifies each migration artifact in {@code .artifacts/} against its hash in the
+     * signature-verified root manifest, restoring any that fails, or is missing, from the upgrade server.
      * <p>
      * A hash mismatch under a <i>valid</i> manifest signature means the manifest is trustworthy and the
      * local file was tampered with or corrupted, which the design treats as safely recoverable (Case A /
@@ -271,11 +276,13 @@ public final class JreMigrationStager {
         List<String> restored = new ArrayList<>();
         for (String name : VERIFIED_ROOT_ARTIFACTS) {
             File artifact = new File(artifacts, name);
-            if (!artifact.exists()) {
-                // Absent artifacts are handled by later steps (e.g. jre21.zip throws if still missing).
+            boolean present = artifact.exists();
+            if (!present && !ManifestVerifier.hasEntry(rootMf, name)) {
+                // Absent and unlisted: there is nothing to restore it against. The later steps decide
+                // whether it was required (requireMigrationInputs / copyRequired fail closed).
                 continue;
             }
-            if (!ManifestVerifier.hasEntry(rootMf, name)) {
+            if (present && !ManifestVerifier.hasEntry(rootMf, name)) {
                 // Fail closed: an artifact that is physically present but absent from the
                 // signature-verified root manifest cannot be integrity-checked. Refuse to unzip/copy/
                 // make it runnable rather than trusting unverifiable bytes — this matters most for the
@@ -285,12 +292,16 @@ public final class JreMigrationStager {
                 throw new IOException("Root manifest has no integrity entry for migration artifact: "
                         + name + " — refusing to use an unverifiable artifact");
             }
-            if (ManifestVerifier.fileMatches(rootMf, name, artifact)) {
+            if (present && ManifestVerifier.fileMatches(rootMf, name, artifact)) {
                 LOGGER.info("Verified migration artifact against root manifest: {}", name);
                 continue;
             }
+            // A listed artifact that is MISSING is restored the same way as a corrupt one. This is what a
+            // retry after a late rollback needs: once migration.exe has emptied lib/, rollback.exe
+            // removes .artifacts/ and no copy of jre21.zip / the exes / run.bat is left on the machine.
             // The design requires the operator be told before the re-download starts, in these words.
-            alert(alerts, name + " integrity check failed. Restoring from server...");
+            alert(alerts, present ? name + " integrity check failed. Restoring from server..."
+                    : name + " is missing. Restoring from server...");
             try {
                 restoreFromServer(rootMf, name, artifact, root, rootArtifactBaseUrl,
                         connectTimeout, readTimeout, progress);
@@ -394,6 +405,23 @@ public final class JreMigrationStager {
         } catch (RuntimeException e) {
             // A status line must never break the upgrade it is reporting on.
             LOGGER.warn("Could not surface the operator alert ({})", e.getMessage());
+        }
+    }
+
+    /**
+     * Shows an operator-facing step line when a listener is wired. Unlike {@link #alert} it is not
+     * logged as a warning: it reports normal progress, which the surrounding steps already log.
+     * Never fails the upgrade.
+     */
+    private static void status(OperatorAlertListener alerts, String message) {
+        if (alerts == null) {
+            return;
+        }
+        try {
+            alerts.onAlert(message);
+        } catch (RuntimeException e) {
+            // A status line must never break the upgrade it is reporting on.
+            LOGGER.warn("Could not show the status line ({})", e.getMessage());
         }
     }
 
