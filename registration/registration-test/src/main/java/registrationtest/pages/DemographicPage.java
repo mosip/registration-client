@@ -36,6 +36,7 @@ import registrationtest.pojo.schema.Schema;
 import registrationtest.pojo.schema.Screens;
 import registrationtest.utility.ComboBoxUtil;
 import registrationtest.utility.DateUtil;
+import registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.JsonUtil;
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;
@@ -59,6 +60,9 @@ public class DemographicPage {
     BioCorrectionPage bioCorrectionPage;
     WaitsUtil waitsUtil;
     String DemoDetailsImg = "#DemoDetailsImg";
+    String preRegistrationIdField = "#preRegistrationId";
+    String fetchBtn = "#fetchBtn";
+    String progressIndicator = "#progressIndicator";
     WebViewDocument webViewDocument;
     Buttons buttons;
     String schemaJsonFilePath;
@@ -79,6 +83,7 @@ public class DemographicPage {
     LinkedHashMap<String, Integer> allignmentgroupMap;
 
     Boolean flag = false;
+    boolean skipDocumentUpload = false;
 
     public DemographicPage(FxRobot robot) {
         logger.info(" DemographicPage Constructor  ");
@@ -194,6 +199,15 @@ public class DemographicPage {
      * @return
      */
     public WebViewDocument screensFlow(String JsonIdentity, String flow, String ageGroup) {
+        return screensFlow(JsonIdentity, flow, ageGroup, null);
+    }
+
+    /**
+     * @param preRegistrationId when non-empty, is entered into the demographic page's
+     *                          Pre-Registration ID field and fetched before any screen
+     *                          whose process definition has preRegFetchRequired=true is filled.
+     */
+    public WebViewDocument screensFlow(String JsonIdentity, String flow, String ageGroup, String preRegistrationId) {
 
         /**
          * convert jsonFromSchema intoJava
@@ -231,10 +245,14 @@ public class DemographicPage {
             logger.info("Order" + screens.getOrder() + " Fields" + screens.getFields());
             fieldsList = screens.getFields();
 
-            nameTab = screens.getName();       
+            nameTab = screens.getName();
             waitsUtil.clickNodeAssert("#" + nameTab + "_tab");
             // waitsUtil.clickNodeAssert("#"+nameTab);
             robot.moveTo("#" + nameTab);
+
+            if (screens.isPreRegFetchRequired() && preRegistrationId != null && !preRegistrationId.trim().isEmpty()) {
+                fetchPreRegistrationData(preRegistrationId);
+            }
 
             for (Schema schema : fieldsList) {
                 try {
@@ -282,9 +300,259 @@ public class DemographicPage {
                     logger.error("", e);
                 }
             }
+
         }
+
+        if ("Y".equalsIgnoreCase(JsonUtil.getOptionalIdentityValue(JsonIdentity, "verifyBioAfterSkipPOE"))) {
+            runBioRetainedAfterPoeFlow(JsonIdentity, "Bio retained after skip POE", false);
+        }
+        if ("Y".equalsIgnoreCase(JsonUtil.getOptionalIdentityValue(JsonIdentity, "verifyPoeDeleteFlow"))) {
+            runBioRetainedAfterPoeFlow(JsonIdentity, "Bio retained after POE delete", true);
+        }
+        skipDocumentUpload = false;
         return webViewDocument;
 
+    }
+
+    /**
+     * Enters the given Pre-Registration ID into the demographic page's PRID field
+     * and clicks fetch, waiting for the fetched applicant data to load.
+     */
+    private void fetchPreRegistrationData(String preRegistrationId) {
+        logger.info("fetchPreRegistrationData preRegistrationId=" + preRegistrationId);
+
+        TextField preRegField = waitsUtil.waitForNode(preRegistrationIdField, TextField.class);
+        assertNotNull(preRegField, preRegistrationIdField + " not present");
+
+        Platform.runLater(() -> {
+            preRegField.clear();
+            preRegField.setText(preRegistrationId);
+        });
+        org.testfx.util.WaitForAsyncUtils.waitForFxEvents();
+
+        waitsUtil.clickNodeAssert(fetchBtn);
+
+        boolean fetchStarted = true;
+        try {
+            // The fetch can complete before this first poll runs, so a timeout here only
+            // means "already finished", not a failure - only the disappearance wait below matters.
+            org.testfx.util.WaitForAsyncUtils.waitFor(10, java.util.concurrent.TimeUnit.SECONDS, () -> {
+                Node indicator = robot.lookup(progressIndicator).tryQuery().orElse(null);
+                return indicator != null && indicator.isVisible();
+            });
+        } catch (Exception e) {
+            fetchStarted = false;
+        }
+
+        if (fetchStarted) {
+            try {
+                org.testfx.util.WaitForAsyncUtils.waitFor(30, java.util.concurrent.TimeUnit.SECONDS, () -> {
+                    Node indicator = robot.lookup(progressIndicator).tryQuery().orElse(null);
+                    return indicator == null || !indicator.isVisible();
+                });
+            } catch (Exception e) {
+                logger.error("Timed out waiting for pre-registration fetch to complete", e);
+                ExtentReportUtil.test1.fail("Pre-Registration fetch did not complete for ID " + preRegistrationId);
+            }
+        }
+        org.testfx.util.WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    private void runBioRetainedAfterPoeFlow(String jsonIdentity, String label, boolean deleteAfterUpload) {
+        try {
+            if (hasDocumentsScreen()) {
+                if (deleteAfterUpload) {
+                    uploadAndDeletePoeOnDocumentsScreen(jsonIdentity);
+                } else {
+                    skipPoeOnDocumentsScreen();
+                }
+            } else if (hasPoeOnBiometricScreen()) {
+                if (deleteAfterUpload) {
+                    uploadAndDeletePoeOnBiometricScreen(jsonIdentity);
+                } else {
+                    skipPoeOnBiometricScreen();
+                }
+            } else {
+                throw new AssertionError(
+                        label + " requires a Documents screen or proofOfException on the biometric screen");
+            }
+
+            buttons.clickNextBtn();
+
+            navigateToBiometricScreenForVerification();
+            biometricUploadPage.verifyCapturedBiometricsRetained(jsonIdentity, findBioFieldId("applicant"));
+        } catch (Exception e) {
+            logger.error(label + " verification failed", e);
+            throw new AssertionError(label + " verification failed", e);
+        }
+    }
+
+    private void skipPoeOnDocumentsScreen() throws IOException {
+        ExtentReportUtil.test1.info(
+                "Navigate to document page after biometrics, skip POE upload, click next and verify biometrics");
+
+        String documentsScreenName = findDocumentsScreenName();
+        if (documentsScreenName == null) {
+            throw new AssertionError("No document-only screen found in the process definition");
+        }
+        waitsUtil.clickNodeAssert("#" + documentsScreenName + "_tab");
+        scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("proofscroll")));
+        ExtentReportUtil.test1.info("Skipped POE document upload on document page");
+    }
+
+    private void skipPoeOnBiometricScreen() {
+        ExtentReportUtil.test1.info(
+                "On biometric page after biometrics, skip POE document upload, click next and verify biometrics");
+        ExtentReportUtil.test1.info("Skipped POE document upload on biometric page");
+    }
+
+    private void uploadAndDeletePoeOnDocumentsScreen(String jsonIdentity) throws IOException {
+        ExtentReportUtil.test1.info(
+                "Navigate to document page after biometrics, upload POE, delete POE, click next and verify biometrics");
+
+        String documentsScreenName = findDocumentsScreenName();
+        if (documentsScreenName == null) {
+            throw new AssertionError("No document-only screen found in the process definition");
+        }
+        String poeFieldId = findPoeFieldId();
+        waitsUtil.clickNodeAssert("#" + documentsScreenName + "_tab");
+        scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("proofscroll")));
+
+        documentUploadPage.uploadPoeDocument(jsonIdentity, poeFieldId);
+        ExtentReportUtil.test1.info("Uploaded POE document on document page");
+        documentUploadPage.deletePoeDocument(poeFieldId);
+        ExtentReportUtil.test1.info("Deleted POE document on document page");
+    }
+
+    private void uploadAndDeletePoeOnBiometricScreen(String jsonIdentity) throws IOException {
+        ExtentReportUtil.test1.info(
+                "On biometric page after biometrics, upload POE, delete POE, click next and verify biometrics");
+        String poeFieldId = findPoeFieldId();
+        scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+        documentUploadPage.uploadPoeDocument(jsonIdentity, poeFieldId);
+        ExtentReportUtil.test1.info("Uploaded POE document on biometric page");
+        documentUploadPage.deletePoeDocument(poeFieldId);
+        ExtentReportUtil.test1.info("Deleted POE document on biometric page");
+    }
+
+    private boolean isPoeField(Schema field) {
+        return "fileupload".equalsIgnoreCase(field.getControlType())
+                && "POE".equalsIgnoreCase(field.getSubType());
+    }
+
+    private String findPoeFieldId() {
+        if (orderedScreensList == null) {
+            throw new AssertionError("POE field not found in process definition");
+        }
+        for (Screens screen : orderedScreensList) {
+            if (screen.getFields() == null) {
+                continue;
+            }
+            for (Schema field : screen.getFields()) {
+                if (isPoeField(field)) {
+                    return field.getId();
+                }
+            }
+        }
+        return "proofOfException";
+    }
+
+    private boolean hasDocumentsScreen() {
+        return findDocumentsScreenName() != null;
+    }
+
+    private boolean hasPoeOnBiometricScreen() {
+        Screens biometricScreen = findBiometricScreen();
+        if (biometricScreen == null) {
+            return false;
+        }
+        for (Schema field : biometricScreen.getFields()) {
+            if (isPoeField(field)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void navigateToBiometricScreenForVerification() {
+        String biometricScreenName = findBiometricScreenName();
+        String applicantBioFieldId = findBioFieldId("applicant");
+        waitsUtil.waitForFirstVisibleNode("#" + biometricScreenName + "_tab", 15_000);
+        waitsUtil.clickIfPresent("#" + biometricScreenName + "_tab");
+        waitsUtil.waitForFirstVisibleNode("#" + applicantBioFieldId, 20_000);
+        org.testfx.util.WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    private Screens findBiometricScreen() {
+        if (orderedScreensList == null) {
+            return null;
+        }
+        for (Screens screen : orderedScreensList) {
+            if (screen.getFields() == null) {
+                continue;
+            }
+            for (Schema field : screen.getFields()) {
+                if ("biometrics".equalsIgnoreCase(field.getControlType())) {
+                    return screen;
+                }
+            }
+        }
+        return null;
+    }
+
+    private String findBiometricScreenName() {
+        Screens biometricScreen = findBiometricScreen();
+        return biometricScreen != null ? biometricScreen.getName() : "BiometricDetails";
+    }
+
+    private String findDocumentsScreenName() {
+        if (orderedScreensList == null) {
+            return null;
+        }
+        for (Screens screen : orderedScreensList) {
+            if (screen.getFields() == null) {
+                continue;
+            }
+            boolean hasFileUpload = false;
+            boolean hasBiometrics = false;
+            for (Schema field : screen.getFields()) {
+                if ("fileupload".equalsIgnoreCase(field.getControlType())) {
+                    hasFileUpload = true;
+                }
+                if ("biometrics".equalsIgnoreCase(field.getControlType())) {
+                    hasBiometrics = true;
+                }
+            }
+            if (hasFileUpload && !hasBiometrics) {
+                return screen.getName();
+            }
+        }
+        return null;
+    }
+
+    private String findBioFieldId(String subType) {
+        if (orderedScreensList == null) {
+            return defaultBioFieldId(subType);
+        }
+        for (Screens screen : orderedScreensList) {
+            if (screen.getFields() == null) {
+                continue;
+            }
+            for (Schema field : screen.getFields()) {
+                if ("biometrics".equalsIgnoreCase(field.getControlType())
+                        && subType.equalsIgnoreCase(field.getSubType())) {
+                    return field.getId();
+                }
+            }
+        }
+        return defaultBioFieldId(subType);
+    }
+
+    private String defaultBioFieldId(String subType) {
+        if ("introducer".equalsIgnoreCase(subType)) {
+            return "introducerBiometrics";
+        }
+        return "individualBiometrics";
     }
 
     private void scrollVerticalDirection2(int i, Schema schema) {
@@ -683,6 +951,10 @@ public class DemographicPage {
                 } else
                     scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
 
+                if ("Y".equalsIgnoreCase(JsonUtil.getOptionalIdentityValue(identity, "verifyIntroducerBioOptions"))) {
+                    biometricUploadPage.verifyIntroducerBioOptions(schema.getId());
+                }
+
 //                Thread.sleep(400);
                 biometricUploadPage.newRegbioUpload(schema.getSubType(),
                         biometricUploadPage.bioAuthAttributeList(identity), id, identity, ageGroup);
@@ -741,6 +1013,10 @@ public class DemographicPage {
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
                     } else
                         scrollVerticalDirectioncount(Integer.parseInt(PropertiesUtil.getKeyValue("bioscroll")));
+
+                    if ("Y".equalsIgnoreCase(JsonUtil.getOptionalIdentityValue(identity, "verifyIntroducerBioOptions"))) {
+                        biometricUploadPage.verifyIntroducerBioOptions(schema.getId());
+                    }
 
 //                    Thread.sleep(400);
 
@@ -801,6 +1077,9 @@ public class DemographicPage {
     public void fileupload(Schema schema, String JsonIdentity, String key, String id, String scenario,
             String ageGroup) {
         try {
+            if (skipDocumentUpload) {
+                return;
+            }
             List<String> documentUploadAttList = documentUploadPage.documentUploadAttributeList(JsonIdentity);
             for (String doclist : documentUploadAttList) {
                 if (schema.getSubType().equals(doclist)) {
