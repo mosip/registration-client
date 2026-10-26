@@ -240,7 +240,7 @@ public abstract class FxControl  {
 	 */
 	protected Label getLabel(String id, String titleText, String styleClass, boolean isVisible, double prefWidth) {
 		/** Field Title */
-		Label label = new Label();
+		Label label = new LabeledHeightCache.CachedLabel();
 		label.setId(id);
 		label.setText(titleText);
 		label.getStyleClass().add(styleClass);

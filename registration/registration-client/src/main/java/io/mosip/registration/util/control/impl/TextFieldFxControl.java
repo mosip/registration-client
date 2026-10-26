@@ -29,6 +29,7 @@ import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.util.common.DemographicChangeActionHandler;
+import io.mosip.registration.util.control.LabeledHeightCache;
 import io.mosip.registration.util.control.FxControl;
 import javafx.collections.ObservableList;
 import javafx.scene.Cursor;
@@ -240,7 +241,7 @@ public class TextFieldFxControl extends FxControl {
 	
 	private Hyperlink getHyperlink(String id, String langCode, String titleText, String styleClass, boolean isVisible) {
 		/** Field Title */
-		Hyperlink hyperLink = new Hyperlink();
+		Hyperlink hyperLink = new LabeledHeightCache.CachedHyperlink();
 		hyperLink.setId(id);
 		hyperLink.setText(titleText);
 		hyperLink.getStyleClass().add(styleClass);
