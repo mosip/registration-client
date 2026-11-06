@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.testfx.api.FxRobot;
+import org.testfx.util.WaitForAsyncUtils;
 
 import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import javafx.application.Platform;
@@ -131,6 +132,7 @@ public class DocumentUploadPage {
                 throw new AssertionError("proofOfException value missing in test data");
             }
             user_selects_combo_itemdoc("#" + poeFieldId, mapDropValue.get(dropkeys.iterator().next()));
+            WaitForAsyncUtils.waitForFxEvents();
             Button scanButton = waitsUtil.waitForNode("#" + poeFieldId + "button", Button.class);
             robot.moveTo(scanButton);
             robot.clickOn(scanButton);

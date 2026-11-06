@@ -358,7 +358,8 @@ public class WebViewDocument {
                             || "Documents".equalsIgnoreCase(attr) || "Address".equalsIgnoreCase(attr)
                             || "DateOfBirth".equalsIgnoreCase(attr));
         } catch (Exception e) {
-            return false;
+            logger.error("Failed to parse updateUINAttributes", e);
+            throw new AssertionError("Invalid updateUINAttributes", e);
         }
     }
 
