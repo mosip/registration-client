@@ -57,7 +57,7 @@ jobs:
       - name: Build Automationtests with Maven
         run: |
           cd ${{ env.SERVICE_LOCATION}}
-          mvn -U -B package -Dmaven.wagon.http.retryHandler.count=2 --file pom.xml -s $GITHUB_WORKSPACE/settings.xml
+          xvfb-run -a mvn -U -B package -Dmaven.wagon.http.retryHandler.count=2 --file pom.xml -s $GITHUB_WORKSPACE/settings.xml
 
       - name: Set up Go
         uses: actions/setup-go@v5

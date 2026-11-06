@@ -82,8 +82,11 @@ public class TextFieldFxControl extends FxControl {
 	private GenericController genericController;
 	
 	public TextFieldFxControl() {
+		this(ClientApplication.getApplicationContext());
+	}
+
+	TextFieldFxControl(ApplicationContext applicationContext) {
 		refreshDelay.setOnFinished(event -> refreshFields());
-		ApplicationContext applicationContext = ClientApplication.getApplicationContext();
 		validation = applicationContext.getBean(Validations.class);
 		fxComponents = applicationContext.getBean(FXComponents.class);
 		demographicChangeActionHandler = applicationContext.getBean(DemographicChangeActionHandler.class);

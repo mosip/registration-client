@@ -417,6 +417,7 @@ public class VirtualKeyboard {
 		}
 	}
 
+	/** Pairs physical presses with typed events in press order, including unmapped characters. */
 	public void changeControlOfKeyboard(TextField textField) {
 		final Deque<PendingKey> pendingKeys = new ArrayDeque<>();
 
@@ -430,27 +431,30 @@ public class VirtualKeyboard {
 				return;
 			}
 
-			if (event.getCode() == KeyCode.SHIFT
-					|| event.getCode() == KeyCode.CONTROL
-					|| event.getCode() == KeyCode.ALT
-					|| event.getCode() == KeyCode.META
-					|| event.isControlDown()) {
+			KeyCode code = event.getCode();
+			if (code.isModifierKey() || code.isNavigationKey() || code.isFunctionKey()
+					|| code == KeyCode.BACK_SPACE || code == KeyCode.DELETE || code == KeyCode.TAB
+					|| code == KeyCode.ENTER || code == KeyCode.ESCAPE || code == KeyCode.INSERT
+					|| event.isControlDown() || event.isMetaDown()) {
 				return;
 			}
 
-			String mappedText = lookupMappedKey(event);
-			if (mappedText != null) {
-				pendingKeys.addLast(new PendingKey(event.getCode(), mappedText));
-			}
+			pendingKeys.addLast(new PendingKey(code, lookupMappedKey(event)));
 		});
 
 		textField.addEventFilter(KeyEvent.KEY_TYPED, event -> {
-			if (vkType.toString().contains("vk") || event.isControlDown()) {
+			if (vkType.toString().contains("vk") || event.isControlDown() || event.isMetaDown()) {
 				return;
 			}
 
+			// Some platforms emit a typed control character for an editing key, others only a press.
+			String character = event.getCharacter();
+			if (character.length() == 1 && Character.isISOControl(character.charAt(0))) {
+				return;
+			}
 			PendingKey pendingKey = pendingKeys.pollFirst();
-			if (pendingKey == null || pendingKey.mappedText.equals(event.getCharacter())) {
+			if (pendingKey == null || pendingKey.mappedText == null
+					|| pendingKey.mappedText.equals(character) || !textField.isEditable()) {
 				return;
 			}
 
@@ -459,9 +463,8 @@ public class VirtualKeyboard {
 		});
 
 		textField.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
-			PendingKey pendingKey = pendingKeys.peekFirst();
-			if (pendingKey != null && pendingKey.code == event.getCode()) {
-				pendingKeys.removeFirst();
+			if (!vkType.toString().contains("vk")) {
+				pendingKeys.removeIf(pendingKey -> pendingKey.code == event.getCode());
 			}
 		});
 
@@ -472,6 +475,7 @@ public class VirtualKeyboard {
 		});
 	}
 
+	/** Caches both configured mappings and misses for this keyboard's language. */
 	private String lookupMappedKey(KeyEvent event) {
 		if (keyboard == null || event.getCode() == null || event.getCode() == KeyCode.UNDEFINED) {
 			return null;
