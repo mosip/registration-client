@@ -17,6 +17,7 @@ import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import registrationtest.controls.Buttons;
 import registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.JsonUtil;
@@ -179,7 +180,7 @@ public class BiometricUploadPage {
 			listException = exceptionList(jsonContent);
 			// FINGERPRINT_SLAB_RIGHT
 			clickModality(idBioType, idModality);
-			Thread.sleep(500);
+			WaitForAsyncUtils.waitForFxEvents();
 
 			if (listException.contains("rightIndex") && listException.contains("rightLittle")
 					&& listException.contains("rightRing") && listException.contains("rightMiddle")) {
@@ -400,7 +401,7 @@ public class BiometricUploadPage {
 				return;
 			}
 			clickModality(idBioType, idModality);
-			Thread.sleep(500);
+			WaitForAsyncUtils.waitForFxEvents();
 
 			clickScanBtn(idBioType, jsonContent, idModality);
 		}  catch (Exception e) {
@@ -644,6 +645,10 @@ public class BiometricUploadPage {
 		}
 	}
 
+	/**
+	 * Verifies that captured biometric modalities remain available after navigating away
+	 * from the biometric screen (e.g. after POE skip/delete on the documents screen).
+	 */
 	public void verifyCapturedBiometricsRetained(String identity, String bioFieldId) {
 		List<String> bioAttributes = bioAttributeList(identity);
 		List<String> listException = exceptionList(identity);
@@ -656,22 +661,26 @@ public class BiometricUploadPage {
 
 		try {
 			if (hasIris(bioAttributes)) {
-				verifyModalityCaptureStatus(bioFieldId, IRIS_DOUBLE, "Iris biometrics");
+				verifyModalityCaptureStatus(bioFieldId, IRIS_DOUBLE, "Iris biometrics",
+						isIrisExceptionOnly(listException));
 			}
 			if (hasRightFingers(bioAttributes)) {
-				verifyModalityCaptureStatus(bioFieldId, FINGERPRINT_SLAB_RIGHT, "Right hand biometrics");
+				verifyModalityCaptureStatus(bioFieldId, FINGERPRINT_SLAB_RIGHT, "Right hand biometrics",
+						isRightFingerExceptionOnly(listException));
 			}
 			if (hasLeftFingers(bioAttributes)) {
-				verifyModalityCaptureStatus(bioFieldId, FINGERPRINT_SLAB_LEFT, "Left hand biometrics");
+				verifyModalityCaptureStatus(bioFieldId, FINGERPRINT_SLAB_LEFT, "Left hand biometrics",
+						isLeftFingerExceptionOnly(listException));
 			}
 			if (hasThumbs(bioAttributes)) {
-				verifyModalityCaptureStatus(bioFieldId, FINGERPRINT_SLAB_THUMBS, "Thumb biometrics");
+				verifyModalityCaptureStatus(bioFieldId, FINGERPRINT_SLAB_THUMBS, "Thumb biometrics",
+						isThumbExceptionOnly(listException));
 			}
 			if (hasFace(bioAttributes)) {
-				verifyModalityCaptureStatus(bioFieldId, FACE, "Face biometrics");
+				verifyModalityCaptureStatus(bioFieldId, FACE, "Face biometrics", false);
 			}
 			if (!listException.isEmpty()) {
-				verifyModalityCaptureStatus(bioFieldId, EXCEPTION_PHOTO, "Exception photo");
+				verifyModalityCaptureStatus(bioFieldId, EXCEPTION_PHOTO, "Exception photo", false);
 			}
 			ExtentReportUtil.test1.info("Biometric data and exception photo retained on biometric page");
 		} catch (IOException e) {
@@ -692,18 +701,71 @@ public class BiometricUploadPage {
 		}
 	}
 
-	private void verifyModalityCaptureStatus(String bioFieldId, String modality, String description) {
+	private boolean isIrisExceptionOnly(List<String> ex) {
+		return ex.contains("leftEye") && ex.contains("rightEye");
+	}
+
+	private boolean isRightFingerExceptionOnly(List<String> ex) {
+		return ex.contains("rightIndex") && ex.contains("rightLittle") && ex.contains("rightRing")
+				&& ex.contains("rightMiddle");
+	}
+
+	private boolean isLeftFingerExceptionOnly(List<String> ex) {
+		return ex.contains("leftIndex") && ex.contains("leftLittle") && ex.contains("leftRing")
+				&& ex.contains("leftMiddle");
+	}
+
+	private boolean isThumbExceptionOnly(List<String> ex) {
+		return ex.contains("leftThumb") && ex.contains("rightThumb");
+	}
+
+	private List<String> getModalityExceptionAttributeIds(String modality) {
+		if (IRIS_DOUBLE.equals(modality)) {
+			return List.of("leftEye", "rightEye");
+		}
+		if (FINGERPRINT_SLAB_RIGHT.equals(modality)) {
+			return List.of("rightIndex", "rightLittle", "rightRing", "rightMiddle");
+		}
+		if (FINGERPRINT_SLAB_LEFT.equals(modality)) {
+			return List.of("leftIndex", "leftLittle", "leftRing", "leftMiddle");
+		}
+		if (FINGERPRINT_SLAB_THUMBS.equals(modality)) {
+			return List.of("leftThumb", "rightThumb");
+		}
+		return List.of();
+	}
+
+	private boolean hasRetainedExceptionSelection(String modality) {
+		List<String> requiredIds = getModalityExceptionAttributeIds(modality);
+		for (String attrId : requiredIds) {
+			Optional<Node> node = robot.lookup("#" + attrId).tryQuery();
+			if (node.isEmpty() || !(node.get() instanceof ImageView)) {
+				return false;
+			}
+			if (((ImageView) node.get()).getOpacity() != 1.0) {
+				return false;
+			}
+		}
+		return !requiredIds.isEmpty();
+	}
+
+	private void verifyModalityCaptureStatus(String bioFieldId, String modality, String description,
+			boolean exceptionOnly) {
 		String buttonId = "#" + bioFieldId + modality + "Button";
 		String paneId = "#" + bioFieldId + modality + "PANE";
+		String modalitySelector = "#" + bioFieldId + modality;
 
 		Node modalityButton = waitsUtil.waitForFirstVisibleNode(buttonId, 20_000);
 		robot.moveTo(modalityButton);
 		robot.clickOn(modalityButton);
 		WaitForAsyncUtils.waitForFxEvents();
 
-		Node completionMark = waitsUtil.waitForFirstVisibleNode(paneId, 20_000);
-		assertTrue(completionMark != null && completionMark.isVisible(),
-				description + " not displayed on biometric page after document navigation");
+		waitsUtil.waitForFirstVisibleNode(paneId, 20_000);
+		boolean retained = exceptionOnly ? hasRetainedExceptionSelection(modality)
+				: EXCEPTION_PHOTO.equals(modality)
+						? getAttemptSlap(modalitySelector) > 0 || getQualityScore(modalitySelector) > 0
+						: getQualityScore(modalitySelector) > 0;
+		assertTrue(retained, description + " not retained on biometric page after document navigation");
 		ExtentReportUtil.test1.info(description + " verified on biometric page");
 	}
 
@@ -742,6 +804,9 @@ public class BiometricUploadPage {
 		}
 	}
 
+	/**
+	 * Verifies that introducer biometrics shows FP, Iris, and Face options without exception photo.
+	 */
 	public void verifyIntroducerBioOptions(String bioFieldId) {
 		ExtentReportUtil.test1.info(
 				"Verifying introducer biometrics options for field " + bioFieldId

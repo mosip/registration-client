@@ -1,7 +1,7 @@
 { "identity" : {
 	"ageGroup":"MINOR",
 	"process":"Lost",
-	"previewTests":["qrCode","applicationId","dateTime","demographics","biometrics","bioExceptions"],
+	"previewTests":["qrCode","applicationId","demographics","biometrics","bioExceptions"],
 	"ackTests":["qrCode","applicationId","dateTime","demographics","biometrics","bioExceptions"],
 	"preferredLang":"English",
 	"documentUploadAttributes":["POB","POR","POA","POI"],

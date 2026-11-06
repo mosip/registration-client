@@ -3,8 +3,10 @@ package io.mosip.registration.test.update;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -12,6 +14,7 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,39 +47,66 @@ public class ClientIntegrityValidatorTest {
 	@InjectMocks
 	private ClientIntegrityValidator clientIntegrityValidator;
 
+	// Backup of a pre-existing working-dir lib/MANIFEST.MF (e.g. left by another test in the
+	// same fork), restored in teardown so these tests don't depend on external filesystem state.
+	private File libManifestBackup;
+
 	@Before
 	public void initialize() throws Exception {
 		PowerMockito.mockStatic(ApplicationContext.class, FileUtils.class);
 		PowerMockito.mockStatic(HMACUtils2.class);
+		// Start every test from a known-absent lib/MANIFEST.MF; back up any pre-existing one.
+		// Fail fast on any file-op failure so a silent error can't leave state inconsistent.
+		File libManifest = new File("lib", "MANIFEST.MF");
+		if (libManifest.exists()) {
+			libManifestBackup = new File("lib", "MANIFEST.MF.testbak");
+			if (libManifestBackup.exists() && !libManifestBackup.delete()) {
+				throw new IOException("Could not remove stale backup " + libManifestBackup);
+			}
+			if (!libManifest.renameTo(libManifestBackup)) {
+				throw new IOException("Could not back up " + libManifest);
+			}
+		} else {
+			libManifestBackup = null;
+		}
 	}
 
-	@SuppressWarnings({ "rawtypes", "unused" })
-	@Test
+	@After
+	public void restoreLibManifest() throws IOException {
+		File libDir = new File("lib");
+		File libManifest = new File(libDir, "MANIFEST.MF");
+		if (libManifest.exists() && !libManifest.delete()) {
+			throw new IOException("Could not delete test " + libManifest);
+		}
+		if (libManifestBackup != null && libManifestBackup.exists()
+				&& !libManifestBackup.renameTo(libManifest)) {
+			throw new IOException("Could not restore backup to " + libManifest);
+		}
+		libDir.delete(); // removes lib/ only if empty (i.e. created by a test)
+	}
+
+	// In a non-LOCAL environment (test props use environment=TEST) with no lib/MANIFEST.MF on
+	// disk, integrity verification must fail closed with a SecurityException rather than skip.
+	@Test(expected = SecurityException.class)
 	public void verifyClientIntegrityTest() throws RegBaseCheckedException {
 		ClientIntegrityValidator.verifyClientIntegrity();
-		
-		Manifest localManifest = Mockito.mock(Manifest.class);
-//		when(localManifest.getEntries()).thenReturn(null, null);
-		
-		Map <String, Attributes> localAttributes = localManifest.getEntries();
-		
-		localAttributes.entrySet();
-		 
-		java.util.Iterator<Entry<String, Attributes>> it = localAttributes.entrySet().iterator();
-		while (it.hasNext()) {
-		    Map.Entry entry1 = (Map.Entry)it.next();
-		
-		    final String libFolder = "lib";
-		    @SuppressWarnings("unused")
-			File file = new File(libFolder + File.separator + entry1.getKey());
-    
-		    @SuppressWarnings("static-access")
-			X509Certificate trustedCertificate = clientIntegrityValidator.getCertificate();
+	}
 
-		    
+	// Counterpart to verifyClientIntegrityTest: with lib/MANIFEST.MF present (and no
+	// registration-* entries to verify), integrity verification proceeds without throwing.
+	// Uses java.io (not java.nio) on purpose: under PowerMock + Java 21 the module system
+	// blocks the reflective access nio Path operations need (sun.nio.fs not opened).
+	// Setup/teardown (@Before/@After) own the lib/MANIFEST.MF backup + cleanup.
+	@Test
+	public void verifyClientIntegrityManifestPresentTest() throws Exception {
+		File libDir = new File("lib");
+		libDir.mkdirs();
+		try (FileOutputStream fos = new FileOutputStream(new File(libDir, "MANIFEST.MF"))) {
+			fos.write("Manifest-Version: 1.0\r\n\r\nName: logback.xml\r\nContent-Type: testhash\r\n\r\n"
+					.getBytes(StandardCharsets.UTF_8));
 		}
-		
-	
+		// Non-registration entry -> per-jar verification loop is a no-op -> returns normally.
+		ClientIntegrityValidator.verifyClientIntegrity();
 	}
 
 	@Test

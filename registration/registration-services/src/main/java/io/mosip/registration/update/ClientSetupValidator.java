@@ -17,10 +17,15 @@ public class ClientSetupValidator {
     private static final String manifestFile = "MANIFEST.MF";
     private static final String libFolder = "lib";
     private static final String SLASH = "/";
+    // Root MANIFEST.MF carries only version/orchestration info; the per-jar integrity hashes
+    // now live in lib/MANIFEST.MF (bundled inside lib.zip). Version compare/rewrite stays on
+    // the root manifest, the unknown-jar + checksum validation runs against the lib manifest.
+    private static final String libManifestFile = libFolder + File.separator + manifestFile;
 
     private static String serverRegClientURL = null;
     private static String latestVersion = null;
     private static Manifest localManifest = null;
+    private static Manifest libManifest = null;
     private static Manifest serverManifest = null;
 
     private static String environment = null;
@@ -41,6 +46,7 @@ public class ClientSetupValidator {
             latestVersion = properties.getProperty("mosip.reg.version");
             environment = properties.getProperty("environment");
             setLocalManifest();
+            setLibManifest();
 
             Objects.requireNonNull(serverRegClientURL, "'mosip.reg.client.url' IS NOT SET");
             Objects.requireNonNull(latestVersion, "'mosip.reg.version' IS NOT SET");
@@ -51,6 +57,7 @@ public class ClientSetupValidator {
             }
 
             Objects.requireNonNull(localManifest, manifestFile + " - Not found");
+            Objects.requireNonNull(libManifest, libManifestFile + " - Not found");
             //SoftwareUpdateUtil.deleteUnknownJars(localManifest);
 
         } catch (RegBaseCheckedException e) {
@@ -92,14 +99,14 @@ public class ClientSetupValidator {
 
             SoftwareUpdateUtil.clearTempDirectory();
 
-            if(SoftwareUpdateUtil.deleteUnknownJars(localManifest)) {
+            if(SoftwareUpdateUtil.deleteUnknownJars(libManifest)) {
                 logger.info("Found unknown jars in the classpath !");
                 unknown_jars_found = true;
                 validation_failed = true;
             }
 
-            Map<String, Attributes> localAttributes = localManifest.getEntries();
-            for (Map.Entry<String, Attributes> entry : localAttributes.entrySet()) {
+            Map<String, Attributes> libAttributes = libManifest.getEntries();
+            for (Map.Entry<String, Attributes> entry : libAttributes.entrySet()) {
                 File file = new File(libFolder + File.separator + entry.getKey());
                 String url = serverRegClientURL + latestVersion + SLASH + libFolder + SLASH + entry.getKey();
                 if(!file.exists()) {
@@ -138,15 +145,24 @@ public class ClientSetupValidator {
     }
 
     private void setLocalManifest() throws RegBaseCheckedException {
-        try {
-            File localManifestFile = new File(manifestFile);
-            if (localManifestFile.exists()) {
-                localManifest = new Manifest(new FileInputStream(localManifestFile));
+        localManifest = loadManifest(manifestFile, "Local", "REG-BUILD-003");
+    }
+
+    private void setLibManifest() throws RegBaseCheckedException {
+        libManifest = loadManifest(libManifestFile, "Lib", "REG-BUILD-006");
+    }
+
+    private Manifest loadManifest(String path, String label, String errorCode) throws RegBaseCheckedException {
+        File file = new File(path);
+        if (file.exists()) {
+            try (FileInputStream fis = new FileInputStream(file)) {
+                return new Manifest(fis);
+            } catch (IOException e) {
+                logger.error("Failed to load {} manifest file", label.toLowerCase(), e);
+                throw new RegBaseCheckedException(errorCode, label + " Manifest not found", e);
             }
-        } catch (IOException e) {
-            logger.error("Failed to load local manifest file", e);
-            throw new RegBaseCheckedException("REG-BUILD-003", "Local Manifest not found");
         }
+        return null;
     }
 
     private void setServerManifest() {

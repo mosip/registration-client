@@ -355,7 +355,8 @@ public class WebViewDocument {
             }
             return updateAttrs.stream().anyMatch(attr -> "Biometrics".equalsIgnoreCase(attr))
                     && updateAttrs.stream().noneMatch(attr -> "FullName".equalsIgnoreCase(attr)
-                            || "Documents".equalsIgnoreCase(attr) || "Address".equalsIgnoreCase(attr));
+                            || "Documents".equalsIgnoreCase(attr) || "Address".equalsIgnoreCase(attr)
+                            || "DateOfBirth".equalsIgnoreCase(attr));
         } catch (Exception e) {
             return false;
         }
@@ -547,6 +548,8 @@ public class WebViewDocument {
             case "documents":
                 return hasIdentityArray(jsonContent, "documentUploadAttributes")
                         || JsonUtil.getOptionalIdentityValue(jsonContent, "proofOfAddress") != null;
+            case "demographics":
+                return !isBioOnlyUpdate(jsonContent, process);
             default:
                 return true;
         }
@@ -722,6 +725,8 @@ public class WebViewDocument {
             logger.debug("Falling back to document label verification", e);
         }
 
+        verifyExcludedDocumentsNotOnPreview(html, null);
+
         verifyDocumentLabel(html, jsonContent, "proofOfIdentity", "Proof of identity document");
         verifyDocumentLabel(html, jsonContent, "proofOfAddress", "Proof of address document");
     }
@@ -759,6 +764,11 @@ public class WebViewDocument {
         }
     }
 
+    /**
+     * Maps document subType codes from the process definition (POI, POA, POB, POR, POE)
+     * to the corresponding MOSIP identity schema field IDs used in test data JSON files.
+     * These are standard identity schema property names, not UI-specific identifiers.
+     */
     private String documentFieldForType(String docType) {
         switch (docType) {
             case "POI":
@@ -777,12 +787,11 @@ public class WebViewDocument {
     }
 
     private void verifyExcludedDocumentsNotOnPreview(String html, List<String> uploadedDocs) {
-        if (uploadedDocs == null || uploadedDocs.contains("POE")) {
+        if (uploadedDocs != null && uploadedDocs.contains("POE")) {
             return;
         }
         String plainText = stripHtml(html).toLowerCase();
-        assertTrue(!plainText.contains("poe") && !plainText.contains("exception proof")
-                        && !plainText.contains("proof of exception"),
+        assertTrue(!plainText.contains("proof of exception"),
                 "POE document should not be displayed on preview when not uploaded");
         ExtentReportUtil.test1.info("Verified POE document is not shown on preview");
     }

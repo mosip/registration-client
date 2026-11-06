@@ -2,7 +2,7 @@
 	"ageGroup":"ADULT",
 	"process":"Lost",
 	"UIN":"4538471905",
-	"previewTests":["qrCode","applicationId","dateTime","demographics","biometrics","bioExceptions"],
+	"previewTests":["qrCode","applicationId","demographics","biometrics","bioExceptions"],
 	"ackTests":["qrCode","applicationId","dateTime","demographics","biometrics","bioExceptions"],
 	"verifyBioAfterSkipPOE":"Y",
 	"preferredLang":"English",

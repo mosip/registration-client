@@ -1,0 +1,5 @@
+# Go source is LF by convention (gofmt/goimports emit LF). Pin it so Windows
+# checkouts don't introduce CRLF, which would trip gofmt in golangci-lint.
+*.go   text eol=lf
+go.mod text eol=lf
+go.sum text eol=lf
