@@ -17,6 +17,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+/** Regression tests for mapped physical keyboard events and virtual keyboard isolation. */
 public class VirtualKeyboardTest extends JavaFxTest {
 	private static final String ARABIC_A = "\u0634";
 	private static final String SHIFTED_A = "\u0650";
@@ -41,8 +42,9 @@ public class VirtualKeyboardTest extends JavaFxTest {
 		});
 	}
 
+	/** Checks repeated Space/letter rollover with both key-release orders. */
 	@Test
-	public void spaceAndMappedLetterRolloverInBothReleaseOrders() throws Exception {
+	public void should_preserveSpaceAndMappedLetter_when_keysOverlapInEitherReleaseOrder() throws Exception {
 		onFxThread(() -> {
 			String expected = "";
 			for (int i = 0; i < 6; i++) {
@@ -58,8 +60,9 @@ public class VirtualKeyboardTest extends JavaFxTest {
 		});
 	}
 
+	/** Ensures a released key cannot leave a stale mapping behind another press. */
 	@Test
-	public void releaseDiscardsAnUntypedKeyBehindTheQueueHead() throws Exception {
+	public void should_discardUntypedKey_when_releasedBehindQueueHead() throws Exception {
 		onFxThread(() -> {
 			press(B);
 			press(A);
@@ -71,8 +74,9 @@ public class VirtualKeyboardTest extends JavaFxTest {
 		});
 	}
 
+	/** Ensures navigation and editing keys do not consume printable mappings. */
 	@Test
-	public void heldNavigationKeyDoesNotTakeTheNextLetter() throws Exception {
+	public void should_preserveNextMappedLetter_when_navigationKeyIsHeld() throws Exception {
 		onFxThread(() -> {
 			field.setText("xy");
 			field.end();
@@ -88,8 +92,9 @@ public class VirtualKeyboardTest extends JavaFxTest {
 		});
 	}
 
+	/** Covers platforms that do or do not emit a typed Backspace control character. */
 	@Test
-	public void editingKeyWithOrWithoutTypedControlCharacterPreservesNextMapping() throws Exception {
+	public void should_preserveLetterMapping_when_editingKeyEmitsOptionalTypedEvent() throws Exception {
 		onFxThread(() -> {
 			for (boolean emitsTypedEvent : new boolean[] { true, false }) {
 				field.setText("x");
@@ -107,8 +112,9 @@ public class VirtualKeyboardTest extends JavaFxTest {
 		});
 	}
 
+	/** Checks that focus transitions discard pending physical key mappings. */
 	@Test
-	public void focusLossDiscardsPendingMapping() throws Exception {
+	public void should_clearPendingMapping_when_focusIsLost() throws Exception {
 		onFxThread(() -> {
 			field.focus(true);
 			press(A);
@@ -119,8 +125,9 @@ public class VirtualKeyboardTest extends JavaFxTest {
 		});
 	}
 
+	/** Covers Ctrl selection and Shift/Caps Lock mappings together. */
 	@Test
-	public void shortcutsSelectionShiftAndCapsLock() throws Exception {
+	public void should_preserveSelectionAndMappings_when_usingShortcutShiftAndCapsLock() throws Exception {
 		onFxThread(() -> {
 			field.setText("replace me");
 			fire(KEY_PRESSED, A, "", false, true);
@@ -138,8 +145,9 @@ public class VirtualKeyboardTest extends JavaFxTest {
 		});
 	}
 
+	/** Checks virtual keyboard clicks do not steal pending physical mappings. */
 	@Test
-	public void virtualButtonDoesNotTakePendingPhysicalMapping() throws Exception {
+	public void should_preservePhysicalMapping_when_virtualButtonIsPressed() throws Exception {
 		onFxThread(() -> {
 			Stage stage = new Stage();
 			try {

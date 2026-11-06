@@ -22,9 +22,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
+/** Verifies immediate demographic updates and the delayed dependent-field refresh. */
 public class TextFieldFxControlTest extends JavaFxTest {
+	/** Ensures successive edits coalesce into one refresh without postponing validation or updates. */
 	@Test
-	public void editsUpdateDataAndActionsBeforeOneDependentFieldRefresh() throws Exception {
+	public void should_refreshOnce_when_multipleEditsUpdateDemographicsImmediately() throws Exception {
 		CountDownLatch refreshed = new CountDownLatch(1);
 		AtomicInteger refreshCount = new AtomicInteger();
 		AtomicInteger validations = new AtomicInteger();

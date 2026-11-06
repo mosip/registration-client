@@ -24,7 +24,8 @@ on:
 
 jobs:
   build-regclient:
-    if: github.event.repository.fork || !startsWith(github.ref, 'refs/heads/test/')
+    # Run the prerequisite for every branch, including test/** on upstream.
+    # Downstream build-regclient-local depends on this job completing.
     uses: mosip/kattu/.github/workflows/maven-build.yml@master-java21
     with:
       SERVICE_LOCATION: registration

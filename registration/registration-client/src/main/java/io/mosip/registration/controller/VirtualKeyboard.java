@@ -417,7 +417,15 @@ public class VirtualKeyboard {
 		}
 	}
 
-	/** Pairs physical presses with typed events in press order, including unmapped characters. */
+	/**
+	 * Installs physical keyboard filters on a text field. Printable key presses are
+	 * matched to typed events in press order, including keys without a configured
+	 * mapping. Editing/navigation keys and shortcuts retain native JavaFX behavior.
+	 * Pending mappings are discarded when the corresponding key is released or
+	 * focus leaves the field.
+	 *
+	 * @param textField demographic text field receiving the keyboard events
+	 */
 	public void changeControlOfKeyboard(TextField textField) {
 		final Deque<PendingKey> pendingKeys = new ArrayDeque<>();
 
@@ -475,7 +483,13 @@ public class VirtualKeyboard {
 		});
 	}
 
-	/** Caches both configured mappings and misses for this keyboard's language. */
+	/**
+	 * Resolves the configured Shift/Caps Lock mapping for a physical key and
+	 * caches both successful lookups and absent mappings for the keyboard language.
+	 *
+	 * @param event physical key-press event
+	 * @return mapped character(s), or {@code null} when no mapping is configured
+	 */
 	private String lookupMappedKey(KeyEvent event) {
 		if (keyboard == null || event.getCode() == null || event.getCode() == KeyCode.UNDEFINED) {
 			return null;

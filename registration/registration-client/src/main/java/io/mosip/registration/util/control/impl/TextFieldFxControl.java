@@ -85,6 +85,12 @@ public class TextFieldFxControl extends FxControl {
 		this(ClientApplication.getApplicationContext());
 	}
 
+	/**
+	 * Creates the field control with an application context, allowing focused
+	 * tests to supply dependencies without bootstrapping the full client.
+	 *
+	 * @param applicationContext context providing validation and UI services
+	 */
 	TextFieldFxControl(ApplicationContext applicationContext) {
 		refreshDelay.setOnFinished(event -> refreshFields());
 		validation = applicationContext.getBean(Validations.class);

@@ -8,7 +8,9 @@ import org.junit.Assume;
 
 import javafx.application.Platform;
 
+/** Shared JavaFX toolkit setup and UI-thread dispatch for regression tests. */
 public abstract class JavaFxTest {
+	/** Starts the JavaFX runtime once and skips headless Linux without a display. */
 	@BeforeClass
 	public static void startToolkit() {
 		Assume.assumeTrue("Run Linux JavaFX tests under xvfb-run or in a desktop session",
@@ -20,6 +22,7 @@ public abstract class JavaFxTest {
 		}
 	}
 
+	/** Runs a test action on the JavaFX application thread and propagates failures. */
 	protected static void onFxThread(Runnable action) throws Exception {
 		FutureTask<Void> task = new FutureTask<>(action, null);
 		Platform.runLater(task);
