@@ -32,6 +32,7 @@ if [ -f /config/config.properties ]; then
 elif [ ! -f config.properties ]; then
     cp /opt/registration-test/resources/config.properties config.properties
 fi
+sed -i 's/\r$//' config.properties
 
 set_config() {
     local key="$1"
@@ -148,7 +149,7 @@ wait_for_propagation() {
     fi
     local minutes
     minutes="$(config_value setup.propagationWaitMinutes)"
-    minutes="${minutes// /}"
+    minutes="${minutes//[$' \r']/}"
     if [ -z "${minutes}" ]; then
         minutes=15
     fi
