@@ -20,12 +20,9 @@ on:
       - 1.*
       - develop*
       - MOSIP*
-      - 'test/**'
 
 jobs:
   build-regclient:
-    # Run the prerequisite for every branch, including test/** on upstream.
-    # Downstream build-regclient-local depends on this job completing.
     uses: mosip/kattu/.github/workflows/maven-build.yml@master-java21
     with:
       SERVICE_LOCATION: registration
@@ -60,7 +57,7 @@ jobs:
       - name: Build Automationtests with Maven
         run: |
           cd ${{ env.SERVICE_LOCATION}}
-          xvfb-run -a mvn -U -B package -Dmaven.wagon.http.retryHandler.count=2 --file pom.xml -s $GITHUB_WORKSPACE/settings.xml
+          mvn -U -B package -Dmaven.wagon.http.retryHandler.count=2 --file pom.xml -s $GITHUB_WORKSPACE/settings.xml
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -80,12 +77,6 @@ jobs:
           mkdir -p "$out"
           GOOS=windows GOARCH=amd64 go build -ldflags "-H=windowsgui" -o "$out/migration.exe" ./cmd/migration
           GOOS=windows GOARCH=amd64 go build -ldflags "-H=windowsgui" -o "$out/rollback.exe"  ./cmd/rollback
-
-      - name: Build Docker images locally on fork pushes
-        if: github.event.repository.fork && github.event_name != 'pull_request'
-        run: |
-          docker build --tag registration-client:test registration
-          docker build --tag regclient-keystore:test regclient-openssl
 
       - name: Ready the springboot artifacts
         if: ${{ !contains(github.ref, 'master') || !contains(github.ref, 'main') }}
@@ -109,7 +100,7 @@ jobs:
         if: failure() # Pick up events even if the job fails or is canceled.
 
   publish_to_nexus:
-    if: "${{ !github.event.repository.fork && !contains(github.ref, 'master') && github.event_name != 'pull_request' && github.event_name != 'release' && github.event_name != 'prerelease' && github.event_name != 'publish' }}"
+    if: "${{ !contains(github.ref, 'master') && github.event_name != 'pull_request' && github.event_name != 'release' && github.event_name != 'prerelease' && github.event_name != 'publish' }}"
     needs: build-regclient-local
     uses: mosip/kattu/.github/workflows/maven-publish-to-nexus.yml@master-java21
     with:
@@ -123,7 +114,6 @@ jobs:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   build-dockers:
-    if: github.event_name == 'pull_request' || !github.event.repository.fork
     needs: build-regclient-local
     strategy:
       matrix:
@@ -148,7 +138,7 @@ jobs:
 
   sonar_analysis:
     needs: build-regclient-local
-    if: "${{ !github.event.repository.fork && github.event_name != 'pull_request' }}"
+    if: "${{ github.event_name != 'pull_request' }}"
     uses: mosip/kattu/.github/workflows/maven-sonar-analysis.yml@master-java21
     with:
       SERVICE_LOCATION: registration
@@ -163,7 +153,6 @@ jobs:
   
 
   build-regclient-keystore-docker:
-    if: github.event_name == 'pull_request' || (!github.event.repository.fork && !startsWith(github.ref, 'refs/heads/test/'))
     strategy:
       matrix:
         include:

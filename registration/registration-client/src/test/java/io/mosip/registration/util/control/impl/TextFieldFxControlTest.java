@@ -1,3 +1,8 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 package io.mosip.registration.util.control.impl;
 
 import static org.junit.Assert.*;
@@ -26,7 +31,7 @@ import javafx.scene.layout.VBox;
 public class TextFieldFxControlTest extends JavaFxTest {
 	/** Ensures successive edits coalesce into one refresh without postponing validation or updates. */
 	@Test
-	public void should_refreshOnce_when_multipleEditsUpdateDemographicsImmediately() throws Exception {
+	public void textFieldFxControl_multipleEdits_refreshOnceAndUpdateDemographics() throws Exception {
 		CountDownLatch refreshed = new CountDownLatch(1);
 		AtomicInteger refreshCount = new AtomicInteger();
 		AtomicInteger validations = new AtomicInteger();
