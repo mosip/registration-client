@@ -152,6 +152,33 @@ jobs:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
   
 
+  build-registration-test-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build registration-test image
+        run: |
+          docker build \
+            -f registration/registration-test/Dockerfile \
+            --build-arg SOURCE=${{ github.repository }} \
+            --build-arg COMMIT_HASH=$(git rev-parse HEAD) \
+            --build-arg COMMIT_ID=$(git rev-parse --short HEAD) \
+            --build-arg BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
+            -t registration-test \
+            registration
+
+      - name: Log into registry
+        if: github.event_name != 'pull_request'
+        run: echo "${{ secrets.RELEASE_DOCKER_HUB }}" | docker login -u ${{ secrets.ACTOR_DOCKER_HUB }} --password-stdin
+
+      - name: Push registration-test image
+        if: github.event_name != 'pull_request'
+        run: |
+          IMAGE_ID=$(echo "${{ secrets.DEV_NAMESPACE_DOCKER_HUB }}/registration-test" | tr '[:upper:]' '[:lower:]')
+          docker tag registration-test "$IMAGE_ID:${{ github.ref_name }}"
+          docker push "$IMAGE_ID:${{ github.ref_name }}"
+
   build-regclient-keystore-docker:
     strategy:
       matrix:

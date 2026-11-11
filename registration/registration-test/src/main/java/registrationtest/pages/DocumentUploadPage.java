@@ -92,17 +92,29 @@ public class DocumentUploadPage {
                 Set<String> dropkeys = mapDropValue.keySet();
                 if (!dropkeys.isEmpty()) {
                     user_selects_combo_itemdoc(id, mapDropValue.get(dropkeys.iterator().next()));
-                    String scanBtn = id + "button";
-
-                    Button scanButton = waitsUtil.waitForNode(scanBtn, Button.class);
-                    robot.moveTo(scanButton);
-                    robot.clickOn(scanButton);
+                    WaitForAsyncUtils.waitForFxEvents();
+                    openScanPopup(id + "button");
                     selectDocumentScan();
                 }
             }
         } catch (Exception e) {
 
             logger.error("", e);
+        }
+    }
+
+    /** Clicks the scan button; a click that lands while the screen is still updating opens nothing, so retry once. */
+    private void openScanPopup(String scanBtn) {
+        for (int attempt = 1; attempt <= 2; attempt++) {
+            Button scanButton = waitsUtil.waitForNode(scanBtn, Button.class);
+            WaitsUtil.scrollIntoView(scanButton);
+            robot.clickOn(scanButton);
+            try {
+                waitsUtil.waitForFirstVisibleNode(captureBtn, 10_000);
+                return;
+            } catch (RuntimeException e) {
+                logger.info("Scan popup not open after attempt {} for {}", attempt, scanBtn);
+            }
         }
     }
 

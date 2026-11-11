@@ -13,6 +13,8 @@
    <properties>
       <maven.compiler.source>21</maven.compiler.source>
       <maven.compiler.target>21</maven.compiler.target>
+      <!-- 1.2.0.2 accepts the previousHash=null capture this 1.2 client sends. Newer Mock MDS rejects it. -->
+      <mock.mds.version>1.2.0.2</mock.mds.version>
    </properties>
    <dependencies>
       <!-- QA dependency starts -->
@@ -69,18 +71,35 @@
          <version>${mosip.registration.client.version}</version>
          <scope>provided</scope>
       </dependency>
+      <!-- Started as its own process from target/mockmds. Kept off this project's classpath. -->
+      <dependency>
+         <groupId>io.mosip.mock.mds</groupId>
+         <artifactId>mock-mds</artifactId>
+         <version>${mock.mds.version}</version>
+         <scope>provided</scope>
+         <exclusions>
+            <exclusion>
+               <groupId>*</groupId>
+               <artifactId>*</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+      <dependency>
+         <groupId>org.postgresql</groupId>
+         <artifactId>postgresql</artifactId>
+         <version>42.7.5</version>
+      </dependency>
       <dependency>
          <groupId>org.testfx</groupId>
          <artifactId>openjfx-monocle</artifactId>
-         <version>jdk-11+26</version> <!-- jdk-11+26 for Java 11, jdk-9+181 for Java 9, 8u76-b04 for Java 8 -->
+         <version>21.0.2</version> <!-- must match the client's JavaFX major version (21) for -Dheadless=true -->
+         <exclusions>
+            <exclusion>
+               <groupId>org.openjfx</groupId>
+               <artifactId>*</artifactId>
+            </exclusion>
+         </exclusions>
       </dependency>
-      <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-graphics -->
-<dependency>
-    <groupId>org.openjfx</groupId>
-    <artifactId>javafx-graphics</artifactId>
-    <version>15</version>
-</dependency>
-
 <!-- https://mvnrepository.com/artifact/io.rest-assured/rest-assured -->
 <dependency>
     <groupId>io.rest-assured</groupId>
@@ -162,6 +181,35 @@
                </execution>
             </executions>
          </plugin>-->
+          <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-invoker-plugin</artifactId>
+              <version>3.8.1</version>
+              <executions>
+                  <execution>
+                      <id>stage-mockmds</id>
+                      <phase>prepare-package</phase>
+                      <goals>
+                          <goal>run</goal>
+                      </goals>
+                      <configuration>
+                          <projectsDirectory>${project.basedir}/src/main/mockmds</projectsDirectory>
+                          <cloneProjectsTo>${project.build.directory}/invoker-mockmds</cloneProjectsTo>
+                          <pomIncludes>
+                              <pomInclude>pom.xml</pomInclude>
+                          </pomIncludes>
+                          <goals>
+                              <goal>dependency:copy-dependencies</goal>
+                          </goals>
+                          <properties>
+                              <mock.mds.version>${mock.mds.version}</mock.mds.version>
+                              <outputDirectory>${project.build.directory}/mockmds/lib</outputDirectory>
+                          </properties>
+                          <streamLogs>true</streamLogs>
+                      </configuration>
+                  </execution>
+              </executions>
+          </plugin>
           <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-antrun-plugin</artifactId>

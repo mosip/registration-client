@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.mosip.registration</groupId>
+    <artifactId>mock-mds-runtime</artifactId>
+    <version>1.0</version>
+    <description>Stages the mock-mds jar and its runtime libraries. Not part of the registration-test classpath.</description>
+
+    <properties>
+        <mock.mds.version>1.2.0.2</mock.mds.version>
+        <outputDirectory>${project.build.directory}/lib</outputDirectory>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.mosip.mock.mds</groupId>
+            <artifactId>mock-mds</artifactId>
+            <version>${mock.mds.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <configuration>
+                    <outputDirectory>${outputDirectory}</outputDirectory>
+                    <includeScope>runtime</includeScope>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

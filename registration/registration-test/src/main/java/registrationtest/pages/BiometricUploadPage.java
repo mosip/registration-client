@@ -344,7 +344,10 @@ public class BiometricUploadPage {
 				bioCorrectionPage.setMDSscore(type, JsonUtil.JsonObjParsing(jsonContent, "score" + i));
 
 				try {
-					waitsUtil.waitForNode(scanButtonId);
+					if (waitsUtil.waitForNode(scanButtonId).isDisabled()) {
+						logger.info("Retries used up before attempt {} for {}", i, idModality);
+						break;
+					}
 				} catch (RuntimeException e) {
 					logger.info("Scan button disappeared before attempt {} for {}", i, idModality);
 					break;
@@ -629,6 +632,21 @@ public class BiometricUploadPage {
 		}
 	}
 
+	/** Threshold shown in the capture popup, e.g. "Threshold  60.0%". */
+	private Integer popupThreshold() {
+		for (Node node : robot.lookup("#thresholdLabel").queryAll()) {
+			if (node instanceof Label && node.isVisible() && node.getScene() != null
+					&& node.getScene().getWindow() != null && node.getScene().getWindow().isShowing()) {
+				java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+(?:\\.\\d+)?)")
+						.matcher(((Label) node).getText());
+				if (m.find()) {
+					return (int) Math.ceil(Double.parseDouble(m.group(1)));
+				}
+			}
+		}
+		return null;
+	}
+
 	private int readThresholdScoreSafe(String idBioType, String jsonContent) {
 		try {
 			idBioType = idBioType.equals("#") ? idBioType.concat("t") : idBioType.concat("T");
@@ -638,6 +656,10 @@ public class BiometricUploadPage {
 				if (!val.equalsIgnoreCase("")) {
 					return Integer.parseInt(val);
 				}
+			}
+			Integer popupThreshold = popupThreshold();
+			if (popupThreshold != null) {
+				return popupThreshold;
 			}
 			return Integer.parseInt(JsonUtil.JsonObjParsing(jsonContent, "score1"));
 		} catch (Exception e) {
@@ -760,13 +782,36 @@ public class BiometricUploadPage {
 		robot.clickOn(modalityButton);
 		WaitForAsyncUtils.waitForFxEvents();
 
-		waitsUtil.waitForFirstVisibleNode(paneId, 20_000);
+		Node completionMark = waitsUtil.waitForFirstVisibleNode(paneId, 20_000);
 		boolean retained = exceptionOnly ? hasRetainedExceptionSelection(modality)
-				: EXCEPTION_PHOTO.equals(modality)
-						? getAttemptSlap(modalitySelector) > 0 || getQualityScore(modalitySelector) > 0
-						: getQualityScore(modalitySelector) > 0;
+				: hasCapturedScore(bioFieldId, modalitySelector, completionMark);
 		assertTrue(retained, description + " not retained on biometric page after document navigation");
 		ExtentReportUtil.test1.info(description + " verified on biometric page");
+	}
+
+	/**
+	 * Newer clients label the score per modality (e.g. individualBiometricsIRIS_DOUBLEQualityScore); older ones
+	 * have one shared label (individualBiometricsQualityScore) and mark a captured modality with its PANE image.
+	 */
+	private boolean hasCapturedScore(String bioFieldId, String modalitySelector, Node completionMark) {
+		Label perModality = lookupScoreLabel(modalitySelector + "Q" + qualityScore);
+		if (perModality != null) {
+			return getAttemptSlap(modalitySelector) > 0 || scoreOf(perModality) > 0;
+		}
+		Label shared = lookupScoreLabel("#" + bioFieldId + "Q" + qualityScore);
+		if (shared != null && shared.isVisible() && scoreOf(shared) > 0) {
+			return true;
+		}
+		return completionMark != null && completionMark.isVisible();
+	}
+
+	private int scoreOf(Label label) {
+		String val = label.getText() == null ? "" : label.getText().replace("%", "").trim();
+		try {
+			return val.isEmpty() ? 0 : (int) Double.parseDouble(val);
+		} catch (NumberFormatException e) {
+			return 0;
+		}
 	}
 
 	public void infantbioUploadTBD(String idmod, List<String> list, String id, String identity) {

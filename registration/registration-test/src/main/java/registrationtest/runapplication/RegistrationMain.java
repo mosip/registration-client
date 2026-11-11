@@ -16,10 +16,13 @@ import registrationtest.pojo.output.RID;
 import registrationtest.testcases.*;
 import registrationtest.utility.DateUtil;
 import registrationtest.utility.ExtentReportUtil;
+import registrationtest.utility.HeadlessMode;
 import registrationtest.utility.JsonUtil;
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.stage.Stage;
 
 
 
@@ -53,6 +56,7 @@ public class RegistrationMain {
                     Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait")));
 
                     robot = new FxRobot();
+                    keepClientInFront(ClientApplication.getPrimaryStage());
                     ExtentReportUtil.ExtentSetting();
 
                     LinkedHashMap<String, String> map = readJsonFileText(
@@ -81,7 +85,9 @@ public class RegistrationMain {
                                 rid1 = loginNewRegLogout.newRegistration(robot, operatorId, operatorPwd, supervisorId,
                                         supervisorPwd, ClientApplication.getPrimaryStage(), jsonContent, process, ageGroup,
                                         fileName, ClientApplication.getApplicationContext());
-                                logger.info("RID RESULTS-" + rid1.result + "\t" + rid1.ridDateTime + "\t" + rid1.rid);
+                                if (rid1 != null) {
+                                    logger.info("RID RESULTS-" + rid1.result + "\t" + rid1.ridDateTime + "\t" + rid1.rid);
+                                }
                                 ExtentReportUtil.reports.flush();
                                 break;
                             case "Lost":
@@ -90,7 +96,9 @@ public class RegistrationMain {
                                 rid2 = lostUINLogout.lostRegistration(robot, operatorId, operatorPwd, supervisorId,
                                         supervisorPwd, ClientApplication.getPrimaryStage(), jsonContent, process, ageGroup,
                                         fileName, ClientApplication.getApplicationContext());
-                                logger.info("RID RESULTS-" + rid2.result + "\t" + rid2.ridDateTime + "\t" + rid2.rid);
+                                if (rid2 != null) {
+                                    logger.info("RID RESULTS-" + rid2.result + "\t" + rid2.ridDateTime + "\t" + rid2.rid);
+                                }
                                 ExtentReportUtil.reports.flush();
                                 break;
                             case "Update":
@@ -99,16 +107,33 @@ public class RegistrationMain {
                                 rid5 = updatereg.updateRegistration(robot, operatorId, operatorPwd, supervisorId,
                                         supervisorPwd, ClientApplication.getPrimaryStage(), jsonContent, process, ageGroup,
                                         fileName, ClientApplication.getApplicationContext());
-                                logger.info("RID RESULTS-" + rid5.result + "\t" + rid5.ridDateTime + "\t" + rid5.rid);
+                                if (rid5 != null) {
+                                    logger.info("RID RESULTS-" + rid5.result + "\t" + rid5.ridDateTime + "\t" + rid5.rid);
+                                }
                                 ExtentReportUtil.reports.flush();
                                 break;
                             case "bioCorrection":
                                 rid1 = null;
                                 ageGroup = JsonUtil.JsonObjParsing(jsonContent, "ageGroup");
+                                try {
+                                    jsonContent = BioCorrectionSeed.prepare(robot, operatorId, operatorPwd,
+                                            supervisorId, supervisorPwd, ClientApplication.getPrimaryStage(),
+                                            jsonContent, fileName, ClientApplication.getApplicationContext());
+                                } catch (Exception e) {
+                                    logger.error("BIOMETRIC_CORRECTION request could not be prepared", e);
+                                    ExtentReportUtil.test1 = ExtentReportUtil.reports.createTest(
+                                            "New Registration Scenario : " + process + " FileName : " + fileName);
+                                    ExtentReportUtil.test1.log(Status.FAIL,
+                                            "BIOMETRIC_CORRECTION request could not be prepared: " + e.getMessage());
+                                    ExtentReportUtil.reports.flush();
+                                    break;
+                                }
                                 rid1 = bioCorrection.bioCorrection(robot, operatorId, operatorPwd, supervisorId,
                                         supervisorPwd, ClientApplication.getPrimaryStage(), jsonContent, process, ageGroup,
                                         fileName, ClientApplication.getApplicationContext());
-                                logger.info("RID RESULTS-" + rid1.result + "\t" + rid1.ridDateTime + "\t" + rid1.rid);
+                                if (rid1 != null) {
+                                    logger.info("RID RESULTS-" + rid1.result + "\t" + rid1.ridDateTime + "\t" + rid1.rid);
+                                }
                                 ExtentReportUtil.reports.flush();
                                 break;
                             case "InitialLaunch":
@@ -135,7 +160,7 @@ public class RegistrationMain {
                                 logger.info("Choose correct process for automation or go with manual flow");
 
                             }
-                        } catch (Exception e) {
+                        } catch (Throwable e) {
 
                             logger.error("", e);
 
@@ -165,17 +190,6 @@ public class RegistrationMain {
         thread.start();
 
         String args[] = {};
-        
-        
-//		   System.setProperty("testfx.robot", "glass");
-//		    System.setProperty("testfx.headless", "true");
-//		    System.setProperty("prism.order", "sw");
-//		    System.setProperty("prism.text", "t2k");
-//		    System.setProperty("java.awt.headless", "true");
-//		    System.setProperty("glass.platform","Monocle");
-//		    System.setProperty("monocle.platform","Headless");
-
-
         LauncherImpl.launchApplication(ClientApplication.class, ClientPreLoader.class, args);
     }
     
@@ -198,6 +212,7 @@ public class RegistrationMain {
 					Thread.sleep(Long.parseLong(PropertiesUtil.getKeyValue("ApplicationLaunchTimeWait")));
 
 					robot = new FxRobot();
+					keepClientInFront(ClientApplication.getPrimaryStage());
 					ExtentReportUtil.ExtentSetting();
 
 					String manualFlag = PropertiesUtil.getKeyValue("manual");
@@ -245,14 +260,19 @@ public class RegistrationMain {
             System.setProperty("file.encoding", "UTF-8");
             System.setProperty("derby.ui.codeset", "UTF-8");
             System.setProperty("jdbc.drivers", "org.apache.derby.jdbc.EmbeddedDriver");
-            
+            HeadlessMode.configure();
+            Runtime.getRuntime().addShutdownHook(new Thread(MockMdsServer::stop, "mock-mds-stop"));
+            MockMdsServer.start();
+
             if ("initiallaunch".equalsIgnoreCase(System.getProperty("module.run")))  {
             	PropertiesUtil.deleteFolder(System.getProperty("user.dir")+"/logs");
             	PropertiesUtil.deleteFolder(System.getProperty("user.dir")+"/db");
-            	PropertiesUtil.deleteFolder(System.getProperty("user.dir")+"/.mosipkeys");
+            	// Only the DB secret goes with the DB; the machine key pair in .mosipkeys must survive
+            	// because runSetup.bat registered this machine on the server with those keys.
+            	PropertiesUtil.deleteFolder(System.getProperty("user.dir")+"/.mosipkeys/db.conf");
             	invokeRegClientInitialLaunch(PropertiesUtil.getKeyValue("operatorId"), PropertiesUtil.getKeyValue("operatorPwd"),
 						PropertiesUtil.getKeyValue("supervisorUserid"), PropertiesUtil.getKeyValue("supervisorUserpwd"),
-						PropertiesUtil.getKeyValue("reviewmvn clean install -DskipTests -Dgpg.skip=trueerUserid"), PropertiesUtil.getKeyValue("reviewerpwd"));
+						PropertiesUtil.getKeyValue("reviewerUserid"), PropertiesUtil.getKeyValue("reviewerpwd"));
 				return;
             }   
 
@@ -263,6 +283,18 @@ public class RegistrationMain {
             logger.error("", e);
         }
 
+    }
+
+    // FxRobot sends real OS mouse/keyboard events, which go to whichever window is on top; if another window
+    // (IDE, notifications) comes to the front, the input never reaches the client.
+    private static void keepClientInFront(Stage stage) {
+        if (HeadlessMode.isEnabled()) {
+            return;
+        }
+        Platform.runLater(() -> {
+            stage.setAlwaysOnTop(true);
+            stage.toFront();
+        });
     }
 
     public static String[] readFolderJsonList(String key) {

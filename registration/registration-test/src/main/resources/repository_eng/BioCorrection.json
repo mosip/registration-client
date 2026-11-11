@@ -1,6 +1,6 @@
 {
   "identity": {
-	  "additionalInfoRequestId":"34287982413467-BIOMETRIC_CORRECTION-1",
+	  "additionalInfoRequestId":"AUTO",
 	  "UIN":"4538471905",
 	  "ackTests":["additionalInfoRequestId","dateTime","biometrics"],
 	  "BELOW_ARE_STATIC_KEYWORDS":"",

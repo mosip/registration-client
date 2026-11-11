@@ -49,7 +49,8 @@ public class LoginPage {
     String logout = "#logout";
     String submit = "#submit1";
     String userOnboardMessage = "#userOnboardMessage";
-    String success = "#success";
+    String success = "#context";
+    String alertHeader = "#header";
     String failed = "#Failed";
     String exit = "#exit";
     String appLanguage = "#appLanguage";
@@ -362,9 +363,12 @@ public class LoginPage {
 
             waitsUtil.clickNodeAssert("#sub2");
             Thread.sleep(35000);
-            waitsUtil.clickNodeAssert(success);
+            Label header = waitsUtil.waitForNode(alertHeader, Label.class);
+            Label context = waitsUtil.waitForNode(success, Label.class);
+            logger.info("Initial sync alert: {} - {}", header.getText(), context.getText());
+            ExtentReportUtil.test1.info("Initial sync alert: " + header.getText() + " - " + context.getText());
 
-            flag = true;
+            flag = "Success".equalsIgnoreCase(header.getText().trim());
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -375,8 +379,6 @@ public class LoginPage {
     public boolean verifyOnbard(String identity) {
         boolean flag = false;
         try {
-            waitsUtil.clickNodeAssert("#sub2");
-
             waitsUtil.clickNodeAssert("#homeImgView");
             flag = true;
             try {

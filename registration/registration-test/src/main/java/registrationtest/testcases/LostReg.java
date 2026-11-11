@@ -207,7 +207,7 @@ public class LostReg {
 //Logout Regclient
             rid1.appidrid = rid1.getAppidrid(applicationContext, rid1.rid);
             rid1.setResult(result);
-        } catch (Exception e) {
+        } catch (Exception | AssertionError e) {
 
             logger.error("", e);
 
@@ -222,14 +222,14 @@ public class LostReg {
         try {
             homePage.clickHomeImg();
             buttons.clickConfirmBtn();
-        } catch (Exception e) {
+        } catch (Exception | AssertionError e) {
             logger.error("", e);
         }
         try {
             loginPage.logout();
             buttons.clickConfirmBtn();
 
-        } catch (Exception e) {
+        } catch (Exception | AssertionError e) {
             logger.error("", e);
         }
 

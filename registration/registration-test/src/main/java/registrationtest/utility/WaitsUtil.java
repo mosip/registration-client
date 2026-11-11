@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -18,15 +19,21 @@ import javax.imageio.ImageIO;
 import static org.awaitility.Awaitility.*;
 
 import org.testfx.api.FxRobot;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Bounds;
 import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.image.WritableImage;
+import javafx.stage.Window;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 
 
+import org.testfx.service.locator.BoundsLocatorException;
 import org.testfx.util.WaitForAsyncUtils;
 
 import static org.testfx.assertions.api.Assertions.assertThat;
@@ -77,8 +84,53 @@ public class WaitsUtil {
     	waitForNode(id);
         node = lookupById(id);
         assertThat(robot.lookup(id).tryQuery()).isNotNull();
-        robot.moveTo(node);
+        try {
+            robot.moveTo(node);
+        } catch (RuntimeException e) {
+            if (!isOutOfView(e)) {
+                throw e;
+            }
+            scrollIntoView(node);
+            robot.moveTo(node);
+        }
         robot.clickOn(node);
+    }
+
+    private static boolean isOutOfView(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause()) {
+            if (t instanceof BoundsLocatorException) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Scrolls every enclosing ScrollPane so that the node is inside its viewport. */
+    public static void scrollIntoView(Node node) {
+        try {
+            WaitForAsyncUtils.asyncFx(() -> {
+                for (Parent p = node.getParent(); p != null; p = p.getParent()) {
+                    if (!(p instanceof ScrollPane) || ((ScrollPane) p).getContent() == null) {
+                        continue;
+                    }
+                    ScrollPane sp = (ScrollPane) p;
+                    Node content = sp.getContent();
+                    Bounds inContent = content.sceneToLocal(node.localToScene(node.getBoundsInLocal()));
+                    double contentHeight = content.getBoundsInLocal().getHeight();
+                    double viewHeight = sp.getViewportBounds().getHeight();
+                    if (inContent == null || contentHeight <= viewHeight) {
+                        continue;
+                    }
+                    double top = inContent.getMinY() - Math.max(0, (viewHeight - inContent.getHeight()) / 2);
+                    double ratio = Math.max(0, Math.min(1, top / (contentHeight - viewHeight)));
+                    sp.setVvalue(sp.getVmin() + (sp.getVmax() - sp.getVmin()) * ratio);
+                    sp.layout();
+                }
+            }).get(10, TimeUnit.SECONDS);
+            WaitForAsyncUtils.waitForFxEvents();
+        } catch (Exception e) {
+            logger.error("Failed to scroll node into view", e);
+        }
     }
     
     public void assertNodeDisabled(String id) {
@@ -365,11 +417,15 @@ public class WaitsUtil {
     public static String capture() {
         String snapshotpath = null;
         try {
-            Robot rb = new Robot();
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-
-            Rectangle rec = new Rectangle(0, 0, screenSize.width, screenSize.height);
-            BufferedImage image = rb.createScreenCapture(rec);
+            BufferedImage image;
+            if (HeadlessMode.isEnabled()) {
+                image = snapshotTopWindow();
+            } else {
+                Robot rb = new Robot();
+                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                Rectangle rec = new Rectangle(0, 0, screenSize.width, screenSize.height);
+                image = rb.createScreenCapture(rec);
+            }
             // Image myImage=SwingFXUtils.toFXImage(image, null);
 
             Path SNAPSHOTPATH = Paths.get(System.getProperty("user.dir"), "snapshot",
@@ -388,6 +444,19 @@ public class WaitsUtil {
         }
         return snapshotpath;
 
+    }
+
+    private static BufferedImage snapshotTopWindow() throws Exception {
+        WritableImage fxImage = WaitForAsyncUtils.asyncFx(() -> {
+            List<Window> showing = Window.getWindows().filtered(Window::isShowing);
+            Scene scene = showing.get(showing.size() - 1).getScene();
+            return scene.snapshot(null);
+        }).get(30, TimeUnit.SECONDS);
+        BufferedImage argb = SwingFXUtils.fromFXImage(fxImage, null);
+        // JPEG has no alpha channel
+        BufferedImage rgb = new BufferedImage(argb.getWidth(), argb.getHeight(), BufferedImage.TYPE_INT_RGB);
+        rgb.createGraphics().drawImage(argb, 0, 0, null);
+        return rgb;
     }
 
 }

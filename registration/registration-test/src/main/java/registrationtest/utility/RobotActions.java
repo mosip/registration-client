@@ -4,10 +4,15 @@ package registrationtest.utility;
 
 import java.awt.Robot;
 import java.awt.event.KeyEvent;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.testfx.api.FxRobot;
+import org.testfx.util.WaitForAsyncUtils;
 
+import io.mosip.registration.controller.ClientApplication;
 import javafx.scene.input.KeyCode;
+import javafx.stage.Window;
 
 public class RobotActions {
     private static final org.slf4j.Logger logger= org.slf4j.LoggerFactory.getLogger(RobotActions.class);
@@ -19,6 +24,10 @@ public class RobotActions {
     }
 
     public void closeWindow() {
+        if (HeadlessMode.isEnabled()) {
+            hideTopPopupWindow();
+            return;
+        }
         robot.press(KeyCode.ALT);
         robot.press(KeyCode.F4);
         robot.release(KeyCode.F4);
@@ -26,11 +35,29 @@ public class RobotActions {
 
     }
 
+    // Monocle has no window manager, so Alt+F4 does nothing there; the primary stage is never closed.
+    private void hideTopPopupWindow() {
+        try {
+            WaitForAsyncUtils.asyncFx(() -> {
+                List<Window> popups = Window.getWindows()
+                        .filtered(w -> w.isShowing() && w != ClientApplication.getPrimaryStage());
+                if (!popups.isEmpty()) {
+                    popups.get(popups.size() - 1).hide();
+                }
+            }).get(10, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            logger.error("Failed to close popup window", e);
+        }
+    }
+
     public void clickWindow() {
         robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
     }
 
     public void dismissNativePrintDialogAsync() {
+        if (HeadlessMode.isEnabled()) {
+            return;
+        }
         Thread dialogHandler = new Thread(this::dismissNativePrintSaveDialog, "native-print-dialog-handler");
         dialogHandler.setDaemon(true);
         dialogHandler.start();

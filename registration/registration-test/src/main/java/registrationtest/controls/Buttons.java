@@ -109,6 +109,10 @@ public class Buttons {
         waitsUtil.assertNodeDisabled(submit);
     }
     
+    public boolean isSubmitButtonDisabled() {
+        return waitsUtil.waitForNodePresent(submit).isDisable();
+    }
+
     public void verifySubmitButtonEnabled() {
         logger.info("verifySubmitButtonEnabled");
         waitsUtil.assertNodeEnabled(submit);

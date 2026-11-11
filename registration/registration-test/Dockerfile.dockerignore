@@ -1,0 +1,13 @@
+**/.git
+**/target
+registration-test/db
+registration-test/.mosipkeys
+registration-test/snapshot
+registration-test/mds-certs
+registration-test/logs
+registration-test/SCHEMA_*.json
+registration-test/*Process.json
+registration-test/applicanttype.mvel
+registration-services/SCHEMA_*.json
+registration-services/newProcess.json
+**/*.log

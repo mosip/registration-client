@@ -768,15 +768,29 @@ public class DemographicPage {
 
     public void getTextboxKeyValueUpdate(Schema schema, String id, String JsonIdentity, String key, Boolean trans,
             String scenario, String ageGroup) {
-        for (String uinlist : getupdateUINAttributes(JsonIdentity)) {
-            if (schema.getGroup().equals(uinlist)) {
-                if (ageGroup.equalsIgnoreCase("INFANT") || ageGroup.equalsIgnoreCase("MINOR"))
-                    getTextboxKeyValueChild1(schema, id, JsonIdentity, key, schema.isTransliterate(), scenario);
-                else
-                    getTextboxKeyValue(schema, id, JsonIdentity, key, schema.isTransliterate(), scenario);
-
-            }
+        if (isGroupSelectedForUpdate(schema.getGroup(), getupdateUINAttributes(JsonIdentity))) {
+            if (ageGroup.equalsIgnoreCase("INFANT") || ageGroup.equalsIgnoreCase("MINOR"))
+                getTextboxKeyValueChild1(schema, id, JsonIdentity, key, schema.isTransliterate(), scenario);
+            else
+                getTextboxKeyValue(schema, id, JsonIdentity, key, schema.isTransliterate(), scenario);
         }
+    }
+
+    /** FullName and FirstName/LastName are the same update group on schemas that use one or the other. */
+    private boolean isGroupSelectedForUpdate(String group, List<String> updateAttributes) {
+        if (group == null || updateAttributes == null) {
+            return false;
+        }
+        if (updateAttributes.contains(group)) {
+            return true;
+        }
+        if ("FullName".equals(group)) {
+            return updateAttributes.contains("FirstName") || updateAttributes.contains("LastName");
+        }
+        if ("FirstName".equals(group) || "LastName".equals(group)) {
+            return updateAttributes.contains("FullName");
+        }
+        return false;
     }
 
     public void getTextboxKeyValueChild1(Schema schema, String id, String JsonIdentity, String key, Boolean trans,
