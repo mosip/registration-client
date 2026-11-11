@@ -382,7 +382,8 @@
 		<dependency>
 			<artifactId>kernel-biosdk-provider</artifactId>
 			<groupId>io.mosip.kernel</groupId>
-			<version>${mosip.core.kernel.version}</version>
+			<!-- 1.4.0-SNAPSHOT was not published; the other kernel artifacts remain on 1.4.0-SNAPSHOT. -->
+			<version>1.4.1-SNAPSHOT</version>
 			<exclusions>
 				<exclusion>
 					<groupId>io.mosip.kernel</groupId>
