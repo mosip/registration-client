@@ -166,7 +166,7 @@ jobs:
 
       - name: Use the jars from the registration build
         run: |
-          unzip -q registration/registration-local.zip -d registration
+          unzip -q registration-local.zip -d registration
           find registration/registration-client/target -maxdepth 1 -type f -name 'registration-client-*.jar' \
             ! -name '*-sources.jar' ! -name '*-javadoc.jar' \
             -exec cp {} registration/registration-client/target/lib/ \;
