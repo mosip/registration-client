@@ -2,9 +2,10 @@
 
 The image runs the same headless flow as `runAll.bat -Dheadless=true`. It does not use the Windows `jre` folder. JavaFX is drawn with Monocle, and Mock MDS is started by the automation on port 4501 inside the container.
 
-Build from the `registration` directory so the Linux JavaFX natives are resolved inside the image:
+Build the registration reactor first, on Linux, then package that output. The GitHub Action does this in `build-regclient-local` and the test image job waits for it.
 
 ```bash
+mvn -f pom.xml package -DskipTests -Dgpg.skip
 docker build -f registration-test/Dockerfile -t registration-test:local .
 ```
 

@@ -153,9 +153,30 @@ jobs:
   
 
   build-registration-test-docker:
+    needs: build-regclient-local
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Download the registration build
+        uses: actions/download-artifact@v4
+        with:
+          name: registration-local
+          path: ./
+
+      - name: Use the jars from the registration build
+        run: |
+          unzip -q registration/registration-local.zip -d registration
+          find registration/registration-client/target -maxdepth 1 -type f -name 'registration-client-*.jar' \
+            ! -name '*-sources.jar' ! -name '*-javadoc.jar' \
+            -exec cp {} registration/registration-client/target/lib/ \;
+          find registration/registration-test/target -maxdepth 1 -type f -name 'registration-test-*.jar' \
+            ! -name '*-sources.jar' ! -name '*-javadoc.jar' \
+            -exec cp {} registration/registration-test/target/registration-test.jar \;
+          test -s registration/registration-test/target/registration-test.jar
+          test -d registration/registration-client/target/lib
+          test -d registration/registration-test/target/lib
+          test -d registration/registration-test/target/mockmds/lib
 
       - name: Build registration-test image
         run: |

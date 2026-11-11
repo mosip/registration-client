@@ -1,5 +1,4 @@
 **/.git
-**/target
 registration-test/db
 registration-test/.mosipkeys
 registration-test/snapshot

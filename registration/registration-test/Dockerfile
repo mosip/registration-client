@@ -1,21 +1,11 @@
 # Linux image for the Registration Client UI automation.
-# Build from the registration/ directory so Maven resolves Linux JavaFX natives:
+# The registration reactor is built first (locally, or by the GitHub Action job
+# build-regclient-local). This image only packages those jars.
+#
+#   mvn -f pom.xml package -DskipTests -Dgpg.skip
 #   docker build -f registration-test/Dockerfile -t registration-test:local .
 #
-# Same shape as mosip/admin-ui uitest-admin: a non-root user, a small entrypoint,
-# and configuration supplied at run time rather than baked into the command.
-
-FROM maven:3.9.6-eclipse-temurin-21 AS build
-
-WORKDIR /src
-COPY . /src
-
-RUN mvn -B -DskipTests -Dgpg.skip -Dmaven.gitcommitid.skip=true clean package -pl registration-test -am \
-    && mkdir -p /out \
-    && find registration-test/target -maxdepth 1 -type f -name 'registration-test-*.jar' \
-         ! -name '*-sources.jar' ! -name '*-javadoc.jar' \
-         -exec cp {} /out/registration-test.jar \; \
-    && test -s /out/registration-test.jar
+# Build context is the registration/ directory.
 
 FROM eclipse-temurin:21-jre-jammy
 
@@ -81,11 +71,11 @@ RUN apt-get update \
     && mkdir -p /opt/registration-test /config \
     && chown -R ${container_user}:${container_user} /opt/registration-test /config "${work_dir}"
 
-COPY --from=build --chown=${container_user_uid}:${container_user_gid} /out/registration-test.jar /opt/registration-test/registration-test.jar
-COPY --from=build --chown=${container_user_uid}:${container_user_gid} /src/registration-test/target/lib /opt/registration-test/testlib
-COPY --from=build --chown=${container_user_uid}:${container_user_gid} /src/registration-client/target/lib /opt/registration-test/lib
-COPY --from=build --chown=${container_user_uid}:${container_user_gid} /src/registration-test/target/mockmds /opt/registration-test/mockmds
-COPY --from=build --chown=${container_user_uid}:${container_user_gid} /src/registration-test/src/main/resources /opt/registration-test/resources
+COPY --chown=${container_user_uid}:${container_user_gid} registration-client/target/lib /opt/registration-test/lib
+COPY --chown=${container_user_uid}:${container_user_gid} registration-test/target/registration-test.jar /opt/registration-test/registration-test.jar
+COPY --chown=${container_user_uid}:${container_user_gid} registration-test/target/lib /opt/registration-test/testlib
+COPY --chown=${container_user_uid}:${container_user_gid} registration-test/target/mockmds /opt/registration-test/mockmds
+COPY --chown=${container_user_uid}:${container_user_gid} registration-test/src/main/resources /opt/registration-test/resources
 COPY --chown=${container_user_uid}:${container_user_gid} registration-test/entrypoint.sh /opt/registration-test/entrypoint.sh
 RUN chmod 755 /opt/registration-test/entrypoint.sh
 
