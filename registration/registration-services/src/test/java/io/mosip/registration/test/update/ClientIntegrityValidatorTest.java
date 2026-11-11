@@ -119,7 +119,6 @@ public class ClientIntegrityValidatorTest {
 		ClientIntegrityValidator.verifyClientIntegrity();
 	}
 
-	@Ignore //Skipped due to trusted certificate is expired
 	@Test
 	public void integrityCheckTest() throws IOException {
 		URL url = ManifestCreatorTest.class.getResource("/setup/registration-api-1.3.0-SNAPSHOT.jar");

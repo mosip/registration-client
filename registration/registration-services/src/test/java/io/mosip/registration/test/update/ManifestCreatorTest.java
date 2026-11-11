@@ -76,7 +76,6 @@ public class ManifestCreatorTest extends ManifestCreator {
     }
 
 
-    @Ignore //Skipped due to trusted certificate is expired
     @Test
     public void listMode_explicitFiles_createsManifest() throws Exception {
         listModeTempDir = Files.createTempDirectory("manifest-list-mode").toFile();
