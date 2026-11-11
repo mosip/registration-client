@@ -7,7 +7,9 @@
 #
 # Build context is the registration/ directory.
 
-FROM eclipse-temurin:21-jre-jammy
+# JDK, not the JRE image: JavaFX swing requires jdk.unsupported.desktop, and the
+# Temurin JRE build does not include that module.
+FROM eclipse-temurin:21-jdk-jammy
 
 ARG SOURCE
 ARG COMMIT_HASH

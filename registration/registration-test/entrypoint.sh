@@ -121,6 +121,23 @@ monocle_jar() {
     printf '%s\n' "${jar}"
 }
 
+# Temurin does not ship JavaFX. The runnable modules are the platform jars
+# (javafx-*-linux.jar); the unscoped javafx-*.jar files are empty placeholders.
+javafx_module_dir() {
+    local dir jar found=0
+    dir="${work_dir}/.javafx-modules"
+    mkdir -p "${dir}"
+    while IFS= read -r jar; do
+        ln -sfn "$(pwd)/${jar}" "${dir}/$(basename "${jar}")"
+        found=1
+    done < <(find -H lib -maxdepth 1 -type f -name 'javafx-*-linux*.jar' -print)
+    if [ "${found}" -eq 0 ]; then
+        echo "JavaFX Linux modules were not found under lib" >&2
+        exit 1
+    fi
+    printf '%s\n' "${dir}"
+}
+
 run_setup() {
     echo "=== Environment setup ==="
     java "${common_opts[@]}" -cp "${classpath}" registrationtest.runapplication.EnvironmentSetup "$@" 2>&1 | tee setup.log
@@ -137,6 +154,7 @@ run_client() {
     # shellcheck disable=SC2086
     java ${JAVA_OPTS:--Xms512m -Xmx2048m} "${patch[@]}" "${common_opts[@]}" \
         -Djdbc.drivers=org.apache.derby.jdbc.EmbeddedDriver \
+        --module-path "$(javafx_module_dir)" \
         "${javafx_opts[@]}" \
         "$@" \
         -cp "${classpath}" \
