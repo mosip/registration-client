@@ -5,14 +5,11 @@ import io.mosip.registration.mdm.spec_0_9_5.service.impl.MosipDeviceSpecificatio
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.lang.reflect.Method;
 
-@RunWith(SpringRunner.class)
 public class MosipDeviceSpecification_095_ProviderImplTest {
 
     @InjectMocks
