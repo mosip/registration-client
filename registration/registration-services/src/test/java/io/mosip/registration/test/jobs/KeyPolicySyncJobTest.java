@@ -29,8 +29,6 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.amazonaws.services.iot.model.JobExecution;
-
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.context.SessionContext.UserContext;
 import io.mosip.registration.dao.SyncJobConfigDAO;
@@ -89,8 +87,6 @@ public class KeyPolicySyncJobTest {
 	private UserContext userContext;
 	@Mock
 	private RegistrationCenterDetailDTO registrationCenterDetailDTO;
-	@InjectMocks
-	private JobExecution jobExecutor = new JobExecution();
 
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();

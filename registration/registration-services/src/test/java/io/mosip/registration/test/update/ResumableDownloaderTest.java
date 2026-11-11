@@ -15,6 +15,8 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -361,6 +363,101 @@ public class ResumableDownloaderTest {
     }
 
     // ---- helpers ----
+
+    // ---------------------------------------------------------------------
+    // Progress reporting (drives the in-app upgrade bar while the operator keeps working)
+    // ---------------------------------------------------------------------
+
+    @Test
+    public void download_withProgressListener_reportsUpToTheFullSize() throws Exception {
+        byte[] payload = randomPayload(2000);
+        HttpServer server = rangeServer(payload, ETAG, null, true);
+        File dir = tempDir();
+        List<long[]> reports = new ArrayList<>();
+        try {
+            ResumableDownloader.download(urlFor(server), dir.getAbsolutePath(), "artifact.bin",
+                    CONNECT_TIMEOUT, READ_TIMEOUT, (done, total) -> reports.add(new long[]{done, total}));
+
+            assertFalse("expected at least one progress report", reports.isEmpty());
+            long[] last = reports.get(reports.size() - 1);
+            assertEquals("final report must equal the payload size", payload.length, last[0]);
+            assertEquals("total must be the artifact size", payload.length, last[1]);
+            long previous = -1;
+            for (long[] report : reports) {
+                assertEquals(payload.length, report[1]);
+                assertTrue("progress must never go backwards", report[0] >= previous);
+                assertTrue("progress must never exceed the total", report[0] <= payload.length);
+                previous = report[0];
+            }
+        } finally {
+            stop(server, dir);
+        }
+    }
+
+    @Test
+    public void download_resumed_reportsProgressFromTheExistingOffsetNotZero() throws Exception {
+        byte[] payload = randomPayload(2000);
+        HttpServer server = rangeServer(payload, ETAG, null, true);
+        File dir = tempDir();
+        List<long[]> reports = new ArrayList<>();
+        try {
+            // 800 bytes already on disk from an interrupted attempt.
+            Files.write(new File(dir, "artifact.bin.part").toPath(), Arrays.copyOf(payload, 800));
+            writeMeta(dir, ETAG);
+
+            ResumableDownloader.download(urlFor(server), dir.getAbsolutePath(), "artifact.bin",
+                    CONNECT_TIMEOUT, READ_TIMEOUT, (done, total) -> reports.add(new long[]{done, total}));
+
+            // A 206 carries only the REMAINING length, so a naive total would be 1200 and the bar would
+            // read 67% at completion. The resumed prefix must be counted on both sides.
+            assertEquals("first report must start at the resumed offset", 800L, reports.get(0)[0]);
+            assertEquals("total must be the whole artifact, not just the remaining range",
+                    payload.length, reports.get(0)[1]);
+            long[] last = reports.get(reports.size() - 1);
+            assertEquals(payload.length, last[0]);
+            assertEquals(payload.length, last[1]);
+        } finally {
+            stop(server, dir);
+        }
+    }
+
+    @Test
+    public void download_unknownContentLength_reportsNegativeTotalSoTheBarStaysIndeterminate() throws Exception {
+        byte[] payload = randomPayload(2000);
+        // Chunked response: sendResponseHeaders(200, 0) means "length unknown".
+        HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+        server.createContext("/file", exchange -> {
+            exchange.getResponseHeaders().add("ETag", ETAG);
+            exchange.sendResponseHeaders(200, 0);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(payload);
+            }
+            exchange.close();
+        });
+        server.start();
+        File dir = tempDir();
+        List<long[]> reports = new ArrayList<>();
+        try {
+            ResumableDownloader.download(urlFor(server), dir.getAbsolutePath(), "artifact.bin",
+                    CONNECT_TIMEOUT, READ_TIMEOUT, (done, total) -> reports.add(new long[]{done, total}));
+
+            assertArrayEquals(payload, Files.readAllBytes(new File(dir, "artifact.bin").toPath()));
+            assertFalse(reports.isEmpty());
+            // Every report DURING the transfer must stay indeterminate...
+            for (long[] report : reports.subList(0, reports.size() - 1)) {
+                assertTrue("unknown length must stay negative while streaming, never be read as a real total",
+                        report[1] < 0);
+            }
+            // ...but the final one carries the real size: once the file is on disk its length is known,
+            // so the bar completes instead of spinning forever on a finished download.
+            long[] last = reports.get(reports.size() - 1);
+            assertEquals(payload.length, last[0]);
+            assertEquals(payload.length, last[1]);
+        } finally {
+            stop(server, dir);
+        }
+    }
+
 
     private static byte[] randomPayload(int size) {
         byte[] bytes = new byte[size];
