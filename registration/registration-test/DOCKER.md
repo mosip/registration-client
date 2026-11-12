@@ -55,13 +55,13 @@ docker run --rm \
   registration-test:local
 ```
 
-A mounted `/config/config.properties` is copied in first. `REG_CFG_*` values are applied after that. With no mount, the image uses the `config.properties` that was in `src/main/resources` at build time.
+A mounted `/config/config.properties` replaces the image file. `REG_CFG_*` values are applied after that. With no mount, the container starts from the `config.properties` baked into the image and refreshes it on every start, so a volume cannot keep an older copy.
 
 ## Rancher
 
-Use a CronJob or Job, the same way `uitest-admin` is started. Do not mount a properties file. Add the test keys as environment variables from a ConfigMap, and the passwords from a Secret. Rancher does this with **Add from Config Map** and **Add from Secret**, prefix left empty, which is `envFrom`.
+Use a CronJob or Job, the same way `uitest-admin` is started. Do not mount a properties file. The image `config.properties` already has the full suite, including `mosip.hostname`, center, zone, Keycloak, admin, and `regprc` database settings. The container uses those values as they are written.
 
-The variable name is the config key itself. `mosip.hostname` and `setup.admin.password` are valid. An environment value replaces the same key in the image's `config.properties`. `REG_CFG_<key>` still works and wins over the ConfigMap when both are set.
+Pass a Rancher variable only when that environment should differ from the file. The variable name is the config key itself (`mosip.hostname`, `setup.admin.password`). It replaces the same line. `REG_CFG_<key>` still works and wins when both are set. Add it with **Add from Config Map** or **Add from Secret**, prefix left empty.
 
 Report upload uses the same names as uitest-admin's `s3` ConfigMap. Set `push-reports-to-s3` to `yes`. The container uploads when it exits.
 
@@ -126,7 +126,7 @@ spec:
                 claimName: registration-test-data
 ```
 
-`registration-test` ConfigMap holds the non-secret keys (`mosip.hostname`, `operatorId`, `setup.regCenterId`, `setup.zoneCode`, `datadir`, and the other `setup.*` urls). The Secret of the same name holds `operatorPwd`, `supervisorUserpwd`, `reviewerpwd`, `setup.admin.password`, the client secrets, and `regprc.db.password`. The shared `s3` ConfigMap or Secret holds `s3-host`, `s3-user-key`, `s3-user-secret`, `s3-account`, and `push-reports-to-s3=yes`.
+The shared `s3` ConfigMap or Secret holds `s3-host`, `s3-user-key`, `s3-user-secret`, `s3-account`, and `push-reports-to-s3=yes`. Everything else, including `mosip.hostname`, stays in the image `config.properties`.
 
 `MINIO_URL`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, and `MINIO_BUCKET` still upload the report when `push-reports-to-s3` is unset. Those four override the `s3-*` names when both are present.
 

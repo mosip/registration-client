@@ -27,9 +27,11 @@ if [ ! -d repository_eng ]; then
     cp -a /opt/registration-test/resources/repository_eng repository_eng
 fi
 
+# The image file is the suite config. A mount at /config replaces it for a local
+# run. Always copy again so a volume left from an older run cannot hide new keys.
 if [ -f /config/config.properties ]; then
     cp /config/config.properties config.properties
-elif [ ! -f config.properties ]; then
+else
     cp /opt/registration-test/resources/config.properties config.properties
 fi
 sed -i 's/\r$//' config.properties
