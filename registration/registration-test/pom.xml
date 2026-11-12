@@ -277,6 +277,15 @@
                       <configuration>
                           <target>
                               <delete file="${project.basedir}/../registration-client/target/lib/jboss-logging-3.5.0.Final.jar" quiet="true"/>
+                              <!-- lib/* lists jars in directory order. jdk15on 1.66 and jdk18on 1.78
+                                   are both present, so a pod can load bcpkix 1.78 against bcprov 1.66
+                                   and fail in SubjectPublicKeyInfo.getPublicKeyData(). Keep 1.78 only. -->
+                              <delete quiet="true">
+                                  <fileset dir="${project.basedir}/../registration-client/target/lib" includes="bc*-jdk15on-*.jar"/>
+                              </delete>
+                              <delete quiet="true">
+                                  <fileset dir="${project.build.directory}/lib" includes="bc*-jdk15on-*.jar"/>
+                              </delete>
                           </target>
                       </configuration>
                   </execution>
