@@ -47,7 +47,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 		"io.mosip.kernel.idvalidator", "io.mosip.kernel.ridgenerator", "io.mosip.kernel.qrcode",
 		"io.mosip.kernel.crypto", "io.mosip.kernel.jsonvalidator", "io.mosip.kernel.idgenerator",
 		"io.mosip.kernel.virusscanner", "io.mosip.kernel.transliteration", "io.mosip.kernel.applicanttype",
-		"io.mosip.kernel.core.pdfgenerator.spi", "io.mosip.kernel.pdfgenerator.itext.impl",
+		"io.mosip.kernel.core.pdfgenerator.spi", "io.mosip.kernel.pdfgenerator.impl",
 		"io.mosip.kernel.idobjectvalidator.impl", "io.mosip.kernel.biosdk.provider.impl",
 		"io.mosip.kernel.biosdk.provider.factory", "io.mosip.commons.packet",
 		"io.mosip.registration.api.config"})

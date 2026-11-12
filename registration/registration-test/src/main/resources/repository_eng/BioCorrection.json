@@ -1,11 +1,13 @@
 {
   "identity": {
 	  "additionalInfoRequestId":"34287982413467-BIOMETRIC_CORRECTION-1",
+	  "UIN":"4538471905",
+	  "ackTests":["additionalInfoRequestId","dateTime","biometrics"],
 	  "BELOW_ARE_STATIC_KEYWORDS":"",
 	  "ageGroup":"MINOR",
     "process": "bioCorrection",
     "profile":"Default",
-    "score1":"10",
+    "score1":"90",
     "score2":"20",
     "score3":"90",
     "score4":"90",

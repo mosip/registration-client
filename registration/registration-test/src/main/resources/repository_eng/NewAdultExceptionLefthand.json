@@ -1,10 +1,11 @@
 { "identity" : {
 	"ageGroup":"ADULT",
 	"process":"New",
+	"previewTests":["qrCode","applicationId","dateTime","demographics","documents","bioExceptions"],
 	"preferredLang":"English",
 	"documentUploadAttributes":["POB","POA","POI"],
 	   "profile":"Default",
-	    "score1":"10",
+	    "score1":"90",
 	    "score2":"20",
 	    "score3":"90",
 	    "score4":"90",

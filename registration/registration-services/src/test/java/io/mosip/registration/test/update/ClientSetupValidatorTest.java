@@ -84,6 +84,7 @@ public class ClientSetupValidatorTest {
 	private void resetStaticFields() {
 		ReflectionTestUtils.setField(ClientSetupValidator.class, "environment", null);
 		ReflectionTestUtils.setField(ClientSetupValidator.class, "localManifest", null);
+		ReflectionTestUtils.setField(ClientSetupValidator.class, "libManifest", null);
 		ReflectionTestUtils.setField(ClientSetupValidator.class, "serverManifest", null);
 		ReflectionTestUtils.setField(ClientSetupValidator.class, "serverRegClientURL", null);
 		ReflectionTestUtils.setField(ClientSetupValidator.class, "latestVersion", null);
@@ -148,6 +149,7 @@ public class ClientSetupValidatorTest {
 		Manifest manifest = getManifest();
 		ReflectionTestUtils.setField(clientSetupValidator, "serverManifest", manifest);
 		ReflectionTestUtils.setField(clientSetupValidator, "localManifest", manifest);
+		ReflectionTestUtils.setField(clientSetupValidator, "libManifest", manifest);
 		Mockito.when(HMACUtils2.digestAsPlainText(Mockito.any())).thenReturn("testing");
 		Mockito.when(ApplicationContext.getIntValueFromApplicationMap(CONNECTION_TIMEOUT)).thenReturn(null);
 		Mockito.when(ApplicationContext.getIntValueFromApplicationMap(READ_TIMEOUT)).thenReturn(null);
@@ -165,6 +167,7 @@ public class ClientSetupValidatorTest {
 		ReflectionTestUtils.setField(manifest, "entries", entries);
 		ReflectionTestUtils.setField(clientSetupValidator, "serverManifest", manifest);
 		ReflectionTestUtils.setField(clientSetupValidator, "localManifest", manifest);
+		ReflectionTestUtils.setField(clientSetupValidator, "libManifest", manifest);
 		Mockito.when(ApplicationContext.getIntValueFromApplicationMap(CONNECTION_TIMEOUT)).thenReturn(null);
 		Mockito.when(ApplicationContext.getIntValueFromApplicationMap(READ_TIMEOUT)).thenReturn(null);
 		clientSetupValidator.validateBuildSetup();
@@ -181,6 +184,7 @@ public class ClientSetupValidatorTest {
 		ReflectionTestUtils.setField(manifest, "entries", entries);
 		ReflectionTestUtils.setField(clientSetupValidator, "serverManifest", manifest);
 		ReflectionTestUtils.setField(clientSetupValidator, "localManifest", manifest);
+		ReflectionTestUtils.setField(clientSetupValidator, "libManifest", manifest);
 		Mockito.when(HMACUtils2.digestAsPlainText(Mockito.any())).thenReturn("testing");
 		Mockito.when(ApplicationContext.getIntValueFromApplicationMap(CONNECTION_TIMEOUT)).thenReturn(null);
 		Mockito.when(ApplicationContext.getIntValueFromApplicationMap(READ_TIMEOUT)).thenReturn(null);

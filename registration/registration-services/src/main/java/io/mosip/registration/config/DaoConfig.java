@@ -53,6 +53,7 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
+import io.mosip.registration.update.SoftwareUpdateHandler;
 import lombok.SneakyThrows;
 
 /**
@@ -161,8 +162,15 @@ public class DaoConfig extends HibernateDaoConfig {
 	@Override
 	@Bean
 	public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+		DataSource dataSource = dataSource();
+		// Upgrade the schema BEFORE Hibernate and every JPA-backed bean exist: some beans query it while
+		// the context is still being created (the keymanager library's PartnerCertificateManagerServiceImpl
+		// reads CA_CERT_STORE.CA_CERT_TYPE in its init method), so an upgrade run once the context is up
+		// never gets the chance on a database that still needs it. ClientApplication reports the outcome.
+		SoftwareUpdateHandler.upgradeLocalDatabase(jdbcTemplate(), new File("."), keys.getProperty("mosip.reg.rollback.path"));
+
 		LocalContainerEntityManagerFactoryBean entityManagerFactory = new LocalContainerEntityManagerFactoryBean();
-		entityManagerFactory.setDataSource(dataSource());
+		entityManagerFactory.setDataSource(dataSource);
 		entityManagerFactory.setPackagesToScan(HibernatePersistenceConstant.MOSIP_PACKAGE);
 		entityManagerFactory.setPersistenceUnitName(HibernatePersistenceConstant.HIBERNATE);
 		entityManagerFactory.setJpaPropertyMap(jpaProperties());

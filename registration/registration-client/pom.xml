@@ -18,6 +18,17 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>io.mosip.registration</groupId>
 			<artifactId>registration-services</artifactId>
 			<version>${mosip.registration.client.version}</version>
@@ -87,7 +98,6 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>io.mosip.registration.controller.Initialization</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -115,9 +125,6 @@
 				<groupId>org.openjfx</groupId>
 				<artifactId>javafx-maven-plugin</artifactId>
 				<version>0.0.3</version>
-				<configuration>
-					<mainClass>io.mosip.registration.controller.Initialization</mainClass>
-				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

@@ -120,11 +120,13 @@ public class LostReg {
 
             webViewDocument = demographicPage.screensFlow(jsonContent, flow, ageGroup);
 
-            buttons.clicknextBtn();
+            buttons.clickNextBtn();
 
-            rid1 = webViewDocument.acceptPreview(flow); // return thread and wait on thread
+            rid1 = webViewDocument.acceptPreview(flow);
 
-            buttons.clicknextBtn();
+            webViewDocument.verifyPreviewScreen(jsonContent, flow, ageGroup, rid1);
+
+            buttons.clickNextBtn();
 
             if (!rid1.rid.trim().isEmpty()) {
                 ExtentReportUtil.test1.info("Demo, Doc, Bio - Done");
@@ -163,6 +165,7 @@ public class LostReg {
              */
 
             rid2 = webViewDocument.getacknowledgement(flow);
+            webViewDocument.verifyAcknowledgementScreen(jsonContent, flow, ageGroup, rid2);
             homePage.clickHomeImg();
 
             eodApprovalPage = homePage.clickeodApprovalImageView(applicationPrimaryStage, scene);

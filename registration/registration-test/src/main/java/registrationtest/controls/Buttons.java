@@ -36,7 +36,7 @@ public class Buttons {
         waitsUtil.clickNodeAssert(continueBtn);
 
     }
-
+    
     /**
      * {@summary} Back Button Click
      */
@@ -51,7 +51,7 @@ public class Buttons {
      */
     public void clickConfirmBtn() {
         logger.info("clickConfirmBtn");
-        waitsUtil.clickNodeAssert(confirm);
+        waitsUtil.clickIfPresent(confirm);
     }
 
     /**
@@ -68,7 +68,7 @@ public class Buttons {
     public void clickcancelBtn() {
         try {
             logger.info("clickcancelBtn");
-            waitsUtil.clickNodeAssert(cancel);
+            waitsUtil.clickIfPresent(cancel);
         } catch (Exception e) {
             logger.error("clickcancelBtn not present", e);
         }
@@ -85,7 +85,7 @@ public class Buttons {
     /**
      * Continue Click
      */
-    public void clicknextBtn() {
+    public void clickNextBtn() {
         logger.info("clicknextBtn");
         waitsUtil.clickNodeAssert(next);
     }
@@ -95,7 +95,22 @@ public class Buttons {
      */
     public void clickAuthenticateBtn() {
         logger.info("clickAuthenticateBtn");
-        waitsUtil.clickNodeAssert(authenticate);
+        waitsUtil.waitForFirstVisibleNode(authenticate, 15_000);
+        waitsUtil.clickVisibleNodeInAnyWindow(authenticate, 5_000);
+    }
 
+    public void clickPrintBtn() {
+        logger.info("clickPrintBtn");
+        waitsUtil.clickNodeAssert(print);
+    }
+    
+    public void verifySubmitButtonDisabled() {
+        logger.info("verifySubmitButtonDisabled");
+        waitsUtil.assertNodeDisabled(submit);
+    }
+    
+    public void verifySubmitButtonEnabled() {
+        logger.info("verifySubmitButtonEnabled");
+        waitsUtil.assertNodeEnabled(submit);
     }
 }

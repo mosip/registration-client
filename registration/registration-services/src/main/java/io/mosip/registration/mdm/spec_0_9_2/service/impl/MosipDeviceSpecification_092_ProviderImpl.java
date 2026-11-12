@@ -7,6 +7,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -28,6 +29,7 @@ import io.micrometer.core.annotation.Timed;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.CryptoUtil;
+import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
@@ -249,7 +251,7 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 	}
 
 	private RCaptureRequestDTO getRCaptureRequest(MdmBioDevice bioDevice, MDMRequestDto mdmRequestDto)
-			throws JsonParseException, JsonMappingException, IOException {
+			throws JsonParseException, JsonMappingException, IOException, NoSuchAlgorithmException {
 
 		RCaptureRequestDTO rCaptureRequestDTO = null;
 
@@ -257,7 +259,8 @@ public class MosipDeviceSpecification_092_ProviderImpl implements MosipDeviceSpe
 			List<RCaptureRequestBioDTO> captureRequestBioDTOs = new LinkedList<>();
 			captureRequestBioDTOs.add(new RCaptureRequestBioDTO(getDeviceType(bioDevice.getDeviceType()), "1",
 					mdmRequestDto.getExceptions(), String.valueOf(mdmRequestDto.getRequestedScore()),
-					bioDevice.getDeviceId(), getDeviceSubId(mdmRequestDto.getModality()), null));
+					bioDevice.getDeviceId(), getDeviceSubId(mdmRequestDto.getModality()),
+					HMACUtils2.digestAsPlainText("".getBytes())));
 
 			rCaptureRequestDTO = new RCaptureRequestDTO(mdmRequestDto.getEnvironment(), "Registration", "0.9.2",
 					String.valueOf(mdmRequestDto.getTimeout()),

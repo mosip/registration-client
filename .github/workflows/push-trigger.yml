@@ -51,6 +51,14 @@ jobs:
           server-id: ossrh # Value of the distributionManagement/repository/id field of the pom.xml
           settings-path: ${{ github.workspace }} # location for the settings.xml file
 
+      - name: Cache local Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
       - name: Setup the settings file for ossrh server
         run: echo "<settings><servers><server><id>ossrh</id><username>${{secrets.ossrh_user}}</username><password>${{secrets.ossrh_secret}}</password></server></servers><profiles><profile><id>ossrh</id><activation><activeByDefault>true</activeByDefault></activation><properties><gpg.executable>gpg2</gpg.executable><gpg.passphrase>${{secrets.gpg_secret}}</gpg.passphrase></properties></profile><profile><id>allow-snapshots</id><activation><activeByDefault>true</activeByDefault></activation><repositories><repository><id>snapshots-repo</id><url>https://central.sonatype.com/repository/maven-snapshots/</url><releases><enabled>false</enabled></releases><snapshots><enabled>true</enabled></snapshots></repository><repository><id>releases-repo</id><url>https://central.sonatype.com/api/v1/publisher</url><releases><enabled>true</enabled></releases><snapshots><enabled>false</enabled></snapshots></repository></repositories></profile><profile><id>sonar</id><properties><sonar.sources>.</sonar.sources><sonar.host.url>https://sonarcloud.io</sonar.host.url></properties><activation><activeByDefault>false</activeByDefault></activation></profile></profiles></settings>" > $GITHUB_WORKSPACE/settings.xml
 
@@ -58,6 +66,25 @@ jobs:
         run: |
           cd ${{ env.SERVICE_LOCATION}}
           mvn -U -B package -Dmaven.wagon.http.retryHandler.count=2 --file pom.xml -s $GITHUB_WORKSPACE/settings.xml
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: native/go.mod
+
+      - name: Cross-compile the Windows upgrade executables
+        run: |
+          ## migration.exe / rollback.exe are Windows x64 native binaries built from native/ at the
+          ## repo root. They are emitted into registration-launcher/target so the zip step below
+          ## picks them up with everything else under */target/*, which is what the Dockerfile ADDs
+          ## and configure.sh copies into lib/ before the manifests are generated.
+          cd native
+          go vet ./...
+          go test ./...
+          out=../${{ env.SERVICE_LOCATION }}/registration-launcher/target
+          mkdir -p "$out"
+          GOOS=windows GOARCH=amd64 go build -ldflags "-H=windowsgui" -o "$out/migration.exe" ./cmd/migration
+          GOOS=windows GOARCH=amd64 go build -ldflags "-H=windowsgui" -o "$out/rollback.exe"  ./cmd/rollback
 
       - name: Ready the springboot artifacts
         if: ${{ !contains(github.ref, 'master') || !contains(github.ref, 'main') }}
@@ -139,15 +166,13 @@ jobs:
         include:
           - SERVICE_LOCATION: 'regclient-openssl'
             SERVICE_NAME: 'regclient-keystore'
-            BASE_IMAGE_BUILD: true
       fail-fast: false
     name: ${{ matrix.SERVICE_NAME }}
     uses: mosip/kattu/.github/workflows/docker-build.yml@develop
     with:
       SERVICE_LOCATION: ${{ matrix.SERVICE_LOCATION }}
       SERVICE_NAME: ${{ matrix.SERVICE_NAME }}
-      BUILD_ARTIFACT: ${{ matrix.BUILD_ARTIFACT || false }}
-      BASE_IMAGE_BUILD: ${{ matrix.BASE_IMAGE_BUILD }}
+      BUILD_ARTIFACT: 'false'
     secrets:
       DEV_NAMESPACE_DOCKER_HUB: ${{ secrets.DEV_NAMESPACE_DOCKER_HUB }}
       ACTOR_DOCKER_HUB: ${{ secrets.ACTOR_DOCKER_HUB }}

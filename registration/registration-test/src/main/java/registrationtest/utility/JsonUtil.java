@@ -2,6 +2,7 @@ package registrationtest.utility;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.util.Set;
 
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class JsonUtil {
@@ -52,6 +54,42 @@ public class JsonUtil {
         }
         return payload;
     }
+    
+	public static String getOptionalIdentityValue(String identity, String key) {
+		try {
+			JSONObject json = new JSONObject(identity);
+			String objName = PropertiesUtil.getKeyValue("jsonObjName");
+			if (!json.has(objName) || json.isNull(objName)) {
+				throw new IllegalArgumentException("Missing identity object: " + objName);
+			}
+			JSONObject identityObj = json.getJSONObject(objName);
+			if (identityObj.has(key) && !identityObj.isNull(key)) {
+				return identityObj.getString(key);
+			}
+			return null;
+		} catch (JSONException e) {
+			logger.error("Failed to resolve optional identity key: {}", key, e);
+			throw new IllegalArgumentException("Invalid identity payload for key: " + key, e);
+		} catch (IOException e) {
+			logger.error("Failed to load config for optional identity key: {}", key, e);
+			throw new IllegalArgumentException("Invalid identity payload/config for key: " + key, e);
+		}
+	}
+
+	public static String getIdentityValue(String identity, String key) {
+		try {
+			JsonNode identityNode = mapper.readTree(identity).path(PropertiesUtil.getKeyValue("jsonObjName"));
+
+			if (identityNode.isMissingNode() || !identityNode.hasNonNull(key)) {
+				throw new IllegalArgumentException("Missing identity key: " + key);
+			}
+
+			return identityNode.get(key).asText();
+		} catch (IOException e) {
+			logger.error("Failed to parse identity JSON", e);
+			throw new IllegalArgumentException("Invalid identity JSON", e);
+		}
+	}
 
     public static LinkedHashMap<String, String> JsonObjSimpleParsing(String jsonIdentity, String idfield)
             throws Exception {
@@ -171,6 +209,53 @@ public class JsonUtil {
 
         return value;
     }
+
+	public static JSONArray getOptionalIdentityJsonArray(String identity, String key) {
+		try {
+			JSONObject json = new JSONObject(identity);
+			String objName = PropertiesUtil.getKeyValue("jsonObjName");
+			if (!json.has(objName) || json.isNull(objName)) {
+				throw new IllegalArgumentException("Missing identity object: " + objName);
+			}
+			JSONObject identityObj = json.getJSONObject(objName);
+			if (!identityObj.has(key) || identityObj.isNull(key)) {
+				return null;
+			}
+			return identityObj.getJSONArray(key);
+		} catch (JSONException e) {
+			logger.error("Failed to resolve optional identity json array: {}", key, e);
+			throw new IllegalArgumentException("Invalid identity payload for json array key: " + key, e);
+		} catch (IOException e) {
+			logger.error("Failed to load config for optional identity json array: {}", key, e);
+			throw new IllegalArgumentException("Invalid identity payload/config for json array key: " + key, e);
+		}
+	}
+
+	public static List<String> getOptionalIdentityArrayList(String identity, String key) {
+		try {
+			JSONObject json = new JSONObject(identity);
+			String objName = PropertiesUtil.getKeyValue("jsonObjName");
+			if (!json.has(objName) || json.isNull(objName)) {
+				throw new IllegalArgumentException("Missing identity object: " + objName);
+			}
+			JSONObject identityObj = json.getJSONObject(objName);
+			if (!identityObj.has(key) || identityObj.isNull(key)) {
+				return null;
+			}
+			JSONArray identityitems = identityObj.getJSONArray(key);
+			List<String> list = new LinkedList<>();
+			for (int i = 0; i < identityitems.length(); i++) {
+				list.add(identityitems.getString(i));
+			}
+			return list;
+		} catch (JSONException e) {
+			logger.error("Failed to resolve optional identity array: {}", key, e);
+			throw new IllegalArgumentException("Invalid identity payload for array key: " + key, e);
+		} catch (IOException e) {
+			logger.error("Failed to load config for optional identity array: {}", key, e);
+			throw new IllegalArgumentException("Invalid identity payload/config for array key: " + key, e);
+		}
+	}
 
     public static List<String> JsonObjArrayListParsing(String jsonIdentity, String idfield) throws Exception {
         List<String> list = new LinkedList<String>();

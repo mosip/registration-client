@@ -1,14 +1,15 @@
 package registrationtest.pages;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-
-
 
 import org.testfx.api.FxRobot;
 
 import javafx.scene.control.TextField;
 
 import registrationtest.utility.JsonUtil;
+import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;
 
 public class UpdatePage {
@@ -38,7 +39,7 @@ public class UpdatePage {
      * Enter uinId -
      */
     public void enterUinId(String uinNumber) {
-        TextField useruin = waitsUtil.lookupByIdTextField(uinId, robot);
+        TextField useruin = waitsUtil.waitForNode(uinId, TextField.class);
         useruin.setText(uinNumber);
         logger.info("enterUinId");
     }
@@ -50,8 +51,29 @@ public class UpdatePage {
         } catch (Exception e) {
             logger.error("", e);
         }
-        for (String attr : updateUINAttributes)
-            waitsUtil.clickNodeAssert("#" + attr);
+        if (updateUINAttributes == null || updateUINAttributes.isEmpty()) {
+            return;
+        }
+        for (String attr : updateUINAttributes) {
+            for (String checkboxId : resolveCheckboxIds(attr)) {
+                waitsUtil.clickNodeAssert("#" + checkboxId);
+            }
+        }
+    }
+
+    private List<String> resolveCheckboxIds(String attribute) {
+        if ("FullName".equalsIgnoreCase(attribute)) {
+            return Arrays.asList("FirstName", "LastName");
+        }
+        try {
+            String mapped = PropertiesUtil.getKeyValue(attribute);
+            if (mapped != null && !mapped.isBlank() && !mapped.equals(attribute)) {
+                return Arrays.asList(mapped);
+            }
+        } catch (Exception e) {
+            logger.debug("No config mapping for update attribute {}", attribute);
+        }
+        return new ArrayList<>(Arrays.asList(attribute));
     }
 
 }
