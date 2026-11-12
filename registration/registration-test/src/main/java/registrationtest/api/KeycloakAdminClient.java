@@ -95,6 +95,26 @@ public class KeycloakAdminClient {
         return true;
     }
 
+    /**
+     * Creates the user when it is missing, and otherwise sets its password and roles to the given
+     * values. Used for the automation-owned partner admin, which has to exist on every environment.
+     */
+    public void ensureUser(String userName, String password, List<String> roleNames) {
+        if (createUser(userName, password, roleNames)) {
+            return;
+        }
+        String userId = findUserId(userName);
+        JSONObject credential = new JSONObject()
+                .put("type", "password")
+                .put("value", password)
+                .put("temporary", false);
+        Response reset = request().body(credential.toString())
+                .put(adminRealmUrl + "/users/" + userId + "/reset-password");
+        expectOk(reset, "Resetting password for Keycloak user '" + userName + "'");
+        assignRealmRoles(userId, userName, roleNames);
+        logger.info("Updated Keycloak user {} with the required roles", userName);
+    }
+
     private String findUserId(String userName) {
         Response response = request()
                 .queryParam("username", userName)

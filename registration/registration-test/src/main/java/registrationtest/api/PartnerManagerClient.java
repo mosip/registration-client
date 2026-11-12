@@ -167,7 +167,12 @@ public class PartnerManagerClient {
 
     private static JSONObject parse(Response response, String context) {
         if (response.getStatusCode() < 200 || response.getStatusCode() >= 300) {
-            throw new IllegalStateException(context + " failed with HTTP status " + response.getStatusCode());
+            String body = response.getBody() == null ? "" : response.getBody().asString().replaceAll("\\s+", " ").trim();
+            if (body.length() > 500) {
+                body = body.substring(0, 500);
+            }
+            throw new IllegalStateException(context + " failed with HTTP status " + response.getStatusCode()
+                    + (body.isEmpty() ? "" : ": " + body));
         }
         try {
             return new JSONObject(response.getBody().asString());

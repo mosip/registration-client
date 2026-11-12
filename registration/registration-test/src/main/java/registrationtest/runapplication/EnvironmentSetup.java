@@ -31,6 +31,11 @@ public class EnvironmentSetup {
 
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EnvironmentSetup.class);
 
+    /** Created in Keycloak when setup.pms.userName is not set. CA upload requires one of these roles. */
+    private static final String PARTNER_ADMIN_USER = "regclientpms";
+    private static final String PARTNER_ADMIN_PASSWORD = "Mosip@123";
+    private static final List<String> PARTNER_ADMIN_ROLES = List.of("PARTNER_ADMIN", "PARTNERMANAGER");
+
     public static void main(String[] args) {
         int exitCode = 0;
         try {
@@ -115,8 +120,22 @@ public class EnvironmentSetup {
         String realm = optional("setup.keycloak.realm", "mosip");
         String pmsClientId = optional("setup.pms.clientId", "mosip-pms-client");
         String pmsClientSecret = require("setup.pms.clientSecret");
-        String pmsUser = optional("setup.pms.userName", require("setup.admin.userName"));
-        String pmsPassword = optional("setup.pms.password", require("setup.admin.password"));
+        String user = optional("setup.pms.userName", null);
+        String password = optional("setup.pms.password", null);
+        if (user == null) {
+            user = PARTNER_ADMIN_USER;
+            if (password == null) {
+                password = PARTNER_ADMIN_PASSWORD;
+            }
+            KeycloakAdminClient keycloak = KeycloakAdminClient.login(
+                    keycloakUrl, realm, require("setup.keycloak.clientId"), require("setup.keycloak.clientSecret"));
+            keycloak.ensureUser(user, password, PARTNER_ADMIN_ROLES);
+            report("Partner admin user ready: " + user);
+        } else if (password == null) {
+            password = require("setup.admin.password");
+        }
+        final String pmsUser = user;
+        final String pmsPassword = password;
         String baseUrl = adminBaseUrl();
 
         String partnerId = optional("setup.mds.partnerId",
