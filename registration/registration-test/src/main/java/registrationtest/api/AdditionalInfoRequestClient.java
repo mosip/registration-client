@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import registrationtest.utility.PropertiesUtil;
 
@@ -25,13 +26,28 @@ public final class AdditionalInfoRequestClient {
             if (requestId != null) {
                 return requestId;
             }
-            if (System.currentTimeMillis() > deadline) {
-                throw new IllegalStateException(
-                        "No " + process + " request created for " + regId + " within " + timeoutSeconds + " s");
+            String status = findRegistrationStatus(regId);
+            if (isFinishedWithoutRequest(status)) {
+                throw new IllegalStateException("No " + process + " request for " + regId
+                        + ". Registration is already " + status);
             }
-            logger.info("Waiting for {} request for {}", process, regId);
+            if (System.currentTimeMillis() > deadline) {
+                throw new IllegalStateException("No " + process + " request created for " + regId + " within "
+                        + timeoutSeconds + " s. Last registration status: " + status);
+            }
+            logger.info("Waiting for {} request for {}. Registration status: {}", process, regId, status);
             Thread.sleep(15_000);
         }
+    }
+
+    /** A terminal registration status means the processor will not pause this packet later. */
+    private static boolean isFinishedWithoutRequest(String status) {
+        String code = status == null ? "" : status;
+        int split = code.indexOf(' ');
+        if (split > 0) {
+            code = code.substring(0, split);
+        }
+        return "PROCESSED".equals(code) || "REJECTED".equals(code) || "FAILED".equals(code);
     }
 
     private static String findRequestId(String regId, String process) throws Exception {
@@ -47,6 +63,27 @@ public final class AdditionalInfoRequestClient {
                     return rs.next() ? rs.getString(1) : null;
                 }
             }
+        }
+    }
+
+    private static String findRegistrationStatus(String regId) {
+        String sql = "select status_code, reg_stage_name from regprc.registration where reg_id = ?";
+        try (Connection c = DriverManager.getConnection(PropertiesUtil.getKeyValue("regprc.db.url"),
+                PropertiesUtil.getKeyValue("regprc.db.user"), PropertiesUtil.getKeyValue("regprc.db.password"))) {
+            c.setReadOnly(true);
+            try (PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.setString(1, regId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        return "NOT_FOUND";
+                    }
+                    String stage = rs.getString(2);
+                    return rs.getString(1) + (stage == null || stage.isBlank() ? "" : " at " + stage);
+                }
+            }
+        } catch (SQLException | java.io.IOException e) {
+            logger.info("Could not read registration status for {}: {}", regId, e.getMessage());
+            return "UNKNOWN";
         }
     }
 }

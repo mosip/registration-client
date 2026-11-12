@@ -56,7 +56,7 @@ public final class BioCorrectionSeed {
             throw new IllegalStateException("Low quality NEW packet for " + PROCESS + " was not uploaded");
         }
 
-        long waitSeconds = Long.parseLong(valueOrDefault("bioCorrection.requestWaitSeconds", "900"));
+        long waitSeconds = Long.parseLong(valueOrDefault("bioCorrection.requestWaitSeconds", "1800"));
         String requestId = AdditionalInfoRequestClient.waitForRequestId(seedRid.rid.trim(), PROCESS, waitSeconds);
         logger.info("{} request {} created for {}", PROCESS, requestId, seedRid.rid);
         ExtentReportUtil.test1.log(Status.INFO, PROCESS + " request created by server: " + requestId);

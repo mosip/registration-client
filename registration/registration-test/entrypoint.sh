@@ -280,21 +280,50 @@ wait_for_propagation() {
     sleep "$((minutes * 60))"
 }
 
-# Copies the newest extentReport*.html to a stable name, then uploads report/ and snapshot/
+# Copies the newest extentReport*.html to a DSL-style name, then uploads that one file
 # when MinIO settings are present. The Java report name is left as the tests wrote it.
 publish_reports() {
-    local stamp host report_name src prefix dest
-    stamp="$(date +%Y%m%d%H%M%S)"
+    local host report_name src prefix env_name millis
+    local pass fail fatal error warning skip total
     host="$(hostname -s 2>/dev/null || hostname)"
     host="$(printf '%s' "${host}" | tr '[:upper:]' '[:lower:]')"
-    report_name="${REPORT_NAME:-registration-test-${host}.html}"
 
     if [ -d report ]; then
         src="$(find -H report -maxdepth 1 -type f -name 'extentReport*.html' -printf '%T@ %p\n' | sort -n | awk 'END { print $2 }')"
-        if [ -n "${src}" ]; then
-            cp -f "${src}" "report/${report_name}"
-            echo "Report copied to report/${report_name} (source $(basename "${src}"))"
-        fi
+    fi
+
+    extent_count() {
+        sed -n "s/.*${1}: *\\([0-9][0-9]*\\).*/\\1/p" "$2" | head -n 1
+    }
+    pass="$(extent_count passParent "${src:-/dev/null}")"
+    fail="$(extent_count failParent "${src:-/dev/null}")"
+    fatal="$(extent_count fatalParent "${src:-/dev/null}")"
+    error="$(extent_count errorParent "${src:-/dev/null}")"
+    warning="$(extent_count warningParent "${src:-/dev/null}")"
+    skip="$(extent_count skipParent "${src:-/dev/null}")"
+    pass="${pass:-0}"
+    fail="${fail:-0}"
+    fatal="${fatal:-0}"
+    error="${error:-0}"
+    warning="${warning:-0}"
+    skip="${skip:-0}"
+    fail="$((fail + fatal + error + warning))"
+    total="$((pass + fail + skip))"
+
+    env_name="$(config_value mosip.hostname)"
+    env_name="${env_name:-${host}}"
+    env_name="${env_name#https://}"
+    env_name="${env_name#http://}"
+    env_name="${env_name%%/*}"
+    millis="$(date +%s%3N 2>/dev/null || true)"
+    case "${millis}" in
+        *N|'' ) millis="$(date +%s)000" ;;
+    esac
+    report_name="${REPORT_NAME:-REGCLIENT-${env_name}-full-run-${millis}-report_T-${total}_P-${pass}_KI-0_I-0_S-${skip}_F-${fail}.html}"
+
+    if [ -n "${src}" ]; then
+        cp -f "${src}" "report/${report_name}"
+        echo "Report copied to report/${report_name} (source $(basename "${src}"))"
     fi
 
     # uitest-admin reads these names from the s3 ConfigMap. MINIO_* still wins when set.
@@ -321,20 +350,24 @@ publish_reports() {
         return 1
     fi
 
-    prefix="${MINIO_PREFIX:-registration-test}"
+    # s3-account is the bucket. The one report is stored there under its DSL-style name.
+    # MINIO_PREFIX adds a folder only when it is set.
+    prefix="${MINIO_PREFIX:-}"
     mc alias set regtest "${url}" "${access}" "${secret}" >/dev/null
     mc mb --ignore-existing "regtest/${bucket}" >/dev/null
-    dest="regtest/${bucket}/${prefix}/${host}/${stamp}"
-    if [ -d report ]; then
-        mc cp --recursive report/ "${dest}/report/"
+    if [ -n "${prefix}" ]; then
+        base="regtest/${bucket}/${prefix}"
+        shown="${bucket}/${prefix}/${report_name}"
+    else
+        base="regtest/${bucket}"
+        shown="${bucket}/${report_name}"
     fi
-    if [ -d snapshot ]; then
-        mc cp --recursive snapshot/ "${dest}/snapshot/"
+    if [ ! -f "report/${report_name}" ]; then
+        echo "No report file to upload" >&2
+        return 1
     fi
-    if [ -f "report/${report_name}" ]; then
-        mc cp "report/${report_name}" "regtest/${bucket}/${prefix}/${host}/latest.html"
-    fi
-    echo "Report uploaded to ${bucket}/${prefix}/${host}/${stamp} and ${bucket}/${prefix}/${host}/latest.html"
+    mc cp "report/${report_name}" "${base}/${report_name}"
+    echo "Report uploaded to ${shown}"
 }
 
 finish() {

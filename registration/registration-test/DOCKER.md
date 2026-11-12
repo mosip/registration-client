@@ -74,13 +74,11 @@ Report upload uses the same names as uitest-admin's `s3` ConfigMap. Set `push-re
 | `push-reports-to-s3` | `yes` to upload, anything else skips the upload |
 | `s3-region` | Accepted and ignored. The MinIO client does not use it |
 
-With hostname `reg-automation-01` and `s3-account=automation`, the objects are:
+With `s3-account=uitestrig`, the only uploaded object is one HTML file in that bucket. The name follows the DSL report:
 
-- `automation/registration-test/reg-automation-01/<timestamp>/report/`
-- `automation/registration-test/reg-automation-01/<timestamp>/snapshot/`
-- `automation/registration-test/reg-automation-01/latest.html`
+`REGCLIENT-api-internal.dev2.mosip.net-full-run-<epoch-millis>-report_T-<total>_P-<pass>_KI-0_I-0_S-<skip>_F-<fail>.html`
 
-The copied report name is `registration-test-<hostname>.html`. Override it with `REPORT_NAME`. The tests still write `extentReport<yyyyMMddHHmm>.html` first, so a local `run.bat` is unchanged.
+`T`, `P`, `S`, and `F` are the Extent parent totals. This suite has no known-issue or ignored count, so `KI` and `I` stay 0. The environment name is `mosip.hostname`. `regtest` is only the local MinIO client alias. Set `REPORT_NAME` to override the whole file name, or `MINIO_PREFIX` to put the file in a folder.
 
 Give the container about 3Gi of memory (the client heap is 2Gi). Mount a persistent volume at `/home/mosip` so the machine key and Derby survive. The pod must reach `mosip.hostname` and `s3-host`. The container runs as uid 1001 (`mosip`), so that volume must be writable by uid 1001. Set a stable hostname. It is the machine name registered in masterdata.
 
