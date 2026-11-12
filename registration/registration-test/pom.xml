@@ -89,6 +89,19 @@
          <artifactId>postgresql</artifactId>
          <version>42.7.5</version>
       </dependency>
+      <!-- Hibernate Validator 9 needs jboss-logging 3.6.3. The client lib still ships 3.5.0,
+           which is first on the classpath and has no getMessageLogger(Lookup, ...). -->
+      <dependency>
+         <groupId>org.jboss.logging</groupId>
+         <artifactId>jboss-logging</artifactId>
+         <version>3.6.3.Final</version>
+      </dependency>
+      <!-- No-op GPS and document scanner so the client can start without hardware. -->
+      <dependency>
+         <groupId>io.mosip.registration</groupId>
+         <artifactId>registration-api-stub-impl</artifactId>
+         <version>${project.version}</version>
+      </dependency>
       <dependency>
          <groupId>org.testfx</groupId>
          <artifactId>openjfx-monocle</artifactId>
@@ -139,6 +152,26 @@
                         ${project.build.directory}/lib
                      </outputDirectory>
                      <excludeScope>provided</excludeScope>
+                  </configuration>
+               </execution>
+               <!-- Client lib is already assembled. Replace its older jboss-logging so lib/* loads 3.6.3. -->
+               <execution>
+                  <id>replace-client-jboss-logging</id>
+                  <phase>prepare-package</phase>
+                  <goals>
+                     <goal>copy</goal>
+                  </goals>
+                  <configuration>
+                     <artifactItems>
+                        <artifactItem>
+                           <groupId>org.jboss.logging</groupId>
+                           <artifactId>jboss-logging</artifactId>
+                           <version>3.6.3.Final</version>
+                           <type>jar</type>
+                           <overWrite>true</overWrite>
+                           <outputDirectory>${project.basedir}/../registration-client/target/lib</outputDirectory>
+                        </artifactItem>
+                     </artifactItems>
                   </configuration>
                </execution>
             </executions>
@@ -215,6 +248,18 @@
               <artifactId>maven-antrun-plugin</artifactId>
               <version>3.0.0</version>
               <executions>
+                  <execution>
+                      <id>remove-old-jboss-logging</id>
+                      <phase>prepare-package</phase>
+                      <goals>
+                          <goal>run</goal>
+                      </goals>
+                      <configuration>
+                          <target>
+                              <delete file="${project.basedir}/../registration-client/target/lib/jboss-logging-3.5.0.Final.jar" quiet="true"/>
+                          </target>
+                      </configuration>
+                  </execution>
                   <execution>
                       <id>make-jar-executable</id>
                       <phase>package</phase>
