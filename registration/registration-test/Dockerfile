@@ -79,7 +79,12 @@ COPY --chown=${container_user_uid}:${container_user_gid} registration-test/targe
 COPY --chown=${container_user_uid}:${container_user_gid} registration-test/target/mockmds /opt/registration-test/mockmds
 COPY --chown=${container_user_uid}:${container_user_gid} registration-test/src/main/resources /opt/registration-test/resources
 COPY --chown=${container_user_uid}:${container_user_gid} registration-test/entrypoint.sh /opt/registration-test/entrypoint.sh
-RUN chmod 755 /opt/registration-test/entrypoint.sh
+# object.store.base.location is ../packets. The client working directory is
+# /home/mosip, so the store is /home/packets. /home is not writable by the
+# runtime user, and a synced global param overrides the classpath file.
+RUN chmod 755 /opt/registration-test/entrypoint.sh \
+    && mkdir -p /home/packets \
+    && chown ${container_user_uid}:${container_user_gid} /home/packets
 
 USER ${container_user_uid}:${container_user_gid}
 WORKDIR /home/mosip

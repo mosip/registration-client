@@ -75,8 +75,20 @@ public class LoginPage {
 
         this.robot = robot;
         waitsUtil = new WaitsUtil(robot);
-        waitsUtil.clickNodeAssert(loginScreen);
         biometricUploadPage = new BiometricUploadPage(robot);
+        recoverLoginScreen();
+    }
+
+    /** A leftover alert or an open home screen hides the login page from the next scenario. */
+    private void recoverLoginScreen() {
+        waitsUtil.dismissAlertIfPresent();
+        if (!waitsUtil.isShown(loginScreen) && waitsUtil.isShown(homeSelectionMenu)) {
+            logout();
+            if (waitsUtil.isShown("#confirm")) {
+                waitsUtil.clickNodeAssert("#confirm");
+            }
+        }
+        waitsUtil.clickNodeAssert(loginScreen);
     }
 
     public void selectAppLang() {
@@ -424,9 +436,7 @@ public class LoginPage {
         logger.info("In Login test Loaded");
 
         try {
-            // alerts.clickAlertCancel();
-
-            waitsUtil.clickNodeAssert(loginScreen);
+            recoverLoginScreen();
 
             scene = applicationPrimaryStage.getScene();
             node = scene.lookup(loginScreen);
@@ -457,6 +467,10 @@ public class LoginPage {
         /**
          * Click Menu Logout
          */
+        waitsUtil.dismissAlertIfPresent();
+        if (waitsUtil.isShown("#confirm")) {
+            waitsUtil.clickNodeAssert("#confirm");
+        }
         waitsUtil.clickNodeAssert(homeSelectionMenu);
 
         waitsUtil.clickNodeAssert(logout);

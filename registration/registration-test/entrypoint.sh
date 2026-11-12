@@ -136,7 +136,21 @@ apply_client_hostname() {
     echo "Client hostname set to ${host}"
 }
 
+# The synced global param keeps object.store.base.location=../packets, which
+# overrides the classpath file. From /home/mosip that directory is /home/packets.
+# The image creates it because /home is not writable by the runtime user.
+prepare_packet_store() {
+    local packet_dir
+    packet_dir="$(dirname "${work_dir}")/packets"
+    if [ ! -d "${packet_dir}" ] || [ ! -w "${packet_dir}" ]; then
+        echo "Packet directory ${packet_dir} is missing or not writable" >&2
+        exit 1
+    fi
+    echo "Packet store directory ${packet_dir}"
+}
+
 apply_client_hostname
+prepare_packet_store
 
 mode="${1:-all}"
 case "${mode}" in

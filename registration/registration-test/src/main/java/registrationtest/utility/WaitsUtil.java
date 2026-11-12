@@ -80,6 +80,33 @@ public class WaitsUtil {
 
     }
 
+    /** Closes the registration alert when it is covering the screen. */
+    public void dismissAlertIfPresent() {
+        try {
+            Optional<Node> icon = robot.lookup("#alertImage").tryQuery();
+            if (icon.isEmpty() || !icon.get().isVisible()) {
+                return;
+            }
+            Optional<Node> exit = robot.lookup("#exit").tryQuery();
+            if (exit.isPresent() && exit.get().isVisible()) {
+                robot.clickOn(exit.get());
+                WaitForAsyncUtils.waitForFxEvents();
+                logger.info("Dismissed alert");
+            }
+        } catch (RuntimeException e) {
+            logger.error("Could not dismiss alert", e);
+        }
+    }
+
+    public boolean isShown(String id) {
+        try {
+            Optional<Node> found = robot.lookup(id).tryQuery();
+            return found.isPresent() && found.get().isVisible();
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
     public void clickNodeAssert(String id) {
     	waitForNode(id);
         node = lookupById(id);

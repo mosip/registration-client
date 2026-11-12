@@ -304,6 +304,11 @@ public class RegistrationMain {
 
             if (directoryPath.exists()) {
                 contents = directoryPath.list();
+                // Linux directory order is not alphabetical. The onboard files are prefixed so
+                // they run before registration, which is what a Windows listing already does.
+                if (contents != null) {
+                    java.util.Arrays.sort(contents);
+                }
                 System.out.println("List of files and directories in the specified directory:");
                 for (int i = 0; i < contents.length; i++) {
                     System.out.println(contents[i]);

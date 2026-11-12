@@ -15,6 +15,8 @@ Mount the same `config.properties` used locally. Keep a volume on `/home/mosip` 
 
 `mosip.hostname` in that file is also applied to the client before it starts. The services jar is built with `dev.mosip.net`, and the client would keep calling that host. The container copies the jar properties, sets `mosip.hostname` and `mosip.client.upgrade.server.url` from the mounted config, and puts that file ahead of the jar on the classpath. Initial launch deletes the local Derby database, so an older hostname stored there is not reused.
 
+The client stores packets at `../packets`. From the working directory `/home/mosip` that is `/home/packets`. A synced global parameter keeps that relative path, so the image creates `/home/packets` for the runtime user. The startup log prints `Packet store directory /home/packets` before the suite starts.
+
 ```bash
 docker run --rm \
   --hostname reg-automation-01 \
