@@ -89,6 +89,55 @@ if [ "${HEADLESS:-true}" != "false" ]; then
     set_config headless Y
 fi
 
+# The client reads mosip.hostname from the services jar, then from Derby.
+# The mounted config is what the tests use, so put that host first on the classpath.
+apply_client_hostname() {
+    local host services dest
+    host="$(config_value mosip.hostname)"
+    host="${host//[$' \r']/}"
+    if [ -z "${host}" ]; then
+        return 0
+    fi
+    services="$(find -H lib -maxdepth 1 -type f -name 'registration-services-*.jar' \
+        ! -name '*-sources.jar' ! -name '*-javadoc.jar' -print -quit)"
+    if [ -z "${services}" ]; then
+        echo "registration-services jar was not found under lib" >&2
+        exit 1
+    fi
+    rm -rf client-config
+    mkdir -p client-config
+    ( cd client-config && jar xf "../${services}" props/mosip-application.properties )
+    dest="client-config/props/mosip-application.properties"
+    awk -v host="${host}" '
+        BEGIN { found_host = 0; found_upgrade = 0 }
+        {
+            sep = index($0, "=")
+            if (sep > 1) {
+                key = substr($0, 1, sep - 1)
+                if (key == "mosip.hostname") {
+                    print key "=" host
+                    found_host = 1
+                    next
+                }
+                if (key == "mosip.client.upgrade.server.url") {
+                    print key "=https://" host
+                    found_upgrade = 1
+                    next
+                }
+            }
+            print
+        }
+        END {
+            if (!found_host) print "mosip.hostname=" host
+            if (!found_upgrade) print "mosip.client.upgrade.server.url=https://" host
+        }
+    ' "${dest}" > "${dest}.tmp"
+    mv "${dest}.tmp" "${dest}"
+    echo "Client hostname set to ${host}"
+}
+
+apply_client_hostname
+
 mode="${1:-all}"
 case "${mode}" in
     all|setup|initial|test)
@@ -99,7 +148,11 @@ case "${mode}" in
         ;;
 esac
 
-classpath="registration-test.jar:lib/*:testlib/*"
+if [ -d client-config ]; then
+    classpath="client-config:registration-test.jar:lib/*:testlib/*"
+else
+    classpath="registration-test.jar:lib/*:testlib/*"
+fi
 common_opts=(
     -Dpath.config=/config.properties
     -Dfile.encoding=UTF-8

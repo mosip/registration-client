@@ -13,6 +13,8 @@ docker build -f registration-test/Dockerfile -t registration-test:local .
 
 Mount the same `config.properties` used locally. Keep a volume on `/home/mosip` so `.mosipkeys`, Derby, logs and the Extent report survive a restart. The machine name registered in masterdata is the container hostname, lowercased, so set a stable hostname.
 
+`mosip.hostname` in that file is also applied to the client before it starts. The services jar is built with `dev.mosip.net`, and the client would keep calling that host. The container copies the jar properties, sets `mosip.hostname` and `mosip.client.upgrade.server.url` from the mounted config, and puts that file ahead of the jar on the classpath. Initial launch deletes the local Derby database, so an older hostname stored there is not reused.
+
 ```bash
 docker run --rm \
   --hostname reg-automation-01 \
