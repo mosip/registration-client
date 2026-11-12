@@ -2,8 +2,12 @@ package io.mosip.registration.controller;
 
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -15,7 +19,6 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.VirtualKeyboardKeys;
 import io.mosip.registration.controller.reg.RegistrationController;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.BooleanProperty;
@@ -28,7 +31,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableStringValue;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventTarget;
 import javafx.event.EventType;
@@ -63,10 +65,20 @@ public class VirtualKeyboard {
 	private StringBuilder vkType = new StringBuilder();
 
 	private ResourceBundle keyboard = null;
-	
-	private KeyEvent keyEvent;
+
+	private final Map<String, String> mappedKeyCache = new HashMap<>();
 
 	private Stage parentStage;
+
+	private static final class PendingKey {
+		private final KeyCode code;
+		private final String mappedText;
+
+		private PendingKey(KeyCode code, String mappedText) {
+			this.code = code;
+			this.mappedText = mappedText;
+		}
+	}
 	
 	public VirtualKeyboard(String langCode) {
 		this(null, langCode);
@@ -405,80 +417,105 @@ public class VirtualKeyboard {
 		}
 	}
 
+	/**
+	 * Installs physical keyboard filters on a text field. Printable key presses are
+	 * matched to typed events in press order, including keys without a configured
+	 * mapping. Editing/navigation keys and shortcuts retain native JavaFX behavior.
+	 * Pending mappings are discarded when the corresponding key is released or
+	 * focus leaves the field.
+	 *
+	 * @param textField demographic text field receiving the keyboard events
+	 */
 	public void changeControlOfKeyboard(TextField textField) {
-		textField.setOnKeyPressed(new EventHandler<Event>() {
-			@Override
-			public void handle(Event event) {
-				if (!vkType.toString().contains("vk")) {
-					KeyEvent e = ((KeyEvent) event);
-					if (e.getCode().getName().equals("Caps Lock")) {
-						if (capsLock) {
-							capsLock = false;
-						} else {
-							capsLock = true;
-						}
-					}
-					if (e.getCode().getName().equals("Shift")) {
-						keyEvent = e;
-					}					
-					
-					textField.setOnKeyReleased(new EventHandler<KeyEvent>() {
-			            @Override
-			            public void handle(KeyEvent event) {
-			                switch (event.getCode()) {			                   
-			                    case SHIFT:
-			                    	keyEvent = null;
-							default:
-								break;
-			                }
-			            }
-			        });
-					
-					String key;
-					if (capsLock || (keyEvent != null ? keyEvent.getCode() != null && keyEvent.getCode().getName() != null && keyEvent.getCode().getName().equals("Shift") : false)) {
-						try {
-							key = keyboard.getString("shift_" + e.getCode().getName().replaceAll("\\s", ""));
-						} catch (MissingResourceException exception) {
-							LOGGER.error("Virtual Keyboard", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-									exception.getMessage());
-							key = null;
-						}
-						if (key != null) {
-							textField.fireEvent(new KeyEvent(KeyEvent.KEY_TYPED, key, e.getCode().getName(),
-									e.getCode(), false, false, false, false));
-							textField.setEditable(false);
-						}
-					} else {
-						try {
-							key = keyboard.getString("unshift_" + e.getCode().getName().replaceAll("\\s", ""));
-						} catch (MissingResourceException exception) {
-							LOGGER.error("Virtual Keyboard", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-									exception.getMessage());
-							key = null;
-						}
-						if (key != null) {
-							textField.fireEvent(new KeyEvent(KeyEvent.KEY_TYPED, key, e.getCode().getName(),
-									e.getCode(), false, false, false, false));
-							textField.setEditable(false);
-						}
-					}
-				}
+		final Deque<PendingKey> pendingKeys = new ArrayDeque<>();
+
+		textField.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+			if (vkType.toString().contains("vk")) {
+				return;
+			}
+
+			if (event.getCode() == KeyCode.CAPS) {
+				capsLock = !capsLock;
+				return;
+			}
+
+			KeyCode code = event.getCode();
+			if (code.isModifierKey() || code.isNavigationKey() || code.isFunctionKey()
+					|| code == KeyCode.BACK_SPACE || code == KeyCode.DELETE || code == KeyCode.TAB
+					|| code == KeyCode.ENTER || code == KeyCode.ESCAPE || code == KeyCode.INSERT
+					|| event.isControlDown() || event.isMetaDown()) {
+				return;
+			}
+
+			pendingKeys.addLast(new PendingKey(code, lookupMappedKey(event)));
+		});
+
+		textField.addEventFilter(KeyEvent.KEY_TYPED, event -> {
+			if (vkType.toString().contains("vk") || event.isControlDown() || event.isMetaDown()) {
+				return;
+			}
+
+			// Some platforms emit a typed control character for an editing key, others only a press.
+			String character = event.getCharacter();
+			if (character.length() == 1 && Character.isISOControl(character.charAt(0))) {
+				return;
+			}
+			PendingKey pendingKey = pendingKeys.pollFirst();
+			if (pendingKey == null || pendingKey.mappedText == null
+					|| pendingKey.mappedText.equals(character) || !textField.isEditable()) {
+				return;
+			}
+
+			event.consume();
+			textField.replaceSelection(pendingKey.mappedText);
+		});
+
+		textField.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
+			if (!vkType.toString().contains("vk")) {
+				pendingKeys.removeIf(pendingKey -> pendingKey.code == event.getCode());
 			}
 		});
 
-		textField.textProperty().addListener(new ChangeListener<String>() {
-			@Override
-			public void changed(final ObservableValue<? extends String> obsVal, final String oldValue,
-					final String newValue) {
-				Platform.runLater(() -> {
-					textField.setEditable(true);
-				});
-
+		textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+			if (!newValue) {
+				pendingKeys.clear();
 			}
 		});
-
 	}
 
+	/**
+	 * Resolves the configured Shift/Caps Lock mapping for a physical key and
+	 * caches both successful lookups and absent mappings for the keyboard language.
+	 *
+	 * @param event physical key-press event
+	 * @return mapped character(s), or {@code null} when no mapping is configured
+	 */
+	private String lookupMappedKey(KeyEvent event) {
+		if (keyboard == null || event.getCode() == null || event.getCode() == KeyCode.UNDEFINED) {
+			return null;
+		}
+
+		String keyName = event.getCode().getName();
+		if (keyName == null || keyName.isEmpty()) {
+			return null;
+		}
+
+		String prefix = (capsLock || event.isShiftDown()) ? "shift_" : "unshift_";
+		String resourceKey = prefix + keyName.replaceAll("\\s", "");
+		if (mappedKeyCache.containsKey(resourceKey)) {
+			return mappedKeyCache.get(resourceKey);
+		}
+
+		String mappedText = null;
+		try {
+			mappedText = keyboard.getString(resourceKey);
+		} catch (MissingResourceException exception) {
+			LOGGER.debug("No physical keyboard mapping found for key {}", resourceKey);
+		}
+
+		mappedKeyCache.put(resourceKey, mappedText);
+		return mappedText;
+	}
 	public void focusListener(TextField field, double y, Node keyboardNode) {
 		field.focusedProperty().addListener(new ChangeListener<Boolean>() {
 			@Override
