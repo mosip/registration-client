@@ -59,85 +59,75 @@ A mounted `/config/config.properties` is copied in first. `REG_CFG_*` values are
 
 ## Rancher
 
-Use a Job. Put `config.properties` in a ConfigMap key of the same name, mount it at `/config`, and mount a persistent volume at `/home/mosip`. Give the container about 3Gi of memory (the client heap is 2Gi). The pod must reach `mosip.hostname`.
+Use a CronJob or Job, the same way `uitest-admin` is started. Do not mount a properties file. Add the test keys as environment variables from a ConfigMap, and the passwords from a Secret. Rancher does this with **Add from Config Map** and **Add from Secret**, prefix left empty, which is `envFrom`.
+
+The variable name is the config key itself. `mosip.hostname` and `setup.admin.password` are valid. An environment value replaces the same key in the image's `config.properties`. `REG_CFG_<key>` still works and wins over the ConfigMap when both are set.
+
+Report upload uses the same names as uitest-admin's `s3` ConfigMap. Set `push-reports-to-s3` to `yes`. The container uploads when it exits.
+
+| Variable | Meaning |
+|---|---|
+| `s3-host` | MinIO URL, for example `http://minio.minio:9000` |
+| `s3-user-key` | Access key |
+| `s3-user-secret` | Secret key |
+| `s3-account` | Bucket name |
+| `push-reports-to-s3` | `yes` to upload, anything else skips the upload |
+| `s3-region` | Accepted and ignored. The MinIO client does not use it |
+
+With hostname `reg-automation-01` and `s3-account=automation`, the objects are:
+
+- `automation/registration-test/reg-automation-01/<timestamp>/report/`
+- `automation/registration-test/reg-automation-01/<timestamp>/snapshot/`
+- `automation/registration-test/reg-automation-01/latest.html`
+
+The copied report name is `registration-test-<hostname>.html`. Override it with `REPORT_NAME`. The tests still write `extentReport<yyyyMMddHHmm>.html` first, so a local `run.bat` is unchanged.
+
+Give the container about 3Gi of memory (the client heap is 2Gi). Mount a persistent volume at `/home/mosip` so the machine key and Derby survive. The pod must reach `mosip.hostname` and `s3-host`. The container runs as uid 1001 (`mosip`), so that volume must be writable by uid 1001. Set a stable hostname. It is the machine name registered in masterdata.
 
 ```yaml
 apiVersion: batch/v1
-kind: Job
+kind: CronJob
 metadata:
   name: registration-test
+  namespace: uitestrig
 spec:
-  backoffLimit: 0
-  template:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
     spec:
-      hostname: reg-automation-01
-      restartPolicy: Never
-      containers:
-        - name: registration-test
-          image: registration-test:local
-          args: ["all"]
-          env:
-            - name: REG_CFG_mosip.hostname
-              value: api-internal.example.mosip.net
-          resources:
-            requests:
-              memory: 3Gi
-            limits:
-              memory: 4Gi
-          volumeMounts:
-            - name: config
-              mountPath: /config
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: Never
+          hostname: reg-automation-01
+          containers:
+            - name: registration-test
+              image: jayesh12234/registration-test:develop
+              imagePullPolicy: Always
+              args: ["all"]
+              envFrom:
+                - configMapRef:
+                    name: registration-test
+                - secretRef:
+                    name: registration-test
+                - configMapRef:
+                    name: s3
+              resources:
+                requests:
+                  memory: 3Gi
+                limits:
+                  memory: 4Gi
+              volumeMounts:
+                - name: data
+                  mountPath: /home/mosip
+          volumes:
             - name: data
-              mountPath: /home/mosip
-      volumes:
-        - name: config
-          configMap:
-            name: registration-test-config
-        - name: data
-          persistentVolumeClaim:
-            claimName: registration-test-data
+              persistentVolumeClaim:
+                claimName: registration-test-data
 ```
 
-The container runs as uid 1001 (`mosip`). The volume needs to be writable by that user.
+`registration-test` ConfigMap holds the non-secret keys (`mosip.hostname`, `operatorId`, `setup.regCenterId`, `setup.zoneCode`, `datadir`, and the other `setup.*` urls). The Secret of the same name holds `operatorPwd`, `supervisorUserpwd`, `reviewerpwd`, `setup.admin.password`, the client secrets, and `regprc.db.password`. The shared `s3` ConfigMap or Secret holds `s3-host`, `s3-user-key`, `s3-user-secret`, `s3-account`, and `push-reports-to-s3=yes`.
 
-## Reports and MinIO
+`MINIO_URL`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, and `MINIO_BUCKET` still upload the report when `push-reports-to-s3` is unset. Those four override the `s3-*` names when both are present.
 
-The tests write the Extent report to `/home/mosip/report/extentReport<yyyyMMddHHmm>.html`. Failure screenshots are in `/home/mosip/snapshot/`. That Java name is unchanged, so a local `run.bat` still behaves as it does today.
-
-After the run the container copies the newest report to a stable file:
-
-- default name: `report/registration-test-<hostname>.html`
-- override with `-e REPORT_NAME=regclient-dev2.html`
-
-Two ways to land that file in MinIO:
-
-Mount the report directory when the bucket is already exposed as a volume (MinIO CSI or an equivalent mount):
-
-```yaml
-volumeMounts:
-  - name: minio-reports
-    mountPath: /home/mosip/report
-```
-
-Or let the container upload with the MinIO client. Set `MINIO_URL`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY` and `MINIO_BUCKET`. Optional `MINIO_PREFIX` defaults to `registration-test`.
-
-```bash
-docker run --rm \
-  --hostname reg-automation-01 \
-  -v /path/to/config.properties:/config/config.properties:ro \
-  -v registration-test-data:/home/mosip \
-  -e MINIO_URL=http://minio.minio:9000 \
-  -e MINIO_ACCESS_KEY=minio \
-  -e MINIO_SECRET_KEY=minio123 \
-  -e MINIO_BUCKET=qa-reports \
-  -e REPORT_NAME=regclient-dev2.html \
-  registration-test:local
-```
-
-That writes:
-
-- `qa-reports/registration-test/reg-automation-01/<timestamp>/report/` (every report file, including the renamed copy)
-- `qa-reports/registration-test/reg-automation-01/<timestamp>/snapshot/`
-- `qa-reports/registration-test/reg-automation-01/latest.html` (the renamed report, replaced each run)
-
-`latest.html` is the object to open after a run. The timestamp folder keeps the earlier runs.
+Headless is turned on in the container. Set `HEADLESS=false` only when the container has a display.

@@ -34,6 +34,37 @@ elif [ ! -f config.properties ]; then
 fi
 sed -i 's/\r$//' config.properties
 
+# Rancher injects a ConfigMap or Secret with envFrom. A variable whose name is a
+# config key, or contains a dot (mosip.hostname, setup.admin.password), overrides
+# the file. This is the same idea as uitest-admin reading System.getenv(key).
+apply_config_from_env() {
+    local -A known=()
+    local key value line
+    while IFS= read -r key; do
+        [ -n "${key}" ] && known["${key}"]=1
+    done < <(awk '
+        /^[[:space:]]*#/ { next }
+        {
+            sep = index($0, ":")
+            eq = index($0, "=")
+            if (eq > 0 && (sep == 0 || eq < sep)) sep = eq
+            if (sep > 1) print substr($0, 1, sep - 1)
+        }
+    ' config.properties)
+    while IFS= read -r line || [ -n "${line}" ]; do
+        key="${line%%=*}"
+        value="${line#*=}"
+        case "${key}" in
+            ''|REG_CFG_*|MINIO_*|REPORT_NAME|HEADLESS|PATH|HOME|HOSTNAME|PWD|SHLVL|OLDPWD|LANG|LC_*|JAVA_*|work_dir)
+                continue
+                ;;
+        esac
+        if [[ "${key}" == *.* ]] || [[ -n "${known[${key}]+x}" ]]; then
+            set_config "${key}" "${value}"
+        fi
+    done < <(env)
+}
+
 set_config() {
     local key="$1"
     local value="$2"
@@ -71,6 +102,8 @@ config_value() {
         }
     ' config.properties
 }
+
+apply_config_from_env
 
 while IFS= read -r line; do
     case "${line}" in
@@ -262,18 +295,34 @@ publish_reports() {
         fi
     fi
 
+    # uitest-admin reads these names from the s3 ConfigMap. MINIO_* still wins when set.
+    local s3_host s3_key s3_secret s3_account push url access secret bucket
+    s3_host="$(printenv 's3-host' 2>/dev/null || true)"
+    s3_key="$(printenv 's3-user-key' 2>/dev/null || true)"
+    s3_secret="$(printenv 's3-user-secret' 2>/dev/null || true)"
+    s3_account="$(printenv 's3-account' 2>/dev/null || true)"
+    push="$(printenv 'push-reports-to-s3' 2>/dev/null || true)"
+    url="${MINIO_URL:-${s3_host}}"
+    access="${MINIO_ACCESS_KEY:-${s3_key}}"
+    secret="${MINIO_SECRET_KEY:-${s3_secret}}"
+    bucket="${MINIO_BUCKET:-${s3_account}}"
+    push="$(printf '%s' "${push}" | tr '[:upper:]' '[:lower:]')"
+
     if [ -z "${MINIO_URL:-}" ]; then
-        return 0
+        case "${push}" in
+            yes|y|true) ;;
+            *) return 0 ;;
+        esac
     fi
-    if [ -z "${MINIO_ACCESS_KEY:-}" ] || [ -z "${MINIO_SECRET_KEY:-}" ] || [ -z "${MINIO_BUCKET:-}" ]; then
-        echo "MINIO_URL is set but MINIO_ACCESS_KEY, MINIO_SECRET_KEY or MINIO_BUCKET is missing" >&2
+    if [ -z "${url}" ] || [ -z "${access}" ] || [ -z "${secret}" ] || [ -z "${bucket}" ]; then
+        echo "Report upload needs s3-host, s3-user-key, s3-user-secret and s3-account, or MINIO_URL, MINIO_ACCESS_KEY, MINIO_SECRET_KEY and MINIO_BUCKET" >&2
         return 1
     fi
 
     prefix="${MINIO_PREFIX:-registration-test}"
-    mc alias set regtest "${MINIO_URL}" "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}" >/dev/null
-    mc mb --ignore-existing "regtest/${MINIO_BUCKET}" >/dev/null
-    dest="regtest/${MINIO_BUCKET}/${prefix}/${host}/${stamp}"
+    mc alias set regtest "${url}" "${access}" "${secret}" >/dev/null
+    mc mb --ignore-existing "regtest/${bucket}" >/dev/null
+    dest="regtest/${bucket}/${prefix}/${host}/${stamp}"
     if [ -d report ]; then
         mc cp --recursive report/ "${dest}/report/"
     fi
@@ -281,9 +330,9 @@ publish_reports() {
         mc cp --recursive snapshot/ "${dest}/snapshot/"
     fi
     if [ -f "report/${report_name}" ]; then
-        mc cp "report/${report_name}" "regtest/${MINIO_BUCKET}/${prefix}/${host}/latest.html"
+        mc cp "report/${report_name}" "regtest/${bucket}/${prefix}/${host}/latest.html"
     fi
-    echo "Report uploaded to ${MINIO_BUCKET}/${prefix}/${host}/${stamp} and ${MINIO_BUCKET}/${prefix}/${host}/latest.html"
+    echo "Report uploaded to ${bucket}/${prefix}/${host}/${stamp} and ${bucket}/${prefix}/${host}/latest.html"
 }
 
 finish() {
