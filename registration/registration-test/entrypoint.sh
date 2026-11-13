@@ -280,6 +280,61 @@ wait_for_propagation() {
     sleep "$((minutes * 60))"
 }
 
+# The HTML refers to snapshot files by their container path. Only the HTML is uploaded,
+# so those paths cannot load in a browser. Replace each existing image with its bytes.
+embed_report_images() {
+    local html="$1"
+    local list path file mime b64file out
+    [ -f "${html}" ] || return 0
+    list="$(mktemp)"
+    grep -oE "/[^'\"<> ]+\.(jpg|jpeg|png)" "${html}" | sort -u > "${list}" || true
+    if [ ! -s "${list}" ]; then
+        rm -f "${list}"
+        return 0
+    fi
+    out="$(mktemp)"
+    cp "${html}" "${out}"
+    while IFS= read -r path; do
+        [ -n "${path}" ] || continue
+        if [ -f "${path}" ]; then
+            file="${path}"
+        else
+            echo "Screenshot missing from report: ${path}" >&2
+            continue
+        fi
+        case "${file}" in
+            *.png|*.PNG) mime="image/png" ;;
+            *) mime="image/jpeg" ;;
+        esac
+        b64file="$(mktemp)"
+        base64 -w 0 "${file}" > "${b64file}"
+        awk -v path="${path}" -v mime="${mime}" -v b64file="${b64file}" '
+            function replace_all(s, find, repl,    out, at, n) {
+                out = ""
+                n = length(find)
+                while ((at = index(s, find)) > 0) {
+                    out = out substr(s, 1, at - 1) repl
+                    s = substr(s, at + n)
+                }
+                return out s
+            }
+            BEGIN {
+                getline b64 < b64file
+                close(b64file)
+                data = "data:" mime ";base64," b64
+            }
+            {
+                print replace_all($0, path, data)
+            }
+        ' "${out}" > "${out}.next"
+        mv "${out}.next" "${out}"
+        rm -f "${b64file}"
+    done < "${list}"
+    mv "${out}" "${html}"
+    rm -f "${list}"
+    echo "Embedded screenshots into $(basename "${html}")"
+}
+
 # Copies the newest extentReport*.html to a DSL-style name, then uploads that one file
 # when MinIO settings are present. The Java report name is left as the tests wrote it.
 publish_reports() {
@@ -323,6 +378,7 @@ publish_reports() {
 
     if [ -n "${src}" ]; then
         cp -f "${src}" "report/${report_name}"
+        embed_report_images "report/${report_name}" || echo "Screenshots were left as file paths" >&2
         echo "Report copied to report/${report_name} (source $(basename "${src}"))"
     fi
 
