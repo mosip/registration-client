@@ -1,6 +1,5 @@
 package registrationtest.utility;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,7 +10,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 import registrationtest.pojo.schema.Root;
 import registrationtest.pojo.schema.Schema;
@@ -108,22 +106,12 @@ public class ProcessSchemaUtil {
     }
 
     /**
-     * The client writes the process file with the process id's own capitalization
-     * ({@code bioCorrectionProcess.json}). The lookup name is lower case, which is the same file on Windows
-     * and a missing file on Linux.
+     * Same name the client writes from the schema key: first letter lower case, the rest unchanged.
+     * {@code New} is {@code newProcess.json}. {@code bioCorrection} is {@code bioCorrectionProcess.json}.
      */
     public static Path resolveProcessFile(String flow) {
-        String wanted = flow.toLowerCase(Locale.ROOT) + "Process.json";
-        Path dir = Paths.get(System.getProperty("user.dir", "."));
-        try (Stream<Path> files = Files.list(dir)) {
-            return files.filter(Files::isRegularFile)
-                    .filter(path -> path.getFileName().toString().equalsIgnoreCase(wanted))
-                    .findFirst()
-                    .orElse(dir.resolve(wanted));
-        } catch (IOException e) {
-            logger.error("Could not list process definitions in {}", dir, e);
-            return dir.resolve(wanted);
-        }
+        String processName = flow.substring(0, 1).toLowerCase(Locale.ROOT) + flow.substring(1);
+        return Paths.get(System.getProperty("user.dir", ".")).resolve(processName + "Process.json");
     }
 
     private static Root loadProcess(String flow) {
