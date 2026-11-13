@@ -54,7 +54,8 @@ public class DocumentUploadPage {
 
             // robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
         } catch (Exception e) {
-            logger.error("", e);
+            logger.error("Document scan failed", e);
+            throw new AssertionError("Document scan failed", e);
         }
 
     }
@@ -116,6 +117,41 @@ public class DocumentUploadPage {
         }
 
         return documentUploadAttList;
+    }
+
+    /**
+     * Uploads a proof-of-exception document using the schema-derived field id.
+     */
+    public void uploadPoeDocument(String jsonIdentity, String poeFieldId) {
+        logger.info("Uploading POE document");
+        try {
+            LinkedHashMap<String, String> mapDropValue = JsonUtil.JsonObjSimpleParsing(jsonIdentity, "proofOfException");
+            Set<String> dropkeys = mapDropValue.keySet();
+            if (dropkeys.isEmpty()) {
+                throw new AssertionError("proofOfException value missing in test data");
+            }
+            user_selects_combo_itemdoc("#" + poeFieldId, mapDropValue.get(dropkeys.iterator().next()));
+            Button scanButton = waitsUtil.waitForNode("#" + poeFieldId + "button", Button.class);
+            robot.moveTo(scanButton);
+            robot.clickOn(scanButton);
+            selectDocumentScan();
+        } catch (Exception e) {
+            logger.error("Failed to upload POE document", e);
+            throw new AssertionError("POE document upload failed", e);
+        }
+    }
+
+    /**
+     * Clears a previously uploaded proof-of-exception document.
+     */
+    public void deletePoeDocument(String poeFieldId) {
+        logger.info("Deleting POE document");
+        try {
+            waitsUtil.clickNodeAssert("#" + poeFieldId + "clear");
+        } catch (Exception e) {
+            logger.error("Failed to delete POE document", e);
+            throw new AssertionError("POE document delete failed", e);
+        }
     }
 
 }
