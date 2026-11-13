@@ -24,6 +24,7 @@ import javafx.stage.Window;
 import registrationtest.controls.Alerts;
 import registrationtest.utility.ExtentReportUtil;
 import registrationtest.utility.PropertiesUtil;
+import registrationtest.utility.RobotActions;
 import registrationtest.utility.WaitsUtil;
 
 import java.util.List;
@@ -81,12 +82,8 @@ public class LoginPage {
 
     /** A leftover alert or an open home screen hides the login page from the next scenario. */
     private void recoverLoginScreen() {
-        waitsUtil.dismissAlertIfPresent();
-        if (!waitsUtil.isShown(loginScreen) && waitsUtil.isShown(homeSelectionMenu)) {
+        if (!waitsUtil.isShown(loginScreen)) {
             logout();
-            if (waitsUtil.isShown("#confirm")) {
-                waitsUtil.clickNodeAssert("#confirm");
-            }
         }
         waitsUtil.clickNodeAssert(loginScreen);
     }
@@ -464,17 +461,31 @@ public class LoginPage {
     }
 
     public void logout() {
-        /**
-         * Click Menu Logout
-         */
-        waitsUtil.dismissAlertIfPresent();
-        if (waitsUtil.isShown("#confirm")) {
-            waitsUtil.clickNodeAssert("#confirm");
+        RuntimeException lastFailure = null;
+        for (int attempt = 0; attempt < 2; attempt++) {
+            waitsUtil.dismissAlertIfPresent();
+            new RobotActions(robot).closeWindow();
+            if (waitsUtil.isShown("#confirm")) {
+                waitsUtil.clickNodeAssert("#confirm");
+            }
+            if (waitsUtil.isShown(loginScreen)) {
+                return;
+            }
+            if (!waitsUtil.isShown(homeSelectionMenu) && waitsUtil.isShown("#homeImgView")) {
+                waitsUtil.clickNodeAssert("#homeImgView");
+            }
+            try {
+                waitsUtil.clickNodeAssert(homeSelectionMenu);
+                waitsUtil.clickNodeAssert(logout);
+                return;
+            } catch (RuntimeException e) {
+                lastFailure = e;
+                logger.error("Logout menu was not available", e);
+            }
         }
-        waitsUtil.clickNodeAssert(homeSelectionMenu);
-
-        waitsUtil.clickNodeAssert(logout);
-
+        if (lastFailure != null) {
+            throw lastFailure;
+        }
     }
 
 }

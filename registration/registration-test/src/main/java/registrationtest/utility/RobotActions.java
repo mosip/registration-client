@@ -39,10 +39,14 @@ public class RobotActions {
     private void hideTopPopupWindow() {
         try {
             WaitForAsyncUtils.asyncFx(() -> {
-                List<Window> popups = Window.getWindows()
-                        .filtered(w -> w.isShowing() && w != ClientApplication.getPrimaryStage());
-                if (!popups.isEmpty()) {
-                    popups.get(popups.size() - 1).hide();
+                List<Window> popups = new java.util.ArrayList<>();
+                Window.getWindows().forEach(window -> {
+                    if (window.isShowing() && window != ClientApplication.getPrimaryStage()) {
+                        popups.add(window);
+                    }
+                });
+                for (int i = popups.size() - 1; i >= 0; i--) {
+                    popups.get(i).hide();
                 }
             }).get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
