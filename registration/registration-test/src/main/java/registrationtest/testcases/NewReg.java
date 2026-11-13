@@ -263,6 +263,7 @@ public class NewReg {
                 .createTest("New Registration Scenario : " + process + " FileName : " + fileName);
 
         String preRegistrationId = null;
+        String failureDetail = null;
         if (usePreRegistration) {
             try {
                 preRegistrationId = registrationtest.api.PreRegistrationClient.createPreRegistration(ageGroup);
@@ -422,6 +423,7 @@ public class NewReg {
             rid1.setResult(result);
         } catch (Exception | AssertionError e) {
 
+            failureDetail = e.getMessage();
             logger.error("", e);
 
             try {
@@ -452,7 +454,8 @@ public class NewReg {
                             + rid1.ridDateTime + "] [ENVIRONMENT=" + System.getProperty("mosip.hostname") + "]");
             ExtentReportUtil.test1.info("Approve Packet Details Below" + rid2.getWebViewAck());
         } else {
-            ExtentReportUtil.test1.log(Status.FAIL, "TESTCASE FAIL");
+            ExtentReportUtil.test1.log(Status.FAIL,
+                    failureDetail == null ? "TESTCASE FAIL" : "TESTCASE FAIL: " + failureDetail);
 
         }
 

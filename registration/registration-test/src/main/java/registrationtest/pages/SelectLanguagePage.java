@@ -2,9 +2,11 @@ package registrationtest.pages;
 
 import java.io.IOException;
 
-
 import org.testfx.api.FxRobot;
+import org.testfx.util.WaitForAsyncUtils;
 
+import javafx.scene.Node;
+import javafx.scene.control.CheckBox;
 import registrationtest.utility.PropertiesUtil;
 import registrationtest.utility.WaitsUtil;
 
@@ -31,10 +33,26 @@ public class SelectLanguagePage {
         }
         langCodeList = code.split("@@");
 
-        for(int index=1;index<langCodeList.length;index++)
-        {
-        	String code=langCodeList[index];
-        	waitsUtil.clickNodeAssert("#" + code);
+        // Index 0 is the application language and is already selected. Clicking a
+        // selected box again clears it, which keeps Submit disabled.
+        for (int index = 1; index < langCodeList.length; index++) {
+            selectAdditionalLanguage("#" + langCodeList[index].trim());
         }
+    }
+
+    private void selectAdditionalLanguage(String id) {
+        for (int attempt = 0; attempt < 3; attempt++) {
+            Node node = waitsUtil.waitForNode(id);
+            if (node instanceof CheckBox && ((CheckBox) node).isSelected()) {
+                return;
+            }
+            waitsUtil.clickNodeAssert(id);
+            WaitForAsyncUtils.waitForFxEvents();
+            node = waitsUtil.waitForNode(id);
+            if (node instanceof CheckBox && ((CheckBox) node).isSelected()) {
+                return;
+            }
+        }
+        throw new IllegalStateException("Language " + id + " stayed unselected");
     }
 }
