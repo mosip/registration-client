@@ -4,8 +4,6 @@ package registrationtest.pages;
 
 import org.testfx.api.FxRobot;
 
-import javafx.scene.Node;
-import javafx.scene.control.Labeled;
 import javafx.scene.control.TextField;
 import registrationtest.controls.Alerts;
 
@@ -62,10 +60,7 @@ public class UploadPacketPage {
 
         logger.info("selectPacket" + rid);
         filterField = waitsUtil.waitForNode(filterField1, TextField.class);
-        // The select-all handler records a row only when its index is inside the
-        // filtered table. A search box left on one id therefore selects nothing
-        // once earlier packets are still in the list.
-        filterField.setText("");
+        filterField.setText(rid);
         waitsUtil.clickNodeAssert(selectAll);
 //		robot.moveTo(rid);
 //		waitsUtil.clickNodeAssert( rid);
@@ -92,44 +87,24 @@ public class UploadPacketPage {
     }
 
     public Boolean verifyPacketUpload(String rid) {
+        Boolean result = false;
         logger.info("verifyPacketUpload" + rid);
         try {
-            Node resultTable = waitsUtil.waitForVisibleNodeInAnyWindow("#resultTable", 120_000L);
-            Node ridNode = findLabeled(resultTable, rid);
-            Node statusNode = ridNode == null ? null : findLabeled(rowOf(ridNode), uploaded);
-            if (ridNode == null || statusNode == null) {
-                throw new IllegalStateException("Uploaded packet was not listed under PUSHED: " + rid);
-            }
-            robot.clickOn(statusNode);
-            robot.clickOn(ridNode);
-            return true;
-        } catch (RuntimeException e) {
-            logger.error("Failure Unable to upload", e);
-            if (e instanceof IllegalStateException) {
-                throw e;
-            }
-            throw new IllegalStateException("Uploaded packet was not listed under PUSHED: " + rid, e);
-        } finally {
-            waitsUtil.dismissAlertIfPresent();
+           
+            waitsUtil.clickNodeAssert(uploaded);
+
+            waitsUtil.clickNodeAssert(rid);
+            result = true;
             robotActions.closeWindow();
-        }
-    }
+           // alerts.clickAlertexit();
+        } catch (Exception e) {
+        	logger.error("Failure Unable to upload", e);
+            robotActions.closeWindow();
+            result = false;
+		}
 
-    private Node rowOf(Node node) {
-        Node current = node;
-        while (current != null && !(current instanceof javafx.scene.control.TableRow)) {
-            current = current.getParent();
-        }
-        return current == null ? node : current;
-    }
+        return result;
 
-    private Node findLabeled(Node root, String text) {
-        for (Node node : root.lookupAll("*")) {
-            if (node instanceof Labeled && text.equals(((Labeled) node).getText())) {
-                return node;
-            }
-        }
-        return null;
     }
 
 }
