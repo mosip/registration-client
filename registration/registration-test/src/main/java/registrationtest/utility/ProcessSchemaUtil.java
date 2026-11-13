@@ -1,14 +1,17 @@
 package registrationtest.utility;
 
-import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import registrationtest.pojo.schema.Root;
 import registrationtest.pojo.schema.Schema;
@@ -104,12 +107,30 @@ public class ProcessSchemaUtil {
                 || (field.getType() != null && field.getType().contains("documentType"));
     }
 
+    /**
+     * The client writes the process file with the process id's own capitalization
+     * ({@code bioCorrectionProcess.json}). The lookup name is lower case, which is the same file on Windows
+     * and a missing file on Linux.
+     */
+    public static Path resolveProcessFile(String flow) {
+        String wanted = flow.toLowerCase(Locale.ROOT) + "Process.json";
+        Path dir = Paths.get(System.getProperty("user.dir", "."));
+        try (Stream<Path> files = Files.list(dir)) {
+            return files.filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().equalsIgnoreCase(wanted))
+                    .findFirst()
+                    .orElse(dir.resolve(wanted));
+        } catch (IOException e) {
+            logger.error("Could not list process definitions in {}", dir, e);
+            return dir.resolve(wanted);
+        }
+    }
+
     private static Root loadProcess(String flow) {
-        String flowKey = flow.toLowerCase();
+        String flowKey = flow.toLowerCase(Locale.ROOT);
         return processCache.computeIfAbsent(flowKey, key -> {
             try {
-                String path = System.getProperty("user.dir") + File.separator + key + "Process.json";
-                String json = Files.readString(Paths.get(path));
+                String json = Files.readString(resolveProcessFile(flow));
                 return JsonUtil.convertJsonintoJava(json, Root.class);
             } catch (Exception e) {
                 logger.error("Failed to load process definition for flow: {}", flow, e);

@@ -2,9 +2,9 @@ package registrationtest.pages;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.util.HashMap;
@@ -213,14 +213,11 @@ public class DemographicPage {
          * convert jsonFromSchema intoJava
          */
 
-        try {
-            jsonFromSchema = getProcessSchemaJsonTxt(flow);
-
-            processSchema = JsonUtil.convertJsonintoJava(jsonFromSchema, Root.class);
-
-           // logger.info("Automaiton Script - Printing Input file Json" + JsonIdentity);
-        } catch (Exception e) {
-            logger.error("", e);
+        jsonFromSchema = getProcessSchemaJsonTxt(flow);
+        processSchema = JsonUtil.convertJsonintoJava(jsonFromSchema, Root.class);
+        if (processSchema == null) {
+            throw new IllegalStateException("Process definition could not be read for " + flow
+                    + " from " + schemaJsonFilePath);
         }
 
         /**
@@ -667,18 +664,15 @@ public class DemographicPage {
     }
 
     public String getProcessSchemaJsonTxt(String flow) {
-        String jsonFromSchema = null;
+        Path path = registrationtest.utility.ProcessSchemaUtil.resolveProcessFile(flow);
+        schemaJsonFilePath = path.toString();
         try {
-            // schemaJsonFileVersion=JsonUtil.JsonObjDoubleParsing(JsonIdentity,"IDSchemaVersion");
-
-           // schemaJsonFileVersion = Double.parseDouble(PropertiesUtil.getKeyValue("IDSchemaVersion"));
-            schemaJsonFilePath = System.getProperty("user.dir") + File.separator + flow.toLowerCase() + "Process.json";
-            jsonFromSchema = Files.readString(Paths.get(schemaJsonFilePath));
+            String jsonFromSchema = Files.readString(path);
             logger.info("Automaiton Script - Printing jsonFromSchema" + jsonFromSchema);
-        } catch (Exception e) {
-            logger.error("", e);
+            return jsonFromSchema;
+        } catch (IOException e) {
+            throw new IllegalStateException("Process definition not found: " + path, e);
         }
-        return jsonFromSchema;
     }
 
     /**
