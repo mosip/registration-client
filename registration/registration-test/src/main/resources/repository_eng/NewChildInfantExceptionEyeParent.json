@@ -2,6 +2,8 @@
 	"identity": {
 		"ageGroup": "INFANT",
 		"process": "New",
+	"previewTests":["qrCode","applicationId","demographics","documents","biometrics","bioExceptions","introducer"],
+	"ackTests":["qrCode","applicationId","dateTime","demographics","documents","biometrics","bioExceptions"],
 		"preferredLang": "English",
 		"documentUploadAttributes": [
 			"POB",
