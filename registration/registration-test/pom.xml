@@ -13,11 +13,9 @@
    <properties>
       <maven.compiler.source>21</maven.compiler.source>
       <maven.compiler.target>21</maven.compiler.target>
-      <!-- 1.2.0.2 accepts the previousHash=null capture this 1.2 client sends. Newer Mock MDS rejects it. -->
       <mock.mds.version>1.2.0.2</mock.mds.version>
    </properties>
    <dependencies>
-      <!-- QA dependency starts -->
       <dependency>
          <groupId>org.junit.jupiter</groupId>
          <artifactId>junit-jupiter-api</artifactId>
@@ -38,28 +36,21 @@
          <artifactId>junit-jupiter-params</artifactId>
          <version>5.5.1</version>
       </dependency>
-      <!-- https://mvnrepository.com/artifact/org.json/json -->
       <dependency>
          <groupId>org.json</groupId>
          <artifactId>json</artifactId>
          <version>20200518</version>
       </dependency>
-      <!-- https://mvnrepository.com/artifact/org.junit.platform/junit-platform-runner 
-         <dependency> <groupId>org.junit.platform</groupId> <artifactId>junit-platform-runner</artifactId> 
-         <version>1.7.0</version> <scope>test</scope> </dependency> -->
       <dependency>
          <groupId>org.awaitility</groupId>
          <artifactId>awaitility</artifactId>
          <version>4.0.3</version>
       </dependency>
- <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-core -->
-<dependency>
-    <groupId>ch.qos.logback</groupId>
-    <artifactId>logback-core</artifactId>
-    <version>1.4.14</version>
-</dependency>
- 
-      
+      <dependency>
+         <groupId>ch.qos.logback</groupId>
+         <artifactId>logback-core</artifactId>
+         <version>1.4.14</version>
+      </dependency>
       <dependency>
          <groupId>com.aventstack</groupId>
          <artifactId>extentreports</artifactId>
@@ -71,7 +62,6 @@
          <version>${mosip.registration.client.version}</version>
          <scope>provided</scope>
       </dependency>
-      <!-- Started as its own process from target/mockmds. Kept off this project's classpath. -->
       <dependency>
          <groupId>io.mosip.mock.mds</groupId>
          <artifactId>mock-mds</artifactId>
@@ -89,28 +79,21 @@
          <artifactId>postgresql</artifactId>
          <version>42.7.5</version>
       </dependency>
-      <!-- Hibernate Validator 9 needs jboss-logging 3.6.3. The client lib still ships 3.5.0,
-           which is first on the classpath and has no getMessageLogger(Lookup, ...). -->
       <dependency>
          <groupId>org.jboss.logging</groupId>
          <artifactId>jboss-logging</artifactId>
          <version>3.6.3.Final</version>
       </dependency>
-      <!-- No-op GPS and document scanner so the client can start without hardware. -->
       <dependency>
          <groupId>io.mosip.registration</groupId>
          <artifactId>registration-api-stub-impl</artifactId>
          <version>${project.version}</version>
       </dependency>
-      <!-- The stub brings registration-api's slf4j-api 1.6.6, which has no varargs
-           log methods. Three-argument calls then fail to compile. -->
       <dependency>
          <groupId>org.slf4j</groupId>
          <artifactId>slf4j-api</artifactId>
          <version>2.0.12</version>
       </dependency>
-      <!-- The server's biometric provider is io.mosip.mock.sdk.impl.SampleSDK.
-           That class is not in the client lib, so startup fails once sync succeeds. -->
       <dependency>
          <groupId>io.mosip.mock.sdk</groupId>
          <artifactId>mock-sdk</artifactId>
@@ -125,7 +108,7 @@
       <dependency>
          <groupId>org.testfx</groupId>
          <artifactId>openjfx-monocle</artifactId>
-         <version>21.0.2</version> <!-- must match the client's JavaFX major version (21) for -Dheadless=true -->
+         <version>21.0.2</version>
          <exclusions>
             <exclusion>
                <groupId>org.openjfx</groupId>
@@ -133,27 +116,12 @@
             </exclusion>
          </exclusions>
       </dependency>
-<!-- https://mvnrepository.com/artifact/io.rest-assured/rest-assured -->
-<dependency>
-    <groupId>io.rest-assured</groupId>
-    <artifactId>rest-assured</artifactId>
-    <version>4.3.3</version>
-    
-</dependency>
-
-
+      <dependency>
+         <groupId>io.rest-assured</groupId>
+         <artifactId>rest-assured</artifactId>
+         <version>4.3.3</version>
+      </dependency>
    </dependencies>
-   <!-- <build> <plugins> <plugin> <groupId>org.apache.maven.plugins</groupId> 
-      <artifactId>maven-jar-plugin</artifactId> <version>2.4</version> <configuration> 
-      <archive> <manifest> <addClasspath>true</addClasspath> <mainClass>qa114.runapplication.RegistrationMain</mainClass> 
-      </manifest> </archive> </configuration> </plugin> <plugin> <groupId>org.apache.maven.plugins</groupId> 
-      <artifactId>maven-dependency-plugin</artifactId> <version>2.4</version> <executions> 
-      <execution> <id>copy</id> <phase>prepare-package</phase> <goals> <goal>copy-dependencies</goal> 
-      </goals> <configuration> <outputDirectory>${project.build.directory}/autolib</outputDirectory> 
-      </configuration> </execution> </executions> </plugin> <plugin> <groupId>org.openjfx</groupId> 
-      <artifactId>javafx-maven-plugin</artifactId> <version>0.0.3</version> <configuration> 
-      <mainClass>qa114.runapplication.NewRegistrationAdultTest</mainClass> </configuration> 
-      </plugin> </plugins> </build> -->
    <build>
       <plugins>
          <plugin>
@@ -174,7 +142,6 @@
                      <excludeScope>provided</excludeScope>
                   </configuration>
                </execution>
-               <!-- Client lib is already assembled. Replace its older jboss-logging so lib/* loads 3.6.3. -->
                <execution>
                   <id>replace-client-jboss-logging</id>
                   <phase>prepare-package</phase>
@@ -209,32 +176,7 @@
                </archive>
             </configuration>
          </plugin>
-         <!--<plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <version>3.1.1</version>
-            <configuration>
-               <descriptorRefs>
-                  <descriptorRef>jar-with-dependencies</descriptorRef>
-               </descriptorRefs>
-               <archive>
-                  <manifest>
-                     <addClasspath>true</addClasspath>
-                     <mainClass>registrationtest.runapplication.RegistrationMain</mainClass>
-                  </manifest>
-               </archive>
-            </configuration>
-            <executions>
-               <execution>
-                  <id>make-assembly</id>
-                  <phase>package</phase>
-                  <goals>
-                     <goal>single</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin>-->
-          <plugin>
+         <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-invoker-plugin</artifactId>
               <version>3.8.1</version>
@@ -277,9 +219,6 @@
                       <configuration>
                           <target>
                               <delete file="${project.basedir}/../registration-client/target/lib/jboss-logging-3.5.0.Final.jar" quiet="true"/>
-                              <!-- lib/* lists jars in directory order. jdk15on 1.66 and jdk18on 1.78
-                                   are both present, so a pod can load bcpkix 1.78 against bcprov 1.66
-                                   and fail in SubjectPublicKeyInfo.getPublicKeyData(). Keep 1.78 only. -->
                               <delete quiet="true">
                                   <fileset dir="${project.basedir}/../registration-client/target/lib" includes="bc*-jdk15on-*.jar"/>
                               </delete>
@@ -297,7 +236,6 @@
                       </goals>
                       <configuration>
                           <target>
-                              <!-- Create a shell script to run the JAR file with executable permission -->
                               <chmod file="${project.build.directory}/*.jar" perm="ugo+rx"/>
                           </target>
                       </configuration>
@@ -307,4 +245,3 @@
       </plugins>
    </build>
 </project>
-  

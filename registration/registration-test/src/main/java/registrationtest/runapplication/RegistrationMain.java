@@ -268,7 +268,7 @@ public class RegistrationMain {
             	PropertiesUtil.deleteFolder(System.getProperty("user.dir")+"/logs");
             	PropertiesUtil.deleteFolder(System.getProperty("user.dir")+"/db");
             	// Only the DB secret goes with the DB; the machine key pair in .mosipkeys must survive
-            	// because runSetup.bat registered this machine on the server with those keys.
+            	// because run.bat registered this machine on the server with those keys.
             	PropertiesUtil.deleteFolder(System.getProperty("user.dir")+"/.mosipkeys/db.conf");
             	invokeRegClientInitialLaunch(PropertiesUtil.getKeyValue("operatorId"), PropertiesUtil.getKeyValue("operatorPwd"),
 						PropertiesUtil.getKeyValue("supervisorUserid"), PropertiesUtil.getKeyValue("supervisorUserpwd"),

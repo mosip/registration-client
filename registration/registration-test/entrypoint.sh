@@ -1,10 +1,10 @@
 #!/bin/bash
-# Runs the same sequence as runAll.bat inside the container.
+# Runs the same sequence as run.bat inside the container.
 #   all      setup, then initial launch, then the suite (default)
 #   setup    environment setup only
 #   initial  initial launch only
 #   test     suite only
-# Extra arguments are passed to the client, as runAll.bat does.
+# Extra arguments are passed to the client, as run.bat does.
 
 set -euo pipefail
 

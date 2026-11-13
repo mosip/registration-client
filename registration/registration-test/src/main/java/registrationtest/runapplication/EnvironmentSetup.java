@@ -15,7 +15,7 @@ import registrationtest.utility.LocalMachineDetails;
 import registrationtest.utility.PropertiesUtil;
 
 /**
- * One-time environment preparation to run before the Registration Client automation (runSetup.bat):
+ * One-time environment preparation run by run.bat before the Registration Client automation:
  * <ol>
  * <li>create the configured operator/supervisor/reviewer users in Keycloak with their roles</li>
  * <li>map those users to the configured zone and registration center</li>
@@ -111,7 +111,7 @@ public class EnvironmentSetup {
         if (isEnabled("setup.mockMds")) {
             setupMockMds(machine);
         }
-        // runAll.bat reads this line to decide whether to wait before the initial launch.
+        // run.bat reads this line to decide whether to wait before the initial launch.
         report("SETUP_NEW_RESOURCES=" + createdNewUserOrMachine);
     }
 

@@ -40,8 +40,8 @@ Update the following:
 * datadir=/repository_eng/
 * manual:Y or N
 
-## Environment setup (run before automation)
-`runSetup.bat` prepares the target environment, similar to android-registration-client `ui-test`:
+## Environment setup
+`run.bat` prepares the target environment, then runs the initial launch and the full suite:
 1. Creates `operatorId`, `supervisorUserid` and `reviewerUserid` in Keycloak with their passwords and `setup.user.roles`
    (existing users are used as they are)
 2. Maps those users to `setup.zoneCode` and `setup.regCenterId` (existing mappings are kept)
@@ -58,32 +58,25 @@ Update the following:
 The zone and center must be inside the zone of `setup.admin.userName`, otherwise masterdata rejects the mapping.
 `mosip.hostname` must be the host that serves the MOSIP APIs (for example `api-internal.<env>.mosip.net`).
 
-`runInitialLaunch.bat` and `run.bat` start Mock MDS before the client and stop it when the run ends. The dependency
+`run.bat` starts Mock MDS before the client and stops it when the run ends. The dependency
 is `mock-mds` 1.2.0.2, which accepts the capture requests this Registration Client sends.
 By default UI automation drives the real mouse and keyboard, so keep the machine unlocked while it runs.
 To run without a visible window (machine can be locked or in use), set `headless:Y` in `config.properties`
-(`Y`, `yes` or `true`). `run.bat` and `runInitialLaunch.bat` read that key. `headless:N` keeps the visible client.
+(`Y`, `yes` or `true`). `run.bat` reads that key. `headless:N` keeps the visible client.
 `-Dheadless=true` or `-Dheadless=false` on the command line overrides the file.
 Headless mode uses JavaFX Monocle (`openjfx-monocle` 21.x, matching the client's JavaFX 21); failure snapshots are taken
 from the top JavaFX window instead of the screen. `openjfx-monocle-21*.jar` must be in `lib` or `testlib` (remove the old
-`openjfx-monocle-jdk-11+26.jar`); the bat files patch it into the bundled JRE's `javafx.graphics` module.
+`openjfx-monocle-jdk-11+26.jar`); `run.bat` patches it into the bundled JRE's `javafx.graphics` module.
 
 Fill the `setup.*` keys and `mosip.hostname` in `config.properties`, then run from the same folder as `run.bat`.
-`runAll.bat` does the whole sequence: setup, then initial launch, then the full suite.
+`run.bat` does the whole sequence: setup, then initial launch, then the full suite.
 When setup creates a new user or machine it waits `setup.propagationWaitMinutes` (default 15) before the initial launch.
 When the user and machine already exist, that wait is skipped.
 ```
-runAll.bat
-```
-The three steps can still be run on their own:
-```
-runSetup.bat
-runInitialLaunch.bat
 run.bat
 ```
 Machine details are read the same way the Registration Client reads them: machine name is the lowercase hostname, and the
-public key / sign public key come from the TPM, or from `.mosipkeys/reg.pub` when no TPM is available. To only print them
-without calling the server, run `runSetup.bat machine-details`.
+public key / sign public key come from the TPM, or from `.mosipkeys/reg.pub` when no TPM is available.
 
 ## Execution result and logs
 1. Verify the failure in the logs file `\logs\AutomationLogs.log`
