@@ -10,7 +10,7 @@ import registrationtest.utility.PropertiesUtil;
 
 /**
  * Reads the additional info request (e.g. BIOMETRIC_CORRECTION) that registration processor creates when it
- * pauses a packet. Read-only access to the regprc database configured with regprc.db.* keys.
+ * pauses a packet. Read-only access to the regprc database.
  */
 public final class AdditionalInfoRequestClient {
 
@@ -54,7 +54,7 @@ public final class AdditionalInfoRequestClient {
         String sql = "select additional_info_req_id from regprc.additional_info_request"
                 + " where reg_id = ? and additional_info_process = ? order by timestamp desc limit 1";
         try (Connection c = DriverManager.getConnection(PropertiesUtil.getKeyValue("regprc.db.url"),
-                PropertiesUtil.getKeyValue("regprc.db.user"), PropertiesUtil.getKeyValue("regprc.db.password"))) {
+                PropertiesUtil.getKeyValue("regprc.db.user"), PropertiesUtil.getKeyValue("postgres-password"))) {
             c.setReadOnly(true);
             try (PreparedStatement ps = c.prepareStatement(sql)) {
                 ps.setString(1, regId);
@@ -69,7 +69,7 @@ public final class AdditionalInfoRequestClient {
     private static String findRegistrationStatus(String regId) {
         String sql = "select status_code, reg_stage_name from regprc.registration where reg_id = ?";
         try (Connection c = DriverManager.getConnection(PropertiesUtil.getKeyValue("regprc.db.url"),
-                PropertiesUtil.getKeyValue("regprc.db.user"), PropertiesUtil.getKeyValue("regprc.db.password"))) {
+                PropertiesUtil.getKeyValue("regprc.db.user"), PropertiesUtil.getKeyValue("postgres-password"))) {
             c.setReadOnly(true);
             try (PreparedStatement ps = c.prepareStatement(sql)) {
                 ps.setString(1, regId);

@@ -67,7 +67,7 @@ public class EnvironmentSetup {
                     require("setup.keycloak.url"),
                     optional("setup.keycloak.realm", "mosip"),
                     require("setup.keycloak.clientId"),
-                    require("setup.keycloak.clientSecret"));
+                    require("mosip_testrig_client_secret"));
             List<String> roles = csv(require("setup.user.roles"));
             for (Map.Entry<String, String> user : users.entrySet()) {
                 if (keycloak.createUser(user.getKey(), user.getValue(), roles)) {
@@ -81,7 +81,7 @@ public class EnvironmentSetup {
                 adminBaseUrl(),
                 optional("setup.admin.appId", "admin"),
                 require("setup.admin.clientId"),
-                require("setup.admin.clientSecret"),
+                require("mosip_admin_client_secret"),
                 require("setup.admin.userName"),
                 require("setup.admin.password"),
                 langCode);
@@ -119,7 +119,7 @@ public class EnvironmentSetup {
         String keycloakUrl = require("setup.keycloak.url");
         String realm = optional("setup.keycloak.realm", "mosip");
         String pmsClientId = optional("setup.pms.clientId", "mosip-pms-client");
-        String pmsClientSecret = require("setup.pms.clientSecret");
+        String pmsClientSecret = require("mosip_pms_client_secret");
         String user = optional("setup.pms.userName", null);
         String password = optional("setup.pms.password", null);
         if (user == null) {
@@ -128,7 +128,7 @@ public class EnvironmentSetup {
                 password = PARTNER_ADMIN_PASSWORD;
             }
             KeycloakAdminClient keycloak = KeycloakAdminClient.login(
-                    keycloakUrl, realm, require("setup.keycloak.clientId"), require("setup.keycloak.clientSecret"));
+                    keycloakUrl, realm, require("setup.keycloak.clientId"), require("mosip_testrig_client_secret"));
             keycloak.ensureUser(user, password, PARTNER_ADMIN_ROLES);
             report("Partner admin user ready: " + user);
         } else if (password == null) {
