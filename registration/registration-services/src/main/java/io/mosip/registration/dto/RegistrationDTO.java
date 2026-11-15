@@ -76,6 +76,7 @@ public class RegistrationDTO {
 	public Map<String, byte[]> BIO_CAPTURES = new HashMap<>();
 	public Map<String, Double> BIO_SCORES = new HashMap<>();
 	public Map<String, Double> SDK_SCORES = new HashMap<>();
+	public Map<String, Double> AGGREGATED_SCORES = new HashMap<>();
 	public Map<String, Object> AGE_GROUPS = new HashMap<>();
 	public Map<String, Integer> ATTEMPTS = new HashMap<>();
 	public Map<String, List<String>> CONFIGURED_BIOATTRIBUTES = new HashMap<>();
@@ -91,6 +92,7 @@ public class RegistrationDTO {
 		this.BIO_CAPTURES.clear();
 		this.BIO_SCORES.clear();
 		this.SDK_SCORES.clear();
+		this.AGGREGATED_SCORES.clear();
 		this.ATTEMPTS.clear();
 		this.SELECTED_CODES.clear();
 
@@ -255,6 +257,14 @@ public class RegistrationDTO {
 				sdkScoresIterator.remove();
 			}
 		}
+
+		Iterator<Entry<String, Double>> aggregatedScoresIterator = this.AGGREGATED_SCORES.entrySet().iterator();
+		while (aggregatedScoresIterator.hasNext()) {
+			Entry<String, Double> item = aggregatedScoresIterator.next();
+			if (item.getKey().startsWith(String.format("%s_%s_", fieldId, Modality.EXCEPTION_PHOTO.name()))) {
+				aggregatedScoresIterator.remove();
+			}
+		}
 	}
 
 	public void clearBIOCache(String fieldId, String bioAttribute) {
@@ -270,6 +280,7 @@ public class RegistrationDTO {
 					.forEach( k -> {
 						this.BIO_SCORES.remove(k);
 						this.SDK_SCORES.remove(k);
+						this.AGGREGATED_SCORES.remove(k);
 						this.BIO_CAPTURES.remove(k);
 						this.biometrics.remove(k);
 						this.biometricExceptions.remove(k);
@@ -282,11 +293,13 @@ public class RegistrationDTO {
 		keys.clear();
 		keys.addAll(this.BIO_SCORES.keySet());
 		keys.addAll(this.SDK_SCORES.keySet());
+		keys.addAll(this.AGGREGATED_SCORES.keySet());
 		keys.stream()
 				.filter( k -> k.startsWith(key))
 				.forEach( k -> {
 					this.BIO_SCORES.remove(k);
 					this.SDK_SCORES.remove(k);
+					this.AGGREGATED_SCORES.remove(k);
 				});
 	}
 
@@ -364,9 +377,14 @@ public class RegistrationDTO {
 				BiometricsDto value = entry.getValue();
 				value.setForceCaptured(isForceCaptured);
 				//value.setSubType(fieldId);
+				// Compare with the same score the threshold decision above used
+				// (getDisplayScore(): aggregate if explicitly configured, else SDK, else
+				// raw SBI) - comparing the raw SBI score here instead would let a later
+				// attempt with a higher SBI score but a worse SDK/aggregate score
+				// silently replace a better-scoring one, and vice versa.
 				if( (savedRegistrationBiometric == null && (isQualityCheckPassed || isForceCaptured)) ||
 						(savedRegistrationBiometric != null &&
-								value.getQualityScore() >= savedRegistrationBiometric.getQualityScore())) {
+								value.getDisplayScore() >= savedRegistrationBiometric.getDisplayScore())) {
 					addBiometric(fieldId, entry.getKey(), value);
 					//savedBiometrics.add(addBiometric(fieldId, entry.getKey(), value));
 				}
@@ -379,7 +397,14 @@ public class RegistrationDTO {
 		double qualityScore = 0.0;
 
 		for (BiometricsDto biometricsDto : biometrics) {
-			qualityScore += biometricsDto.getQualityScore();
+			// Use the same score that is actually shown/used elsewhere (aggregate if
+			// explicitly configured, else SDK, else raw SBI) so a capture that passes
+			// on the UI's threshold bar isn't silently force-retried here against the
+			// raw SBI score alone. Delegates to BiometricsDto#getDisplayScore() - the
+			// single source of truth for this precedence - rather than reimplementing
+			// it inline, so the >=0 "was this source actually evaluated" check can't
+			// drift out of sync between the two places.
+			qualityScore += biometricsDto.getDisplayScore();
 		}
 
 		return qualityScore;

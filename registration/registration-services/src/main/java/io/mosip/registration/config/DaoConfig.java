@@ -126,6 +126,27 @@ public class DaoConfig extends HibernateDaoConfig {
 		}
 	}
 
+	/**
+	 * @param key a config key
+	 * @return true if this key is present directly in spring.properties /
+	 *         props/mosip-application.properties (i.e. the build's own config
+	 *         files), independent of any DB global-param or local-preference
+	 *         override layered on top at runtime.
+	 */
+	public static boolean isKeyPresentInPropertiesFile(String key) {
+		return keys != null && keys.containsKey(key);
+	}
+
+	/**
+	 * @param key a config key
+	 * @return this key's value as it literally appears in spring.properties /
+	 *         props/mosip-application.properties, ignoring any DB global-param
+	 *         or local-preference override; null if the key isn't in the file.
+	 */
+	public static String getPropertyValueFromFile(String key) {
+		return keys != null ? keys.getProperty(key) : null;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 *
@@ -453,6 +474,7 @@ public class DaoConfig extends HibernateDaoConfig {
 	
 	public void updateGlobalParamsInProperties(JdbcTemplate jdbcTemplate) {
 		if (!isPPCUpdated) {
+			syncQualityConfigToGlobalParam(jdbcTemplate);
 			Properties properties = new Properties();
 			Map<String, Object> globalProps = getDBProps(jdbcTemplate);
 			properties.putAll(keys);
@@ -461,6 +483,52 @@ public class DaoConfig extends HibernateDaoConfig {
 			environment.getPropertySources().addFirst(propertiesPropertySource);
 			applicationContext.getApplicationMap().putAll(globalProps);
 			isPPCUpdated = true;
+		}
+	}
+
+	private static final String[] QUALITY_CONFIG_KEYS = {
+			"mosip.registration.quality_check_with_sdk",
+			"mosip.registration.quality.evaluators.default",
+			"mosip.registration.quality.aggregation.default"
+	};
+
+	/**
+	 * Keeps REG.GLOBAL_PARAM in sync with the biometric quality orchestrator
+	 * settings from spring.properties, so they always show up (and reflect the
+	 * properties-file value) in the Global Config Settings screen, regardless of
+	 * whatever the local DB previously had.
+	 */
+	private void syncQualityConfigToGlobalParam(JdbcTemplate jdbcTemplate) {
+		for (String key : QUALITY_CONFIG_KEYS) {
+			String value = keys.getProperty(key);
+			if (value == null) {
+				try {
+					// Key removed from spring.properties: deactivate any stale local row
+					// so ApplicationContext.map() stops seeing it as "configured".
+					jdbcTemplate.update(
+							"UPDATE REG.GLOBAL_PARAM SET IS_ACTIVE = FALSE WHERE CODE = ? AND LANG_CODE = 'eng'", key);
+				} catch (Exception e) {
+					LOGGER.error("Failed to deactivate stale quality config key {}: {}", key, e.getMessage());
+				}
+				continue;
+			}
+			try {
+				Integer count = jdbcTemplate.queryForObject(
+						"SELECT COUNT(*) FROM REG.GLOBAL_PARAM WHERE CODE = ? AND LANG_CODE = 'eng'",
+						Integer.class, key);
+				if (count != null && count > 0) {
+					jdbcTemplate.update(
+							"UPDATE REG.GLOBAL_PARAM SET VAL = ?, IS_ACTIVE = TRUE, IS_DELETED = FALSE WHERE CODE = ? AND LANG_CODE = 'eng'",
+							value, key);
+				} else {
+					jdbcTemplate.update(
+							"INSERT INTO REG.GLOBAL_PARAM (CODE, NAME, VAL, TYP, LANG_CODE, IS_ACTIVE, CR_BY, CR_DTIMES, IS_DELETED) "
+									+ "VALUES (?, ?, ?, 'CONFIGURATION', 'eng', TRUE, 'SYSTEM', CURRENT_TIMESTAMP, FALSE)",
+							key, key, value);
+				}
+			} catch (Exception e) {
+				LOGGER.error("Failed to sync quality config key {} into GLOBAL_PARAM: {}", key, e.getMessage());
+			}
 		}
 	}
 

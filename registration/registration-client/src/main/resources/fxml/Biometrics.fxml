@@ -204,7 +204,7 @@
                                           <GridPane fx:id="thresholdBox" GridPane.rowIndex="4">
                                              <children>
                                                 <Label styleClass="threshHoldLabel" text="%threshold" GridPane.halignment="LEFT" />
-                                                <Label styleClass="qualityLabel" text="%quality" GridPane.columnIndex="1" GridPane.halignment="LEFT" />
+                                                <!-- <Label styleClass="qualityLabel" text="%quality" GridPane.columnIndex="1" GridPane.halignment="LEFT" /> -->
                                                 <Label fx:id="attemptsLabel1" styleClass="attemptsLabel" text="%attempts" GridPane.halignment="LEFT" GridPane.rowIndex="2" />
                                                 <Label fx:id="exceptionsLabel" styleClass="exceptionLabel" text="%exceptions" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="2" />
                                                 <Label fx:id="thresholdScoreLabel" GridPane.halignment="LEFT" GridPane.rowIndex="1" />

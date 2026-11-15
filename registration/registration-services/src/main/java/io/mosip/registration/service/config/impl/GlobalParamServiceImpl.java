@@ -52,8 +52,11 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 					"mosip.reg.db.current.version", "mosip.reg.services.version",
 					RegistrationConstants.IS_SOFTWARE_UPDATE_AVAILABLE, RegistrationConstants.SERVICES_VERSION_KEY,
 					RegistrationConstants.HTTP_API_READ_TIMEOUT, RegistrationConstants.HTTP_API_WRITE_TIMEOUT,
-					RegistrationConstants.LAST_SOFTWARE_UPDATE, RegistrationConstants.REGCLIENT_INSTALLED_TIME, 
-					RegistrationConstants.AUDIT_TIMESTAMP));
+					RegistrationConstants.LAST_SOFTWARE_UPDATE, RegistrationConstants.REGCLIENT_INSTALLED_TIME,
+					RegistrationConstants.AUDIT_TIMESTAMP,
+					"mosip.registration.quality_check_with_sdk",
+					"mosip.registration.quality.evaluators.default",
+					"mosip.registration.quality.aggregation.default"));
 	/**
 	 * Instance of LOGGER
 	 */
@@ -190,6 +193,10 @@ public class GlobalParamServiceImpl extends BaseService implements GlobalParamSe
 				isToBeRestarted = parseGlobalParam(isToBeRestarted, globalParamMap, globalParamList);
 
 				for (Entry<String, String> key : globalParamMap.entrySet()) {
+					if (NON_REMOVABLE_PARAMS.contains(key.getKey())) {
+						// Locally pinned param: keep the local value, don't let the server response overwrite it
+						continue;
+					}
 					createNew(key.getKey(), globalParamMap.get(key.getKey()), globalParamList);
 					isToBeRestarted = isToBeRestarted ? isToBeRestarted : isPropertyRequireRestart(key.getKey());
 					/* Add in application map */

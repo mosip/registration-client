@@ -132,20 +132,25 @@
                                 <RowConstraints minHeight="10.0" percentHeight="100.0" prefHeight="30.0" vgrow="SOMETIMES" />
                             </rowConstraints>
                         </GridPane>
-                        <GridPane fx:id="thresholdBox" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                        <GridPane fx:id="thresholdBox" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="3" GridPane.halignment="LEFT" GridPane.valignment="CENTER" alignment="CENTER_LEFT">
                             <children>
-                                <Label prefHeight="12.0" styleClass="mdsQualityLabel" text="%mdsQuality" GridPane.columnIndex="0" GridPane.halignment="LEFT" GridPane.rowIndex="1" />
-                                <Label fx:id="qualityScore" prefHeight="12.0" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="1" />
-                                <Label prefHeight="12.0" styleClass="sdkQualityLabel" text="%sdkQuality" GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.rowIndex="1" />
-                                <Label fx:id="sdkQualityText" prefHeight="12.0" styleClass="sdkQualityText" GridPane.columnIndex="3" GridPane.halignment="LEFT" GridPane.rowIndex="1" />
+                                <Label fx:id="mdsQualityLabel" prefHeight="12.0" styleClass="mdsQualityLabel" text="%mdsQuality" wrapText="true" GridPane.columnIndex="0" GridPane.halignment="LEFT" GridPane.valignment="CENTER" GridPane.rowIndex="1" />
+                                <Label fx:id="qualityScore" prefHeight="12.0" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.valignment="CENTER" GridPane.rowIndex="1" />
+                                <Label fx:id="sdkQualityLabel" prefHeight="12.0" styleClass="sdkQualityLabel" text="%sdkQuality" wrapText="true" GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.valignment="CENTER" GridPane.rowIndex="1" />
+                                <Label fx:id="sdkQualityText" prefHeight="12.0" styleClass="sdkQualityText" GridPane.columnIndex="3" GridPane.halignment="LEFT" GridPane.valignment="CENTER" GridPane.rowIndex="1" />
+                                <Label fx:id="aggregatedQualityLabel" prefHeight="12.0" styleClass="mdsQualityLabel" text="%aggregatedQuality" wrapText="true" GridPane.columnIndex="4" GridPane.halignment="LEFT" GridPane.valignment="CENTER" GridPane.rowIndex="1" visible="false" managed="false" />
+                                <Label fx:id="aggregatedQualityText" prefHeight="12.0" GridPane.columnIndex="5" GridPane.halignment="LEFT" GridPane.valignment="CENTER" GridPane.rowIndex="1" visible="false" managed="false" />
                             </children>
                             <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="15.0" prefWidth="100.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="15.0" prefWidth="100.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="15.0" prefWidth="100.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="15.0" prefWidth="100.0" />
                                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="20.0" prefWidth="100.0" />
-                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="30.0" prefWidth="100.0" />
                                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="20.0" prefWidth="100.0" />
-                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="30.0" prefWidth="100.0" />
                             </columnConstraints>
                      <rowConstraints>
+                        <RowConstraints />
                         <RowConstraints />
                         <RowConstraints />
                      </rowConstraints>

@@ -406,6 +406,7 @@ public class RegistrationUIConstants {
 
 	public static final String BIOMETRIC_CAPTURE_SUCCESS = "BIOMETRIC_CAPTURE_SUCCESS";
 	public static final String BIOMETRIC_CAPTURE_FAILURE = "BIOMETRIC_CAPTURE_FAILURE";
+	public static final String BIOMETRIC_QUALITY_BELOW_THRESHOLD = "BIOMETRIC_QUALITY_BELOW_THRESHOLD";
 
 	public static final String LOCAL_DEDUP_CHECK_FAILED = "LOCAL_DEDUP_CHECK_FAILED";
 

@@ -1285,12 +1285,12 @@ Working on new Css by taleev
 }
 
 .sdkQualityLabel {
-	-fx-text-fill: #800000;
+	-fx-text-fill: #000000;
 	-fx-font-weight: bold;
 }
 
 .sdkQualityText {
-	-fx-text-fill: #800000;
+	-fx-text-fill: #000000;
 	-fx-font-size: 12.0px;
 }
 
@@ -2697,4 +2697,18 @@ Working on new Css by taleev
 .tab:selected.tabErrorLabel .tab-label {
     -fx-text-fill: #FF0000;
     -fx-font-weight: bold;
+}
+
+/* Pass/fail coloring for the small MDS/SDK/Aggregated score caption+value labels.
+   Deliberately a separate class from .labelRed/.labelGreen (used elsewhere at
+   20px for the big bar-score label) - these only override text-fill, leaving
+   font-size untouched so the small labels stay at their normal 12px. Declared
+   after .mdsQualityLabel/.sdkQualityLabel/.sdkQualityText so this always wins
+   the cascade regardless of which label it's applied to. */
+.scoreValueGreen {
+	-fx-text-fill: #45A30A;
+}
+
+.scoreValueRed {
+	-fx-text-fill: #FF0000;
 }
