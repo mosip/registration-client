@@ -51,6 +51,9 @@ public class SdkBiometricQualityEvaluatorTest {
     @Mock
     private BIRBuilder birBuilder;
 
+    @Mock
+    private io.mosip.registration.service.bio.quality.SdkInfoProvider sdkInfoProvider;
+
     @InjectMocks
     private SdkBiometricQualityEvaluator evaluator;
 

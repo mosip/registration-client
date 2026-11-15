@@ -91,6 +91,9 @@ public class QualityErrorScenariosTest {
 	@Mock
 	private LocalConfigService localConfigService;
 
+	@Mock
+	private io.mosip.registration.service.bio.quality.SdkInfoProvider sdkInfoProvider;
+
 	private SdkBiometricQualityEvaluator sdkEvaluator;
 	private SbiQualityEvaluator sbiEvaluator;
 	private BiometricQualityOrchestrator orchestrator;
@@ -110,6 +113,7 @@ public class QualityErrorScenariosTest {
 		ReflectionTestUtils.setField(sdkEvaluator, "bioAPIFactory", bioAPIFactory);
 		ReflectionTestUtils.setField(sdkEvaluator, "birBuilder", birBuilder);
 		ReflectionTestUtils.setField(sdkEvaluator, "auditFactory", auditFactory);
+		ReflectionTestUtils.setField(sdkEvaluator, "sdkInfoProvider", sdkInfoProvider);
 
 		sbiEvaluator = new SbiQualityEvaluator();
 		ReflectionTestUtils.setField(sbiEvaluator, "auditFactory", auditFactory);

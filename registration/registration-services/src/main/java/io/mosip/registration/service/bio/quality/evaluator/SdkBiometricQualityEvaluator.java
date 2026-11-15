@@ -83,6 +83,9 @@ public class SdkBiometricQualityEvaluator implements IBiometricQualityEvaluator 
 	@Autowired
 	private AuditManagerService auditFactory;
 
+	@Autowired
+	private io.mosip.registration.service.bio.quality.SdkInfoProvider sdkInfoProvider;
+
 	@Override
 	public QualityScore evaluate(BiometricsDto dto) throws RegBaseCheckedException {
 		String bioAttribute = dto.getBioAttribute();
@@ -103,6 +106,21 @@ public class SdkBiometricQualityEvaluator implements IBiometricQualityEvaluator 
 						RegistrationExceptionConstants.REG_SDK_INVALID_SCORE.getErrorCode(),
 						RegistrationExceptionConstants.REG_SDK_INVALID_SCORE.getErrorMessage());
 			}
+
+			// Pre-warm SdkInfoProvider's per-modality cache here, during live capture,
+			// instead of leaving it to BIRBuilder to trigger the first (and only,
+			// thanks to that cache) SDKInfo resolution later - which calls init()
+			// again on this same live SDK instance. BIRBuilder's call happens at
+			// final packet assembly (PacketHandlerServiceImpl), well after capture;
+			// re-invoking a vendor SDK's possibly-non-idempotent init() there risks
+			// disrupting license/native state in the middle of registration
+			// submission. Doing it here instead means that second init() call
+			// happens right alongside a call we're already making to this SDK
+			// during capture - a safer moment than mid-submission - and by the
+			// time BIRBuilder asks, the result is already cached. Best-effort: a
+			// failure here (returns null, logged by SdkInfoProvider itself) must
+			// not fail the quality score that was already successfully obtained.
+			sdkInfoProvider.getSdkInfo(biometricType);
 
 			QualityScore qs = new QualityScore();
 			// QualityScore.setScore() takes a float directly - going through (long)
