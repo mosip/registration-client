@@ -152,8 +152,10 @@ public class BioServiceImpl extends BaseService implements BioService {
 						// once retries are exhausted the best-scoring attempt is force-accepted
 						// (RegistrationDTO#addAllBiometrics). Hard-blocking here with an
 						// exception would discard the score entirely instead of recording it
-						// and letting that mechanism run.
-						LOGGER.info("BioServiceImpl: Quality score {} below threshold {} for attribute {} - recorded, re-capture will be prompted",
+						// and letting that mechanism run - so REG_QUALITY_BELOW_THRESHOLD
+						// (REG-SDK-006) is logged for traceability, not thrown.
+						LOGGER.info("BioServiceImpl: [{}] Quality score {} below threshold {} for attribute {} - recorded, re-capture will be prompted",
+								RegistrationExceptionConstants.REG_QUALITY_BELOW_THRESHOLD.getErrorCode(),
 								displayScore, threshold, biometricsDto.getBioAttribute());
 					}
 				}
