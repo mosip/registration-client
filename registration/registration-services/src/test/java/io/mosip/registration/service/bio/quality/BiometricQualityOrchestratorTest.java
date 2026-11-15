@@ -81,9 +81,10 @@ public class BiometricQualityOrchestratorTest {
 	}
 
 	// helper to put a key into the live ApplicationContext map, and also into
-	// DaoConfig's file-backed properties so aggregation-strategy keys are seen
-	// as "explicitly configured" (BiometricQualityOrchestrator checks the file,
-	// not the runtime map, for that flag - see DaoConfig.isKeyPresentInPropertiesFile).
+	// DaoConfig's file-backed properties - both evaluator selection and
+	// aggregation-strategy resolution now read via ApplicationContext.map(),
+	// which is the merged file/GLOBAL_PARAM/LOCAL_PREFERENCES view, so setting
+	// both here just means "configured, regardless of source" for most tests.
 	private void putConfig(String key, String value) {
 		Map<String, Object> m = new HashMap<>();
 		m.put(key, value);
@@ -95,6 +96,15 @@ public class BiometricQualityOrchestratorTest {
 			ReflectionTestUtils.setField(io.mosip.registration.config.DaoConfig.class, "keys", props);
 		}
 		props.setProperty(key, value);
+	}
+
+	// helper that sets a key ONLY in ApplicationContext.map() - simulating a
+	// Global Config Settings / Local Preferences override that was never part
+	// of the shipped properties files (DaoConfig.keys stays untouched).
+	private void putConfigMapOnly(String key, String value) {
+		Map<String, Object> m = new HashMap<>();
+		m.put(key, value);
+		ApplicationContext.setApplicationMap(m);
 	}
 
 	// =========================================================================
@@ -278,6 +288,29 @@ public class BiometricQualityOrchestratorTest {
 		assertEquals("MEDIAN", medianAggregator.getStrategyName());
 		assertEquals("WEIGHTED_AVERAGE", weightedAggregator.getStrategyName());
 		assertEquals("PRIORITY", priorityAggregator.getStrategyName());
+	}
+
+	/**
+	 * A Global Config Settings / Local Preferences edit to the aggregation
+	 * strategy is never written into DaoConfig's file-backed properties - only
+	 * into ApplicationContext.map() (via GLOBAL_PARAM/LOCAL_PREFERENCES). This
+	 * proves that edit is honored even though it was never "in the file".
+	 */
+	@Test
+	public void testAggregationStrategyHonoredFromGlobalConfigNotJustFile() throws RegBaseCheckedException {
+		putConfig(RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default", "SBI,SDK");
+		// Deliberately NOT putConfig() - this key exists only in ApplicationContext.map(),
+		// simulating a Global Config Settings screen edit that never touched spring.properties.
+		putConfigMapOnly(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "MEDIAN");
+		when(sbiEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(60L));
+		when(sdkEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(80L));
+
+		BiometricQualityOrchestrator.OrchestrationResult result = orchestrator.orchestrate(biometricsDto);
+
+		assertTrue("A map-only (Global Config) override must still count as explicitly configured",
+				result.isAggregationExplicitlyConfigured());
+		assertEquals("MEDIAN", result.getAggregationStrategy());
+		assertEquals(70.0, result.getAggregatedScore(), 0.001);
 	}
 
 	@Test

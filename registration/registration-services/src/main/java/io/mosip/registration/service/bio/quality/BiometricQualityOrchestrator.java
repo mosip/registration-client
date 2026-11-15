@@ -221,29 +221,35 @@ public class BiometricQualityOrchestrator {
 		String aggAttributeKey     = RegistrationConstants.QUALITY_AGGREGATION_PREFIX + bioAttribute;
 		String aggDefaultKey       = RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default";
 
-		// Scoped strictly to spring.properties / mosip-application.properties: a DB
-		// global-param or local-preference override does NOT count as "configured"
-		// here, only the build's own config files do.
-		boolean aggregationExplicitlyConfigured = io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggModalityKeyUpper)
-				|| io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggModalityKeyLower)
-				|| io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggAttributeKey)
-				|| io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggDefaultKey);
+		// Read via ApplicationContext.map() - the same merged file/GLOBAL_PARAM/
+		// LOCAL_PREFERENCES view the evaluator-selection hierarchy above already
+		// uses - rather than the build's own properties files only. An earlier
+		// version of this check read the files directly to dodge a stale DB value
+		// making this look "explicitly configured" when the deployment's own
+		// config never set it; but mosip.registration.quality.aggregation.default
+		// (and the master switch / evaluators.default alongside it) is kept in
+		// sync with the file on every startup by DaoConfig.syncQualityConfigToGlobalParam,
+		// and a modality/attribute-level override set via Global Config Settings
+		// is a deliberate admin action, not staleness - reading the file only
+		// meant an operator's edit on that screen could never take effect here,
+		// unlike every other quality config key.
+		boolean aggregationExplicitlyConfigured = ApplicationContext.map().containsKey(aggModalityKeyUpper)
+				|| ApplicationContext.map().containsKey(aggModalityKeyLower)
+				|| ApplicationContext.map().containsKey(aggAttributeKey)
+				|| ApplicationContext.map().containsKey(aggDefaultKey);
 
-		// When the strategy is explicitly set in the config files, take the value
-		// straight from the file (not the merged runtime map, which can carry a
-		// stale DB global-param or local-preference override on top of it).
 		// Attribute is checked before modality here too, for the same reason as
 		// the evaluator lookup above: it's the more specific key and must win.
 		String strategyName;
 		if (aggregationExplicitlyConfigured) {
-			if (io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggAttributeKey)) {
-				strategyName = io.mosip.registration.config.DaoConfig.getPropertyValueFromFile(aggAttributeKey);
-			} else if (io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggModalityKeyUpper)) {
-				strategyName = io.mosip.registration.config.DaoConfig.getPropertyValueFromFile(aggModalityKeyUpper);
-			} else if (io.mosip.registration.config.DaoConfig.isKeyPresentInPropertiesFile(aggModalityKeyLower)) {
-				strategyName = io.mosip.registration.config.DaoConfig.getPropertyValueFromFile(aggModalityKeyLower);
+			if (ApplicationContext.map().containsKey(aggAttributeKey)) {
+				strategyName = (String) ApplicationContext.map().get(aggAttributeKey);
+			} else if (ApplicationContext.map().containsKey(aggModalityKeyUpper)) {
+				strategyName = (String) ApplicationContext.map().get(aggModalityKeyUpper);
+			} else if (ApplicationContext.map().containsKey(aggModalityKeyLower)) {
+				strategyName = (String) ApplicationContext.map().get(aggModalityKeyLower);
 			} else {
-				strategyName = io.mosip.registration.config.DaoConfig.getPropertyValueFromFile(aggDefaultKey);
+				strategyName = (String) ApplicationContext.map().get(aggDefaultKey);
 			}
 		} else {
 			strategyName = "MEAN";
