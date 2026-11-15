@@ -377,9 +377,14 @@ public class RegistrationDTO {
 				BiometricsDto value = entry.getValue();
 				value.setForceCaptured(isForceCaptured);
 				//value.setSubType(fieldId);
+				// Compare with the same score the threshold decision above used
+				// (getDisplayScore(): aggregate if explicitly configured, else SDK, else
+				// raw SBI) - comparing the raw SBI score here instead would let a later
+				// attempt with a higher SBI score but a worse SDK/aggregate score
+				// silently replace a better-scoring one, and vice versa.
 				if( (savedRegistrationBiometric == null && (isQualityCheckPassed || isForceCaptured)) ||
 						(savedRegistrationBiometric != null &&
-								value.getQualityScore() >= savedRegistrationBiometric.getQualityScore())) {
+								value.getDisplayScore() >= savedRegistrationBiometric.getDisplayScore())) {
 					addBiometric(fieldId, entry.getKey(), value);
 					//savedBiometrics.add(addBiometric(fieldId, entry.getKey(), value));
 				}

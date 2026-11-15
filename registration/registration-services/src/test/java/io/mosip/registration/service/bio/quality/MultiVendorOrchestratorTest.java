@@ -109,7 +109,7 @@ public class MultiVendorOrchestratorTest {
     public void testThreeVendorsWithWeightedAverageStrategy() throws RegBaseCheckedException {
         putConfig(RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default",
                 "MOCK_VENDOR_1, MOCK_VENDOR_2, MOCK_VENDOR_3");
-        putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "WEIGHTED");
+        putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "WEIGHTED_AVERAGE");
 
         // Set per-vendor weights
         putConfig(RegistrationConstants.QUALITY_WEIGHT_PREFIX + "leftIndex.MOCK_VENDOR_1", "0.2");

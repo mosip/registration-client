@@ -19,11 +19,16 @@ public class PriorityScoreAggregator implements IBiometricScoreAggregator {
 		if (w == null || w.isEmpty()) {
 			return scores.values().stream().mapToDouble(Double::doubleValue).findFirst().orElse(0.0);
 		}
-		return w.entrySet().stream()
-				.sorted(Map.Entry.comparingByValue())
-				.filter(e -> scores.containsKey(e.getKey()))
-				.mapToDouble(e -> scores.get(e.getKey()))
-				.findFirst().orElse(0.0);
+		// Iterate scores (insertion-ordered by the orchestrator, matching the
+		// configured evaluator order) rather than w, and sort by Stream.sorted()
+		// which is stable for an ordered source - so when two evaluators tie on
+		// weight (e.g. both left at the default 1.0, unconfigured), the winner is
+		// deterministically the one listed first in evaluators config, not
+		// whichever HashMap bucket order happened to come out first.
+		return scores.entrySet().stream()
+				.filter(e -> w.containsKey(e.getKey()))
+				.sorted((e1, e2) -> Double.compare(w.get(e1.getKey()), w.get(e2.getKey())))
+				.findFirst().map(Map.Entry::getValue).orElse(0.0);
 	}
 
 	@Override

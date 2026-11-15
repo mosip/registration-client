@@ -203,8 +203,7 @@ public class BiometricQualityOrchestratorTest {
 	@Test
 	public void testWeightedAverageViaOrchestrator() throws RegBaseCheckedException {
 		putConfig(RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default", "SBI,SDK");
-		// WeightedAverageScoreAggregator strategy name is "WEIGHTED"
-		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "WEIGHTED");
+		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "WEIGHTED_AVERAGE");
 		putConfig(RegistrationConstants.QUALITY_WEIGHT_PREFIX + "leftIndex.SBI", "0.3");
 		putConfig(RegistrationConstants.QUALITY_WEIGHT_PREFIX + "leftIndex.SDK", "0.7");
 		when(sbiEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(60L));
@@ -277,7 +276,7 @@ public class BiometricQualityOrchestratorTest {
 	public void testAggregatorStrategyNames() {
 		assertEquals("MEAN", meanAggregator.getStrategyName());
 		assertEquals("MEDIAN", medianAggregator.getStrategyName());
-		assertEquals("WEIGHTED", weightedAggregator.getStrategyName());
+		assertEquals("WEIGHTED_AVERAGE", weightedAggregator.getStrategyName());
 		assertEquals("PRIORITY", priorityAggregator.getStrategyName());
 	}
 
@@ -387,7 +386,7 @@ public class BiometricQualityOrchestratorTest {
 	@Test
 	public void testInvalidWeightConfigDefaultsToOne() throws RegBaseCheckedException {
 		putConfig(RegistrationConstants.QUALITY_EVALUATORS_PREFIX + "default", "SBI,SDK");
-		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "WEIGHTED");
+		putConfig(RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default", "WEIGHTED_AVERAGE");
 		putConfig(RegistrationConstants.QUALITY_WEIGHT_PREFIX + "leftIndex.SBI", "bad_value");
 		putConfig(RegistrationConstants.QUALITY_WEIGHT_PREFIX + "leftIndex.SDK", "bad_value");
 		when(sbiEvaluator.evaluate(biometricsDto)).thenReturn(scoreOf(60L));

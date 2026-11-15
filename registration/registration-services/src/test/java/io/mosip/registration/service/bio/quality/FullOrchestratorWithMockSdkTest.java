@@ -176,8 +176,6 @@ public class FullOrchestratorWithMockSdkTest {
 
         double result = orchestrator.orchestrate(dto("leftIndex")).getAggregatedScore();
 
-        System.out.println("\n[MEAN] SBI=" + SBI_SCORE + "  SDK=" + SDK_SCORE
-                + "  →  Aggregated=" + result);
         assertEquals("MEAN(70.0, 90.0) should be 80.0", 80.0, result, 0.001);
     }
 
@@ -191,8 +189,6 @@ public class FullOrchestratorWithMockSdkTest {
 
         double result = orchestrator.orchestrate(dto("leftEye")).getAggregatedScore();
 
-        System.out.println("\n[MEDIAN] SBI=" + SBI_SCORE + "  SDK=" + SDK_SCORE
-                + "  →  Aggregated=" + result);
         assertEquals("MEDIAN(70.0, 90.0) should be 80.0", 80.0, result, 0.001);
     }
 
@@ -203,7 +199,7 @@ public class FullOrchestratorWithMockSdkTest {
     // =========================================================================
     @Test
     public void test_WEIGHTED_aggregation_Face() throws RegBaseCheckedException {
-        configureAggregation("WEIGHTED");
+        configureAggregation("WEIGHTED_AVERAGE");
         // Configure weights: SBI=0.4, SDK=0.6
         ApplicationContext.map().put(
                 RegistrationConstants.QUALITY_AGGREGATION_PREFIX + "default.weights",
@@ -211,13 +207,10 @@ public class FullOrchestratorWithMockSdkTest {
 
         double result = orchestrator.orchestrate(dto("face")).getAggregatedScore();
 
-        System.out.println("\n[WEIGHTED] SBI=" + SBI_SCORE + "×0.4  SDK=" + SDK_SCORE
-                + "×0.6  →  Aggregated=" + result);
         // Weighted: (70×0.4 + 90×0.6) / 1.0 = 82.0
         assertTrue("WEIGHTED result should be between MIN and MAX scores",
                 result >= SBI_SCORE && result <= SDK_SCORE);
-        System.out.println("[WEIGHTED] Result " + result + " is between SBI("
-                + SBI_SCORE + ") and SDK(" + SDK_SCORE + ") ✓");
+        
     }
 
     // =========================================================================
@@ -230,12 +223,10 @@ public class FullOrchestratorWithMockSdkTest {
 
         double result = orchestrator.orchestrate(dto("rightIndex")).getAggregatedScore();
 
-        System.out.println("\n[PRIORITY] SBI=" + SBI_SCORE + "  SDK=" + SDK_SCORE
-                + "  →  Aggregated=" + result);
         // Without explicit priority weights, PRIORITY returns first score encountered
         assertTrue("PRIORITY result must be one of the evaluator scores",
                 result == SBI_SCORE || result == SDK_SCORE);
-        System.out.println("[PRIORITY] Selected score: " + result + " ✓");
+        
     }
 
     // =========================================================================
@@ -254,8 +245,6 @@ public class FullOrchestratorWithMockSdkTest {
         double fingerResult = orchestrator.orchestrate(dto("leftIndex")).getAggregatedScore(); // FINGER
         double irisResult   = orchestrator.orchestrate(dto("leftEye")).getAggregatedScore();   // IRIS
 
-        System.out.println("\n[PER-MODALITY] FINGER(MEAN)=" + fingerResult
-                + "  IRIS(MEDIAN)=" + irisResult);
 
         assertEquals("FINGER MEAN(70.0, 90.0) = 80.0", 80.0, fingerResult, 0.001);
         assertEquals("IRIS MEDIAN(70.0, 90.0) = 80.0", 80.0, irisResult, 0.001);
@@ -274,7 +263,6 @@ public class FullOrchestratorWithMockSdkTest {
 
         double result = orchestrator.orchestrate(dto("leftThumb")).getAggregatedScore();
 
-        System.out.println("\n[SBI-ONLY] SBI=" + SBI_SCORE + "  →  Aggregated=" + result);
         assertEquals("SBI-only mode should return exactly SBI score",
                 SBI_SCORE, result, 0.001);
     }
@@ -298,10 +286,6 @@ public class FullOrchestratorWithMockSdkTest {
         assertNotNull("SDK must report QUALITY_CHECK in supportedMethods",
                 info.getSupportedMethods().get(BiometricFunction.QUALITY_CHECK));
 
-        System.out.println("\n[SDK-INIT] " + realSampleSDKV2.getClass().getSimpleName()
-                + " v" + info.getSdkVersion()
-                + " | Modalities: " + info.getSupportedModalities()
-                + " | Methods: " + info.getSupportedMethods().keySet());
     }
 
     // =========================================================================
@@ -317,10 +301,6 @@ public class FullOrchestratorWithMockSdkTest {
         double irisResult   = orchestrator.orchestrate(dto("leftEye")).getAggregatedScore();
         double faceResult   = orchestrator.orchestrate(dto("face")).getAggregatedScore();
 
-        System.out.println("\n[ALL-MODALITIES MEAN]"
-                + "  Finger=" + fingerResult
-                + "  Iris="   + irisResult
-                + "  Face="   + faceResult);
 
         assertEquals("Finger MEAN should be 80.0", 80.0, fingerResult, 0.001);
         assertEquals("Iris MEAN should be 80.0",   80.0, irisResult,   0.001);
@@ -343,10 +323,10 @@ public class FullOrchestratorWithMockSdkTest {
         // BiometricsDto with SBI score = 100
         BiometricsDto perfectDto = new BiometricsDto("leftIndex", new byte[]{1}, 100.0);
 
-        for (String strategy : Arrays.asList("MEAN", "MEDIAN", "WEIGHTED")) {
+        for (String strategy : Arrays.asList("MEAN", "MEDIAN", "WEIGHTED_AVERAGE")) {
             configureAggregation(strategy);
             double result = orchestrator.orchestrate(perfectDto).getAggregatedScore();
-            System.out.println("[PERFECT-" + strategy + "] Result: " + result);
+            
             assertEquals("All strategies should return 100 for perfect scores",
                     100.0, result, 0.001);
         }
@@ -361,11 +341,10 @@ public class FullOrchestratorWithMockSdkTest {
         double min = Math.min(SBI_SCORE, SDK_SCORE); // 70.0
         double max = Math.max(SBI_SCORE, SDK_SCORE); // 90.0
 
-        for (String strategy : Arrays.asList("MEAN", "MEDIAN", "WEIGHTED")) {
+        for (String strategy : Arrays.asList("MEAN", "MEDIAN", "WEIGHTED_AVERAGE")) {
             configureAggregation(strategy);
             double result = orchestrator.orchestrate(dto("leftIndex")).getAggregatedScore();
-            System.out.println("[RANGE-CHECK-" + strategy + "] SBI="
-                    + SBI_SCORE + " SDK=" + SDK_SCORE + " Result=" + result);
+            
             assertTrue("Strategy " + strategy + ": result " + result
                             + " must be within [" + min + ", " + max + "]",
                     result >= min && result <= max);

@@ -1,6 +1,6 @@
 package io.mosip.registration.service.bio.quality;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -165,7 +165,11 @@ public class BiometricQualityOrchestrator {
 		// A configured evaluator that fails (invalid score, timeout, exception) blocks
 		// immediately and does NOT silently fall back to the remaining sources - only
 		// an evaluator that was never configured/selected is skipped silently.
-		Map<String, Double> scores = new HashMap<>();
+		// LinkedHashMap, not HashMap: preserves the order evaluators were
+		// configured/run in, so PriorityScoreAggregator can break a weight tie
+		// deterministically (by configured order) instead of by HashMap's
+		// unspecified, hash-dependent iteration order.
+		Map<String, Double> scores = new LinkedHashMap<>();
 		for (IBiometricQualityEvaluator evaluator : selectedEvaluators) {
 			LOGGER.info("BiometricQualityOrchestrator: Running evaluator {} for attribute {}", evaluator.getEvaluatorName(), bioAttribute);
 			try {
@@ -180,7 +184,20 @@ public class BiometricQualityOrchestrator {
 							RegistrationExceptionConstants.REG_SDK_INVALID_SCORE.getErrorCode(),
 							RegistrationExceptionConstants.REG_SDK_INVALID_SCORE.getErrorMessage());
 				}
-				scores.put(evaluator.getEvaluatorName(), (double) qs.getScore());
+				double rawScore = (double) qs.getScore();
+				// NaN and +/-Infinity are not caught by a plain "< 0" check (NaN >= 0 is
+				// false, which getDisplayScore() would read as "source did not run" and
+				// silently fall through to the next source instead of blocking), and a
+				// score above 100 would satisfy any real-world threshold outright - both
+				// are an Invalid Score, same as null/negative, not a value to let through.
+				if (Double.isNaN(rawScore) || Double.isInfinite(rawScore) || rawScore < 0 || rawScore > 100) {
+					LOGGER.error("BiometricQualityOrchestrator: Evaluator {} returned out-of-range score {} for attribute {}",
+							evaluator.getEvaluatorName(), rawScore, bioAttribute);
+					throw new RegBaseCheckedException(
+							RegistrationExceptionConstants.REG_SDK_INVALID_SCORE.getErrorCode(),
+							RegistrationExceptionConstants.REG_SDK_INVALID_SCORE.getErrorMessage());
+				}
+				scores.put(evaluator.getEvaluatorName(), rawScore);
 			} catch (RegBaseCheckedException e) {
 				LOGGER.error("BiometricQualityOrchestrator: Evaluator {} failed for attribute {}: {}",
 						evaluator.getEvaluatorName(), bioAttribute, e.getMessage());
@@ -293,6 +310,23 @@ public class BiometricQualityOrchestrator {
 		}
 
 		double aggregatedScore = selectedAggregator.aggregate(scores, weights, formulaExpr);
+
+		// A FORMULA expression (or, in principle, a misconfigured weight) can
+		// produce a value outside the valid 0..100 score range, or non-finite -
+		// the aggregated score feeds straight into getDisplayScore() and the
+		// threshold gate the same way an evaluator score does, so it needs the
+		// same Invalid Score protection. Unlike an evaluator returning a bad
+		// score, this is a misconfiguration of the strategy itself (bad
+		// formula/weights), so it's reported as a Configuration Error.
+		if (Double.isNaN(aggregatedScore) || Double.isInfinite(aggregatedScore) || aggregatedScore < 0 || aggregatedScore > 100) {
+			LOGGER.error("BiometricQualityOrchestrator: Strategy {} produced out-of-range aggregated score {} for attribute {}",
+					finalStrategyName, aggregatedScore, bioAttribute);
+			safeAudit(AuditEvent.QUALITY_ORCH_FAILED, bioAttribute, "AGGREGATION_OUT_OF_RANGE");
+			throw new RegBaseCheckedException(
+					RegistrationExceptionConstants.REG_QUALITY_CONFIG_ERROR.getErrorCode(),
+					RegistrationExceptionConstants.REG_QUALITY_CONFIG_ERROR.getErrorMessage());
+		}
+
 		LOGGER.info("BiometricQualityOrchestrator: Aggregated score {} using strategy {} for attribute {}",
 				aggregatedScore, finalStrategyName, bioAttribute);
 

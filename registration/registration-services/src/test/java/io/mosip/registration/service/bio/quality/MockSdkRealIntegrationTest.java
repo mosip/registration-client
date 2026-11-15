@@ -124,8 +124,7 @@ public class MockSdkRealIntegrationTest {
 
         // The SDK must return a non-null Response object — proves it was called
         assertNotNull("SampleSDKV2.checkQuality() must return a non-null Response", response);
-        System.out.println("[MockSdkRealIntegrationTest] FINGER exception response status: "
-                + response.getStatusCode());
+        
     }
 
     // =========================================================================
@@ -149,8 +148,7 @@ public class MockSdkRealIntegrationTest {
         // This proves the SDK is running and returning structured responses.
         assertEquals("SDK should return 404 BIOMETRIC_NOT_FOUND for empty BDB segments",
                 404, (int) response.getStatusCode());
-        System.out.println("[MockSdkRealIntegrationTest] IRIS exception response status: "
-                + response.getStatusCode());
+        
     }
 
     // =========================================================================
@@ -173,8 +171,7 @@ public class MockSdkRealIntegrationTest {
                 404, (int) response.getStatusCode());
         // QualityCheck is null when SDK returns error status — correct SDK contract
         assertNull("QualityCheck should be null for error responses", response.getResponse());
-        System.out.println("[MockSdkRealIntegrationTest] FACE exception response status: "
-                + response.getStatusCode());
+        
     }
 
     // =========================================================================
@@ -197,8 +194,7 @@ public class MockSdkRealIntegrationTest {
         // SDK correctly returns 404 for each empty-BDB segment across all modalities
         assertEquals("SDK should return 404 BIOMETRIC_NOT_FOUND for multi-modal empty-BDB record",
                 404, (int) response.getStatusCode());
-        System.out.println("[MockSdkRealIntegrationTest] Multi-modal exception status: "
-                + response.getStatusCode());
+        
     }
 
     // =========================================================================
@@ -210,7 +206,7 @@ public class MockSdkRealIntegrationTest {
         io.mosip.kernel.biometrics.model.SDKInfo initResponse = sampleSDKV2.init(null);
 
         assertNotNull("init() must return a non-null SDKInfo", initResponse);
-        System.out.println("[MockSdkRealIntegrationTest] SDK init response: " + initResponse);
+        
     }
 
     // =========================================================================
@@ -235,7 +231,6 @@ public class MockSdkRealIntegrationTest {
         // 404 proves SDK was called and attempted to find IRIS segments — modality filter works
         assertEquals("SDK should return 404 when filtering to IRIS-only with empty BDB",
                 404, (int) response.getStatusCode());
-        System.out.println("[MockSdkRealIntegrationTest] Modality-filtered response: "
-                + response.getStatusCode());
+        
     }
 }

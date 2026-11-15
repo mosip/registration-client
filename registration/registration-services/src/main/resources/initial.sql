@@ -423,7 +423,7 @@ INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.vid.length','mosip.kernel
 
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.kernel.partner.cacertificate.upload.minimumvalidity.month', 'mosip.kernel.partner.cacertificate.upload.minimumvalidity.month', '1', 'CONFIGURATION', 'eng', true, 'SYSTEM', current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 
-INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.quality_check_with_sdk','mosip.registration.quality_check_with_sdk','Y','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
+INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.quality_check_with_sdk','mosip.registration.quality_check_with_sdk','N','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 
 INSERT INTO "REG"."GLOBAL_PARAM" VALUES ('mosip.registration.quality.evaluators.default','mosip.registration.quality.evaluators.default','SBI, SDK','CONFIGURATION','eng',true,'SYSTEM',current timestamp, 'SYSTEM',current timestamp, false, current timestamp);
 

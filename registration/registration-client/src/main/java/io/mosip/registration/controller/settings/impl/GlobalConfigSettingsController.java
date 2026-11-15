@@ -202,7 +202,8 @@ public class GlobalConfigSettingsController extends BaseController implements Se
 					setText(null);
 					setGraphic(null);
 					if (item != null) {
-						if (getTableRow() != null && getTableRow().getItem() != null) {
+						if (getTableRow() != null && getTableRow().getItem() != null
+								&& permittedConfigurations.contains(getTableRow().getItem().getKey())) {
 							TextField textField = new TextField();
 							textField.setText(item);
 							textField.getStyleClass().add("settingsTextField");

@@ -26,6 +26,6 @@ public class WeightedAverageScoreAggregator implements IBiometricScoreAggregator
 
 	@Override
 	public String getStrategyName() {
-		return "WEIGHTED";
+		return "WEIGHTED_AVERAGE";
 	}
 }
