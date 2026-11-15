@@ -595,7 +595,14 @@ public class GenericBiometricsController extends BaseController {
 				if (failureCause instanceof RegBaseCheckedException) {
 					String errorCode = ((RegBaseCheckedException) failureCause).getErrorCode();
 					if (errorCode != null && errorCode.startsWith("REG-SDK-")) {
-						alertMessage = ((RegBaseCheckedException) failureCause).getErrorText();
+						// Look the code up in the active locale's message bundle first (same
+						// pattern BaseController uses for PreConditionCheckException) so the
+						// operator sees this in their own language, not the English text baked
+						// into the exception - fall back to that English text only if the
+						// active locale's messages file genuinely has no entry for this code.
+						alertMessage = RegistrationUIConstants.bundle.containsKey(errorCode)
+								? RegistrationUIConstants.bundle.getString(errorCode)
+								: ((RegBaseCheckedException) failureCause).getErrorText();
 					}
 				}
 				generateAlert(RegistrationConstants.ERROR, alertMessage);
