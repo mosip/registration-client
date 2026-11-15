@@ -2,12 +2,13 @@ package io.mosip.registration.service.bio.quality.evaluator;
 
 import java.util.Map;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.PreDestroy;
 
@@ -51,14 +52,25 @@ public class SdkBiometricQualityEvaluator implements IBiometricQualityEvaluator 
 	// to tolerate a handful of concurrent evaluations, not to guarantee forward
 	// progress under total SDK hang: shutdownNow()/Future#cancel(true) on a
 	// blocking native SDK call is generally NOT actually interruptible, so a
-	// genuinely hung SDK still permanently leaks one thread from this pool per
-	// timeout rather than one thread per call - this bounds the damage instead
-	// of it being unbounded, it does not eliminate it. If every pool thread is
-	// eventually leaked this way, subsequent calls queue behind them and hit
-	// their own future.get(timeoutMs) without ever starting, which still fails
-	// fast rather than hanging the caller.
+	// genuinely hung SDK call permanently leaks its worker thread - that part is
+	// a real Java/JNI limitation with no safe workaround (Thread#stop() is unsafe
+	// and can corrupt native/VM state, so it's deliberately not used here).
+	//
+	// What IS fixable is the consequence: with a single fixed-size pool, once
+	// every thread is wedged that way, every later call queues behind them
+	// forever and times out without ever starting. recycleExecutorIfSaturated()
+	// detects that (all SDK_EXECUTOR_POOL_SIZE threads still active right after
+	// a timeout) and swaps in a fresh pool, so the next call gets a thread that
+	// can actually run instead of queuing behind permanently-stuck ones. The
+	// abandoned pool's stuck threads stay alive as leaked daemons (harmless to
+	// JVM shutdown, just wasted stack) until the SDK call they're blocked in
+	// ever returns, if it does.
 	private static final int SDK_EXECUTOR_POOL_SIZE = 4;
-	private final ExecutorService sdkExecutor = Executors.newFixedThreadPool(SDK_EXECUTOR_POOL_SIZE, sdkThreadFactory());
+	private final AtomicReference<ThreadPoolExecutor> sdkExecutorRef = new AtomicReference<>(newSdkExecutor());
+
+	private static ThreadPoolExecutor newSdkExecutor() {
+		return (ThreadPoolExecutor) Executors.newFixedThreadPool(SDK_EXECUTOR_POOL_SIZE, sdkThreadFactory());
+	}
 
 	private static ThreadFactory sdkThreadFactory() {
 		AtomicInteger counter = new AtomicInteger(1);
@@ -69,9 +81,30 @@ public class SdkBiometricQualityEvaluator implements IBiometricQualityEvaluator 
 		};
 	}
 
+	/**
+	 * If every thread in the current pool is still active immediately after a
+	 * timeout, they're not merely busy (the pool is only ever asked to run one
+	 * task per captured attribute, never flooded) - they're wedged in a blocking
+	 * call that didn't honor cancellation. Replace the pool so subsequent calls
+	 * aren't queued behind threads that will never free up.
+	 */
+	private void recycleExecutorIfSaturated() {
+		ThreadPoolExecutor current = sdkExecutorRef.get();
+		if (current.getActiveCount() >= SDK_EXECUTOR_POOL_SIZE) {
+			ThreadPoolExecutor fresh = newSdkExecutor();
+			if (sdkExecutorRef.compareAndSet(current, fresh)) {
+				LOGGER.error("SdkBiometricQualityEvaluator: SDK executor pool saturated with unresponsive threads after a timeout - replacing it so future quality checks aren't queued behind them");
+				current.shutdownNow();
+			} else {
+				// Another thread already recycled it between the get() and here.
+				fresh.shutdownNow();
+			}
+		}
+	}
+
 	@PreDestroy
 	private void shutdownSdkExecutor() {
-		sdkExecutor.shutdownNow();
+		sdkExecutorRef.get().shutdownNow();
 	}
 
 	@Autowired
@@ -169,7 +202,7 @@ public class SdkBiometricQualityEvaluator implements IBiometricQualityEvaluator 
 	private Map<BiometricType, Float> callSdkWithTimeout(BiometricType biometricType, BIR[] birList,
 			String bioAttribute) throws RegBaseCheckedException, BiometricException {
 		long timeoutMs = resolveTimeoutMs();
-		Future<Map<BiometricType, Float>> future = sdkExecutor.submit(() -> bioAPIFactory
+		Future<Map<BiometricType, Float>> future = sdkExecutorRef.get().submit(() -> bioAPIFactory
 				.getBioProvider(biometricType, BiometricFunction.QUALITY_CHECK)
 				.getModalityQuality(birList, null));
 		try {
@@ -180,8 +213,9 @@ public class SdkBiometricQualityEvaluator implements IBiometricQualityEvaluator 
 			safeAudit(AuditEvent.SDK_QUALITY_EVAL_TIMEOUT, bioAttribute, "SDK_TIMEOUT");
 			// Best-effort only: a blocking native SDK call generally isn't actually
 			// interruptible, so this does not reliably reclaim the worker thread -
-			// see the pool-level comment on sdkExecutor.
+			// see the pool-level comment on sdkExecutorRef.
 			future.cancel(true);
+			recycleExecutorIfSaturated();
 			throw new RegBaseCheckedException(
 					RegistrationExceptionConstants.REG_SDK_QUALITY_TIMEOUT.getErrorCode(),
 					RegistrationExceptionConstants.REG_SDK_QUALITY_TIMEOUT.getErrorMessage());

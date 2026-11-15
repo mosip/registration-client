@@ -8,6 +8,7 @@ import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biometrics.model.QualityScore;
 import io.mosip.kernel.biosdk.provider.factory.BioAPIFactory;
 import io.mosip.kernel.biosdk.provider.impl.BioProviderImpl_V_0_9;
+import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.enums.Modality;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -62,6 +63,12 @@ public class SdkBiometricQualityEvaluatorTest {
 
     @Before
     public void setUp() throws Exception {
+        // ApplicationContext.map() NPEs until this runs at least once - every call
+        // in this class (including resolveTimeoutMs() on every evaluate()) relied
+        // on some other test class in the same Surefire fork having already
+        // called this first, which only held true when this class never ran alone.
+        ApplicationContext.getInstance();
+
         // Manually create a Mockito mock of the SDK provider
         mockSdkProvider = Mockito.mock(BioProviderImpl_V_0_9.class);
 
@@ -248,6 +255,65 @@ public class SdkBiometricQualityEvaluatorTest {
     @Test
     public void testEvaluatorNameIsSDK() {
         assertEquals("SDK", evaluator.getEvaluatorName());
+    }
+
+    // =========================================================================
+    // 5. EXECUTOR POOL RECOVERY
+    // =========================================================================
+
+    /**
+     * Proves the fix for "after N hangs, later quality checks time out without
+     * starting until the process restarts": future.cancel(true) genuinely cannot
+     * reclaim a thread stuck in a call that ignores interruption (a real Java/JNI
+     * limitation - not something this fix pretends to solve), but the pool itself
+     * should recover so later calls still get a chance to run. Simulates
+     * SDK_EXECUTOR_POOL_SIZE (4) truly non-interruptible "hung" calls - each must
+     * still time out individually - then a 5th, fast, healthy call: with the old
+     * single fixed-size pool this would queue forever behind the 4 wedged threads
+     * and time out too, despite the SDK itself responding instantly; with the
+     * recycled pool it actually succeeds.
+     */
+    @Test(timeout = 15000)
+    public void testPoolRecoversAfterThreadsWedgedByNonInterruptibleCalls() throws RegBaseCheckedException {
+        ApplicationContext.map().put("mosip.registration.quality.timeout.SDK", "100");
+        try {
+            final int poolSize = 4; // mirrors SdkBiometricQualityEvaluator.SDK_EXECUTOR_POOL_SIZE
+            final java.util.concurrent.atomic.AtomicInteger callCount = new java.util.concurrent.atomic.AtomicInteger(0);
+            when(mockSdkProvider.getModalityQuality(any(), any())).thenAnswer(invocation -> {
+                if (callCount.getAndIncrement() < poolSize) {
+                    // Simulates a blocking native call that does NOT honor interruption -
+                    // the exact behaviour future.cancel(true) cannot do anything about.
+                    while (true) {
+                        try {
+                            Thread.sleep(60000);
+                        } catch (InterruptedException ignored) {
+                            // A real non-interruptible native call would never even reach
+                            // this handler; looping here reproduces the same end result -
+                            // the thread never returns to the pool.
+                        }
+                    }
+                }
+                Map<BiometricType, Float> qualityMap = new HashMap<>();
+                qualityMap.put(BiometricType.FACE, 88.0f);
+                return qualityMap;
+            });
+
+            for (int i = 0; i < poolSize; i++) {
+                try {
+                    evaluator.evaluate(buildDto("face", Modality.FACE));
+                    fail("Expected call " + i + " to time out");
+                } catch (RegBaseCheckedException e) {
+                    assertEquals("REG-SDK-001", e.getErrorCode());
+                }
+            }
+
+            // All pool threads are now wedged. Without recovery this would also
+            // time out despite the mock answering instantly on this 5th call.
+            QualityScore result = evaluator.evaluate(buildDto("face", Modality.FACE));
+            assertEquals(88.0f, result.getScore(), 0.001f);
+        } finally {
+            ApplicationContext.map().remove("mosip.registration.quality.timeout.SDK");
+        }
     }
 
     // =========================================================================
