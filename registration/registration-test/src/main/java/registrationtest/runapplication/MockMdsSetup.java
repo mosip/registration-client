@@ -48,20 +48,35 @@ public class MockMdsSetup {
         this.password = password.toCharArray();
     }
 
+    private static final String BOUND_HOSTNAME_FILE = "bound-hostname.txt";
+
     /**
-     * Reuses the device key from a previous run while it is still valid; otherwise registers the device
-     * provider and creates a new trusted chain.
+     * Reuses the device key from a previous run on the same {@code hostname} while it is still valid;
+     * otherwise registers the device provider and creates a new trusted chain for this environment.
+     * Keys must not be reused across hosts: the partner certificate is re-signed by that env's PMS, and the
+     * client validates the DEVICE trust chain synced from that same host.
      *
      * @return the DSK keystore Mock MDS has to use
      */
-    public Path prepareDeviceKeystore(String partnerId, Supplier<PartnerManagerClient> pmsLogin)
+    public Path prepareDeviceKeystore(String partnerId, String hostname, Supplier<PartnerManagerClient> pmsLogin)
             throws GeneralSecurityException, IOException {
         Path dskFile = certsDir.resolve(DSK_FILE_NAME);
+        Path boundFile = certsDir.resolve(BOUND_HOSTNAME_FILE);
+        String boundHostname = Files.isRegularFile(boundFile)
+                ? new String(Files.readAllBytes(boundFile), StandardCharsets.UTF_8).trim()
+                : "";
+        boolean sameEnv = hostname != null && !hostname.isBlank() && hostname.equals(boundHostname);
         PrivateKeyEntry existing = DeviceCertificateUtil.loadP12(dskFile, password);
-        if (existing != null && isValidFor((X509Certificate) existing.getCertificate(), MIN_REMAINING_VALIDITY)) {
-            logger.info("Reusing device key {} valid until {}", dskFile,
+        if (sameEnv && existing != null
+                && isValidFor((X509Certificate) existing.getCertificate(), MIN_REMAINING_VALIDITY)) {
+            logger.info("Reusing device key {} for {} valid until {}", dskFile, hostname,
                     ((X509Certificate) existing.getCertificate()).getNotAfter());
             return dskFile;
+        }
+        if (existing != null && !sameEnv) {
+            logger.info("Device key was bound to '{}'; recreating for '{}'", boundHostname, hostname);
+            Files.deleteIfExists(dskFile);
+            Files.deleteIfExists(certsDir.resolve("device-partner.p12"));
         }
 
         PartnerManagerClient pms = pmsLogin.get();
@@ -97,7 +112,9 @@ public class MockMdsSetup {
         dskChain.add(dskCert);
         dskChain.addAll(Arrays.asList(chainStartingWith(resignedPartnerCert, signedChain)));
         DeviceCertificateUtil.saveP12(dskFile, dskKeys.getPrivate(), dskChain.toArray(new X509Certificate[0]), password);
-        logger.info("Created device key {} valid until {}", dskFile, dskCert.getNotAfter());
+        Files.createDirectories(certsDir);
+        Files.write(boundFile, (hostname == null ? "" : hostname).getBytes(StandardCharsets.UTF_8));
+        logger.info("Created device key {} for {} valid until {}", dskFile, hostname, dskCert.getNotAfter());
         return dskFile;
     }
 

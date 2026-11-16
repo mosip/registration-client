@@ -302,7 +302,14 @@ public class MasterdataAdminClient {
             return true;
         }
         for (int i = 0; i < errors.length(); i++) {
-            String message = errors.getJSONObject(i).optString("message").toLowerCase();
+            JSONObject error = errors.getJSONObject(i);
+            String errorCode = error.optString("errorCode");
+            String message = error.optString("message").toLowerCase();
+            // KER-USR-021: user is mapped to another zone — treating this as "already done" leaves
+            // login failing with "Username not mapped to this center".
+            if ("KER-USR-021".equalsIgnoreCase(errorCode) || message.contains("different zone")) {
+                throw new IllegalStateException(context + " failed: " + errors);
+            }
             if (!message.contains("exist") && !message.contains("already") && !message.contains("duplicate")) {
                 throw new IllegalStateException(context + " failed: " + errors);
             }

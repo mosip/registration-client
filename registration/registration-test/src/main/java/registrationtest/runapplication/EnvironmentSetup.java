@@ -142,8 +142,9 @@ public class EnvironmentSetup {
                 "regclient_device_" + machine.getName().replaceAll("[^A-Za-z0-9]", "_"));
         MockMdsSetup mockMds = new MockMdsSetup(Paths.get(optional("setup.mds.certsDir", "mds-certs")),
                 optional("setup.mds.p12Password", "qwerty@123"));
-        Path dskFile = mockMds.prepareDeviceKeystore(partnerId, () -> PartnerManagerClient.login(baseUrl,
-                keycloakUrl, realm, pmsClientId, pmsClientSecret, pmsUser, pmsPassword));
+        Path dskFile = mockMds.prepareDeviceKeystore(partnerId, require("mosip.hostname"),
+                () -> PartnerManagerClient.login(baseUrl, keycloakUrl, realm, pmsClientId, pmsClientSecret, pmsUser,
+                        pmsPassword));
         report("Device key for Mock MDS ready: " + dskFile.toAbsolutePath() + " (partner " + partnerId + ")");
 
         Path mockMdsDir = MockMdsServer.prepare();
