@@ -121,6 +121,23 @@
          <artifactId>rest-assured</artifactId>
          <version>4.3.3</version>
       </dependency>
+      <!-- Used only by EnvironmentSetup; staged to setuplib/ so JavaFX RegistrationMain classpath stays clean. -->
+      <dependency>
+         <groupId>io.mosip.testrig.apitest.commons</groupId>
+         <artifactId>apitest-commons</artifactId>
+         <version>1.8.0-SNAPSHOT</version>
+         <scope>provided</scope>
+         <exclusions>
+            <exclusion>
+               <groupId>org.slf4j</groupId>
+               <artifactId>slf4j-api</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.slf4j</groupId>
+               <artifactId>slf4j-log4j12</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
    </dependencies>
    <build>
       <plugins>
@@ -140,6 +157,19 @@
                         ${project.build.directory}/lib
                      </outputDirectory>
                      <excludeScope>provided</excludeScope>
+                  </configuration>
+               </execution>
+               <execution>
+                  <id>copy-setuplib</id>
+                  <phase>prepare-package</phase>
+                  <goals>
+                     <goal>copy-dependencies</goal>
+                  </goals>
+                  <configuration>
+                     <outputDirectory>${project.build.directory}/setuplib</outputDirectory>
+                     <includeArtifactIds>apitest-commons</includeArtifactIds>
+                     <includeScope>provided</includeScope>
+                     <excludeTransitive>false</excludeTransitive>
                   </configuration>
                </execution>
                <execution>
@@ -188,7 +218,7 @@
                           <goal>run</goal>
                       </goals>
                       <configuration>
-                          <projectsDirectory>${project.basedir}/src/main/mockmds</projectsDirectory>
+                          <projectsDirectory>${project.build.directory}/mockmds-stage</projectsDirectory>
                           <cloneProjectsTo>${project.build.directory}/invoker-mockmds</cloneProjectsTo>
                           <pomIncludes>
                               <pomInclude>pom.xml</pomInclude>
@@ -197,7 +227,6 @@
                               <goal>dependency:copy-dependencies</goal>
                           </goals>
                           <properties>
-                              <mock.mds.version>${mock.mds.version}</mock.mds.version>
                               <outputDirectory>${project.build.directory}/mockmds/lib</outputDirectory>
                           </properties>
                           <streamLogs>true</streamLogs>
@@ -210,6 +239,35 @@
               <artifactId>maven-antrun-plugin</artifactId>
               <version>3.0.0</version>
               <executions>
+                  <execution>
+                      <id>write-mockmds-stage-pom</id>
+                      <phase>generate-resources</phase>
+                      <goals>
+                          <goal>run</goal>
+                      </goals>
+                      <configuration>
+                          <target>
+                              <mkdir dir="${project.build.directory}/mockmds-stage"/>
+                              <echo file="${project.build.directory}/mockmds-stage/pom.xml"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.mosip.registration</groupId>
+    <artifactId>mock-mds-runtime</artifactId>
+    <version>1.0</version>
+    <dependencies>
+        <dependency>
+            <groupId>io.mosip.mock.mds</groupId>
+            <artifactId>mock-mds</artifactId>
+            <version>]]>${mock.mds.version}<![CDATA[</version>
+        </dependency>
+    </dependencies>
+</project>
+]]></echo>
+                          </target>
+                      </configuration>
+                  </execution>
                   <execution>
                       <id>remove-old-jboss-logging</id>
                       <phase>prepare-package</phase>
