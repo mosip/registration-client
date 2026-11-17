@@ -51,32 +51,13 @@ jobs:
           server-id: ossrh # Value of the distributionManagement/repository/id field of the pom.xml
           settings-path: ${{ github.workspace }} # location for the settings.xml file
 
-      - name: Cache local Maven repository
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
       - name: Setup the settings file for ossrh server
-        run: echo "<settings> <servers>  <server>  <id>ossrh</id>    <username>${{secrets.ossrh_user}}</username> <password>${{secrets.ossrh_secret}}</password> </server> </servers> <profiles> <profile>     <id>ossrh</id> <activation> <activeByDefault>true</activeByDefault> </activation>  <properties> <gpg.executable>gpg2</gpg.executable> <gpg.passphrase>${{secrets.gpg_secret}}</gpg.passphrase> </properties> </profile> <profile> <id>allow-snapshots</id>       <activation><activeByDefault>true</activeByDefault></activation> <repositories> <repository>        <id>snapshots-repo</id> <url>https://central.sonatype.com/repository/maven-snapshots</url> <releases><enabled>false</enabled></releases> <snapshots><enabled>true</enabled></snapshots> </repository>  <repository>         <id>releases-repo</id>  <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>         <releases><enabled>true</enabled></releases>         <snapshots><enabled>false</enabled></snapshots> </repository> </repositories>  </profile> <profile> <id>sonar</id> <properties>  <sonar.sources>.</sonar.sources> <sonar.host.url>https://sonarcloud.io</sonar.host.url>  </properties> <activation> <activeByDefault>false</activeByDefault> </activation> </profile> </profiles> </settings>" > $GITHUB_WORKSPACE/settings.xml
+        run: echo "<settings> <servers>  <server>  <id>ossrh</id>    <username>${{secrets.ossrh_user}}</username> <password>${{secrets.ossrh_secret}}</password> </server> </servers> <profiles> <profile>     <id>ossrh</id> <activation> <activeByDefault>true</activeByDefault> </activation>  <properties> <gpg.executable>gpg2</gpg.executable> <gpg.passphrase>${{secrets.gpg_secret}}</gpg.passphrase> </properties> </profile> <profile> <id>allow-snapshots</id>       <activation><activeByDefault>true</activeByDefault></activation> <repositories> <repository>        <id>snapshots-repo</id> <url>https://oss.sonatype.org/content/repositories/snapshots</url> <releases><enabled>false</enabled></releases> <snapshots><enabled>true</enabled></snapshots> </repository>  <repository>         <id>releases-repo</id>  <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>         <releases><enabled>true</enabled></releases>         <snapshots><enabled>false</enabled></snapshots> </repository> </repositories>  </profile> <profile> <id>sonar</id> <properties>  <sonar.sources>.</sonar.sources> <sonar.host.url>https://sonarcloud.io</sonar.host.url>  </properties> <activation> <activeByDefault>false</activeByDefault> </activation> </profile> </profiles> </settings>" > $GITHUB_WORKSPACE/settings.xml
 
       - name: Build Automationtests with Maven
         run: |
           cd ${{ env.SERVICE_LOCATION}}
-          # build-regclient already resolved these snapshots. -U re-downloads every
-          # one and Sonatype answers 429. Reuse the shared Maven cache instead.
-          attempt=1
-          until mvn -B package -Dmaven.wagon.http.retryHandler.count=2 --file pom.xml -s $GITHUB_WORKSPACE/settings.xml
-          do
-            if [ "$attempt" -ge 4 ]; then
-              exit 1
-            fi
-            echo "Maven failed on attempt ${attempt}. Waiting before retry."
-            sleep $((attempt * 45))
-            attempt=$((attempt + 1))
-          done
+          mvn -U -B package -Dmaven.wagon.http.retryHandler.count=2 --file pom.xml -s $GITHUB_WORKSPACE/settings.xml
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -176,14 +157,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      - name: Download the registration build
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: registration-local
           path: ./
-
-      - name: Use the jars from the registration build
+      - name: Prepare jars and build image
         run: |
           unzip -q registration-local.zip -d registration
           find registration/registration-client/target -maxdepth 1 -type f -name 'registration-client-*.jar' \
@@ -192,13 +170,6 @@ jobs:
           find registration/registration-test/target -maxdepth 1 -type f -name 'registration-test-*.jar' \
             ! -name '*-sources.jar' ! -name '*-javadoc.jar' \
             -exec cp {} registration/registration-test/target/registration-test.jar \;
-          test -s registration/registration-test/target/registration-test.jar
-          test -d registration/registration-client/target/lib
-          test -d registration/registration-test/target/lib
-          test -d registration/registration-test/target/mockmds/lib
-
-      - name: Build registration-test image
-        run: |
           docker build \
             -f registration/registration-test/Dockerfile \
             --build-arg SOURCE=${{ github.repository }} \
@@ -207,11 +178,9 @@ jobs:
             --build-arg BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
             -t registration-test \
             registration
-
       - name: Log into registry
         if: github.event_name != 'pull_request'
         run: echo "${{ secrets.RELEASE_DOCKER_HUB }}" | docker login -u ${{ secrets.ACTOR_DOCKER_HUB }} --password-stdin
-
       - name: Push registration-test image
         if: github.event_name != 'pull_request'
         run: |
