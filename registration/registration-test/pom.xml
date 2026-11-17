@@ -136,6 +136,10 @@
                <groupId>org.slf4j</groupId>
                <artifactId>slf4j-log4j12</artifactId>
             </exclusion>
+            <exclusion>
+               <groupId>io.mosip.mock.mds</groupId>
+               <artifactId>mock-mds</artifactId>
+            </exclusion>
          </exclusions>
       </dependency>
    </dependencies>
@@ -293,6 +297,13 @@
     <groupId>io.mosip.registration</groupId>
     <artifactId>apitest-commons-runtime</artifactId>
     <version>1.0</version>
+    <repositories>
+        <repository>
+            <id>ossrh-central</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots</url>
+            <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+    </repositories>
     <dependencies>
         <dependency>
             <groupId>io.mosip.testrig.apitest.commons</groupId>
@@ -306,6 +317,12 @@
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <!-- apitest-commons asks for mock-mds 1.4.0-SNAPSHOT; setup does not need it.
+                     Mock MDS is staged separately as ${mock.mds.version}. -->
+                <exclusion>
+                    <groupId>io.mosip.mock.mds</groupId>
+                    <artifactId>mock-mds</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
