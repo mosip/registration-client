@@ -40,9 +40,22 @@ sed -i 's/\r$//' config.properties
 # Rancher injects a ConfigMap or Secret with envFrom. A variable whose name is a
 # config key, or contains a dot (mosip.hostname, setup.admin.password), overrides
 # the file. This is the same idea as uitest-admin reading System.getenv(key).
+# Underscore secret keys must be applied even when an older image's config.properties
+# does not list them yet (dot-keys are always applied; these are allowlisted by name).
+is_suite_secret_key() {
+    case "$1" in
+        mosip_admin_client_secret|mosip_testrig_client_secret|mosip_pms_client_secret|postgres-password)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 apply_config_from_env() {
     local -A known=()
-    local key value line
+    local key value line applied_secrets=()
     while IFS= read -r key; do
         [ -n "${key}" ] && known["${key}"]=1
     done < <(awk '
@@ -62,10 +75,19 @@ apply_config_from_env() {
                 continue
                 ;;
         esac
-        if [[ "${key}" == *.* ]] || [[ -n "${known[${key}]+x}" ]]; then
+        if [[ "${key}" == *.* ]] || [[ -n "${known[${key}]+x}" ]] || is_suite_secret_key "${key}"; then
             set_config "${key}" "${value}"
+            if is_suite_secret_key "${key}"; then
+                applied_secrets+=("${key}=len:${#value}")
+            fi
         fi
     done < <(env)
+    if [ "${#applied_secrets[@]}" -gt 0 ]; then
+        echo "Suite secrets applied from env: ${applied_secrets[*]}"
+    else
+        echo "WARNING: none of mosip_admin_client_secret / mosip_testrig_client_secret / mosip_pms_client_secret / postgres-password were present in the pod env" >&2
+        echo "Wire them via CronJob envFrom (e.g. secretRef keycloak-client-secrets) or REG_CFG_<key>=..." >&2
+    fi
 }
 
 set_config() {
