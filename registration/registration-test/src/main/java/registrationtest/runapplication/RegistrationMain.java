@@ -331,7 +331,6 @@ public class RegistrationMain {
                 if (f.exists()) {
                     InputStream is = new FileInputStream(f);
                     jsonTxt = IOUtils.toString(is, "UTF-8");
-                    //System.out.println(jsonTxt);
                     logger.info("readJsonFileText");
 
                     map.put(doc, jsonTxt);
@@ -345,18 +344,3 @@ public class RegistrationMain {
     }
 
 }
-
-/*
- * String hostName=targetUrl.substring(targetUrl.indexOf("//")+2);
- * 
- * System.setProperty("java.net.useSystemProxies", "true");
- * System.setProperty("file.encoding", "UTF-8");
- * System.setProperty("derby.ui.codeset", "UTF-8");
- * System.setProperty("mosip.upgradeserver",targetUrl+"/");
- * System.setProperty("mosip.hostname",hostName);
- * System.setProperty("jdbc.drivers","org.apache.derby.jdbc.EmbeddedDriver");
- * //if (Boolean.getBoolean("headless")) { System.setProperty("testfx.robot",
- * "glass"); System.setProperty("testfx.headless", "true");
- * System.setProperty("prism.order", "sw"); System.setProperty("prism.text",
- * "t2k"); System.setProperty("java.awt.headless", "true"); //}
- */

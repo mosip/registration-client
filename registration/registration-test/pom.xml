@@ -121,23 +121,6 @@
          <artifactId>rest-assured</artifactId>
          <version>4.3.3</version>
       </dependency>
-      <!-- Used only by EnvironmentSetup; staged to setuplib/ so JavaFX RegistrationMain classpath stays clean. -->
-      <dependency>
-         <groupId>io.mosip.testrig.apitest.commons</groupId>
-         <artifactId>apitest-commons</artifactId>
-         <version>1.8.0-SNAPSHOT</version>
-         <scope>provided</scope>
-         <exclusions>
-            <exclusion>
-               <groupId>org.slf4j</groupId>
-               <artifactId>slf4j-api</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.slf4j</groupId>
-               <artifactId>slf4j-log4j12</artifactId>
-            </exclusion>
-         </exclusions>
-      </dependency>
    </dependencies>
    <build>
       <plugins>
@@ -157,19 +140,6 @@
                         ${project.build.directory}/lib
                      </outputDirectory>
                      <excludeScope>provided</excludeScope>
-                  </configuration>
-               </execution>
-               <execution>
-                  <id>copy-setuplib</id>
-                  <phase>prepare-package</phase>
-                  <goals>
-                     <goal>copy-dependencies</goal>
-                  </goals>
-                  <configuration>
-                     <outputDirectory>${project.build.directory}/setuplib</outputDirectory>
-                     <includeArtifactIds>apitest-commons</includeArtifactIds>
-                     <includeScope>provided</includeScope>
-                     <excludeTransitive>false</excludeTransitive>
                   </configuration>
                </execution>
                <execution>
