@@ -142,7 +142,8 @@ public final class ApitestCommonsBootstrap {
     public static String require(String key) throws IOException {
         String value = optional(key, null);
         if (value == null) {
-            throw new IllegalStateException("Missing required config.properties key '" + key + "' for environment setup");
+            throw new IllegalStateException("Missing required key '" + key
+                    + "' (config.properties empty and not set in pod env / REG_CFG_" + key + ")");
         }
         return value;
     }
