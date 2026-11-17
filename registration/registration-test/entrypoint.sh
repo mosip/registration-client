@@ -340,27 +340,42 @@ embed_report_images() {
     echo "Embedded screenshots into $(basename "${html}")"
 }
 
-# Copies the newest extentReport*.html to a DSL-style name, then uploads that one file
-# when MinIO settings are present. The Java report name is left as the tests wrote it.
+# Marker so publish_reports never picks a leftover PVC report from an older run.
+RUN_MARKER="${work_dir}/.run-started"
+PUBLISH_REPORT=0
+touch "${RUN_MARKER}"
+
+# Copies an extentReport*.html written during this run to a DSL-style name, then uploads
+# that one file when MinIO settings are present. Never re-uploads a previous run's report.
 publish_reports() {
     local host report_name src prefix env_name millis
     local pass fail fatal error warning skip total
     host="$(hostname -s 2>/dev/null || hostname)"
     host="$(printf '%s' "${host}" | tr '[:upper:]' '[:lower:]')"
 
+    if [ "${PUBLISH_REPORT}" != "1" ]; then
+        echo "Skipping report publish (full suite did not run in this invocation)"
+        return 0
+    fi
+
     if [ -d report ]; then
-        src="$(find -H report -maxdepth 1 -type f -name 'extentReport*.html' -printf '%T@ %p\n' | sort -n | awk 'END { print $2 }')"
+        # Only reports newer than this run's marker — PVC often keeps older extentReport*.html.
+        src="$(find -H report -maxdepth 1 -type f -name 'extentReport*.html' -newer "${RUN_MARKER}" -printf '%T@ %p\n' 2>/dev/null | sort -n | awk 'END { print $2 }')"
+    fi
+    if [ -z "${src}" ]; then
+        echo "No new extent report from this run; not uploading"
+        return 0
     fi
 
     extent_count() {
         sed -n "s/.*${1}: *\\([0-9][0-9]*\\).*/\\1/p" "$2" | head -n 1
     }
-    pass="$(extent_count passParent "${src:-/dev/null}")"
-    fail="$(extent_count failParent "${src:-/dev/null}")"
-    fatal="$(extent_count fatalParent "${src:-/dev/null}")"
-    error="$(extent_count errorParent "${src:-/dev/null}")"
-    warning="$(extent_count warningParent "${src:-/dev/null}")"
-    skip="$(extent_count skipParent "${src:-/dev/null}")"
+    pass="$(extent_count passParent "${src}")"
+    fail="$(extent_count failParent "${src}")"
+    fatal="$(extent_count fatalParent "${src}")"
+    error="$(extent_count errorParent "${src}")"
+    warning="$(extent_count warningParent "${src}")"
+    skip="$(extent_count skipParent "${src}")"
     pass="${pass:-0}"
     fail="${fail:-0}"
     fatal="${fatal:-0}"
@@ -381,11 +396,9 @@ publish_reports() {
     esac
     report_name="${REPORT_NAME:-REGCLIENT-${env_name}-full-run-${millis}-report_T-${total}_P-${pass}_KI-0_I-0_S-${skip}_F-${fail}.html}"
 
-    if [ -n "${src}" ]; then
-        cp -f "${src}" "report/${report_name}"
-        embed_report_images "report/${report_name}" || echo "Screenshots were left as file paths" >&2
-        echo "Report copied to report/${report_name} (source $(basename "${src}"))"
-    fi
+    cp -f "${src}" "report/${report_name}"
+    embed_report_images "report/${report_name}" || echo "Screenshots were left as file paths" >&2
+    echo "Report copied to report/${report_name} (source $(basename "${src}"))"
 
     # uitest-admin reads these names from the s3 ConfigMap. MINIO_* still wins when set.
     local s3_host s3_key s3_secret s3_account push url access secret bucket
@@ -423,10 +436,6 @@ publish_reports() {
         base="regtest/${bucket}"
         shown="${bucket}/${report_name}"
     fi
-    if [ ! -f "report/${report_name}" ]; then
-        echo "No report file to upload" >&2
-        return 1
-    fi
     mc cp "report/${report_name}" "${base}/${report_name}"
     echo "Report uploaded to ${shown}"
 }
@@ -451,12 +460,14 @@ case "${mode}" in
         run_client startup.log -Dmodule.run=initiallaunch "$@"
         ;;
     test)
+        PUBLISH_REPORT=1
         run_client startup.log "$@"
         ;;
     all)
         run_setup
         wait_for_propagation
         run_client startup-initial.log -Dmodule.run=initiallaunch "$@"
+        PUBLISH_REPORT=1
         run_client startup.log "$@"
         ;;
 esac
