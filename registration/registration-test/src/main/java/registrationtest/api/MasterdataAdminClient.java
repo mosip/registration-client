@@ -16,9 +16,9 @@ import io.restassured.specification.RequestSpecification;
 import registrationtest.utility.LocalMachineDetails;
 
 /**
- * Admin/masterdata calls needed before the Registration Client can be used against an environment:
- * user-zone mapping, user-center mapping and machine creation/activation. Mirrors
- * android-registration-client ui-test's AdminTestUtil, talking to the APIs directly with RestAssured.
+ * Machine create/search/update/activate against masterdata. Zone/center user mapping and Keycloak
+ * user creation use apitest-commons; machine registration stays here because commons has no API that
+ * publishes this PC's publicKey/signPublicKey/mac/ip.
  */
 public class MasterdataAdminClient {
 
@@ -71,50 +71,12 @@ public class MasterdataAdminClient {
         return new MasterdataAdminClient(url, body.getString("token"), langCode);
     }
 
-    public void mapUserToZone(String userId, String zoneCode) {
-        JSONObject request = new JSONObject()
-                .put("zoneCode", zoneCode)
-                .put("userId", userId)
-                .put("langCode", langCode)
-                .put("isActive", true);
-        JSONObject created = parse(authorized().body(wrap("string", request).toString())
-                .post(baseUrl + "/v1/masterdata/zoneuser"), "Zone mapping for " + userId);
-        if (!failUnlessAlreadyDone(created, "Mapping user " + userId + " to zone " + zoneCode)) {
-            return;
-        }
-
-        JSONObject activated = parse(authorized().queryParam("isActive", true).queryParam("userId", userId)
-                .patch(baseUrl + "/v1/masterdata/zoneuser"), "Zone mapping activation for " + userId);
-        failUnlessAlreadyDone(activated, "Activating zone mapping of " + userId);
-        logger.info("User {} mapped to zone {}", userId, zoneCode);
-    }
-
-    public void mapUserToCenter(String userId, String regCenterId) {
-        JSONObject request = new JSONObject()
-                .put("id", userId)
-                .put("name", userId)
-                .put("statusCode", "active")
-                .put("regCenterId", regCenterId)
-                .put("langCode", langCode)
-                .put("isActive", true);
-        JSONObject created = parse(authorized().body(wrap("string", request).toString())
-                .post(baseUrl + "/v1/masterdata/usercentermapping"), "Center mapping for " + userId);
-        if (!failUnlessAlreadyDone(created, "Mapping user " + userId + " to center " + regCenterId)) {
-            return;
-        }
-
-        JSONObject activated = parse(authorized().queryParam("isActive", true).queryParam("id", userId)
-                .patch(baseUrl + "/v1/masterdata/usercentermapping"), "Center mapping activation for " + userId);
-        failUnlessAlreadyDone(activated, "Activating center mapping of " + userId);
-        logger.info("User {} mapped to center {}", userId, regCenterId);
-    }
-
     public String getFirstMachineSpecId() {
         JSONObject json = parse(authorized().get(baseUrl + "/v1/masterdata/machinespecifications/all"),
                 "Fetching machine specifications");
         JSONObject body = json.optJSONObject("response");
         JSONArray data = body == null ? null : body.optJSONArray("data");
-        if (data == null || data.isEmpty()) {
+        if (data == null || data.length() == 0) {
             throw new IllegalStateException("No machine specification found on server: " + json.opt("errors"));
         }
         return data.getJSONObject(0).getString("id");
@@ -217,7 +179,6 @@ public class MasterdataAdminClient {
         logger.info("Machine {} activated", machineId);
     }
 
-    /** Server may return keys in standard or URL-safe Base64, with or without padding. */
     private static boolean sameKey(String local, String server) {
         return normalizeBase64(local).equals(normalizeBase64(server));
     }
@@ -285,31 +246,19 @@ public class MasterdataAdminClient {
 
     private static void failOnErrors(JSONObject json, String context) {
         JSONArray errors = json.optJSONArray("errors");
-        if (errors != null && !errors.isEmpty()) {
+        if (errors != null && errors.length() > 0) {
             throw new IllegalStateException(context + " failed: " + errors);
         }
     }
 
-    /**
-     * Setup is re-run before every automation cycle, so "already exists"/"duplicate request" errors
-     * from previous runs are expected and only logged.
-     *
-     * @return true if the call succeeded, false if it was skipped because it was already done
-     */
     private static boolean failUnlessAlreadyDone(JSONObject json, String context) {
         JSONArray errors = json.optJSONArray("errors");
-        if (errors == null || errors.isEmpty()) {
+        if (errors == null || errors.length() == 0) {
             return true;
         }
         for (int i = 0; i < errors.length(); i++) {
             JSONObject error = errors.getJSONObject(i);
-            String errorCode = error.optString("errorCode");
             String message = error.optString("message").toLowerCase();
-            // KER-USR-021: user is mapped to another zone — treating this as "already done" leaves
-            // login failing with "Username not mapped to this center".
-            if ("KER-USR-021".equalsIgnoreCase(errorCode) || message.contains("different zone")) {
-                throw new IllegalStateException(context + " failed: " + errors);
-            }
             if (!message.contains("exist") && !message.contains("already") && !message.contains("duplicate")) {
                 throw new IllegalStateException(context + " failed: " + errors);
             }

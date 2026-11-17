@@ -76,6 +76,7 @@ RUN apt-get update \
 COPY --chown=${container_user_uid}:${container_user_gid} registration-client/target/lib /opt/registration-test/lib
 COPY --chown=${container_user_uid}:${container_user_gid} registration-test/target/registration-test.jar /opt/registration-test/registration-test.jar
 COPY --chown=${container_user_uid}:${container_user_gid} registration-test/target/lib /opt/registration-test/testlib
+COPY --chown=${container_user_uid}:${container_user_gid} registration-test/target/setuplib /opt/registration-test/setuplib
 COPY --chown=${container_user_uid}:${container_user_gid} registration-test/target/mockmds /opt/registration-test/mockmds
 COPY --chown=${container_user_uid}:${container_user_gid} registration-test/src/main/resources /opt/registration-test/resources
 COPY --chown=${container_user_uid}:${container_user_gid} registration-test/entrypoint.sh /opt/registration-test/entrypoint.sh

@@ -21,6 +21,7 @@ link_dir() {
 link_dir registration-test.jar /opt/registration-test/registration-test.jar
 link_dir lib /opt/registration-test/lib
 link_dir testlib /opt/registration-test/testlib
+link_dir setuplib /opt/registration-test/setuplib
 link_dir mockmds /opt/registration-test/mockmds
 
 if [ ! -d repository_eng ]; then
@@ -199,8 +200,12 @@ esac
 
 if [ -d client-config ]; then
     classpath="client-config:registration-test.jar:lib/*:testlib/*"
+    # setuplib already ships apitest-commons and its deps; do not add lib/* or testlib/*
+    # (those pull Groovy 3 while setuplib uses Groovy 4 via rest-assured 5).
+    setup_classpath="client-config:registration-test.jar:setuplib/*"
 else
     classpath="registration-test.jar:lib/*:testlib/*"
+    setup_classpath="registration-test.jar:setuplib/*"
 fi
 common_opts=(
     -Dpath.config=/config.properties
@@ -242,7 +247,7 @@ javafx_module_dir() {
 
 run_setup() {
     echo "=== Environment setup ==="
-    java "${common_opts[@]}" -cp "${classpath}" registrationtest.runapplication.EnvironmentSetup "$@" 2>&1 | tee setup.log
+    java "${common_opts[@]}" -cp "${setup_classpath}" registrationtest.runapplication.EnvironmentSetup "$@" 2>&1 | tee setup.log
 }
 
 run_client() {

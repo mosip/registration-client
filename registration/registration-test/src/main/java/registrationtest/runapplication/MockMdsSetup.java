@@ -14,20 +14,18 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 
 import javax.security.auth.x500.X500Principal;
 
-import registrationtest.api.PartnerManagerClient;
+import registrationtest.api.PartnerDeviceSetup;
 import registrationtest.utility.DeviceCertificateUtil;
 
 /**
  * Creates a server-trusted device certificate for Mock MDS and installs it, following the DSL device partner
- * flow: CA and intermediate certificates are uploaded to the DEVICE domain, the partner certificate is
- * uploaded and re-signed by PMS, and a device specific key (DSK) signed by the partner key is what Mock MDS
- * signs its responses with. The Registration Client validates that signature against the DEVICE trust chain
- * it syncs from the server, so the default keys shipped with Mock MDS are rejected.
+ * flow via apitest-commons {@code PartnerRegistration}: CA and intermediate certificates are uploaded to the
+ * DEVICE domain, the partner certificate is uploaded and re-signed by PMS, and a device specific key (DSK)
+ * signed by the partner key is what Mock MDS signs its responses with.
  */
 public class MockMdsSetup {
 
@@ -35,7 +33,6 @@ public class MockMdsSetup {
 
     public static final String DSK_FILE_NAME = "device-dsk-partner.p12";
 
-    private static final String DOMAIN = "DEVICE";
     private static final Duration CA_VALIDITY = Duration.ofDays(3 * 365);
     private static final Duration DSK_VALIDITY = Duration.ofDays(180);
     private static final Duration MIN_REMAINING_VALIDITY = Duration.ofDays(7);
@@ -53,12 +50,10 @@ public class MockMdsSetup {
     /**
      * Reuses the device key from a previous run on the same {@code hostname} while it is still valid;
      * otherwise registers the device provider and creates a new trusted chain for this environment.
-     * Keys must not be reused across hosts: the partner certificate is re-signed by that env's PMS, and the
-     * client validates the DEVICE trust chain synced from that same host.
      *
      * @return the DSK keystore Mock MDS has to use
      */
-    public Path prepareDeviceKeystore(String partnerId, String hostname, Supplier<PartnerManagerClient> pmsLogin)
+    public Path prepareDeviceKeystore(String partnerId, String hostname)
             throws GeneralSecurityException, IOException {
         Path dskFile = certsDir.resolve(DSK_FILE_NAME);
         Path boundFile = certsDir.resolve(BOUND_HOSTNAME_FILE);
@@ -79,21 +74,20 @@ public class MockMdsSetup {
             Files.deleteIfExists(certsDir.resolve("device-partner.p12"));
         }
 
-        PartnerManagerClient pms = pmsLogin.get();
-        pms.registerDeviceProvider(partnerId, "regclient." + partnerId.toLowerCase() + "@mosip.test");
+        PartnerDeviceSetup.registerDeviceProvider(partnerId, PartnerDeviceSetup.uniqueEmail(partnerId));
 
         PrivateKeyEntry ca = loadOrCreateCa("device-ca.p12", "CA-DEVICE-" + partnerId, null, partnerId);
         PrivateKeyEntry inter = loadOrCreateCa("device-inter.p12", "INTER-DEVICE-" + partnerId, ca, partnerId);
-        pms.uploadCaCertificate(DeviceCertificateUtil.toPem(ca.getCertificate()), DOMAIN);
-        pms.uploadCaCertificate(DeviceCertificateUtil.toPem(inter.getCertificate()), DOMAIN);
+        PartnerDeviceSetup.uploadCaCertificate(DeviceCertificateUtil.toPem(ca.getCertificate()));
+        PartnerDeviceSetup.uploadIntermediateCertificate(DeviceCertificateUtil.toPem(inter.getCertificate()));
 
         X509Certificate interCert = (X509Certificate) inter.getCertificate();
         KeyPair partnerKeys = DeviceCertificateUtil.newKeyPair();
         X509Certificate partnerCert = DeviceCertificateUtil.issue(inter.getPrivateKey(),
                 interCert.getSubjectX500Principal(), DeviceCertificateUtil.name("PARTNER-DEVICE-" + partnerId, partnerId),
                 partnerKeys.getPublic(), CA_VALIDITY.minusDays(1));
-        List<X509Certificate> signedChain = pms.uploadPartnerCertificate(
-                DeviceCertificateUtil.toPem(partnerCert), DOMAIN, partnerId);
+        List<X509Certificate> signedChain = PartnerDeviceSetup.uploadPartnerCertificate(
+                DeviceCertificateUtil.toPem(partnerCert), partnerId);
         X509Certificate resignedPartnerCert = signedChain.stream()
                 .filter(cert -> Arrays.equals(cert.getPublicKey().getEncoded(), partnerKeys.getPublic().getEncoded()))
                 .findFirst()
@@ -101,8 +95,6 @@ public class MockMdsSetup {
         DeviceCertificateUtil.saveP12(certsDir.resolve("device-partner.p12"), partnerKeys.getPrivate(),
                 chainStartingWith(resignedPartnerCert, signedChain), password);
 
-        // The DSK issuer must be the subject PMS put in the re-signed certificate, which can differ from the
-        // subject that was uploaded, otherwise the client cannot build the trust path.
         KeyPair dskKeys = DeviceCertificateUtil.newKeyPair();
         Duration dskValidity = Duration.between(Instant.now(), resignedPartnerCert.getNotAfter().toInstant());
         X509Certificate dskCert = DeviceCertificateUtil.issue(partnerKeys.getPrivate(),

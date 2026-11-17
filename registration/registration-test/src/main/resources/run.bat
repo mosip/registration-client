@@ -29,7 +29,7 @@ if "%HEADLESS%"=="true" (
 
 :configured
 echo === Environment setup ===
-jre\bin\java -Dpath.config=/config.properties -Dfile.encoding=UTF-8 --add-opens java.base/java.lang=ALL-UNNAMED -cp "registration-test.jar;lib/*;testlib/*" registrationtest.runapplication.EnvironmentSetup > setup.log 2>&1
+jre\bin\java -Dpath.config=/config.properties -Dfile.encoding=UTF-8 --add-opens java.base/java.lang=ALL-UNNAMED -cp "registration-test.jar;setuplib/*" registrationtest.runapplication.EnvironmentSetup > setup.log 2>&1
 set SETUP_EXIT=%ERRORLEVEL%
 type setup.log
 if not "%SETUP_EXIT%"=="0" (

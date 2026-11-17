@@ -3,21 +3,21 @@ package registrationtest.runapplication;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
-import registrationtest.api.KeycloakAdminClient;
+import io.mosip.testrig.apirig.testrunner.BaseTestCase;
+import io.mosip.testrig.apirig.utils.KeycloakUserManager;
+import registrationtest.api.ApitestCommonsBootstrap;
 import registrationtest.api.MasterdataAdminClient;
-import registrationtest.api.PartnerManagerClient;
+import registrationtest.api.MasterdataCenterMapper;
 import registrationtest.utility.LocalMachineDetails;
-import registrationtest.utility.PropertiesUtil;
 
 /**
  * One-time environment preparation run by run.bat before the Registration Client automation:
  * <ol>
- * <li>create the configured operator/supervisor/reviewer users in Keycloak with their roles</li>
+ * <li>create the configured operator/supervisor/reviewer users in Keycloak with their roles
+ * (via apitest-commons {@link KeycloakUserManager})</li>
  * <li>map those users to the configured zone and registration center</li>
  * <li>create (or reuse) this machine in masterdata with its public and signing public keys, and
  * activate it</li>
@@ -31,10 +31,8 @@ public class EnvironmentSetup {
 
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EnvironmentSetup.class);
 
-    /** Created in Keycloak when setup.pms.userName is not set. CA upload requires one of these roles. */
-    private static final String PARTNER_ADMIN_USER = "regclientpms";
-    private static final String PARTNER_ADMIN_PASSWORD = "Mosip@123";
-    private static final List<String> PARTNER_ADMIN_ROLES = List.of("PARTNER_ADMIN", "PARTNERMANAGER");
+    /** Password for the commons partner user ({@code regclient-111997}); matches Kernel.properties. */
+    private static final String PARTNER_PASSWORD = "mosip123";
 
     public static void main(String[] args) {
         int exitCode = 0;
@@ -56,6 +54,8 @@ public class EnvironmentSetup {
     }
 
     private static void run(LocalMachineDetails machine) throws Exception {
+        ApitestCommonsBootstrap.init();
+
         Map<String, String> users = operatorUsers();
         String langCode = optional("langcode", "eng").split("@@")[0];
         String regCenterId = require("setup.regCenterId");
@@ -63,38 +63,34 @@ public class EnvironmentSetup {
 
         boolean createdNewUserOrMachine = false;
         if (isEnabled("setup.createUsers")) {
-            KeycloakAdminClient keycloak = KeycloakAdminClient.login(
-                    require("setup.keycloak.url"),
-                    optional("setup.keycloak.realm", "mosip"),
-                    require("setup.keycloak.clientId"),
-                    require("mosip_testrig_client_secret"));
-            List<String> roles = csv(require("setup.user.roles"));
             for (Map.Entry<String, String> user : users.entrySet()) {
-                if (keycloak.createUser(user.getKey(), user.getValue(), roles)) {
+                boolean existed = !KeycloakUserManager.getKeycloakUserID(user.getKey()).isEmpty();
+                KeycloakUserManager.createUsers(user.getKey(), user.getValue(), null);
+                if (!existed) {
                     createdNewUserOrMachine = true;
                 }
             }
             report("Keycloak users ready: " + users.keySet());
         }
 
-        MasterdataAdminClient admin = MasterdataAdminClient.login(
-                adminBaseUrl(),
-                optional("setup.admin.appId", "admin"),
-                require("setup.admin.clientId"),
-                require("mosip_admin_client_secret"),
-                require("setup.admin.userName"),
-                require("setup.admin.password"),
-                langCode);
-
         if (isEnabled("setup.mapUsers")) {
             for (String userId : users.keySet()) {
-                admin.mapUserToZone(userId, zoneCode);
-                admin.mapUserToCenter(userId, regCenterId);
+                BaseTestCase.mapUserToZone(userId, zoneCode);
+                BaseTestCase.mapZone(userId);
+                MasterdataCenterMapper.mapUserToCenter(userId, regCenterId);
             }
             report("Users " + users.keySet() + " mapped to zone " + zoneCode + " and center " + regCenterId);
         }
 
         if (isEnabled("setup.createMachine")) {
+            MasterdataAdminClient admin = MasterdataAdminClient.login(
+                    ApitestCommonsBootstrap.adminBaseUrl(),
+                    optional("setup.admin.appId", "admin"),
+                    require("setup.admin.clientId"),
+                    require("mosip_admin_client_secret"),
+                    require("setup.admin.userName"),
+                    require("setup.admin.password"),
+                    langCode);
             String machineSpecId = optional("setup.machine.specId", null);
             if (machineSpecId == null) {
                 machineSpecId = admin.getFirstMachineSpecId();
@@ -116,35 +112,18 @@ public class EnvironmentSetup {
     }
 
     private static void setupMockMds(LocalMachineDetails machine) throws Exception {
-        String keycloakUrl = require("setup.keycloak.url");
-        String realm = optional("setup.keycloak.realm", "mosip");
-        String pmsClientId = optional("setup.pms.clientId", "mosip-pms-client");
-        String pmsClientSecret = require("mosip_pms_client_secret");
-        String user = optional("setup.pms.userName", null);
-        String password = optional("setup.pms.password", null);
-        if (user == null) {
-            user = PARTNER_ADMIN_USER;
-            if (password == null) {
-                password = PARTNER_ADMIN_PASSWORD;
-            }
-            KeycloakAdminClient keycloak = KeycloakAdminClient.login(
-                    keycloakUrl, realm, require("setup.keycloak.clientId"), require("mosip_testrig_client_secret"));
-            keycloak.ensureUser(user, password, PARTNER_ADMIN_ROLES);
-            report("Partner admin user ready: " + user);
-        } else if (password == null) {
-            password = require("setup.admin.password");
-        }
-        final String pmsUser = user;
-        final String pmsPassword = password;
-        String baseUrl = adminBaseUrl();
+        // Commons KernelAuthentication.getAuthForPartner() logs in as currentModule + "-111997"
+        // with password from Kernel.properties (mosip123). Custom setup.pms.userName is not used for
+        // PartnerRegistration auth; keep creating the commons-expected user.
+        String partnerUser = ApitestCommonsBootstrap.partnerKeycloakUser();
+        ApitestCommonsBootstrap.ensurePartnerAdminUser(partnerUser, PARTNER_PASSWORD);
+        report("Partner Keycloak user ready: " + partnerUser);
 
         String partnerId = optional("setup.mds.partnerId",
                 "regclient_device_" + machine.getName().replaceAll("[^A-Za-z0-9]", "_"));
         MockMdsSetup mockMds = new MockMdsSetup(Paths.get(optional("setup.mds.certsDir", "mds-certs")),
                 optional("setup.mds.p12Password", "qwerty@123"));
-        Path dskFile = mockMds.prepareDeviceKeystore(partnerId, require("mosip.hostname"),
-                () -> PartnerManagerClient.login(baseUrl, keycloakUrl, realm, pmsClientId, pmsClientSecret, pmsUser,
-                        pmsPassword));
+        Path dskFile = mockMds.prepareDeviceKeystore(partnerId, require("mosip.hostname"));
         report("Device key for Mock MDS ready: " + dskFile.toAbsolutePath() + " (partner " + partnerId + ")");
 
         Path mockMdsDir = MockMdsServer.prepare();
@@ -161,36 +140,16 @@ public class EnvironmentSetup {
         return users;
     }
 
-    private static String adminBaseUrl() throws IOException {
-        String baseUrl = optional("setup.admin.baseUrl", null);
-        return baseUrl != null ? baseUrl : "https://" + require("mosip.hostname");
-    }
-
     private static boolean isEnabled(String key) throws IOException {
         return !"N".equalsIgnoreCase(optional(key, "Y"));
     }
 
-    private static List<String> csv(String value) {
-        List<String> values = new ArrayList<>();
-        for (String item : value.split(",")) {
-            if (!item.trim().isEmpty()) {
-                values.add(item.trim());
-            }
-        }
-        return values;
-    }
-
     private static String require(String key) throws IOException {
-        String value = optional(key, null);
-        if (value == null) {
-            throw new IllegalStateException("Missing required config.properties key '" + key + "' for environment setup");
-        }
-        return value;
+        return ApitestCommonsBootstrap.require(key);
     }
 
     private static String optional(String key, String defaultValue) throws IOException {
-        String value = PropertiesUtil.getKeyValue(key);
-        return value == null || value.trim().isEmpty() ? defaultValue : value.trim();
+        return ApitestCommonsBootstrap.optional(key, defaultValue);
     }
 
     private static void report(String message) {
