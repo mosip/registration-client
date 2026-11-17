@@ -341,6 +341,11 @@
                               <delete quiet="true">
                                   <fileset dir="${project.build.directory}/lib" includes="bc*-jdk15on-*.jar"/>
                               </delete>
+                              <!-- setuplib also pulls apitest-commons BC 1.70 (jdk15on) beside 1.78 (jdk18on);
+                                   mixed jars cause NoSuchFieldError in DeviceCertificateUtil / Mock MDS. -->
+                              <delete quiet="true">
+                                  <fileset dir="${project.build.directory}/setuplib" includes="bc*-jdk15on-*.jar"/>
+                              </delete>
                           </target>
                       </configuration>
                   </execution>
