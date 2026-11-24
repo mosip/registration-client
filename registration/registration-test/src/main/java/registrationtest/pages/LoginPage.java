@@ -49,7 +49,8 @@ public class LoginPage {
     String logout = "#logout";
     String submit = "#submit1";
     String userOnboardMessage = "#userOnboardMessage";
-    String success = "#success";
+    String success = "#context";
+    String alertHeader = "#header";
     String failed = "#Failed";
     String exit = "#exit";
     String appLanguage = "#appLanguage";
@@ -74,8 +75,20 @@ public class LoginPage {
 
         this.robot = robot;
         waitsUtil = new WaitsUtil(robot);
-        waitsUtil.clickNodeAssert(loginScreen);
         biometricUploadPage = new BiometricUploadPage(robot);
+        recoverLoginScreen();
+    }
+
+    /** A leftover alert or an open home screen hides the login page from the next scenario. */
+    private void recoverLoginScreen() {
+        waitsUtil.dismissAlertIfPresent();
+        if (!waitsUtil.isShown(loginScreen) && waitsUtil.isShown(homeSelectionMenu)) {
+            logout();
+            if (waitsUtil.isShown("#confirm")) {
+                waitsUtil.clickNodeAssert("#confirm");
+            }
+        }
+        waitsUtil.clickNodeAssert(loginScreen);
     }
 
     public void selectAppLang() {
@@ -362,9 +375,12 @@ public class LoginPage {
 
             waitsUtil.clickNodeAssert("#sub2");
             Thread.sleep(35000);
-            waitsUtil.clickNodeAssert(success);
+            Label header = waitsUtil.waitForNode(alertHeader, Label.class);
+            Label context = waitsUtil.waitForNode(success, Label.class);
+            logger.info("Initial sync alert: {} - {}", header.getText(), context.getText());
+            ExtentReportUtil.test1.info("Initial sync alert: " + header.getText() + " - " + context.getText());
 
-            flag = true;
+            flag = "Success".equalsIgnoreCase(header.getText().trim());
         } catch (Exception e) {
             logger.error("", e);
         }
@@ -375,8 +391,6 @@ public class LoginPage {
     public boolean verifyOnbard(String identity) {
         boolean flag = false;
         try {
-            waitsUtil.clickNodeAssert("#sub2");
-
             waitsUtil.clickNodeAssert("#homeImgView");
             flag = true;
             try {
@@ -422,9 +436,7 @@ public class LoginPage {
         logger.info("In Login test Loaded");
 
         try {
-            // alerts.clickAlertCancel();
-
-            waitsUtil.clickNodeAssert(loginScreen);
+            recoverLoginScreen();
 
             scene = applicationPrimaryStage.getScene();
             node = scene.lookup(loginScreen);
@@ -455,6 +467,10 @@ public class LoginPage {
         /**
          * Click Menu Logout
          */
+        waitsUtil.dismissAlertIfPresent();
+        if (waitsUtil.isShown("#confirm")) {
+            waitsUtil.clickNodeAssert("#confirm");
+        }
         waitsUtil.clickNodeAssert(homeSelectionMenu);
 
         waitsUtil.clickNodeAssert(logout);

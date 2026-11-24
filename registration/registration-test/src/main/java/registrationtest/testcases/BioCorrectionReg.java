@@ -79,6 +79,7 @@ public class BioCorrectionReg {
             String supervisorUserpwd, Stage applicationPrimaryStage1, String jsonContent, String process,
             String ageGroup, String fileName, ApplicationContext applicationContext) {
 
+        String failureDetail = null;
         try {
             logger.info("New Adult Registration Scenario : " + process + " FileName : " + fileName);
             ExtentReportUtil.test1 = ExtentReportUtil.reports
@@ -215,9 +216,10 @@ public class BioCorrectionReg {
             // Logout Regclient
             rid1.appidrid = rid1.getAppidrid(applicationContext, rid1.rid);
             rid1.setResult(result);
-        } catch (Exception e) {
+        } catch (Exception | AssertionError e) {
 
             logger.error("", e);
+            failureDetail = e.toString();
 
             try {
                 ExtentReportUtil.test1.addScreenCaptureFromPath(WaitsUtil.capture());
@@ -230,14 +232,14 @@ public class BioCorrectionReg {
         try {
             homePage.clickHomeImg();
             buttons.clickConfirmBtn();
-        } catch (Exception e) {
+        } catch (Exception | AssertionError e) {
             logger.error("", e);
         }
         try {
             loginPage.logout();
             buttons.clickConfirmBtn();
 
-        } catch (Exception e) {
+        } catch (Exception | AssertionError e) {
             logger.error("", e);
         }
 
@@ -247,7 +249,8 @@ public class BioCorrectionReg {
                             + rid1.ridDateTime + "] [ENVIRONMENT=" + System.getProperty("mosip.hostname") + "]");
             ExtentReportUtil.test1.info("Approve Packet Details Below" + rid2.getWebViewAck());
         } else {
-            ExtentReportUtil.test1.log(Status.FAIL, "TESTCASE FAIL");
+            ExtentReportUtil.test1.log(Status.FAIL,
+                    failureDetail == null ? "TESTCASE FAIL" : "TESTCASE FAIL: " + failureDetail);
 
         }
 

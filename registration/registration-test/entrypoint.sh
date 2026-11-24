@@ -1,0 +1,495 @@
+#!/bin/bash
+# Runs the same sequence as run.bat inside the container.
+#   all      setup, then initial launch, then the suite (default)
+#   setup    environment setup only
+#   initial  initial launch only
+#   test     suite only
+# Extra arguments are passed to the client, as run.bat does.
+
+set -euo pipefail
+
+cd "${work_dir}"
+
+link_dir() {
+    local name="$1"
+    local target="$2"
+    if [ -L "${name}" ] || [ ! -e "${name}" ]; then
+        ln -sfn "${target}" "${name}"
+    fi
+}
+
+link_dir registration-test.jar /opt/registration-test/registration-test.jar
+link_dir lib /opt/registration-test/lib
+link_dir testlib /opt/registration-test/testlib
+link_dir setuplib /opt/registration-test/setuplib
+link_dir mockmds /opt/registration-test/mockmds
+
+if [ ! -d repository_eng ]; then
+    cp -a /opt/registration-test/resources/repository_eng repository_eng
+fi
+
+# The image file is the suite config. A mount at /config replaces it for a local
+# run. Always copy again so a volume left from an older run cannot hide new keys.
+if [ -f /config/config.properties ]; then
+    cp /config/config.properties config.properties
+else
+    cp /opt/registration-test/resources/config.properties config.properties
+fi
+sed -i 's/\r$//' config.properties
+
+# Rancher injects a ConfigMap or Secret with envFrom. A variable whose name is a
+# config key, or contains a dot (mosip.hostname, setup.admin.password), overrides
+# the file. This is the same idea as uitest-admin reading System.getenv(key).
+# Underscore secret keys must be applied even when an older image's config.properties
+# does not list them yet (dot-keys are always applied; these are allowlisted by name).
+is_suite_secret_key() {
+    case "$1" in
+        mosip_admin_client_secret|mosip_testrig_client_secret|mosip_pms_client_secret|postgres-password)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+apply_config_from_env() {
+    local -A known=()
+    local key value line applied_secrets=()
+    while IFS= read -r key; do
+        [ -n "${key}" ] && known["${key}"]=1
+    done < <(awk '
+        /^[[:space:]]*#/ { next }
+        {
+            sep = index($0, ":")
+            eq = index($0, "=")
+            if (eq > 0 && (sep == 0 || eq < sep)) sep = eq
+            if (sep > 1) print substr($0, 1, sep - 1)
+        }
+    ' config.properties)
+    while IFS= read -r line || [ -n "${line}" ]; do
+        key="${line%%=*}"
+        value="${line#*=}"
+        case "${key}" in
+            ''|REG_CFG_*|MINIO_*|REPORT_NAME|HEADLESS|PATH|HOME|HOSTNAME|PWD|SHLVL|OLDPWD|LANG|LC_*|JAVA_*|work_dir)
+                continue
+                ;;
+        esac
+        if [[ "${key}" == *.* ]] || [[ -n "${known[${key}]+x}" ]] || is_suite_secret_key "${key}"; then
+            set_config "${key}" "${value}"
+            if is_suite_secret_key "${key}"; then
+                applied_secrets+=("${key}=len:${#value}")
+            fi
+        fi
+    done < <(env)
+    if [ "${#applied_secrets[@]}" -gt 0 ]; then
+        echo "Suite secrets applied from env: ${applied_secrets[*]}"
+    else
+        echo "WARNING: none of mosip_admin_client_secret / mosip_testrig_client_secret / mosip_pms_client_secret / postgres-password were present in the pod env" >&2
+        echo "Wire them via CronJob envFrom (e.g. secretRef keycloak-client-secrets) or REG_CFG_<key>=..." >&2
+    fi
+}
+
+set_config() {
+    local key="$1"
+    local value="$2"
+    local tmp
+    tmp="$(mktemp)"
+    awk -v key="${key}" -v value="${value}" '
+        {
+            sep = index($0, ":")
+            eq = index($0, "=")
+            if (eq > 0 && (sep == 0 || eq < sep)) sep = eq
+            if (sep > 1 && substr($0, 1, sep - 1) == key) {
+                print key "=" value
+                found = 1
+                next
+            }
+            print
+        }
+        END {
+            if (!found) print key "=" value
+        }
+    ' config.properties > "${tmp}"
+    mv "${tmp}" config.properties
+}
+
+config_value() {
+    awk -v key="$1" '
+        {
+            sep = index($0, ":")
+            eq = index($0, "=")
+            if (eq > 0 && (sep == 0 || eq < sep)) sep = eq
+            if (sep > 1 && substr($0, 1, sep - 1) == key) {
+                print substr($0, sep + 1)
+                exit
+            }
+        }
+    ' config.properties
+}
+
+apply_config_from_env
+
+while IFS= read -r line; do
+    case "${line}" in
+        REG_CFG_*)
+            rest="${line#REG_CFG_}"
+            key="${rest%%=*}"
+            value="${rest#*=}"
+            if [ -n "${key}" ]; then
+                set_config "${key}" "${value}"
+            fi
+            ;;
+    esac
+done < <(env)
+
+if [ "${HEADLESS:-true}" != "false" ]; then
+    set_config headless Y
+fi
+
+# The client reads mosip.hostname from the services jar, then from Derby.
+# The mounted config is what the tests use, so put that host first on the classpath.
+apply_client_hostname() {
+    local host services dest
+    host="$(config_value mosip.hostname)"
+    host="${host//[$' \r']/}"
+    if [ -z "${host}" ]; then
+        return 0
+    fi
+    services="$(find -H lib -maxdepth 1 -type f -name 'registration-services-*.jar' \
+        ! -name '*-sources.jar' ! -name '*-javadoc.jar' -print -quit)"
+    if [ -z "${services}" ]; then
+        echo "registration-services jar was not found under lib" >&2
+        exit 1
+    fi
+    rm -rf client-config
+    mkdir -p client-config
+    ( cd client-config && jar xf "../${services}" props/mosip-application.properties )
+    dest="client-config/props/mosip-application.properties"
+    awk -v host="${host}" '
+        BEGIN { found_host = 0; found_upgrade = 0 }
+        {
+            sep = index($0, "=")
+            if (sep > 1) {
+                key = substr($0, 1, sep - 1)
+                if (key == "mosip.hostname") {
+                    print key "=" host
+                    found_host = 1
+                    next
+                }
+                if (key == "mosip.client.upgrade.server.url") {
+                    print key "=https://" host
+                    found_upgrade = 1
+                    next
+                }
+            }
+            print
+        }
+        END {
+            if (!found_host) print "mosip.hostname=" host
+            if (!found_upgrade) print "mosip.client.upgrade.server.url=https://" host
+        }
+    ' "${dest}" > "${dest}.tmp"
+    mv "${dest}.tmp" "${dest}"
+    echo "Client hostname set to ${host}"
+}
+
+# The synced global param keeps object.store.base.location=../packets, which
+# overrides the classpath file. From /home/mosip that directory is /home/packets.
+# The image creates it because /home is not writable by the runtime user.
+prepare_packet_store() {
+    local packet_dir
+    packet_dir="$(dirname "${work_dir}")/packets"
+    if [ ! -d "${packet_dir}" ] || [ ! -w "${packet_dir}" ]; then
+        echo "Packet directory ${packet_dir} is missing or not writable" >&2
+        exit 1
+    fi
+    echo "Packet store directory ${packet_dir}"
+}
+
+apply_client_hostname
+prepare_packet_store
+
+mode="${1:-all}"
+case "${mode}" in
+    all|setup|initial|test)
+        shift || true
+        ;;
+    *)
+        mode=all
+        ;;
+esac
+
+if [ -d client-config ]; then
+    classpath="client-config:registration-test.jar:lib/*:testlib/*"
+    # setuplib already ships apitest-commons and its deps; do not add lib/* or testlib/*
+    # (those pull Groovy 3 while setuplib uses Groovy 4 via rest-assured 5).
+    setup_classpath="client-config:registration-test.jar:setuplib/*"
+else
+    classpath="registration-test.jar:lib/*:testlib/*"
+    setup_classpath="registration-test.jar:setuplib/*"
+fi
+common_opts=(
+    -Dpath.config=/config.properties
+    -Dfile.encoding=UTF-8
+    --add-opens java.base/java.lang=ALL-UNNAMED
+)
+javafx_opts=(
+    --add-modules=javafx.controls,javafx.fxml,javafx.base,javafx.web,javafx.swing,javafx.graphics
+    --add-exports javafx.graphics/com.sun.javafx.sg.prism=ALL-UNNAMED
+    --add-exports javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
+)
+
+monocle_jar() {
+    local jar
+    jar="$(find -H lib testlib -maxdepth 1 -type f -name 'openjfx-monocle-21*.jar' -print -quit)"
+    if [ -z "${jar}" ]; then
+        echo "openjfx-monocle 21 was not found under lib or testlib" >&2
+        exit 1
+    fi
+    printf '%s\n' "${jar}"
+}
+
+# Temurin does not ship JavaFX. The runnable modules are the platform jars
+# (javafx-*-linux.jar); the unscoped javafx-*.jar files are empty placeholders.
+javafx_module_dir() {
+    local dir jar found=0
+    dir="${work_dir}/.javafx-modules"
+    mkdir -p "${dir}"
+    while IFS= read -r jar; do
+        ln -sfn "$(pwd)/${jar}" "${dir}/$(basename "${jar}")"
+        found=1
+    done < <(find -H lib -maxdepth 1 -type f -name 'javafx-*-linux*.jar' -print)
+    if [ "${found}" -eq 0 ]; then
+        echo "JavaFX Linux modules were not found under lib" >&2
+        exit 1
+    fi
+    printf '%s\n' "${dir}"
+}
+
+run_setup() {
+    echo "=== Environment setup ==="
+    java "${common_opts[@]}" -cp "${setup_classpath}" registrationtest.runapplication.EnvironmentSetup "$@" 2>&1 | tee setup.log
+}
+
+run_client() {
+    local log_file="$1"
+    shift
+    local patch=()
+    if [ "${HEADLESS:-true}" != "false" ]; then
+        patch=(-Dheadless=true --patch-module "javafx.graphics=$(monocle_jar)")
+    fi
+    echo "=== ${log_file} ==="
+    # shellcheck disable=SC2086
+    java ${JAVA_OPTS:--Xms512m -Xmx2048m} "${patch[@]}" "${common_opts[@]}" \
+        -Djdbc.drivers=org.apache.derby.jdbc.EmbeddedDriver \
+        --module-path "$(javafx_module_dir)" \
+        "${javafx_opts[@]}" \
+        "$@" \
+        -cp "${classpath}" \
+        registrationtest.runapplication.RegistrationMain 2>&1 | tee "${log_file}"
+}
+
+wait_for_propagation() {
+    if ! grep -q "SETUP_NEW_RESOURCES=true" setup.log; then
+        return 0
+    fi
+    local minutes
+    minutes="$(config_value setup.propagationWaitMinutes)"
+    minutes="${minutes//[$' \r']/}"
+    if [ -z "${minutes}" ]; then
+        minutes=15
+    fi
+    if [ "${minutes}" = "0" ]; then
+        return 0
+    fi
+    echo "New user or machine was created. Waiting ${minutes} minutes before initial launch."
+    sleep "$((minutes * 60))"
+}
+
+# The HTML refers to snapshot files by their container path. Only the HTML is uploaded,
+# so those paths cannot load in a browser. Replace each existing image with its bytes.
+embed_report_images() {
+    local html="$1"
+    local list path file mime b64file out
+    [ -f "${html}" ] || return 0
+    list="$(mktemp)"
+    grep -oE "/[^'\"<> ]+\.(jpg|jpeg|png)" "${html}" | sort -u > "${list}" || true
+    if [ ! -s "${list}" ]; then
+        rm -f "${list}"
+        return 0
+    fi
+    out="$(mktemp)"
+    cp "${html}" "${out}"
+    while IFS= read -r path; do
+        [ -n "${path}" ] || continue
+        if [ -f "${path}" ]; then
+            file="${path}"
+        else
+            echo "Screenshot missing from report: ${path}" >&2
+            continue
+        fi
+        case "${file}" in
+            *.png|*.PNG) mime="image/png" ;;
+            *) mime="image/jpeg" ;;
+        esac
+        b64file="$(mktemp)"
+        base64 -w 0 "${file}" > "${b64file}"
+        awk -v path="${path}" -v mime="${mime}" -v b64file="${b64file}" '
+            function replace_all(s, find, repl,    out, at, n) {
+                out = ""
+                n = length(find)
+                while ((at = index(s, find)) > 0) {
+                    out = out substr(s, 1, at - 1) repl
+                    s = substr(s, at + n)
+                }
+                return out s
+            }
+            BEGIN {
+                getline b64 < b64file
+                close(b64file)
+                data = "data:" mime ";base64," b64
+            }
+            {
+                print replace_all($0, path, data)
+            }
+        ' "${out}" > "${out}.next"
+        mv "${out}.next" "${out}"
+        rm -f "${b64file}"
+    done < "${list}"
+    mv "${out}" "${html}"
+    rm -f "${list}"
+    echo "Embedded screenshots into $(basename "${html}")"
+}
+
+# Marker so publish_reports never picks a leftover PVC report from an older run.
+RUN_MARKER="${work_dir}/.run-started"
+PUBLISH_REPORT=0
+touch "${RUN_MARKER}"
+
+# Copies an extentReport*.html written during this run to a DSL-style name, then uploads
+# that one file when MinIO settings are present. Never re-uploads a previous run's report.
+publish_reports() {
+    local host report_name src prefix env_name millis
+    local pass fail fatal error warning skip total
+    host="$(hostname -s 2>/dev/null || hostname)"
+    host="$(printf '%s' "${host}" | tr '[:upper:]' '[:lower:]')"
+
+    if [ "${PUBLISH_REPORT}" != "1" ]; then
+        echo "Skipping report publish (full suite did not run in this invocation)"
+        return 0
+    fi
+
+    if [ -d report ]; then
+        # Only reports newer than this run's marker — PVC often keeps older extentReport*.html.
+        src="$(find -H report -maxdepth 1 -type f -name 'extentReport*.html' -newer "${RUN_MARKER}" -printf '%T@ %p\n' 2>/dev/null | sort -n | awk 'END { print $2 }')"
+    fi
+    if [ -z "${src}" ]; then
+        echo "No new extent report from this run; not uploading"
+        return 0
+    fi
+
+    extent_count() {
+        sed -n "s/.*${1}: *\\([0-9][0-9]*\\).*/\\1/p" "$2" | head -n 1
+    }
+    pass="$(extent_count passParent "${src}")"
+    fail="$(extent_count failParent "${src}")"
+    fatal="$(extent_count fatalParent "${src}")"
+    error="$(extent_count errorParent "${src}")"
+    warning="$(extent_count warningParent "${src}")"
+    skip="$(extent_count skipParent "${src}")"
+    pass="${pass:-0}"
+    fail="${fail:-0}"
+    fatal="${fatal:-0}"
+    error="${error:-0}"
+    warning="${warning:-0}"
+    skip="${skip:-0}"
+    fail="$((fail + fatal + error + warning))"
+    total="$((pass + fail + skip))"
+
+    env_name="$(config_value mosip.hostname)"
+    env_name="${env_name:-${host}}"
+    env_name="${env_name#https://}"
+    env_name="${env_name#http://}"
+    env_name="${env_name%%/*}"
+    millis="$(date +%s%3N 2>/dev/null || true)"
+    case "${millis}" in
+        *N|'' ) millis="$(date +%s)000" ;;
+    esac
+    report_name="${REPORT_NAME:-REGCLIENT-${env_name}-full-run-${millis}-report_T-${total}_P-${pass}_KI-0_I-0_S-${skip}_F-${fail}.html}"
+
+    cp -f "${src}" "report/${report_name}"
+    embed_report_images "report/${report_name}" || echo "Screenshots were left as file paths" >&2
+    echo "Report copied to report/${report_name} (source $(basename "${src}"))"
+
+    # uitest-admin reads these names from the s3 ConfigMap. MINIO_* still wins when set.
+    local s3_host s3_key s3_secret s3_account push url access secret bucket
+    s3_host="$(printenv 's3-host' 2>/dev/null || true)"
+    s3_key="$(printenv 's3-user-key' 2>/dev/null || true)"
+    s3_secret="$(printenv 's3-user-secret' 2>/dev/null || true)"
+    s3_account="$(printenv 's3-account' 2>/dev/null || true)"
+    push="$(printenv 'push-reports-to-s3' 2>/dev/null || true)"
+    url="${MINIO_URL:-${s3_host}}"
+    access="${MINIO_ACCESS_KEY:-${s3_key}}"
+    secret="${MINIO_SECRET_KEY:-${s3_secret}}"
+    bucket="${MINIO_BUCKET:-${s3_account}}"
+    push="$(printf '%s' "${push}" | tr '[:upper:]' '[:lower:]')"
+
+    if [ -z "${MINIO_URL:-}" ]; then
+        case "${push}" in
+            yes|y|true) ;;
+            *) return 0 ;;
+        esac
+    fi
+    if [ -z "${url}" ] || [ -z "${access}" ] || [ -z "${secret}" ] || [ -z "${bucket}" ]; then
+        echo "Report upload needs s3-host, s3-user-key, s3-user-secret and s3-account, or MINIO_URL, MINIO_ACCESS_KEY, MINIO_SECRET_KEY and MINIO_BUCKET" >&2
+        return 1
+    fi
+
+    # s3-account is the bucket. The one report is stored there under its DSL-style name.
+    # MINIO_PREFIX adds a folder only when it is set.
+    prefix="${MINIO_PREFIX:-}"
+    mc alias set regtest "${url}" "${access}" "${secret}" >/dev/null
+    mc mb --ignore-existing "regtest/${bucket}" >/dev/null
+    if [ -n "${prefix}" ]; then
+        base="regtest/${bucket}/${prefix}"
+        shown="${bucket}/${prefix}/${report_name}"
+    else
+        base="regtest/${bucket}"
+        shown="${bucket}/${report_name}"
+    fi
+    mc cp "report/${report_name}" "${base}/${report_name}"
+    echo "Report uploaded to ${shown}"
+}
+
+finish() {
+    local code=$?
+    if ! publish_reports; then
+        echo "Publishing the report failed" >&2
+        if [ "${code}" -eq 0 ]; then
+            code=1
+        fi
+    fi
+    exit "${code}"
+}
+trap finish EXIT
+
+case "${mode}" in
+    setup)
+        run_setup "$@"
+        ;;
+    initial)
+        run_client startup.log -Dmodule.run=initiallaunch "$@"
+        ;;
+    test)
+        PUBLISH_REPORT=1
+        run_client startup.log "$@"
+        ;;
+    all)
+        run_setup
+        wait_for_propagation
+        run_client startup-initial.log -Dmodule.run=initiallaunch "$@"
+        PUBLISH_REPORT=1
+        run_client startup.log "$@"
+        ;;
+esac

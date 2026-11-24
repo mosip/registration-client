@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.testfx.api.FxRobot;
 
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import registrationtest.utility.WaitsUtil;
 
@@ -109,8 +110,25 @@ public class Buttons {
         waitsUtil.assertNodeDisabled(submit);
     }
     
+    public boolean isSubmitButtonDisabled() {
+        return waitsUtil.waitForNodePresent(submit).isDisable();
+    }
+
     public void verifySubmitButtonEnabled() {
         logger.info("verifySubmitButtonEnabled");
+        long start = System.currentTimeMillis();
+        while (System.currentTimeMillis() - start < 5000) {
+            Node node = waitsUtil.waitForNodePresent(submit);
+            if (node != null && !node.isDisable()) {
+                return;
+            }
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
         waitsUtil.assertNodeEnabled(submit);
     }
 }

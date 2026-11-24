@@ -13,9 +13,9 @@
    <properties>
       <maven.compiler.source>21</maven.compiler.source>
       <maven.compiler.target>21</maven.compiler.target>
+      <mock.mds.version>1.2.0.2</mock.mds.version>
    </properties>
    <dependencies>
-      <!-- QA dependency starts -->
       <dependency>
          <groupId>org.junit.jupiter</groupId>
          <artifactId>junit-jupiter-api</artifactId>
@@ -36,28 +36,21 @@
          <artifactId>junit-jupiter-params</artifactId>
          <version>5.5.1</version>
       </dependency>
-      <!-- https://mvnrepository.com/artifact/org.json/json -->
       <dependency>
          <groupId>org.json</groupId>
          <artifactId>json</artifactId>
          <version>20200518</version>
       </dependency>
-      <!-- https://mvnrepository.com/artifact/org.junit.platform/junit-platform-runner 
-         <dependency> <groupId>org.junit.platform</groupId> <artifactId>junit-platform-runner</artifactId> 
-         <version>1.7.0</version> <scope>test</scope> </dependency> -->
       <dependency>
          <groupId>org.awaitility</groupId>
          <artifactId>awaitility</artifactId>
          <version>4.0.3</version>
       </dependency>
- <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-core -->
-<dependency>
-    <groupId>ch.qos.logback</groupId>
-    <artifactId>logback-core</artifactId>
-    <version>1.4.14</version>
-</dependency>
- 
-      
+      <dependency>
+         <groupId>ch.qos.logback</groupId>
+         <artifactId>logback-core</artifactId>
+         <version>1.4.14</version>
+      </dependency>
       <dependency>
          <groupId>com.aventstack</groupId>
          <artifactId>extentreports</artifactId>
@@ -70,38 +63,86 @@
          <scope>provided</scope>
       </dependency>
       <dependency>
+         <groupId>io.mosip.mock.mds</groupId>
+         <artifactId>mock-mds</artifactId>
+         <version>${mock.mds.version}</version>
+         <scope>provided</scope>
+         <exclusions>
+            <exclusion>
+               <groupId>*</groupId>
+               <artifactId>*</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+      <dependency>
+         <groupId>org.postgresql</groupId>
+         <artifactId>postgresql</artifactId>
+         <version>42.7.5</version>
+      </dependency>
+      <dependency>
+         <groupId>org.jboss.logging</groupId>
+         <artifactId>jboss-logging</artifactId>
+         <version>3.6.3.Final</version>
+      </dependency>
+      <dependency>
+         <groupId>io.mosip.registration</groupId>
+         <artifactId>registration-api-stub-impl</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+         <version>2.0.12</version>
+      </dependency>
+      <dependency>
+         <groupId>io.mosip.mock.sdk</groupId>
+         <artifactId>mock-sdk</artifactId>
+         <version>1.3.1-rc.1</version>
+         <exclusions>
+            <exclusion>
+               <groupId>io.mosip.kernel</groupId>
+               <artifactId>*</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+      <dependency>
          <groupId>org.testfx</groupId>
          <artifactId>openjfx-monocle</artifactId>
-         <version>jdk-11+26</version> <!-- jdk-11+26 for Java 11, jdk-9+181 for Java 9, 8u76-b04 for Java 8 -->
+         <version>21.0.2</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.openjfx</groupId>
+               <artifactId>*</artifactId>
+            </exclusion>
+         </exclusions>
       </dependency>
-      <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-graphics -->
-<dependency>
-    <groupId>org.openjfx</groupId>
-    <artifactId>javafx-graphics</artifactId>
-    <version>15</version>
-</dependency>
-
-<!-- https://mvnrepository.com/artifact/io.rest-assured/rest-assured -->
-<dependency>
-    <groupId>io.rest-assured</groupId>
-    <artifactId>rest-assured</artifactId>
-    <version>4.3.3</version>
-    
-</dependency>
-
-
+      <dependency>
+         <groupId>io.rest-assured</groupId>
+         <artifactId>rest-assured</artifactId>
+         <version>4.3.3</version>
+      </dependency>
+      <!-- Used only by EnvironmentSetup; staged to setuplib/ so JavaFX RegistrationMain classpath stays clean. -->
+      <dependency>
+         <groupId>io.mosip.testrig.apitest.commons</groupId>
+         <artifactId>apitest-commons</artifactId>
+         <version>1.8.0-SNAPSHOT</version>
+         <scope>provided</scope>
+         <exclusions>
+            <exclusion>
+               <groupId>org.slf4j</groupId>
+               <artifactId>slf4j-api</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.slf4j</groupId>
+               <artifactId>slf4j-log4j12</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>io.mosip.mock.mds</groupId>
+               <artifactId>mock-mds</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
    </dependencies>
-   <!-- <build> <plugins> <plugin> <groupId>org.apache.maven.plugins</groupId> 
-      <artifactId>maven-jar-plugin</artifactId> <version>2.4</version> <configuration> 
-      <archive> <manifest> <addClasspath>true</addClasspath> <mainClass>qa114.runapplication.RegistrationMain</mainClass> 
-      </manifest> </archive> </configuration> </plugin> <plugin> <groupId>org.apache.maven.plugins</groupId> 
-      <artifactId>maven-dependency-plugin</artifactId> <version>2.4</version> <executions> 
-      <execution> <id>copy</id> <phase>prepare-package</phase> <goals> <goal>copy-dependencies</goal> 
-      </goals> <configuration> <outputDirectory>${project.build.directory}/autolib</outputDirectory> 
-      </configuration> </execution> </executions> </plugin> <plugin> <groupId>org.openjfx</groupId> 
-      <artifactId>javafx-maven-plugin</artifactId> <version>0.0.3</version> <configuration> 
-      <mainClass>qa114.runapplication.NewRegistrationAdultTest</mainClass> </configuration> 
-      </plugin> </plugins> </build> -->
    <build>
       <plugins>
          <plugin>
@@ -122,6 +163,25 @@
                      <excludeScope>provided</excludeScope>
                   </configuration>
                </execution>
+               <execution>
+                  <id>replace-client-jboss-logging</id>
+                  <phase>prepare-package</phase>
+                  <goals>
+                     <goal>copy</goal>
+                  </goals>
+                  <configuration>
+                     <artifactItems>
+                        <artifactItem>
+                           <groupId>org.jboss.logging</groupId>
+                           <artifactId>jboss-logging</artifactId>
+                           <version>3.6.3.Final</version>
+                           <type>jar</type>
+                           <overWrite>true</overWrite>
+                           <outputDirectory>${project.basedir}/../registration-client/target/lib</outputDirectory>
+                        </artifactItem>
+                     </artifactItems>
+                  </configuration>
+               </execution>
             </executions>
          </plugin>
          <plugin>
@@ -137,36 +197,175 @@
                </archive>
             </configuration>
          </plugin>
-         <!--<plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <version>3.1.1</version>
-            <configuration>
-               <descriptorRefs>
-                  <descriptorRef>jar-with-dependencies</descriptorRef>
-               </descriptorRefs>
-               <archive>
-                  <manifest>
-                     <addClasspath>true</addClasspath>
-                     <mainClass>registrationtest.runapplication.RegistrationMain</mainClass>
-                  </manifest>
-               </archive>
-            </configuration>
-            <executions>
-               <execution>
-                  <id>make-assembly</id>
-                  <phase>package</phase>
-                  <goals>
-                     <goal>single</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin>-->
+         <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-invoker-plugin</artifactId>
+              <version>3.8.1</version>
+              <executions>
+                  <execution>
+                      <id>stage-mockmds</id>
+                      <phase>prepare-package</phase>
+                      <goals>
+                          <goal>run</goal>
+                      </goals>
+                      <configuration>
+                          <projectsDirectory>${project.build.directory}/mockmds-stage</projectsDirectory>
+                          <cloneProjectsTo>${project.build.directory}/invoker-mockmds</cloneProjectsTo>
+                          <pomIncludes>
+                              <pomInclude>pom.xml</pomInclude>
+                          </pomIncludes>
+                          <goals>
+                              <goal>dependency:copy-dependencies</goal>
+                          </goals>
+                          <properties>
+                              <outputDirectory>${project.build.directory}/mockmds/lib</outputDirectory>
+                          </properties>
+                          <streamLogs>true</streamLogs>
+                      </configuration>
+                  </execution>
+                  <execution>
+                      <id>stage-setuplib</id>
+                      <phase>prepare-package</phase>
+                      <goals>
+                          <goal>run</goal>
+                      </goals>
+                      <configuration>
+                          <projectsDirectory>${project.build.directory}/setuplib-stage</projectsDirectory>
+                          <cloneProjectsTo>${project.build.directory}/invoker-setuplib</cloneProjectsTo>
+                          <pomIncludes>
+                              <pomInclude>pom.xml</pomInclude>
+                          </pomIncludes>
+                          <goals>
+                              <goal>dependency:copy-dependencies</goal>
+                          </goals>
+                          <properties>
+                              <outputDirectory>${project.build.directory}/setuplib</outputDirectory>
+                          </properties>
+                          <streamLogs>true</streamLogs>
+                      </configuration>
+                  </execution>
+              </executions>
+          </plugin>
           <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-antrun-plugin</artifactId>
               <version>3.0.0</version>
               <executions>
+                  <execution>
+                      <id>write-mockmds-stage-pom</id>
+                      <phase>generate-resources</phase>
+                      <goals>
+                          <goal>run</goal>
+                      </goals>
+                      <configuration>
+                          <target>
+                              <mkdir dir="${project.build.directory}/mockmds-stage"/>
+                              <echo file="${project.build.directory}/mockmds-stage/pom.xml"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.mosip.registration</groupId>
+    <artifactId>mock-mds-runtime</artifactId>
+    <version>1.0</version>
+    <dependencies>
+        <dependency>
+            <groupId>io.mosip.mock.mds</groupId>
+            <artifactId>mock-mds</artifactId>
+            <version>]]>${mock.mds.version}<![CDATA[</version>
+        </dependency>
+    </dependencies>
+</project>
+]]></echo>
+                          </target>
+                      </configuration>
+                  </execution>
+                  <execution>
+                      <id>write-setuplib-stage-pom</id>
+                      <phase>generate-resources</phase>
+                      <goals>
+                          <goal>run</goal>
+                      </goals>
+                      <configuration>
+                          <target>
+                              <mkdir dir="${project.build.directory}/setuplib-stage"/>
+                              <echo file="${project.build.directory}/setuplib-stage/pom.xml"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.mosip.registration</groupId>
+    <artifactId>apitest-commons-runtime</artifactId>
+    <version>1.0</version>
+    <repositories>
+        <repository>
+            <id>ossrh-central</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots</url>
+            <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+    </repositories>
+    <dependencies>
+        <dependency>
+            <groupId>io.mosip.testrig.apitest.commons</groupId>
+            <artifactId>apitest-commons</artifactId>
+            <version>1.8.0-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <!-- apitest-commons asks for mock-mds 1.4.0-SNAPSHOT; setup does not need it.
+                     Mock MDS is staged separately as ${mock.mds.version}. -->
+                <exclusion>
+                    <groupId>io.mosip.mock.mds</groupId>
+                    <artifactId>mock-mds</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- setup classpath is setuplib-only (no lib/testlib — Groovy 3 clash); logging must live here. -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.12</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.4.14</version>
+        </dependency>
+    </dependencies>
+</project>
+]]></echo>
+                          </target>
+                      </configuration>
+                  </execution>
+                  <execution>
+                      <id>remove-old-jboss-logging</id>
+                      <phase>prepare-package</phase>
+                      <goals>
+                          <goal>run</goal>
+                      </goals>
+                      <configuration>
+                          <target>
+                              <delete file="${project.basedir}/../registration-client/target/lib/jboss-logging-3.5.0.Final.jar" quiet="true"/>
+                              <delete quiet="true">
+                                  <fileset dir="${project.basedir}/../registration-client/target/lib" includes="bc*-jdk15on-*.jar"/>
+                              </delete>
+                              <delete quiet="true">
+                                  <fileset dir="${project.build.directory}/lib" includes="bc*-jdk15on-*.jar"/>
+                              </delete>
+                              <!-- setuplib also pulls apitest-commons BC 1.70 (jdk15on) beside 1.78 (jdk18on);
+                                   mixed jars cause NoSuchFieldError in DeviceCertificateUtil / Mock MDS. -->
+                              <delete quiet="true">
+                                  <fileset dir="${project.build.directory}/setuplib" includes="bc*-jdk15on-*.jar"/>
+                              </delete>
+                          </target>
+                      </configuration>
+                  </execution>
                   <execution>
                       <id>make-jar-executable</id>
                       <phase>package</phase>
@@ -175,7 +374,6 @@
                       </goals>
                       <configuration>
                           <target>
-                              <!-- Create a shell script to run the JAR file with executable permission -->
                               <chmod file="${project.build.directory}/*.jar" perm="ugo+rx"/>
                           </target>
                       </configuration>
@@ -185,4 +383,3 @@
       </plugins>
    </build>
 </project>
-  
