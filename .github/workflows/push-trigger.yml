@@ -152,6 +152,42 @@ jobs:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
   
 
+  build-registration-test-docker:
+    needs: build-regclient-local
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v4
+        with:
+          name: registration-local
+          path: ./
+      - name: Prepare jars and build image
+        run: |
+          unzip -q registration-local.zip -d registration
+          find registration/registration-client/target -maxdepth 1 -type f -name 'registration-client-*.jar' \
+            ! -name '*-sources.jar' ! -name '*-javadoc.jar' \
+            -exec cp {} registration/registration-client/target/lib/ \;
+          find registration/registration-test/target -maxdepth 1 -type f -name 'registration-test-*.jar' \
+            ! -name '*-sources.jar' ! -name '*-javadoc.jar' \
+            -exec cp {} registration/registration-test/target/registration-test.jar \;
+          docker build \
+            -f registration/registration-test/Dockerfile \
+            --build-arg SOURCE=${{ github.repository }} \
+            --build-arg COMMIT_HASH=$(git rev-parse HEAD) \
+            --build-arg COMMIT_ID=$(git rev-parse --short HEAD) \
+            --build-arg BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
+            -t registration-test \
+            registration
+      - name: Log into registry
+        if: github.event_name != 'pull_request'
+        run: echo "${{ secrets.RELEASE_DOCKER_HUB }}" | docker login -u ${{ secrets.ACTOR_DOCKER_HUB }} --password-stdin
+      - name: Push registration-test image
+        if: github.event_name != 'pull_request'
+        run: |
+          IMAGE_ID=$(echo "${{ secrets.DEV_NAMESPACE_DOCKER_HUB }}/registration-test" | tr '[:upper:]' '[:lower:]')
+          docker tag registration-test "$IMAGE_ID:${{ github.ref_name }}"
+          docker push "$IMAGE_ID:${{ github.ref_name }}"
+
   build-regclient-keystore-docker:
     strategy:
       matrix:

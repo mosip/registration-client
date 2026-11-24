@@ -27,8 +27,6 @@ public class HomePage {
     Alerts alerts;
     String homeimg = "#homeImgView";
     String exit = "#exit";
-    String success = "#alertGridPane";
-
     // operationalTasks
     String syncDataImageView = "#syncDataImageView", downloadPreRegDataImageView = "#downloadPreRegDataImageView",
             updateOperatorBiometricsImageView = "updateOperatorBiometricsImageView",
@@ -66,13 +64,13 @@ public class HomePage {
     public void clickSynchronizeData() {
         try {
             waitsUtil.clickNodeAssert(syncDataImageView);
-            waitsUtil.clickNodeAssert(success);
-            waitsUtil.clickNodeAssert(exit);
-
+            waitsUtil.waitForVisibleNodeInAnyWindow("#alertImage", 180_000L);
+            waitsUtil.clickVisibleNodeInAnyWindow(exit, 10_000L);
+            logger.info("Sync completed and success alert dismissed");
         } catch (Exception e) {
-            logger.error("", e);
+            logger.error("Failed during synchronize data", e);
+            throw new RuntimeException(e);
         }
-
     }
 
     public void clickdownloadPreRegDataImageView(Stage applicationPrimaryStage, Scene scene)
