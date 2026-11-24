@@ -35,7 +35,7 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.dataaccess.hibernate.repository.impl.HibernateRepositoryImpl;
 import io.mosip.kernel.logger.logback.factory.Logfactory;
 import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderImpl;
-
+import org.springframework.scheduling.annotation.EnableScheduling;  
 /**
  * Spring Configuration class for Registration-Service Module
  * 
@@ -45,6 +45,7 @@ import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderIm
  */
 @Configuration
 @EnableAspectJAutoProxy
+@EnableScheduling
 @Import({ DaoConfig.class, AuditConfig.class, TemplateManagerBuilderImpl.class })
 @EnableJpaRepositories(basePackages = "io.mosip.registration", repositoryBaseClass = HibernateRepositoryImpl.class)
 @ComponentScan(excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = {
