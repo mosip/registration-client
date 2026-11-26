@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.testfx.api.FxRobot;
+import org.testfx.util.WaitForAsyncUtils;
 
 import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import javafx.application.Platform;
@@ -54,7 +55,8 @@ public class DocumentUploadPage {
 
             // robot.press(KeyCode.SPACE).release(KeyCode.SPACE);
         } catch (Exception e) {
-            logger.error("", e);
+            logger.error("Document scan failed", e);
+            throw new AssertionError("Document scan failed", e);
         }
 
     }
@@ -90,17 +92,29 @@ public class DocumentUploadPage {
                 Set<String> dropkeys = mapDropValue.keySet();
                 if (!dropkeys.isEmpty()) {
                     user_selects_combo_itemdoc(id, mapDropValue.get(dropkeys.iterator().next()));
-                    String scanBtn = id + "button";
-
-                    Button scanButton = waitsUtil.waitForNode(scanBtn, Button.class);
-                    robot.moveTo(scanButton);
-                    robot.clickOn(scanButton);
+                    WaitForAsyncUtils.waitForFxEvents();
+                    openScanPopup(id + "button");
                     selectDocumentScan();
                 }
             }
         } catch (Exception e) {
 
             logger.error("", e);
+        }
+    }
+
+    /** Clicks the scan button; a click that lands while the screen is still updating opens nothing, so retry once. */
+    private void openScanPopup(String scanBtn) {
+        for (int attempt = 1; attempt <= 2; attempt++) {
+            Button scanButton = waitsUtil.waitForNode(scanBtn, Button.class);
+            WaitsUtil.scrollIntoView(scanButton);
+            robot.clickOn(scanButton);
+            try {
+                waitsUtil.waitForFirstVisibleNode(captureBtn, 10_000);
+                return;
+            } catch (RuntimeException e) {
+                logger.info("Scan popup not open after attempt {} for {}", attempt, scanBtn);
+            }
         }
     }
 
@@ -116,6 +130,42 @@ public class DocumentUploadPage {
         }
 
         return documentUploadAttList;
+    }
+
+    /**
+     * Uploads a proof-of-exception document using the schema-derived field id.
+     */
+    public void uploadPoeDocument(String jsonIdentity, String poeFieldId) {
+        logger.info("Uploading POE document");
+        try {
+            LinkedHashMap<String, String> mapDropValue = JsonUtil.JsonObjSimpleParsing(jsonIdentity, "proofOfException");
+            Set<String> dropkeys = mapDropValue.keySet();
+            if (dropkeys.isEmpty()) {
+                throw new AssertionError("proofOfException value missing in test data");
+            }
+            user_selects_combo_itemdoc("#" + poeFieldId, mapDropValue.get(dropkeys.iterator().next()));
+            WaitForAsyncUtils.waitForFxEvents();
+            Button scanButton = waitsUtil.waitForNode("#" + poeFieldId + "button", Button.class);
+            robot.moveTo(scanButton);
+            robot.clickOn(scanButton);
+            selectDocumentScan();
+        } catch (Exception e) {
+            logger.error("Failed to upload POE document", e);
+            throw new AssertionError("POE document upload failed", e);
+        }
+    }
+
+    /**
+     * Clears a previously uploaded proof-of-exception document.
+     */
+    public void deletePoeDocument(String poeFieldId) {
+        logger.info("Deleting POE document");
+        try {
+            waitsUtil.clickNodeAssert("#" + poeFieldId + "clear");
+        } catch (Exception e) {
+            logger.error("Failed to delete POE document", e);
+            throw new AssertionError("POE document delete failed", e);
+        }
     }
 
 }

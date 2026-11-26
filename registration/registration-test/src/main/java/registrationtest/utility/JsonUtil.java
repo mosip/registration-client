@@ -91,6 +91,43 @@ public class JsonUtil {
 		}
 	}
 
+	public static String getOptionalIdentityValue(String identity, String key, String defaultValue) {
+		try {
+			JsonNode identityNode = mapper.readTree(identity).path(PropertiesUtil.getKeyValue("jsonObjName"));
+			return identityNode.hasNonNull(key) ? identityNode.get(key).asText() : defaultValue;
+		} catch (IOException e) {
+			logger.error("Failed to parse identity JSON", e);
+			throw new IllegalArgumentException("Invalid identity JSON", e);
+		}
+	}
+
+    /**
+     * Test data written for a firstName/lastName schema gets a fullName ("first last" per language) so it also
+     * runs against a schema that has a single fullName field. Data that already has fullName is returned as is.
+     */
+    public static String withFullNameFromParts(String jsonContent) throws IOException {
+        JSONObject root = new JSONObject(jsonContent);
+        JSONObject identity = root.optJSONObject(PropertiesUtil.getKeyValue("jsonObjName"));
+        if (identity == null || identity.has("fullName") || !identity.has("firstName")) {
+            return jsonContent;
+        }
+        LinkedHashMap<String, String> lastNames = new LinkedHashMap<String, String>();
+        JSONArray last = identity.optJSONArray("lastName");
+        for (int i = 0; last != null && i < last.length(); i++) {
+            lastNames.put(last.getJSONObject(i).getString("language"), last.getJSONObject(i).getString("value"));
+        }
+        JSONArray first = identity.getJSONArray("firstName");
+        JSONArray full = new JSONArray();
+        for (int i = 0; i < first.length(); i++) {
+            String lang = first.getJSONObject(i).getString("language");
+            String lastValue = lastNames.get(lang);
+            String value = first.getJSONObject(i).getString("value") + (lastValue == null ? "" : " " + lastValue);
+            full.put(new JSONObject().put("language", lang).put("value", value));
+        }
+        identity.put("fullName", full);
+        return root.toString();
+    }
+
     public static LinkedHashMap<String, String> JsonObjSimpleParsing(String jsonIdentity, String idfield)
             throws Exception {
         LinkedHashMap<String, String> mapLang = new LinkedHashMap<String, String>();

@@ -3,7 +3,7 @@
 	"process":"New",
 	"previewTests":["ALL"],
 	"verifyPreviewEdit":"Y",
-	"ackTests":["qrCode","applicationId","dateTime","demographics","documents","biometrics"],
+	"ackTests":["qrCode","applicationId","dateTime","demographics","documents","biometrics","bioExceptions"],
 	"preferredLang":"English",
 	"documentUploadAttributes":["POB","POA","POI"],
 	   "profile":"Default",

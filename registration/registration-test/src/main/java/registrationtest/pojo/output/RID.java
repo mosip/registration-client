@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 
 import io.mosip.registration.dao.RegistrationDAO;
 
@@ -87,7 +88,14 @@ public class RID {
         List<String> appidList = new LinkedList<String>();
         List<String> ridid = new LinkedList<String>();
         appidList.add(appid);
-        ridid = registrationDAO.getRegistrationIds(appidList);
+        try {
+            ridid = registrationDAO.getRegistrationIds(appidList);
+        } catch (IncorrectResultSizeDataAccessException e) {
+            // A biometric correction packet keeps the RID of the packet it corrects, so both are stored locally
+            logger.info("More than one local registration for {}; using it as the RID", appid);
+            appidrid = appid;
+            return appidrid;
+        }
         System.out.println(ridid);
         appidrid = ridid.get(0);
         return appidrid;

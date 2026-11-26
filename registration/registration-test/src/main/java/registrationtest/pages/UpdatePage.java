@@ -2,9 +2,13 @@ package registrationtest.pages;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.testfx.api.FxRobot;
+import org.testfx.util.WaitForAsyncUtils;
 
 import javafx.scene.control.TextField;
 
@@ -54,17 +58,57 @@ public class UpdatePage {
         if (updateUINAttributes == null || updateUINAttributes.isEmpty()) {
             return;
         }
+        Set<String> clicked = new HashSet<>();
         for (String attr : updateUINAttributes) {
-            for (String checkboxId : resolveCheckboxIds(attr)) {
-                waitsUtil.clickNodeAssert("#" + checkboxId);
+            for (String checkboxId : presentCheckboxIds(attr)) {
+                if (clicked.add(checkboxId)) {
+                    waitsUtil.clickNodeAssert("#" + checkboxId);
+                }
             }
         }
     }
 
-    private List<String> resolveCheckboxIds(String attribute) {
+    /**
+     * Name groups differ per environment: some UI specs have one "FullName" group, others "FirstName" and
+     * "LastName". Uses whichever variant is on screen, falling back to the configured id.
+     */
+    private List<String> presentCheckboxIds(String attribute) {
+        List<String> configured = resolveCheckboxIds(attribute);
+        List<String> alternative = nameGroupAlternative(attribute);
+        long deadline = System.currentTimeMillis() + 20_000;
+        while (System.currentTimeMillis() < deadline) {
+            if (allPresent(configured)) {
+                return configured;
+            }
+            if (!alternative.isEmpty() && allPresent(alternative)) {
+                logger.info("Update attribute {} shown as {}", attribute, alternative);
+                return alternative;
+            }
+            WaitForAsyncUtils.sleep(200, TimeUnit.MILLISECONDS);
+        }
+        return configured;
+    }
+
+    private boolean allPresent(List<String> ids) {
+        for (String id : ids) {
+            if (robot.lookup("#" + id).tryQuery().isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private List<String> nameGroupAlternative(String attribute) {
         if ("FullName".equalsIgnoreCase(attribute)) {
             return Arrays.asList("FirstName", "LastName");
         }
+        if ("FirstName".equalsIgnoreCase(attribute) || "LastName".equalsIgnoreCase(attribute)) {
+            return Arrays.asList("FullName");
+        }
+        return new ArrayList<>();
+    }
+
+    private List<String> resolveCheckboxIds(String attribute) {
         try {
             String mapped = PropertiesUtil.getKeyValue(attribute);
             if (mapped != null && !mapped.isBlank() && !mapped.equals(attribute)) {

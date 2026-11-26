@@ -1,0 +1,14 @@
+# Runtime artifacts created when the suite or client runs locally
+.mosipkeys/
+mds-certs/
+db/
+SCHEMA_*.json
+applicanttype.mvel
+bioCorrectionProcess.json
+lostProcess.json
+newProcess.json
+updateProcess.json
+/snapshot/
+*.log
+setup.log
+startup.log

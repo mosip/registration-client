@@ -117,14 +117,14 @@ public class NewReg {
                 try {
                     homePage.clickHomeImg();
                     buttons.clickConfirmBtn();
-                } catch (Exception e) {
+                } catch (Exception | AssertionError e) {
                     logger.error("", e);
                 }
                 try {
                     loginPage.logout();
                     buttons.clickConfirmBtn();
 
-                } catch (Exception e) {
+                } catch (Exception | AssertionError e) {
                     logger.error("", e);
                 }
             }
@@ -145,8 +145,8 @@ public class NewReg {
         try {
           
             ExtentReportUtil.test1 = ExtentReportUtil.reports.createTest("Onboard " + operatorUserid +  " "+filename);
-            String username = JsonUtil.getIdentityValue(jsoncontent, "username");
-            String password = JsonUtil.getIdentityValue(jsoncontent, "password");
+            String username = JsonUtil.getOptionalIdentityValue(jsoncontent, "username", "");
+            String password = JsonUtil.getOptionalIdentityValue(jsoncontent, "password", "");
             loginPage = new LoginPage(robot);
             buttons = new Buttons(robot);
             authenticationPage = new AuthenticationPage(robot);
@@ -199,14 +199,14 @@ public class NewReg {
                 try {
                     homePage.clickHomeImg();
                     buttons.clickConfirmBtn();
-                } catch (Exception e) {
+                } catch (Exception | AssertionError e) {
                     logger.error("", e);
                 }
                 try {
                     loginPage.logout();
                     buttons.clickConfirmBtn();
 
-                } catch (Exception e) {
+                } catch (Exception | AssertionError e) {
                     logger.error("", e);
                 }
                 ExtentReportUtil.test1.log(Status.PASS, "SUCCESS Operator Onboards");
@@ -222,14 +222,14 @@ public class NewReg {
                 try {
                     homePage.clickHomeImg();
                     buttons.clickConfirmBtn();
-                } catch (Exception e) {
+                } catch (Exception | AssertionError e) {
                     logger.error("", e);
                 }
                 try {
                     loginPage.logout();
                     buttons.clickConfirmBtn();
 
-                } catch (Exception e) {
+                } catch (Exception | AssertionError e) {
                     logger.error("", e);
                 }
             }
@@ -246,11 +246,38 @@ public class NewReg {
     public RID newRegistration(FxRobot robot, String loginUserid, String loginPwd, String supervisorUserid,
             String supervisorUserpwd, Stage applicationPrimaryStage1, String jsonContent, String process,
             String ageGroup, String fileName, ApplicationContext applicationContext) {
+        return newRegistration(robot, loginUserid, loginPwd, supervisorUserid, supervisorUserpwd,
+                applicationPrimaryStage1, jsonContent, process, ageGroup, fileName, applicationContext, false);
+    }
+
+    /**
+     * @param usePreRegistration when true, creates a Pre-Registration ID via {@link registrationtest.api.PreRegistrationClient}
+     *                           before starting New Registration, and fetches it on the demographic page
+     *                           (only takes effect on screens whose process definition has preRegFetchRequired=true).
+     */
+    public RID newRegistration(FxRobot robot, String loginUserid, String loginPwd, String supervisorUserid,
+            String supervisorUserpwd, Stage applicationPrimaryStage1, String jsonContent, String process,
+            String ageGroup, String fileName, ApplicationContext applicationContext, boolean usePreRegistration) {
+
+        ExtentReportUtil.test1 = ExtentReportUtil.reports
+                .createTest("New Registration Scenario : " + process + " FileName : " + fileName);
+
+        String preRegistrationId = null;
+        String failureDetail = null;
+        if (usePreRegistration) {
+            try {
+                preRegistrationId = registrationtest.api.PreRegistrationClient.createPreRegistration(ageGroup);
+            } catch (RuntimeException e) {
+                logger.error("Pre-Registration creation failed", e);
+                ExtentReportUtil.test1.log(Status.FAIL, "Pre-Registration creation failed: " + e.getMessage());
+                ExtentReportUtil.reports.flush();
+                rid1 = null;
+                return rid1;
+            }
+        }
 
         try {
             logger.info("New Adult Registration Scenario : " + process + " FileName : " + fileName);
-            ExtentReportUtil.test1 = ExtentReportUtil.reports
-                    .createTest("New Registration Scenario : " + process + " FileName : " + fileName);
 
             loginPage = new LoginPage(robot);
             buttons = new Buttons(robot);
@@ -286,13 +313,16 @@ public class NewReg {
             demographicPage = homePage.clickNewRegistration();
 
             if (PropertiesUtil.getKeyValue("multilang").equals("Y")) {
-            	buttons.verifySubmitButtonDisabled();
+                // The application language is pre-selected, so Submit starts enabled when it alone satisfies the
+                // environment's minimum language count.
+                ExtentReportUtil.test1.info("Language selection Submit initially "
+                        + (buttons.isSubmitButtonDisabled() ? "disabled" : "enabled"));
                 selectLanguagePage.selectLang();
                 buttons.verifySubmitButtonEnabled();
                 buttons.clicksubmitBtn();
             }
 
-            webViewDocument = demographicPage.screensFlow(jsonContent, process, ageGroup);
+            webViewDocument = demographicPage.screensFlow(jsonContent, process, ageGroup, preRegistrationId);
 
             buttons.clickNextBtn();
 
@@ -391,8 +421,9 @@ public class NewReg {
             // Logout Regclient
             rid1.appidrid = rid1.getAppidrid(applicationContext, rid1.rid);
             rid1.setResult(result);
-        } catch (Exception e) {
+        } catch (Exception | AssertionError e) {
 
+            failureDetail = e.getMessage();
             logger.error("", e);
 
             try {
@@ -406,14 +437,14 @@ public class NewReg {
         try {
             homePage.clickHomeImg();
             buttons.clickConfirmBtn();
-        } catch (Exception e) {
+        } catch (Exception | AssertionError e) {
             logger.error("", e);
         }
         try {
             loginPage.logout();
             buttons.clickConfirmBtn();
 
-        } catch (Exception e) {
+        } catch (Exception | AssertionError e) {
             logger.error("", e);
         }
 
@@ -423,7 +454,8 @@ public class NewReg {
                             + rid1.ridDateTime + "] [ENVIRONMENT=" + System.getProperty("mosip.hostname") + "]");
             ExtentReportUtil.test1.info("Approve Packet Details Below" + rid2.getWebViewAck());
         } else {
-            ExtentReportUtil.test1.log(Status.FAIL, "TESTCASE FAIL");
+            ExtentReportUtil.test1.log(Status.FAIL,
+                    failureDetail == null ? "TESTCASE FAIL" : "TESTCASE FAIL: " + failureDetail);
 
         }
 

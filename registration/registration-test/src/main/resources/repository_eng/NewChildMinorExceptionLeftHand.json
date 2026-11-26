@@ -1,6 +1,8 @@
 { "identity" : {
 	"ageGroup":"MINOR",
 	"process":"New",
+	"previewTests":["qrCode","applicationId","demographics","documents","biometrics","bioExceptions","introducer"],
+	"ackTests":["qrCode","applicationId","dateTime","demographics","documents","biometrics","bioExceptions"],
 	"preferredLang":"English",
 	"documentUploadAttributes":["POB","POR","POA","POI"],
 	"UIN":"5931539704",

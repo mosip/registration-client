@@ -85,6 +85,7 @@ public class UpdateReg {
             logger.info("New Adult Registration Scenario : " + process + " FileName : " + fileName);
             ExtentReportUtil.test1 = ExtentReportUtil.reports
                     .createTest("Update Scenario : " + process + " FileName : " + fileName);
+            jsonContent = JsonUtil.withFullNameFromParts(jsonContent);
 
             loginPage = new LoginPage(robot);
             buttons = new Buttons(robot);
@@ -112,7 +113,7 @@ public class UpdateReg {
                 rid1.appidrid = rid1.getAppidrid(applicationContext, rid1.rid);
                 rid1.setResult(result);
             }
-        } catch (Exception e) {
+        } catch (Exception | AssertionError e) {
 
             logger.error("", e);
 
@@ -127,14 +128,14 @@ public class UpdateReg {
         try {
             homePage.clickHomeImg();
             buttons.clickConfirmBtn();
-        } catch (Exception e) {
+        } catch (Exception | AssertionError e) {
             logger.error("", e);
         }
         try {
             loginPage.logout();
             buttons.clickConfirmBtn();
 
-        } catch (Exception e) {
+        } catch (Exception | AssertionError e) {
             logger.error("", e);
         }
 
