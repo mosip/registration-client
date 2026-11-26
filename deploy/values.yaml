@@ -1,5 +1,9 @@
 regclient:
+  ## Must exactly match the registration-client build version (e.g. 1.3.0 vs 1.3.0-SNAPSHOT).
+  ## The client treats any version different from its own as an available update.
   version: 1.2.1-SNAPSHOT
+  ## lastUpdated (yyyyMMddHHmmss) is NOT set here. install.sh asks for it (default: current date/time)
+  ## and passes it as `--set-string regclient.lastUpdated=<date>`. See README.md.
 image:
   registry: docker.io
   repository: mosipqa/registration-client

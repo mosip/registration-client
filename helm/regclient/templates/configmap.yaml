@@ -1,3 +1,7 @@
+{{- $lastUpdated := toString (required "regclient.lastUpdated is required (yyyyMMddHHmmss)" .Values.regclient.lastUpdated) }}
+{{- if not (regexMatch "^[0-9]{14}$" $lastUpdated) }}
+{{- fail (printf "regclient.lastUpdated must be exactly 14 digits (yyyyMMddHHmmss), got %q. Quote it in values files or use --set-string." $lastUpdated) }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -20,7 +24,7 @@ data:
         <versions>
            <version>{{ .Values.regclient.version }}</version>
         </versions>
-      <lastUpdated>20200729125958</lastUpdated>
+      <lastUpdated>{{ $lastUpdated }}</lastUpdated>
       </versioning>
     </metadata>
 
