@@ -77,6 +77,10 @@ job:
 
 regclient:
   version: 1.2.1-SNAPSHOT
+  ## Date (yyyyMMddHHmmss) from which this version is considered available to clients. Published as <lastUpdated> in
+  ## maven-metadata.xml; clients force the update once mosip.registration.softwareUpdateCheck_configured_frequency days
+  ## have passed since this date. Required: the chart fails if left empty (deploy/install.sh sets it).
+  lastUpdated: ""
   mountDir: /home/mosip/build_files/
   upgradeServerUrl: https://regclient.sandbox.xzy.net
   hostName: https://api-internal.sandbox.mosip.net
